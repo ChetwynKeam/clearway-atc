@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- CSRF Token -->
+        <meta name="csrf-token" content="ov7wGiCeWePwDInDWuHatGBm28tcgvqmNSHiWksB">
+
+        <title>Gibraltar International Airport Official Website</title>
+        <meta name="description" content="Live flight information, aiport details, everything you need to know about flying in and out of Gibraltar">
+        <meta name="robots" content="NOODP">
+
+        <!-- Facebook OG Tags -->
+        <meta name="og:title" content="Gibraltar International Airport Official Website">
+        <meta name="og:description" content="Live flight information, aiport details, everything you need to know about flying in and out of Gibraltar">
+        <meta property="og:site_name" content="Gibraltar Airport" />
+        <meta name="og:image" content="https://www.gibraltarairport.gi/uploads/Airport Website Relaunch.png">
+
+        <!-- Twitter Card data -->
+        <meta name="twitter:title" content="Gibraltar International Airport Official Website">
+        <meta name="twitter:description" content="Live flight information, aiport details, everything you need to know about flying in and out of Gibraltar">
+        <meta name="twitter:image:src" content="https://www.gibraltarairport.gi/uploads/Airport Website Relaunch.png">
+
+
+        <!-- Favicons -->
+        <link rel="apple-touch-icon-precomposed" sizes="57x57" href="https://www.gibraltarairport.gi/assets/favicon/apple-touch-icon-57x57.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="https://www.gibraltarairport.gi/assets/favicon/apple-touch-icon-114x114.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="https://www.gibraltarairport.gi/assets/favicon/apple-touch-icon-72x72.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://www.gibraltarairport.gi/assets/favicon/apple-touch-icon-144x144.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="60x60" href="https://www.gibraltarairport.gi/assets/favicon/apple-touch-icon-60x60.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="120x120" href="https://www.gibraltarairport.gi/assets/favicon/apple-touch-icon-120x120.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="76x76" href="https://www.gibraltarairport.gi/assets/favicon/apple-touch-icon-76x76.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://www.gibraltarairport.gi/assets/favicon/apple-touch-icon-152x152.png" />
+        <link rel="icon" type="image/png" href="https://www.gibraltarairport.gi/assets/favicon/favicon-196x196.png" sizes="196x196" />
+        <link rel="icon" type="image/png" href="https://www.gibraltarairport.gi/assets/favicon/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/png" href="https://www.gibraltarairport.gi/assets/favicon/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="https://www.gibraltarairport.gi/assets/favicon/favicon-16x16.png" sizes="16x16" />
+        <link rel="icon" type="image/png" href="https://www.gibraltarairport.gi/assets/favicon/favicon-128.png" sizes="128x128" />
+        <meta name="application-name" content="&nbsp;"/>
+        <meta name="msapplication-TileColor" content="#FFFFFF" />
+        <meta name="msapplication-TileImage" content="https://www.gibraltarairport.gi/assets/favicon/mstile-144x144.png" />
+        <meta name="msapplication-square70x70logo" content="https://www.gibraltarairport.gi/assets/favicon/mstile-70x70.png" />
+        <meta name="msapplication-square150x150logo" content="https://www.gibraltarairport.gi/assets/favicon/mstile-150x150.png" />
+        <meta name="msapplication-wide310x150logo" content="https://www.gibraltarairport.gi/assets/favicon/mstile-310x150.png" />
+        <meta name="msapplication-square310x310logo" content="https://www.gibraltarairport.gi/assets/favicon/mstile-310x310.png" />
+
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/assets/vendor/bootstrap-4.3.1/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/assets/vendor/fontawesome-6.4.2/css/all.min.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/vendor/caribe/vendor/tempusdominus/tempusdominus-bootstrap-4.min.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/vendor/caribe/vendor/bootstrap-select-1.13.2/bootstrap-select.min.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/assets/vendor/flexslider-2.7.1.0/flexslider.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/assets/vendor/slick-1.8.1/slick.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/assets/vendor/slick-1.8.1/slick-theme.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/vendor/caribe/vendor/sweetalert-7.0.5/sweetalert2.min.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/assets/css/accessibility.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/vendor/caribe/css/front.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/assets/vendor/cookieconsent/dist/cookieconsent.css">
+        <link rel="stylesheet" type="text/css" href="https://www.gibraltarairport.gi/assets/css/styles.css?v=30.03.2026">
+
+        <style type="text/css">
+            :root {
+                --site1: #148ee4;
+                --site2: #2c2e36;
+                --site3: #0e73b2;
+                --site4: ;
+                --text: #585757;
+            }
+        </style>
+
+        
+            </head>
+    <body>
+        <div id="accessibilityPanel">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="uppercase"><strong>Accessibility</strong></h2>
+            <p class="text-right"><button type="button" id="closeAccessibilityPanel">X</button></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h3>Font size</h3>
+            <button type="button" class="accessibilityFontDecrease">-</button>
+            <span class="accessibilityFontSize"></span>
+            <button type="button" class="accessibilityFontIncrease">+</button>
+            <button type="button" class="accessibilityFontReset">Reset</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <h3>Filters</h3>
+            <ul>
+                <li>
+                    <label><input type="radio" name="accessibilityFiltersOptions" value="" checked /> None</label>
+                    <label><input type="radio" name="accessibilityFiltersOptions" value="grayscale" /> Grayscale</label>
+                    <label><input type="radio" name="accessibilityFiltersOptions" value="invert" /> Inverted Colors</label>
+                    <label><input type="radio" name="accessibilityFiltersOptions" value="w-blue" /> Without Blue</label>
+                    <label><input type="radio" name="accessibilityFiltersOptions" value="w-green" /> Without Green</label>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <h3>Highlight</h3>
+            <ul>
+                <li>
+                    <label><input type="radio" name="accessibilityHighlightOptions" value="" checked /> None</label>
+                    <label><input type="radio" name="accessibilityHighlightOptions" value="links" /> Links</label>
+                    <label><input type="radio" name="accessibilityHighlightOptions" value="titles" /> Titles</label>
+                    <label><input type="radio" name="accessibilityHighlightOptions" value="text" /> Just text</label>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <h3>Colour</h3>
+            <ul>
+                <li>
+                    <label><input type="radio" name="accessibilityColourOptions" value="" checked /> Default</label>
+                    <label><input type="radio" name="accessibilityColourOptions" value="black" /> Black on White</label>
+                    <label><input type="radio" name="accessibilityColourOptions" value="yellow" /> Yellow on Black</label>
+                    <label><input type="radio" name="accessibilityColourOptions" value="green" /> Green on Black</label>
+                    <label><input type="radio" name="accessibilityColourOptions" value="white" /> White on Black</label>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <h3>Zoom</h3>
+            <button type="button" class="accessibilityZoomDecrease">-</button>
+            <span class="accessibilityZoomScale"></span>
+            <button type="button" class="accessibilityZoomIncrease">+</button>
+            <button type="button" class="accessibilityZoomReset">Reset</button>
+        </div>
+    </div>
+</div>
+
+<div id="accessibilityArea">
+    <header id="header">
+        <section class="container">
+            <div class="row align-items-center justify-content-center">
+                <div class="col-5 col-lg-3 col-xl-2">
+                    <a href="https://www.gibraltarairport.gi" title="Gibraltar Airport" class="logo">
+                        <img src="https://www.gibraltarairport.gi/uploads/logos/Joshua_Hassan_Gibraltar_International_Airport_Logo.png" alt="Image of Gibraltar Airport Logo"/>
+                    </a>
+                </div>
+                <div class="col-7 col-lg-9 col-xl-10 text-right">
+                    <nav>
+                        <ul  class="menu"><li  class="active d-xl-none"><a href="https://www.gibraltarairport.gi" >Home </a></li><li  class="parent"><a href="https://www.gibraltarairport.gi/airlines-and-destinations" >Airlines &amp; Destinations </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/airlines-and-destinations/live-flight-information" >Live Flight Information </a></li><li  ><a href="https://www.gibraltarairport.gi/airlines-and-destinations/airlines-destinations" >Airlines &amp; Destinations </a></li></ul></li><li  class="parent"><a href="https://www.gibraltarairport.gi/at-the-airport" >At the Airport </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/passports-and-identity-cards" >Passports &amp; Identity Cards </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/customs" >HM Customs </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/getting-to-gibraltar-airport" >Getting to Gibraltar Airport </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/car-parking" >Parking </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/car-hire" >Car Hire </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/special-assistance" >Special Assistance </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/luggage" >Luggage </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/check" >Check-In </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/your-passenger-rights" >Your Passenger Rights </a></li><li  class="parent"><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating" >Shopping &amp; Eating </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating/arrivals" >Arrivals </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating/before-security" >Before Security </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating/after-security" >After Security </a></li></ul></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/the-calpe-lounge" >The Calpe Lounge </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/additional-services" >Additional Services </a></li></ul></li><li  class="parent"><a href="https://www.gibraltarairport.gi/general-aviation" >General Aviation </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/general-aviation/business-aviation" >Business Aviation </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/recreational-flying" >Recreational Flying </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/charters-non-scheduled-flying" >Charters/Non-Scheduled Flying </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/contacts" >Contacts </a></li></ul></li><li  class="parent"><a href="https://www.gibraltarairport.gi/about-us" >About </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/about-us/air-traffic-statistics" >Air Traffic Statistics </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/crossing-runway" >Crossing the Runway </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/news" >News </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/advertising-opportunties" >Advertising Opportunties </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/meeting-and-event-hire" >Meeting &amp; Event Hire </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/image-library" >Image Library </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/drone-use" >Drone Use </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/data-protection" >Data Protection </a></li></ul></li><li  ><a href="https://www.gibraltarairport.gi/contact-us" >Contact </a></li></ul>
+                    </nav>
+                    
+                    <a href="https://www.gibraltarairport.gi/docs/Project-Servator-QA.pdf" title="Project Servator" target="_blank">
+                        <img src="https://www.gibraltarairport.gi/assets/img/project-servator-logo.png" alt="Image of Project Servator Logo"/>
+                    </a>
+
+                    <a href="#" title="Accessibility" id="accessibility-btn"><i class="fa fa-eye"></i></a>
+
+                    <a href="https://www.gibraltarairport.gi/at-the-airport/special-assistance" title="Special Assistance">
+                        <img src="https://www.gibraltarairport.gi/assets/img/sunflower.png" alt="Image of Disability Sunflower Logo"/>
+                    </a>
+ 
+                    <button id="open-menu" class="d-xl-none">
+                        <span class="line"></span>
+                        <span class="line"></span>
+                        <span class="line"></span>
+                    </button>
+                </div>
+            </div>
+        </section>
+        <section class="gradient-bkg">
+            <div class="container">
+                <div class="row align-items-center justify-content-center">
+                    <div class="col-12 text-right">
+                        
+
+                        <div class="widget weather">
+                            <img src="https://www.gibraltarairport.gi/assets/img/weather/default.png" title="Weather" alt="Weather Icon">
+                            <p>12º C</p>
+                        </div>
+
+                        <div class="widget">
+                            <i class="fa-regular fa-clock"></i>
+                            <p>10:19</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </header>
+
+        <section id="content">
+            
+<div class="bkg-cover padding-top-md padding-bottom-xxl main-section container-fluid" style="background-image: url(&#039;https://www.gibraltarairport.gi/uploads/Aviramp GIB.jpeg&#039;)"><div class="row"><div class="container"><div class="justify-content-right row"><div class="col-12 col-lg-7 col-xl-6"><div id="" class="live-table ">
+    <ul class="nav nav-tabs" id="flightTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" title="Arrivals" id="todays-flights-arrivals-tab" data-toggle="tab" href="#todays-flights-arrivals" role="tab" aria-controls="todays-flights-arrivals" aria-selected="true">
+                <img src="https://www.gibraltarairport.gi/assets/img/icons/arrivals-icon.png" alt="Arrivals Icon"/> Arrivals
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link " title="Departures" id="todays-flights-departures-tab" data-toggle="tab" href="#todays-flights-departures" role="tab" aria-controls="todays-flights-departures" aria-selected="false">
+                <img src="https://www.gibraltarairport.gi/assets/img/icons/departures-icon.png" alt="Departures Icon"/> Departures
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-2">
+        <!-- Arrivals Tab -->
+        <div class="tab-pane fade show active" id="todays-flights-arrivals" role="tabpanel" aria-labelledby="todays-flights-arrivals-tab">
+            <div class="table-responsive">
+                <table border="0" cellpadding="0" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>From</th>
+                            <th>Flight</th>
+                            <th>Sched</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                                                <tr>
+                            <td>Manchester</td>
+                            <td>EZY2267</td>
+                            <td>10:10</td>
+                            <td>
+                                Estimated
+
+                                                                <img 
+                                    src="https://www.gibraltarairport.gi/assets/img/icons/info-icon.png"
+                                    title="Information"
+                                    data-toggle="popover" 
+                                    data-trigger="hover" 
+                                    data-html="true" 
+                                    data-content="DELAYED"
+                                />
+                                                            </td>
+                            <td>
+                                                                11:21
+                                                            </td>
+                        </tr>
+                                                <tr>
+                            <td>London Gatwick</td>
+                            <td>EZY8791</td>
+                            <td>10:25</td>
+                            <td>
+                                Estimated
+
+                                                            </td>
+                            <td>
+                                                                10:28
+                                                            </td>
+                        </tr>
+                                                <tr>
+                            <td>London Heathrow</td>
+                            <td>BA490</td>
+                            <td>11:10</td>
+                            <td>
+                                Estimated
+
+                                                            </td>
+                            <td>
+                                                                10:55
+                                                            </td>
+                        </tr>
+                                                <tr>
+                            <td>London Heathrow</td>
+                            <td>BA492</td>
+                            <td>16:30</td>
+                            <td>
+                                Scheduled
+
+                                                            </td>
+                            <td>
+                                                            </td>
+                        </tr>
+                                                <tr>
+                            <td>London Gatwick</td>
+                            <td>EZY8793</td>
+                            <td>19:15</td>
+                            <td>
+                                Scheduled
+
+                                                            </td>
+                            <td>
+                                                            </td>
+                        </tr>
+                                            </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Departures Tab -->
+        <div class="tab-pane fade" id="todays-flights-departures" role="tabpanel" aria-labelledby="todays-flights-departures-tab">
+            <div class="table-responsive">
+                <table border="0" cellpadding="0" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>To</th>
+                            <th>Flight</th>
+                            <th>Sched</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                                                <tr>
+                            <td>Manchester</td>
+                            <td>EZY2268</td>
+                            <td>10:45</td>
+                            <td>
+                                Estimated
+                                
+                                                                <img 
+                                    src="https://www.gibraltarairport.gi/assets/img/icons/info-icon.png"
+                                    title="Information"
+                                    data-toggle="popover" 
+                                    data-trigger="hover" 
+                                    data-html="true" 
+                                    data-content="DELAYED"
+                                />
+                                                            </td>
+                            <td>
+                                                                12:00
+                                                            </td>
+                        </tr>
+                                                <tr>
+                            <td>London Gatwick</td>
+                            <td>EZY8792</td>
+                            <td>11:10</td>
+                            <td>
+                                On time
+                                
+                                                            </td>
+                            <td>
+                                                            </td>
+                        </tr>
+                                                <tr>
+                            <td>London Heathrow</td>
+                            <td>BA491</td>
+                            <td>12:00</td>
+                            <td>
+                                On time
+                                
+                                                            </td>
+                            <td>
+                                                            </td>
+                        </tr>
+                                                <tr>
+                            <td>London Heathrow</td>
+                            <td>BA493</td>
+                            <td>17:20</td>
+                            <td>
+                                Scheduled
+                                
+                                                            </td>
+                            <td>
+                                                            </td>
+                        </tr>
+                                                <tr>
+                            <td>London Gatwick</td>
+                            <td>EZY8794</td>
+                            <td>19:55</td>
+                            <td>
+                                Scheduled
+                                
+                                                            </td>
+                            <td>
+                                                            </td>
+                        </tr>
+                                            </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-center">
+        <a href="https://www.gibraltarairport.gi/airlines-and-destinations/live-flight-information" title="View all Flights" class="button">
+            VIEW ALL FLIGHTS FOR THE NEXT 7 DAYS <i class="fa fa-angle-right"></i>
+        </a>
+    </p>
+</div>
+
+</div></div></div></div></div><div class="container-fluid" style="background-color: rgb(237, 239, 240)"><div class="row"><div class="container"><div class="row"><div class="col-12 col-lg-4"><div class="icon-box"><p><img title="Getting Here" src="/assets/img/icons/map-marker-icon.png" alt="Map Marker Icon" /></p>
+<h4>GETTING HERE</h4>
+<p data-mh="icon-text">Find out the easiest and quickest way to get to the Airport</p>
+<p><a title="Find out how" href="/at-the-airport/getting-to-gibraltar-airport">Find out how</a></p></div></div><div class="col-12 col-lg-4"><div class="icon-box"><p><img title="Flights" src="/assets/img/icons/airplane-icon.png" alt="Airplane Icon" /></p>
+<h4>FLIGHTS</h4>
+<p data-mh="icon-text">All your flight information</p>
+<p><a title="Find out more" href="/airlines-and-destinations/live-flight-information">Find out more</a></p></div></div><div class="col-12 col-lg-4"><div class="icon-box"><p><img title="Shop, Dine &amp; Relax" src="/assets/img/icons/shop-eat-icon.png" alt="Shop &amp; Eat Icon" /></p>
+<h4>SHOP, DINE &amp; RELAX</h4>
+<p data-mh="icon-text">Discover where you can shop, eat and relax</p>
+<p><a title="Find out more" href="/at-the-airport/shopping-and-eating/arrivals">Find out more</a></p></div></div></div></div></div></div><div class="margin-top-lg margin-bottom-md container"><div class="row"><div class="col-12 col-lg-12"><div ><h2>LATEST NEWS</h2></div><div  class="row latest-news ">
+
+		<div class="col-12 col-md-6 col-lg-4">
+		<article class="single-article">
+			<div class="row">
+				<div class="col-5">
+					<div class="bkg-cover sixteen-nine-img"  style="background-image: url('https://www.gibraltarairport.gi/uploads/abstract-blur-group-people-business-meeting.webp ');">
+						<a href="https://www.gibraltarairport.gi/about-us/news/government-statement-on-entry-requirements-and-travel-10" title="Read More">&nbsp;</a>
+					</div>
+				</div>
+				<div class="col-7 pl-0 pl-sm-2">
+					<h4 class="h6"><a href="https://www.gibraltarairport.gi/about-us/news/government-statement-on-entry-requirements-and-travel-10" title="Government Statement on Entry Requirements and Travel" data-mh="news-title">Government Statement on Entry Requirements and Travel</a></h4>
+					<p class="date">July 22, 2026</p>
+				</div>
+			</div>
+		</article>
+	</div>
+		<div class="col-12 col-md-6 col-lg-4">
+		<article class="single-article">
+			<div class="row">
+				<div class="col-5">
+					<div class="bkg-cover sixteen-nine-img"  style="background-image: url('https://www.gibraltarairport.gi/uploads/prepare-for-your-journey.jpg ');">
+						<a href="https://www.gibraltarairport.gi/about-us/news/technical-notice-reminder-concerning-immigration-arrangements-at-gibraltar-airport-and-the-crossing-of-schengen-external-borders-9" title="Read More">&nbsp;</a>
+					</div>
+				</div>
+				<div class="col-7 pl-0 pl-sm-2">
+					<h4 class="h6"><a href="https://www.gibraltarairport.gi/about-us/news/technical-notice-reminder-concerning-immigration-arrangements-at-gibraltar-airport-and-the-crossing-of-schengen-external-borders-9" title="Technical Notice: REMINDER concerning immigration arrangements at Gibraltar Airport and the crossing of Schengen external borders" data-mh="news-title">Technical Notice: REMINDER concerning immigration arrangements at Gibraltar Airport and the crossing of Schengen external borders</a></h4>
+					<p class="date">July 16, 2026</p>
+				</div>
+			</div>
+		</article>
+	</div>
+		<div class="col-12 col-md-6 col-lg-4">
+		<article class="single-article">
+			<div class="row">
+				<div class="col-5">
+					<div class="bkg-cover sixteen-nine-img"  style="background-image: url('https://www.gibraltarairport.gi/uploads/Aviramp GIB.jpeg ');">
+						<a href="https://www.gibraltarairport.gi/about-us/news/tourism-minister-new-route-to-birmingham-now-gives-gibraltar-access-to-whole-of-england-8" title="Read More">&nbsp;</a>
+					</div>
+				</div>
+				<div class="col-7 pl-0 pl-sm-2">
+					<h4 class="h6"><a href="https://www.gibraltarairport.gi/about-us/news/tourism-minister-new-route-to-birmingham-now-gives-gibraltar-access-to-whole-of-england-8" title="Tourism Minister: &#039;New route to Birmingham now gives Gibraltar access to whole of England&#039;" data-mh="news-title">Tourism Minister: &#039;New route to Birmingham now gives Gibraltar access to whole of England&#039;</a></h4>
+					<p class="date">June 02, 2025</p>
+				</div>
+			</div>
+		</article>
+	</div>
+	
+</div></div><div class="text-right col-12 col-lg-12"><div ><p><a class="text-link" title="View all articles" href="/about-us/news">View all articles</a></p></div></div></div></div>
+
+   
+        </section>
+        
+            <footer id="footer">
+        <div class="container"><div class="row"><div class="col-12 col-lg-12"><a href="https://www.gibraltar.gov.gi/" target="_blank" title="HM Government of Gibraltar"><img alt="HM Government of Gibraltar White Logo" src="https://www.gibraltarairport.gi/uploads/logos/hm-government-of-gibraltar-logo-white.png"/></a></div><div class="col-12 col-lg-3 col-xl-4"><div ><p class="icon-text phone"><a title="Call Gibraltar International Airport" href="tel:+35012345">+350 200 12345</a></p>
+<p class="icon-text email"><a title="Contact Gibraltar International Airport" href="mailto:info@gibraltarairport.gi">info@gibraltarairport.gi</a></p>
+<p class="icon-text address">British Lines Road, <br />Gibraltar<br />GX11 1AA</p></div></div><div class="col-12 col-lg-9 col-xl-8"><div class="row"><div class="col-12 col-md-4 col-lg-4"><ul  class="menu"><li  class="parent"><a href="https://www.gibraltarairport.gi/airlines-and-destinations" >Airlines &amp; Destinations </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/airlines-and-destinations/live-flight-information" >Live Flight Information </a></li><li  ><a href="https://www.gibraltarairport.gi/airlines-and-destinations/airlines-destinations" >Airlines &amp; Destinations </a></li></ul></li></ul><ul  class="menu"><li  class="parent"><a href="https://www.gibraltarairport.gi/general-aviation" >General Aviation </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/general-aviation/business-aviation" >Business Aviation </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/recreational-flying" >Recreational Flying </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/charters-non-scheduled-flying" >Charters/Non-Scheduled Flying </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/contacts" >Contacts </a></li></ul></li></ul></div><div class="col-12 col-md-4 col-lg-4"><ul  class="menu"><li  class="parent"><a href="https://www.gibraltarairport.gi/at-the-airport" >At the Airport </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/passports-and-identity-cards" >Passports &amp; Identity Cards </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/customs" >Customs </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/getting-to-gibraltar-airport" >Getting to Gibraltar Airport </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/car-parking" >Parking </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/car-hire" >Car Hire </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/special-assistance" >Special Assistance </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/luggage" >Luggage </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/check" >Check-In </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/your-passenger-rights" >Your Passenger Rights </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating" >Shopping &amp; Eating </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/the-calpe-lounge" >The Calpe Lounge </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/additional-services" >Additional Services </a></li></ul></li></ul></div><div class="col-12 col-md-4 col-lg-4"><ul  class="menu"><li  class="parent"><a href="https://www.gibraltarairport.gi/about-us" >About </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/about-us/air-traffic-statistics" >Air Traffic Statistics </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/crossing-runway" >Crossing the Runway </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/news" >News </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/advertising-opportunties" >Advertising Opportunties </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/meeting-and-event-hire" >Meeting &amp; Event Hire </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/image-library" >Image Library </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/drone-use" >Drone Use </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/data-protection" >Data Protection </a></li></ul></li></ul><ul  class="menu"><li  class="parent"><a href="https://www.gibraltarairport.gi/contact-us" >Contact </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/contact-us" >Main Contacts </a></li></ul></li></ul></div></div></div></div></div><div class="container-fluid" id="copyright"><div class="row"><div class="container"><div class="row"><div class="col-12 col-md-4 col-lg-4"><ul  class="legal-menu"><li  ><a href="https://www.gibraltarairport.gi/privacy-policy" >Privacy Policy </a></li><li  ><a href="https://www.gibraltarairport.gi/cookies-policy" >Cookies Policy </a></li><li  ><a href="https://www.gibraltarairport.gi/disclaimer" >Disclaimer </a></li></ul></div><div class="col-12 col-md-8 col-lg-8 text-md-right"><div ><p>&copy; Copyright Gibraltar Air Terminal Ltd. All Rights Reserved.</p></div></div></div></div></div></div>
+    </footer>
+
+    <section id="offCanvas">
+        <header>
+            <a href="https://www.gibraltarairport.gi" title="Gibraltar Airport" class="logo">
+                <img src="https://www.gibraltarairport.gi/uploads/logos/Joshua_Hassan_Gibraltar_International_Airport_Logo.png" alt="Image of Gibraltar Airport Logo"/>
+            </a>
+
+            <button title="Back" class="back-link"><i class="fa fa-angle-left"></i></button>
+            <button title="Close" id="close-menu">
+                <img src="https://www.gibraltarairport.gi/assets/img/icons/close-icon.png" alt="Close Icon">
+            </button>
+            <h4></h4>
+        </header>
+        
+        <ul  class="menu"><li  class="active d-xl-none"><a href="https://www.gibraltarairport.gi" >Home </a></li><li  class="parent"><a href="https://www.gibraltarairport.gi/airlines-and-destinations" >Airlines &amp; Destinations </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/airlines-and-destinations/live-flight-information" >Live Flight Information </a></li><li  ><a href="https://www.gibraltarairport.gi/airlines-and-destinations/airlines-destinations" >Airlines &amp; Destinations </a></li></ul></li><li  class="parent"><a href="https://www.gibraltarairport.gi/at-the-airport" >At the Airport </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/passports-and-identity-cards" >Passports &amp; Identity Cards </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/customs" >HM Customs </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/getting-to-gibraltar-airport" >Getting to Gibraltar Airport </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/car-parking" >Parking </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/car-hire" >Car Hire </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/special-assistance" >Special Assistance </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/luggage" >Luggage </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/check" >Check-In </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/your-passenger-rights" >Your Passenger Rights </a></li><li  class="parent"><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating" >Shopping &amp; Eating </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating/arrivals" >Arrivals </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating/before-security" >Before Security </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating/after-security" >After Security </a></li></ul></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/the-calpe-lounge" >The Calpe Lounge </a></li><li  ><a href="https://www.gibraltarairport.gi/at-the-airport/additional-services" >Additional Services </a></li></ul></li><li  class="parent"><a href="https://www.gibraltarairport.gi/general-aviation" >General Aviation </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/general-aviation/business-aviation" >Business Aviation </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/recreational-flying" >Recreational Flying </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/charters-non-scheduled-flying" >Charters/Non-Scheduled Flying </a></li><li  ><a href="https://www.gibraltarairport.gi/general-aviation/contacts" >Contacts </a></li></ul></li><li  class="parent"><a href="https://www.gibraltarairport.gi/about-us" >About </a><ul  class=""><li  ><a href="https://www.gibraltarairport.gi/about-us/air-traffic-statistics" >Air Traffic Statistics </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/crossing-runway" >Crossing the Runway </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/news" >News </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/advertising-opportunties" >Advertising Opportunties </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/meeting-and-event-hire" >Meeting &amp; Event Hire </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/image-library" >Image Library </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/drone-use" >Drone Use </a></li><li  ><a href="https://www.gibraltarairport.gi/about-us/data-protection" >Data Protection </a></li></ul></li><li  ><a href="https://www.gibraltarairport.gi/contact-us" >Contact </a></li></ul>
+    </section>
+</div>
+
+        <!-- JS -->
+        <script type="text/javascript">
+            var baseUrl = "https://www.gibraltarairport.gi";
+        </script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/vendor/caribe/vendor/jquery/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/vendor/caribe/vendor/bootstrap/popper.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/assets/vendor/bootstrap-4.3.1/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/vendor/caribe/vendor/bootstrap-select-1.13.2/bootstrap-select.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/assets/vendor/fontawesome-6.4.2/js/all.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/vendor/caribe/vendor/jquery.form/jquery.form.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/vendor/caribe/js/ajax-form.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/vendor/caribe/vendor/sweetalert-7.0.5/sweetalert2.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/assets/vendor/flexslider-2.7.1.0/jquery.flexslider-min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/assets/vendor/jquery.matchHeight.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/assets/vendor/slick-1.8.1/slick.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/vendor/caribe/vendor/moment.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/vendor/caribe/vendor/tempusdominus/tempusdominus-bootstrap-4.min.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/assets/js/accessibility.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/assets/vendor/cookieconsent/dist/cookieconsent.js"></script>
+<script type="text/javascript" src="https://www.gibraltarairport.gi/assets/js/cookieconsent-init.js"></script>
+        <script type="text/javascript" src="https://www.gibraltarairport.gi/assets/js/site.js"></script>
+
+        <script type="text/javascript">
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    });
+</script>
+    </body>
+</html>

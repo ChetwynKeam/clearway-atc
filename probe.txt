@@ -1,0 +1,57 @@
+=================== https://api.adsb.lol/v2/point/36.15/-5.35/60
+HTTP/2 200 
+content-type: application/json
+{"ac":[
+{"hex":"020058","type":"adsb_icao","flight":"RAM612G ","r":"CN-ROA","t":"B738","alt_baro":36000,"alt_geom":37525,"gs":480.5,"ias":255,"tas":444,"mach":0.772,"wd":221,"ws":40,"oat":-55,"tat":-29,"track":16.81,"track_rate":0.00,"roll":0.00,"mag_heading":13.89,"true_heading":13.82,"baro_rate":64,"geom_rate":-64,"squawk":"6453","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":12.66,"lat":35.827423,"lon":-6.241264,"nic":8,"rc":186,"seen_pos":0.762,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":374,"seen":0.6,"rssi":-25.1,"dst":47.353,"dir":246.2},
+{"hex":"4ca9c3","type":"adsb_icao","flight":"RYR47KA ","r":"EI-EVC","t":"B738","alt_baro":36000,"alt_geom":37475,"gs":495.7,"ias":258,"tas":448,"mach":0.780,"wd":224,"ws":47,"oat":-56,"tat":-29,"track":40.66,"track_rate":0.00,"roll":-0.53,"mag_heading":40.25,"true_heading":40.32,"baro_rate":64,"geom_rate":32,"squawk":"6451","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":40.08,"lat":36.265078,"lon":-5.779919,"nic":8,"rc":186,"seen_pos":0.107,"version":2,"nic_baro":1,"nac_p":8,"nac_v":1,"sil":3,"sil_type":"perhour","gva":1,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":3915,"seen":0.1,"rssi":-11.7,"dst":21.902,"dir":288.5},
+{"hex":"02019b","type":"adsb_icao","flight":"RAM703  ","r":"CN-RGW","t":"B7
+=================== https://api.airplanes.live/v2/point/36.15/-5.35/60
+HTTP/2 403 
+content-type: application/json
+{"error": "Please contact us at contact@airplanes.live. Your email MUST include any links, a description of the project, and any information you deem appropriate."}
+=================== https://opendata.adsb.fi/api/v2/lat/36.15/lon/-5.35/dist/60
+HTTP/2 200 
+content-type: application/json
+{"now": 1791188394.003
+,"aircraft":[
+{"hex":"020058","type":"adsb_icao","flight":"RAM612G ","r":"CN-ROA","t":"B738","desc":"BOEING 737-800","alt_baro":36000,"alt_geom":37525,"gs":480.5,"ias":255,"tas":444,"mach":0.772,"wd":221,"ws":40,"oat":-55,"tat":-29,"track":16.81,"track_rate":0.00,"roll":0.00,"mag_heading":13.89,"true_heading":13.82,"baro_rate":64,"geom_rate":-64,"squawk":"6453","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":12.66,"lat":35.827423,"lon":-6.241264,"nic":8,"rc":186,"seen_pos":0.741,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":3162,"seen":0.6,"rssi":-25.5,"dst":47.353,"dir":246.2},
+{"hex":"4ca9c3","type":"adsb_icao","flight":"RYR47KA ","r":"EI-EVC","t":"B738","desc":"BOEING 737-800","alt_baro":36000,"alt_geom":37475,"gs":495.7,"ias":258,"tas":448,"mach":0.780,"wd":224,"ws":47,"oat":-56,"tat":-29,"track":40.66,"track_rate":0.00,"roll":-0.53,"mag_heading":40.25,"true_heading":40.32,"baro_rate":64,"geom_rate":32,"squawk":"6451","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":40.08,"lat":36.265078,"lon":-5.779919,"nic":8,"rc":186,"seen_pos":0.087,"version":2,"nic_baro":1,"nac_p":8,"nac_v":1,"sil":3,"sil_type":"perhour","gva":1,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":6362,"seen":0.1,"rssi":-8.7,"dst":21.902,"dir":288.5}
+=================== https://opensky-network.org/api/states/all?lamin=35.2&lomin=-6.6&lamax=37.1&lomax=-4.1
+HTTP/2 200 
+content-type: application/json
+access-control-allow-origin: https://opensky-network.org
+{"time":1791188386,"states":[["345292","BCS932  ","Spain",1791188108,1791188110,-5.9461,35.734,15.24,false,74.54,96.34,-4.23,null,99.06,"2614",false,0],["02019b","RAM703  ","Morocco",1791188386,1791188386,-5.5599,35.3773,11277.6,false,202.92,216.03,0,null,11750.04,"7651",false,0],["020058","RAM612G ","Morocco",1791188386,1791188386,-6.2464,35.8136,10972.8,false,247.21,16.81,0,null,11437.62,"6453",false,0],["4ca565","RYR2DG  ","Ireland",1791188386,1791188386,-5.0203,35.5666,2133.6,false,123.83,140.22,-0.33,null,2331.72,"7137",false,0],["485209","TRA1B   ","Kingdom of the Netherlands",1791188287,1791188292,-4.6066,36.7326,487.68,false,83.53,117.51,-4.55,null,609.6,"2146",false,0],["49d287","EWG535  ","Czech Republic",1791188386,1791188386,-4.1877,36.6793,2667,false,156.18,17.84,11.7,null,2880.36,"4540",false,0],["407f65","EZY37NU ","United Kingdom",1791188386,1791188386,-4.899,36.2671,2727.96,false,133.88,177.58,-3.9,null,2979.42,"5250",false,0],["3444cb","VLG32QK ","Spain",1791188386,1791188386,-4.7007,36.8412,10668,false,214.8,237.72,-0.33,null,11148.06,"0421",false,0],["4ca9c3","RYR47KA ","Ireland",1791188386,1791188386,-5.7941,36.2517,10972.8,false,255,40.66,0,null,11422.38,"6451",false,0],["4854ca","TRA70R  ","Kingdom of the Netherlands",1791188385,1791188386,-4.7866,36.9025,1828.8,false,104.79,160.5,-5.53,null,2011.68,"2111",false,0],["4075bb","EXS387  ","United Kingdom",1791188096,1791188097,-4.6076,36.733,487.68,false,81.01,118.03,-4.23,null,617.22,"1173",false,0],["347
+=================== https://opensky-network.org/api/flights/arrival?airport=LXGB&begin=1791101995&end=1791188395
+HTTP/2 403 
+content-type: text/plain;charset=UTF-8
+access-control-allow-origin: https://opensky-network.org
+You cannot access historical flights
+=================== routeset
+HTTP/2 201 
+
+
+=================== https://www.gibraltarairport.gi/
+HTTP/2 200 
+content-type: text/html; charset=UTF-8
+href="#todays-flights-arrivals"
+href="#todays-flights-departures"
+href="/airlines-and-destinations/live-flight-information"
+href="/at-the-airport/shopping-and-eating/arrivals"
+href="https://www.gibraltarairport.gi/airlines-and-destinations/live-flight-information"
+href="https://www.gibraltarairport.gi/at-the-airport/shopping-and-eating/arrivals"
+ajax-form.js
+EZY2267
+EZY2268
+EZY8791
+EZY8792
+EZY8793
+EZY8794
+=================== https://www.gibraltarairport.gi/flight-information
+HTTP/2 404 
+content-type: text/html; charset=UTF-8
+=================== https://www.gibraltarairport.gi/arrivals
+HTTP/2 404 
+content-type: text/html; charset=UTF-8
+=================== https://www.gibraltarairport.gi/departures
+HTTP/2 404 
+content-type: text/html; charset=UTF-8
