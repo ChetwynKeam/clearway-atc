@@ -1,0 +1,117 @@
+<!-- ═════════════════════ PRICING ═════════════════════ -->
+<section class="page" id="page-pricing" data-page="pricing" hidden>
+  <div class="pagehead"><div class="wrap">
+    <div class="eyebrow">Pricing</div>
+    <h1>Pick your airports. <em>Try any plan free for <span data-cw="trial">2</span> days.</em></h1>
+    <p>Every plan includes the full simulator at the airports you choose: approach, tower and ground, live weather, real-world traffic, the timetable, guided exercises and your career logbook. Briefings and the Academy reading are free for everyone.</p>
+    <div class="cw-note" id="cwPreviewNote" hidden>Clearway is in open preview: every airport is free to control while subscriptions are being set up.</div>
+  </div></div>
+  <div class="wrap">
+    <div class="cw-plans" id="cwPlans"></div>
+    <label class="cw-early-pick" id="cwEarlyPick"><input type="checkbox" id="cwEarlyBox"> <span><b>Add early access</b> for <span data-cw="early-price"></span> a month: play airports while they are still being built, and your airport requests count double. Included with Unlimited.</span></label>
+    <div class="cw-early">
+      <div><div class="eyebrow">Early access scheme</div>
+        <h2>Control tomorrow’s airports today.</h2>
+        <p>Early access members open airports marked <b>In development</b> as soon as their first build is playable, see new features before everyone else, and help decide what comes next: their airport requests carry double weight and their feedback goes to the top of the pile.</p></div>
+      <ul class="cw-ticks"><li>Airports in development, from the first playable build</li><li>New features and engine changes first</li><li>Double weight on airport requests</li><li>Priority feedback, read by the developer</li></ul>
+    </div>
+    <div class="cw-faq">
+      <h2>Questions</h2>
+      <details><summary>How does the free trial work?</summary><p>Choose a plan and start your trial. Nothing is charged for <span data-cw="trial">2</span> days, and you can cancel from your account before then without paying anything. After the trial the plan renews monthly until you cancel. The trial is available once per player.</p></details>
+      <details><summary>How do I choose my airports?</summary><p>After you subscribe, open <a href="#account">your account</a> and tick the airports your plan includes. You can fill empty places at any time. Swapping an airport out is free during the trial and then once every 30 days. Unlimited includes every airport, including new ones as they open.</p></details>
+      <details><summary>Can I change or cancel my plan?</summary><p>Yes. Open <a href="#account">your account</a> and choose Manage billing to move up or down a plan, update your card, download invoices or cancel. A cancelled plan stays active until the end of the month you have paid for.</p></details>
+      <details><summary>What is free?</summary><p>The website, every airport briefing, the Academy reading, the airport map and your career logbook. Opening a position at an airport needs a trial or a plan.</p></details>
+      <details><summary>Is this real air traffic control training?</summary><p>No. Clearway is a simulation game built from published charts. It is not approved for real-world training or navigation and is not affiliated with any air navigation service provider, airport or airline.</p></details>
+    </div>
+  </div>
+  <div style="height:72px"></div>
+</section>
+
+<!-- ═════════════════════ ACCOUNT ═════════════════════ -->
+<section class="page" id="page-account" data-page="account" hidden>
+  <div class="pagehead"><div class="wrap">
+    <div class="eyebrow">Account</div>
+    <h1 id="cwAccH">Sign in to Clearway</h1>
+    <p id="cwAccP">We email you a sign-in link: no password to remember.</p>
+  </div></div>
+  <div class="wrap cw-acc">
+    <div class="cw-box" id="cwSignIn">
+      <form id="cwEmailForm" class="cw-form"><label>Email<input type="email" id="cwEmail" required autocomplete="email" placeholder="you@example.com"></label><button class="btn primary">Email me a sign-in link</button></form>
+      <form id="cwCodeForm" class="cw-form" hidden><label>Or type the code from your email<input id="cwCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" required placeholder="123456"></label><button class="btn primary">Sign in</button><button type="button" class="btn" id="cwCodeBack">Use another email</button></form>
+      <p class="cw-msg" id="cwSignMsg"></p>
+    </div>
+    <div id="cwAccount" hidden>
+      <div class="cw-box"><div class="cw-row"><div><div class="lbl">Signed in as</div><b id="cwWho"></b></div><span class="grow"></span><button class="btn" id="cwSignOut">Sign out</button></div></div>
+      <div class="cw-box"><h2>Your plan</h2><div id="cwPlanBox"></div></div>
+      <div class="cw-box" id="cwPickBox" hidden><h2>Your airports</h2><p class="cw-sub" id="cwPickSub"></p><div class="cw-picks" id="cwPicks"></div><p class="cw-msg" id="cwPickMsg"></p></div>
+    </div>
+  </div>
+  <div style="height:72px"></div>
+</section>
+
+<!-- ═════════════════════ AIRPORT REQUESTS ═════════════════════ -->
+<section class="page" id="page-request" data-page="request" hidden>
+  <div class="pagehead"><div class="wrap">
+    <div class="eyebrow">Roadmap</div>
+    <h1>Which airport should we build next?</h1>
+    <p>Tell us the airport you most want to control and why. The most requested airports move up the roadmap, and early access members’ requests count double.</p>
+  </div></div>
+  <div class="wrap cw-req">
+    <form class="cw-box cw-form" id="cwReqForm">
+      <h2>Request an airport</h2>
+      <div class="cw-two"><label>ICAO code<input id="cwReqIcao" maxlength="4" required placeholder="LEMG" autocapitalize="characters" spellcheck="false"></label><label>Airport<input id="cwReqName" maxlength="80" placeholder="Málaga"></label></div>
+      <label>What makes it a good one to control? <span class="lbl">optional</span><textarea id="cwReqWhy" rows="3" maxlength="600" placeholder="A short runway between mountains, summer peaks, a tricky approach…"></textarea></label>
+      <div class="cw-row"><button class="btn primary">Send request</button><span class="cw-msg" id="cwReqMsg"></span></div>
+    </form>
+    <div class="cw-box"><h2>Most requested</h2><div id="cwReqList" class="cw-reqlist"><p class="cw-sub">Loading…</p></div></div>
+    <div class="cw-box"><h2>Already on the roadmap</h2><div id="cwRoadmap" class="cw-reqlist"></div></div>
+  </div>
+  <div style="height:72px"></div>
+</section>
+
+<!-- ═════════════════════ LEGAL ═════════════════════ -->
+<section class="page cw-legal" id="page-terms" data-page="terms" hidden>
+  <div class="pagehead"><div class="wrap"><div class="eyebrow">Legal</div><h1>Terms of service</h1><p>Last updated <span data-cw="legal-date"></span>.</p></div></div>
+  <div class="wrap cw-prose">
+    <p>These terms cover your use of Clearway (the website at <span data-cw="site"></span> and its simulators). By creating an account or subscribing you agree to them.</p>
+    <h2>The service</h2><p>Clearway is an air traffic control simulation game. It is built from published aeronautical information and open map data, simplified for play. It must not be used for real-world navigation, flight planning or controller training, and it is not affiliated with any air navigation service provider, airport or airline.</p>
+    <h2>Accounts</h2><p>You sign in with your email address. Keep access to that email secure: anyone who can read it can sign in as you. One account is for one person.</p>
+    <h2>Subscriptions and the free trial</h2><p>Plans are billed monthly in advance through our payment provider, Stripe, and renew automatically until you cancel. New players can try a plan free for <span data-cw="trial">2</span> days once; if you do not cancel before the trial ends, the first monthly payment is taken then. You can change plan, update your card or cancel at any time from your account. Cancelling stops the next renewal and your plan stays active until the end of the period you have paid for. Prices include any VAT that applies and may change with at least 30 days’ notice by email.</p>
+    <h2>Your right to cancel</h2><p>If you are a consumer in the UK or EU you normally have 14 days to cancel a new subscription. Because Clearway gives you access to digital content straight away, you agree when subscribing that access starts immediately and that you lose that right once it has started, except where the law says otherwise. The free trial gives you time to decide before paying. If something has gone wrong, contact us and we will look at a refund.</p>
+    <h2>Airports and early access</h2><p>Your plan lets you open the number of airports it includes. Airports in development, offered through early access, are unfinished and may change or be withdrawn. We may update, improve or retire features; if we withdraw an airport you have chosen you can pick another.</p>
+    <h2>Fair use</h2><p>Do not share your account, copy or resell the simulator, try to get around access controls, or disrupt the service.</p>
+    <h2>Feedback</h2><p>Feedback and airport requests you send may be used to improve Clearway without payment to you.</p>
+    <h2>Liability</h2><p>Clearway is provided as it is. Nothing in these terms limits liability that cannot be limited by law. Otherwise our total liability to you is limited to what you paid us in the 12 months before the claim.</p>
+    <h2>Contact</h2><p data-cw="contact-line">Contact us through the feedback button on any page.</p>
+  </div>
+  <div style="height:72px"></div>
+</section>
+<section class="page cw-legal" id="page-privacy" data-page="privacy" hidden>
+  <div class="pagehead"><div class="wrap"><div class="eyebrow">Legal</div><h1>Privacy</h1><p>Last updated <span data-cw="legal-date"></span>.</p></div></div>
+  <div class="wrap cw-prose">
+    <h2>What we keep</h2><ul>
+      <li><b>Your account:</b> your email address, your plan, the airports you have chosen and when your trial and billing period end.</li>
+      <li><b>Payments:</b> handled by Stripe. We never see or store your card number; Stripe tells us your plan’s status.</li>
+      <li><b>Feedback and airport requests:</b> what you write, the page you were on, your browser type and, if you give it or are signed in, your email so we can reply. Anonymous senders are recorded only as a one-way hash, to prevent spam.</li>
+      <li><b>Your career logbook and settings</b> stay in your browser and are not sent to us.</li>
+    </ul>
+    <h2>Who processes it</h2><p>Supabase (accounts and database), Stripe (payments), Vercel (our server functions) and GitHub Pages (the website). Map tiles come from OpenStreetMap, and live traffic and weather from public aviation data feeds; those requests include your IP address, as any web request does.</p>
+    <h2>Cookies and analytics</h2><p>We do not use advertising or tracking cookies. Signing in stores a session token in your browser’s local storage. <span data-cw="analytics-line"></span></p>
+    <h2>Your rights</h2><p>You can ask for a copy of your data, or for your account and data to be deleted, at any time. Cancel any subscription first, then contact us. We keep payment records for as long as tax law requires.</p>
+    <h2>Contact</h2><p data-cw="contact-line">Contact us through the feedback button on any page.</p>
+  </div>
+  <div style="height:72px"></div>
+</section>
+
+<!-- feedback: the floating button on site pages, and the Feedback button on the console -->
+<button class="cw-fbbtn" id="cwFbBtn" type="button" aria-haspopup="dialog"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Feedback</button>
+<div class="cw-modal" id="cwFb" hidden role="dialog" aria-modal="true" aria-labelledby="cwFbH">
+  <form class="card cw-form" id="cwFbForm">
+    <div class="cw-row"><h2 id="cwFbH">Send feedback</h2><span class="grow"></span><button type="button" class="btn" data-close aria-label="Close">✕</button></div>
+    <div class="chips" id="cwFbKind" role="radiogroup" aria-label="Type"><button type="button" data-k="bug">Something’s wrong</button><button type="button" data-k="idea" class="on">Idea</button><button type="button" data-k="praise">I like it</button><button type="button" data-k="other">Other</button></div>
+    <div class="cw-stars" id="cwFbStars" role="radiogroup" aria-label="How is Clearway so far?"><span class="lbl">How is Clearway so far?</span></div>
+    <label>Your message<textarea id="cwFbMsg" rows="5" maxlength="4000" required placeholder="What happened, or what would make Clearway better?"></textarea></label>
+    <label id="cwFbEmailL">Email for a reply <span class="lbl">optional</span><input type="email" id="cwFbEmail" autocomplete="email"></label>
+    <div class="cw-row"><button class="btn primary">Send</button><span class="cw-msg" id="cwFbMsgOut"></span><span class="grow"></span><a href="#request" data-close>Request an airport instead</a></div>
+  </form>
+</div>

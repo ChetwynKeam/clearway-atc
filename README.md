@@ -10,6 +10,8 @@ Play it at the GitHub Pages address for this repository.
 `python3 build.py` assembles `src/` into `dist/index.html` (standalone) and `dist/gibraltar-atc.html`.
 Copy `dist/index.html` to `index.html` at the repository root to publish.
 
+Subscriptions, feedback and airport requests: see [SUBSCRIPTIONS.md](SUBSCRIPTIONS.md) (all switched off until set up).
+
 ## Notes
 
 - Spoken commands use the browser's speech recognition (Chrome, Edge or Safari) and need microphone permission.
