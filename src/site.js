@@ -670,7 +670,6 @@ function airportChrome(){
   $('exGroup').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<option value="${k}">Exercise ${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</option>`).join('');
   const others = LIVE_APS.filter(k => k !== APT.icao);
   $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b>${others.map(k => `<a href="${SITE[k]}#sim">Switch to ${ENDORSE[k].name}</a>`).join('')}`;
-  document.querySelectorAll('.apsw a').forEach(a => { const ic = a.dataset.ap; a.classList.toggle('on', ic === APT.icao); if (ic !== APT.icao) a.href = SITE[ic] + '#' + AP_ROUTE[ic]; });
   // links to another airport's pages go straight there
   document.querySelectorAll('a[href^="#"]').forEach(a => { const o = otherPage(a.getAttribute('href').slice(1)); if (o) a.href = o; });
 }

@@ -732,11 +732,6 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .fl-sub text { fill: var(--dim); font: 500 11.5px var(--font-body); }
 
 /* ── multi-airport: airport switch, Academy hub, career airport tags ── */
-.apsw { display: inline-flex; border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; background: var(--panel); }
-.apsw a { padding: 6px 10px; font-family: var(--font-data); font-size: 12.5px; color: var(--dim); text-decoration: none; }
-.apsw a + a { border-left: 1px solid var(--line-2); }
-.apsw a.on { background: var(--phos-soft, #e8efff); color: var(--phos, #1f5eff); font-weight: 600; }
-.apsw a:hover { color: var(--ink); }
 .badge.new { color: #fff; background: var(--phos, #1f5eff); border-color: transparent; }
 .badge.new::before { display: none; }
 .apline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
@@ -754,7 +749,6 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .toc #tocList .lbl { margin-top: 14px; }
 .toc #tocList .lbl:first-child { margin-top: 0; }
 .cr-ap { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--panel-2); color: var(--dim); vertical-align: 1px; }
-@media (max-width: 900px) { .topbar .apsw { display: none; } }
 
 </style>
 </head>
@@ -772,7 +766,6 @@ button.atis-letter:hover { background: var(--amber-soft); }
   </nav>
   <div class="status">
     <span class="live clk"><i></i><span id="topClock">--:--Z</span></span>
-    <div class="apsw" role="group" aria-label="Airport"><a href="#lxgb" data-ap="LXGB" title="Gibraltar">LXGB</a><a href="#lpma" data-ap="LPMA" title="Madeira">LPMA</a></div>
     <a class="btn primary" href="#sim">Launch</a>
   </div>
 </header>
@@ -5553,7 +5546,6 @@ function airportChrome(){
   $('exGroup').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<option value="${k}">Exercise ${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</option>`).join('');
   const others = LIVE_APS.filter(k => k !== APT.icao);
   $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b>${others.map(k => `<a href="${SITE[k]}#sim">Switch to ${ENDORSE[k].name}</a>`).join('')}`;
-  document.querySelectorAll('.apsw a').forEach(a => { const ic = a.dataset.ap; a.classList.toggle('on', ic === APT.icao); if (ic !== APT.icao) a.href = SITE[ic] + '#' + AP_ROUTE[ic]; });
   // links to another airport's pages go straight there
   document.querySelectorAll('a[href^="#"]').forEach(a => { const o = otherPage(a.getAttribute('href').slice(1)); if (o) a.href = o; });
 }
