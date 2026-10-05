@@ -36,7 +36,9 @@ const SB = () => env('SUPABASE_URL').replace(/\/$/, ''), SBK = () => env('SUPABA
 export const configured = () => !!(SB() && SBK());
 // PostgREST call with the service role (bypasses row level security; the tables have none open to the public)
 export async function db(path, { method = 'GET', body: b, prefer } = {}){
-  const res = await fetch(`${SB()}/rest/v1/${path}`, { method, headers: { apikey: SBK(), authorization: `Bearer ${SBK()}`, 'content-type': 'application/json',
+  // new-style secret keys (sb_secret_...) go in apikey only; legacy service_role JWTs also as the bearer token
+  const auth = SBK().startsWith('sb_') ? {} : { authorization: `Bearer ${SBK()}` };
+  const res = await fetch(`${SB()}/rest/v1/${path}`, { method, headers: { apikey: SBK(), ...auth, 'content-type': 'application/json',
     ...(prefer ? { prefer } : {}) }, body: b == null ? undefined : JSON.stringify(b) });
   const t = await res.text();
   if (!res.ok) throw new Error(`db ${res.status}: ${t.slice(0, 200)}`);

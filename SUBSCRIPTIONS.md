@@ -49,7 +49,7 @@ follow-up once there are paying players.
 4. Players sign in with the emailed link. Once a custom sender is connected (step 6), Authentication > Emails > Templates > Magic link or OTP can add `Your Clearway code is {{ .Token }}` so they can type a code instead.
 5. Authentication > URL Configuration: Site URL `https://www.clearway-atc.co.uk/`.
 6. Before launch: Authentication > Emails > SMTP Settings, connect a real sender. The built-in sender only allows a few emails an hour.
-7. Project Settings > API: copy the Project URL, the `anon` public key and the `service_role` secret key.
+7. Project Settings > API Keys: copy the publishable key (`sb_publishable_...`, goes in subs.json) and the secret key (`sb_secret_...`, Vercel only). The legacy `anon` and `service_role` keys also work. The Project URL is under Project Settings > Data API.
 
 ### 2. Stripe (test mode first)
 1. Create a Stripe account. Leave it in Test mode.
@@ -66,7 +66,7 @@ Vercel > clearway-atc > Settings > Environment Variables (Production), then rede
 
 ```
 SUPABASE_URL              https://xxxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY (service_role key; never put it in subs.json)
+SUPABASE_SERVICE_ROLE_KEY (the sb_secret_... key; never put it in subs.json)
 STRIPE_SECRET_KEY         sk_test_...
 STRIPE_WEBHOOK_SECRET     whsec_...
 PRICE_1 PRICE_3 PRICE_5 PRICE_10 PRICE_UNLIMITED PRICE_EARLY   price_...
