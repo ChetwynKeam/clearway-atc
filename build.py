@@ -29,6 +29,7 @@ const GEO = {r('geo.json').strip()};
 {r('far.js')}
 {r('live.js')}
 {r('voice.js')}
+{r('radio.js')}
 {r('site.js')}
 </script>
 '''

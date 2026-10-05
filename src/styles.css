@@ -579,3 +579,14 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 .emgline b { font-family: var(--font-data); letter-spacing: .04em; }
 .emgline button { margin-left: auto; }
 .warnline.bad { color: var(--alert); border-color: var(--alert); }
+
+/* radio realism */
+#log .blk .tx { color: var(--faint); font-style: italic; } #log .blk .who { color: var(--faint); }
+button.atis-letter { cursor: pointer; background: none; }
+button.atis-letter:hover { background: var(--amber-soft); }
+.atis-pop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(8,16,28,.45); }
+.atis-pop[hidden] { display: none; }
+.atis-card { position: relative; width: min(620px, 100%); max-height: 85vh; overflow: auto; background: var(--panel); color: var(--ink); border: 1px solid var(--line-2); border-radius: 12px; padding: 16px 18px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: grid; gap: 12px; }
+.atis-card .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.atis-card .pop-x { width: 30px; height: 30px; border: 0; background: none; color: var(--dim); font-size: 22px; cursor: pointer; border-radius: 4px; }
+.atis-body { font: 500 14px/1.6 var(--font-data); margin: 0; text-transform: uppercase; letter-spacing: .01em; }

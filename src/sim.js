@@ -357,10 +357,19 @@ function say(text, who){
   } catch(e) {}
 }
 function atc(ac, text){ const line = `${spoken(ac.cs)}, ${text}`; log('atc', line, ac.freq === 'TWR' ? 'TOWER' : 'RADAR'); say(line, 'atc'); }
-function pilot(ac, text){ const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300); }
+// Unprompted calls (not read-backs) now and then collide with another station and are blocked; the crew calls again.
+let inCmd = false, lastCallT = -99;
+function pilot(ac, text, again){
+  if (!inCmd && !again && S.running && !ac.emerg && (S.t - lastCallT < 3 ? Math.random() < 0.6 : Math.random() < 0.025)) {
+    log('blk', 'two stations transmitting at once, blocked', '· · ·'); if (typeof radioFx === 'function') radioFx('blocked');
+    (S.recalls ||= []).push({ at: S.t + rnd(8, 16), ac, text }); lastCallT = S.t; return;
+  }
+  if (!inCmd) lastCallT = S.t;
+  const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300);
+}
 function sys(text, bad){ log(bad ? 'bad' : 'sys', text); }
 // landline coordination with Sevilla / Casablanca (not on the frequency)
-function coord(text, who){ log('coord', text, who); say(text, who === 'GIBRALTAR' ? 'atc' : who); }
+function coord(text, who){ log('coord', text, who); say(text, 'tel:' + who); }
 function requestRelease(ac){
   const who = relUnit(ac), sid = sidName(ac.gate, S.rwy);
   ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
@@ -599,7 +608,10 @@ function findAc(token){
 }
 function windPhrase(){ const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3(w.dir)+' degrees'} ${w.spd} knots${w.gust ? ' gusting '+w.gust : ''}`; }
 const viaWords = v => v.length ? ' via ' + v.map(t => PHON[t] || t).join(', ') : '';
-function command(str){
+const SAY_AGAIN = ['say again', 'say again, you were broken', 'Gibraltar, readability two, say again', 'say again the last instruction'];
+const garbleable = (ac, toks) => ac.airborne && !ac.emerg && ac.mode !== 'FINAL' && ac.state !== 'PRE' && toks.length && toks.every(t => /^([HLRACDS]\d{1,5}|SN|DCT|APP|HOLD|09|27)$/.test(t) || WP[t]);
+function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
+function commandRun(str){
   const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
   if (!toks.length) return;
   let ac = findAc(toks[0]);
@@ -610,6 +622,7 @@ function command(str){
   const said = [], reads = [];
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
+  const snap = garbleable(ac, toks) && Math.random() < 0.05 ? { ...ac } : null;   // the crew misses it now and then
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]; let r;
     if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
@@ -761,7 +774,14 @@ function command(str){
     } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
-  if (said.length) { if (ac.emerg && !ac.emerg.ack) { const a = emgAck(ac); if (a) { said.unshift(a); reads.unshift('roger'); } } atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency') ac.need = null; emit('cmd', { ac, toks }); }
+  if (said.length && snap) {
+    atc(ac, said.join(', '));
+    for (const k of Object.keys(ac)) if (!(k in snap)) delete ac[k];
+    Object.assign(ac, snap); ac.lastCmd = toks.join(' ');
+    pilot(ac, SAY_AGAIN[Math.floor(Math.random()*SAY_AGAIN.length)]); ac.need = 'Say again';
+    renderSel(); renderStrips(true); return;
+  }
+  if (said.length) { if (ac.emerg && !ac.emerg.ack) { const a = emgAck(ac); if (a) { said.unshift(a); reads.unshift('roger'); } } atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency' || ac.need === 'Say again') ac.need = null; emit('cmd', { ac, toks }); }
   renderSel(); renderStrips(true);
 }
 function willIntercept(ac, F){
@@ -818,6 +838,7 @@ function step(dt){
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
 
   stepTows(); if (S.emg) stepEmerg(dt);
+  if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
