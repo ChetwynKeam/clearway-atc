@@ -582,6 +582,15 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 .relline.ok { color: var(--ok); } .relline.req { color: var(--warn); } .relline.exp { color: var(--alert); }
 .strip .rel { font-weight: 700; } .strip .rel.ok { color: var(--ok); } .strip .rel.req { color: var(--warn); } .strip .rel.exp { color: var(--alert); }
 
+/* emergencies */
+.app button.strip.emg { box-shadow: inset 0 0 0 2px var(--alert); }
+.app button.strip.emg .bar { background: var(--alert); animation: emgPulse 1s ease-in-out infinite; }
+@keyframes emgPulse { 50% { opacity: .35; } }
+.emgline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 2px; padding: 6px 8px; border-radius: 6px; background: color-mix(in srgb, var(--alert) 12%, transparent); color: var(--alert); font-size: 12.5px; }
+.emgline b { font-family: var(--font-data); letter-spacing: .04em; }
+.emgline button { margin-left: auto; }
+.warnline.bad { color: var(--alert); border-color: var(--alert); }
+
 </style>
 </head>
 <body>
@@ -868,6 +877,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
           <label><span class="lbl">Weather</span><select id="wxPreset"></select></label>
           <label><span class="lbl">Day</span><select id="daySel"></select></label>
           <label><span class="lbl">Start time</span><select id="hourSel"></select></label>
+          <label><span class="lbl">Emergencies</span><select id="emgSel"><option value="off">Off · routine flights only</option><option value="some" selected>Occasional · about every 20 minutes</option><option value="often">Frequent · about every 10 minutes</option></select></label>
         </div>
         <div class="slotlist" id="slotList" aria-live="polite"></div>
         <label style="display:block;margin-top:12px"><span class="lbl">Live METAR (optional, overrides the weather)</span>
@@ -973,16 +983,23 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
       </table></div>
       <p>Press <b>Taxi…</b> to open the route picker. It lists each holding point the aircraft can reach with up to three routings, such as Echo via Bravo or Echo via Alpha and Bravo, with their lengths. Hover over one to see it drawn on the map, then click to issue the clearance. The clearance names the taxiways. Aircraft give way to each other: one that stops behind another shows <b>GIVING WAY</b> in its label. Stop one yourself with <code>HP</code> (hold position) and release it with <code>RES</code> (continue taxi). Re-clear a taxiing aircraft to a different holding point with <code>TAXI A</code> and the rest.</p>
       <div class="callout warn"><div class="lbl">Hot spot HS1</div><p>Holding point Alpha sits right at the junction of A and B. An aircraft holding at A blocks traffic along B to and from the civil apron, so sequence the outbound and inbound flows before you clear anyone onto A.</p></div>
-      <h3>Line up and take-off</h3>
-      <p><code>LU</code> lines an aircraft up and backtracks it to the turning circle. <code>CTO</code> clears it for take-off. Issued at the holding point, CTO lines it up, backtracks, turns and rolls in one go. The departure instruction comes with the clearance:</p>
+      <h3>Departure routes and the release</h3>
+      <p>Every departure flies a named standard route, given with the start-up: <b>PIMOS 1A</b> or <b>1B</b> to the east, <b>LINTO 1A/1B</b> to the west and <b>TTN 1A/1B</b> to Morocco. The A routes are for runway 27 (left turn heading 200), the B routes for runway 09 (straight ahead to 1,500 ft, then right heading 160). Both turns keep departures clear of R164 to the north and the Rock to the south. Once clear of the Rock the aircraft routes on to UPMUP and PIMOS, ODLUK and LINTO, or TTN by itself, climbing to 4,000 ft.</p>
       <div class="rt">
-        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, after departure turn left heading 200, climb altitude 4,000 feet, runway 27, cleared for takeoff, wind 260 degrees 8 knots</span></div>
-        <div><span class="w">BAW493</span><span class="p">Left heading 200, 4,000 feet, cleared for takeoff runway 27, Speedbird four niner three</span></div>
+        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, cleared to London Heathrow via PIMOS one Alpha departure, climb altitude 4,000 feet, squawk 4610, start-up and push back approved, facing west, QNH 1018</span></div>
+        <div><span class="w">BAW493</span><span class="p">Cleared London Heathrow, PIMOS one Alpha, 4,000 feet, squawk 4610, start and push approved facing west, QNH 1018, Speedbird four niner three</span></div>
       </div>
-      <p>For runway 09 the clearance is to climb straight ahead to 1,500 ft, then turn right heading 160. Both turns keep departures clear of R164 to the north and the Rock to the south. The departure minimum is <b>1,000 m visibility</b> at the threshold.</p>
-      <div class="callout"><div class="lbl">Modelled, not published</div><p>The AIP does not publish these post-departure headings. They are the simulator's stand-in for the clearances Radar would give.</p></div>
+      <p>Gibraltar sits under Spanish airspace, so no departure goes without a <b>release</b> from the next unit: <b>Sevilla</b> for the east and west routes, <b>Casablanca</b> for TTN. Press <b>Request release</b> or type <code>REL</code> any time after start-up. The call goes down the landline (shown in pink in the log) and the unit calls back within a couple of minutes: usually “released, valid until” a time ten minutes away, sometimes “not before” a time a few minutes ahead. The strip shows <b>REL…</b> while you wait and <b>REL</b> once released. <code>CTO</code> is refused without a valid release. If the window runs out before take-off, ask again.</p>
+      <div class="callout"><div class="lbl">Modelled, not published</div><p>The AIP publishes no SIDs for Gibraltar. These route names and headings are the simulator's stand-in for the departure clearances Gibraltar and Sevilla agree.</p></div>
+      <h3>Line up and take-off</h3>
+      <p><code>LU</code> lines an aircraft up and backtracks it to the turning circle. <code>CTO</code> clears it for take-off. Issued at the holding point, CTO lines it up, backtracks, turns and rolls in one go. The departure route is confirmed with the clearance:</p>
+      <div class="rt">
+        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, PIMOS one Alpha departure, runway 27, cleared for takeoff, wind 260 degrees 8 knots</span></div>
+        <div><span class="w">BAW493</span><span class="p">PIMOS one Alpha, cleared for takeoff runway 27, Speedbird four niner three</span></div>
+      </div>
+      <p>If the runway changed since start-up, Tower gives the amended route. The departure minimum is <b>1,000 m visibility</b> at the threshold.</p>
       <h3>After take-off</h3>
-      <p>Above 1,000 ft the crew wants Radar: press <b>To Radar</b> (<code>HO</code>). Once clear of the Rock it asks for its exit fix: <b>UPMUP</b> then PIMOS for the east, <b>ODLUK</b> then LINTO for the west, or <b>TTN</b> for Morocco. Approve it with <code>DCT UPMUP A80</code>. Beyond about 22 NM it is ready for Sevilla or Casablanca, so transfer it with <code>HO</code>. One that leaves your airspace without a transfer costs points.</p>
+      <p>Above 1,000 ft the crew wants Radar: press <b>To Radar 122.8</b> (<code>HO</code>). On its route it turns towards its exit fix by itself and asks for further climb near 4,000 ft: give it <code>A80</code>. Vector it with a heading and it leaves the route, then asks for its exit fix when clear of the Rock (<code>DCT UPMUP A80</code>). Beyond about 22 NM it is ready for <b>Sevilla Control 132.6</b> or <b>Casablanca Control 125.5</b>. Transfer it with <code>HO</code>, or name the frequency yourself with <code>HO 132.6</code>. Give the wrong one and the crew finds nobody there and comes back to you a little later, which costs points. One that leaves your airspace without a transfer costs more.</p>
     </section>
 
     <section id="t-road"><h2><span class="n">05</span>Winston Churchill Avenue</h2>
@@ -1067,14 +1084,15 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
         <tr><td class="mono">DCT fix</td><td>Proceed direct to a fix</td><td class="mono">DCT UPMUP</td></tr>
         <tr><td class="mono">HOLD [fix]</td><td>Hold at a fix, or at present position</td><td class="mono">HOLD UPMUP</td></tr>
         <tr><td class="mono">APP 27 / APP 09</td><td>Clear the surveillance radar approach</td><td class="mono">APP 27</td></tr>
-        <tr><td class="mono">HO</td><td>Transfer: Radar ↔ Tower, then Sevilla or Casablanca</td><td class="mono">HO</td></tr>
+        <tr><td class="mono">HO [freq]</td><td>Transfer: Radar ↔ Tower, then Sevilla 132.6 or Casablanca 125.5. A wrong frequency sends the crew away and back</td><td class="mono">HO 132.6</td></tr>
         <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
         <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
-        <tr><td class="mono">PUSH [E|W]</td><td>Start-up and push back approved, facing east or west</td><td class="mono">BAW493 PUSH E</td></tr>
+        <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west</td><td class="mono">BAW493 PUSH E</td></tr>
         <tr><td class="mono">TAXI [A|C|D|E] [VIA …]</td><td>Taxi to a holding point, by the shortest route or the one you name. <b>Taxi…</b> on the selected flight opens the route picker</td><td class="mono">TAXI E VIA A B</td></tr>
         <tr><td class="mono">HP / RES</td><td>Hold position / continue taxi</td><td class="mono">HP</td></tr>
         <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
-        <tr><td class="mono">CTO</td><td>Cleared for take-off, with the departure instruction</td><td class="mono">CTO</td></tr>
+        <tr><td class="mono">REL</td><td>Request the departure release from Sevilla or Casablanca on the landline</td><td class="mono">REL</td></tr>
+        <tr><td class="mono">CTO</td><td>Cleared for take-off on the departure route. Needs a valid release</td><td class="mono">CTO</td></tr>
         <tr><td class="mono">VAC [A|C|D|E]</td><td>Vacate (backtrack if needed) and taxi to stand</td><td class="mono">VAC</td></tr>
         <tr><td class="mono">IDENT</td><td>Squawk ident</td><td class="mono">IDENT</td></tr>
       </table></div>
@@ -1099,7 +1117,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     <section id="t-exercises"><h2><span class="n">11</span>Guided exercises</h2>
       <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. The card tells you what the crew wants, which button or command does it, and moves on when you have done it.</p>
       <div class="exgrid">
-        <div class="ex"><div class="nm">1 · First departure</div><p>One A320neo on stand 3, fair weather, runway 27. Push, taxi via Bravo to Echo, close the road, backtrack and take off, then route it out to Sevilla.</p><button class="btn primary" data-ex="dep">Start exercise</button></div>
+        <div class="ex"><div class="nm">1 · First departure</div><p>One A320neo on stand 3, fair weather, runway 27. Push with its PIMOS 1A route, taxi via Bravo to Echo, get Sevilla's release, close the road, backtrack and take off, then hand it to Sevilla on 132.6.</p><button class="btn primary" data-ex="dep">Start exercise</button></div>
         <div class="ex"><div class="nm">2 · First arrival</div><p>One arrival from the east. Descend it, clear the SRA for runway 27, close the road in time, land it, and backtrack it to Alpha and the stand.</p><button class="btn primary" data-ex="arr">Start exercise</button></div>
         <div class="ex"><div class="nm">3 · Levanter, runway 09</div><p>An easterly gale. The arrival joins via RIPRA and Point X-Ray in the lee of the Rock while an ATR departs from the south apron via Charlie.</p><button class="btn primary" data-ex="lev">Start exercise</button></div>
       </div>
@@ -1788,12 +1806,13 @@ function command(str){
       reads.push(`hold ${ac.hold.name}`);
     } else if (t === 'CTL') {
       if (ac.kind !== 'ARR' || !air) { sys(`${ac.cs} is not on approach.`); continue; }
+      { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): you can't clear ${ac.cs} to land. Hold it or send it around.`, true); continue; } }
       const rw = ac.app || S.rwy; ac.ctl = true; ac.need = null; ac.freq = 'TWR';
       said.push(`runway ${rw}, cleared to land, ${windPhrase()}`); reads.push(`cleared to land runway ${rw}`);
       if (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') sys('Winston Churchill Avenue is still open.');
     } else if (t === 'GA' && air) {
       if (ac.kind !== 'ARR') { sys(`${ac.cs} is a departure.`); continue; }
-      goAround(ac, null); said.push('go around, I say again go around, climb altitude 4,000 feet'); reads.push('going around, climbing 4,000 feet');
+      emgOnGA(ac); goAround(ac, null); said.push('go around, I say again go around, climb altitude 4,000 feet'); reads.push('going around, climbing 4,000 feet');
     } else if (t === 'HO' || t === 'CONT') {
       if (!air) { sys(`${ac.cs} is on the ground and stays with Tower.`); continue; }
       const unit = ac.kind === 'DEP' ? (ac.freq === 'TWR' ? ['Gibraltar Radar','122.8'] : NEXT_UNIT[ac.gate]) : ['Gibraltar Tower','131.2'];
@@ -1856,6 +1875,7 @@ function command(str){
       if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state)) { sys(`${ac.cs} is not ready for takeoff.`); continue; }
       if (S.wx.vis < 1000) { atc(ac, `runway ${S.rwy}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${S.rwy}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
+      { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
       { const R = ac.rel, who = relUnit(ac);
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
@@ -1871,6 +1891,10 @@ function command(str){
       setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); turnRound(ac); });
       const stp = ac.stand ? `stand ${ac.stand.id}` : 'as directed';
       said.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}, taxi ${stp}${viaWords(ac.taxiVia || [])}`); reads.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate ${PHON[ac.exit]}, ${stp}`);
+    } else if (t === 'ROG') {
+      const a = emgAck(ac); if (!a) { sys(`${ac.cs} has not declared an emergency.`); continue; } said.push(a); reads.push('roger');
+    } else if (t === 'WS') {
+      const a = emgWS(ac); if (!a) { sys('No windshear has been reported.'); continue; } said.push(a); reads.push('copied the windshear');
     } else if (t === 'REL') {
       if (ac.kind !== 'DEP' || air) { sys(`${ac.cs} doesn't need a departure release.`); continue; }
       if (ac.rel && ac.rel.st === 'REQ') { sys(`Release for ${ac.cs} already requested: ${relUnit(ac)} will call back.`); continue; }
@@ -1879,7 +1903,7 @@ function command(str){
     } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
-  if (said.length) { atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency') ac.need = null; emit('cmd', { ac, toks }); }
+  if (said.length) { if (ac.emerg && !ac.emerg.ack) { const a = emgAck(ac); if (a) { said.unshift(a); reads.unshift('roger'); } } atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency') ac.need = null; emit('cmd', { ac, toks }); }
   renderSel(); renderStrips(true);
 }
 function willIntercept(ac, F){
@@ -1935,7 +1959,7 @@ function step(dt){
   if (X.st === 'OPENING' && S.t >= X.t) { X.st = 'OPEN'; renderAtis(); emit('xing', 'OPEN'); }
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
 
-  stepTows();
+  stepTows(); if (S.emg) stepEmerg(dt);
   for (const ac of S.acs) {
     if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
@@ -2085,9 +2109,11 @@ function stepAir(ac, dt){
       if (rw === '27' && w.dir >= 200 && w.dir <= 250 && w.spd >= 25 && Math.random() < 0.25) return goAround(ac, 'waterspout on the approach');
       if (w.cb) p = Math.max(p, 0.15);
       const lim = windLimit(ac, rw); if (lim) return goAround(ac, lim);
-      if (Math.random() < p) return goAround(ac, rw === '09' ? 'severe turbulence and windshear in the lee of the Rock' : 'windshear');
+      if (ac.wsTold) p *= 0.6;   // briefed crews add speed and are ready for it
+      if (Math.random() < p) { if (S.emg && (!S.emg.ws || S.t - S.emg.ws.t > 300)) shearReport(ac, rw); return goAround(ac, rw === '09' ? 'severe turbulence and windshear in the lee of the Rock' : 'windshear'); }
     }
     if (fin.togo < 0.9 && !ac.ctl && !ac.warnedCtl) { ac.warnedCtl = true; pilot(ac, `short final runway ${rw}, request landing clearance`); ac.need = 'Short final, no clearance'; }
+    { const blk = rwyBlocked(); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && S.acs.some(o => o !== ac && o.onRwy)) return goAround(ac, 'runway occupied');
     if (fin.togo < 0.4 && S.xing.st !== 'CLOSED') { S.score.incidents++; S.score.pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
@@ -2239,6 +2265,7 @@ function draw(){
   if (S.preview) drawPreview(S.preview);
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
+  if (typeof drawRwyBlock === 'function') drawRwyBlock();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
   if (img) drawImageryCredit();
@@ -2522,7 +2549,7 @@ function drawAc(ac){
   const sc = V.scale, X = sx(ac.x), Y = sy(ac.y);
   if (X < -200 || Y < -200 || X > W+200 || Y > H+200) return;
   const sel = S.sel === ac, conf = S.conflictSet.has(ac.cs);
-  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : conf ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
+  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : conf || (ac.emerg && !ac.emerg.done) ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
   cx.fillStyle = col; cx.globalAlpha = 0.45;
   if (!ac.ground && sc < 400) for (const [hx,hy] of ac.hist) cx.fillRect(sx(hx)-1, sy(hy)-1, 2, 2);
   cx.globalAlpha = 1;
@@ -2543,7 +2570,7 @@ function drawAc(ac){
   const lx = X + 16, ly = Y - 26;
   cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+8, Y-8); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
   cx.font = `500 11.5px ${FONT_D}`;
-  const l1 = ac.cs + (ac.need ? ' ◆' : '');
+  const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need ? ' ◆' : '');
   let l2, l3 = '';
   if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN'; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
   else {
@@ -2582,6 +2609,8 @@ function renderAtis(){
       <div class="tile"><div class="lbl">SRA mins</div><div class="v ${sraMinsOk(w)?'ok':'bad'}">${sraMinsOk(w)?'OK':'BELOW'}</div></div>
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
+    ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${S.rwy} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
+    ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the Special Procedures limit. Expect windshear on final.</div>` : ''}
     <div class="xing st-${X.st}">
       <div class="xing-l"><div class="lbl">Winston Churchill Avenue</div>
@@ -2620,7 +2649,8 @@ function renderSel(){
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → LXGB` : `LXGB → ${ac.d}`;
   let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span><span class="grow"></span><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? 'Tower 131.2' : 'Radar 122.8'}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
-  if (ac.need) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
+  if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
+  if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${relCls(ac)}">${relText(ac)}</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-GBR[0], ac.y-GBR[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls Gibraltar Radar at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
@@ -2629,6 +2659,7 @@ function renderSel(){
     ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
     <div class="ctl"><label><span class="lbl">Heading</span><input id="iH" placeholder="270" inputmode="numeric"></label><label><span class="lbl">Altitude ×100</span><input id="iA" placeholder="40" inputmode="numeric"></label><label><span class="lbl">Speed</span><input id="iS" placeholder="180" inputmode="numeric"></label></div><div class="btns">`;
     if (ac.diverting) html += b(`DCT ${ac.diverting} A80`, 'Approve diversion', true, 'go');
+    if (ac.kind === 'ARR' && S.emg && S.emg.ws && !ac.wsTold) html += b('WS', 'Pass windshear', true, 'go');
     if (ac.kind === 'ARR') html += b('APP 27','SRA 27', true, S.rwy==='27'?'on':'') + b('APP 09','SRA 09', true, S.rwy==='09'?'on':'') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
     else html += b('HO', ac.freq === 'TWR' ? 'To Radar 122.8' : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A80','Climb FL80');
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).map(k => `<option>${k}</option>`).join('')}</select></div>`;
@@ -2737,7 +2768,7 @@ function renderStrips(force){
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
   for (const ac of list) {
-    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}`;
+    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}`;
     d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
     d.querySelector('.cs').textContent = ac.cs;
     d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
@@ -2853,7 +2884,7 @@ daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListen
 renderSlots();
 function resetSession(){
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
-  S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+  S.emg = null; S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
@@ -2878,6 +2909,8 @@ function start(){
     else if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys('Wind exceeds the Special Procedures turbulence limit: expect windshear on final and go-arounds.');
     if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft): arrivals will not be able to land.');
+    emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
+    if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');
     emit('start', mode);
   } else { nextAtis(); sys(`Weather updated: ${S.wx.raw}. Information ${phonetic(S.atis)}.`); if (newRwy !== S.rwy) sys(`Wind now favours runway ${newRwy}.`); }
@@ -2915,6 +2948,180 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 window.__S = S; window.__cmd = command; window.__step = step; window.__start = start;
+
+// ═════════════════════════ emergencies and things going wrong ═════════════════════════
+// A scheduler picks an event that fits the traffic on frequency: a MAYDAY, a medical PAN, a medical diversion from an
+// overflight, a bird strike, debris or an inspection closing the runway, a pedestrian jumping the barrier on the
+// avenue, or a windshear report in the levanter. The first transmission to an emergency acknowledges it.
+const EMG_RATE = { off: 0, some: 22*60, often: 9*60 };
+const DIVERTS = [
+  { cs: 'TOM5HM', t: 'B738', o: 'EGBB', gate: 'E', to: 'Marrakech' },
+  { cs: 'EZY35KM', t: 'A20N', o: 'EGKK', gate: 'E', to: 'Marrakech' },
+  { cs: 'EXS4LW', t: 'B738', o: 'EGCC', gate: 'W', to: 'Tenerife' },
+  { cs: 'RAM970', t: 'B738', o: 'GMMN', gate: 'S', to: 'Paris' }
+];
+const MAYDAYS = ['engine failure', 'engine fire, fire is out', 'smoke in the cabin', 'hydraulic failure'];
+const MEDICAL = ['a passenger with suspected heart attack', 'a passenger having a stroke', 'a passenger unconscious, not responding', 'a crew member taken seriously ill'];
+const pob = ac => ac.perf.wake === 'L' ? Math.round(rnd(3, 9)) : ac.t === 'AT76' ? Math.round(rnd(40, 68)) : Math.round(rnd(120, 186));
+function emgInit(level){
+  S.emg = { level, rate: EMG_RATE[level] || 0, next: S.t + rnd(7, 13)*60, rwyBlock: null, incursion: null, ws: null, inspectAfter: null, handled: 0 };
+}
+const rwyBlocked = () => S.emg && (S.emg.rwyBlock ? S.emg.rwyBlock.why : S.emg.incursion ? 'a pedestrian on the runway at the crossing' : null);
+const onFinalNear = (ac, nm) => ac.airborne && ac.kind === 'ARR' && ac.mode === 'FINAL' && ac.app && ac.state !== 'MISSED' && finalDist(ac) < nm;
+function finalDist(ac){ const F = FINAL[ac.app]; return F ? onFinal(ac, F).togo : 99; }
+
+function declare(ac, k, why, extra){
+  ac.emerg = { k, why, t: S.t, ack: false };
+  ac.sqkWas = ac.sqk; ac.sqk = k === 'MAYDAY' ? '7700' : ac.sqk;
+  const three = k === 'MAYDAY' ? 'MAYDAY MAYDAY MAYDAY' : 'PAN PAN, PAN PAN, PAN PAN';
+  pilot(ac, `${three}, ${ac.unit()}, ${spoken(ac.cs)}, ${why}, ${extra}, ${pob(ac)} persons on board`);
+  ac.need = `${k}: ${why.split(',')[0]}`;
+  sys(`${k === 'MAYDAY' ? 'Distress' : 'Urgency'}: ${ac.cs} ${why}. Acknowledge it, give it priority and a straight-in approach. Emergency services are alerted.`, true);
+  emit('emergency', ac);
+  if (S.sel !== ac) select(ac);
+}
+// a departure in trouble becomes an arrival back to Gibraltar
+function makeReturn(ac){
+  Object.assign(ac, { kind: 'ARR', o: 'LXGB', d: undefined, state: 'VECTORS', route: [], app: null, ctl: false, onSid: false, handed: false, turn: null, stand: null,
+    checked: false, shearChecked: false, warnedCtl: false, warned15: false, warned10: false, askedApp: true, cto: false });
+  if (ac.mode === 'NAV') { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
+  ac.tgtAlt = ac.cleared = Math.min(ac.tgtAlt || 4000, 4000);
+  S.score.pts += 0;
+}
+function block(why, mins){
+  const E = S.emg; E.rwyBlock = { why, until: S.t + mins*60 };
+  sys(`Runway ${S.rwy} CLOSED: ${why}. About ${Math.round(mins)} minutes. Send arrivals around or hold them, and hold departures.`, true);
+  for (const a of S.acs) if (a.ctl && a.airborne && a.mode === 'FINAL') sys(`${a.cs} is cleared to land on a closed runway: send it around.`, true);
+  nextAtis(); renderAtis(); emit('rwyblock', why);
+}
+
+const EVENTS = {
+  mayday(){
+    const c = S.acs.filter(a => a.airborne && !a.emerg && a.state !== 'PRE' && !a.handed && a.state !== 'MISSED' && a.state !== 'DIVERTING' &&
+      ((a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state) && Math.hypot(a.x - GBR[0], a.y - GBR[1]) > 10) || (a.kind === 'DEP' && a.state === 'CLIMB' && a.alt > 2500)));
+    if (!c.length) return false;
+    const ac = c[Math.floor(Math.random()*c.length)], why = MAYDAYS[Math.floor(Math.random()*MAYDAYS.length)];
+    const ret = ac.kind === 'DEP'; if (ret) makeReturn(ac);
+    if (/engine/.test(why)) ac.tgtSpd = Math.min(ac.tgtSpd || 999, ac.perf.vapp + 40);
+    declare(ac, 'MAYDAY', why, `${altShort(Math.round(ac.alt/100)*100)}, request ${ret ? 'immediate return, ' : ''}priority landing runway ${S.rwy}`);
+    return true;
+  },
+  medical(){
+    const c = S.acs.filter(a => a.airborne && !a.emerg && a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state));
+    if (!c.length) return false;
+    const ac = c[Math.floor(Math.random()*c.length)];
+    declare(ac, 'PAN', `medical emergency, ${MEDICAL[Math.floor(Math.random()*MEDICAL.length)]}`, 'request priority and an ambulance on arrival');
+    return true;
+  },
+  divert(){
+    if (S.acs.filter(a => a.airborne && a.kind === 'ARR').length > 5) return false;
+    const opts = DIVERTS.filter(d => !S.acs.some(a => a.cs === d.cs)); if (!opts.length) return false;
+    const d = opts[Math.floor(Math.random()*opts.length)];
+    const ac = spawnArrival({ cs: d.cs, t: d.t, k: 'ARR', o: d.o, gate: d.gate, m: S.t/60, diverted: true });
+    ac.need = null;
+    declare(ac, 'PAN', `medical diversion, ${MEDICAL[Math.floor(Math.random()*MEDICAL.length)]}, we were en route to ${d.to}`, 'request diversion to Gibraltar and an ambulance on arrival');
+    return true;
+  },
+  bird(){
+    const dep = S.acs.filter(a => a.kind === 'DEP' && a.airborne && !a.emerg && a.alt < 2500 && a.alt > 400);
+    if (dep.length) {
+      const ac = dep[0]; makeReturn(ac); ac.tgtSpd = ac.perf.vapp + 40;
+      declare(ac, 'PAN', 'bird strike on departure, vibration on number two engine', `${altShort(Math.round(ac.alt/100)*100)}, request return runway ${S.rwy}`);
+      S.emg.inspectAfter = 'bird'; block('runway inspection after a bird strike on departure', rnd(3, 5));
+      return true;
+    }
+    const arr = S.acs.find(a => a.kind === 'ARR' && (a.state === 'ROLLED' || a.state === 'ROLLOUT'));
+    if (arr) { pilot(arr, `be advised, we had a bird strike on short final, birds over the runway`); block('bird strike reported on short final, runway inspection and bird scaring', rnd(3, 5)); return true; }
+    return false;
+  },
+  fod(){
+    if (S.emg.rwyBlock || S.acs.some(a => a.onRwy || onFinalNear(a, 2))) return false;
+    const what = ['debris (FOD) found on the runway near the crossing', 'a tyre fragment found on the runway', 'a fuel spill on the runway from a vehicle at the crossing'][Math.floor(Math.random()*3)];
+    block(what, rnd(4, 7)); return true;
+  },
+  incursion(){
+    if (S.xing.st !== 'CLOSED' || S.emg.incursion) return false;
+    const ac = S.acs.find(a => onFinalNear(a, 4) && finalDist(a) > 1.2); if (!ac) return false;
+    S.emg.incursion = { until: S.t + rnd(70, 110), ac: ac.cs, gaBy: null };
+    sys(`RUNWAY INCURSION: a pedestrian has climbed the barrier at Winston Churchill Avenue and is on the runway. ${ac.cs} is on ${finalDist(ac).toFixed(1)} NM final: send it around (GA).`, true);
+    emit('incursion', ac); if (S.sel !== ac) select(ac);
+    return true;
+  },
+  windshear(){
+    const w = S.wx, lev = w.dir >= 40 && w.dir <= 140 && w.spd >= 15;
+    if (!lev && (w.gust || 0) < 25) return false;
+    const ac = S.acs.find(a => onFinalNear(a, 4)) || S.acs.find(a => a.kind === 'ARR' && (a.state === 'ROLLED' || a.state === 'ROLLOUT'));
+    if (!ac) return false;
+    shearReport(ac, ac.app || S.rwy); return true;
+  }
+};
+const loss = () => Math.round(rnd(3, 5))*5;
+function shearReport(ac, rw){
+  const kt = loss(), ft = Math.round(rnd(3, 8))*100;
+  S.emg.ws = { t: S.t, rw, by: `${ac.t}`, cs: ac.cs, text: `loss of ${kt} knots at ${ft} feet` };
+  pilot(ac, `be advised, windshear on final runway ${rw}, ${S.emg.ws.text}`);
+  sys(`Windshear report from ${ac.cs}: pass it to arrivals on approach with WS. It is now on the ATIS.`, true);
+  for (const a of S.acs) a.wsTold = false;
+  nextAtis(); renderAtis();
+}
+function stepEmerg(dt){
+  const E = S.emg; if (!E) return;
+  if (E.rwyBlock && S.t >= E.rwyBlock.until) { E.rwyBlock = null; sys(`Runway ${S.rwy} inspection complete: the runway is open again.`); nextAtis(); renderAtis(); emit('rwyopen'); }
+  if (E.incursion && S.t >= E.incursion.until) { E.incursion = null; sys('The pedestrian has been escorted off the runway by the police: the crossing is clear.'); }
+  if (E.ws && S.t - E.ws.t > 25*60) { E.ws = null; nextAtis(); renderAtis(); }
+  if (E.inspectAfter && E.inspectAfter.cs && !E.inspectAfter.onRwy && !E.inspectAfter.airborne) { E.inspectAfter = null; block('runway inspection after the emergency landing', rnd(2.5, 4)); }
+  for (const ac of S.acs) if (ac.emerg && !ac.emerg.ack && !ac.emerg.late && S.t - ac.emerg.t > 60) { ac.emerg.late = true; S.score.pts -= 10; sys(`${ac.cs}'s ${ac.emerg.k} has not been acknowledged.`, true); }
+  if (E.rate && S.t >= E.next && S.running) {
+    E.next = S.t + E.rate*rnd(0.7, 1.3);
+    const w = S.wx, windy = (w.dir >= 40 && w.dir <= 140 && w.spd >= 15) || (w.gust || 0) >= 25;
+    const bag = ['mayday','medical','medical','divert','bird','bird','fod','incursion','incursion', ...(windy ? ['windshear','windshear','windshear'] : [])];
+    for (let n = 0; n < 6; n++) { const k = bag.splice(Math.floor(Math.random()*bag.length), 1)[0]; if (k && EVENTS[k]()) break; }
+  }
+}
+// hooks called from the command parser and the approach logic
+function emgAck(ac){
+  if (!ac.emerg || ac.emerg.ack) return null;
+  ac.emerg.ack = true; if (!ac.emerg.late) S.score.pts += 10;
+  if (ac.need && /^(MAYDAY|PAN)/.test(ac.need)) ac.need = null;
+  return `roger ${ac.emerg.k}, ${ac.emerg.k === 'MAYDAY' ? 'you are number one, ' : ''}runway ${S.rwy}, emergency services are standing by`;
+}
+function emgOnGA(ac){
+  const I = S.emg && S.emg.incursion;
+  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; S.score.pts += 20; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
+}
+function emgBlockedFinal(ac, why){   // an arrival reaching short final with the runway closed goes around by itself
+  const I = S.emg.incursion;
+  if (I && I.ac === ac.cs) { I.gaBy = 'crew'; S.score.pts -= 25; sys(`${ac.cs}'s crew saw the pedestrian on the runway and went around on their own.`, true); }
+  else if (ac.ctl) { S.score.pts -= 30; S.score.incidents++; sys(`${ac.cs} was still cleared to land on a closed runway and went around at short final.`, true); }
+  return goAround(ac, I ? 'person on the runway' : 'runway closed');
+}
+function emgWS(ac){
+  const W = S.emg && S.emg.ws;
+  if (!W) return null;
+  if (!ac.wsTold) { ac.wsTold = true; S.score.pts += 5; }
+  const ago = Math.max(1, Math.round((S.t - W.t)/60));
+  return `windshear reported on final runway ${W.rw} by ${W.cs === ac.cs ? 'you' : 'a ' + (TYPES[W.by] ? TYPES[W.by].name : W.by)} ${ago} minute${ago === 1 ? '' : 's'} ago, ${W.text}`;
+}
+S.listeners.push((ev, ac) => {
+  if (ev === 'landed' && ac && ac.emerg) {
+    S.score.pts += 40; S.emg.handled++;
+    sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'Fire service following it in.' : 'Ambulance meeting it on stand.'}`);
+    if (ac.emerg.k === 'MAYDAY' || S.emg.inspectAfter === 'bird') S.emg.inspectAfter = ac;
+    ac.emerg.done = true;
+  }
+});
+// draw: closed runway crosses, a figure on the crossing during an incursion
+function drawRwyBlock(){
+  const E = S.emg; if (!E || (!E.rwyBlock && !E.incursion)) return;
+  const pulse = 0.55 + 0.45*Math.sin(performance.now()/220);
+  cx.save(); cx.strokeStyle = C.conf; cx.lineWidth = 3; cx.globalAlpha = pulse;
+  if (E.rwyBlock) for (const m of [RWY_M*0.18, RWY_M*0.5, RWY_M*0.82]) {
+    const a = rm(m - 30, -14), b = rm(m + 30, 14), c2 = rm(m - 30, 14), d = rm(m + 30, -14);
+    cx.beginPath(); cx.moveTo(sx(a[0]), sy(a[1])); cx.lineTo(sx(b[0]), sy(b[1])); cx.moveTo(sx(c2[0]), sy(c2[1])); cx.lineTo(sx(d[0]), sy(d[1])); cx.stroke();
+  }
+  if (E.incursion) { const p = rm(xingM(4), 4); cx.fillStyle = C.conf; cx.beginPath(); cx.arc(sx(p[0]), sy(p[1]), 6, 0, 7); cx.fill(); }
+  cx.restore();
+}
 
 // ═════════════════════════ ground detail: surfaces, textures, town, stands ═════════════════════════
 // Drawn in the tower and ground views (scale > 70 px/NM). Airfield geometry follows chart D1/E1 (runway, taxiways,
@@ -3697,6 +3904,8 @@ function phraseToCmd(raw){
   else if (/ (contact|monitor) /.test(s)) out.push('HO');
   if (/ (request|requesting) release /.test(s) || / release /.test(s) && !/ released /.test(s)) out.push('REL');
   if (/ (squawk )?ident /.test(s)) out.push('IDENT');
+  if (/ roger (mayday|pan)/.test(s)) out.push('ROG');
+  if (/ windshear /.test(s)) out.push('WS');
   return { ac, cmd: out.join(' ') };
 }
 

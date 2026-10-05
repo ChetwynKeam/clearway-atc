@@ -68,6 +68,7 @@ function draw(){
   if (S.preview) drawPreview(S.preview);
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
+  if (typeof drawRwyBlock === 'function') drawRwyBlock();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
   if (img) drawImageryCredit();
@@ -351,7 +352,7 @@ function drawAc(ac){
   const sc = V.scale, X = sx(ac.x), Y = sy(ac.y);
   if (X < -200 || Y < -200 || X > W+200 || Y > H+200) return;
   const sel = S.sel === ac, conf = S.conflictSet.has(ac.cs);
-  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : conf ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
+  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : conf || (ac.emerg && !ac.emerg.done) ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
   cx.fillStyle = col; cx.globalAlpha = 0.45;
   if (!ac.ground && sc < 400) for (const [hx,hy] of ac.hist) cx.fillRect(sx(hx)-1, sy(hy)-1, 2, 2);
   cx.globalAlpha = 1;
@@ -372,7 +373,7 @@ function drawAc(ac){
   const lx = X + 16, ly = Y - 26;
   cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+8, Y-8); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
   cx.font = `500 11.5px ${FONT_D}`;
-  const l1 = ac.cs + (ac.need ? ' ◆' : '');
+  const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need ? ' ◆' : '');
   let l2, l3 = '';
   if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN'; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
   else {
@@ -411,6 +412,8 @@ function renderAtis(){
       <div class="tile"><div class="lbl">SRA mins</div><div class="v ${sraMinsOk(w)?'ok':'bad'}">${sraMinsOk(w)?'OK':'BELOW'}</div></div>
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
+    ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${S.rwy} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
+    ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the Special Procedures limit. Expect windshear on final.</div>` : ''}
     <div class="xing st-${X.st}">
       <div class="xing-l"><div class="lbl">Winston Churchill Avenue</div>
@@ -449,7 +452,8 @@ function renderSel(){
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → LXGB` : `LXGB → ${ac.d}`;
   let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span><span class="grow"></span><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? 'Tower 131.2' : 'Radar 122.8'}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
-  if (ac.need) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
+  if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
+  if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${relCls(ac)}">${relText(ac)}</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-GBR[0], ac.y-GBR[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls Gibraltar Radar at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
@@ -458,6 +462,7 @@ function renderSel(){
     ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
     <div class="ctl"><label><span class="lbl">Heading</span><input id="iH" placeholder="270" inputmode="numeric"></label><label><span class="lbl">Altitude ×100</span><input id="iA" placeholder="40" inputmode="numeric"></label><label><span class="lbl">Speed</span><input id="iS" placeholder="180" inputmode="numeric"></label></div><div class="btns">`;
     if (ac.diverting) html += b(`DCT ${ac.diverting} A80`, 'Approve diversion', true, 'go');
+    if (ac.kind === 'ARR' && S.emg && S.emg.ws && !ac.wsTold) html += b('WS', 'Pass windshear', true, 'go');
     if (ac.kind === 'ARR') html += b('APP 27','SRA 27', true, S.rwy==='27'?'on':'') + b('APP 09','SRA 09', true, S.rwy==='09'?'on':'') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
     else html += b('HO', ac.freq === 'TWR' ? 'To Radar 122.8' : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A80','Climb FL80');
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).map(k => `<option>${k}</option>`).join('')}</select></div>`;
@@ -566,7 +571,7 @@ function renderStrips(force){
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
   for (const ac of list) {
-    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}`;
+    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}`;
     d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
     d.querySelector('.cs').textContent = ac.cs;
     d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
@@ -682,7 +687,7 @@ daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListen
 renderSlots();
 function resetSession(){
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
-  S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+  S.emg = null; S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
@@ -707,6 +712,8 @@ function start(){
     else if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys('Wind exceeds the Special Procedures turbulence limit: expect windshear on final and go-arounds.');
     if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft): arrivals will not be able to land.');
+    emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
+    if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');
     emit('start', mode);
   } else { nextAtis(); sys(`Weather updated: ${S.wx.raw}. Information ${phonetic(S.atis)}.`); if (newRwy !== S.rwy) sys(`Wind now favours runway ${newRwy}.`); }
