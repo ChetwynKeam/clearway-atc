@@ -352,14 +352,13 @@ function drawAc(ac){
     cx.strokeStyle = col; cx.lineWidth = sel ? 2 : 1.3;
     if (ac.ground) { cx.beginPath(); cx.arc(X, Y, 3, 0, 7); cx.stroke(); }
     else {
-      if (ac.kind === 'ARR') cx.strokeRect(X-4, Y-4, 8, 8); else { cx.beginPath(); cx.arc(X, Y, 4.5, 0, 7); cx.stroke(); }
-      const v = ac.gs/60; cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(sx(ac.x + v*Math.sin(ac.trk*D2R)), sy(ac.y + v*Math.cos(ac.trk*D2R))); cx.stroke();
+      planeIcon(X, Y, ac.hdg, col, sel, ac.t);   // type-shaped icon pointing along the heading
     }
   }
   if (ac.ground && sc < 70) return;
   if (dormant(ac) && !sel) return;   // parked with nothing due: no data block
   const lx = X + 16, ly = Y - 26;
-  cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+5, Y-5); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
+  cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+8, Y-8); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
   cx.font = `500 11.5px ${FONT_D}`;
   const l1 = ac.cs + (ac.need ? ' ◆' : '');
   let l2, l3 = '';

@@ -86,7 +86,19 @@ const RADAR_NM = 60;
 const outsideRadar = ac => ac.state === 'PRE' || Math.hypot(ac.x - GBR[0], ac.y - GBR[1]) > RADAR_NM;
 
 // ── drawing ──
-function planeIcon(X, Y, hdg, col, sel){
+// plane icons shaped by aircraft type, nose along the heading. Coordinates are in units of the icon's half-size
+// (about 9 px), nose at -1 and tail at +1, so every type sits in the same footprint as the yellow en-route icons.
+const ICON_CAT = t => /^(A20N|A319|A320|A321|A21N|B73|B738|B38M|B39M|E19|A220|BCS)/.test(t || '') ? 'jet' : /^(A33|A35|B77|B78|A34|B76|B74|A38)/.test(t || '') ? 'wide'
+  : /^(AT[47]|DH8|PC12|C208|BE20|SF34|F50)/.test(t || '') ? 'prop' : /^A400|^C130|^C30J/.test(t || '') ? 'mil' : /^(C56X|C68A|GLF|GL[57]|CL|LJ|E55|FA|C25|PC24|H25)/.test(t || '') ? 'biz' : 'jet';
+const ICON_SHAPE = {
+  jet:  { k: 1.0, body: 0.13, wing: [[0.12, -0.12], [0.98, 0.26], [0.98, 0.36], [0.12, 0.16]], tail: [[0.09, 0.72], [0.40, 0.92], [0.40, 0.99], [0.07, 0.92]], eng: [[0.42, 0.06, 0.07, 0.15]] },
+  wide: { k: 1.15, body: 0.15, wing: [[0.14, -0.16], [1.0, 0.30], [1.0, 0.40], [0.14, 0.14]], tail: [[0.10, 0.70], [0.42, 0.92], [0.42, 0.99], [0.08, 0.92]], eng: [[0.40, 0.04, 0.09, 0.17]] },
+  biz:  { k: 0.85, body: 0.11, wing: [[0.10, -0.02], [0.95, 0.30], [0.95, 0.38], [0.10, 0.22]], tail: [[0.06, 0.86], [0.38, 0.95], [0.38, 1.0], [0.05, 0.98]], eng: [[0.19, 0.55, 0.07, 0.15]] },
+  prop: { k: 1.0, body: 0.11, wing: [[0.10, -0.24], [1.0, -0.20], [1.0, -0.06], [0.10, -0.06]], tail: [[0.07, 0.80], [0.34, 0.84], [0.34, 0.94], [0.06, 0.94]], eng: [[0.33, -0.28, 0.06, 0.16]], prop: true },
+  mil:  { k: 1.1, body: 0.15, wing: [[0.12, -0.24], [1.0, -0.16], [1.0, -0.02], [0.12, -0.04]], tail: [[0.10, 0.78], [0.40, 0.86], [0.40, 0.96], [0.08, 0.96]], eng: [[0.30, -0.28, 0.06, 0.15], [0.62, -0.24, 0.06, 0.14]], prop: true }
+};
+// the basic flight-tracker plane: en-route (yellow) and live background (grey) traffic
+function basicPlane(X, Y, hdg, col, sel){
   cx.save(); cx.translate(X, Y); cx.rotate(hdg*D2R); const k = 0.9;
   cx.beginPath();
   cx.moveTo(0, -9*k); cx.quadraticCurveTo(1.6*k, -8*k, 1.6*k, -5*k); cx.lineTo(1.6*k, -2*k); cx.lineTo(9*k, 2*k); cx.lineTo(9*k, 3.6*k); cx.lineTo(1.6*k, 1.6*k);
@@ -95,11 +107,26 @@ function planeIcon(X, Y, hdg, col, sel){
   cx.fillStyle = col; cx.strokeStyle = sel ? '#0c1b2e' : 'rgba(40,30,0,.85)'; cx.lineWidth = sel ? 1.8 : 1; cx.fill(); cx.stroke();
   cx.restore();
 }
+// with a type: the shape of that aircraft (your own flights inside radar cover); without one: the basic plane
+function planeIcon(X, Y, hdg, col, sel, type){
+  if (!type) return basicPlane(X, Y, hdg, col, sel);
+  const S0 = ICON_SHAPE[ICON_CAT(type)], u = 9*S0.k, b = S0.body;
+  cx.save(); cx.translate(X, Y); cx.rotate(hdg*D2R); cx.scale(u, u);
+  cx.beginPath();
+  // fuselage: rounded nose, straight sides, tapered tail cone
+  cx.moveTo(0, -1); cx.quadraticCurveTo(b, -0.98, b, -0.72); cx.lineTo(b, 0.62); cx.quadraticCurveTo(b*0.8, 0.92, 0, 1.0); cx.quadraticCurveTo(-b*0.8, 0.92, -b, 0.62); cx.lineTo(-b, -0.72); cx.quadraticCurveTo(-b, -0.98, 0, -1); cx.closePath();
+  for (const part of [S0.wing, S0.tail]) for (const s of [1, -1]) { cx.moveTo(s*part[0][0], part[0][1]); for (const [x, y] of part.slice(1)) cx.lineTo(s*x, y); cx.closePath(); }
+  for (const [ex, ey, ew, el] of S0.eng) for (const s of [1, -1]) { cx.moveTo(s*ex + ew, ey); cx.ellipse(s*ex, ey, ew, el, 0, 0, Math.PI*2); }
+  cx.fillStyle = col; cx.fill('nonzero');
+  cx.lineWidth = (sel ? 1.8 : 0.8)/u; cx.strokeStyle = sel ? '#0c1b2e' : 'rgba(20,24,30,.55)'; cx.lineJoin = 'round'; cx.stroke();
+  if (S0.prop) { cx.strokeStyle = 'rgba(20,24,30,.8)'; cx.lineWidth = 1.2/u; cx.beginPath(); for (const [ex, ey, , el] of S0.eng) for (const s of [1, -1]) { cx.moveTo(s*ex - 0.13, ey - el - 0.02); cx.lineTo(s*ex + 0.13, ey - el - 0.02); } cx.stroke(); }
+  cx.restore();
+}
 function farTag(X, Y, l1, l2, l3, col){
-  const lx = X + 14, ly = Y - 18; cx.font = `500 11px ${FONT_D}`;
-  const w = Math.max(cx.measureText(l1).width, cx.measureText(l2).width, cx.measureText(l3).width);
-  cx.fillStyle = C.tagBg; cx.fillRect(lx - 3, ly - 11, w + 6, 3*13 + 3); cx.strokeStyle = C.tagEdge; cx.lineWidth = 1; cx.strokeRect(lx - 3.5, ly - 11.5, w + 7, 3*13 + 4);
-  cx.fillStyle = col; cx.fillText(l1, lx, ly); cx.fillText(l2, lx, ly + 13); cx.fillText(l3, lx, ly + 26);
+  const lx = X + 14, ly = Y - 18, n = l3 ? 3 : 2; cx.font = `500 11px ${FONT_D}`;
+  const w = Math.max(cx.measureText(l1).width, cx.measureText(l2).width, l3 ? cx.measureText(l3).width : 0);
+  cx.fillStyle = C.tagBg; cx.fillRect(lx - 3, ly - 11, w + 6, n*13 + 3); cx.strokeStyle = C.tagEdge; cx.lineWidth = 1; cx.strokeRect(lx - 3.5, ly - 11.5, w + 7, n*13 + 4);
+  cx.fillStyle = col; cx.fillText(l1, lx, ly); cx.fillText(l2, lx, ly + 13); if (l3) cx.fillText(l3, lx, ly + 26);
 }
 const FL = a => String(Math.max(0, Math.round(a/100))).padStart(3, '0');
 function drawFar(){
@@ -114,7 +141,7 @@ function drawFar(){
 function drawFarAc(ac){   // a sim aircraft outside radar cover: plane icon plus its normal tag lines
   const X = sx(ac.x), Y = sy(ac.y); if (X < -60 || Y < -60 || X > W + 60 || Y > H + 60) return;
   const sel = S.sel === ac;
-  planeIcon(X, Y, ac.trk || ac.hdg, sel ? '#ffe066' : '#f7c600', sel);
+  planeIcon(X, Y, ac.hdg, sel ? '#ffe066' : '#f7c600', sel);
   if (V.scale > 0.6 || sel) farTag(X, Y, ac.cs + (ac.need ? ' ◆' : ''), `${FL(ac.alt)} ${String(Math.round(ac.gs/10)).padStart(2, '0')}`, ac.state === 'PRE' ? `${ac.t} ${ac.o} PENDING` : `${ac.t} ${ac.kind === 'ARR' ? ac.o : ac.d}`, C.name === 'dark' ? '#f7d34a' : '#5b4a00');
 }
 

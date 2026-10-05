@@ -124,19 +124,12 @@ function liveBind(){
 const liveHidden = (a, p) => LIVE.bound.has(a.hex) || a.gnd || (a.alt != null && a.alt < 3500 && Math.hypot(p[0] - GBR[0], p[1] - GBR[1]) < 6) || S.acs.some(x => x.cs === a.cs);
 function drawLive(){
   if (!S.running || !isLiveMode() || !LIVE.ac.size) return;
-  const tags = V.scale > 2.5, col = C.name === 'dark' ? '#9fb3c8' : '#5d6f84';
+  const col = C.name === 'dark' ? '#9fb3c8' : '#5d6f84';
   for (const a of LIVE.ac.values()) {
     const ll = liveLL(a), p = xy(...ll); if (liveHidden(a, p)) continue;
     const X = sx(p[0]), Y = sy(p[1]); if (X < -60 || Y < -60 || X > W + 60 || Y > H + 60) continue;
-    const inRadar = Math.hypot(p[0] - GBR[0], p[1] - GBR[1]) <= RADAR_NM;
-    if (inRadar) {
-      cx.strokeStyle = col; cx.lineWidth = 1.2; cx.strokeRect(X - 3, Y - 3, 6, 6);
-      const L = (a.gs || 0)/60*V.scale; cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(X + Math.sin((a.trk || 0)*D2R)*L, Y - Math.cos((a.trk || 0)*D2R)*L); cx.stroke();
-      if (tags) { cx.font = `500 10.5px ${FONT_D}`; cx.fillStyle = col; cx.fillText(a.cs || a.reg || a.hex, X + 7, Y - 6); cx.fillText(`${FL(a.alt || 0)} ${a.t || ''}`, X + 7, Y + 6); }
-    } else {
-      planeIcon(X, Y, a.trk || 0, C.name === 'dark' ? '#8ea3b8' : '#b4c2d1');
-      if (V.scale > 0.6) farTag(X, Y, a.cs || a.reg || a.hex, `${FL(a.alt || 0)} ${String(Math.round((a.gs || 0)/10)).padStart(2, '0')}`, `${a.t || '----'} LIVE`, col);
-    }
+    planeIcon(X, Y, a.trk || 0, C.name === 'dark' ? '#8ea3b8' : '#b4c2d1');   // grey, basic shape, wherever it is
+    if (V.scale > 0.6) farTag(X, Y, a.cs || a.reg || a.hex, `${FL(a.alt || 0)} ${String(Math.round((a.gs || 0)/10)).padStart(2, '0')}`, '', col);
   }
 }
 S.listeners.push(ev => {
