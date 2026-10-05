@@ -50,7 +50,7 @@ function draw(){
   // land (even-odd so traced harbours/bays inside the chart frame stay water)
   cx.fillStyle = ground ? C.ground : C.land;
   for (const pg of LAND) { cx.beginPath(); for (const r of pg) { r.forEach((p,i) => { const X = sx(p[0]), Y = sy(p[1]); i ? cx.lineTo(X,Y) : cx.moveTo(X,Y); }); cx.closePath(); } cx.fill('evenodd'); }
-  const img = ground && mapImagery();
+  const img = mapImagery();
   if (img) drawImagery();
   else if (ground) { drawGroundBase(); drawRoads(); }
   cx.strokeStyle = C.coast; cx.lineWidth = ground ? 1.4 : 1; cx.globalAlpha = ground ? 0.8 : 1;
@@ -64,7 +64,7 @@ function draw(){
   for (const ac of S.acs) if (!ac.ground) drawAc(ac);
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
   if (img) drawImageryCredit();
-  else if (ground && MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
+  else if (MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
   // scale bar
   cx.fillStyle = rgba('lab', .75); cx.font = `11px ${FONT_D}`;
   const nm = sc > 900 ? 0.05 : sc > 300 ? 0.2 : sc > 100 ? 0.5 : sc > 30 ? 1 : 5, lp = nm*sc;
@@ -83,11 +83,12 @@ function drawRadarMap(){
   cx.restore();
   cx.save(); cx.strokeStyle = rgba('r164', .65); cx.setLineDash([6,4]); cx.lineWidth = 1.2; poly(R164); cx.stroke(); cx.restore();
   if (sc < 160) { cx.fillStyle = rgba('r164', .9); cx.font = `600 12px ${FONT_L}`; const p = xy(36.245,-5.40); cx.fillText('R164  SFC–FL300', sx(p[0]), sy(p[1])); }
-  cx.strokeStyle = C.border; cx.setLineDash([2,3]); for (const l of BORDERS) { poly(l,false); cx.stroke(); } cx.setLineDash([]);
-  drawRockRelief();
+  const IMGON = mapImagery();
+  if (!IMGON) { cx.strokeStyle = C.border; cx.setLineDash([2,3]); for (const l of BORDERS) { poly(l,false); cx.stroke(); } cx.setLineDash([]);
+  drawRockRelief(); }
   // towns and airports
   cx.font = `500 12px ${FONT_L}`;
-  for (const [n,x,y] of TOWNS) { const X = sx(x), Y = sy(y); if (X < -40 || Y < -20 || X > W+40 || Y > H+20) continue; cx.fillStyle = rgba('town', .55); cx.fillRect(X-1.5, Y-1.5, 3, 3); cx.fillStyle = rgba('town', .6); cx.fillText(n.toUpperCase(), X+5, Y+4); }
+  if (!IMGON) for (const [n,x,y] of TOWNS) { const X = sx(x), Y = sy(y); if (X < -40 || Y < -20 || X > W+40 || Y > H+20) continue; cx.fillStyle = rgba('town', .55); cx.fillRect(X-1.5, Y-1.5, 3, 3); cx.fillStyle = rgba('town', .6); cx.fillText(n.toUpperCase(), X+5, Y+4); }
   for (const [n,x,y] of AIRPORTS) { const X = sx(x), Y = sy(y); cx.strokeStyle = rgba('apt', .55); cx.lineWidth = 1; cx.beginPath(); cx.arc(X, Y, 4, 0, 7); cx.stroke(); cx.beginPath(); cx.moveTo(X-6, Y); cx.lineTo(X+6, Y); cx.stroke(); cx.fillStyle = rgba('apt', .6); cx.font = `10px ${FONT_D}`; cx.fillText(n, X+7, Y-5); }
   // range rings and bearing scale around GBR
   if (sc < 60) {
@@ -164,14 +165,13 @@ function drawAirport(){
   }
   const lw = m => Math.max(1, m*mpx);
   const IMG = mapImagery(), st = S.xing.st;
-  if (!IMG) {
   // airfield ground (D1: non-load-bearing surfaces) and roads
   cx.lineJoin = 'round'; cx.lineCap = 'round';
   cx.strokeStyle = C.road; cx.lineWidth = lw(14);
-  path(AD.roadN, false); cx.stroke(); path(AD.roadS, false); cx.stroke();
+  if (!IMG) { path(AD.roadN, false); cx.stroke(); path(AD.roadS, false); cx.stroke(); }
   // frontier fence with hatching on the Spanish side
-  cx.strokeStyle = rgba('r164', .55); cx.lineWidth = 1.2; poly(FRONTIER, false); cx.stroke();
-  if (sc > 160) { cx.strokeStyle = rgba('r164', .35); for (let i = 0; i < FRONTIER.length-1; i++) { const a = FRONTIER[i], b = FRONTIER[i+1], L = dist(...a, ...b)/M2NM, n = Math.floor(L/25); for (let k = 0; k < n; k++) { const f = k/n, x = a[0]+(b[0]-a[0])*f, y = a[1]+(b[1]-a[1])*f; const X = sx(x), Y = sy(y); cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(X+5, Y-7); cx.stroke(); } } }
+  if (!IMG) { cx.strokeStyle = rgba('r164', .55); cx.lineWidth = 1.2; poly(FRONTIER, false); cx.stroke(); }
+  if (sc > 160 && !IMG) { cx.strokeStyle = rgba('r164', .35); for (let i = 0; i < FRONTIER.length-1; i++) { const a = FRONTIER[i], b = FRONTIER[i+1], L = dist(...a, ...b)/M2NM, n = Math.floor(L/25); for (let k = 0; k < n; k++) { const f = k/n, x = a[0]+(b[0]-a[0])*f, y = a[1]+(b[1]-a[1])*f; const X = sx(x), Y = sy(y); cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(X+5, Y-7); cx.stroke(); } } }
   // pavement
   cx.fillStyle = C.concrete; path(AD.civil); cx.fill(); path(AD.north); cx.fill(); path(AD.south); cx.fill();
   drawApronSlabs(path);
@@ -196,12 +196,10 @@ function drawAirport(){
     path(k === 'E' ? [[1668,22.5],[1730,50],[1764,62],[1790,50],[1790,0],[1668,0]] : [[RWY_M-1668,-22.5],[RWY_M-1730,-50],[RWY_M-1764,-62],[RWY_M-1790,-50],[RWY_M-1790,0],[RWY_M-1668,0]]); cx.fill();
   }
   drawPavingDetail(c, path, mpx);
-  drawBuildings(c, path, mpx);
+  if (!IMG) drawBuildings(c, path, mpx);
   // Winston Churchill Avenue across the runway
-  cx.save(); cx.globalAlpha = 0.55; cx.strokeStyle = C.road; cx.lineWidth = lw(14); cx.lineCap = 'butt'; path([[985,-22],[1000,22]], false); cx.stroke(); cx.restore();
-  }
+  if (!IMG) { cx.save(); cx.globalAlpha = 0.55; cx.strokeStyle = C.road; cx.lineWidth = lw(14); cx.lineCap = 'butt'; path([[985,-22],[1000,22]], false); cx.stroke(); cx.restore(); }
   if (sc > 150) {
-    if (!IMG) {
     // runway markings: AD 2.9 only says the TDZ marks are non-standard, so the set below follows the ICAO Annex 14 layout
     cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
     cx.lineWidth = lw(0.9); path([[0,21.6],[RWY_M,21.6]], false); cx.stroke(); path([[0,-21.6],[RWY_M,-21.6]], false); cx.stroke();   // side stripes
@@ -243,7 +241,6 @@ function drawAirport(){
       cx.save(); cx.translate(...c(...nose)); cx.rotate(s.hdg*D2R); cx.fillStyle = C.yellow; cx.fillRect(-4*mpx-2, -0.6, 8*mpx+4, 1.4); cx.restore();
     }
     drawStandDetail(c, path, mpx);
-    } else drawStandTags(c, mpx);
     // closed portion of B and B1: unserviceable crosses
     cx.strokeStyle = 'rgba(255,255,255,.75)'; cx.lineWidth = lw(0.8);
     for (const [m,o] of [[1648,TW.B],[1785,92]]) { const [X,Y] = c(m,o), r = 6*mpx+2; cx.beginPath(); cx.moveTo(X-r,Y-r); cx.lineTo(X+r,Y+r); cx.moveTo(X+r,Y-r); cx.lineTo(X-r,Y+r); cx.stroke(); }
@@ -251,7 +248,7 @@ function drawAirport(){
     for (const [k, Hd] of Object.entries(HOLDS)) {
       const s = Math.sign(Hd.off);
       cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
-      if (!IMG) for (const [d, dash] of [[0.9,false],[0.3,false],[-0.3,true],[-0.9,true]]) { cx.setLineDash(dash ? [1*mpx+1, 1*mpx+1] : []); path([[Hd.m-9.5, Hd.off + s*d],[Hd.m+9.5, Hd.off + s*d]], false); cx.stroke(); }
+      for (const [d, dash] of [[0.9,false],[0.3,false],[-0.3,true],[-0.9,true]]) { cx.setLineDash(dash ? [1*mpx+1, 1*mpx+1] : []); path([[Hd.m-9.5, Hd.off + s*d],[Hd.m+9.5, Hd.off + s*d]], false); cx.stroke(); }
       cx.setLineDash([]);
       if (sc > 220) {
         const fs = Math.max(9, 3.4*mpx), q = c(Hd.m + 14, Hd.off + s*2); const txt = `${k}  27-09`; cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(txt).width;
@@ -295,7 +292,7 @@ function drawAirport(){
     if (IMG) { cx.fillStyle = C.name === 'dark' ? 'rgba(235,242,245,.92)' : '#fff'; cx.strokeStyle = 'rgba(0,0,0,.6)'; cx.lineWidth = 3; cx.lineJoin = 'round'; }
     const lab = (txt, m, off) => { const p = c(m, off); if (IMG) cx.strokeText(txt, p[0], p[1]); cx.fillText(txt, p[0], p[1]); };
     lab('TERMINAL', 1225, 300); lab('CIVIL APRON', 1235, 228); lab('NORTH APRON', 1450, 240); lab('SOUTH APRON · RAF', 1000, -230); lab('ATC', 1056, 232);
-    lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75);
+    if (!IMG) { lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); } lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75);
   }
 }
 

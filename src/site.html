@@ -170,7 +170,7 @@
   <div class="section"><div class="wrap">
     <div class="section-head">
       <div><div class="eyebrow">Three positions, one console</div><h2>From 50 NM out to the stand.</h2></div>
-      <p>Gibraltar Radar and Gibraltar Tower are combined on one position. Switch the display between the approach radar, the tower picture and the ground movement map at any time. Every aircraft is the same object in all three.</p>
+      <p>Gibraltar Radar and Gibraltar Tower are combined on one position. One map does it all: scroll out for the approach radar picture, scroll in for the runway and the stands. Every aircraft is the same object at every zoom.</p>
     </div>
     <div class="positions">
       <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Radar display"></canvas></div><div class="body"><div class="freq">GIBRALTAR RADAR · 122.8</div><h3>Approach and departure</h3><p>Arrivals call at 50 NM via PIMOS, LINTO or Tetouan. Descend them, hold them at UPMUP or ODLUK, vector them into the SRA and keep them 3 NM or 1,000 ft apart. Route departures out and hand them to Sevilla or Casablanca.</p></div></div>
@@ -211,13 +211,12 @@
     <div class="toolbar">
       <button class="exit" id="tgExit" title="Leave the position and return to the airport page"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</button>
       <a class="apchip" href="#lxgb" title="Gibraltar airport briefing"><b>LXGB</b><span>Gibraltar</span></a>
-      <div class="seg" role="group" aria-label="Display"><button data-view="app" class="on">Radar</button><button data-view="twr">Tower</button><button data-view="gnd">Ground</button></div>
       <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
       <button id="tgProc" class="on">Procedures</button>
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
       <button id="tgTalk" class="talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Hold to talk</button>
       <button id="tgSetup">Session</button>
-      <button id="tgMap" title="Background for the tower and ground views: satellite photo, street map or drawn chart">Satellite</button>
+      
       <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
       <button id="tgFull" title="Full screen">Full screen</button>
     </div>
@@ -330,7 +329,7 @@
 
     <section id="t-console"><h2><span class="n">03</span>Reading the console</h2>
       <h3>The scope</h3>
-      <p><b>Radar</b> shows 40 NM around the GBR TACAN with range rings every 5 NM, the bearing scale, R164, the Rock, the arrival routes and holds, and both SRA final paths. <b>Tower</b> zooms to the runway and finals. <b>Ground</b> shows the aerodrome to scale. Drag to pan and scroll or pinch to zoom.</p>
+      <p><b>Radar</b> shows 40 NM around the GBR TACAN with range rings every 5 NM, the bearing scale, R164, the Rock, the arrival routes and holds, and both SRA final paths. Scroll or pinch in to see the runway, finals and the aerodrome to scale over the street map. Drag to pan.</p>
       <div class="rt"><div><span class="w">Line 1</span><span class="p">EZY8901 ◆ — callsign, ◆ means the crew is waiting on you</span></div><div><span class="w">Line 2</span><span class="p">045↓030 21 — FL/altitude in hundreds, trend, cleared level (or SRA), groundspeed ÷ 10</span></div><div><span class="w">Line 3</span><span class="p">A20N R27 T — type, runway of the approach (or destination), T when on Tower</span></div></div>
       <p>Arrivals are amber squares, departures blue circles, and the selected flight is white. Anything in conflict turns red. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
       <h3>The side panel</h3>

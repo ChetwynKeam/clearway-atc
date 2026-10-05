@@ -9,8 +9,7 @@ const MAP_SRC = {
             credit: '© OpenStreetMap contributors' }
 };
 const TILE = { cache: new Map(), ok: 0, err: 0, failed: false, use: 0 };
-let MAP_LAYER = 'sat';
-try { const v = localStorage.getItem('cw-map'); if (v === 'drawn' || MAP_SRC[v]) MAP_LAYER = v; } catch(_) {}
+const MAP_LAYER = 'street';   // the street map is the only background (satellite kept for reference)
 
 const tx2lon = (x, z) => x/2**z*360 - 180;
 const ty2lat = (y, z) => Math.atan(Math.sinh(Math.PI*(1 - 2*y/2**z)))*R2D;
@@ -33,17 +32,17 @@ const peekTile = (src, z, x, y) => TILE.cache.get(`${src}/${z}/${x}/${y}`);
 
 // true when the scope should show imagery instead of the drawn ground
 function mapImagery(){
-  return MAP_LAYER !== 'drawn' && !TILE.failed && V.scale > 70 && cv && cv.id === 'scope';
+  return !TILE.failed && cv && cv.id === 'scope';
 }
 function drawImagery(){
   const src = MAP_LAYER, S0 = MAP_SRC[src];
   const [la1, lo1] = xy2ll(wx2(0), wy2(0)), [la2, lo2] = xy2ll(wx2(W), wy2(H));
   const mpp = 1852/V.scale/DPR, res0 = 156543.034*Math.cos(LAT0*D2R);
-  let z = clamp(Math.round(Math.log2(res0/mpp) + 0.6), 12, S0.max);
+  let z = clamp(Math.round(Math.log2(res0/mpp) + 0.6), 5, S0.max);
   let x0, x1, y0, y1;
   for (;;) {
     x0 = Math.floor(lon2tx(lo1, z)); x1 = Math.floor(lon2tx(lo2, z)); y0 = Math.floor(lat2ty(la1, z)); y1 = Math.floor(lat2ty(la2, z));
-    if ((x1 - x0 + 1)*(y1 - y0 + 1) <= 160 || z <= 12) break; z--;
+    if ((x1 - x0 + 1)*(y1 - y0 + 1) <= 160 || z <= 5) break; z--;
   }
   cx.save(); cx.imageSmoothingQuality = 'high';
   const rect = (zz, x, y) => { const a = xy(ty2lat(y, zz), tx2lon(x, zz)), b = xy(ty2lat(y + 1, zz), tx2lon(x + 1, zz)); return [sx(a[0]), sy(a[1]), sx(b[0]), sy(b[1])]; };
@@ -65,22 +64,3 @@ function drawImageryCredit(){
   cx.fillStyle = 'rgba(255,255,255,.72)'; cx.fillRect(W - 12 - w, H - 19, w, 15); cx.fillStyle = '#334'; cx.fillText(txt, W - 7 - w, H - 8);
 }
 // stand numbers only (the photo already shows the painted stand markings)
-function drawStandTags(c, mpx){
-  if (V.scale <= 160) return;
-  for (const s of STANDS) {
-    const box = s.area === 'civil' ? 40 : s.area === 'north' ? 32 : 46, h = s.hdg*D2R, bh = box*mpx;
-    const fs = Math.max(9, 3.4*mpx); cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(s.id).width + fs*0.6;
-    cx.save(); cx.translate(sx(s.p[0]), sy(s.p[1])); cx.rotate(h);
-    const flip = Math.cos(h) < 0; if (flip) cx.rotate(Math.PI);
-    const yb = flip ? -bh*0.42 - fs*0.2 : bh*0.42 - fs*1.0;
-    cx.fillStyle = '#111'; cx.fillRect(-tw/2, yb, tw, fs*1.2); cx.fillStyle = C.yellow; cx.textAlign = 'center'; cx.fillText(s.id, 0, yb + fs*0.95); cx.textAlign = 'left';
-    cx.restore();
-  }
-}
-function setMapLayer(k){
-  MAP_LAYER = k; TILE.failed = false; TILE.ok = 0; TILE.err = 0;
-  const bt = document.getElementById('tgMap'); if (bt) bt.textContent = k === 'drawn' ? 'Drawn map' : MAP_SRC[k].name;
-  try { localStorage.setItem('cw-map', k); } catch(_) {}
-}
-{ const bt = document.getElementById('tgMap'); if (bt) bt.onclick = () => setMapLayer(MAP_LAYER === 'sat' ? 'street' : MAP_LAYER === 'street' ? 'drawn' : 'sat'); }
-setMapLayer(MAP_LAYER);

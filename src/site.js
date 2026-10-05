@@ -230,7 +230,7 @@ const COACH = {
     { h: 'Close the road in time', p: 'Walkers must be clear by 15 NM and traffic by 10 NM. Press <b>Close road</b> now, while the arrival is still well out.', road: true, ok: () => roadShut() || sn('EZY8901').landed },
     { h: 'Transfer to Tower', p: 'At about 5 NM, transfer the flight to Tower on 131.2 with <code>EZY8901 HO</code>.', cmd: 'EZY8901 HO', ok: () => (A('EZY8901') && A('EZY8901').freq === 'TWR') || sn('EZY8901').landed },
     { h: 'Clear to land', p: 'With the road closed, type <code>EZY8901 CTL</code>. Without a landing clearance by short final, the crew goes around.', cmd: 'EZY8901 CTL', ok: () => !!(A('EZY8901') && A('EZY8901').ctl) || sn('EZY8901').landed },
-    { h: 'Watch the landing', p: 'Switch to the <b>Tower</b> view to see the touchdown. Gibraltar has no rapid exits, so the aircraft rolls out on the runway and asks to backtrack.', ok: () => sn('EZY8901').landed && st('EZY8901','ROLLED','VACATING','ONSTAND') },
+    { h: 'Watch the landing', p: 'Scroll in on the runway to see the touchdown. Gibraltar has no rapid exits, so the aircraft rolls out on the runway and asks to backtrack.', ok: () => sn('EZY8901').landed && st('EZY8901','ROLLED','VACATING','ONSTAND') },
     { h: 'Backtrack and taxi to stand', p: 'Type <code>EZY8901 VAC</code>. It backtracks, turns off at Alpha or Echo and taxies to a civil stand. The road stays shut until it is off the runway.', cmd: 'EZY8901 VAC', ok: () => st('EZY8901','VACATING','ONSTAND') || sn('EZY8901').onstand },
     { h: 'Reopen the road', p: 'Once the aircraft is off the runway, press <b>Open road</b>.', road: true, ok: () => S.xing.st === 'OPEN' || S.xing.st === 'OPENING' }
   ],
