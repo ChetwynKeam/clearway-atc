@@ -1,0 +1,71 @@
+name: Fetch LPMA data
+# One-off for the Madeira (LPMA) airport build: OSM aerodrome and island geometry, reference tiles, METAR/TAF,
+# a sample of the airport's live flight pages and live ADS-B, published to the lpma-data branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/workflows/lpma-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          BUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          ovp(){ for H in https://overpass-api.de https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do curl -sSf -m 200 -A "$UA" --data-urlencode "data=$1" "$H/api/interpreter" -o "$2" && return 0; sleep 10; done; return 1; }
+          # aerodrome: runway, taxiways, aprons, stands, buildings, roads and fence around the field
+          ovp '[out:json][timeout:120];(way[aeroway](32.670,-16.800,32.712,-16.740);node[aeroway](32.670,-16.800,32.712,-16.740);relation[aeroway](32.670,-16.800,32.712,-16.740);way[building](32.680,-16.790,32.705,-16.755);way[highway](32.672,-16.800,32.712,-16.745);way[barrier](32.680,-16.790,32.705,-16.755);way[man_made](32.675,-16.795,32.708,-16.750););out geom;' osm_aerodrome.json
+          # Madeira, Porto Santo, Desertas, Selvagens coastline; peaks and spot heights; towns; navaids
+          ovp '[out:json][timeout:180];(way[natural=coastline](29.9,-17.4,33.2,-15.7););out geom;' osm_coast.json
+          ovp '[out:json][timeout:120];(node[natural~"peak|volcano|saddle"](32.3,-17.4,33.2,-16.1);node[place~"city|town|village"](32.3,-17.4,33.2,-16.1);node[aeroway~"navigationaid|aerodrome"](32.0,-17.6,33.4,-15.9);node["navigationaid"](32.0,-17.6,33.4,-15.9);way[aeroway=aerodrome](32.0,-17.6,33.4,-15.9);way[power=line](32.6,-16.85,32.75,-16.70);node[man_made~"mast|tower"](32.6,-16.85,32.75,-16.70););out geom;' osm_island.json
+          # Porto Santo aerodrome (LPPS)
+          ovp '[out:json][timeout:90];(way[aeroway](33.055,-16.370,33.085,-16.320););out geom;' osm_lpps.json
+          ls -la
+          # weather
+          for S in LPMA LPPS; do
+            curl -sS -m 20 "https://aviationweather.gov/api/data/metar?ids=$S&format=raw&hours=24" -o metar_$S.txt || true
+            curl -sS -m 20 "https://aviationweather.gov/api/data/taf?ids=$S&format=raw" -o taf_$S.txt || true
+            curl -sS -m 20 "https://metar.vatsim.net/$S" -o vatsim_$S.txt || true
+          done
+          # airport live flight info (ANA / VINCI) and a few alternatives
+          mkdir flights
+          for P in real-time-arrivals real-time-departures; do
+            curl -sSL --compressed -m 30 -A "$BUA" -o flights/ana_$P.html -w "%{http_code} %{url_effective}\n" "https://www.aeroportomadeira.pt/en/fnc/flights-destinations/find-flights/$P" || true
+          done
+          curl -sSL --compressed -m 30 -A "$BUA" -o flights/ana_home.html -w "%{http_code} %{url_effective}\n" "https://www.aeroportomadeira.pt/en/fnc/home" || true
+          curl -sSL --compressed -m 30 -A "$BUA" -o flights/ana_root.html -w "%{http_code} %{url_effective}\n" "https://www.aeroportomadeira.pt/" || true
+          ls -la flights
+          # live ADS-B around the island, straight from the feeds and through the site's relay
+          curl -sS -m 20 -A "$UA" "https://api.adsb.lol/v2/point/32.69/-16.77/200" -o adsb_lol.json -w "adsb.lol %{http_code}\n" || true
+          curl -sS -m 20 -A "$UA" "https://opendata.adsb.fi/api/v2/lat/32.69/lon/-16.77/dist/200" -o adsb_fi.json -w "adsb.fi %{http_code}\n" || true
+          curl -sS -m 25 "https://clearway-atc.vercel.app/api/traffic?lat=32.69&lon=-16.77&r=200" -o relay.json -w "relay %{http_code}\n" || true
+          # NAV Portugal AIS entry page (for the eAIP link structure)
+          curl -sSL --compressed -m 30 -A "$BUA" -o nav_ais.html -w "%{http_code} %{url_effective}\n" "https://ais.nav.pt/" || true
+          mkdir tiles
+          cat > list.py <<'PY'
+          import math, sys
+          z = int(sys.argv[1])
+          def t(lat, lon):
+              n = 2**z; r = math.radians(lat)
+              return int((lon + 180)/360*n), int((1 - math.log(math.tan(r) + 1/math.cos(r))/math.pi)/2*n)
+          box = (33.6, -18.2, 31.6, -15.3) if z <= 10 else (32.90, -17.30, 32.60, -16.60) if z <= 13 else (32.712, -16.800, 32.672, -16.745)
+          x0, y0 = t(box[0], box[1]); x1, y1 = t(box[2], box[3])
+          for x in range(x0, x1 + 1):
+              for y in range(y0, y1 + 1): print(z, x, y)
+          PY
+          for z in 8 9 10 11 12 13 14 15 16 17; do
+            python3 list.py $z | while read Z X Y; do curl -sSf -A "$UA" "https://tile.openstreetmap.org/$Z/$X/$Y.png" -o "tiles/${Z}_${X}_${Y}.png" || true; sleep 0.2; done
+          done
+          rm list.py; ls tiles | wc -l; du -sh .
+      - name: Publish to lpma-data branch
+        run: |
+          cd out
+          git init -q -b lpma-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "LPMA data"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" lpma-data
