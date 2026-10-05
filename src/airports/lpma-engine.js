@@ -144,6 +144,65 @@ const FINAL = {};
     if (f.gates) for (const g of f.gates) g.togo = f.cum[g.idx]; }
 })();
 
+// ── RNP AR approaches (AD 2.24.12-5 to -10). Crew-flown published paths: the legs in lpma.js are flown fix to fix,
+// with each radius-to-fix arc drawn as short chords round its centre. FINAL['RNPY05'], ['RNPZ05'], ['RNP23'] (from
+// PILIM) and ['RNP23M'] (the MONEC transition). The missed approaches are routes of fixes, with hidden points on the arcs.
+const RNP = {};
+(function(){
+  const fixP = id => id === 'RW05' ? T_LO : id === 'RW23' ? T_HI : WP[id].p;
+  // points from a to b round centre c, turning L or R, every `step` NM (b itself last)
+  function arc(a, b, c, dir, step){
+    const R = (dist(...c, ...a) + dist(...c, ...b))/2, t0 = brg(...c, ...a), t1 = brg(...c, ...b);
+    const sweep = dir === 'R' ? norm(t1 - t0) : -norm(t0 - t1), n = Math.max(2, Math.ceil(Math.abs(sweep)*D2R*R/step));
+    const out = []; for (let k = 1; k < n; k++) out.push(add(c, t0 + sweep*k/n, R)); out.push(b); return out;
+  }
+  const C = id => LL(LPMA.ARC[id]);
+  const minor = new Set();
+  for (const [name, A] of Object.entries(LPMA.APPROACHES)) {
+    if (!A.legs) continue;
+    const pts = [fixP(A.legs[0][0])], at = { [A.legs[0][0]]: 0 }, cons = [];
+    if (A.legs[0][1]) cons.push([0, A.legs[0][1]]);
+    let fap = null;
+    for (const [id, alt, rf, role] of A.legs.slice(1)) {
+      const b = fixP(id);
+      if (rf) pts.push(...arc(pts[pts.length-1], b, C(rf[0]), rf[1], 0.2)); else pts.push(b);
+      at[id] = pts.length - 1; if (alt) cons.push([pts.length - 1, alt]); if (role === 'FAP') fap = pts.length - 1;
+    }
+    const thr = A.rwy === RW_LO ? T_LO : T_HI, elev = THR_ELEV[A.rwy];
+    const cum = new Array(pts.length).fill(0); for (let i = pts.length-2; i >= 0; i--) cum[i] = cum[i+1] + dist(...pts[i], ...pts[i+1]);
+    const prof = [[0, elev + 50], ...cons.map(([i, a]) => [cum[i], a])].sort((p, q) => p[0] - q[0]);
+    // decision: where the profile comes down through DA
+    let dec = 0; for (let t = 0; t < cum[0]; t += 0.01) if (profAt(prof, t) >= A.minima.da) { dec = t; break; }
+    // missed approach: from the threshold along the legs; arcs get hidden points about every 1.5 NM
+    const miss = [], mpts = [thr]; let n = 0;
+    for (const [id, , rf] of A.missed.legs) {
+      const b = fixP(id);
+      if (rf) { const prev = mpts[mpts.length-1]; for (const q of arc(prev, b, C(rf[0]), rf[1], 1.5).slice(0, -1)) { const h = `${A.key}~${++n}`; WP[h] = { id: h, p: q, hide: true }; miss.push(h); }
+        mpts.push(...arc(prev, b, C(rf[0]), rf[1], 0.3)); } else mpts.push(b);
+      miss.push(id);
+    }
+    const iaf = A.iaf, sp = A.spoken;
+    FINAL[A.key] = { pts, cum, prof, elev, rnp: true, rwy: A.rwy, name, short: A.short, spoken: sp, entry: iaf, entryName: iaf, via: A.via, alt: 3000,
+      decNM: dec + 0.1, decMin: dec - 1.2, decName: 'minimums', minAlt: A.minima.da - 150, minText: `${A.minima.da} ft`, minRate: 0,
+      mins: { vis: A.minima.vis, ceil: A.minima.dh }, da: A.minima.da, missed: miss, missPts: [...mpts],
+      gates: fap != null ? [{ at: `the FAP (${A.legs.find(l => l[3] === 'FAP')[0]})`, togo: cum[fap], min: 1950 }] : [],
+      phrase: rw => `cleared ${sp} via ${iaf}`, read: rw => `cleared ${A.short} runway ${rw} via ${iaf}` };
+    RNP[A.key] = FINAL[A.key];
+    for (const l of [...A.legs, ...A.missed.legs]) if (/^MA\d/.test(l[0])) minor.add(l[0]);
+  }
+  for (const id of minor) if (WP[id]) WP[id].minor = true;
+})();
+// which RNP approach a clearance means: Y (from MONEC) or Z (from PILIM) to 05, the PILIM or MONEC start to 23;
+// a plain "RNP" picks the one whose start is nearer the aircraft's route
+function rnpPick(ac, rw, v){
+  const near = () => { const r = ac.mode === 'HOLD' && ac.hold ? ac.hold.name : null; if (r === 'MONEC' || ac.route.includes('MONEC')) return 'M'; if (r === 'PILIM' || ac.route.includes('PILIM')) return 'P';
+    return dist(ac.x, ac.y, ...WP.MONEC.p) < dist(ac.x, ac.y, ...WP.PILIM.p) ? 'M' : 'P'; };
+  if (rw === '05') return v === 'Y' ? 'RNPY05' : v === 'Z' ? 'RNPZ05' : near() === 'M' ? 'RNPY05' : 'RNPZ05';
+  if (v === 'Y' || v === 'Z') return null;
+  return near() === 'M' ? 'RNP23M' : 'RNP23';
+}
+const rnpMinsOk = (w, rw) => { const F = FINAL[rw === '05' ? 'RNPY05' : 'RNP23']; return w.vis >= F.mins.vis && w.ceil >= F.mins.ceil; };
+
 // ═════════════════════════ schedule ═════════════════════════
 const withGate = x => ({ ...x, gate: x.gate || gateFor(x.k === 'ARR' ? x.o : x.d) });
 const TIMETABLE = LPMA.TIMETABLE;
@@ -193,6 +252,10 @@ const APT = {
   liveName: 'Madeira Airport', atisFreq: '130.355', turbName: 'Madeira',
   view: { app: [-5, -6, 70], twr: [0, -0.05, 2.4], gnd: [1350, -90, 2950, 760] },
   minsOk,
+  // RNP AR approaches: which one a clearance means, their minima, and what crews ask for when the VOR minima are not met
+  rnp: rnpPick, rnpMinsOk,
+  reqApp: rw => minsOk(S.wx, rw) || !rnpMinsOk(S.wx, rw) ? 'VOR approach' : 'RNP approach',
+  rnpButtons: rw => rw === '05' ? [['APP 05 RNPY', 'RNP Y 05'], ['APP 05 RNPZ', 'RNP Z 05']] : [['APP 23 RNP', 'RNP 23']],
   inboundAlt: gate => 7000,
   divertTo: ac => ['Porto Santo', 'MARCU'],
   vacPrefs: st => ['B', 'C'],
@@ -229,7 +292,8 @@ const APT = {
     const A = anem(w), f = a => `${hdg3(norm(a.dir - LPMA.RWY.var))} degrees ${a.spd} knots${a.gust ? ' gusting ' + a.gust : ''}`;
     const out = [
       `This is Madeira arrival information ${L}, time ${zt(S.t).slice(0,5).replace(':', '')}.`,
-      `Expect VOR DME approach runway ${S.rwy}${S.rwy === RW_LO ? ', circling via Gelo and Rosário' : ', visual on track 235'}. Runway in use ${S.rwy}.`,
+      !minsOk(w, S.rwy) && rnpMinsOk(w, S.rwy) ? `Expect RNP approach runway ${S.rwy}. Runway in use ${S.rwy}.`
+        : `Expect VOR DME approach runway ${S.rwy}${S.rwy === RW_LO ? ', circling via Gelo and Rosário' : ', visual on track 235'}, RNP approaches available on request. Runway in use ${S.rwy}.`,
       `Surface wind ${wind}. Wind at Mid Point ${f(A.MID)}, at Rosário ${f(A.ROSARIO)}. Visibility ${vis}. ${cloud}.`,
       `Temperature ${w.temp}, dew point ${w.dew}. QNH ${w.qnh} hectopascals. Transition level flight level 60.`
     ];
@@ -237,7 +301,7 @@ const APT = {
     if (turbExcess(w) > 0) out.push('Moderate to severe turbulence and windshear on final.');
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
     if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
-    if (!minsOk(w, S.rwy)) out.push('Weather below the circling minima.');
+    if (!minsOk(w, S.rwy)) out.push(rnpMinsOk(w, S.rwy) ? 'Weather below the circling minima.' : 'Weather below the circling and RNP minima.');
     out.push('Departures: release from Lisboa Control is required before take-off.');
     out.push(`Acknowledge receipt of information ${L} and advise aircraft type on first contact.`);
     return out;

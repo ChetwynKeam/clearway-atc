@@ -14,7 +14,7 @@ const LPMA = (() => {
   const P = (lat, lon) => [ll(lat), ll(lon)];
   const D = (d, m, s = 0, neg = false) => (neg ? -1 : 1)*(d + m/60 + s/3600);
 
-  // ── fixes (coding tables AD 2.24.08 and 2.24.10; RNP AR fixes read off AD 2.24.12-5, approximate)
+  // ── fixes (coding tables AD 2.24.08, 2.24.10 and 2.24.12)
   const FIX = {
     // STAR entry points and route fixes
     EKNOT: P('321035.26N', '0161744.50W'), IBBAN: P('332034.58N', '0170831.84W'), KICAS: P('334501.68N', '0162824.45W'),
@@ -30,10 +30,23 @@ const LPMA = (() => {
     PS704: P('331802.42N', '0161047.36W'),
     // conventional approach (AD 2.24.12-1/-3)
     ABUSU: [D(32,52,1), D(16,38,8,true)], FUSUL: [D(32,36,5), D(16,39,43,true)],
-    // RNP Y RWY 05 (AR), read off the chart: positions good to about 0.2 NM
-    MA512: [32.5075, -16.8075], MA510: [32.5377, -16.8023], MA508: [32.6038, -16.8023], MA504: [32.6617, -16.8023],
-    MA502: [32.6742, -16.7893], MA550: [32.6993, -16.7628], MA552: [32.7277, -16.7265], MA554: [32.5875, -16.6408],
+    // RNP AR approaches (coding tables AD 2.24.12-6, -8, -10): RNP Y and Z 05, RNP 23, their missed approaches
+    MA512: P('323018.539N', '0164833.962W'), MA510: P('323201.424N', '0164812.538W'), MA508: P('323602.429N', '0164812.538W'),
+    MA504: P('323933.590N', '0164812.538W'), MA502: P('324058.101N', '0164731.493W'),
+    MA530: P('324946.215N', '0163703.180W'), MA528: P('324802.705N', '0163815.303W'), MA526: P('323832.210N', '0164206.696W'),
+    MA522: P('323639.123N', '0164634.442W'), MA520: P('323833.470N', '0164812.538W'),
+    MA410: P('324825.446N', '0163847.606W'), MA408: P('324617.264N', '0164118.075W'), MA416: P('323048.439N', '0164821.110W'),
+    MA414: P('323233.960N', '0164703.405W'), MA413: P('323702.651N', '0164157.741W'), MA412: P('324205.123N', '0163612.753W'),
+    MA550: P('324224.500N', '0164550.480W'), MA552: P('324327.944N', '0164344.183W'), MA554: P('323506.473N', '0163834.850W'),
+    MA407: P('324123.753N', '0164701.505W'), MA406: P('323939.233N', '0164801.455W'),
     // other TMA boundary points (AD 2.24.11), for the map
+  };
+  // centres of the RNP AR radius-to-fix arcs
+  const ARC = {
+    MAC01: P('323933.568N', '0164550.396W'), MAC02: P('323850.704N', '0164209.486W'), MAC03: P('323201.285N', '0165407.396W'),
+    MAC04: P('323833.448N', '0164550.423W'), MAC05: P('323916.937N', '0164429.882W'), MAC06: P('324625.002N', '0163238.764W'),
+    MAC07: P('322905.437N', '0164247.860W'), MAC08: P('324410.341N', '0163846.385W'), MAC09: P('323930.609N', '0164528.402W'),
+    MAC10: P('323931.136N', '0164223.286W')
   };
   const NAV = {
     FUN: { name: 'Funchal DVOR/DME', freq: '112.200', ch: '59X', p: [D(32,44,50), D(16,42,20,true)], elev: 500 },
@@ -149,21 +162,33 @@ const LPMA = (() => {
       minima: { mda: 1300, vis: 7000, ceil: 1200 },
       missed: { hdg: 137, intercept: 'R170 FUN', fix: 'FUSUL', alt: 3000 }
     },
+    // RNP AR (AD 2.24.12-5 to -10): crew-flown published paths with radius-to-fix (RF) arcs. Each leg is [fix, alt, arc]:
+    // alt is the profile altitude the sim flies at that fix (the coding table's "+2000" is at or above), arc is
+    // [centre, 'L'|'R'] for an RF leg ending at that fix. DA(H) and OCH are cat C, RNP 0.3. Visibility is not on the
+    // chart (operators set it); the sim uses 1,500 m for 05 and 2,000 m for 23.
     'RNP Y 05': {
-      rwy: '05', type: 'RNP-AR', spoken: 'RNP Yankee approach runway zero five',
-      pts: [['MONEC', 3000], ['MA512'], ['MA510'], ['MA508', 2000], ['MA504'], ['MA502'], ['RW05']], gp: 3.0, rf: ['MA512', 'MA504'],
-      minima: { da: 890, vis: 1500, ceil: 750 },                          // RNP 0.3, cat C
-      missed: { pts: ['MA550', 'MA552', 'MA554', 'MONEC'], alt: 3000 }
+      rwy: '05', key: 'RNPY05', short: 'RNP Y', spoken: 'RNP Yankee approach runway zero five', iaf: 'MONEC', via: ['PILIM'],
+      legs: [['MONEC', 3000], ['MA512'], ['MA510', 2000, ['MAC03', 'L']], ['MA508', 2000, null, 'FAP'], ['MA504', 890], ['MA502', 390, ['MAC01', 'R']], ['RW05']],
+      minima: { da: 910, dh: 764, vis: 1500 },
+      missed: { legs: [['MA550'], ['MA552', null, ['MAC10', 'R']], ['MA554', null, ['MAC02', 'R']], ['MONEC']], alt: 3000 }
     },
     'RNP Z 05': {
-      rwy: '05', type: 'RNP-AR', spoken: 'RNP Zulu approach runway zero five', from: 'PILIM',
-      note: 'from PILIM round the east of the island to the same final as RNP Y; fixes to be traced from AD 2.24.12-7',
-      minima: { da: 890, vis: 1500, ceil: 750 }, missed: { pts: ['MA550', 'MA552', 'MA554', 'MONEC'], alt: 3000 }
+      rwy: '05', key: 'RNPZ05', short: 'RNP Z', spoken: 'RNP Zulu approach runway zero five', iaf: 'PILIM',
+      legs: [['PILIM', 3000], ['MA530'], ['MA528', 2000, ['MAC06', 'L']], ['MA526', 2000], ['MA522', 2000, ['MAC09', 'R'], 'FAP'], ['MA520', 1200, ['MAC04', 'R']], ['MA504', 890], ['MA502', 390, ['MAC01', 'R']], ['RW05']],
+      minima: { da: 910, dh: 764, vis: 1500 },
+      missed: { legs: [['MA550'], ['MA552', null, ['MAC10', 'R']], ['MA554', null, ['MAC02', 'R']], ['MONEC']], alt: 3000 }
     },
     'RNP 23': {
-      rwy: '23', type: 'RNP-AR', spoken: 'RNP approach runway two three', from: 'PILIM',
-      note: 'from PILIM or MONEC; fixes to be traced from AD 2.24.12-9',
-      minima: { da: 1000, vis: 2000, ceil: 900 }, missed: { fix: 'MONEC', alt: 3000 }
+      rwy: '23', key: 'RNP23', short: 'RNP', spoken: 'RNP approach runway two three', iaf: 'PILIM',
+      legs: [['PILIM', 3000], ['MA410', 2000], ['MA408', 2000, null, 'FAP'], ['RW23']],
+      minima: { da: 1200, dh: 1009, vis: 2000 },
+      missed: { legs: [['MA407'], ['MA406', null, ['MAC05', 'L']], ['MONEC']], alt: 3000 }
+    },
+    'RNP 23 MONEC': {
+      rwy: '23', key: 'RNP23M', short: 'RNP', spoken: 'RNP approach runway two three', iaf: 'MONEC', transition: true,
+      legs: [['MONEC', 3000], ['MA416'], ['MA414', 2000, ['MAC07', 'R']], ['MA413', 2000], ['MA412', 2000], ['MA408', 2000, ['MAC08', 'L'], 'FAP'], ['RW23']],
+      minima: { da: 1200, dh: 1009, vis: 2000 },
+      missed: { legs: [['MA407'], ['MA406', null, ['MAC05', 'L']], ['MONEC']], alt: 3000 }
     }
   };
 
@@ -290,6 +315,7 @@ const LPMA = (() => {
     tradeMax: { name: 'Gale-force trade wind, 05 at the limit',          short: 'Strong NE',  metar: 'LPMA 041850Z 03019G29KT 9999 SCT022 20/14 Q1016' },
     sw:       { name: 'South-westerly front, runway 23 in rain',         short: 'Front',      metar: 'LPMA 041850Z 21016G24KT 8000 -RA BKN014 OVC025 18/16 Q1008' },
     low:      { name: 'Low cloud below the VOR 23 circling minima',      short: 'Low cloud',  metar: 'LPMA 041850Z 20010KT 5000 -RA BKN009 OVC015 18/17 Q1010' },
+    murk:     { name: 'Drizzle and low cloud: RNP only on runway 05',     short: 'RNP only',   metar: 'LPMA 041850Z 05010KT 3000 -DZ BR BKN008 OVC015 19/18 Q1014' },
     calima:   { name: 'Calima: Saharan dust haze, visibility 3 km',      short: 'Calima',     metar: 'LPMA 041850Z 11012KT 3000 HZ NSC 29/12 Q1012' },
     calm:     { name: 'Light and variable, morning sea breeze',          short: 'Calm',       metar: 'LPMA 041850Z VRB03KT CAVOK 21/15 Q1021' }
   };
@@ -355,7 +381,7 @@ const LPMA = (() => {
 
   return {
     icao: 'LPMA', iata: 'FNC', name: 'Madeira', city: 'Funchal', country: 'Portugal', arp: [D(32,41,39), D(16,46,41,true)], elev: 191,
-    FIX, NAV, RWY, STANDS, STAND_EXCLUDE, TAXI, depHold, STARS, HOLDS_AIR, SIDS, DIR, PLACE_DIR, dirFor, APPROACHES,
+    FIX, ARC, NAV, RWY, STANDS, STAND_EXCLUDE, TAXI, depHold, STARS, HOLDS_AIR, SIDS, DIR, PLACE_DIR, dirFor, APPROACHES,
     WIND_LIMITS, windLimit, anemometers, turbulence, MVA, PEAKS, TMA_NM, RADAR_REF, UNITS, release, TA, TZ, ALTERNATES,
     TIMETABLE, LONG_STAY, EXTRA, EXERCISES, WX_PRESETS, TEL, AIRLINE_ICAO, AIRLINE_TYPE, TYPES, PLACES, AIRPORTS,
     data: { metar: 'lpma/metar.txt', flights: 'lpma/flights.json' },

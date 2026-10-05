@@ -403,7 +403,8 @@ const SCEN_TEXT = APT.icao === 'LPMA' ? {
   nortada: 'A strong northerly over the limit at Rosário. Arrivals refuse the approach: hold them at PILIM and plan for Porto Santo.',
   tradeMax: 'The trade wind at gale force, right at the 05 limit. Some crews land, some hold. Watch every gust.',
   sw: 'A south-westerly front with rain. Runway 23, the higher VOR 23 minima and a visual approach close to the cliffs.',
-  low: 'Low cloud below the VOR 23 circling minima. Crews hold and divert while the departures keep moving.',
+  low: 'Low cloud below the runway 23 circling and RNP minima. Crews hold and divert while the departures keep moving.',
+  murk: 'Drizzle and cloud at 800 ft. Below the VOR circling minima but above the RNP ones, so every arrival needs an RNP AR approach.',
   calima: 'Saharan dust from the south-east. Visibility down to 3 km and a light easterly.',
   calm: 'Light and variable wind and a clear sky. A good day to learn the circuit.'
 } : {
