@@ -26,6 +26,7 @@ const GEO = {r('geo.json').strip()};
 {r('ground.js')}
 {r('tiles.js')}
 {r('far.js')}
+{r('live.js')}
 {r('voice.js')}
 {r('site.js')}
 </script>

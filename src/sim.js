@@ -262,8 +262,9 @@ const EXERCISES = {
 };
 function buildSchedule(mode, day = 0, hour = 17){
   if (EXERCISES[mode]) return EXERCISES[mode].sched.map(x => ({...x}));
-  const T = timetableSession(day, hour), s = [...T.residents, ...T.sched];
-  if (mode !== 'real') {
+  const LS = /^live/.test(mode) && typeof liveSession === 'function' ? liveSession() : null;   // Real world: today's real flights
+  const T = LS || timetableSession(day, Math.floor(hour)), s = [...T.residents, ...T.sched];
+  if (mode !== 'real' && mode !== 'live') {
     // busier sessions add charters, positioning flights and business jets on top of the timetable
     const used = new Set(s.map(x => x.cs)), extra = EXTRA.filter(x => !used.has(x.cs));
     const n = mode === 'event' ? extra.length : Math.min(8, extra.length), span = mode === 'event' ? 50 : 66;

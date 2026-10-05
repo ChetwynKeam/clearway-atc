@@ -63,6 +63,8 @@ function buildFar(){
   if (EXERCISES[S.mode]) return;
   for (const f of S.sched) if (f.k === 'ARR') addArrGhost(f);
   const day = String((S.day || 0) + 1), t0 = (S.hour || 0)*60;
+  if (/^live/.test(S.mode)) { const T = LIVE.session && LIVE.session.T; if (T) for (const d of T.dep) {   // today's real departures still en route
+    const off = (d.tm + 8 - t0)*60; if (!d.cancelled && off >= -5*3600 && off < -600) addDepGhost({ cs: d.cs, t: d.t, d: d.ap, dt0: off - S.t }, toLL(rm(THR27_M - 1500, 0))); } return; }
   for (const [, , , dc, dd, td, t, days] of TIMETABLE) {
     if (!dc || !days.includes(day)) continue;
     const off = (hm(td) + 8 - t0)*60;                 // airborne about eight minutes after off-blocks
@@ -129,6 +131,12 @@ const zHM = ms => new Date(ms).toISOString().substr(11, 5);
 const nowMin = () => (S.hour || 0)*60 + S.t/60;
 function fidsRows(kind){
   const day = String((S.day || 0) + 1), rows = [];
+  const LT = /^live/.test(S.mode) && LIVE.session && LIVE.session.T;
+  if (LT) {   // Real world: the airport's own list, with its status where the session hasn't got the flight yet
+    for (const r of kind === 'ARR' ? LT.arr : LT.dep) rows.push({ cs: r.cs, t: r.t, ap: r.ap, apName: r.place, tm: r.tm, stand: '', real: r.cancelled ? 'Cancelled' : r.real });
+    for (const f of S.sched) if (f.k === kind && !rows.some(r => r.cs === f.cs)) rows.push({ cs: f.cs, t: f.t, ap: kind === 'ARR' ? f.o : f.d, tm: Math.round((S.hour || 0)*60 + f.m + (kind === 'ARR' ? 15 : 6)), stand: f.stand || '', extra: true });
+    return rows.sort((a, b) => a.tm - b.tm);
+  }
   for (const [ac, o, ta, dc, dd, td, t, days, stand] of TIMETABLE) {
     if (!days.includes(day)) continue;
     if (kind === 'ARR' && ac) rows.push({ cs: ac, t, ap: o, tm: hm(ta), stand: dc ? stand : '' });
@@ -140,6 +148,7 @@ function fidsRows(kind){
 function fidsStatus(r, kind){
   const ac = S.acs.find(a => a.cs === r.cs), g = FAR.list.find(x => x.cs === r.cs);
   const late = nowMin() > r.tm + 5;
+  if (r.real && !ac && !FAR.done[r.cs] && !(g && S.t >= g.tStart && S.t <= g.tEnd)) return [r.real, /cancel/i.test(r.real) ? 'bad' : /landed|departed|arrived/i.test(r.real) ? 'ok' : /estimated|delayed/i.test(r.real) ? 'live' : ''];
   if (kind === 'ARR') {
     if (ac) return ac.ground ? (['ONSTAND', 'PARKED'].includes(ac.state) ? ['On stand', 'ok'] : ['Landed', 'ok']) : ac.state === 'PRE' ? ['Approaching', 'live'] : ac.state === 'DIVERTING' ? ['Diverting', 'bad'] : ['On approach', 'live'];
     if (FAR.done[r.cs]) return [FAR.done[r.cs], 'ok'];
@@ -165,7 +174,7 @@ function renderFids(){
   document.getElementById('fidsClock').textContent = S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
   el.innerHTML = rows.length ? rows.map(r => {
     const [st, cls] = fidsStatus(r, fidsTab), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
-    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.ap}<span class="ic">${r.ap}</span></td><td class="ty">${r.t}</td><td class="sd">${r.stand || ''}</td><td class="st ${cls}">${st}</td></tr>`;
+    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${r.stand || ''}</td><td class="st ${cls}">${st}</td></tr>`;
   }).join('') : `<tr><td colspan="6" class="none">No ${fidsTab === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
   document.getElementById('fidsAp').textContent = fidsTab === 'ARR' ? 'From' : 'To';
   document.querySelectorAll('[data-fids]').forEach(b => b.classList.toggle('on', b.dataset.fids === fidsTab));

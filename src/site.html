@@ -237,11 +237,15 @@
         <div class="eyebrow">Position briefing</div>
         <h1>Gibraltar Radar &amp; Tower</h1>
         <div class="sub">LXGB · RWY 09/27 1798 × 45 m · ELEV 12 ft · GBR TACAN Ch 83X · TA 6000 · Radar 122.8 · Tower 131.2</div>
-        <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable. Bring arrivals in on surveillance radar approaches, keep them out of R164 and off the Rock, work the departures from stand to Sevilla, and keep Winston Churchill Avenue shut whenever anything uses the runway.</p>
+        <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Gibraltar flights from the current time with the live METAR. Bring arrivals in on surveillance radar approaches, keep them out of R164 and off the Rock, work the departures from stand to Sevilla, and keep Winston Churchill Avenue shut whenever anything uses the runway.</p>
         <h2>Session</h2>
         <div class="grid2">
           <label><span class="lbl">Traffic</span>
             <select id="trafficSel">
+              <optgroup label="Real world">
+                <option value="live">Live now · today’s real flights</option>
+                <option value="liveplus">Live now plus extra traffic</option>
+              </optgroup>
               <optgroup label="Sessions">
                 <option value="real" selected>Timetable only</option>
                 <option value="summer">Timetable plus charters and bizjets</option>

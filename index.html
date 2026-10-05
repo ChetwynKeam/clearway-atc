@@ -812,11 +812,15 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
         <div class="eyebrow">Position briefing</div>
         <h1>Gibraltar Radar &amp; Tower</h1>
         <div class="sub">LXGB · RWY 09/27 1798 × 45 m · ELEV 12 ft · GBR TACAN Ch 83X · TA 6000 · Radar 122.8 · Tower 131.2</div>
-        <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable. Bring arrivals in on surveillance radar approaches, keep them out of R164 and off the Rock, work the departures from stand to Sevilla, and keep Winston Churchill Avenue shut whenever anything uses the runway.</p>
+        <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Gibraltar flights from the current time with the live METAR. Bring arrivals in on surveillance radar approaches, keep them out of R164 and off the Rock, work the departures from stand to Sevilla, and keep Winston Churchill Avenue shut whenever anything uses the runway.</p>
         <h2>Session</h2>
         <div class="grid2">
           <label><span class="lbl">Traffic</span>
             <select id="trafficSel">
+              <optgroup label="Real world">
+                <option value="live">Live now · today’s real flights</option>
+                <option value="liveplus">Live now plus extra traffic</option>
+              </optgroup>
               <optgroup label="Sessions">
                 <option value="real" selected>Timetable only</option>
                 <option value="summer">Timetable plus charters and bizjets</option>
@@ -1349,8 +1353,9 @@ const EXERCISES = {
 };
 function buildSchedule(mode, day = 0, hour = 17){
   if (EXERCISES[mode]) return EXERCISES[mode].sched.map(x => ({...x}));
-  const T = timetableSession(day, hour), s = [...T.residents, ...T.sched];
-  if (mode !== 'real') {
+  const LS = /^live/.test(mode) && typeof liveSession === 'function' ? liveSession() : null;   // Real world: today's real flights
+  const T = LS || timetableSession(day, Math.floor(hour)), s = [...T.residents, ...T.sched];
+  if (mode !== 'real' && mode !== 'live') {
     // busier sessions add charters, positioning flights and business jets on top of the timetable
     const used = new Set(s.map(x => x.cs)), extra = EXTRA.filter(x => !used.has(x.cs));
     const n = mode === 'event' ? extra.length : Math.min(8, extra.length), span = mode === 'event' ? 50 : 66;
@@ -2144,6 +2149,7 @@ function draw(){
   drawAirport();
   if (S.preview) drawPreview(S.preview);
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
+  if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
   if (img) drawImageryCredit();
@@ -2716,6 +2722,7 @@ daySel.value = (new Date().getUTCDay() + 6) % 7;
 const lt = h => String((h + 2) % 24).padStart(2,'0');
 function renderSlots(){
   const d = +daySel.value, keep = hourSel.value, ex = !!EXERCISES[$('trafficSel').value];
+  if (/^live/.test($('trafficSel').value)) { daySel.disabled = hourSel.disabled = true; if (typeof renderLiveSlots === 'function') renderLiveSlots(); return; }
   hourSel.innerHTML = '';
   for (const h of SESSION_HOURS) {
     const n = timetableFlights(d, h).length, o = document.createElement('option');
@@ -2746,12 +2753,15 @@ function start(){
   if (!S.running) {
     resetSession();
     S.running = true; S.rwy = newRwy; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
-    const day = +daySel.value, hour = +hourSel.value; S.day = day; S.hour = hour;
-    if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
-    S.wx = parseMetar(S.wx.raw.replace(/^(LXGB )\d{6}Z/, (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
+    const live = /^live/.test(mode), now = new Date(Math.floor(Date.now()/60e3)*60e3);
+    const day = live ? (now.getUTCDay() + 6) % 7 : +daySel.value, hour = live ? now.getUTCHours() + now.getUTCMinutes()/60 : +hourSel.value; S.day = day; S.hour = hour;
+    if (live) S.start = +now; else if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
+    if (!live) S.wx = parseMetar(S.wx.raw.replace(/^(LXGB )\d{6}Z/, (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
     S.sched = buildSchedule(mode, day, hour);
     sys(`Position open: Gibraltar Radar 122.8 and Tower 131.2 combined. ${S.wx.raw}. Runway ${S.rwy}, information ${phonetic(S.atis)}.`);
-    if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
+    if (live && LIVE.session) sys(`Real world, ${DAYS[day]} ${zHM(S.start)}Z: ${S.sched.length} real flight${S.sched.length === 1 ? '' : 's'} still to come today, from Gibraltar Airport’s live flight information${LIVE.data.updated ? ` (updated ${LIVE.data.updated.substr(11, 5)}Z)` : ''}.`);
+    else if (live) sys('Real world: today’s flight information could not be loaded here, so the session uses the timetable for this hour.', true);
+    else if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys('Wind exceeds the Special Procedures turbulence limit: expect windshear on final and go-arounds.');
     if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft): arrivals will not be able to land.');
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');
@@ -2760,7 +2770,19 @@ function start(){
   $('setup').hidden = true; S.paused = false; $('tgPause').textContent = 'Pause';
   renderAtis(); renderSel(); renderStrips(true);
 }
-$('startBtn').onclick = start;
+// Real world sessions load today's flights (and the live METAR) before the position opens
+$('startBtn').onclick = async () => {
+  const mode = $('trafficSel').value;
+  if (/^live/.test(mode) && !S.running) {
+    const bt = $('startBtn'), txt = bt.textContent; bt.disabled = true; bt.textContent = 'Loading today’s flights…';
+    try {
+      await liveLoad(true); LIVE.session = liveSession();
+      if (!liveBox.checked) { liveBox.checked = true; setLive(true); }
+      const m = await fetchMetar(); if (m) { $('wxPaste').value = m; liveLast = m; }
+    } finally { bt.disabled = false; bt.textContent = txt; }
+  }
+  start();
+};
 $('newBtn').onclick = () => { S.running = false; resetSession(); openSetup(); renderAtis(); renderSel(); renderStrips(true); };
 
 let last = performance.now(), uiT = 0;
@@ -3128,6 +3150,8 @@ function buildFar(){
   if (EXERCISES[S.mode]) return;
   for (const f of S.sched) if (f.k === 'ARR') addArrGhost(f);
   const day = String((S.day || 0) + 1), t0 = (S.hour || 0)*60;
+  if (/^live/.test(S.mode)) { const T = LIVE.session && LIVE.session.T; if (T) for (const d of T.dep) {   // today's real departures still en route
+    const off = (d.tm + 8 - t0)*60; if (!d.cancelled && off >= -5*3600 && off < -600) addDepGhost({ cs: d.cs, t: d.t, d: d.ap, dt0: off - S.t }, toLL(rm(THR27_M - 1500, 0))); } return; }
   for (const [, , , dc, dd, td, t, days] of TIMETABLE) {
     if (!dc || !days.includes(day)) continue;
     const off = (hm(td) + 8 - t0)*60;                 // airborne about eight minutes after off-blocks
@@ -3194,6 +3218,12 @@ const zHM = ms => new Date(ms).toISOString().substr(11, 5);
 const nowMin = () => (S.hour || 0)*60 + S.t/60;
 function fidsRows(kind){
   const day = String((S.day || 0) + 1), rows = [];
+  const LT = /^live/.test(S.mode) && LIVE.session && LIVE.session.T;
+  if (LT) {   // Real world: the airport's own list, with its status where the session hasn't got the flight yet
+    for (const r of kind === 'ARR' ? LT.arr : LT.dep) rows.push({ cs: r.cs, t: r.t, ap: r.ap, apName: r.place, tm: r.tm, stand: '', real: r.cancelled ? 'Cancelled' : r.real });
+    for (const f of S.sched) if (f.k === kind && !rows.some(r => r.cs === f.cs)) rows.push({ cs: f.cs, t: f.t, ap: kind === 'ARR' ? f.o : f.d, tm: Math.round((S.hour || 0)*60 + f.m + (kind === 'ARR' ? 15 : 6)), stand: f.stand || '', extra: true });
+    return rows.sort((a, b) => a.tm - b.tm);
+  }
   for (const [ac, o, ta, dc, dd, td, t, days, stand] of TIMETABLE) {
     if (!days.includes(day)) continue;
     if (kind === 'ARR' && ac) rows.push({ cs: ac, t, ap: o, tm: hm(ta), stand: dc ? stand : '' });
@@ -3205,6 +3235,7 @@ function fidsRows(kind){
 function fidsStatus(r, kind){
   const ac = S.acs.find(a => a.cs === r.cs), g = FAR.list.find(x => x.cs === r.cs);
   const late = nowMin() > r.tm + 5;
+  if (r.real && !ac && !FAR.done[r.cs] && !(g && S.t >= g.tStart && S.t <= g.tEnd)) return [r.real, /cancel/i.test(r.real) ? 'bad' : /landed|departed|arrived/i.test(r.real) ? 'ok' : /estimated|delayed/i.test(r.real) ? 'live' : ''];
   if (kind === 'ARR') {
     if (ac) return ac.ground ? (['ONSTAND', 'PARKED'].includes(ac.state) ? ['On stand', 'ok'] : ['Landed', 'ok']) : ac.state === 'PRE' ? ['Approaching', 'live'] : ac.state === 'DIVERTING' ? ['Diverting', 'bad'] : ['On approach', 'live'];
     if (FAR.done[r.cs]) return [FAR.done[r.cs], 'ok'];
@@ -3230,7 +3261,7 @@ function renderFids(){
   document.getElementById('fidsClock').textContent = S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
   el.innerHTML = rows.length ? rows.map(r => {
     const [st, cls] = fidsStatus(r, fidsTab), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
-    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.ap}<span class="ic">${r.ap}</span></td><td class="ty">${r.t}</td><td class="sd">${r.stand || ''}</td><td class="st ${cls}">${st}</td></tr>`;
+    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${r.stand || ''}</td><td class="st ${cls}">${st}</td></tr>`;
   }).join('') : `<tr><td colspan="6" class="none">No ${fidsTab === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
   document.getElementById('fidsAp').textContent = fidsTab === 'ARR' ? 'From' : 'To';
   document.querySelectorAll('[data-fids]').forEach(b => b.classList.toggle('on', b.dataset.fids === fidsTab));
@@ -3244,6 +3275,147 @@ function renderFids(){
     S.listeners.push(ev => { if (ev === 'tick' || ev === 'start') renderFids(); });
   }
 }
+
+// ═════════════════════════ Real world mode: today's real flights and live traffic ═════════════════════════
+// The session starts at the current time. Gibraltar's arrivals and departures come from the airport's own live flight
+// information (flights.json beside the page, refreshed every 15 minutes by a scheduled job in the site's repo), with
+// their expected times and delays. Aircraft in the air right now come from free ADS-B networks (adsb.lol, adsb.fi)
+// through a small relay, because those feeds can't be read by a web page directly. Real Gibraltar inbounds take over
+// their scheduled flight when they come within range; everything else is shown as background traffic.
+const RELAY_URL = '';                     // the Cloudflare Worker in relay/worker.js, once deployed
+const RELAY = (() => { try { return localStorage.getItem('cw-relay') || RELAY_URL; } catch (e) { return RELAY_URL; } })();
+const LIVE = { data: null, loadedAt: 0, session: null, rows: null, ac: new Map(), ok: 0, err: 0, timer: null, bound: new Set(), hide: new Set() };
+const isLiveMode = m => /^live/.test(m || S.mode || '');
+const AIRLINE_ICAO = { BA: 'BAW', U2: 'EZY', DS: 'EZS', EC: 'EJU', AT: 'RAM', LS: 'EXS', BY: 'TOM', VY: 'VLG', FR: 'RYR', IB: 'IBE', I2: 'IBS', W6: 'WZZ', TO: 'TVF', RK: 'RUK', MT: 'TCX' };
+const AIRLINE_TYPE = { BAW: 'A20N', EZY: 'A20N', EJU: 'A20N', EZS: 'A20N', RAM: 'AT76', EXS: 'B738', TOM: 'B738', RYR: 'B738', VLG: 'A320', RRR: 'A400' };
+const PLACE_ICAO = { 'london gatwick': 'EGKK', 'gatwick': 'EGKK', 'london heathrow': 'EGLL', 'heathrow': 'EGLL', 'london luton': 'EGGW', 'luton': 'EGGW',
+  'london stansted': 'EGSS', 'manchester': 'EGCC', 'bristol': 'EGGD', 'birmingham': 'EGBB', 'edinburgh': 'EGPH', 'brize norton': 'EGVN', 'raf brize norton': 'EGVN',
+  'tangier': 'GMTT', 'tangiers': 'GMTT', 'casablanca': 'GMMN', 'marrakech': 'GMMX', 'madrid': 'LEMD', 'seville': 'LEZL', 'sevilla': 'LEZL', 'malaga': 'LEMG', 'málaga': 'LEMG',
+  'paris': 'LFPG', 'paris cdg': 'LFPG', 'nice': 'LFMN', 'farnborough': 'EGLF' };
+Object.assign(AP, { EGBB: [52.4539, -1.7480, 'Birmingham'], EGPH: [55.9500, -3.3725, 'Edinburgh'], GMMX: [31.6069, -8.0363, 'Marrakech'] });
+const csOf = fl => { fl = fl.toUpperCase().replace(/\s/g, ''); let m = fl.match(/^([A-Z]{3})(\d{1,4}[A-Z]{0,2})$/); if (m) return fl; m = fl.match(/^([A-Z0-9]{2})(\d{1,4}[A-Z]?)$/); return m && AIRLINE_ICAO[m[1]] ? AIRLINE_ICAO[m[1]] + m[2] : fl; };
+const placeOf = p => PLACE_ICAO[p.toLowerCase().trim()] || p;
+const typeOf = cs => AIRLINE_TYPE[cs.slice(0, 3)] || 'A320';
+const fnum = cs => +((cs.match(/(\d+)/) || [0, 0])[1]);
+
+async function liveLoad(force){
+  if (LIVE.data && !force && Date.now() - LIVE.loadedAt < 5*60e3) return LIVE.data;
+  try {
+    const r = await fetch('flights.json?_=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) { LIVE.data = await r.json(); LIVE.loadedAt = Date.now(); }
+  } catch (e) {}
+  return LIVE.data;
+}
+// today's rows in UTC minutes from 00Z, with the airport's own status text
+function liveToday(now = Date.now()){
+  const D = LIVE.data && LIVE.data.days; if (!D) return null;
+  const tryKey = off => new Date(now + off*60e3).toISOString().slice(0, 10);
+  const key = Object.keys(D).find(k => k === tryKey(D[k].utcOffsetMin)); if (!key) return null;
+  const day = D[key], off = day.utcOffsetMin, nowUtc = new Date(now).getUTCHours()*60 + new Date(now).getUTCMinutes();
+  const conv = (r, kind) => {
+    const cs = csOf(r.flight), t = hm(r.expected && /^\d\d:\d\d$/.test(r.expected) ? r.expected : r.sched) - off, sch = hm(r.sched) - off;
+    const st = (r.status || '').trim(), stl = st.toLowerCase();
+    return { cs, flight: r.flight, t: typeOf(cs), ap: placeOf(r.place), place: r.place, tm: t, sched: sch, kind,
+      real: st + (r.expected && !/landed|departed|airborne|arrived/i.test(st) ? ' ' + r.expected + ' local' : ''),
+      cancelled: /cancel/.test(stl), done: kind === 'ARR' ? /landed|arrived|on stand|on blocks/.test(stl) : /departed|airborne|closed/.test(stl), rel: t - nowUtc };
+  };
+  return { arr: day.arr.map(r => conv(r, 'ARR')).sort((a, b) => a.tm - b.tm), dep: day.dep.map(r => conv(r, 'DEP')).sort((a, b) => a.tm - b.tm), nowUtc, key, off };
+}
+// sched (arrivals with their turnaround) and residents, the same shape as timetableSession, with m relative to now
+function liveSession(now = Date.now()){
+  const T = liveToday(now); if (!T) return null;
+  const sched = [], residents = [], used = new Set();
+  const pairFor = a => T.dep.find(d => !used.has(d) && !d.cancelled && d.ap === a.ap && fnum(d.cs) - fnum(a.cs) === 1 && d.cs.slice(0, 3) === a.cs.slice(0, 3))
+                    || T.dep.find(d => !used.has(d) && !d.cancelled && d.ap === a.ap && d.cs.slice(0, 3) === a.cs.slice(0, 3) && d.tm > a.tm);
+  for (const a of T.arr) {
+    if (a.cancelled) continue;
+    const d = pairFor(a); if (d) used.add(d);
+    const depOpen = d && !d.done && d.rel > 0, o = a.ap, landed = a.done || a.rel < -5;
+    if (!landed) sched.push({ cs: a.cs, t: a.t, k: 'ARR', o, gate: gateFor(o), m: Math.max(0, a.rel - 15), at: zHM(Date.UTC(2026, 0, 1) + a.tm*60e3), real: true,
+                               turn: d ? { cs: d.cs, d: d.ap, depM: Math.max(8, d.rel), at: zHM(Date.UTC(2026, 0, 1) + d.tm*60e3) } : null });
+    else if (depOpen) residents.push({ cs: d.cs, t: d.t, k: 'RES', d: d.ap, gate: gateFor(d.ap), m: 0, depM: d.rel, at: zHM(Date.UTC(2026, 0, 1) + d.tm*60e3), real: true });
+  }
+  for (const d of T.dep) if (!used.has(d) && !d.cancelled && !d.done && d.rel > 0)   // night-stoppers and positioning flights
+    residents.push({ cs: d.cs, t: d.t, k: 'RES', d: d.ap, gate: gateFor(d.ap), m: 0, depM: d.rel, at: zHM(Date.UTC(2026, 0, 1) + d.tm*60e3), real: true });
+  return { sched, residents, T };
+}
+// session picker: today's real flights instead of the timetable slot
+function renderLiveSlots(){
+  const el = $('slotList'); el.innerHTML = '<span class="dimmer">Loading today’s flights from Gibraltar Airport…</span>';
+  liveLoad().then(() => {
+    if (!isLiveMode($('trafficSel').value)) return;
+    const T = liveToday();
+    if (!T) { el.innerHTML = '<span class="dimmer">Today’s flight information isn’t available on this page (it needs the site’s own web address). The session will use the timetable instead.</span>'; return; }
+    const upd = LIVE.data.updated ? ` · updated ${LIVE.data.updated.substr(11, 5)}Z` : '';
+    const row = r => `<span class="slot ${r.kind}${r.done || r.rel < -5 ? ' past' : ''}"><b>${r.cs}</b> ${r.kind === 'ARR' ? r.ap + ' › LXGB' : 'LXGB › ' + r.ap} <i>${zHM(Date.UTC(2026, 0, 1) + r.tm*60e3)}Z${r.cancelled ? ' cancelled' : ''}</i></span>`;
+    el.innerHTML = `<span class="dimmer" style="flex-basis:100%">Real flights today from Gibraltar Airport${upd}. Your session starts now (${zHM(Date.now())}Z).</span>` + [...T.arr, ...T.dep].sort((a, b) => a.tm - b.tm).map(row).join('');
+  });
+}
+
+// ── live traffic from the relay ──
+async function pollTraffic(){
+  if (!RELAY || !S.running || !isLiveMode()) return;
+  try {
+    const r = await fetch(RELAY.replace(/\/$/, '') + '/traffic?lat=36.15&lon=-5.35&r=200', { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json(), now = Date.now();
+    for (const a of j.ac || []) { a.ts = now - (a.seen || 0)*1000; LIVE.ac.set(a.hex, a); }
+    for (const [k, a] of LIVE.ac) if (now - a.ts > 90e3) LIVE.ac.delete(k);
+    if (!LIVE.ok) sys(`Live traffic connected: ${LIVE.ac.size} aircraft within 200 NM (${j.src || 'ADS-B'}).`);
+    LIVE.ok = now; LIVE.err = 0; liveBind();
+  } catch (e) { if (++LIVE.err === 3) sys('Live traffic feed not responding; retrying.', true); }
+}
+const liveLL = a => { const dt = Math.min(45, (Date.now() - a.ts)/1000), d = (a.gs || 0)*dt/3600, tr = (a.trk || 0)*D2R; return [a.lat + d*Math.cos(tr)/60, a.lon + d*Math.sin(tr)/(60*Math.cos(a.lat*D2R))]; };
+// a real aircraft inbound to Gibraltar takes over its scheduled flight as a pending track at its real position
+function liveBind(){
+  for (const [hex, a] of LIVE.ac) {
+    if (LIVE.bound.has(hex) || a.gnd || !a.alt) continue;
+    const ll = liveLL(a), p = xy(...ll), dGbr = Math.hypot(p[0] - GBR[0], p[1] - GBR[1]);
+    if (dGbr > 90 || dGbr < 12) continue;
+    const toGbr = brg(p[0], p[1], ...GBR), off = Math.abs(((a.trk - toGbr) % 360 + 540) % 360 - 180);
+    const byName = S.sched.find(f => f.k === 'ARR' && f.cs === a.cs && !f.liveHex);
+    const byPath = !byName && off < 25 && a.alt < 26000 && (a.vs || 0) <= 300 && S.sched.find(f => f.k === 'ARR' && f.real && !f.liveHex && f.cs.slice(0, 3) === a.cs.slice(0, 3) && Math.abs(f.m*60 + 15*60 - S.t - dGbr/Math.max(150, a.gs || 250)*3600) < 40*60);
+    const f = byName || byPath; if (!f) continue;
+    let ac = S.acs.find(x => x.cs === f.cs);
+    if (ac && ac.state !== 'PRE') { f.liveHex = hex; LIVE.bound.add(hex); continue; }   // already yours: just hide the live copy
+    if (!ac) { f.spawned = true; ac = spawnArrival({ ...f, m: S.t/60 + PRE_LEAD/60 + 1 }); }
+    if (!ac) continue;
+    const gateNow = ['E', 'W', 'S'].sort((g1, g2) => dist(...ENTRY[g1], ...p) - dist(...ENTRY[g2], ...p))[0];
+    ac.gate = gateNow; ac.x = p[0]; ac.y = p[1]; ac.alt = Math.max(ENTRY_ALT[gateNow], a.alt); ac.gs = a.gs || 300; ac.ias = Math.min(300, ac.gs);
+    ac.hdg = ac.trk = a.trk || ac.hdg; ac.preAt = S.t + Math.max(30, dist(...p, ...ENTRY[gateNow])/Math.max(150, ac.gs)*3600);
+    if (a.cs && a.cs !== ac.cs) { ac.real = a.cs; }
+    ac.liveHex = hex; f.liveHex = hex; LIVE.bound.add(hex);
+    FAR.list = FAR.list.filter(g => g.cs !== f.cs);
+    sys(`${f.cs} is a real flight${a.cs && a.cs !== f.cs ? ` (callsign ${a.cs})` : ''}: picked up ${Math.round(dGbr)} NM out at ${altShort(Math.round(a.alt/100)*100)}.`);
+  }
+}
+const liveHidden = (a, p) => LIVE.bound.has(a.hex) || a.gnd || (a.alt != null && a.alt < 3500 && Math.hypot(p[0] - GBR[0], p[1] - GBR[1]) < 6) || S.acs.some(x => x.cs === a.cs);
+function drawLive(){
+  if (!S.running || !isLiveMode() || !LIVE.ac.size) return;
+  const tags = V.scale > 2.5, col = C.name === 'dark' ? '#9fb3c8' : '#5d6f84';
+  for (const a of LIVE.ac.values()) {
+    const ll = liveLL(a), p = xy(...ll); if (liveHidden(a, p)) continue;
+    const X = sx(p[0]), Y = sy(p[1]); if (X < -60 || Y < -60 || X > W + 60 || Y > H + 60) continue;
+    const inRadar = Math.hypot(p[0] - GBR[0], p[1] - GBR[1]) <= RADAR_NM;
+    if (inRadar) {
+      cx.strokeStyle = col; cx.lineWidth = 1.2; cx.strokeRect(X - 3, Y - 3, 6, 6);
+      const L = (a.gs || 0)/60*V.scale; cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(X + Math.sin((a.trk || 0)*D2R)*L, Y - Math.cos((a.trk || 0)*D2R)*L); cx.stroke();
+      if (tags) { cx.font = `500 10.5px ${FONT_D}`; cx.fillStyle = col; cx.fillText(a.cs || a.reg || a.hex, X + 7, Y - 6); cx.fillText(`${FL(a.alt || 0)} ${a.t || ''}`, X + 7, Y + 6); }
+    } else {
+      planeIcon(X, Y, a.trk || 0, C.name === 'dark' ? '#8ea3b8' : '#b4c2d1');
+      if (V.scale > 0.6) farTag(X, Y, a.cs || a.reg || a.hex, `${FL(a.alt || 0)} ${String(Math.round((a.gs || 0)/10)).padStart(2, '0')}`, `${a.t || '----'} LIVE`, col);
+    }
+  }
+}
+S.listeners.push(ev => {
+  if (ev === 'start') {
+    clearInterval(LIVE.timer); LIVE.timer = null; LIVE.ac.clear(); LIVE.bound.clear(); LIVE.ok = 0; LIVE.err = 0;
+    if (isLiveMode()) {
+      if (RELAY) { pollTraffic(); LIVE.timer = setInterval(pollTraffic, 10000); }
+      else sys('Real world: live aircraft positions need the traffic relay, which isn’t set up yet. Today’s real Gibraltar flights are scheduled at their real times.');
+    }
+  }
+});
 
 // ═════════════════════════ voice: spoken commands and accented pilots ═════════════════════════
 // Speech in: the browser's speech recogniser hears standard phraseology ("Speedbird four niner two, turn left heading

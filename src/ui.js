@@ -67,6 +67,7 @@ function draw(){
   drawAirport();
   if (S.preview) drawPreview(S.preview);
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
+  if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
   if (img) drawImageryCredit();
@@ -639,6 +640,7 @@ daySel.value = (new Date().getUTCDay() + 6) % 7;
 const lt = h => String((h + 2) % 24).padStart(2,'0');
 function renderSlots(){
   const d = +daySel.value, keep = hourSel.value, ex = !!EXERCISES[$('trafficSel').value];
+  if (/^live/.test($('trafficSel').value)) { daySel.disabled = hourSel.disabled = true; if (typeof renderLiveSlots === 'function') renderLiveSlots(); return; }
   hourSel.innerHTML = '';
   for (const h of SESSION_HOURS) {
     const n = timetableFlights(d, h).length, o = document.createElement('option');
@@ -669,12 +671,15 @@ function start(){
   if (!S.running) {
     resetSession();
     S.running = true; S.rwy = newRwy; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
-    const day = +daySel.value, hour = +hourSel.value; S.day = day; S.hour = hour;
-    if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
-    S.wx = parseMetar(S.wx.raw.replace(/^(LXGB )\d{6}Z/, (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
+    const live = /^live/.test(mode), now = new Date(Math.floor(Date.now()/60e3)*60e3);
+    const day = live ? (now.getUTCDay() + 6) % 7 : +daySel.value, hour = live ? now.getUTCHours() + now.getUTCMinutes()/60 : +hourSel.value; S.day = day; S.hour = hour;
+    if (live) S.start = +now; else if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
+    if (!live) S.wx = parseMetar(S.wx.raw.replace(/^(LXGB )\d{6}Z/, (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
     S.sched = buildSchedule(mode, day, hour);
     sys(`Position open: Gibraltar Radar 122.8 and Tower 131.2 combined. ${S.wx.raw}. Runway ${S.rwy}, information ${phonetic(S.atis)}.`);
-    if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
+    if (live && LIVE.session) sys(`Real world, ${DAYS[day]} ${zHM(S.start)}Z: ${S.sched.length} real flight${S.sched.length === 1 ? '' : 's'} still to come today, from Gibraltar Airport’s live flight information${LIVE.data.updated ? ` (updated ${LIVE.data.updated.substr(11, 5)}Z)` : ''}.`);
+    else if (live) sys('Real world: today’s flight information could not be loaded here, so the session uses the timetable for this hour.', true);
+    else if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys('Wind exceeds the Special Procedures turbulence limit: expect windshear on final and go-arounds.');
     if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft): arrivals will not be able to land.');
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');
@@ -683,7 +688,19 @@ function start(){
   $('setup').hidden = true; S.paused = false; $('tgPause').textContent = 'Pause';
   renderAtis(); renderSel(); renderStrips(true);
 }
-$('startBtn').onclick = start;
+// Real world sessions load today's flights (and the live METAR) before the position opens
+$('startBtn').onclick = async () => {
+  const mode = $('trafficSel').value;
+  if (/^live/.test(mode) && !S.running) {
+    const bt = $('startBtn'), txt = bt.textContent; bt.disabled = true; bt.textContent = 'Loading today’s flights…';
+    try {
+      await liveLoad(true); LIVE.session = liveSession();
+      if (!liveBox.checked) { liveBox.checked = true; setLive(true); }
+      const m = await fetchMetar(); if (m) { $('wxPaste').value = m; liveLast = m; }
+    } finally { bt.disabled = false; bt.textContent = txt; }
+  }
+  start();
+};
 $('newBtn').onclick = () => { S.running = false; resetSession(); openSetup(); renderAtis(); renderSel(); renderStrips(true); };
 
 let last = performance.now(), uiT = 0;
