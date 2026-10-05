@@ -40,6 +40,7 @@ def links(icao, absolute):
     return {k: (up or './') if v['page'] == 'index.html' else up + v['page'].rsplit('/', 1)[0] + '/' for k, v in AIRPORTS.items()}
 def cwcfg(live):
     c = {k: SUBS[k] for k in ('enabled', 'feedback', 'api', 'supabase_url', 'supabase_anon_key', 'currency', 'prices', 'trial_days', 'contact_email', 'analytics_token', 'legal_date')}
+    c['offer'] = SUBS.get('offer')
     c['site'] = SITE_URL
     if not live: c['enabled'] = False
     return json.dumps(c, ensure_ascii=False)

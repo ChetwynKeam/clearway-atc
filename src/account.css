@@ -8,8 +8,15 @@
 .cw-plan > .badge { position: absolute; top: -12px; left: 18px; }
 .cw-plan h3 { font-size: 24px; margin: 0; }
 .cw-plan .price { display: flex; align-items: baseline; gap: 4px; margin-top: 6px; }
-.cw-plan .price b { font-family: var(--font-head); font-size: 34px; letter-spacing: -.03em; color: var(--brand); }
-.cw-plan .price span { color: var(--dim); }
+.cw-plan .price b { font-family: var(--font-head); font-size: clamp(26px, 2.2vw, 34px); letter-spacing: -.03em; color: var(--brand); }
+.cw-plan .price span { color: var(--dim); font-size: 14px; white-space: nowrap; }
+.cw-plan .price s, .cw-tchip s { color: var(--faint); font-weight: 500; margin-right: 4px; }
+.cw-plan .price { flex-wrap: wrap; row-gap: 0; }
+.cw-plan .price s { font-size: 16px; flex-basis: 100%; }
+.cw-off { font-size: 13px; font-weight: 600; color: #0d7a52; }
+.cw-offer { background: #e3f6ee; color: #0d7a52; border-color: #b8e6d2; margin: 0 8px 8px 0; }
+.cw-teaser-off { margin: -24px 0 20px; font-weight: 600; color: #0d7a52; }
+.cw-teaser-off:empty { display: none; }
 .cw-plan .per { font-size: 13px; color: var(--dim); }
 .cw-plan p { color: var(--ink-2); font-size: 14.5px; margin: 8px 0 14px; flex: 1; }
 .cw-plan .btn { width: 100%; }

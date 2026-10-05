@@ -60,6 +60,7 @@ follow-up once there are paying players.
    `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
    Copy the signing secret (`whsec_...`).
 5. Developers > API keys: copy the secret key (`sk_test_...`).
+6. Launch offer: Product catalogue > Coupons > New, 30% off, duration "Repeating" for 3 months. Copy its ID into the Vercel variable `STRIPE_COUPON`; Checkout then applies it to every new subscription. The pricing page shows the offer from `subs.json` (`offer`: percent, months, label); set `offer` to `null` and delete `STRIPE_COUPON` to end it.
 
 ### 3. Vercel environment variables
 Vercel > clearway-atc > Settings > Environment Variables (Production), then redeploy:
@@ -72,6 +73,7 @@ STRIPE_WEBHOOK_SECRET     whsec_...
 PRICE_1 PRICE_3 PRICE_5 PRICE_10 PRICE_UNLIMITED PRICE_EARLY   price_...
 SITE_URL                  https://www.clearway-atc.co.uk/
 TRIAL_DAYS                2
+STRIPE_COUPON             (the launch offer coupon ID, optional)
 ```
 
 ### 4. Turn it on (`subs.json`, then `python3 build.py` and copy the pages)

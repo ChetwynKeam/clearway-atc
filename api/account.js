@@ -6,7 +6,7 @@
 // POST {action: 'early', on}                       add or remove the early access add-on
 import { json, fail, preflight, body, user, account, saveAccount, entitlement, configured, stripe, stripeOn, PLANS, EARLY_PRICE, SITE_URL, TRIAL_DAYS } from './_lib.js';
 
-const ICAO = /^[A-Z]{4}$/, SWAP_DAYS = 30;
+const ICAO = /^[A-Z]{4}$/, SWAP_DAYS = 30, COUPON = () => (process.env.STRIPE_COUPON || '').trim();
 
 async function handle(req){
   if (req.method === 'OPTIONS') return preflight(req);
@@ -43,7 +43,9 @@ async function handle(req){
       const items = [{ price: plan.price(), quantity: 1 }];
       if (b.early && !plan.early && EARLY_PRICE()) items.push({ price: EARLY_PRICE(), quantity: 1 });
       const s = await stripe('checkout/sessions', {
-        mode: 'subscription', client_reference_id: u.id, line_items: items, allow_promotion_codes: 'true',
+        mode: 'subscription', client_reference_id: u.id, line_items: items,
+        // a launch offer coupon applies itself; otherwise players may type a promotion code (Stripe allows one or the other)
+        ...(COUPON() ? { discounts: [{ coupon: COUPON() }] } : { allow_promotion_codes: 'true' }),
         ...(a.stripe_customer ? { customer: a.stripe_customer } : { customer_email: u.email }),
         subscription_data: { metadata: { user_id: u.id }, ...(a.trial_used ? {} : { trial_period_days: TRIAL_DAYS }) },
         success_url: SITE_URL + '?checkout=done#account', cancel_url: SITE_URL + '#pricing',

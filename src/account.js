@@ -12,6 +12,10 @@ const CW_PLANS = [
   { k: 'all', n: 0, name: 'Echo', p: 'Every airport, including new ones as they open, with Foxtrot early access included' },
 ];
 const cwPrice = k => CW_CFG.currency + (+CW_CFG.prices[k]).toFixed(2);
+// a launch offer (subs.json "offer"): percent off the first N months, applied in Stripe by the STRIPE_COUPON coupon
+const CW_OFF = CW_CFG.offer && +CW_CFG.offer.percent > 0 ? CW_CFG.offer : null;
+const cwOffer = k => CW_CFG.currency + (Math.round(CW_CFG.prices[k]*(100 - CW_OFF.percent))/100).toFixed(2);
+const cwOfferTerm = () => CW_OFF.months ? `for your first ${CW_OFF.months} month${CW_OFF.months > 1 ? 's' : ''}` : 'for as long as you subscribe';
 const CW = { ses: null, ent: null, loading: false, want: null };
 const cwLS = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } },
   set(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} } };
@@ -121,6 +125,8 @@ function cwOnRoute(){
 // ── pricing ──
 function cwRenderPricing(){
   $('cwPreviewNote').hidden = CW_ON;
+  $('cwOfferNote').hidden = !CW_OFF;
+  if (CW_OFF) $('cwOfferNote').innerHTML = `<b>${esc(CW_OFF.label || 'Offer')}:</b> ${CW_OFF.percent}% off every plan ${cwOfferTerm()}${CW_ON ? ', applied at checkout' : ' when subscriptions open'}.`;
   $('cwEarlyPick').hidden = !CW_ON;
   const e = CW.ent, cur = e && e.active ? e.plan : null, trial = !(e && e.trial_used);
   $('cwPlans').innerHTML = CW_PLANS.map(p => {
@@ -130,7 +136,7 @@ function cwRenderPricing(){
       : `<button class="btn${p.hot ? ' primary' : ''}" data-plan="${p.k}">${cur ? 'Switch to ' + p.name : trial ? `Start ${CW_CFG.trial_days}-day free trial` : 'Choose ' + p.name}</button>`;
     return `<div class="cw-plan${p.hot ? ' hot' : ''}">${p.hot ? '<span class="badge new">Most popular</span>' : ''}
       <div class="lbl">${p.n ? p.n + ' airport' + (p.n > 1 ? 's' : '') : 'All airports'}</div><h3>${p.name}</h3>
-      <div class="price"><b>${cwPrice(p.k)}</b><span>/month</span></div>${per}<p>${p.p}.</p>${btn}</div>`;
+      <div class="price">${CW_OFF ? `<s>${cwPrice(p.k)}</s><b>${cwOffer(p.k)}</b>` : `<b>${cwPrice(p.k)}</b>`}<span>/month</span></div>${CW_OFF ? `<span class="cw-off">${CW_OFF.percent}% off ${cwOfferTerm()}, then ${cwPrice(p.k)}</span>` : ''}${per}<p>${p.p}.</p>${btn}</div>`;
   }).join('');
   $('cwPlans').querySelectorAll('[data-plan]').forEach(b => b.onclick = () => cwChoose(b.dataset.plan, $('cwEarlyBox').checked, b));
 }
@@ -283,7 +289,8 @@ function cwInit(){
   document.querySelectorAll('[data-cw="legal-date"]').forEach(el => el.textContent = CW_CFG.legal_date);
   if (CW_CFG.contact_email) document.querySelectorAll('[data-cw="contact-line"]').forEach(el => el.innerHTML = `Email <a href="mailto:${esc(CW_CFG.contact_email)}">${esc(CW_CFG.contact_email)}</a>, or use the feedback button on any page.`);
   document.querySelectorAll('[data-cw="analytics-line"]').forEach(el => el.textContent = CW_CFG.analytics_token ? 'We count visits with Cloudflare Web Analytics, which uses no cookies and does not track you across sites.' : 'We do not run analytics.');
-  $('cwTeaser').innerHTML = CW_PLANS.map(p => `<a class="cw-tchip" href="#pricing"><b>${p.n || 'All'}</b><span>${p.n ? 'airport' + (p.n > 1 ? 's' : '') : 'airports'}</span><em>${cwPrice(p.k)}/mo</em></a>`).join('');
+  $('cwTeaser').innerHTML = CW_PLANS.map(p => `<a class="cw-tchip" href="#pricing"><b>${p.n || 'All'}</b><span>${p.n ? 'airport' + (p.n > 1 ? 's' : '') : 'airports'}</span><em>${CW_OFF ? `<s>${cwPrice(p.k)}</s> ${cwOffer(p.k)}` : cwPrice(p.k)}/mo</em></a>`).join('');
+  if (CW_OFF) $('cwTeaserOff').textContent = `${CW_OFF.label || 'Offer'}: ${CW_OFF.percent}% off ${cwOfferTerm()}.`;
   document.querySelectorAll('[data-cw-fb]').forEach(el => el.hidden = !CW_FB);
   $('cwFbBtn').hidden = !CW_FB;
   if (CW_FB) cwFeedback();
