@@ -123,6 +123,7 @@ function phraseToCmd(raw){
       out.push(cmd);
     }
   }
+  if (/ tow approved /.test(s) || / approved tow /.test(s)) out.push('TOW');
   if (/ lineup /.test(s)) out.push('LU');
   if (/ cleared( for)? takeoff /.test(s)) out.push('CTO');
   if (/ vacate /.test(s)) out.push('VAC');

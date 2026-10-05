@@ -21,7 +21,7 @@ const PAL = {
     ring: 'rgba(11,42,74,.13)', ringTxt: 'rgba(11,42,74,.5)', arr: '#b75f00', dep: '#1452d9', sel: '#0c1b2e', conf: '#d62d2d',
     ground: '#e4e9d6', grass: '#dde5cc', asphalt: '#9ba4ad', rwy: '#5d656e', concrete: '#c4cad1', apronLine: '#8a949e',
     bld: '#d9dde3', bldEdge: '#8b96a3', road: '#d3c9b8', paint: 'rgba(255,255,255,.95)', yellow: '#f5c400', closed: '#b9c0c7',
-    acArr: '#fff1d6', acDep: '#ffffff', tagBg: 'rgba(255,255,255,.9)', tagEdge: 'rgba(12,27,46,.18)',
+    acArr: '#fff1d6', acDep: '#ffffff', pre: 'rgba(80,92,108,.7)', tagBg: 'rgba(255,255,255,.9)', tagEdge: 'rgba(12,27,46,.18)',
     xClosed: '#d62d2d', xOpen: '#12805c', xMid: '#b75f00', pv: '#12a46b', pvTxt: '#0d7a52', pvBg: 'rgba(255,255,255,.95)',
     glow: 'source-over', flood: 0,
     rgb: { lab: '30,45,65', proc: '183,95,0', apt: '20,82,217', relief: '95,115,70', reliefFill: '120,140,90', reliefTxt: '70,85,50',
@@ -32,7 +32,7 @@ const PAL = {
     ring: 'rgba(125,255,176,.09)', ringTxt: 'rgba(125,255,176,.35)', arr: '#ffc164', dep: '#7cc7ff', sel: '#ffffff', conf: '#ff5a5a',
     ground: '#162523', grass: '#14231f', asphalt: '#262e31', rwy: '#20272a', concrete: '#353f42', apronLine: '#4b585c',
     bld: '#0b1214', bldEdge: '#3c4a4c', road: '#2e2a26', paint: 'rgba(236,240,232,.86)', yellow: '#e7c23a', closed: '#1f2628',
-    acArr: '#e9d7b0', acDep: '#d6e8f5', tagBg: 'rgba(4,14,18,.72)', tagEdge: 'rgba(0,0,0,0)',
+    acArr: '#e9d7b0', acDep: '#d6e8f5', pre: 'rgba(160,190,190,.55)', tagBg: 'rgba(4,14,18,.72)', tagEdge: 'rgba(0,0,0,0)',
     xClosed: '#ff5a5a', xOpen: '#4fd18b', xMid: '#ffc164', pv: '#7dffb0', pvTxt: '#7dffb0', pvBg: 'rgba(4,18,26,.92)',
     glow: 'lighter', flood: 0.10,
     rgb: { lab: '207,227,226', proc: '255,200,120', apt: '124,199,255', relief: '190,205,170', reliefFill: '150,170,130', reliefTxt: '210,220,195',
@@ -324,7 +324,7 @@ function drawAc(ac){
   const sc = V.scale, X = sx(ac.x), Y = sy(ac.y);
   if (X < -200 || Y < -200 || X > W+200 || Y > H+200) return;
   const sel = S.sel === ac, conf = S.conflictSet.has(ac.cs);
-  const col = conf ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
+  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : conf ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
   cx.fillStyle = col; cx.globalAlpha = 0.45;
   if (!ac.ground && sc < 400) for (const [hx,hy] of ac.hist) cx.fillRect(sx(hx)-1, sy(hy)-1, 2, 2);
   cx.globalAlpha = 1;
@@ -342,6 +342,7 @@ function drawAc(ac){
     }
   }
   if (ac.ground && sc < 70) return;
+  if (dormant(ac) && !sel) return;   // parked with nothing due: no data block
   const lx = X + 16, ly = Y - 26;
   cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+5, Y-5); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
   cx.font = `500 11.5px ${FONT_D}`;
@@ -352,7 +353,7 @@ function drawAc(ac){
     const a = String(Math.max(0, Math.round(ac.alt/100))).padStart(3,'0'), tr = ac.vs > 300 ? '↑' : ac.vs < -300 ? '↓' : ' ';
     const cl = ac.mode === 'FINAL' ? 'SRA' : ac.tgtAlt != null ? String(Math.round(ac.tgtAlt/100)).padStart(3,'0') : '';
     l2 = `${a}${tr}${cl} ${String(Math.round(ac.gs/10)).padStart(2,'0')}`;
-    l3 = `${ac.t} ${ac.kind === 'ARR' ? (ac.app ? 'R'+ac.app : ac.o) : ac.d}${ac.freq === 'TWR' ? ' T' : ''}`;
+    l3 = ac.state === 'PRE' ? `${ac.t} ${ac.o} PENDING` : `${ac.t} ${ac.kind === 'ARR' ? (ac.app ? 'R'+ac.app : ac.o) : ac.d}${ac.freq === 'TWR' ? ' T' : ''}`;
   }
   const w = Math.max(cx.measureText(l1).width, cx.measureText(l2).width, l3 ? cx.measureText(l3).width : 0);
   { cx.fillStyle = C.tagBg; cx.fillRect(lx-3, ly-11, w+6, (l3 ? 3 : 2)*13 + 3); cx.strokeStyle = C.tagEdge; cx.lineWidth = 1; cx.strokeRect(lx-3.5, ly-11.5, w+7, (l3 ? 3 : 2)*13 + 4); }
@@ -360,7 +361,7 @@ function drawAc(ac){
 }
 
 function stateLabel(ac){
-  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', READY:'STARTED', TAXI:'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:'SRA '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', ROLLED:'ON RUNWAY', VACATING:'TAXI IN', ONSTAND:'ON STAND' })[ac.state] || ac.state;
+  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', READY:'STARTED', TAXI:'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:'SRA '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:'TAXI IN', ONSTAND:'ON STAND' })[ac.state] || ac.state;
 }
 
 // ═════════════════════════ console UI ═════════════════════════
@@ -413,10 +414,11 @@ function renderSel(){
   const ac = S.sel, el = $('sel');
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → LXGB` : `LXGB → ${ac.d}`;
-  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span><span class="grow"></span><span class="lbl">${ac.freq === 'TWR' ? 'Tower 131.2' : 'Radar 122.8'}</span></div>
+  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span><span class="grow"></span><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? 'Tower 131.2' : 'Radar 122.8'}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.need) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
+  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-GBR[0], ac.y-GBR[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls Gibraltar Radar at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? 'SRA profile' : (ac.tgtAlt ?? '–')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
     ${ac.route.length || ac.mode === 'HOLD' ? `<div class="meta">${ac.route.length ? 'Route '+ac.route.join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
@@ -428,8 +430,10 @@ function renderSel(){
   } else {
     html += `<div class="btns">`;
     if (ac.kind === 'DEP') {
-      const south = ac.stand && ac.stand.area === 'south', canTaxi = ac.state === 'READY' || (ac.state === 'PARKED' && !!ac.need) || ac.state === 'TAXI' || ac.state === 'HOLDPT';
-      html += b('POP:push','Start &amp; push…', ac.state === 'PARKED' && !!ac.need, ac.state === 'PARKED' && ac.need ? 'go' : '');
+      const south = ac.stand && ac.stand.area === 'south', canTaxi = ac.state === 'READY' || (ac.state === 'PARKED' && !!ac.need && ac.need !== 'Request tow') || ac.state === 'TAXI' || ac.state === 'HOLDPT';
+      const startReq = ac.state === 'PARKED' && !!ac.need && ac.need !== 'Request tow';
+      if (ac.need === 'Request tow') html += b('TOW', `Approve tow to stand ${ac.tow && ac.tow.to ? ac.tow.to.id : ''}`, true, 'go');
+      html += b('POP:push','Start &amp; push…', startReq, startReq ? 'go' : '');
       html += b('POP:taxi', ac.state === 'TAXI' ? 'Re-route taxi…' : 'Taxi…', canTaxi && ac.state !== 'HOLDPT', ac.state === 'READY' && ac.need ? 'go' : '');
       html += b('LU','Line up', ac.state === 'HOLDPT') + b('CTO','Cleared take-off', ['HOLDPT','LINEUP','LINEDUP'].includes(ac.state), 'go');
     } else {
@@ -521,7 +525,7 @@ document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains
 
 let stripSig = '';
 function renderStrips(force){
-  const list = [...S.acs].sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
+  const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
   const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + Math.round(a.alt/100) + a.freq).join(',');
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
@@ -537,7 +541,8 @@ function renderStrips(force){
     d.onclick = () => select(ac); el.appendChild(d);
   }
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
-  $('stripCount').textContent = `${S.acs.length} active · ${S.sched.filter(f => !f.spawned).length} to come`;
+  const parked = S.acs.filter(dormant).length;
+  $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
 }
 function renderScore(){
   const s = S.score;

@@ -203,6 +203,26 @@ function timetableFlights(d, h){
   }
   return out.sort((a,b) => a.m - b.m);
 }
+// long-stay aircraft parked on the remote stands all day (representative): [callsign/registration, type, stand, days]
+const LONG_STAY = [['RRR4419', 'A400', 'S2', '14'], ['GXJET', 'C56X', 'N2', '2357'], ['GOMAR', 'PC12', 'N2', '146']];
+// what is on the ground and in the air for a session: arrivals carry their turnaround departure; aircraft already parked
+// at the start (inbound landed earlier, or a departure with no inbound today) are residents
+function timetableSession(d, h){
+  const day = String(d + 1), t0 = h*60, sched = [], residents = [];
+  for (const [ac, o, ta, dc, dd, td, t, days, stand] of TIMETABLE) {
+    if (!days.includes(day)) continue;
+    const reg = REGS[t] ? { reg: REGS[t] } : {}, arrM = ac ? hm(ta) - t0 : null, depM = dc ? hm(td) - t0 : null;
+    if (ac && arrM - 15 >= -10 && arrM - 15 <= 62) {
+      sched.push({ cs: ac, t, k: 'ARR', o, gate: gateFor(o), m: Math.max(0, arrM - 15), at: ta, ...reg, turn: dc ? { cs: dc, d: dd, depM, at: td, stand } : null });
+    } else if ((!ac || arrM - 15 < -10) && dc && depM > 0) {
+      residents.push({ cs: dc, t, k: 'RES', d: dd, gate: gateFor(dd), m: 0, depM, at: td, stand, ...reg });
+    } else if (ac && !dc && arrM - 15 < -10) {
+      residents.push({ cs: ac, t, k: 'RES', o, gate: gateFor(o), m: 0, depM: null, at: ta, ...reg });   // arrived earlier, staying
+    }
+  }
+  for (const [cs, t, stand, days] of LONG_STAY) if (days.includes(day)) residents.push({ cs, t, k: 'RES', o: 'LXGB', gate: 'E', m: 0, depM: null, stand, longStay: true });
+  return { sched, residents };
+}
 const SESSION_HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 06Z to 21Z, the civil operating day
 const EXTRA = [
   { cs:'EXS96K',  t:'B738', k:'ARR', o:'EGCC', gate:'W' }, { cs:'EZY8915', t:'A20N', k:'DEP', d:'EGKK', gate:'E' },
@@ -219,7 +239,7 @@ const EXERCISES = {
 };
 function buildSchedule(mode, day = 0, hour = 17){
   if (EXERCISES[mode]) return EXERCISES[mode].sched.map(x => ({...x}));
-  const s = timetableFlights(day, hour);
+  const T = timetableSession(day, hour), s = [...T.residents, ...T.sched];
   if (mode !== 'real') {
     // busier sessions add charters, positioning flights and business jets on top of the timetable
     const used = new Set(s.map(x => x.cs)), extra = EXTRA.filter(x => !used.has(x.cs));
@@ -328,20 +348,46 @@ class Aircraft {
   get airborne(){ return !this.ground; }
 }
 
+// arrivals show on radar about 35 NM beyond the boundary as pending tracks (not on frequency, no control) and call
+// Gibraltar Radar when they reach the entry point inside the radar rings
+const PRE_NM = 35, PRE_LEAD = 6.5*60;
+const ENTRY_ALT = { E: 14000, W: 12000, S: 10000 }, PRE_ALT = { E: 26000, W: 24000, S: 20000 };
+const greet = () => { const h = (new Date(S.start + S.t*1000).getUTCHours() + 2) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
   const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][S.rwy][0]];
+  const left = f.m*60 - S.t;
+  if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
+    const L = Math.hypot(e[0] - GBR[0], e[1] - GBR[1]), u = [(e[0] - GBR[0])/L, (e[1] - GBR[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
+    ac.x = e[0] + u[0]*PRE_NM*frac; ac.y = e[1] + u[1]*PRE_NM*frac;
+    ac.alt = ENTRY_ALT[f.gate] + (PRE_ALT[f.gate] - ENTRY_ALT[f.gate])*frac; ac.ias = 300; ac.gs = 330;
+    ac.hdg = ac.trk = brg(ac.x, ac.y, ...e); ac.state = 'PRE'; ac.preAt = f.m*60; ac.route = []; ac.freq = 'PRE';
+    S.acs.push(ac); emit('spawn', ac);
+    return ac;
+  }
   const d0 = f.m === 0 ? 0.55 : 0;                     // the first arrival starts part-way in
   ac.x = e[0] + (first.p[0]-e[0])*d0; ac.y = e[1] + (first.p[1]-e[1])*d0;
-  ac.alt = d0 ? 9000 : f.gate === 'E' ? 14000 : f.gate === 'W' ? 12000 : 10000;
-  ac.tgtAlt = ac.cleared = f.gate === 'E' ? 8000 : 7000;
-  ac.ias = 260; ac.hdg = brg(ac.x, ac.y, ...first.p); ac.trk = ac.hdg; ac.state = 'INBOUND';
-  ac.route = ARR_ROUTE[f.gate][S.rwy].slice();
+  ac.alt = d0 ? 9000 : ENTRY_ALT[f.gate];
   S.acs.push(ac);
-  pilot(ac, `Gibraltar Radar, good evening, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, inbound ${ac.route[0]}, information ${phonetic(S.atis)}`);
-  ac.need = 'Initial call';
+  makeInbound(ac);
   emit('spawn', ac);
   return ac;
+}
+function makeInbound(ac){
+  const first = WP[ARR_ROUTE[ac.gate][S.rwy][0]];
+  ac.tgtAlt = ac.cleared = ac.gate === 'E' ? 8000 : 7000; ac.freq = 'RAD';
+  ac.ias = 260; ac.hdg = brg(ac.x, ac.y, ...first.p); ac.trk = ac.hdg; ac.state = 'INBOUND';
+  ac.route = ARR_ROUTE[ac.gate][S.rwy].slice();
+  pilot(ac, `Gibraltar Radar, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, inbound ${ac.route[0]}, information ${phonetic(S.atis)}`);
+  ac.need = 'Initial call';
+}
+function stepPending(ac, dt){
+  const e = ENTRY[ac.gate], d = dist(ac.x, ac.y, ...e), mv = ac.gs/3600*dt;
+  ac.hdg = ac.trk = brg(ac.x, ac.y, ...e);
+  if (d <= mv + 0.05 || S.t >= ac.preAt + 90) { ac.x = e[0]; ac.y = e[1]; ac.alt = ENTRY_ALT[ac.gate]; makeInbound(ac); return; }
+  ac.x += (e[0] - ac.x)/d*mv; ac.y += (e[1] - ac.y)/d*mv;
+  const left = Math.max(1, ac.preAt - S.t); ac.alt = Math.max(ENTRY_ALT[ac.gate], ac.alt - (ac.alt - ENTRY_ALT[ac.gate])*dt/left);
+  ac.vs = -(ac.alt - ENTRY_ALT[ac.gate])/left*60;
 }
 function spawnDeparture(f){
   const ac = new Aircraft(f); ac.kind = 'DEP'; ac.freq = 'TWR';
@@ -356,6 +402,57 @@ function spawnDeparture(f){
   emit('spawn', ac);
   return ac;
 }
+const isBiz = ac => ac.perf.wake === 'L' || ac.t === 'GLF6' || ac.t === 'C56X';
+// an aircraft already on the ground when the session opens. Airliners with a long wait sit on a remote stand (south or
+// north apron) and are towed to a terminal stand about 35 minutes before departure for the turnaround.
+function spawnResident(f){
+  const ac = new Aircraft(f); ac.freq = 'TWR'; ac.ground = true; ac.alt = ELEV;
+  const wait = f.depM == null ? Infinity : f.depM;
+  const remote = !isMil(ac) && !isBiz(ac) && wait > 45;
+  const order = isMil(ac) ? ['south'] : isBiz(ac) ? ['north', 'civil'] : remote ? ['south', 'north', 'civil'] : ['civil', 'north'];
+  let st = !remote && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
+  for (const a of order) if (!st) st = STANDS.find(s => !s.occ && s.area === a);
+  if (!st) return null;
+  st.occ = ac; ac.stand = st; ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
+  if (f.depM == null) { ac.kind = 'ARR'; ac.state = 'ONSTAND'; ac.doneAt = Infinity; }
+  else { ac.kind = 'DEP'; ac.state = 'PARKED'; ac.reqAt = Math.max(8, (f.depM - 6)*60); if (remote && st.area !== 'civil') ac.tow = { at: Math.max(20, (f.depM - 35)*60), pref: f.stand }; }
+  S.acs.push(ac); emit('spawn', ac);
+  return ac;
+}
+// after an arrival is on stand it becomes its own turnaround departure (new callsign), or stays parked
+function turnRound(ac){
+  const tr = ac.turn;
+  if (!tr) { ac.doneAt = ac.stand ? Infinity : S.t + 120; return; }
+  const was = ac.cs;
+  Object.assign(ac, { cs: tr.cs, kind: 'DEP', d: tr.d, gate: gateFor(tr.d), o: undefined, state: 'PARKED', need: null, freq: 'TWR', turn: null,
+    app: null, ctl: false, checked: false, shearChecked: false, warnedCtl: false, warned15: false, warned10: false, pushed: false, leftStand: false,
+    hp: null, cto: false, exit: null, backtrack: false, taxiVia: [], face: null, held: false, handed: false, onRwy: false, path: null });
+  ac.reqAt = Math.max(S.t + 20*60, (tr.depM - 6)*60);
+  sys(`${was} is on stand ${ac.stand ? ac.stand.id : ''} and turns round as ${tr.cs} to ${tr.d}, off-blocks ${tr.at}Z.`);
+  emit('turnround', ac);
+}
+function towPath(ac, to){
+  const from = ac.stand, pts = [from.lp];
+  const add = r => { if (r) for (const id of r.nodes.slice(1)) pts.push(GN[id].p); };
+  if (from.area === 'south' && to.area !== 'south') {
+    add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, to.node));
+  } else add(route(from.node, to.node));
+  pts.push(to.p);
+  return pts;
+}
+function stepTows(){
+  for (const ac of S.acs) {
+    if (!ac.tow || ac.state !== 'PARKED' || ac.tow.asked || S.t < ac.tow.at) continue;
+    const to = (ac.tow.pref && STANDS.find(s => s.id === ac.tow.pref && !s.occ && s.area === 'civil')) || STANDS.find(s => !s.occ && s.area === 'civil');
+    if (!to) { ac.tow.at = S.t + 120; continue; }
+    to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
+    const cross = ac.stand.area === 'south';
+    log('plt', `Gibraltar Tower, tug with ${ac.cs} on stand ${ac.stand.id}, request tow to stand ${to.id}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
+    say(`Gibraltar Tower, tug with ${spoken(ac.cs)} on stand ${ac.stand.id}, request tow to stand ${to.id}`, 'tug');
+  }
+}
+// parked aircraft with nothing due in the next 15 minutes stay off the strip board
+const dormant = ac => ac.state === 'ONSTAND' || (ac.state === 'PARKED' && !ac.need && ac.reqAt - S.t > 15*60 && !(ac.tow && S.t >= ac.tow.at - 300));
 function freeStand(ac){
   const area = isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
   for (const a of area) { const s = STANDS.find(s => !s.occ && s.area === a); if (s) return s; }
@@ -458,6 +555,7 @@ function command(str){
   let ac = findAc(toks[0]);
   if (ac) toks.shift(); else ac = S.sel;
   if (!ac || !S.acs.includes(ac)) { sys('Select a flight first, or start the command with its callsign.'); return; }
+  if (ac.state === 'PRE') { select(ac); sys(`${ac.cs} is not on your frequency yet: it calls Gibraltar Radar at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
   select(ac);
   const said = [], reads = [];
   const air = ac.airborne;
@@ -528,8 +626,16 @@ function command(str){
       else if (ac.kind === 'DEP') { unit = NEXT_UNIT[ac.gate]; ac.handed = true; ac.need = null; }
       else { unit = ['Gibraltar Tower','131.2']; ac.freq = 'TWR'; }
       said.push(`contact ${unit[0]} ${unit[1]}`); reads.push(`${unit[1]}, ${ac.handed ? 'good day' : 'thanks'}`);
+    } else if (t === 'TOW') {
+      if (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to) { sys(`${ac.cs} has no tow request.`); continue; }
+      const to = ac.tow.to, from = ac.stand, cross = from.area === 'south';
+      setPath(ac, towPath(ac, to), 5, () => { ac.state = 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = null; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is on stand ${to.id}.`); });
+      if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null;
+      log('atc', `Tug with ${ac.cs}, tow approved to stand ${to.id}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
+      say(`Tug with ${spoken(ac.cs)}, tow approved to stand ${to.id}`, 'atc');
+      return renderSel && renderSel();
     } else if (t === 'PUSH') {
-      if (ac.state !== 'PARKED' || !ac.need) { sys(`${ac.cs} has not asked for start-up.`); continue; }
+      if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
       const dir = { E:'east', EAST:'east', W:'west', WEST:'west' }[toks[i+1]]; if (dir) i++;
       const face = dir || pushRec(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face;
       setPath(ac, pushPath(ac, face), 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
@@ -576,7 +682,7 @@ function command(str){
       if (ac.state !== 'ROLLED' && ac.state !== 'ROLLOUT') { sys(`${ac.cs} is not on the runway.`); continue; }
       if (toks[i+1] && HOLDS[toks[i+1]]) ac.reqExit = toks[++i];
       const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null;
-      setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.doneAt = S.t + 120; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); });
+      setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); turnRound(ac); });
       const stp = ac.stand ? `stand ${ac.stand.id}` : 'as directed';
       said.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}, taxi ${stp}${viaWords(ac.taxiVia || [])}`); reads.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate ${PHON[ac.exit]}, ${stp}`);
     } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
@@ -632,19 +738,21 @@ const gpAlt = togo => ELEV + 40 + Math.max(0, togo)*297;   // 2.8° profile: 920
 
 function step(dt){
   S.t += dt;
-  for (const f of S.sched) if (!f.spawned && S.t >= f.m*60) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else spawnDeparture(f); }
+  for (const f of S.sched) if (!f.spawned && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else spawnDeparture(f); }
   const X = S.xing;
   if (X.st === 'CLOSING' && S.t >= X.t) { X.st = 'CLOSED'; sys('Winston Churchill Avenue closed: barriers down, crossing clear, FOD check complete.'); renderAtis(); emit('xing', 'CLOSED'); }
   if (X.st === 'OPENING' && S.t >= X.t) { X.st = 'OPEN'; renderAtis(); emit('xing', 'OPEN'); }
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
 
+  stepTows();
   for (const ac of S.acs) {
-    if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
+    if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
+    if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
   }
   S.acs = S.acs.filter(ac => {
     if (ac.state === 'ONSTAND' && S.t > ac.doneAt) { if (S.sel === ac) S.sel = null; if (ac.stand) ac.stand.occ = null; return false; }
-    if (ac.airborne && Math.hypot(ac.x - GBR[0], ac.y - GBR[1]) > (ac.kind === 'DEP' ? 48 : ac.state === 'DIVERTING' ? 40 : 58)) {
+    if (ac.airborne && ac.state !== 'PRE' && Math.hypot(ac.x - GBR[0], ac.y - GBR[1]) > (ac.kind === 'DEP' ? 48 : ac.state === 'DIVERTING' ? 40 : 58)) {
       if (ac.kind === 'DEP') { if (!ac.handed) { S.score.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else S.score.pts += 20; S.score.departed++; }
       else { S.score.div++; S.score.pts -= ac.state === 'DIVERTING' ? 0 : 40; sys(`${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); }
       emit('exit', ac);
@@ -653,7 +761,7 @@ function step(dt){
     return true;
   });
   // separation: 3 NM / 1000 ft (2.5 NM between aircraft both established on final)
-  const conf = new Set(), air = S.acs.filter(a => a.airborne && a.alt > 700);
+  const conf = new Set(), air = S.acs.filter(a => a.airborne && a.alt > 700 && a.state !== 'PRE');
   for (let i = 0; i < air.length; i++) for (let j = i+1; j < air.length; j++) {
     const a = air[i], b = air[j], d = dist(a.x,a.y,b.x,b.y);
     if (Math.abs(a.alt-b.alt) >= 950 || d >= 3) continue;
@@ -803,7 +911,7 @@ function stepAir(ac, dt){
 }
 
 function stepGround(ac, dt){
-  if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, `Gibraltar Tower, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up and push back`); }
+  if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && !ac.tow && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, `Gibraltar Tower, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up and push back`); }
   if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt) { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
   if (ac.path) {
     const tgt = ac.path.pts[0], d = dist(ac.x, ac.y, ...tgt);
