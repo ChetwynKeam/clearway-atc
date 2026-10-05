@@ -4,14 +4,16 @@
 // POST {action: 'checkout', plan, early}           start a subscription (Stripe Checkout, 2-day trial the first time)
 // POST {action: 'portal'}                          Stripe's billing page: change plan, card, invoices, cancel
 // POST {action: 'early', on}                       add or remove the early access add-on
+// POST {action: 'upgrade', plan, code}             move up a plan with a new-airport code (50% off the first 3 months)
 // POST {action: 'commission', icao, name, notes}   ask for an airport to be built: save a card now, charged only on release
 // POST {action: 'commission_card', id}             save the card for a commission that has none yet
 // POST {action: 'commission_pay', id}              pay by hand if the release charge needed the player (Stripe Checkout)
 // POST {action: 'commission_cancel', id}           withdraw a commission before it is released (nothing is charged)
-import { json, fail, preflight, body, user, account, saveAccount, entitlement, configured, stripe, stripeOn, db, customerOf, commissionCardSession,
+import { json, fail, guarded, preflight, body, user, account, saveAccount, entitlement, configured, stripe, stripeOn, db, customerOf, commissionCardSession,
   PLANS, EARLY_PRICE, COMMISSION_PENCE, SITE_URL, TRIAL_DAYS } from './_lib.js';
 
 const ICAO = /^[A-Z]{4}$/, SWAP_DAYS = 30, COUPON = () => (process.env.STRIPE_COUPON || '').trim();
+const UPGRADE_COUPON = () => (process.env.STRIPE_UPGRADE_COUPON || '').trim();   // 50% off 3 months, behind each new airport's code
 
 async function handle(req){
   if (req.method === 'OPTIONS') return preflight(req);
@@ -100,6 +102,24 @@ async function handle(req){
       });
       return json(req, { url: s.url });
     }
+    if (b.action === 'upgrade') {
+      // a new airport's code: a Stripe promotion code on the STRIPE_UPGRADE_COUPON coupon
+      const plan = PLANS[b.plan], code = String(b.code || '').trim().toUpperCase();
+      if (!plan || !plan.price()) return fail(req, 400, 'Unknown plan.');
+      if (!ent.active || !a.subscription_id) return fail(req, 400, 'Start a plan first.');
+      const size = p => p.airports || 1e6;
+      if (size(plan) <= size(PLANS[a.plan] || { airports: 1 })) return fail(req, 400, 'Choose a bigger plan than the one you have.');
+      const promo = code && (await stripe(`promotion_codes?code=${encodeURIComponent(code)}&active=true&limit=1`)).data[0];
+      const coupon = promo && (promo.coupon || (promo.promotion && promo.promotion.coupon));
+      const cid = coupon && (coupon.id || coupon);
+      if (!promo || !UPGRADE_COUPON() || cid !== UPGRADE_COUPON()) return fail(req, 400, 'That code is not valid, or has expired.');
+      const sub = await stripe(`subscriptions/${a.subscription_id}`);
+      const item = sub.items.data.find(i => i.price.id !== EARLY_PRICE()) || sub.items.data[0];
+      await stripe(`subscriptions/${sub.id}`, { items: [{ id: item.id, price: plan.price() }], proration_behavior: 'create_prorations',
+        discounts: [{ promotion_code: promo.id }], metadata: { user_id: u.id, upgrade_code: code } });
+      a = await saveAccount(u.id, { plan: b.plan });   // the webhook confirms it from Stripe moments later
+      return json(req, entitlement(a));
+    }
     if (b.action === 'early') {
       if (!a.subscription_id || !EARLY_PRICE()) return fail(req, 400, 'Start a plan first.');
       const sub = await stripe(`subscriptions/${a.subscription_id}`);
@@ -112,4 +132,5 @@ async function handle(req){
     return fail(req, 400, 'Unknown action.');
   } catch (e) { console.error(e); return fail(req, 500, 'Something went wrong. Please try again.'); }
 }
-export const GET = handle, POST = handle, OPTIONS = handle;
+const route = guarded(handle);
+export const GET = route, POST = route, OPTIONS = route;

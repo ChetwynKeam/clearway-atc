@@ -111,3 +111,20 @@ Run `supabase/commissions.sql` once in the SQL Editor (after `schema.sql`). It a
 
 Why not a hold on the card? A bank authorisation hold lapses after about 7 days, which is shorter than a build.
 Saving the card with the player's agreement is how Stripe recommends charging later.
+
+## When a new airport opens (swap it in, or 50% off an upgrade)
+Players on Alpha to Delta see a "New airport" box on their account for 30 days after it opens. They can swap it in for
+one of their airports (one swap a month), or move up a plan at 50% off for the first 3 months with the airport's code.
+
+One-time setup in Stripe (test mode first): Product catalogue > Coupons > Create coupon: name `New airport offer`,
+50% off, duration Multiple months: 3, ID `NEWAIRPORT50`. Add `STRIPE_UPGRADE_COUPON = NEWAIRPORT50` in Vercel.
+
+For each new airport:
+1. Open the `NEWAIRPORT50` coupon in Stripe and add a promotion code, for example `NEWKJFK`. Optionally set an expiry
+   date 30 days ahead and "Limit to one use per customer".
+2. Add the airport to `releases` in `subs.json` with its opening date and code, then rebuild the pages:
+   `{"icao": "KJFK", "date": "2026-10-05", "code": "NEWKJFK"}`. The box shows while the airport is live and the date is
+   within `upgrade_offer.days`.
+
+The code only works for moving up a plan. Codes from other coupons (such as the launch offer) are refused, and the
+new discount replaces any discount already on the subscription.

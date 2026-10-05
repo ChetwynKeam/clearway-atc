@@ -45,6 +45,7 @@ def cwcfg(live):
     c = {k: SUBS[k] for k in ('enabled', 'feedback', 'api', 'supabase_url', 'supabase_anon_key', 'currency', 'prices', 'trial_days', 'contact_email', 'analytics_token', 'legal_date')}
     c['offer'] = SUBS.get('offer')
     c['commission'] = SUBS.get('commission', 25)
+    c['upgrade_offer'], c['releases'] = SUBS.get('upgrade_offer'), SUBS.get('releases', [])
     c['site'] = SITE_URL
     if not live: c['enabled'] = False; c['test_switch'] = False
     return json.dumps(c, ensure_ascii=False)

@@ -31,6 +31,8 @@ const cors = req => {
 export const json = (req, o, status = 200) => new Response(JSON.stringify(o), { status, headers: { ...cors(req), 'content-type': 'application/json', 'cache-control': 'no-store' } });
 export const preflight = req => new Response(null, { status: 204, headers: cors(req) });
 export const fail = (req, status, error) => json(req, { error }, status);
+// every handler goes through this, so even an unexpected crash answers with CORS headers (otherwise the browser only sees "could not be reached")
+export const guarded = h => async req => { try { return await h(req); } catch (e) { console.error(e); return fail(req, 500, 'Something went wrong. Please try again.'); } };
 export async function body(req){ try { return await req.json(); } catch { return {}; } }
 
 // ── Supabase ──
