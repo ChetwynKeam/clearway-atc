@@ -3282,9 +3282,11 @@ function renderFids(){
 // their expected times and delays. Aircraft in the air right now come from free ADS-B networks (adsb.lol, adsb.fi)
 // through a small relay, because those feeds can't be read by a web page directly. Real Gibraltar inbounds take over
 // their scheduled flight when they come within range; everything else is shown as background traffic.
-const RELAY_URL = 'https://clearway-relay.ventrogroup.workers.dev';                     // the Cloudflare Worker in relay/worker.js, once deployed
-const RELAY = (() => { try { return localStorage.getItem('cw-relay') || RELAY_URL; } catch (e) { return RELAY_URL; } })();
-const LIVE = { data: null, loadedAt: 0, session: null, rows: null, ac: new Map(), ok: 0, err: 0, timer: null, bound: new Set(), hide: new Set() };
+// live-traffic relays, tried in order: the Vercel function (api/traffic.js) and the Cloudflare Worker (relay/worker.js)
+const RELAY_URLS = ['https://clearway-atc.vercel.app/api/traffic', 'https://clearway-relay.ventrogroup.workers.dev/traffic'];
+const RELAYS = (() => { try { const o = localStorage.getItem('cw-relay'); return o ? [o] : RELAY_URLS; } catch (e) { return RELAY_URLS; } })();
+const RELAY = RELAYS[0];
+const LIVE = { relay: 0, data: null, loadedAt: 0, session: null, rows: null, ac: new Map(), ok: 0, err: 0, timer: null, bound: new Set(), hide: new Set() };
 const isLiveMode = m => /^live/.test(m || S.mode || '');
 const AIRLINE_ICAO = { BA: 'BAW', U2: 'EZY', DS: 'EZS', EC: 'EJU', AT: 'RAM', LS: 'EXS', BY: 'TOM', VY: 'VLG', FR: 'RYR', IB: 'IBE', I2: 'IBS', W6: 'WZZ', TO: 'TVF', RK: 'RUK', MT: 'TCX' };
 const AIRLINE_TYPE = { BAW: 'A20N', EZY: 'A20N', EJU: 'A20N', EZS: 'A20N', RAM: 'AT76', EXS: 'B738', TOM: 'B738', RYR: 'B738', VLG: 'A320', RRR: 'A400' };
@@ -3356,9 +3358,17 @@ function renderLiveSlots(){
 async function pollTraffic(){
   if (!RELAY || !S.running || !isLiveMode()) return;
   try {
-    const r = await fetch(RELAY.replace(/\/$/, '') + '/traffic?lat=36.15&lon=-5.35&r=200', { cache: 'no-store' });
-    if (!r.ok) throw new Error(r.status);
-    const j = await r.json(), now = Date.now();
+    let j = null;
+    for (let i = 0; i < RELAYS.length && !j; i++) {
+      const k = (LIVE.relay + i) % RELAYS.length, base = RELAYS[k].replace(/\/$/, '');
+      try {
+        const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
+        const r = await fetch((/\/(traffic|api\/traffic)$/.test(base) ? base : base + '/traffic') + '?lat=36.15&lon=-5.35&r=200', { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
+        if (r.ok) { j = await r.json(); LIVE.relay = k; }
+      } catch (e) {}
+    }
+    if (!j) throw new Error('no relay');
+    const now = Date.now();
     for (const a of j.ac || []) { a.ts = now - (a.seen || 0)*1000; LIVE.ac.set(a.hex, a); }
     for (const [k, a] of LIVE.ac) if (now - a.ts > 90e3) LIVE.ac.delete(k);
     if (!LIVE.ok) sys(`Live traffic connected: ${LIVE.ac.size} aircraft within 200 NM (${j.src || 'ADS-B'}).`);
