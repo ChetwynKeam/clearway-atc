@@ -30,7 +30,7 @@ with Stripe), `api/feedback.js` (feedback and airport requests), `api/_lib.js` (
 | Foxtrot (early access add-on) | `early` | airports in development, double-weight airport requests | £4.99 / month |
 
 The prices players see come from `subs.json`; the prices they pay come from Stripe. Keep the two the same.
-Every plan starts with a 2-day free trial, once per player, with a card taken at sign-up and cancellable before day 2.
+Every plan starts with a 2-day free trial of one airport of the player's choice (whatever the plan), once per player, with a card taken at sign-up and cancellable before day 2. The rest of the plan's airports unlock when the trial ends.
 Players tick their airports on the Account page. Empty places can be filled any time; swaps are free in the trial and then once every 30 days.
 
 ## How strong the protection is

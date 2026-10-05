@@ -96,15 +96,15 @@ function cwPaywall(){
   const e = CW.ent, name = APT.name, trial = CW_CFG.trial_days, dev = cwStatusOf(APT.icao) === 'dev';
   let h = '', btns = '';
   if (CW.ses && !e && CW.loading) { h = `<h1>${esc(name)}</h1><p>Checking your plan…</p>`; }
-  else if (!CW.ses) { h = `<h1>Control ${esc(name)}</h1><p>Opening a position needs a plan. Try any plan free for ${trial} days: pick one airport, three, five, ten or the whole network.</p>`;
+  else if (!CW.ses) { h = `<h1>Control ${esc(name)}</h1><p>Opening a position needs a plan. Try one airport of your choice free for ${trial} days, then pick one airport, three, five, ten or the whole network.</p>`;
     btns = `<a class="btn primary" href="${cwHost('pricing')}">Start your ${trial}-day free trial</a><a class="btn" href="${cwHost('account')}">Sign in</a>`; }
-  else if (!e || !e.active) { h = `<h1>Control ${esc(name)}</h1><p>Your account has no active plan${e && e.trial_used ? '' : `. Try any plan free for ${trial} days`}.</p>`;
+  else if (!e || !e.active) { h = `<h1>Control ${esc(name)}</h1><p>Your account has no active plan${e && e.trial_used ? '' : `. Try one airport of your choice free for ${trial} days`}.</p>`;
     btns = `<a class="btn primary" href="${cwHost('pricing')}">See plans</a><a class="btn" href="${cwHost('account')}">Your account</a>`; }
   else if (dev) { h = `<h1>${esc(name)} is in development</h1><p>Airports in development are open to Foxtrot (early access) members.</p>`;
     btns = `<a class="btn primary" href="${cwHost('account')}">Add Foxtrot</a>`; }
-  else if (e.airports.length < e.limit) { h = `<h1>Add ${esc(name)} to your plan?</h1><p>Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''} and you have chosen ${e.airports.length}${e.airports.length ? ': ' + e.airports.join(', ') : ''}.</p>`;
+  else if (e.airports.length < e.limit) { h = `<h1>Add ${esc(name)} to your ${e.trial ? 'trial' : 'plan'}?</h1><p>${e.trial ? `Your free trial includes one airport of your choice.` : `Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''} and you have chosen ${e.airports.length}${e.airports.length ? ': ' + e.airports.join(', ') : ''}.`}</p>`;
     btns = `<button class="btn primary" id="cwPayAdd">Add ${esc(name)}</button><a class="btn" href="${cwHost('account')}">Choose on your account</a>`; }
-  else { h = `<h1>${esc(name)} is not in your plan</h1><p>Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''}: ${e.airports.join(', ')}. Swap one on your account, or move up a plan.</p>`;
+  else { h = `<h1>${esc(name)} is not in your ${e.trial ? 'trial' : 'plan'}</h1><p>${e.trial ? `Your free trial is for one airport, ${e.airports.join(', ')}. The rest of your plan’s airports unlock when the trial ends, or you can swap airports on your account during the trial.` : `Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''}: ${e.airports.join(', ')}. Swap one on your account, or move up a plan.`}</p>`;
     btns = `<a class="btn primary" href="${cwHost('account')}">Your airports</a><a class="btn" href="${cwHost('pricing')}">Plans</a>`; }
   el.innerHTML = `<div class="card"><div class="eyebrow">${APT.icao}</div>${h}<p class="cw-msg" id="cwPayMsg"></p><div class="row">${btns}<a class="btn" href="${cwHost(HOME_RT)}">Airport briefing</a></div></div>`;
   const add = $('cwPayAdd');
@@ -170,9 +170,9 @@ async function cwRenderAccount(){
   if (want && !e.active) return cwChoose(want.plan, want.early);
   const plan = CW_PLANS.find(p => p.k === e.plan);
   if (!e.active) {
-    $('cwPlanBox').innerHTML = `<p>${e.status === 'canceled' ? 'Your plan has ended.' : 'You have no plan yet.'} ${e.trial_used ? '' : `Every plan starts with a ${CW_CFG.trial_days}-day free trial.`}</p><div class="cw-row"><a class="btn primary" href="#pricing">See plans</a>${e.billing ? '<button class="btn" data-portal>Billing history</button>' : ''}</div>`;
+    $('cwPlanBox').innerHTML = `<p>${e.status === 'canceled' ? 'Your plan has ended.' : 'You have no plan yet.'} ${e.trial_used ? '' : `Every plan starts with a free ${CW_CFG.trial_days}-day trial of one airport of your choice.`}</p><div class="cw-row"><a class="btn primary" href="#pricing">See plans</a>${e.billing ? '<button class="btn" data-portal>Billing history</button>' : ''}</div>`;
   } else {
-    const when = e.status === 'trialing' ? `Free trial until ${cwDate(e.trial_end)}${e.cancel_at ? ', then ends' : ', then ' + cwPrice(e.plan) + ' a month'}`
+    const when = e.status === 'trialing' ? `Free trial until ${cwDate(e.trial_end)}${e.cancel_at ? ', then ends' : CW_OFF ? `, then ${cwOffer(e.plan)} a month ${cwOfferTerm().replace('your ', 'the ')} and ${cwPrice(e.plan)} after that` : ', then ' + cwPrice(e.plan) + ' a month'}`
       : e.cancel_at ? `Ends on ${cwDate(e.cancel_at)}` : e.status === 'past_due' ? 'Your last payment failed: please update your card' : `Renews on ${cwDate(e.period_end)}`;
     $('cwPlanBox').innerHTML = `<div class="cw-planrow"><div><span class="badge ${e.status === 'past_due' ? 'dev' : 'live'}">${CW_ST[e.status] || e.status}</span><h3>${plan ? plan.name : e.plan}</h3><p class="cw-sub">${when}.</p></div>
       <div class="cw-row"><button class="btn primary" data-portal>Manage billing</button><a class="btn" href="#pricing">Compare plans</a></div></div>
@@ -195,7 +195,7 @@ function cwRenderPicks(){
   } else {
     let sel = [...e.airports];
     const draw = () => {
-      $('cwPickSub').textContent = `${sel.length} of ${e.limit} chosen. Fill empty places at any time; ${e.status === 'trialing' ? 'swaps are free during your trial' : 'you can swap an airport once every 30 days'}.`;
+      $('cwPickSub').textContent = e.trial ? `Your free trial includes one airport of your choice; swap it as often as you like. The rest of your plan’s ${e.plan_airports || ''} airports unlock when the trial ends.`.replace('plan’s  airports', 'plan’s airports') : `${sel.length} of ${e.limit} chosen. Fill empty places at any time; you can swap an airport once every 30 days.`;
       $('cwPicks').innerHTML = live.map(a => `<button type="button" class="cw-pick${sel.includes(a.icao) ? ' on' : ''}" data-i="${a.icao}" aria-pressed="${sel.includes(a.icao)}"><b>${a.icao}</b><span>${esc(a.name)}</span></button>`).join('')
         + `<div class="cw-row" style="grid-column:1/-1"><button class="btn primary" id="cwPickSave"${String(sel) === String(e.airports) ? ' disabled' : ''}>Save my airports</button></div>`;
       $('cwPicks').querySelectorAll('[data-i]').forEach(b => b.onclick = () => {

@@ -1073,7 +1073,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     </div>
   </div></div>
   <div class="section cw-teaser"><div class="wrap">
-    <div class="section-head"><div><div class="eyebrow">Plans</div><h2>Choose your airports. Try free for <span data-cw="trial">2</span> days.</h2></div>
+    <div class="section-head"><div><div class="eyebrow">Plans</div><h2>Choose your airports. Try one free for <span data-cw="trial">2</span> days.</h2></div>
       <p>Pick one airport, three, five, ten or the whole network, and change your mind any month. Early access opens airports while they are still being built.</p></div>
     <p class="cw-teaser-off" id="cwTeaserOff"></p>
     <div class="cw-teaser-row" id="cwTeaser"></div>
@@ -2191,7 +2191,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 <section class="page" id="page-pricing" data-page="pricing" hidden>
   <div class="pagehead"><div class="wrap">
     <div class="eyebrow">Pricing</div>
-    <h1>Pick your airports. <em>Try any plan free for <span data-cw="trial">2</span> days.</em></h1>
+    <h1>Pick your airports. <em>Try one airport free for <span data-cw="trial">2</span> days.</em></h1>
     <p>Every plan includes the full simulator at the airports you choose: approach, tower and ground, live weather, real-world traffic, the timetable, guided exercises and your career logbook. Briefings and the Academy reading are free for everyone.</p>
     <div class="cw-note cw-offer" id="cwOfferNote" hidden></div>
     <div class="cw-note" id="cwPreviewNote" hidden>Clearway is in open preview: every airport is free to control while subscriptions are being set up.</div>
@@ -2207,7 +2207,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     </div>
     <div class="cw-faq">
       <h2>Questions</h2>
-      <details><summary>How does the free trial work?</summary><p>Choose a plan and start your trial. Nothing is charged for <span data-cw="trial">2</span> days, and you can cancel from your account before then without paying anything. After the trial the plan renews monthly until you cancel. The trial is available once per player.</p></details>
+      <details><summary>How does the free trial work?</summary><p>Choose a plan and start your trial. For <span data-cw="trial">2</span> days you can control one airport of your choice, free. Cancel from your account before the trial ends and you pay nothing. Otherwise your plan starts, the rest of its airports unlock, and it renews monthly until you cancel. The trial is available once per player.</p></details>
       <details><summary>How do I choose my airports?</summary><p>After you subscribe, open <a href="#account">your account</a> and tick the airports your plan includes. You can fill empty places at any time. Swapping an airport out is free during the trial and then once every 30 days. Unlimited includes every airport, including new ones as they open.</p></details>
       <details><summary>Can I change or cancel my plan?</summary><p>Yes. Open <a href="#account">your account</a> and choose Manage billing to move up or down a plan, update your card, download invoices or cancel. A cancelled plan stays active until the end of the month you have paid for.</p></details>
       <details><summary>What is free?</summary><p>The website, every airport briefing, the Academy reading, the airport map and your career logbook. Opening a position at an airport needs a trial or a plan.</p></details>
@@ -2266,7 +2266,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     <p>These terms cover your use of Clearway (the website at <span data-cw="site"></span> and its simulators). By creating an account or subscribing you agree to them.</p>
     <h2>The service</h2><p>Clearway is an air traffic control simulation game. It is built from published aeronautical information and open map data, simplified for play. It must not be used for real-world navigation, flight planning or controller training, and it is not affiliated with any air navigation service provider, airport or airline.</p>
     <h2>Accounts</h2><p>You sign in with your email address. Keep access to that email secure: anyone who can read it can sign in as you. One account is for one person.</p>
-    <h2>Subscriptions and the free trial</h2><p>Plans are billed monthly in advance through our payment provider, Stripe, and renew automatically until you cancel. New players can try a plan free for <span data-cw="trial">2</span> days once; if you do not cancel before the trial ends, the first monthly payment is taken then. You can change plan, update your card or cancel at any time from your account. Cancelling stops the next renewal and your plan stays active until the end of the period you have paid for. Prices include any VAT that applies and may change with at least 30 days’ notice by email.</p>
+    <h2>Subscriptions and the free trial</h2><p>Plans are billed monthly in advance through our payment provider, Stripe, and renew automatically until you cancel. New players can try one airport of their choice free for <span data-cw="trial">2</span> days, once, on the plan they choose; if you do not cancel before the trial ends, the first monthly payment is taken then and the rest of the plan’s airports unlock. You can change plan, update your card or cancel at any time from your account. Cancelling stops the next renewal and your plan stays active until the end of the period you have paid for. Prices include any VAT that applies and may change with at least 30 days’ notice by email.</p>
     <h2>Your right to cancel</h2><p>If you are a consumer in the UK or EU you normally have 14 days to cancel a new subscription. Because Clearway gives you access to digital content straight away, you agree when subscribing that access starts immediately and that you lose that right once it has started, except where the law says otherwise. The free trial gives you time to decide before paying. If something has gone wrong, contact us and we will look at a refund.</p>
     <h2>Airports and early access</h2><p>Your plan lets you open the number of airports it includes. Airports in development, offered through early access, are unfinished and may change or be withdrawn. We may update, improve or retire features; if we withdraw an airport you have chosen you can pick another.</p>
     <h2>Fair use</h2><p>Do not share your account, copy or resell the simulator, try to get around access controls, or disrupt the service.</p>
@@ -6815,15 +6815,15 @@ function cwPaywall(){
   const e = CW.ent, name = APT.name, trial = CW_CFG.trial_days, dev = cwStatusOf(APT.icao) === 'dev';
   let h = '', btns = '';
   if (CW.ses && !e && CW.loading) { h = `<h1>${esc(name)}</h1><p>Checking your plan…</p>`; }
-  else if (!CW.ses) { h = `<h1>Control ${esc(name)}</h1><p>Opening a position needs a plan. Try any plan free for ${trial} days: pick one airport, three, five, ten or the whole network.</p>`;
+  else if (!CW.ses) { h = `<h1>Control ${esc(name)}</h1><p>Opening a position needs a plan. Try one airport of your choice free for ${trial} days, then pick one airport, three, five, ten or the whole network.</p>`;
     btns = `<a class="btn primary" href="${cwHost('pricing')}">Start your ${trial}-day free trial</a><a class="btn" href="${cwHost('account')}">Sign in</a>`; }
-  else if (!e || !e.active) { h = `<h1>Control ${esc(name)}</h1><p>Your account has no active plan${e && e.trial_used ? '' : `. Try any plan free for ${trial} days`}.</p>`;
+  else if (!e || !e.active) { h = `<h1>Control ${esc(name)}</h1><p>Your account has no active plan${e && e.trial_used ? '' : `. Try one airport of your choice free for ${trial} days`}.</p>`;
     btns = `<a class="btn primary" href="${cwHost('pricing')}">See plans</a><a class="btn" href="${cwHost('account')}">Your account</a>`; }
   else if (dev) { h = `<h1>${esc(name)} is in development</h1><p>Airports in development are open to Foxtrot (early access) members.</p>`;
     btns = `<a class="btn primary" href="${cwHost('account')}">Add Foxtrot</a>`; }
-  else if (e.airports.length < e.limit) { h = `<h1>Add ${esc(name)} to your plan?</h1><p>Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''} and you have chosen ${e.airports.length}${e.airports.length ? ': ' + e.airports.join(', ') : ''}.</p>`;
+  else if (e.airports.length < e.limit) { h = `<h1>Add ${esc(name)} to your ${e.trial ? 'trial' : 'plan'}?</h1><p>${e.trial ? `Your free trial includes one airport of your choice.` : `Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''} and you have chosen ${e.airports.length}${e.airports.length ? ': ' + e.airports.join(', ') : ''}.`}</p>`;
     btns = `<button class="btn primary" id="cwPayAdd">Add ${esc(name)}</button><a class="btn" href="${cwHost('account')}">Choose on your account</a>`; }
-  else { h = `<h1>${esc(name)} is not in your plan</h1><p>Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''}: ${e.airports.join(', ')}. Swap one on your account, or move up a plan.</p>`;
+  else { h = `<h1>${esc(name)} is not in your ${e.trial ? 'trial' : 'plan'}</h1><p>${e.trial ? `Your free trial is for one airport, ${e.airports.join(', ')}. The rest of your plan’s airports unlock when the trial ends, or you can swap airports on your account during the trial.` : `Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''}: ${e.airports.join(', ')}. Swap one on your account, or move up a plan.`}</p>`;
     btns = `<a class="btn primary" href="${cwHost('account')}">Your airports</a><a class="btn" href="${cwHost('pricing')}">Plans</a>`; }
   el.innerHTML = `<div class="card"><div class="eyebrow">${APT.icao}</div>${h}<p class="cw-msg" id="cwPayMsg"></p><div class="row">${btns}<a class="btn" href="${cwHost(HOME_RT)}">Airport briefing</a></div></div>`;
   const add = $('cwPayAdd');
@@ -6889,9 +6889,9 @@ async function cwRenderAccount(){
   if (want && !e.active) return cwChoose(want.plan, want.early);
   const plan = CW_PLANS.find(p => p.k === e.plan);
   if (!e.active) {
-    $('cwPlanBox').innerHTML = `<p>${e.status === 'canceled' ? 'Your plan has ended.' : 'You have no plan yet.'} ${e.trial_used ? '' : `Every plan starts with a ${CW_CFG.trial_days}-day free trial.`}</p><div class="cw-row"><a class="btn primary" href="#pricing">See plans</a>${e.billing ? '<button class="btn" data-portal>Billing history</button>' : ''}</div>`;
+    $('cwPlanBox').innerHTML = `<p>${e.status === 'canceled' ? 'Your plan has ended.' : 'You have no plan yet.'} ${e.trial_used ? '' : `Every plan starts with a free ${CW_CFG.trial_days}-day trial of one airport of your choice.`}</p><div class="cw-row"><a class="btn primary" href="#pricing">See plans</a>${e.billing ? '<button class="btn" data-portal>Billing history</button>' : ''}</div>`;
   } else {
-    const when = e.status === 'trialing' ? `Free trial until ${cwDate(e.trial_end)}${e.cancel_at ? ', then ends' : ', then ' + cwPrice(e.plan) + ' a month'}`
+    const when = e.status === 'trialing' ? `Free trial until ${cwDate(e.trial_end)}${e.cancel_at ? ', then ends' : CW_OFF ? `, then ${cwOffer(e.plan)} a month ${cwOfferTerm().replace('your ', 'the ')} and ${cwPrice(e.plan)} after that` : ', then ' + cwPrice(e.plan) + ' a month'}`
       : e.cancel_at ? `Ends on ${cwDate(e.cancel_at)}` : e.status === 'past_due' ? 'Your last payment failed: please update your card' : `Renews on ${cwDate(e.period_end)}`;
     $('cwPlanBox').innerHTML = `<div class="cw-planrow"><div><span class="badge ${e.status === 'past_due' ? 'dev' : 'live'}">${CW_ST[e.status] || e.status}</span><h3>${plan ? plan.name : e.plan}</h3><p class="cw-sub">${when}.</p></div>
       <div class="cw-row"><button class="btn primary" data-portal>Manage billing</button><a class="btn" href="#pricing">Compare plans</a></div></div>
@@ -6914,7 +6914,7 @@ function cwRenderPicks(){
   } else {
     let sel = [...e.airports];
     const draw = () => {
-      $('cwPickSub').textContent = `${sel.length} of ${e.limit} chosen. Fill empty places at any time; ${e.status === 'trialing' ? 'swaps are free during your trial' : 'you can swap an airport once every 30 days'}.`;
+      $('cwPickSub').textContent = e.trial ? `Your free trial includes one airport of your choice; swap it as often as you like. The rest of your plan’s ${e.plan_airports || ''} airports unlock when the trial ends.`.replace('plan’s  airports', 'plan’s airports') : `${sel.length} of ${e.limit} chosen. Fill empty places at any time; you can swap an airport once every 30 days.`;
       $('cwPicks').innerHTML = live.map(a => `<button type="button" class="cw-pick${sel.includes(a.icao) ? ' on' : ''}" data-i="${a.icao}" aria-pressed="${sel.includes(a.icao)}"><b>${a.icao}</b><span>${esc(a.name)}</span></button>`).join('')
         + `<div class="cw-row" style="grid-column:1/-1"><button class="btn primary" id="cwPickSave"${String(sel) === String(e.airports) ? ' disabled' : ''}>Save my airports</button></div>`;
       $('cwPicks').querySelectorAll('[data-i]').forEach(b => b.onclick = () => {

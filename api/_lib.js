@@ -66,9 +66,11 @@ export function entitlement(a){
   const now = Date.now(), end = a && a.period_end ? Date.parse(a.period_end) : 0;
   const active = !!a && (a.status === 'trialing' || a.status === 'active' || (a.status === 'past_due' && now < end + 3*864e5));
   const plan = active ? PLANS[a.plan] : null;
-  return { active, plan: active ? a.plan : null, status: a ? a.status || null : null, limit: plan ? plan.airports : null,
-    airports: active ? (plan && plan.airports === 0 ? '*' : (a.airports || []).slice(0, plan ? plan.airports : 0)) : [],
-    early: active && !!(a.early || (plan && plan.early)), trial_end: a && a.trial_end, period_end: a && a.period_end,
+  // the free trial is one airport of the player's choice, whatever the plan; the rest unlock when it ends
+  const trial = active && a.status === 'trialing', limit = !plan ? null : trial ? 1 : plan.airports;
+  return { active, plan: active ? a.plan : null, status: a ? a.status || null : null, limit, trial, plan_airports: plan ? plan.airports : null,
+    airports: active ? (limit === 0 ? '*' : (a.airports || []).slice(0, limit || 0)) : [],
+    early: active && !trial && !!(a.early || (plan && plan.early)), trial_end: a && a.trial_end, period_end: a && a.period_end,
     cancel_at: a && a.cancel_at, trial_used: !!(a && a.trial_used), airports_changed_at: a && a.airports_changed_at };
 }
 
