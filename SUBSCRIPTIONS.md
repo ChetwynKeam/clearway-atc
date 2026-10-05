@@ -22,12 +22,12 @@ with Stripe), `api/feedback.js` (feedback and airport requests), `api/_lib.js` (
 
 | Plan | Key | Airports | Suggested price |
 |---|---|---|---|
-| Solo | `a1` | 1 | £4.99 / month |
-| Three | `a3` | 3 | £9.99 / month |
-| Five | `a5` | 5 | £14.99 / month |
-| Ten | `a10` | 10 | £24.99 / month |
-| Unlimited | `all` | every airport, early access included | £29.99 / month |
-| Early access add-on | `early` | airports in development, double-weight airport requests | £4.99 / month |
+| Alpha | `a1` | 1 | £4.99 / month |
+| Bravo | `a3` | 3 | £9.99 / month |
+| Charlie | `a5` | 5 | £14.99 / month |
+| Delta | `a10` | 10 | £24.99 / month |
+| Echo | `all` | every airport, Foxtrot included | £29.99 / month |
+| Foxtrot (early access add-on) | `early` | airports in development, double-weight airport requests | £4.99 / month |
 
 The prices players see come from `subs.json`; the prices they pay come from Stripe. Keep the two the same.
 Every plan starts with a 2-day free trial, once per player, with a card taken at sign-up and cancellable before day 2.

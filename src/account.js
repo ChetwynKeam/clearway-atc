@@ -5,11 +5,11 @@
 const CW_ON = !!(CW_CFG.enabled && CW_CFG.supabase_url && CW_CFG.supabase_anon_key && CW_CFG.api);
 const CW_FB = !!(CW_CFG.feedback && CW_CFG.api);
 const CW_PLANS = [
-  { k: 'a1', n: 1, name: 'Solo', p: 'One airport of your choice' },
-  { k: 'a3', n: 3, name: 'Three', p: 'Three airports of your choice', hot: true },
-  { k: 'a5', n: 5, name: 'Five', p: 'Five airports of your choice' },
-  { k: 'a10', n: 10, name: 'Ten', p: 'Ten airports of your choice' },
-  { k: 'all', n: 0, name: 'Unlimited', p: 'Every airport, including new ones as they open, with early access included' },
+  { k: 'a1', n: 1, name: 'Alpha', p: 'One airport of your choice' },
+  { k: 'a3', n: 3, name: 'Bravo', p: 'Three airports of your choice', hot: true },
+  { k: 'a5', n: 5, name: 'Charlie', p: 'Five airports of your choice' },
+  { k: 'a10', n: 10, name: 'Delta', p: 'Ten airports of your choice' },
+  { k: 'all', n: 0, name: 'Echo', p: 'Every airport, including new ones as they open, with Foxtrot early access included' },
 ];
 const cwPrice = k => CW_CFG.currency + (+CW_CFG.prices[k]).toFixed(2);
 const CW = { ses: null, ent: null, loading: false, want: null };
@@ -47,8 +47,11 @@ async function cwToken(){
 }
 async function cwApi(path, body){
   const t = await cwToken();
-  const res = await fetch(CW_CFG.api.replace(/\/$/, '') + '/' + path, { method: body ? 'POST' : 'GET',
-    headers: { ...(t ? { authorization: 'Bearer ' + t } : {}), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  // text/plain keeps anonymous posts a "simple" request (no CORS preflight); the server reads the JSON either way
+  let res;
+  try { res = await fetch(CW_CFG.api.replace(/\/$/, '') + '/' + path, { method: body ? 'POST' : 'GET',
+    headers: { ...(t ? { authorization: 'Bearer ' + t } : {}), ...(body ? { 'content-type': 'text/plain;charset=UTF-8' } : {}) }, body: body ? JSON.stringify(body) : undefined }); }
+  catch(e) { throw new Error('Clearway’s server could not be reached. Check your connection, or allow this site in any ad or tracker blocker, and try again.'); }
   const j = await res.json().catch(() => ({}));
   if (!res.ok) { const e = new Error(j.error || 'Something went wrong. Please try again.'); e.status = res.status; throw e; }
   return j;
@@ -93,8 +96,8 @@ function cwPaywall(){
     btns = `<a class="btn primary" href="${cwHost('pricing')}">Start your ${trial}-day free trial</a><a class="btn" href="${cwHost('account')}">Sign in</a>`; }
   else if (!e || !e.active) { h = `<h1>Control ${esc(name)}</h1><p>Your account has no active plan${e && e.trial_used ? '' : `. Try any plan free for ${trial} days`}.</p>`;
     btns = `<a class="btn primary" href="${cwHost('pricing')}">See plans</a><a class="btn" href="${cwHost('account')}">Your account</a>`; }
-  else if (dev) { h = `<h1>${esc(name)} is in development</h1><p>Airports in development are open to early access members.</p>`;
-    btns = `<a class="btn primary" href="${cwHost('account')}">Add early access</a>`; }
+  else if (dev) { h = `<h1>${esc(name)} is in development</h1><p>Airports in development are open to Foxtrot (early access) members.</p>`;
+    btns = `<a class="btn primary" href="${cwHost('account')}">Add Foxtrot</a>`; }
   else if (e.airports.length < e.limit) { h = `<h1>Add ${esc(name)} to your plan?</h1><p>Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''} and you have chosen ${e.airports.length}${e.airports.length ? ': ' + e.airports.join(', ') : ''}.</p>`;
     btns = `<button class="btn primary" id="cwPayAdd">Add ${esc(name)}</button><a class="btn" href="${cwHost('account')}">Choose on your account</a>`; }
   else { h = `<h1>${esc(name)} is not in your plan</h1><p>Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''}: ${e.airports.join(', ')}. Swap one on your account, or move up a plan.</p>`;
@@ -121,7 +124,7 @@ function cwRenderPricing(){
   $('cwEarlyPick').hidden = !CW_ON;
   const e = CW.ent, cur = e && e.active ? e.plan : null, trial = !(e && e.trial_used);
   $('cwPlans').innerHTML = CW_PLANS.map(p => {
-    const per = p.n ? `<span class="per">${CW_CFG.currency}${(CW_CFG.prices[p.k]/p.n).toFixed(2)} per airport</span>` : '<span class="per">Every airport · early access included</span>';
+    const per = p.n ? `<span class="per">${CW_CFG.currency}${(CW_CFG.prices[p.k]/p.n).toFixed(2)} per airport</span>` : '<span class="per">Every airport · Foxtrot included</span>';
     const btn = !CW_ON ? `<a class="btn" href="#airports">Free during the preview</a>`
       : cur === p.k ? `<button class="btn" disabled>Your plan</button>`
       : `<button class="btn${p.hot ? ' primary' : ''}" data-plan="${p.k}">${cur ? 'Switch to ' + p.name : trial ? `Start ${CW_CFG.trial_days}-day free trial` : 'Choose ' + p.name}</button>`;
@@ -167,8 +170,8 @@ async function cwRenderAccount(){
       : e.cancel_at ? `Ends on ${cwDate(e.cancel_at)}` : e.status === 'past_due' ? 'Your last payment failed: please update your card' : `Renews on ${cwDate(e.period_end)}`;
     $('cwPlanBox').innerHTML = `<div class="cw-planrow"><div><span class="badge ${e.status === 'past_due' ? 'dev' : 'live'}">${CW_ST[e.status] || e.status}</span><h3>${plan ? plan.name : e.plan}</h3><p class="cw-sub">${when}.</p></div>
       <div class="cw-row"><button class="btn primary" data-portal>Manage billing</button><a class="btn" href="#pricing">Compare plans</a></div></div>
-      <div class="cw-earlyrow"><div><b>Early access</b><p class="cw-sub">${e.plan === 'all' ? 'Included with Unlimited.' : e.early ? 'On: airports in development are open to you.' : `Play airports in development, for ${cwPrice('early')} a month.`}</p></div>
-      ${e.plan === 'all' ? '' : `<button class="btn" id="cwEarlyTog">${e.early ? 'Remove early access' : 'Add early access'}</button>`}</div>`;
+      <div class="cw-earlyrow"><div><b>Foxtrot</b> (early access)<p class="cw-sub">${e.plan === 'all' ? 'Included with Echo.' : e.early ? 'On: airports in development are open to you.' : `Play airports in development, for ${cwPrice('early')} a month.`}</p></div>
+      ${e.plan === 'all' ? '' : `<button class="btn" id="cwEarlyTog">${e.early ? 'Remove Foxtrot' : 'Add Foxtrot'}</button>`}</div>`;
     const t = $('cwEarlyTog');
     if (t) t.onclick = async () => { t.disabled = true; try { CW.ent = await cwApi('account', { action: 'early', on: !e.early }); cwLS.set('cw-ent', null); await cwLoad(true); cwRenderAccount(); } catch(err) { t.textContent = err.message; } };
   }
