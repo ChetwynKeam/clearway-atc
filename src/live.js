@@ -16,6 +16,7 @@ const PLACE_ICAO = { 'london gatwick': 'EGKK', 'gatwick': 'EGKK', 'london heathr
   'london stansted': 'EGSS', 'manchester': 'EGCC', 'bristol': 'EGGD', 'birmingham': 'EGBB', 'edinburgh': 'EGPH', 'brize norton': 'EGVN', 'raf brize norton': 'EGVN',
   'tangier': 'GMTT', 'tangiers': 'GMTT', 'casablanca': 'GMMN', 'marrakech': 'GMMX', 'madrid': 'LEMD', 'seville': 'LEZL', 'sevilla': 'LEZL', 'malaga': 'LEMG', 'málaga': 'LEMG',
   'paris': 'LFPG', 'paris cdg': 'LFPG', 'nice': 'LFMN', 'farnborough': 'EGLF' };
+Object.assign(AIRLINE_ICAO, APT.airlineIcao || {}); Object.assign(AIRLINE_TYPE, APT.airlineType || {}); Object.assign(PLACE_ICAO, APT.placeIcao || {});
 Object.assign(AP, { EGBB: [52.4539, -1.7480, 'Birmingham'], EGPH: [55.9500, -3.3725, 'Edinburgh'], GMMX: [31.6069, -8.0363, 'Marrakech'] });
 const csOf = fl => { fl = fl.toUpperCase().replace(/\s/g, ''); let m = fl.match(/^([A-Z]{3})(\d{1,4}[A-Z]{0,2})$/); if (m) return fl; m = fl.match(/^([A-Z0-9]{2})(\d{1,4}[A-Z]?)$/); return m && AIRLINE_ICAO[m[1]] ? AIRLINE_ICAO[m[1]] + m[2] : fl; };
 const placeOf = p => PLACE_ICAO[p.toLowerCase().trim()] || p;
@@ -65,14 +66,14 @@ function liveSession(now = Date.now()){
 }
 // session picker: today's real flights instead of the timetable slot
 function renderLiveSlots(){
-  const el = $('slotList'); el.innerHTML = '<span class="dimmer">Loading today’s flights from Gibraltar Airport…</span>';
+  const el = $('slotList'); el.innerHTML = `<span class="dimmer">Loading today’s flights from ${APT.liveName}…</span>`;
   liveLoad().then(() => {
     if (!isLiveMode($('trafficSel').value)) return;
     const T = liveToday();
     if (!T) { el.innerHTML = '<span class="dimmer">Today’s flight information isn’t available on this page (it needs the site’s own web address). The session will use the timetable instead.</span>'; return; }
     const upd = LIVE.data.updated ? ` · updated ${LIVE.data.updated.substr(11, 5)}Z` : '';
-    const row = r => `<span class="slot ${r.kind}${r.done || r.rel < -5 ? ' past' : ''}"><b>${r.cs}</b> ${r.kind === 'ARR' ? r.ap + ' › LXGB' : 'LXGB › ' + r.ap} <i>${zHM(Date.UTC(2026, 0, 1) + r.tm*60e3)}Z${r.cancelled ? ' cancelled' : ''}</i></span>`;
-    el.innerHTML = `<span class="dimmer" style="flex-basis:100%">Real flights today from Gibraltar Airport${upd}. Your session starts now (${zHM(Date.now())}Z).</span>` + [...T.arr, ...T.dep].sort((a, b) => a.tm - b.tm).map(row).join('');
+    const row = r => `<span class="slot ${r.kind}${r.done || r.rel < -5 ? ' past' : ''}"><b>${r.cs}</b> ${r.kind === 'ARR' ? r.ap + ' › ' + APT.icao : APT.icao + ' › ' + r.ap} <i>${zHM(Date.UTC(2026, 0, 1) + r.tm*60e3)}Z${r.cancelled ? ' cancelled' : ''}</i></span>`;
+    el.innerHTML = `<span class="dimmer" style="flex-basis:100%">Real flights today from ${APT.liveName}${upd}. Your session starts now (${zHM(Date.now())}Z).</span>` + [...T.arr, ...T.dep].sort((a, b) => a.tm - b.tm).map(row).join('');
   });
 }
 
@@ -85,7 +86,7 @@ async function pollTraffic(){
       const k = (LIVE.relay + i) % RELAYS.length, base = RELAYS[k].replace(/\/$/, '');
       try {
         const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
-        const r = await fetch((/\/(traffic|api\/traffic)$/.test(base) ? base : base + '/traffic') + '?lat=36.15&lon=-5.35&r=200', { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
+        const r = await fetch((/\/(traffic|api\/traffic)$/.test(base) ? base : base + '/traffic') + `?lat=${LAT0.toFixed(2)}&lon=${LON0.toFixed(2)}&r=200`, { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
         if (r.ok) { j = await r.json(); LIVE.relay = k; }
       } catch (e) {}
     }
@@ -102,9 +103,9 @@ const liveLL = a => { const dt = Math.min(45, (Date.now() - a.ts)/1000), d = (a.
 function liveBind(){
   for (const [hex, a] of LIVE.ac) {
     if (LIVE.bound.has(hex) || a.gnd || !a.alt) continue;
-    const ll = liveLL(a), p = xy(...ll), dGbr = Math.hypot(p[0] - GBR[0], p[1] - GBR[1]);
+    const ll = liveLL(a), p = xy(...ll), dGbr = Math.hypot(p[0] - RADAR_REF[0], p[1] - RADAR_REF[1]);
     if (dGbr > 90 || dGbr < 12) continue;
-    const toGbr = brg(p[0], p[1], ...GBR), off = Math.abs(((a.trk - toGbr) % 360 + 540) % 360 - 180);
+    const toGbr = brg(p[0], p[1], ...RADAR_REF), off = Math.abs(((a.trk - toGbr) % 360 + 540) % 360 - 180);
     const byName = S.sched.find(f => f.k === 'ARR' && f.cs === a.cs && !f.liveHex);
     const byPath = !byName && off < 25 && a.alt < 26000 && (a.vs || 0) <= 300 && S.sched.find(f => f.k === 'ARR' && f.real && !f.liveHex && f.cs.slice(0, 3) === a.cs.slice(0, 3) && Math.abs(f.m*60 + 15*60 - S.t - dGbr/Math.max(150, a.gs || 250)*3600) < 40*60);
     const f = byName || byPath; if (!f) continue;
@@ -112,7 +113,7 @@ function liveBind(){
     if (ac && ac.state !== 'PRE') { f.liveHex = hex; LIVE.bound.add(hex); continue; }   // already yours: just hide the live copy
     if (!ac) { f.spawned = true; ac = spawnArrival({ ...f, m: S.t/60 + PRE_LEAD/60 + 1 }); }
     if (!ac) continue;
-    const gateNow = ['E', 'W', 'S'].sort((g1, g2) => dist(...ENTRY[g1], ...p) - dist(...ENTRY[g2], ...p))[0];
+    const gateNow = Object.keys(ENTRY).sort((g1, g2) => dist(...ENTRY[g1], ...p) - dist(...ENTRY[g2], ...p))[0];
     ac.gate = gateNow; ac.x = p[0]; ac.y = p[1]; ac.alt = Math.max(ENTRY_ALT[gateNow], a.alt); ac.gs = a.gs || 300; ac.ias = Math.min(300, ac.gs);
     ac.hdg = ac.trk = a.trk || ac.hdg; ac.preAt = S.t + Math.max(30, dist(...p, ...ENTRY[gateNow])/Math.max(150, ac.gs)*3600);
     if (a.cs && a.cs !== ac.cs) { ac.real = a.cs; }
@@ -121,7 +122,7 @@ function liveBind(){
     sys(`${f.cs} is a real flight${a.cs && a.cs !== f.cs ? ` (callsign ${a.cs})` : ''}: picked up ${Math.round(dGbr)} NM out at ${altShort(Math.round(a.alt/100)*100)}.`);
   }
 }
-const liveHidden = (a, p) => LIVE.bound.has(a.hex) || a.gnd || (a.alt != null && a.alt < 3500 && Math.hypot(p[0] - GBR[0], p[1] - GBR[1]) < 6) || S.acs.some(x => x.cs === a.cs);
+const liveHidden = (a, p) => LIVE.bound.has(a.hex) || a.gnd || (a.alt != null && a.alt < 3500 && Math.hypot(p[0] - RADAR_REF[0], p[1] - RADAR_REF[1]) < 6) || S.acs.some(x => x.cs === a.cs);
 function drawLive(){
   if (!S.running || !isLiveMode() || !LIVE.ac.size) return;
   const col = C.name === 'dark' ? '#9fb3c8' : '#5d6f84';
@@ -137,7 +138,7 @@ S.listeners.push(ev => {
     clearInterval(LIVE.timer); LIVE.timer = null; LIVE.ac.clear(); LIVE.bound.clear(); LIVE.ok = 0; LIVE.err = 0;
     if (isLiveMode()) {
       if (RELAY) { pollTraffic(); LIVE.timer = setInterval(pollTraffic, 10000); }
-      else sys('Real world: live aircraft positions need the traffic relay, which isn’t set up yet. Today’s real Gibraltar flights are scheduled at their real times.');
+      else sys('Real world: live aircraft positions need the traffic relay, which isn’t set up yet. Today’s real ${APT.name} flights are scheduled at their real times.');
     }
   }
 });

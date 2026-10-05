@@ -59,7 +59,7 @@ function draw(){
   if (img) drawImagery();
   else if (ground) { drawGroundBase(); drawRoads(); }
   cx.strokeStyle = C.coast; cx.lineWidth = ground ? 1.4 : 1; cx.globalAlpha = ground ? 0.8 : 1;
-  if (!img) { cx.save(); if (ground && typeof AIRSIDE !== 'undefined') { cx.beginPath(); cx.rect(0, 0, W, H); AIRSIDE.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](sx(p[0]), sy(p[1]))); cx.closePath(); cx.clip('evenodd'); }
+  if (!img) { cx.save(); if (ground && typeof AIRSIDE !== 'undefined' && AIRSIDE) { cx.beginPath(); cx.rect(0, 0, W, H); AIRSIDE.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](sx(p[0]), sy(p[1]))); cx.closePath(); cx.clip('evenodd'); }
   for (const l of COAST) { poly(l, false); cx.stroke(); } cx.restore(); }
   cx.globalAlpha = 1;
   if (!ground) drawRadarMap(); else if (!img) drawRockRelief();
@@ -85,13 +85,13 @@ function draw(){
 
 function drawRadarMap(){
   const sc = V.scale;
-  // R164
-  cx.save(); poly(R164); cx.fillStyle = rgba('r164', .05); cx.fill(); cx.clip();
+  // restricted area (Gibraltar: R164)
+  if (R164.length) { cx.save(); poly(R164); cx.fillStyle = rgba('r164', .05); cx.fill(); cx.clip();
   cx.strokeStyle = rgba('r164', .10); cx.lineWidth = 1; for (let k = -W; k < W+H; k += 9) { cx.beginPath(); cx.moveTo(k, 0); cx.lineTo(k - H, H); cx.stroke(); }
   cx.restore();
-  cx.save(); cx.strokeStyle = rgba('r164', .65); cx.setLineDash([6,4]); cx.lineWidth = 1.2; poly(R164); cx.stroke(); cx.restore();
+  cx.save(); cx.strokeStyle = rgba('r164', .65); cx.setLineDash([6,4]); cx.lineWidth = 1.2; poly(R164); cx.stroke(); cx.restore(); }
   if (sc < 3) return;                                   // zoomed out to the wider map: no radar furniture
-  if (sc < 160) { cx.fillStyle = rgba('r164', .9); cx.font = `600 12px ${FONT_L}`; const p = xy(36.245,-5.40); cx.fillText('R164  SFC–FL300', sx(p[0]), sy(p[1])); }
+  if (sc < 160 && APT.restricted && APT.restricted.label) { cx.fillStyle = rgba('r164', .9); cx.font = `600 12px ${FONT_L}`; const p = APT.restricted.labelAt; cx.fillText(APT.restricted.label, sx(p[0]), sy(p[1])); }
   const IMGON = mapImagery();
   if (!IMGON) { cx.strokeStyle = C.border; cx.setLineDash([2,3]); for (const l of BORDERS) { poly(l,false); cx.stroke(); } cx.setLineDash([]);
   drawRockRelief(); }
@@ -99,9 +99,9 @@ function drawRadarMap(){
   cx.font = `500 12px ${FONT_L}`;
   if (!IMGON) for (const [n,x,y] of TOWNS) { const X = sx(x), Y = sy(y); if (X < -40 || Y < -20 || X > W+40 || Y > H+20) continue; cx.fillStyle = rgba('town', .55); cx.fillRect(X-1.5, Y-1.5, 3, 3); cx.fillStyle = rgba('town', .6); cx.fillText(n.toUpperCase(), X+5, Y+4); }
   for (const [n,x,y] of AIRPORTS) { const X = sx(x), Y = sy(y); cx.strokeStyle = rgba('apt', .55); cx.lineWidth = 1; cx.beginPath(); cx.arc(X, Y, 4, 0, 7); cx.stroke(); cx.beginPath(); cx.moveTo(X-6, Y); cx.lineTo(X+6, Y); cx.stroke(); cx.fillStyle = rgba('apt', .6); cx.font = `10px ${FONT_D}`; cx.fillText(n, X+7, Y-5); }
-  // range rings and bearing scale around GBR
+  // range rings and bearing scale around the radar reference
   if (sc < 60) {
-    const X0 = sx(GBR[0]), Y0 = sy(GBR[1]);
+    const X0 = sx(RADAR_REF[0]), Y0 = sy(RADAR_REF[1]);
     cx.strokeStyle = C.ring; cx.lineWidth = 1; cx.fillStyle = C.ringTxt; cx.font = `10px ${FONT_D}`;
     for (let r = 5; r <= 50; r += 5) { cx.beginPath(); cx.arc(X0, Y0, r*sc, 0, 7); cx.stroke(); if (r % 10 === 0) cx.fillText(r, X0 + r*sc*0.707 + 2, Y0 - r*sc*0.707); }
     const R = 40*sc;
@@ -109,6 +109,7 @@ function drawRadarMap(){
   }
 }
 function drawRockRelief(){
+  if (!APT.drawnTown) { if (APT.drawRelief) APT.drawRelief(); return; }
   const sc = V.scale;
   cx.fillStyle = rgba('reliefFill', .22); cx.strokeStyle = rgba('relief', .45); cx.lineWidth = 1; poly(ROCK); cx.fill(); cx.stroke();
   for (let k = 0.75; k > 0.15; k -= 0.2) { const pts = ROCK.map(p => [ROCK_TOP[0]+(p[0]-ROCK_TOP[0])*k, ROCK_TOP[1]+(p[1]-ROCK_TOP[1])*k]); cx.strokeStyle = rgba('relief', 0.18+0.25*(1-k)); poly(pts); cx.stroke(); }
@@ -118,12 +119,12 @@ function drawRockRelief(){
 function drawProcedures(){
   const sc = V.scale; if (sc > 400) return;
   cx.lineWidth = 1;
-  for (const g of ['E','W','S']) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][S.rwy].map(id => WP[id].p), false); cx.stroke(); }
+  for (const g of Object.keys(ARR_ROUTE)) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][S.rwy].map(id => WP[id].p), false); cx.stroke(); }
   cx.setLineDash([]);
-  for (const k of ['27','09']) {
+  for (const k of [RW_HI, RW_LO]) {
     const F = FINAL[k]; cx.strokeStyle = k === S.rwy ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = k === S.rwy ? 1.3 : 1;
     poly(F.pts, false); cx.stroke();
-    if (k === '27') { const nx = Math.cos(CRS09*D2R), ny = Math.sin(CRS09*D2R); for (let n = 1; n <= 10; n++) { const p = add(T27, CRS09, n), L = n % 5 === 0 ? 7 : 4; cx.beginPath(); cx.moveTo(sx(p[0]) - nx*L, sy(p[1]) - ny*L); cx.lineTo(sx(p[0]) + nx*L, sy(p[1]) + ny*L); cx.stroke(); } }
+    if (F.ticks) { const ob = norm(crsOf(k) + 180), nx = Math.cos(ob*D2R), ny = Math.sin(ob*D2R); for (let n = 1; n <= 10; n++) { const p = add(F.pts[F.pts.length-1], ob, n), L = n % 5 === 0 ? 7 : 4; cx.beginPath(); cx.moveTo(sx(p[0]) - nx*L, sy(p[1]) - ny*L); cx.lineTo(sx(p[0]) + nx*L, sy(p[1]) + ny*L); cx.stroke(); } }
   }
   cx.strokeStyle = rgba('proc', .4); cx.lineWidth = 1;
   for (const w of Object.values(WP)) if (w.hold) {
@@ -135,38 +136,26 @@ function drawProcedures(){
   cx.font = `10.5px ${FONT_D}`;
   for (const w of Object.values(WP)) {
     const X = sx(w.p[0]), Y = sy(w.p[1]); if (X < -50 || Y < -50 || X > W+50 || Y > H+50) continue;
-    const pt = w.id === 'PTX' || w.id === 'PTY';
+    const pt = !!w.decLabel;
     if (pt && sc < 12) continue;
     cx.strokeStyle = pt ? rgba('proc', .9) : rgba('lab', .65);
     cx.beginPath(); cx.moveTo(X, Y-4.5); cx.lineTo(X+4, Y+3); cx.lineTo(X-4, Y+3); cx.closePath(); cx.stroke();
-    if (sc > 5) { cx.fillStyle = pt ? rgba('proc', .9) : rgba('lab', .6); cx.fillText(pt ? (w.id === 'PTX' ? 'X 920' : 'Y 920') : w.id, X+6, Y+3); }
+    if (sc > 5) { cx.fillStyle = pt ? rgba('proc', .9) : rgba('lab', .6); cx.fillText(pt ? w.decLabel : w.id, X+6, Y+3); }
   }
-  const X = sx(GBR[0]), Y = sy(GBR[1]); cx.strokeStyle = rgba('apt', .75); cx.beginPath(); for (let k=0;k<6;k++){ const a=k*Math.PI/3; cx[k?'lineTo':'moveTo'](X+5*Math.cos(a), Y+5*Math.sin(a)); } cx.closePath(); cx.stroke();
-  if (sc < 120) { cx.fillStyle = rgba('apt', .75); cx.fillText('GBR', X+7, Y-6); }
+  const X = sx(RADAR_REF[0]), Y = sy(RADAR_REF[1]); cx.strokeStyle = rgba('apt', .75); cx.beginPath(); for (let k=0;k<6;k++){ const a=k*Math.PI/3; cx[k?'lineTo':'moveTo'](X+5*Math.cos(a), Y+5*Math.sin(a)); } cx.closePath(); cx.stroke();
+  if (sc < 120) { cx.fillStyle = rgba('apt', .75); cx.fillText(APT.radarName, X+7, Y-6); }
 }
 
 // ── aerodrome ─────────────────────────────────────────────
 const AD = {
   rwyPoly: [[0,-22.5],[0,22.5],[RWY_M,22.5],[RWY_M,-22.5]],
-  // OpenStreetMap aprons in runway metres
-  civil: [[1314.7,216.1],[1315.1,116.7],[1106.4,115.9],[1105.4,210.8],[1110.8,210.8],[1110.8,215.4]],
-  north: [[1400.9,262.4],[1457.4,241.8],[1477.6,234.4],[1492.3,229.6],[1464.4,155.7],[1463.4,149.2],[1464,144.2],[1467.2,136.2],[1472.7,128.4],[1480.1,123.1],[1490.7,118.5],[1343.6,118.4],[1336.5,122.2],[1355,151],[1397.5,261.5]],
-  south: [[1044.6,-90.9],[1042.2,-139.8],[1039.1,-148.3],[1026,-183.2],[1106.9,-225.4],[1138.8,-181],[1151.6,-190.4],[1173.9,-206.6],[1179.2,-193.8],[1197.6,-157.3],[1196.8,-91.7],[1169.6,-91.8],[1162.1,-99.7],[1153.5,-104.4],[1145.1,-106.7],[1135.3,-107.8],[1109.8,-108.2],[1100.8,-107.4],[1094.8,-105.9],[1086.8,-102.3],[1079.2,-96.9],[1072.8,-91]],
   // taxiway centrelines: every taxi-graph edge, the runway fillets and the north apron taxiway's far end
   twys: Object.fromEntries([
     ...GE.map((e, i) => ['e' + i, [[GN[e.a].m, GN[e.a].off], [GN[e.b].m, GN[e.b].off]]]),
     ...Object.entries(FIL).flatMap(([k, f]) => ['W', 'E'].map(d => [k + d, [...f[d], [GN[HOLDS[k].rwy].m, GN[HOLDS[k].rwy].off]]])),
-    ['N', [[1430.3,207],[1440.4,234.4]]]
+    ...(AD_SITE.twyExtra || [])
   ]),
-  closedB: [],
-  roadN: [[1000,22],[1006,120],[1013,250],[1018,330],[1022,430],[1024,520]],
-  roadS: [[985,-22],[973,-54],[943,-175],[920,-250],[885,-330],[858,-420],[840,-520]],
-  terminal: [[1182,241],[1161,245],[1161,278],[1166,282],[1210,282],[1212,319],[1216,324],[1357,322],[1361,317],[1361,245],[1356,240]],
-  atc: [[1032,200],[1020,209],[1028,214],[1028,256],[1033,261],[1047,260],[1051,255],[1051,204],[1046,199]],
-  hangars: [[[990,-195],[966,-187],[960,-181],[981,-126],[987,-121],[1011,-129],[1017,-135],[996,-189]],
-            [[1125,-266],[1103,-252],[1099,-244],[1124,-210],[1126,-189],[1133,-185],[1163,-205],[1167,-210],[1129,-264]],
-            [[1033,-284],[999,-267],[978,-253],[982,-235],[1005,-243],[1046,-258],[1048,-262],[1037,-282]]],
-  floods: [1125,1166,1206,1246,1293]
+  ...AD_SITE
 };
 function drawAirport(){
   const sc = V.scale, mpx = sc/1852;
@@ -183,12 +172,12 @@ function drawAirport(){
   // airfield ground (D1: non-load-bearing surfaces) and roads
   cx.lineJoin = 'round'; cx.lineCap = 'round';
   cx.strokeStyle = C.road; cx.lineWidth = lw(14);
-  if (!IMG) { path(AD.roadN, false); cx.stroke(); path(AD.roadS, false); cx.stroke(); }
+  if (!IMG) for (const r of AD.roads || []) { path(r, false); cx.stroke(); }
   // frontier fence with hatching on the Spanish side
-  if (!IMG) { cx.strokeStyle = rgba('r164', .55); cx.lineWidth = 1.2; poly(FRONTIER, false); cx.stroke(); }
+  if (!IMG && FRONTIER.length) { cx.strokeStyle = rgba('r164', .55); cx.lineWidth = 1.2; poly(FRONTIER, false); cx.stroke(); }
   if (sc > 160 && !IMG) { cx.strokeStyle = rgba('r164', .35); for (let i = 0; i < FRONTIER.length-1; i++) { const a = FRONTIER[i], b = FRONTIER[i+1], L = dist(...a, ...b)/M2NM, n = Math.floor(L/25); for (let k = 0; k < n; k++) { const f = k/n, x = a[0]+(b[0]-a[0])*f, y = a[1]+(b[1]-a[1])*f; const X = sx(x), Y = sy(y); cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(X+5, Y-7); cx.stroke(); } } }
   // pavement
-  cx.fillStyle = C.concrete; path(AD.civil); cx.fill(); path(AD.north); cx.fill(); path(AD.south); cx.fill();
+  cx.fillStyle = C.concrete; for (const a of AD.aprons) { path(a); cx.fill(); }
   drawApronSlabs(path);
   drawRunwayShoulders(path);
   const twyTex = texPattern('twy', 40, RWY_ANGLE()) || C.asphalt;
@@ -196,24 +185,24 @@ function drawAirport(){
   for (const k in AD.twys) { path(AD.twys[k], false); cx.stroke(); }
   cx.strokeStyle = twyTex; cx.lineWidth = lw(19);
   for (const k in AD.twys) { path(AD.twys[k], false); cx.stroke(); }
-  cx.strokeStyle = C.closed; path(AD.closedB, false); cx.stroke();
+  if (AD.closedB && AD.closedB.length) { cx.strokeStyle = C.closed; path(AD.closedB, false); cx.stroke(); }
   // fillets where taxiways meet the runway
   cx.fillStyle = twyTex;
   cx.fillStyle = texPattern('asphalt', 40, RWY_ANGLE()) || C.rwy;
   // turning pads at each end: the mapped loop paved 23 m wide plus the pad itself
   cx.strokeStyle = cx.fillStyle; cx.lineWidth = lw(23); path(TURN_E, false); cx.stroke(); path(TURN_W, false); cx.stroke();
-  for (const k of ['E', 'W']) { const { c: [cm, co], r } = TURN_PAD[k], [X, Y] = c(cm, co); cx.beginPath(); cx.arc(X, Y, (r + 8)*mpx, 0, 7); cx.fill(); }
+  for (const k of ['E', 'W']) { if (!TURN_PAD[k]) continue; const { c: [cm, co], r } = TURN_PAD[k], [X, Y] = c(cm, co); cx.beginPath(); cx.arc(X, Y, (r + 8)*mpx, 0, 7); cx.fill(); }
   drawPavingDetail(c, path, mpx);
   if (!IMG) drawBuildings(c, path, mpx);
   // Winston Churchill Avenue across the runway
-  if (!IMG) { cx.save(); cx.globalAlpha = 0.55; cx.strokeStyle = C.road; cx.lineWidth = lw(14); cx.lineCap = 'butt'; path([[985,-22],[1000,22]], false); cx.stroke(); cx.restore(); }
+  if (!IMG && APT.xing) { cx.save(); cx.globalAlpha = 0.55; cx.strokeStyle = C.road; cx.lineWidth = lw(14); cx.lineCap = 'butt'; path([[985,-22],[1000,22]], false); cx.stroke(); cx.restore(); }
   if (sc > 150) {
     // runway markings: AD 2.9 only says the TDZ marks are non-standard, so the set below follows the ICAO Annex 14 layout
     cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
     cx.lineWidth = lw(0.9); path([[0,21.6],[RWY_M,21.6]], false); cx.stroke(); path([[0,-21.6],[RWY_M,-21.6]], false); cx.stroke();   // side stripes
     quad(0.5, -21.6, 1.4, 21.6); cx.fill(); quad(RWY_M - 1.4, -21.6, RWY_M - 0.5, 21.6); cx.fill();                                        // runway ends
-    cx.lineWidth = lw(0.9); cx.setLineDash([30*mpx, 20*mpx]); path([[THR09_M+85,0],[THR27_M-85,0]], false); cx.stroke(); cx.setLineDash([]);
-    for (const [m0, dir] of [[THR09_M, 1], [THR27_M, -1]]) {
+    cx.lineWidth = lw(0.9); cx.setLineDash([30*mpx, 20*mpx]); path([[THR_LO_M+85,0],[THR_HI_M-85,0]], false); cx.stroke(); cx.setLineDash([]);
+    for (const [m0, dir] of [[THR_LO_M, 1], [THR_HI_M, -1]]) {
       quad(m0, 21.6, m0 + dir*1.8, -21.6); cx.fill();                                                                // threshold bar
       for (let i = 0; i < 6; i++) for (const k of [-1, 1]) { const o = k*(3 + i*3.4); quad(m0 + dir*6, o - 0.9*k, m0 + dir*36, o + 0.9*k); cx.fill(); }   // 12 threshold stripes
       for (const k of [-1, 1]) { quad(m0 + dir*300, k*9, m0 + dir*345, k*15); cx.fill(); }                             // aiming point
@@ -221,19 +210,19 @@ function drawAirport(){
         const o = k*(9 + j*3.3); quad(m0 + dir*d, o, m0 + dir*(d + 22.5), o + k*1.8); cx.fill();
       }
       // displaced threshold: centreline arrows and arrowheads in the pre-threshold area
-      const pre = dir > 0 ? THR09_M : RWY_M - THR27_M;
+      const pre = dir > 0 ? THR_LO_M : RWY_M - THR_HI_M;
       cx.lineWidth = lw(0.9);
       for (let d = 20; d < pre - 12; d += 40) { const m = m0 - dir*d; path([[m - dir*12, 0], [m, 0]], false); cx.stroke(); path([[m - dir*6, -2.5],[m, 0],[m - dir*6, 2.5]], false); cx.stroke(); }
       for (const k of [-1, 1]) { const m = m0 - dir*6; path([[m - dir*8, k*9],[m, k*12],[m - dir*8, k*15]], false); cx.stroke(); }
     }
-    { cx.font = `700 ${Math.max(9, 14*mpx)}px ${FONT_L}`; for (const [m0, lab, h] of [[THR09_M+58,'09',CRS09],[THR27_M-58,'27',CRS27]]) { cx.save(); cx.translate(...c(m0,0)); cx.rotate(h*D2R); cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(lab, 0, 0); cx.restore(); } cx.textBaseline = 'alphabetic'; }
+    { cx.font = `700 ${Math.max(9, 14*mpx)}px ${FONT_L}`; for (const [m0, lab, h] of [[THR_LO_M+58,RW_LO,CRS_LO],[THR_HI_M-58,RW_HI,CRS_HI]]) { cx.save(); cx.translate(...c(m0,0)); cx.rotate(h*D2R); cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(lab, 0, 0); cx.restore(); } cx.textBaseline = 'alphabetic'; }
     // turn-pad guidance lines and edge markings
     cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35); path(TURN_E, false); cx.stroke(); path(TURN_W, false); cx.stroke();
     cx.strokeStyle = C.paint; cx.lineWidth = lw(0.6);
-    for (const k of ['E', 'W']) { const { c: [cm, co], r } = TURN_PAD[k], [X, Y] = c(cm, co); cx.beginPath(); cx.arc(X, Y, (r + 7.5)*mpx, 0, 7); cx.stroke(); }
+    for (const k of ['E', 'W']) { if (!TURN_PAD[k]) continue; const { c: [cm, co], r } = TURN_PAD[k], [X, Y] = c(cm, co); cx.beginPath(); cx.arc(X, Y, (r + 7.5)*mpx, 0, 7); cx.stroke(); }
     // PAAG positions (yellow circular markings across the runway)
     cx.strokeStyle = 'rgba(231,194,58,.8)'; cx.lineWidth = lw(0.6);
-    for (const m of [433, RWY_M - 405]) for (const o of [-14, 0, 14]) { const [X,Y] = c(m,o); cx.beginPath(); cx.arc(X, Y, Math.max(1.5, 3*mpx), 0, 7); cx.stroke(); }
+    for (const m of AD.paag || []) for (const o of [-14, 0, 14]) { const [X,Y] = c(m,o); cx.beginPath(); cx.arc(X, Y, Math.max(1.5, 3*mpx), 0, 7); cx.stroke(); }
     // taxiway centre and edge lines (solid yellow edges, AD 2.9)
     cx.save(); cx.beginPath(); cx.rect(0, 0, W, H); AD.rwyPoly.forEach(([m,o],k) => cx[k?'lineTo':'moveTo'](...c(m, o*1.02))); cx.closePath(); cx.clip('evenodd');   // taxi lines stop at the runway edge
     cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
@@ -257,36 +246,37 @@ function drawAirport(){
     for (const [k, Hd] of Object.entries(HOLDS)) {
       const s = Math.sign(Hd.off);
       cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
-      for (const [d, dash] of [[0.9,false],[0.3,false],[-0.3,true],[-0.9,true]]) { cx.setLineDash(dash ? [1*mpx+1, 1*mpx+1] : []); path([[Hd.m-9.5, Hd.off + s*d],[Hd.m+9.5, Hd.off + s*d]], false); cx.stroke(); }
+      for (const [d, dash] of [[0.9,false],[0.3,false],[-0.3,true],[-0.9,true]]) { cx.setLineDash(dash ? [1*mpx+1, 1*mpx+1] : []); path(Hd.across ? [[Hd.m + Hd.across*d, Hd.off-9.5],[Hd.m + Hd.across*d, Hd.off+9.5]] : [[Hd.m-9.5, Hd.off + s*d],[Hd.m+9.5, Hd.off + s*d]], false); cx.stroke(); }
       cx.setLineDash([]);
       if (sc > 220) {
-        const fs = Math.max(9, 3.4*mpx), q = c(Hd.m + 14, Hd.off + s*2); const txt = `${k}  27-09`; cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(txt).width;
+        const fs = Math.max(9, 3.4*mpx), q = c(Hd.m + 14, Hd.off + s*2); const txt = `${k}  ${RW_HI}-${RW_LO}`; cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(txt).width;
         cx.fillStyle = '#c8202a'; cx.fillRect(q[0], q[1]-fs*0.85, tw + 8, fs*1.2); cx.fillStyle = '#fff'; cx.fillText(txt, q[0]+4, q[1]+fs*0.15);
         cx.fillStyle = '#111'; cx.fillRect(q[0], q[1]-fs*0.85, fs*0.95+4, fs*1.2); cx.fillStyle = C.yellow; cx.fillText(k, q[0]+4, q[1]+fs*0.15);
       }
     }
     // taxiway designators along B
-    if (sc > 220) for (const [k, m, o] of [['B',1330,TW.B],['B',1490,TW.B],['A',TW.A,52],['E',TW.E,50],['C',TW.C,-55],['D',TW.D,-55]]) {
+    if (sc > 220) for (const [k, m, o] of AD.twyLabels || []) {
       const fs = Math.max(9, 3.2*mpx), q = c(m + 12, o - 12); cx.font = `700 ${fs}px ${FONT_L}`; cx.fillStyle = '#111'; cx.fillRect(q[0], q[1]-fs*0.85, fs*0.95+4, fs*1.2); cx.fillStyle = C.yellow; cx.fillText(k, q[0]+4, q[1]+fs*0.15);
     }
-    // HS1 hot spot
-    { const [X,Y] = c(TW.A, 88); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 26*mpx+6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.font = `600 11px ${FONT_L}`; cx.fillText('HS1', X - 26*mpx - 30, Y + 4); }
+    // hot spots
+    for (const [hn, hm, ho] of AD.hotspots || []) { const [X,Y] = c(hm, ho); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 26*mpx+6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.font = `600 11px ${FONT_L}`; cx.fillText(hn, X - 26*mpx - 30, Y + 4); }
   }
   // lighting (it is night at Gibraltar for the session)
   if (sc > 110) {
     cx.save(); cx.globalCompositeOperation = C.glow;
     const r = Math.max(1.1, 0.9*mpx), glow = (m, o, col, rr=r) => { const [X,Y] = c(m,o); cx.fillStyle = col; cx.beginPath(); cx.arc(X, Y, rr, 0, 7); cx.fill(); };
     for (let m = 0; m <= RWY_M; m += 60) { glow(m, 23, 'rgba(255,244,214,.75)'); glow(m, -23, 'rgba(255,244,214,.75)'); }
-    for (let o = -22; o <= 22; o += 4) { glow(THR09_M, o, 'rgba(90,255,140,.9)'); glow(THR27_M, o, 'rgba(90,255,140,.9)'); glow(1, o, 'rgba(255,60,60,.85)'); glow(RWY_M-1, o, 'rgba(255,60,60,.85)'); }
+    for (let o = -22; o <= 22; o += 4) { glow(THR_LO_M, o, 'rgba(90,255,140,.9)'); glow(THR_HI_M, o, 'rgba(90,255,140,.9)'); glow(1, o, 'rgba(255,60,60,.85)'); glow(RWY_M-1, o, 'rgba(255,60,60,.85)'); }
     // SALS 300 m (09) and approach lights 27
     for (let d = 30; d <= 300; d += 30) glow(-d*0.15, 0, 'rgba(255,240,200,.0)');
     for (const k in AD.twys) { const pts = AD.twys[k]; for (let i = 0; i < pts.length-1; i++) { const [m1,o1] = pts[i], [m2,o2] = pts[i+1], L = Math.hypot(m2-m1, o2-o1), n = Math.floor(L/30); for (let j = 1; j < n; j++) { const f = j/n, m = m1+(m2-m1)*f, o = o1+(o2-o1)*f, vx = (m2-m1)/L, vy = (o2-o1)/L; glow(m - vy*10, o + vx*10, 'rgba(70,130,255,.85)'); glow(m + vy*10, o - vx*10, 'rgba(70,130,255,.85)'); } } }
     const on = Math.floor(S.t*1.4) % 2 === 0;
     for (const Hd of Object.values(HOLDS)) if (Hd.rgl) for (const sgn of [-1,1]) glow(Hd.m + sgn*12, Hd.off, (on === (sgn > 0)) ? 'rgba(255,190,40,.95)' : 'rgba(255,190,40,.18)', r*1.4);
     // apron floodlight pools
-    for (const m of AD.floods) { const [X,Y] = c(m, 214), rr = 50*mpx; const g = cx.createRadialGradient(X, Y, 0, X, Y, rr); g.addColorStop(0, `rgba(255,220,160,${C.flood})`); g.addColorStop(1, 'rgba(255,220,160,0)'); cx.fillStyle = g; cx.beginPath(); cx.arc(X, Y, rr, 0, 7); cx.fill(); }
+    for (const m of AD.floods || []) { const [X,Y] = c(m, 214), rr = 50*mpx; const g = cx.createRadialGradient(X, Y, 0, X, Y, rr); g.addColorStop(0, `rgba(255,220,160,${C.flood})`); g.addColorStop(1, 'rgba(255,220,160,0)'); cx.fillStyle = g; cx.beginPath(); cx.arc(X, Y, rr, 0, 7); cx.fill(); }
     cx.restore();
   }
+  if (APT.xing) {
   // barriers, traffic and pedestrians at the crossing (laid along the OpenStreetMap crossing: footways, cycle lanes and service road)
   const col = st === 'CLOSED' ? C.xClosed : st === 'OPEN' ? C.xOpen : C.xMid;
   const down = st === 'CLOSED' || st === 'CLOSING';
@@ -308,12 +298,12 @@ function drawAirport(){
       cx.fillStyle = col; cx.textAlign = 'right'; cx.fillText(txt, p[0] - 6, p[1] + 3); cx.textAlign = 'left';
     }
   }
+  }
   if (sc > 180 && sc < 2400) {
     cx.fillStyle = rgba('lab', .72); cx.font = `600 12px ${FONT_L}`;
     if (IMG) { cx.fillStyle = C.name === 'dark' ? 'rgba(235,242,245,.92)' : '#fff'; cx.strokeStyle = 'rgba(0,0,0,.6)'; cx.lineWidth = 3; cx.lineJoin = 'round'; }
     const lab = (txt, m, off) => { const p = c(m, off); if (IMG) cx.strokeText(txt, p[0], p[1]); cx.fillText(txt, p[0], p[1]); };
-    if (!IMG) { lab('TERMINAL', 1225, 300); lab('CIVIL APRON', 1235, 228); lab('NORTH APRON', 1450, 240); lab('SOUTH APRON · RAF', 1000, -230); lab('ATC', 1056, 232); }
-    if (!IMG) { lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); } if (sc > 650) { lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75); }
+    for (const [txt, m, off, when] of AD.labels || []) if (when === 'near' ? sc > 650 : !IMG) lab(txt, m, off);
   }
 }
 
@@ -378,7 +368,7 @@ function drawAc(ac){
   if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN'; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
   else {
     const a = String(Math.max(0, Math.round(ac.alt/100))).padStart(3,'0'), tr = ac.vs > 300 ? '↑' : ac.vs < -300 ? '↓' : ' ';
-    const cl = ac.mode === 'FINAL' ? 'SRA' : ac.tgtAlt != null ? String(Math.round(ac.tgtAlt/100)).padStart(3,'0') : '';
+    const cl = ac.mode === 'FINAL' ? APT.appShort : ac.tgtAlt != null ? String(Math.round(ac.tgtAlt/100)).padStart(3,'0') : '';
     l2 = `${a}${tr}${cl} ${String(Math.round(ac.gs/10)).padStart(2,'0')}`;
     l3 = ac.state === 'PRE' ? `${ac.t} ${ac.o} PENDING` : `${ac.t} ${ac.kind === 'ARR' ? (ac.app ? 'R'+ac.app : ac.o) : ac.d}${ac.freq === 'TWR' ? ' T' : ''}`;
   }
@@ -409,35 +399,36 @@ document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.onclick = () => s
 setMTab('strips');
 phoneMQ.addEventListener && phoneMQ.addEventListener('change', () => requestAnimationFrame(resize));
 function renderAtis(){
-  const w = S.wx, c = windComp(w, S.rwy === '27' ? CRS27 : CRS09), X = S.xing, tex = turbExcess(w);
+  const w = S.wx, c = windComp(w, crsOf(S.rwy)), X = S.xing, tex = turbExcess(w), wl = windLimit({ perf: { wake: 'M' } }, S.rwy);
   const cloud = w.clouds.length ? w.clouds.join(' ') : (w.raw.includes('CAVOK') ? 'CAVOK' : 'NSC');
   const pct = X.st === 'CLOSING' ? clamp(1 - (X.t - S.t)/150, 0, 1) : X.st === 'CLOSED' ? 1 : X.st === 'OPENING' ? clamp((X.t - S.t)/15, 0, 1) : 0;
   $('atis').innerHTML = `
     <div class="ph"><span class="lbl">ATIS</span><button id="atisRead" class="atis-letter" title="Read the ATIS broadcast">${S.atis}</button><span class="lbl dimmer">${phonetic(S.atis)}</span>
       <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">Runway</span>
-      <span class="seg sm"><button id="rw27" class="${S.rwy==='27'?'on':''}">27</button><button id="rw09" class="${S.rwy==='09'?'on':''}">09</button></span></div>
+      <span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span></div>
     <div class="metar"></div>
     <div class="tiles">
       <div class="tile"><div class="lbl">Wind</div><div class="v">${w.vrb?'VRB':hdg3(w.dir)}°/${w.spd}${w.gust?'<small>G'+w.gust+'</small>':''}</div></div>
-      <div class="tile"><div class="lbl">Head / X ${S.rwy}</div><div class="v ${c.headG < -10 || c.crossG > 33 ? 'bad':''}">${Math.round(c.head)} / ${Math.round(c.cross)}</div></div>
+      <div class="tile"><div class="lbl">Head / X ${S.rwy}</div><div class="v ${wl ? 'bad':''}" ${wl ? `title="${esc(wl)}"` : ''}>${Math.round(c.head)} / ${Math.round(c.cross)}</div></div>
       <div class="tile"><div class="lbl">Vis · Cloud</div><div class="v ${w.vis < 5000 ? 'bad' : ''}">${w.vis >= 9999 ? '10k+' : w.vis} <small>${esc(cloud.split(' ')[0] || '')}</small></div></div>
       <div class="tile"><div class="lbl">QNH</div><div class="v">${w.qnh}</div></div>
-      <div class="tile"><div class="lbl">SRA mins</div><div class="v ${sraMinsOk(w)?'ok':'bad'}">${sraMinsOk(w)?'OK':'BELOW'}</div></div>
+      <div class="tile"><div class="lbl">${APT.appShort} mins</div><div class="v ${APT.minsOk(w, S.rwy)?'ok':'bad'}">${APT.minsOk(w, S.rwy)?'OK':'BELOW'}</div></div>
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${S.rwy} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
-    ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the Special Procedures limit. Expect windshear on final.</div>` : ''}
-    <div class="xing st-${X.st}">
+    ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the ${APT.turbName || 'Special Procedures'} limit. Expect windshear on final.</div>` : ''}
+    ${APT.atisPanel ? APT.atisPanel(w) : ''}
+    ${!APT.xing ? '' : `<div class="xing st-${X.st}">
       <div class="xing-l"><div class="lbl">Winston Churchill Avenue</div>
         <div class="xing-st">${X.st}${X.st==='CLOSING'?' · <span id="xCount">'+Math.max(0,Math.ceil(X.t - S.t))+'</span> s':''}${X.st==='CLOSED'?' · '+Math.round(X.queue)+' waiting':''}</div>
         <div class="bar"><i style="width:${Math.round(pct*100)}%"></i></div></div>
-      <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`;
+      <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`}`;
   $('atis').querySelector('.metar').textContent = w.raw;
   $('atisRead').onclick = () => openAtis();
-  $('rw27').onclick = () => setRwy('27'); $('rw09').onclick = () => setRwy('09');
+  $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO);
   if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
-  $('xBtn').onclick = toggleXing;
+  if ($('xBtn')) $('xBtn').onclick = toggleXing;
 }
 function setRwy(r){
   if (S.rwy === r) return; S.rwy = r; nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
@@ -463,23 +454,23 @@ function relText(ac){
 function renderSel(){
   const ac = S.sel, el = $('sel');
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
-  const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → LXGB` : `LXGB → ${ac.d}`;
+  const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → ${APT.icao}` : `${APT.icao} → ${ac.d}`;
   let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span><span class="grow"></span><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? 'Tower 131.2' : 'Radar 122.8'}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${relCls(ac)}">${relText(ac)}</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
-  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-GBR[0], ac.y-GBR[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls Gibraltar Radar at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
+  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls Gibraltar Radar at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
   if (air) {
-    html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? 'SRA profile' : (ac.tgtAlt ?? '–')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
+    html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? APT.appShort + ' profile' : (ac.tgtAlt ?? '–')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
     ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
     <div class="ctl"><label><span class="lbl">Heading</span><input id="iH" placeholder="270" inputmode="numeric"></label><label><span class="lbl">Altitude ×100</span><input id="iA" placeholder="40" inputmode="numeric"></label><label><span class="lbl">Speed</span><input id="iS" placeholder="180" inputmode="numeric"></label></div><div class="btns">`;
     if (ac.diverting) html += b(`DCT ${ac.diverting} A80`, 'Approve diversion', true, 'go');
     if (ac.need === 'Say again' && ac.lastCmd) html += b(ac.lastCmd, 'Say again: ' + esc(ac.lastCmd), true, 'go');
     if (ac.kind === 'ARR' && S.emg && S.emg.ws && !ac.wsTold) html += b('WS', 'Pass windshear', true, 'go');
-    if (ac.kind === 'ARR') html += b('APP 27','SRA 27', true, S.rwy==='27'?'on':'') + b('APP 09','SRA 09', true, S.rwy==='09'?'on':'') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
-    else html += b('HO', ac.freq === 'TWR' ? 'To Radar 122.8' : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A80','Climb FL80');
+    if (ac.kind === 'ARR') html += b('APP '+RW_HI, APT.appShort+' '+RW_HI, true, S.rwy===RW_HI?'on':'') + b('APP '+RW_LO, APT.appShort+' '+RW_LO, true, S.rwy===RW_LO?'on':'') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
+    else html += b('HO', ac.freq === 'TWR' ? `To ${APT.radar[0].split(' ').pop()} ${APT.radar[1]}` : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A'+APT.climbFL, 'Climb FL'+APT.climbFL);
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).map(k => `<option>${k}</option>`).join('')}</select></div>`;
   } else {
     html += `<div class="btns">`;
@@ -535,25 +526,25 @@ const COMPASS = d => `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20
 function openPushPop(ac, anchor){
   const st = ac.stand, rec = pushRec(ac), lh = mOf(st.lp);
   const opts = ['east', 'west'].map(f => {
-    const pts = pushPath(ac, f), hp = f === 'east' ? (st.area === 'south' ? 'D' : 'E') : (st.area === 'south' ? 'C' : 'A');
+    const pts = pushPath(ac, f), hp = APT.faceHold(st, f);
     return { f, pts: [st.p, ...pts], hp, rec: f === rec };
   });
   showPop(ac, anchor, `<div class="lbl">Start-up and push back</div><h4>${ac.cs} <span>stand ${st.id} · ${ac.t}</span></h4>
     <p class="hint">Choose which way the nose faces after the push. Face the way it will taxi: runway ${S.rwy} departures leave from ${PHON[depHold(ac)]}.</p>
-    <div class="opts two">${opts.map((o, j) => `<button class="opt${o.rec ? ' rec' : ''}" data-j="${j}">${COMPASS(o.f === 'east' ? CRS09 : CRS09 + 180)}<b>Face ${o.f}</b><span>Tail ${o.f === 'east' ? 'west' : 'east'} · towards ${PHON[o.hp]}</span>${o.rec ? '<i>Recommended</i>' : ''}</button>`).join('')}</div>
+    <div class="opts two">${opts.map((o, j) => `<button class="opt${o.rec ? ' rec' : ''}" data-j="${j}">${COMPASS(o.f === 'east' ? CRS_LO : CRS_HI)}<b>Face ${APT.faceWord(o.f)}</b><span>Tail ${APT.faceWord(o.f === 'east' ? 'west' : 'east')} · towards ${PHON[o.hp]}</span>${o.rec ? '<i>Recommended</i>' : ''}</button>`).join('')}</div>
     <div class="phr">“${spoken(ac.cs)}, start-up and push back approved, facing <em>${rec}</em>, QNH ${S.wx.qnh}”</div>`, () => {
     pop.querySelectorAll('.opt').forEach(bt => {
       const o = opts[+bt.dataset.j];
-      const pv = () => { S.preview = { pts: o.pts, label: 'Push · face ' + o.f }; pop.querySelector('.phr em').textContent = o.f; };
+      const pv = () => { S.preview = { pts: o.pts, label: 'Push · face ' + APT.faceWord(o.f) }; pop.querySelector('.phr em').textContent = APT.faceWord(o.f); };
       bt.onmouseenter = pv; bt.onfocus = pv;
       bt.onclick = () => { command(`${ac.cs} PUSH ${o.f === 'east' ? 'E' : 'W'}`); closePop(); };
     });
-    S.preview = { pts: opts.find(o => o.rec).pts, label: 'Push · face ' + rec };
+    S.preview = { pts: opts.find(o => o.rec).pts, label: 'Push · face ' + APT.faceWord(rec) };
   });
 }
 function openTaxiPop(ac, anchor){
   const south = ac.stand && ac.stand.area === 'south' && !ac.leftStand || (ac.leftStand && offOf([ac.x, ac.y]) < 0);
-  const hps = south ? ['C', 'D'] : ['A', 'E'], rec = depHold(ac);
+  const hps = APT.taxiHolds(south), rec = depHold(ac);
   hps.sort((a, b) => (b === rec) - (a === rec));
   const groups = hps.map(hp => ({ hp, opts: taxiOptions(ac, hp) })).filter(g => g.opts.length);
   const pre = ac.state === 'PARKED' ? [ac.stand.lp] : [[ac.x, ac.y]];
@@ -561,7 +552,7 @@ function openTaxiPop(ac, anchor){
   const H = (hp, o) => { const pts = [...pre, ...o.nodes.map(id => GN[id].p)]; if (ac.pushed && !ac.leftStand && pts.length > 2 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[2]))) < 90) pts.splice(1, 1); return pts; };
   const len = o => Math.round(o.len / M2NM / 10) * 10;
   showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${S.rwy}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
-    <p class="hint">Pick a holding point and the routing. Hover to preview it on the scope. ${S.rwy === '27' ? 'From Alpha or Charlie a runway 27 departure backtracks east to the turning circle.' : 'From Echo or Delta a runway 09 departure backtracks west across the road to the turning circle.'}</p>
+    <p class="hint">Pick a holding point and the routing. Hover to preview it on the scope. ${APT.taxiHint(S.rwy)}</p>
     ${groups.map(g => `<div class="grp"><div class="gh"><b>Holding point ${PHON[g.hp]}</b><span>${HOLDS[g.hp].rgl ? 'Guard lights' : ''}${g.hp === rec ? ' · runway ' + S.rwy + ' departure point' : ''}</span></div>
       ${g.opts.map(o => { const j = all.findIndex(a => a.o === o); const a = all[j]; return `<button class="opt row${a.rec ? ' rec' : ''}" data-j="${j}"><span class="hp">${g.hp}</span><b>via ${(o.via.length ? o.via : [g.hp]).map(t => PHON[t]).join(', ')}</b><span class="ln">${len(o)} m</span>${a.rec ? '<i>Recommended</i>' : ''}</button>`; }).join('')}</div>`).join('')}
     <div class="phr">“${spoken(ac.cs)}, taxi to holding point <em></em>, runway ${S.rwy}, QNH ${S.wx.qnh}”</div>`, () => {
@@ -590,7 +581,7 @@ function renderStrips(force){
     d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
     d.querySelector('.cs').textContent = ac.cs;
     d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
-    d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › LXGB` : `LXGB › ${ac.d}`;
+    d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
     d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > 6000 ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > 6000 ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp : 'Ground');
     const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
     d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
@@ -604,19 +595,19 @@ function renderStrips(force){
 }
 function renderScore(){
   const s = S.score;
-  $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span><span class="${s.infr?'bad':''}">R164 <b>${s.infr}</b></span><span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>`;
+  $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>`;
   const d = new Date(S.start + S.t*1000);
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
   $('clockz').textContent = 'local ' + new Date(d.getTime() + 2*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
   if (S.xing.st === 'CLOSING' || S.xing.st === 'OPENING') { const el = $('xCount'); if (el) el.textContent = Math.max(0, Math.ceil(S.xing.t - S.t)); const bar = document.querySelector('.xing .bar i'); if (bar) bar.style.width = Math.round((S.xing.st === 'CLOSING' ? clamp(1 - (S.xing.t - S.t)/150, 0, 1) : clamp((S.xing.t - S.t)/15, 0, 1))*100)+'%'; }
 }
 
-const RWY_MID = rm(900, 0);
+const RWY_MID = rm(RWY_M/2, 0);
 function viewFor(k){
   const m = Math.min(W, H) || 600;
-  if (k === 'app') { V.cx = GBR[0] - 2; V.cy = GBR[1] - 4; V.scale = m/84; }
-  else if (k === 'twr') { V.cx = RWY_MID[0] + 1.45; V.cy = RWY_MID[1] + 0.1; V.scale = m/4.6; }
-  else { const c = rm(1000, 0); V.cx = c[0]; V.cy = c[1]; V.scale = Math.min(W/(1950*M2NM), H/(820*M2NM)); }
+  if (k === 'app') { V.cx = RADAR_REF[0] + APT.view.app[0]; V.cy = RADAR_REF[1] + APT.view.app[1]; V.scale = m/APT.view.app[2]; }
+  else if (k === 'twr') { V.cx = RWY_MID[0] + APT.view.twr[0]; V.cy = RWY_MID[1] + APT.view.twr[1]; V.scale = m/APT.view.twr[2]; }
+  else { const g = APT.view.gnd, c = rm(g[0], g[1]); V.cx = c[0]; V.cy = c[1]; V.scale = Math.min(W/(g[2]*M2NM), H/(g[3]*M2NM)); }
   V.name = k;
 }
 // Render a view into another canvas (overview thumbnails, training figures) without disturbing the live scope.
@@ -676,14 +667,14 @@ $('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; if 
 $('cmd').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const L = S.acs; if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
 document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim') return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === ' ') { e.preventDefault(); $('tgPause').click(); } if (e.key === '/') { e.preventDefault(); $('cmd').focus(); } });
 
-const wxSel = $('wxPreset'); { const o = document.createElement('option'); o.value = 'live'; o.textContent = 'Live weather · current LXGB METAR'; wxSel.appendChild(o); }
+const wxSel = $('wxPreset'); { const o = document.createElement('option'); o.value = 'live'; o.textContent = `Live weather · current ${APT.icao} METAR`; wxSel.appendChild(o); }
 for (const [k,v] of Object.entries(WX_PRESETS)) { const o = document.createElement('option'); o.value = k; o.textContent = v.name; wxSel.appendChild(o); }
-wxSel.value = 'fair';
+wxSel.value = APT.defWx;
 // day and hour pickers: each slot carries its own timetable flights
 const daySel = $('daySel'), hourSel = $('hourSel');
 DAYS.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; daySel.appendChild(o); });
 daySel.value = (new Date().getUTCDay() + 6) % 7;
-const lt = h => String((h + 2) % 24).padStart(2,'0');
+const lt = h => String((h + APT.utcOff) % 24).padStart(2,'0');
 function renderSlots(){
   const d = +daySel.value, keep = hourSel.value, ex = !!EXERCISES[$('trafficSel').value];
   if (/^live/.test($('trafficSel').value)) { daySel.disabled = hourSel.disabled = true; if (typeof renderLiveSlots === 'function') renderLiveSlots(); return; }
@@ -696,14 +687,14 @@ function renderSlots(){
   daySel.disabled = hourSel.disabled = ex || S.running;
   const fl = timetableFlights(d, +hourSel.value);
   $('slotList').innerHTML = ex ? '<span class="dimmer">Guided exercises use their own traffic.</span>'
-    : fl.length ? fl.map(f => `<span class="slot ${f.k}"><b>${f.cs}</b> ${f.k === 'ARR' ? f.o + ' › LXGB' : 'LXGB › ' + f.d} <i>${f.at}Z</i></span>`).join('')
+    : fl.length ? fl.map(f => `<span class="slot ${f.k}"><b>${f.cs}</b> ${f.k === 'ARR' ? f.o + ' › ' + APT.icao : APT.icao + ' › ' + f.d} <i>${f.at}Z</i></span>`).join('')
     : '<span class="dimmer">No scheduled flights in this slot. Pick “Timetable plus charters” for traffic, or another hour.</span>';
 }
 daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListener('change', renderSlots);
 renderSlots();
 function resetSession(){
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
-  S.emg = null; S.recalls = []; S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+  S.emg = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
@@ -711,23 +702,24 @@ function start(){
   const mode = $('trafficSel').value;
   const ex = EXERCISES[mode];
   if (ex && !S.running) { wxSel.value = ex.wx; if (liveBox.checked) { liveBox.checked = false; liveBox.onchange(); } }   // exercises use their own weather
-  S.wx = parseMetar(pasted && /\d{3,5}(G\d+)?KT|VRB|Q\d{4}/.test(pasted.toUpperCase()) ? pasted : (WX_PRESETS[wxSel.value] || WX_PRESETS.fair).metar);
-  const c27 = windComp(S.wx, CRS27), c09 = windComp(S.wx, CRS09);
-  const newRwy = c09.head > c27.head + 2 ? '09' : '27';
+  S.wx = parseMetar(pasted && /\d{3,5}(G\d+)?KT|VRB|Q\d{4}/.test(pasted.toUpperCase()) ? pasted : (WX_PRESETS[wxSel.value] || WX_PRESETS[APT.defWx]).metar);
+  const cHi = windComp(S.wx, CRS_HI), cLo = windComp(S.wx, CRS_LO);
+  const newRwy = cLo.head > cHi.head + 2 ? RW_LO : RW_HI;
   if (!S.running) {
     resetSession();
     S.running = true; S.rwy = newRwy; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
     const live = /^live/.test(mode), now = new Date(Math.floor(Date.now()/60e3)*60e3);
     const day = live ? (now.getUTCDay() + 6) % 7 : +daySel.value, hour = live ? now.getUTCHours() + now.getUTCMinutes()/60 : +hourSel.value; S.day = day; S.hour = hour;
     if (live) { S.start = +now; S.speed = 1; $('tgSpeed').textContent = '1×'; } else if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
-    if (!live) S.wx = parseMetar(S.wx.raw.replace(/^(LXGB )\d{6}Z/, (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
+    if (!live) S.wx = parseMetar(S.wx.raw.replace(new RegExp(`^(${APT.icao} )\\d{6}Z`), (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
     S.sched = buildSchedule(mode, day, hour);
-    sys(`Position open: Gibraltar Radar 122.8 and Tower 131.2 combined. ${S.wx.raw}. Runway ${S.rwy}, information ${phonetic(S.atis)}.`);
-    if (live && LIVE.session) sys(`Real world, ${DAYS[day]} ${zHM(S.start)}Z: ${S.sched.length} real flight${S.sched.length === 1 ? '' : 's'} still to come today, from Gibraltar Airport’s live flight information${LIVE.data.updated ? ` (updated ${LIVE.data.updated.substr(11, 5)}Z)` : ''}.`);
+    sys(`Position open: ${APT.radar[0]} ${APT.radar[1]} and ${APT.tower[0].split(' ').pop()} ${APT.tower[1]} combined. ${S.wx.raw}. Runway ${S.rwy}, information ${phonetic(S.atis)}.`);
+    if (live && LIVE.session) sys(`Real world, ${DAYS[day]} ${zHM(S.start)}Z: ${S.sched.length} real flight${S.sched.length === 1 ? '' : 's'} still to come today, from ${APT.liveName}’s live flight information${LIVE.data.updated ? ` (updated ${LIVE.data.updated.substr(11, 5)}Z)` : ''}.`);
     else if (live) sys('Real world: today’s flight information could not be loaded here, so the session uses the timetable for this hour.', true);
     else if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
-    if (turbExcess(S.wx) > 0) sys('Wind exceeds the Special Procedures turbulence limit: expect windshear on final and go-arounds.');
-    if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft): arrivals will not be able to land.');
+    if (turbExcess(S.wx) > 0) sys(`Wind exceeds the ${APT.turbName || 'Special Procedures'} turbulence limit: expect windshear on final and go-arounds.`);
+    if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong.replace(/\.$/, '') + ': arrivals will not be able to land.');
+    if (APT.windLimit && windLimit({ perf: { wake: 'M' } }, S.rwy)) sys(`Wind is outside the ${APT.name} limits for runway ${S.rwy}: landings and take-offs are not allowed until it eases.`, true);
     emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
     if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');

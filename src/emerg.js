@@ -3,7 +3,7 @@
 // overflight, a bird strike, debris or an inspection closing the runway, a pedestrian jumping the barrier on the
 // avenue, or a windshear report in the levanter. The first transmission to an emergency acknowledges it.
 const EMG_RATE = { off: 0, some: 22*60, often: 9*60 };
-const DIVERTS = [
+const DIVERTS = APT.diverts || [
   { cs: 'TOM5HM', t: 'B738', o: 'EGBB', gate: 'E', to: 'Marrakech' },
   { cs: 'EZY35KM', t: 'A20N', o: 'EGKK', gate: 'E', to: 'Marrakech' },
   { cs: 'EXS4LW', t: 'B738', o: 'EGCC', gate: 'W', to: 'Tenerife' },
@@ -29,9 +29,9 @@ function declare(ac, k, why, extra){
   emit('emergency', ac);
   if (S.sel !== ac) select(ac);
 }
-// a departure in trouble becomes an arrival back to Gibraltar
+// a departure in trouble becomes an arrival back to the home airport
 function makeReturn(ac){
-  Object.assign(ac, { kind: 'ARR', o: 'LXGB', d: undefined, state: 'VECTORS', route: [], app: null, ctl: false, onSid: false, handed: false, turn: null, stand: null,
+  Object.assign(ac, { kind: 'ARR', o: APT.icao, d: undefined, state: 'VECTORS', route: [], app: null, ctl: false, onSid: false, handed: false, turn: null, stand: null,
     checked: false, shearChecked: false, warnedCtl: false, warned15: false, warned10: false, askedApp: true, cto: false });
   if (ac.mode === 'NAV') { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
   ac.tgtAlt = ac.cleared = Math.min(ac.tgtAlt || 4000, 4000);
@@ -47,7 +47,7 @@ function block(why, mins){
 const EVENTS = {
   mayday(){
     const c = S.acs.filter(a => a.airborne && !a.emerg && a.state !== 'PRE' && !a.handed && a.state !== 'MISSED' && a.state !== 'DIVERTING' &&
-      ((a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state) && Math.hypot(a.x - GBR[0], a.y - GBR[1]) > 10) || (a.kind === 'DEP' && a.state === 'CLIMB' && a.alt > 2500)));
+      ((a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state) && Math.hypot(a.x - RADAR_REF[0], a.y - RADAR_REF[1]) > 10) || (a.kind === 'DEP' && a.state === 'CLIMB' && a.alt > 2500)));
     if (!c.length) return false;
     const ac = c[Math.floor(Math.random()*c.length)], why = MAYDAYS[Math.floor(Math.random()*MAYDAYS.length)];
     const ret = ac.kind === 'DEP'; if (ret) makeReturn(ac);
@@ -68,7 +68,7 @@ const EVENTS = {
     const d = opts[Math.floor(Math.random()*opts.length)];
     const ac = spawnArrival({ cs: d.cs, t: d.t, k: 'ARR', o: d.o, gate: d.gate, m: S.t/60, diverted: true });
     ac.need = null;
-    declare(ac, 'PAN', `medical diversion, ${MEDICAL[Math.floor(Math.random()*MEDICAL.length)]}, we were en route to ${d.to}`, 'request diversion to Gibraltar and an ambulance on arrival');
+    declare(ac, 'PAN', `medical diversion, ${MEDICAL[Math.floor(Math.random()*MEDICAL.length)]}, we were en route to ${d.to}`, `request diversion to ${APT.name} and an ambulance on arrival`);
     return true;
   },
   bird(){
@@ -85,11 +85,11 @@ const EVENTS = {
   },
   fod(){
     if (S.emg.rwyBlock || S.acs.some(a => a.onRwy || onFinalNear(a, 2))) return false;
-    const what = ['debris (FOD) found on the runway near the crossing', 'a tyre fragment found on the runway', 'a fuel spill on the runway from a vehicle at the crossing'][Math.floor(Math.random()*3)];
+    const what = [APT.xing ? 'debris (FOD) found on the runway near the crossing' : 'debris (FOD) found on the runway', 'a tyre fragment found on the runway', APT.xing ? 'a fuel spill on the runway from a vehicle at the crossing' : 'a fuel spill on the runway from a fire vehicle'][Math.floor(Math.random()*3)];
     block(what, rnd(4, 7)); return true;
   },
   incursion(){
-    if (S.xing.st !== 'CLOSED' || S.emg.incursion) return false;
+    if (!APT.xing || S.xing.st !== 'CLOSED' || S.emg.incursion) return false;
     const ac = S.acs.find(a => onFinalNear(a, 4) && finalDist(a) > 1.2); if (!ac) return false;
     S.emg.incursion = { until: S.t + rnd(70, 110), ac: ac.cs, gaBy: null };
     sys(`RUNWAY INCURSION: a pedestrian has climbed the barrier at Winston Churchill Avenue and is on the runway. ${ac.cs} is on ${finalDist(ac).toFixed(1)} NM final: send it around (GA).`, true);
@@ -168,6 +168,6 @@ function drawRwyBlock(){
     const c0 = rm(m, 0), X = sx(c0[0]), Y = sy(c0[1]), k = Math.max(7, 30*M2NM*V.scale);   // never smaller than a few pixels
     cx.beginPath(); cx.moveTo(X - k, Y - k*0.5); cx.lineTo(X + k, Y + k*0.5); cx.moveTo(X - k, Y + k*0.5); cx.lineTo(X + k, Y - k*0.5); cx.stroke();
   }
-  if (E.incursion) { const p = rm(xingM(4), 4); cx.fillStyle = C.conf; cx.beginPath(); cx.arc(sx(p[0]), sy(p[1]), 6, 0, 7); cx.fill(); }
+  if (E.incursion && APT.xing) { const p = rm(xingM(4), 4); cx.fillStyle = C.conf; cx.beginPath(); cx.arc(sx(p[0]), sy(p[1]), 6, 0, 7); cx.fill(); }
   cx.restore();
 }

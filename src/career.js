@@ -10,11 +10,15 @@ const BADGES = [
   { id: 'coolhead', name: 'Cool head',         d: 'Bring an emergency aircraft in safely.',                    ic: 'M12 3l9 16H3zM12 10v4M12 17v.5' },
   { id: 'goodcall', name: 'Good call',         d: 'Send an arrival around for a person on the runway.',        ic: 'M4 18c4-8 8-12 16-12M16 3l4 3-3 4' },
   { id: 'live',     name: 'Real world',        d: 'Work 15 minutes of Live now with real flights.',            ic: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18' },
-  { id: 'graduate', name: 'Academy graduate',  d: 'Complete all three guided exercises.',                      ic: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5' },
+  { id: 'graduate', ap: 'LXGB', name: 'Academy graduate',  d: 'Complete the three Gibraltar guided exercises.',                      ic: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5' },
   { id: 'hour',     name: 'One hour',          d: 'One hour on frequency in total.',                           ic: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z' },
   { id: 'ten',      name: 'Ten hours',         d: 'Ten hours on frequency in total.',                          ic: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM4 4l2 2M20 4l-2 2' },
-  { id: 'century',  name: 'Century',           d: '100 movements in total.',                                   ic: 'M4 17V7M8 7h4v10H8zM14 7h4v10h-4z' }
+  { id: 'century',  name: 'Century',           d: '100 movements in total.',                                   ic: 'M4 17V7M8 7h4v10H8zM14 7h4v10h-4z' },
+  // each new airport adds one or two badges of its own; the logbook and the rest of the set are shared by every airport
+  { id: 'rosario',  ap: 'LPMA', name: 'Rosário turn',   d: 'Land three aircraft on runway 05 at Madeira in one session.', ic: 'M4 20c0-8 6-14 16-14M16 3l4 3-4 3M4 20h6' },
+  { id: 'island',   ap: 'LPMA', name: 'Island endorsement', d: 'Complete the three Madeira guided exercises.',           ic: 'M3 17c3-2 5-6 9-6s6 4 9 6M3 21h18M12 3v4' }
 ];
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -41,8 +45,10 @@ function careerCheck(){
     if (s.emg >= 1) careerAward('coolhead');
     if (s.good >= 1) careerAward('goodcall');
     if (/^live/.test(s.mode) && s.secs >= 900) careerAward('live');
+    if (s.ap === 'LPMA' && (s.l05 || 0) >= 3) careerAward('rosario');
   }
   if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
+  if (['mdep','marr','mwind'].every(k => CAR.ex[k])) careerAward('island');
   if (T.secs >= 3600) careerAward('hour');
   if (T.secs >= 36000) careerAward('ten');
   if (T.mov >= 100) careerAward('century');
@@ -62,10 +68,11 @@ function careerSync(){
   if (carDirty) { careerSave(CAR); carDirty = false; }
 }
 S.listeners.push((ev, d) => {
+  if (ev === 'landed' && carCur && d && d.app === '05' && APT.icao === 'LPMA') { carCur.l05 = (carCur.l05 || 0) + 1; carDirty = true; }
   if (ev === 'start') {
     careerSync();
     const w = S.wx, lev = w.dir >= 40 && w.dir <= 140 && w.spd >= 18;
-    carCur = { at: Date.now(), mode: S.mode, ex: !!EXERCISES[S.mode], ap: 'LXGB', wx: w.raw.split(' ').slice(2, 3).join(''), rwy: S.rwy, levanter: lev, secs: 0, pts: 0, landed: 0, departed: 0, ga: 0, los: 0, incidents: 0, emg: 0, good: 0 };
+    carCur = { at: Date.now(), mode: S.mode, ex: !!EXERCISES[S.mode], ap: APT.icao, wx: w.raw.split(' ').slice(2, 3).join(''), rwy: S.rwy, levanter: lev, secs: 0, pts: 0, landed: 0, departed: 0, ga: 0, los: 0, incidents: 0, emg: 0, good: 0 };
   }
 });
 setInterval(careerSync, 15000);
@@ -74,12 +81,13 @@ function careerExercise(ex){ if (!CAR.ex[ex]) { CAR.ex[ex] = Date.now(); carDirt
 
 // ── career page ──
 const fmtHrs = s => s < 3600 ? `${Math.round(s/60)} min` : `${(s/3600).toFixed(s < 36000 ? 1 : 0)} h`;
-const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3' };
+const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3',
+  mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3' };
 function renderCareer(){
   careerSync();
   const T = carTotals(CAR), L = CAR.sessions.slice().reverse();
   $('crStats').innerHTML = [
-    ['On frequency', fmtHrs(T.secs)], ['Sessions', T.n], ['Movements', T.mov], ['Best score', T.best ?? '–'], ['Badges', `${Object.keys(CAR.badges).length} / ${BADGES.length}`]
+    ['On frequency', fmtHrs(T.secs)], ['Sessions', T.n], ['Movements', T.mov], ['Best score', T.best ?? '–'], ['Airports', new Set(CAR.sessions.map(x => x.ap || 'LXGB')).size || '–'], ['Badges', `${Object.keys(CAR.badges).length} / ${BADGES.length}`]
   ].map(([k, v]) => `<div class="cr-stat"><div class="lbl">${k}</div><div class="v">${v}</div></div>`).join('');
   // score history: last 24 sessions, bars to one scale with a zero line
   const H = CAR.sessions.slice(-24), W = Math.max(340, $('crChart').clientWidth || 720), Ht = 220, pad = { l: 44, r: 12, t: 14, b: 26 };
@@ -92,13 +100,13 @@ function renderCareer(){
     for (let v = bot; v <= top; v += step) svg += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" class="${v === 0 ? 'zero' : 'grid'}"/><text x="${pad.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
     H.forEach((s, i) => {
       const x = pad.l + i*bw + bw*0.18, w = bw*0.64, y0 = y(0), y1 = y(s.pts);
-      svg += `<rect x="${x.toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(1, Math.abs(y1 - y0)).toFixed(1)}" rx="2" class="${s.pts < 0 ? 'neg' : s.ex ? 'ex' : 'pos'}"><title>${new Date(s.at).toLocaleDateString('en-GB')} · ${MODE_NAME[s.mode] || s.mode} · ${s.pts} pts</title></rect>`;
+      svg += `<rect x="${x.toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(1, Math.abs(y1 - y0)).toFixed(1)}" rx="2" class="${s.pts < 0 ? 'neg' : s.ex ? 'ex' : 'pos'}"><title>${new Date(s.at).toLocaleDateString('en-GB')} · ${AP_NAME[s.ap || 'LXGB'] || s.ap} · ${MODE_NAME[s.mode] || s.mode} · ${s.pts} pts</title></rect>`;
       if (H.length*46 <= W || i % 2 === 0) svg += `<text x="${(x + w/2).toFixed(1)}" y="${Ht - 8}" text-anchor="middle">${new Date(s.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</text>`;
     });
   }
   $('crChart').innerHTML = H.length ? `<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Score per session">${svg}</svg>` : `<p class="empty">No sessions yet. Work a position for a minute or more and it appears here.</p>`;
-  $('crBadges').innerHTML = BADGES.map(b => { const got = CAR.badges[b.id]; return `<div class="cr-badge ${got ? 'got' : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${b.ic}"/></svg><div><b>${b.name}</b><p>${b.d}</p><span class="lbl">${got ? 'Earned ' + new Date(got).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Locked'}</span></div></div>`; }).join('');
-  $('crTable').innerHTML = L.length ? `<table><tr><th>Date</th><th>Session</th><th>Runway</th><th class="n">Time</th><th class="n">Landed</th><th class="n">Departed</th><th class="n">Go-arounds</th><th class="n">LoS / incidents</th><th class="n">Score</th></tr>${L.slice(0, 30).map(s => `<tr><td>${new Date(s.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td><td>${MODE_NAME[s.mode] || esc(s.mode)}</td><td class="mono">${s.rwy}</td><td class="n">${fmtHrs(s.secs)}</td><td class="n">${s.landed}</td><td class="n">${s.departed}</td><td class="n">${s.ga}</td><td class="n">${s.los} / ${s.incidents}</td><td class="n ${s.pts < 0 ? 'bad' : ''}"><b>${s.pts}</b></td></tr>`).join('')}</table>` : '';
+  $('crBadges').innerHTML = BADGES.map(b => { const got = CAR.badges[b.id]; return `<div class="cr-badge ${got ? 'got' : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${b.ic}"/></svg><div><b>${b.name}</b>${b.ap ? `<span class="cr-ap">${AP_NAME[b.ap]}</span>` : ''}<p>${b.d}</p><span class="lbl">${got ? 'Earned ' + new Date(got).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Locked'}</span></div></div>`; }).join('');
+  $('crTable').innerHTML = L.length ? `<table><tr><th>Date</th><th>Airport</th><th>Session</th><th>Runway</th><th class="n">Time</th><th class="n">Landed</th><th class="n">Departed</th><th class="n">Go-arounds</th><th class="n">LoS / incidents</th><th class="n">Score</th></tr>${L.slice(0, 30).map(s => `<tr><td>${new Date(s.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td><td class="mono">${s.ap || 'LXGB'}</td><td>${MODE_NAME[s.mode] || esc(s.mode)}</td><td class="mono">${s.rwy}</td><td class="n">${fmtHrs(s.secs)}</td><td class="n">${s.landed}</td><td class="n">${s.departed}</td><td class="n">${s.ga}</td><td class="n">${s.los} / ${s.incidents}</td><td class="n ${s.pts < 0 ? 'bad' : ''}"><b>${s.pts}</b></td></tr>`).join('')}</table>` : '';
   const rb = $('crReset'), rc = $('crResetConfirm');
   rb.onclick = () => { rc.hidden = false; rb.hidden = true; };
   rc.querySelector('[data-a=no]').onclick = () => { rc.hidden = true; rb.hidden = false; };

@@ -11,10 +11,11 @@ const AP = {
   LEMG: [36.6749, -4.4991, 'Málaga'], GMTT: [35.7269, -5.9169, 'Tangier'], GMMN: [33.3675, -7.5899, 'Casablanca'],
   LXGB: [36.1512, -5.3494, 'Gibraltar']
 };
+Object.assign(AP, APT.airports || {});
 // turning points outbound from Gibraltar (inbounds fly them in reverse)
 const VIA_N = [[37.25, -4.55], [40.00, -3.80], [43.30, -2.30], [46.20, -1.30]];          // up through Spain and western France
 const VIA_W = [[36.40, -6.70], [37.40, -9.10], [40.50, -9.80], [43.90, -9.40], [48.00, -6.50]]; // west of Portugal, Biscay, Cornwall
-const VIA = {
+const VIA = APT.via || {
   EGLL: VIA_N, EGKK: VIA_N, EGSS: VIA_N, EGLF: VIA_N, LFPG: [[37.25, -4.55], [40.00, -3.80], [43.30, -1.00]],
   EGCC: VIA_W, EGGD: VIA_W, EGVN: VIA_W, EGGW: VIA_W,
   LFMN: [[36.85, -3.00], [38.60, 0.40], [41.50, 4.00]], LEMD: [[37.25, -4.55]], GMMN: [[35.40, -6.40]]
@@ -30,7 +31,7 @@ function gcAt([a1, o1], [a2, o2], f){
   const x = A*Math.cos(p1)*Math.cos(l1) + B*Math.cos(p2)*Math.cos(l2), y = A*Math.cos(p1)*Math.sin(l1) + B*Math.cos(p2)*Math.sin(l2), z = A*Math.sin(p1) + B*Math.sin(p2);
   return [Math.atan2(z, Math.hypot(x, y))*R2D, Math.atan2(y, x)*R2D];
 }
-const nearGib = ll => gcDist(ll, AP.LXGB) < 70;
+const nearGib = ll => gcDist(ll, AP[APT.icao]) < 70;
 function makeLeg(pts){ const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i-1] + gcDist(pts[i-1], pts[i])); return { pts, cum, D: cum[cum.length-1] }; }
 function legAt(L, d){
   d = clamp(d, 0, L.D); let i = 1; while (i < L.cum.length - 1 && L.cum[i] < d) i++;
@@ -41,12 +42,12 @@ function legAt(L, d){
 function addArrGhost(f){
   if (!AP[f.o] || !(f.m > 0)) return;
   const tEnd = f.m*60 - PRE_LEAD; if (tEnd <= 0) return;
-  const e = ENTRY[f.gate], L0 = Math.hypot(e[0] - GBR[0], e[1] - GBR[1]), u = [(e[0] - GBR[0])/L0, (e[1] - GBR[1])/L0];
+  const e = ENTRY[f.gate], L0 = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L0, (e[1] - RADAR_REF[1])/L0];
   const endLL = toLL([e[0] + u[0]*PRE_NM, e[1] + u[1]*PRE_NM]);
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
   const leg = makeLeg([AP[f.o].slice(0, 2), ...via, endLL]), [spd, fl] = CRUISE[f.t] || [450, 37000];
   const cruise = Math.min(fl, 9000 + leg.D*75), tStart = tEnd - leg.D/spd*3600;
-  FAR.list.push({ cs: f.cs, t: f.t, from: f.o, to: 'LXGB', kind: 'ARR', leg, tStart, tEnd, spd, cruise, endAlt: PRE_ALT[f.gate], f });
+  FAR.list.push({ cs: f.cs, t: f.t, from: f.o, to: APT.icao, kind: 'ARR', leg, tStart, tEnd, spd, cruise, endAlt: PRE_ALT[f.gate], f });
 }
 // outbound: from wherever it left the radar area on to the destination
 function addDepGhost(ac, at){
@@ -55,7 +56,7 @@ function addDepGhost(ac, at){
   const via = (VIA[ac.d] || []).filter(p => !nearGib(p) && gcDist(p, p0) > 30 && gcDist(p, AP[ac.d]) < gcDist(p0, AP[ac.d]));
   const leg = makeLeg([p0, ...via, AP[ac.d].slice(0, 2)]), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
-  FAR.list.push({ cs: ac.cs, t: ac.t, from: 'LXGB', to: ac.d, kind: 'DEP', leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? 6000 : ac.alt, endAlt: 0 });
+  FAR.list.push({ cs: ac.cs, t: ac.t, from: APT.icao, to: ac.d, kind: 'DEP', leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? APT.initClimb : ac.alt, endAlt: 0 });
 }
 // at the start of a session: inbounds already airborne or due later, and today's earlier departures still en route
 function buildFar(){
@@ -64,11 +65,11 @@ function buildFar(){
   for (const f of S.sched) if (f.k === 'ARR') addArrGhost(f);
   const day = String((S.day || 0) + 1), t0 = (S.hour || 0)*60;
   if (/^live/.test(S.mode)) { const T = LIVE.session && LIVE.session.T; if (T) for (const d of T.dep) {   // today's real departures still en route
-    const off = (d.tm + 8 - t0)*60; if (!d.cancelled && off >= -5*3600 && off < -600) addDepGhost({ cs: d.cs, t: d.t, d: d.ap, dt0: off - S.t }, toLL(rm(THR27_M - 1500, 0))); } return; }
+    const off = (d.tm + 8 - t0)*60; if (!d.cancelled && off >= -5*3600 && off < -600) addDepGhost({ cs: d.cs, t: d.t, d: d.ap, dt0: off - S.t }, toLL(rm(THR_HI_M - 1500, 0))); } return; }
   for (const [, , , dc, dd, td, t, days] of TIMETABLE) {
     if (!dc || !days.includes(day)) continue;
     const off = (hm(td) + 8 - t0)*60;                 // airborne about eight minutes after off-blocks
-    if (off >= -5*3600 && off < -600) addDepGhost({ cs: dc, t, d: dd, dt0: off - S.t }, toLL(rm(THR27_M - 1500, 0)));
+    if (off >= -5*3600 && off < -600) addDepGhost({ cs: dc, t, d: dd, dt0: off - S.t }, toLL(rm(THR_HI_M - 1500, 0)));
   }
 }
 function farState(g){
@@ -83,7 +84,7 @@ S.listeners.push((ev, d) => {
 });
 // sim aircraft beyond radar cover are drawn the same way
 const RADAR_NM = 60;
-const outsideRadar = ac => ac.state === 'PRE' || Math.hypot(ac.x - GBR[0], ac.y - GBR[1]) > RADAR_NM;
+const outsideRadar = ac => ac.state === 'PRE' || Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]) > RADAR_NM;
 
 // ── drawing ──
 // plane icons shaped by aircraft type, nose along the heading. Coordinates are in units of the icon's half-size

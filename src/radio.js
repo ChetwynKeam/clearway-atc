@@ -46,6 +46,7 @@ function atisText(){
   const wind = w.vrb ? `variable ${w.spd} knots` : `${hdg3(w.dir)} degrees ${w.spd} knots${w.gust ? ' gusting ' + w.gust + ' knots' : ''}`;
   const vis = w.vis >= 9999 ? '10 kilometres or more' : w.vis >= 5000 ? `${Math.round(w.vis/1000)} kilometres` : `${w.vis} metres`;
   const cloud = w.raw.includes('CAVOK') ? 'CAVOK' : w.clouds.length ? 'cloud ' + w.clouds.map(cloudWords).join(', ') : 'no significant cloud';
+  if (APT.atisLines) return APT.atisLines({ w, L, E, wind, vis, cloud: cloud[0].toUpperCase() + cloud.slice(1) });
   const out = [
     `This is Gibraltar information ${L}, time ${zt(S.t).slice(0,5).replace(':', '')}.`,
     `Runway in use ${S.rwy}. Expect surveillance radar approach runway ${S.rwy}, terminating at Point ${FINAL[S.rwy].name}.`,
@@ -64,7 +65,7 @@ function atisText(){
 const atisPop = document.createElement('div'); atisPop.className = 'atis-pop'; atisPop.hidden = true; atisPop.setAttribute('role', 'dialog'); atisPop.setAttribute('aria-label', 'ATIS broadcast'); document.body.appendChild(atisPop);
 function openAtis(){
   const lines = atisText();
-  atisPop.innerHTML = `<div class="atis-card"><div class="row"><span class="lbl">ATIS broadcast · 131.2</span><span class="atis-letter">${S.atis}</span><span class="grow"></span><button class="pop-x" aria-label="Close">×</button></div>
+  atisPop.innerHTML = `<div class="atis-card"><div class="row"><span class="lbl">ATIS broadcast · ${APT.atisFreq}</span><span class="atis-letter">${S.atis}</span><span class="grow"></span><button class="pop-x" aria-label="Close">×</button></div>
     <p class="atis-body">${lines.map(esc).join(' ')}</p>
     <div class="row"><button class="btn" data-a="play">Broadcast it</button><button class="btn" data-a="stop">Stop</button><span class="grow"></span><span class="lbl dimmer">${esc(S.wx.raw)}</span></div></div>`;
   atisPop.hidden = false;

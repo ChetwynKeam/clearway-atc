@@ -109,7 +109,7 @@ function phraseToCmd(raw){
   if (/ (no speed restriction|resume normal speed) /.test(s)) out.push('SN');
   else if ((m = s.match(/ speed (\d{2,3}) /))) out.push('S' + m[1]);
   if ((m = s.match(/ direct( to)? (\S+) /))) { const f = fixFrom(m[2]); if (f) out.push('DCT ' + f); }
-  if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) out.push('APP' + ((m = s.match(/ runway (09|27|9) /)) ? ' ' + (m[1] === '9' ? '09' : m[1]) : ''));
+  if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) out.push('APP' + ((m = s.match(new RegExp(` runway (${RW_LO}|${RW_HI}|${+RW_LO}) `))) ? ' ' + (m[1] === String(+RW_LO) ? RW_LO : m[1]) : ''));
   if (/ cleared to land /.test(s)) out.push('CTL');
   if (/ goaround /.test(s)) out.push('GA');
   if (/ hold position /.test(s) || / stop immediately /.test(s)) out.push('HP');
@@ -187,7 +187,7 @@ window.__phrase = phraseToCmd;
 // every 10 minutes. A new report mid-session is applied like a weather update: new ATIS letter, runway advice.
 // Sources in order: metar.txt beside the page (kept current by a scheduled job in the site's repo, so no cross-site
 // request is needed), then VATSIM's METAR service, then the Aviation Weather Center.
-const LIVE_SRC = ['metar.txt', 'https://metar.vatsim.net/LXGB', 'https://aviationweather.gov/api/data/metar?ids=LXGB&format=raw&hours=3'];
+const LIVE_SRC = ['metar.txt', `https://metar.vatsim.net/${APT.icao}`, `https://aviationweather.gov/api/data/metar?ids=${APT.icao}&format=raw&hours=3`];
 const liveBox = $('liveWx'), liveSt = $('liveWxSt');
 let liveTimer = null, liveLast = '', liveFailed = false;
 function liveStatus(t, cls){ liveSt.hidden = !t; liveSt.textContent = t; liveSt.className = 'fine' + (cls ? ' ' + cls : ''); }
@@ -197,7 +197,7 @@ async function fetchMetar(){
       const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
       const r = await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Date.now(), { signal: ctl.signal, cache: 'no-store' }); clearTimeout(to);
       if (!r.ok) continue;
-      const line = (await r.text()).split('\n').map(x => x.trim()).find(x => /^(METAR |SPECI )?LXGB \d{6}Z/.test(x));
+      const line = (await r.text()).split('\n').map(x => x.trim()).find(x => new RegExp(`^(METAR |SPECI )?${APT.icao} \\d{6}Z`).test(x));
       if (line) return line.replace(/^(METAR|SPECI) /, '').replace(/=$/, '');
     } catch(e) {}
   }
@@ -207,10 +207,10 @@ function applyLiveMetar(raw){
   $('wxPaste').value = raw;
   if (!S.running) return;
   S.wx = parseMetar(raw);
-  const c27 = windComp(S.wx, CRS27), c09 = windComp(S.wx, CRS09), fav = c09.head > c27.head + 2 ? '09' : '27';
+  const cHi = windComp(S.wx, CRS_HI), cLo = windComp(S.wx, CRS_LO), fav = cLo.head > cHi.head + 2 ? RW_LO : RW_HI;
   nextAtis(); sys(`Live METAR: ${S.wx.raw}. Information ${phonetic(S.atis)} is now current.`);
   if (fav !== S.rwy) sys(`Wind now favours runway ${fav}.`);
-  if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft).', true);
+  if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong, true);
   renderAtis();
 }
 async function pollLive(){
@@ -229,14 +229,14 @@ function setLive(on){
   clearInterval(liveTimer); liveTimer = null;
   try { localStorage.setItem('cw-livewx', on ? '1' : ''); } catch(_) {}
   if (!on) { liveStatus(''); return; }
-  liveStatus('Fetching the current LXGB METAR…'); pollLive(); liveTimer = setInterval(pollLive, 10*60*1000);
+  liveStatus(`Fetching the current ${APT.icao} METAR…`); pollLive(); liveTimer = setInterval(pollLive, 10*60*1000);
 }
 // the Weather menu's "Live weather" choice and the Live METAR switch are the same setting
 const wxMenu = $('wxPreset');
 liveBox.onchange = () => {
   setLive(liveBox.checked);
   if (liveBox.checked) { wxMenu.value = 'live'; if (liveLast) $('wxPaste').value = liveLast; }
-  else { if (wxMenu.value === 'live') wxMenu.value = 'fair'; if ($('wxPaste').value.trim() === liveLast) $('wxPaste').value = ''; }
+  else { if (wxMenu.value === 'live') wxMenu.value = APT.defWx; if ($('wxPaste').value.trim() === liveLast) $('wxPaste').value = ''; }
 };
 wxMenu.addEventListener('change', () => {
   const on = wxMenu.value === 'live';

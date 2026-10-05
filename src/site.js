@@ -1,8 +1,14 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'sim', 'training', 'career'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'sim', 'training', 'career'];
+// one page per airport (SITE, from build.py): another airport's briefing, Academy endorsement or exercise opens on its page
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma' }, HOME_RT = AP_ROUTE[APT.icao];
+const LIVE_APS = Object.keys(AP_ROUTE);
+const otherPage = h => { const r = h.split('/')[0]; const ap = Object.keys(AP_ROUTE).find(k => AP_ROUTE[k] === r); return ap && ap !== APT.icao ? SITE[ap] + '#' + h : null; };
+try { localStorage.setItem('cw-airport', APT.icao); } catch(e) {}
 let curRoute = null;
 function go(r){
   if (!ROUTES.includes(r)) r = 'home';
+  { const o = otherPage(r); if (o) { location.href = o; return; } }
   if (r === curRoute) return;
   const prev = curRoute; curRoute = r;
   document.body.dataset.route = r;
@@ -11,13 +17,15 @@ function go(r){
   if (r === 'sim') { resize(); if (!S.running) setView(V.name || 'app'); }
   if (prev === 'sim' && r !== 'sim') exitFull();
   if (r !== 'sim' && prev === 'sim' && S.running && !S.paused) { S.paused = true; $('tgPause').textContent = 'Resume'; sys('Simulation paused while you are away from the scope.'); }
-  if (r === 'home' || r === 'lxgb') requestAnimationFrame(renderThumbs);
+  if (r === 'home' || r === HOME_RT) requestAnimationFrame(renderThumbs);
   if (r === 'training') requestAnimationFrame(() => { renderFigure(); spy(); });
   if (r === 'career') renderCareer();
   window.scrollTo(0, 0);
 }
 function fromHash(){
   const h = location.hash.replace('#', '');
+  // #ex/<key>: open a guided exercise (from another airport's Academy page)
+  if (h.startsWith('ex/')) { const k = h.slice(3); if (EXERCISES[k]) { history.replaceState(null, '', '#sim'); return startExercise(k); } }
   if (ROUTES.includes(h)) return go(h);
   const el = h && document.getElementById(h);
   if (el && el.closest('[data-page="training"]')) { go('training'); requestAnimationFrame(() => el.scrollIntoView()); return; }
@@ -30,11 +38,11 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// Only LXGB is built. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB and LPMA are built. The rest are the roadmap: real airports and runway designators, no invented performance data.
 const AIRPORTS_NET = [
   { icao:'LXGB', iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
+  { icao:'LPMA', iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
   { icao:'EGLC', iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'dev', pos:['TWR','GND'], diff:3, blurb:'Steep approaches between the Docklands towers, a short runway and a tight apron.' },
-  { icao:'LPMA', iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'dev', pos:['APP','TWR'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
   { icao:'LOWI', iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'plan', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
   { icao:'LFMN', iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
@@ -71,10 +79,11 @@ function rwyDiagram(ap){
   out.push('</svg>'); return out.join('');
 }
 function apCard(ap){
-  const live = ap.status === 'live', tag = live ? 'a' : 'div';
-  return `<${tag} class="ap${live ? '' : ' off'}"${live ? ' href="#lxgb"' : ''}>
+  const live = ap.status === 'live', tag = live ? 'a' : 'div', rt = AP_ROUTE[ap.icao];
+  const href = !live ? '' : ap.icao === APT.icao ? '#' + rt : SITE[ap.icao] + '#' + rt;
+  return `<${tag} class="ap${live ? '' : ' off'}"${live ? ` href="${href}"` : ''}>
     <div class="dia">${rwyDiagram(ap)}</div>
-    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span></div>
+    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
     <h3>${esc(ap.name)}</h3><div class="ctry">${esc(ap.ctry)} · ${esc(ap.region)}</div><p>${esc(ap.blurb)}</p>
     <div class="ft">${ap.pos.map(p => `<span class="pos">${p}</span>`).join('')}<span>RWY ${ap.rwys.join(' · ')}</span><span class="diff" title="Difficulty ${ap.diff} of 5">${[1,2,3,4,5].map(i => `<i class="${i <= ap.diff ? 'on' : ''}"></i>`).join('')}</span></div></div>
   </${tag}>`;
@@ -95,7 +104,12 @@ $('apLiveOnly').addEventListener('change', e => { apf.live = e.target.checked; r
 
 // ── overview: animated hero scope ──
 const hero = { cv: $('heroScope'), base: null, map: null, ang: 0, blips: [], trail: [] };
-const HERO_TRAFFIC = [
+const HERO_TRAFFIC = APT.icao === 'LPMA' ? [
+  ['TAP1681', 33.30, -16.15, 225, 280, PAL.light.arr], ['EZY8712', 32.68, -16.62, 87, 220, PAL.light.dep],
+  ['EXS1291', 33.35, -16.95, 160, 250, PAL.light.arr], ['IBB3021', 32.25, -16.45, 20, 230, PAL.light.arr],
+  ['TOM4407', 32.95, -16.40, 40, 260, PAL.light.dep], ['TAP211', 31.95, -17.45, 30, 450, 'rgba(60,75,95,.7)'],
+  ['RYR5TQ', 33.55, -17.30, 160, 440, 'rgba(60,75,95,.7)'], ['CFG1KD', 32.15, -15.95, 330, 440, 'rgba(60,75,95,.7)']
+] : [
   // [label, start lat, lon, track, speed kt, colour]
   ['BAW492',  36.62, -4.55, 236, 290, PAL.light.arr], ['EZY8902', 36.18, -5.33, 70, 230, PAL.light.dep],
   ['RAM1472', 35.80, -5.55, 25, 210, PAL.light.arr], ['TOM6262', 36.40, -4.85, 245, 260, PAL.light.arr],
@@ -107,7 +121,7 @@ function heroInit(){
   hero.base = document.createElement('canvas'); hero.base.style.width = r.width + 'px'; hero.base.style.height = r.height + 'px';
   // drawTo sizes from getBoundingClientRect, which a detached canvas lacks: borrow the hero canvas for the static map
   const dpr = window.devicePixelRatio || 1;
-  hero.map = drawTo(hero.cv, 'app', { acs: [], proc: true, tweak: v => { v.cx = GBR[0] - 1; v.cy = GBR[1] - 1; v.scale = r.height/62; v.cx = GBR[0] + (r.width > 700 ? 3 : 0); } });
+  hero.map = drawTo(hero.cv, 'app', { acs: [], proc: true, tweak: v => { v.cy = RADAR_REF[1] - 1; v.scale = r.height/62; v.cx = RADAR_REF[0] + (r.width > 700 ? 3 : 0); } });
   hero.base.width = hero.cv.width; hero.base.height = hero.cv.height;
   hero.base.getContext('2d').drawImage(hero.cv, 0, 0);
   hero.dpr = dpr; hero.w = r.width; hero.h = r.height;
@@ -121,7 +135,7 @@ function heroFrame(now){
     const g = hero.cv.getContext('2d'), m = hero.map, w = hero.w, h = hero.h;
     const hx = x => w/2 + (x - m.cx)*m.scale, hy = y => h/2 - (MY(y) - MY(m.cy))*m.scale;
     g.setTransform(1,0,0,1,0,0); g.drawImage(hero.base, 0, 0); g.setTransform(hero.dpr,0,0,hero.dpr,0,0);
-    const ox = hx(GBR[0]), oy = hy(GBR[1]), R = Math.hypot(w, h);
+    const ox = hx(RADAR_REF[0]), oy = hy(RADAR_REF[1]), R = Math.hypot(w, h);
     const prevAng = hero.ang; hero.ang = (hero.ang + dt*Math.PI*2/4.8) % (Math.PI*2);
     // sweep wedge
     const grd = g.createConicGradient ? g.createConicGradient(hero.ang - Math.PI/2 - 0.9, ox, oy) : null;
@@ -131,8 +145,8 @@ function heroFrame(now){
     for (const b of hero.blips) {
       const sp = b.kt/3600*dt*6; // 6× time so the picture visibly moves
       b.p = [b.p[0] + Math.sin(b.trk*D2R)*sp, b.p[1] + Math.cos(b.trk*D2R)*sp];
-      if (Math.hypot(b.p[0] - GBR[0], b.p[1] - GBR[1]) > 46) { b.trk = (b.trk + 180) % 360; }
-      const a = (Math.atan2(b.p[0] - GBR[0], b.p[1] - GBR[1]) + Math.PI*2) % (Math.PI*2);
+      if (Math.hypot(b.p[0] - RADAR_REF[0], b.p[1] - RADAR_REF[1]) > 46) { b.trk = (b.trk + 180) % 360; }
+      const a = (Math.atan2(b.p[0] - RADAR_REF[0], b.p[1] - RADAR_REF[1]) + Math.PI*2) % (Math.PI*2);
       const crossed = prevAng <= hero.ang ? (a > prevAng && a <= hero.ang) : (a > prevAng || a <= hero.ang);
       if (crossed || !b.shown) { if (b.shown) { b.hist.unshift(b.shown); b.hist.length = Math.min(b.hist.length, 5); } b.shown = [...b.p]; b.lit = now; }
       for (let i = 0; i < b.hist.length; i++) { g.fillStyle = `rgba(11,42,74,${0.4 - i*0.07})`; g.fillRect(hx(b.hist[i][0]) - 1, hy(b.hist[i][1]) - 1, 2, 2); }
@@ -144,13 +158,26 @@ function heroFrame(now){
   }
   requestAnimationFrame(heroFrame);
 }
-window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === 'lxgb') renderThumbs(); if (curRoute === 'training') renderFigure(); if (curRoute === 'career') renderCareer(); });
+window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === HOME_RT) renderThumbs(); if (curRoute === 'training') renderFigure(); if (curRoute === 'career') renderCareer(); });
 
 // position thumbnails reuse the real renderer
 // sample traffic for the previews: parked, taxiing, on final and climbing out
 function demoTraffic(){
   const mk = (cs, t, k, set) => { const ac = new Aircraft({ cs, t, k, o: 'EGLL', d: 'EGKK' }); ac.kind = k; Object.assign(ac, set); ac.trk = ac.hdg; return ac; };
   const st = id => STANDS.find(s => s.id === id), park = (id, extra) => ({ ground: true, state: 'PARKED', stand: st(id), x: st(id).p[0], y: st(id).p[1], hdg: st(id).hdg, reqAt: 0, need: 'Start-up', ...extra });
+  if (APT.icao === 'LPMA') {
+    // on the visual circuit to 05, rounding Rosário onto short final
+    const FP = FINAL[RW_LO].pts, k0 = FP.length - 3, fin = FP[k0], fhd = Math.round(norm(Math.atan2(FP[k0+1][0] - fin[0], FP[k0+1][1] - fin[1])/D2R)), end = rm(RWY_M, 0), out = [end[0] + Math.sin(100*D2R)*5, end[1] + Math.cos(100*D2R)*5], twy = GN.JC.p;
+    const pil = WP.PILIM.p, ent = ENTRY.N, inb = [pil[0] + (ent[0] - pil[0])*0.2, pil[1] + (ent[1] - pil[1])*0.2];
+    return [
+      mk('TAP1680', 'A20N', 'DEP', park('A3', { need: null, reqAt: 99999 })), mk('EZY8712', 'A20N', 'DEP', park('A6', { need: null, reqAt: 99999 })), mk('TOM4407', 'B38M', 'DEP', park('A9', { need: null, reqAt: 99999 })),
+      mk('IBB3020', 'AT76', 'DEP', park('A12', { need: null, reqAt: 99999 })),
+      mk('EXS1292', 'B738', 'DEP', { ground: true, state: 'TAXI', hp: 'C', x: twy[0], y: twy[1], hdg: CRS_HI, gs: 12 }),
+      mk('TAP1681', 'A21N', 'ARR', { state: 'FINAL', mode: 'FINAL', app: RW_LO, freq: 'TWR', x: fin[0], y: fin[1], hdg: fhd, alt: 600, gs: 140, vs: -700, o: 'LPPT' }),
+      mk('EZY8714', 'A20N', 'DEP', { state: 'CLIMB', x: out[0], y: out[1], hdg: 90, alt: 5000, gs: 220, vs: 1500, tgtAlt: 6000, d: 'EGKK' }),
+      mk('EXS1291', 'B738', 'ARR', { state: 'INBOUND', x: inb[0], y: inb[1], hdg: 200, alt: 9000, gs: 260, vs: -1200, tgtAlt: 5000, o: 'EGCC' })
+    ];
+  }
   const fin = rm(THR27_M + 2.1*1852, 0), out = rm(-9*1852, -9*1852), twy = GN.L4.p, inb = xy(36.42, -4.86);
   return [
     mk('BAW491', 'A20N', 'DEP', park('2', { need: null, reqAt: 99999 })), mk('EZY8904', 'A20N', 'DEP', park('3', { need: null, reqAt: 99999 })), mk('RRR4419', 'A400', 'DEP', park('S2', { need: null, reqAt: 99999 })),
@@ -166,14 +193,26 @@ function renderThumbs(){
   document.querySelectorAll('canvas[data-thumb]').forEach(c => {
     const k = c.dataset.thumb;
     // the ground card zooms in on the civil apron; the aerodrome figure keeps the whole runway
-    const apron = c.dataset.zoom === 'apron' ? rm(1215, 95) : null;
-    drawTo(c, k, { proc: true, acs, tweak: k === 'app' ? (v => { v.scale *= 1.6; v.cx += 2; v.cy += 3; }) : apron ? (v => { v.cx = apron[0]; v.cy = apron[1]; v.scale = 1852*1.05; }) : null });
+    if (!c.getBoundingClientRect().width) return;
+    const lp = APT.icao === 'LPMA', apron = c.dataset.zoom === 'apron' ? (lp ? STANDS.reduce((a, s) => [a[0] + s.p[0]/STANDS.length, a[1] + s.p[1]/STANDS.length], [0, 0]) : rm(1215, 95)) : null;
+    // Madeira's runway runs diagonally: frame the whole runway (aerodrome) or the 05 end and short final (tower)
+    const W = c.getBoundingClientRect().width, mid = lp && rm(RWY_M*0.5, -120), twr = lp && (() => { const FP = FINAL[RW_LO].pts, f = FP[FP.length - 3], t = rm(THR_LO_M, 0); return [(f[0] + t[0])/2, (f[1] + t[1])/2]; })();
+    const lpT = k === 'gnd' ? (v => { v.cx = mid[0]; v.cy = mid[1]; v.scale = W/2900*1852; }) : k === 'twr' ? (v => { v.cx = twr[0]; v.cy = twr[1]; v.scale = W/3; }) : null;
+    drawTo(c, k, { proc: true, acs, tweak: k === 'app' ? (lp ? (v => { v.scale *= 1.3; }) : (v => { v.scale *= 1.6; v.cx += 2; v.cy += 3; })) : apron ? (v => { v.cx = apron[0]; v.cy = apron[1]; v.scale = 1852*(lp ? 0.8 : 1.05); }) : lp ? lpT : null });
   });
 }
-function refreshPreviews(){ if (curRoute === 'home' || curRoute === 'lxgb') { renderThumbs(); hero.map = null; } }
+function refreshPreviews(){ if (curRoute === 'home' || curRoute === HOME_RT) { renderThumbs(); hero.map = null; } }
 
 // scenarios: one card per weather preset, opening the simulator with that weather
-const SCEN_TEXT = {
+const SCEN_TEXT = APT.icao === 'LPMA' ? {
+  trade: 'The north-east trade wind, the usual Madeira day. Runway 05 with the VOR approach and the Rosário circuit.',
+  nortada: 'A strong northerly over the limit at Rosário. Arrivals refuse the approach: hold them at PILIM and plan for Porto Santo.',
+  tradeMax: 'The trade wind at gale force, right at the 05 limit. Some crews land, some hold. Watch every gust.',
+  sw: 'A south-westerly front with rain. Runway 23, the higher VOR 23 minima and a visual approach close to the cliffs.',
+  low: 'Low cloud below the VOR 23 circling minima. Crews hold and divert while the departures keep moving.',
+  calima: 'Saharan dust from the south-east. Visibility down to 3 km and a light easterly.',
+  calm: 'Light and variable wind and a clear sky. A good day to learn the circuit.'
+} : {
   fair: 'A gentle westerly and good visibility. Learn the flow: road closures, backtracks and the SRA to runway 27.',
   levanter: 'The easterly gale and its banner cloud. Runway 09, approaches through RIPRA, and turbulence curling off the Rock.',
   southerly: 'The Rock sits directly upwind of final. The wind is beyond the Special Procedures turbulence limit, so expect go-arounds.',
@@ -183,41 +222,70 @@ const SCEN_TEXT = {
   storm: 'Cumulonimbus in the Strait. Reduced visibility, gusts, and crews asking to avoid cells.'
 };
 function renderScenarios(){
-  const g = $('scenGrid'); g.innerHTML = '';
+  document.querySelectorAll('[data-scen]').forEach(g => { g.innerHTML = '';
   for (const [k, v] of Object.entries(WX_PRESETS)) {
     const b = document.createElement('button'); b.type = 'button';
-    b.innerHTML = `<span class="nm">${esc(v.short)}</span><span class="ds">${esc(SCEN_TEXT[k] || v.name)}</span><span class="mt">${esc(v.metar.replace(/^LXGB \d{6}Z /, ''))}</span><span class="go">Open position ›</span>`;
+    b.innerHTML = `<span class="nm">${esc(v.short)}</span><span class="ds">${esc(SCEN_TEXT[k] || v.name)}</span><span class="mt">${esc(v.metar.replace(/^[A-Z]{4} \d{6}Z /, ''))}</span><span class="go">Open position ›</span>`;
     b.onclick = () => { $('wxPreset').value = k; $('wxPreset').dispatchEvent(new Event('change')); $('trafficSel').value = 'summer'; $('wxPaste').value = ''; if (S.running) { S.running = false; resetSession(); } location.hash = 'sim'; openSetup(); };
     g.appendChild(b);
-  }
+  } });
 }
 
 // ── training guide ──
+const guideSecs = () => [...document.querySelectorAll('#page-training section[data-track]')].filter(s => !s.dataset.apt || s.dataset.apt === APT.icao);
 function buildToc(){
-  const ol = $('tocList'); ol.innerHTML = '';
-  document.querySelectorAll('#page-training section[id^="t-"]').forEach(sec => {
-    const h = sec.querySelector('h2'); if (!h) return;
-    const li = document.createElement('li'), a = document.createElement('a');
-    a.href = '#' + sec.id; a.textContent = h.textContent.replace(/^\d+/, '').trim(); a.dataset.for = sec.id;
-    li.appendChild(a); ol.appendChild(li);
-  });
+  const box = $('tocList'); box.innerHTML = '';
+  const groups = [['core', 'Core course'], ['ap', `${APT.name} endorsement`]];
+  let n = 0;
+  for (const [tr, title] of groups) {
+    const lbl = document.createElement('div'); lbl.className = 'lbl'; lbl.textContent = title; box.appendChild(lbl);
+    const ol = document.createElement('ol'); box.appendChild(ol); let k = 0;
+    for (const sec of guideSecs().filter(s => s.dataset.track === tr)) {
+      const h = sec.querySelector('h2'); if (!h) continue;
+      const num = h.querySelector('.n'); if (num) num.textContent = tr === 'core' ? 'C' + (++k) : String(++n).padStart(2, '0');
+      const li = document.createElement('li'), a = document.createElement('a');
+      a.href = '#' + sec.id; a.textContent = h.textContent.replace(/^(C\d+|\d+)/, '').trim(); a.dataset.for = sec.id;
+      li.appendChild(a); ol.appendChild(li);
+    }
+  }
+  $('tocEx').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<button class="btn" data-ex="${k}">${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</button>`).join('');
+  $('tocEx').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => startExercise(b.dataset.ex));
+}
+// Academy hub: the core course and one endorsement card per open airport, with exercise progress from the logbook
+const ENDORSE = {
+  LXGB: { name: 'Gibraltar', ex: ['dep', 'arr', 'lev'], badge: 'graduate', p: 'The road across the runway, the SRA, the levanter and releases from Sevilla and Casablanca.' },
+  LPMA: { name: 'Madeira', ex: ['mdep', 'marr', 'mwind'], badge: 'island', p: 'Wind limits at two anemometers, the Rosário circuit to runway 05, SIDs out to sea and Lisboa releases.' }
+};
+function renderHub(){
+  const h = $('acHub'); if (!h) return;
+  const done = k => !!(CAR.ex && CAR.ex[k]);
+  const card = (ic, E) => { const n = E.ex.filter(done).length, here = ic === APT.icao, got = CAR.badges && CAR.badges[E.badge], b = BADGES.find(x => x.id === E.badge);
+    return `<div class="hubcard${here ? ' here' : ''}"><div class="lbl">${ic} · endorsement</div><h3>${E.name}</h3><p>${E.p}</p>
+      <div class="hubprog">${E.ex.map(k => `<i class="${done(k) ? 'done' : ''}"></i>`).join('')}<span>${n} of 3 exercises${got ? ` · <b>${esc(b.name)}</b> earned` : ''}</span></div>
+      <a class="btn${here ? ' primary' : ''}" href="${here ? '#' + guideSecs().find(s => s.dataset.track === 'ap').id : SITE[ic] + '#training'}">${here ? 'Read the briefing' : 'Open ' + E.name}</a></div>`; };
+  const core = guideSecs().find(s => s.dataset.track === 'core');
+  h.innerHTML = `<div class="hubcard"><div class="lbl">Every airport</div><h3>Core course</h3><p>The scope, strips and side panel, the radio, every command, emergencies and how scoring works.</p><div class="hubprog"><span>${guideSecs().filter(s => s.dataset.track === 'core').length} lessons</span></div><a class="btn" href="#${core ? core.id : ''}">Start the core course</a></div>`
+    + LIVE_APS.map(ic => card(ic, ENDORSE[ic])).join('');
 }
 function spy(){
   if (curRoute !== 'training') return;
-  const secs = [...document.querySelectorAll('#page-training section[id^="t-"]')];
+  const secs = guideSecs();
   let cur = secs[0];
   for (const s of secs) if (s.getBoundingClientRect().top < 140) cur = s;
   document.querySelectorAll('#tocList a').forEach(a => a.classList.toggle('on', cur && a.dataset.for === cur.id));
 }
 window.addEventListener('scroll', spy, { passive: true });
 function buildTurbTable(){
-  const ks = Object.keys(TURB_TABLE);
+  const ks = Object.keys(TURB_TABLE); if (!ks.length || !$('turbTable')) return;
   $('turbTable').innerHTML = `<thead><tr><th scope="row">Wind from (°M)</th>${ks.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody><tr><th scope="row">Turbulence above (kt)</th>${ks.map(k => `<td>${TURB_TABLE[k]}</td>`).join('')}</tr></tbody>`;
 }
 function renderFigure(){
-  const c = $('figAerodrome'); if (!c) return;
-  c.style.aspectRatio = '2.25 / 1';
-  drawTo(c, 'gnd', { acs: [], proc: false });
+  renderHub();
+  document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
+    if (c.closest('[data-apt]') && c.closest('[data-apt]').dataset.apt !== APT.icao) return;
+    c.style.aspectRatio = APT.icao === 'LPMA' ? '1.9 / 1' : '2.25 / 1';
+    drawTo(c, 'gnd', { acs: [], proc: false });
+  });
   renderAcademyFigs();
 }
 // ── Academy figures, drawn live from the simulator so they always match what you see on the scope ──
@@ -241,14 +309,15 @@ function renderAcademyFigs(){
   const fc = $('figConsole');
   if (fc) {
     fc.style.aspectRatio = '1.7 / 1';
-    const fin = acs.find(a => a.cs === 'BAW492'), tom = acs.find(a => a.cs === 'TOM6262'), ram = acs.find(a => a.cs === 'RAM1473');
-    const r164 = R164.reduce((a, p) => [a[0] + p[0]/R164.length, a[1] + p[1]/R164.length], [0, 0]);
-    const o = drawTo(fc, 'app', { proc: true, acs, tweak: v => { v.scale *= 1.7; v.cx += 2.5; v.cy += 3.5; }, pins: [[tom.x - 1.6, tom.y - 0.4], [ram.x - 1.6, ram.y - 0.4], [fin.x + 0.6, fin.y - 1.6], [WP.UPMUP.p[0] - 1.2, WP.UPMUP.p[1] - 1.2], r164] });
+    const inbA = acs.find(a => a.kind === 'ARR' && a.state === 'INBOUND'), depA = acs.find(a => a.state === 'CLIMB'), fin = acs.find(a => a.state === 'FINAL');
+    const lp = APT.icao === 'LPMA', zone = lp ? APT.terrain.poly : R164, hold = lp ? WP.PILIM.p : WP.UPMUP.p;
+    const zc = zone.reduce((a, p) => [a[0] + p[0]/zone.length, a[1] + p[1]/zone.length], [0, 0]);
+    const o = drawTo(fc, 'app', { proc: true, acs, tweak: lp ? (v => { v.scale *= 1.25; v.cx += 2; }) : (v => { v.scale *= 1.7; v.cx += 2.5; v.cy += 3.5; }), pins: [[inbA.x - 1.6, inbA.y - 0.4], [depA.x - 1.6, depA.y - 0.4], [fin.x + 0.6, fin.y - 1.6], [hold[0] - 1.2, hold[1] - 1.2], zc] });
     if (o) figPins(fc.closest('figure'), o.pins);
   }
   // 2 · departure routes
   const fs = $('figSids');
-  if (fs) {
+  if (fs && APT.icao === 'LXGB') {
     fs.style.aspectRatio = '1.5 / 1';
     drawTo(fs, 'app', { proc: false, acs: [], tweak: v => { v.scale *= 1.3; v.cx += 0.5; v.cy -= 5.5; }, post: () => {
       const col = { '27': '#1f5eff', '09': '#c2700a' };
@@ -268,11 +337,11 @@ function renderAcademyFigs(){
   const fe = $('figEmerg');
   if (fe) {
     fe.style.aspectRatio = '2.2 / 1';
-    const fin = rm(THR27_M + 0.75*1852, 0), hp = GN[HOLDS.A.node].p;
-    const may = new Aircraft({ cs: 'EXS96K', t: 'B738', k: 'ARR', o: 'EGCC' }); Object.assign(may, { kind: 'ARR', state: 'FINAL', mode: 'FINAL', app: '27', freq: 'TWR', x: fin[0], y: fin[1], hdg: CRS27, trk: CRS27, alt: 450, gs: 150, vs: -700, emerg: { k: 'MAYDAY', why: 'engine failure', ack: true }, sqk: '7700', need: 'Runway closed' });
-    const dep = new Aircraft({ cs: 'EZY8902', t: 'A20N', k: 'DEP', d: 'EGKK' }); Object.assign(dep, { kind: 'DEP', ground: true, state: 'HOLDPT', hp: 'A', x: hp[0], y: hp[1], hdg: 180, trk: 180, rel: { st: 'OK', until: 1e9 } });
+    const lo = APT.icao === 'LPMA', fin = lo ? rm(THR_LO_M - 0.75*1852, 0) : rm(THR_HI_M + 0.75*1852, 0), hpk = lo ? 'C' : 'A', hp = GN[HOLDS[hpk].node].p, rwF = lo ? RW_LO : RW_HI, crsF = lo ? CRS_LO : CRS_HI;
+    const may = new Aircraft({ cs: 'EXS96K', t: 'B738', k: 'ARR', o: 'EGCC' }); Object.assign(may, { kind: 'ARR', state: 'FINAL', mode: 'FINAL', app: rwF, freq: 'TWR', x: fin[0], y: fin[1], hdg: crsF, trk: crsF, alt: 450, gs: 150, vs: -700, emerg: { k: 'MAYDAY', why: 'engine failure', ack: true }, sqk: '7700', need: 'Runway closed' });
+    const dep = new Aircraft({ cs: 'EZY8902', t: 'A20N', k: 'DEP', d: 'EGKK' }); Object.assign(dep, { kind: 'DEP', ground: true, state: 'HOLDPT', hp: hpk, x: hp[0], y: hp[1], hdg: 180, trk: 180, rel: { st: 'OK', until: 1e9 } });
     const keep = S.emg; S.emg = { rwyBlock: { why: 'debris', until: 1e12 }, still: true };
-    try { const c0 = rm(RWY_M*0.75, 0); drawTo(fe, 'twr', { proc: true, acs: [may, dep], tweak: v => { v.cx = c0[0] + 0.25; v.cy = c0[1] - 0.12; v.scale *= 2.1; } }); } finally { S.emg = keep; }
+    try { const c0 = rm(RWY_M*(lo ? 0.25 : 0.75), 0); drawTo(fe, 'twr', { proc: true, acs: [may, dep], tweak: v => { v.cx = c0[0] + (lo ? -0.25 : 0.25); v.cy = c0[1] - 0.12; v.scale *= lo ? 1.4 : 2.1; } }); } finally { S.emg = keep; }
   }
 }
 
@@ -323,6 +392,35 @@ const COACH = {
     { h: 'Hand off and reopen', p: 'Transfer RAM1472 to Radar with <code>HO</code>, and later to Casablanca Control on 125.5 with <code>HO 125.5</code>. Press <b>Open road</b> once the runway is clear.', cmd: 'RAM1472 HO', road: true, ok: () => (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') && sn('RAM1472').airborne }
   ]
 };
+const wxOver = () => !!(APT.windLimit && APT.windLimit(null, S.rwy));
+Object.assign(COACH, {
+  mdep: [
+    { h: 'Wait for the start-up call', p: 'TAP1688, an A321 on stand A7, is going to Lisbon. In a moment the crew asks for start-up and push back. Check the anemometers in the ATIS panel while you wait: the trade wind is well inside the limits.', ok: () => !!(A('TAP1688') && A('TAP1688').need) || st('TAP1688','PUSH','READY','TAXI') },
+    { h: 'Approve start-up and push', p: 'Select TAP1688 and press <b>Push</b>, or type <code>TAP1688 PUSH</code>. The clearance gives its SID, DEGUN 1E, climb to FL60 and a squawk, and the tug pushes it back onto taxilane Alpha facing south-west.', cmd: 'TAP1688 PUSH', ok: () => !!(A('TAP1688') && A('TAP1688').pushed) || st('TAP1688','TAXI','HOLDPT','LINEUP','LINEDUP','TAKEOFF') || sn('TAP1688').airborne },
+    { h: 'Taxi to holding point Charlie', p: 'Runway 05 departures leave from Charlie, at the south-west end of the apron. When the crew reports ready, type <code>TAP1688 TAXI C</code>.', cmd: 'TAP1688 TAXI C', ok: () => st('TAP1688','TAXI','HOLDPT','LINEUP','LINEDUP','TAKEOFF') || sn('TAP1688').airborne },
+    { h: 'Request the release from Lisboa', p: 'Madeira is in the Lisboa FIR, and every departure needs a release from Lisboa Control. Press <b>Request release</b> or type <code>TAP1688 REL</code>. Lisboa calls back on the landline (pink in the log).', cmd: 'TAP1688 REL', ok: () => !!(A('TAP1688') && A('TAP1688').rel) || sn('TAP1688').airborne },
+    { h: 'Line up and backtrack', p: 'Charlie joins the runway near the 05 end, so the A321 backtracks to the turn pad and turns round. Type <code>TAP1688 LU</code>.', cmd: 'TAP1688 LU', ok: () => st('TAP1688','LINEUP','LINEDUP','TAKEOFF') || sn('TAP1688').airborne },
+    { h: 'Clear for take-off', p: 'With Lisboa’s release in, type <code>TAP1688 CTO</code>. Watch the right turn after lift-off: the SID turns out to sea as soon as practicable, away from the high ground on the left.', cmd: 'TAP1688 CTO', ok: () => sn('TAP1688').takeoff || sn('TAP1688').airborne, wait: () => { const a = A('TAP1688'); return !!a && !(a.rel && a.rel.st === 'OK'); } },
+    { h: 'Transfer to Madeira Approach', p: 'Once airborne, send it to Approach on 119.605 with <code>TAP1688 HO</code>.', cmd: 'TAP1688 HO', ok: () => (A('TAP1688') && A('TAP1688').freq === 'RAD') || sn('TAP1688').exit },
+    { h: 'Climb it and hand off to Lisboa', p: 'It follows the DEGUN 1E by itself. When it asks for more, climb it with <code>TAP1688 A100</code>. When it is ready for transfer, send it to Lisboa Control: <code>TAP1688 HO 132.255</code> (or just <code>HO</code>).', cmd: ['TAP1688 A100', 'TAP1688 HO 132.255'], ok: () => (A('TAP1688') && A('TAP1688').handed) || sn('TAP1688').exit, wait: () => { const a = A('TAP1688'); return !!a && a.need !== 'Ready for transfer'; } }
+  ],
+  marr: [
+    { h: 'Take the initial call', p: 'EZY8711 from Gatwick calls on the KICAS 1P towards PILIM. Select it and give a descent: <code>EZY8711 A50</code> for 5,000 feet, the transition altitude.', cmd: 'EZY8711 A50', ok: () => sn('EZY8711').cmd || sn('EZY8711').landed },
+    { h: 'Clear the VOR approach', p: 'Type <code>EZY8711 APP</code>. It routes via ABUSU onto the FUN 211° radial and descends to the missed approach point at 3.6 DME. There is no straight-in approach to runway 05.', cmd: 'EZY8711 APP', ok: () => !!(A('EZY8711') && A('EZY8711').app) || sn('EZY8711').landed },
+    { h: 'Transfer to Tower', p: 'Once it is established on the approach, send it to Madeira Tower on 124.660 with <code>EZY8711 HO</code>.', cmd: 'EZY8711 HO', ok: () => (A('EZY8711') && A('EZY8711').freq === 'TWR') || sn('EZY8711').landed },
+    { h: 'Clear to land', p: 'Type <code>EZY8711 CTL</code>. Then zoom in and watch the circuit: a right turn past the GELO point at 850 ft and Rosário at 460 ft, onto a short final over the sea.', cmd: 'EZY8711 CTL', ok: () => !!(A('EZY8711') && A('EZY8711').ctl) || sn('EZY8711').landed },
+    { h: 'Watch the landing', p: 'After touchdown the aircraft rolls out and asks to vacate.', ok: () => sn('EZY8711').landed && st('EZY8711','ROLLED','VACATING','ONSTAND') },
+    { h: 'Vacate and taxi to stand', p: 'Type <code>EZY8711 VAC</code>. It turns off at Bravo, or backtracks to it, and taxies along Alpha to its stand.', cmd: 'EZY8711 VAC', ok: () => st('EZY8711','VACATING','ONSTAND') || sn('EZY8711').onstand }
+  ],
+  mwind: [
+    { h: 'Read the anemometers', p: 'A strong northerly is blowing. The ATIS panel shows the MID and Rosário readings, and the line is red: the wind from 300°–010° is over the 15 kt / gust 25 limit for landing. Two arrivals are on their way in.', ok: () => !!(A('EXS1291') && A('EXS1291').need) },
+    { h: 'Offer the approach', p: 'Clear EXS1291 for the approach anyway with <code>EXS1291 APP</code>. The crew checks the wind and refuses.', cmd: 'EXS1291 APP', ok: () => { const a = A('EXS1291'); return !!a && (a.need === 'Unable approach' || !!a.divertAt || !!a.diverting) || !!sn('EXS1291').landed; } },
+    { h: 'Hold it at PILIM', p: 'Send it to the published hold: <code>EXS1291 HOLD PILIM A30</code>, at 3,000 feet. It flies left-hand turns over the sea while you wait for the wind.', cmd: 'EXS1291 HOLD PILIM A30', ok: () => { const a = A('EXS1291'); return !a || a.state === 'HOLDING' || !!a.diverting; } },
+    { h: 'Stack the second arrival', p: 'TAP1691 from Lisbon is behind it. Offer it the approach too with <code>TAP1691 APP</code>, and when it refuses, hold it at PILIM 1,000 ft higher: <code>TAP1691 HOLD PILIM A40</code>.', cmd: ['TAP1691 APP', 'TAP1691 HOLD PILIM A40'], ok: () => { const a = A('TAP1691'); return !!a && (a.state === 'HOLDING' || !!a.diverting) || !!sn('TAP1691').landed; } },
+    { h: 'Approve the diversion', p: 'After a couple of minutes in the hold, EXS1291 asks to divert to Porto Santo. Press <b>Approve diversion</b>, or type <code>EXS1291 DCT MARCU A80</code>.', cmd: 'EXS1291 DCT MARCU A80', ok: () => { const a = A('EXS1291'); return !a || a.state === 'DIVERTING'; }, wait: () => { const a = A('EXS1291'); return !!a && !a.diverting; } },
+    { h: 'And the second one', p: 'TAP1691 asks too. Approve it the same way with <b>Approve diversion</b> or <code>TAP1691 DCT MARCU A80</code>, and keep the two 1,000 ft apart as they climb out.', cmd: 'TAP1691 DCT MARCU A80', ok: () => { const a = A('TAP1691'); return !a || a.state === 'DIVERTING'; }, wait: () => { const a = A('TAP1691'); return !!a && !a.diverting; } }
+  ]
+});
 const coach = { ex: null, i: 0, hidden: false };
 const stepCs = s => s && s.cmd ? [].concat(s.cmd)[0].split(' ')[0] : null;
 const canDo = s => !!(s && s.cmd && A(stepCs(s))) && !(s.wait && s.wait());
@@ -340,7 +438,7 @@ function renderCoach(){
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
   if (done) careerExercise(coach.ex);
   el.innerHTML = done
-    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="t-exercises">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
+    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${APT.icao === 'LPMA' ? 'm-exercises' : 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;
   el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
     const c = b.dataset.c;
@@ -356,6 +454,7 @@ function runCoachCmd(c){ for (const t of [].concat(c)) command(t); }
 S.listeners.push(ev => { if (ev === 'start') { const m = S.mode; if (COACH[m]) coachStart(m); else { coach.ex = null; $('coach').hidden = true; } } else if (coach.ex) coachCheck(); });
 
 function startExercise(ex){
+  if (!EXERCISES[ex]) { const ic = Object.keys(ENDORSE).find(k => ENDORSE[k].ex.includes(ex)); if (ic && ic !== APT.icao) location.href = SITE[ic] + '#ex/' + ex; return; }
   $('trafficSel').value = ex; $('wxPaste').value = '';
   S.running = false; resetSession();
   location.hash = 'sim'; go('sim');
@@ -364,6 +463,23 @@ function startExercise(ex){
 document.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => startExercise(b.dataset.ex));
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[data-hash]'); if (a) { e.preventDefault(); location.hash = a.dataset.hash; } });
 
+// ── this page's airport: labels, links and the exercise list ──
+function airportChrome(){
+  const lower = APT.icao.toLowerCase();
+  const chip = $('apChip'); chip.href = '#' + lower; chip.title = `${APT.name} airport briefing`; chip.innerHTML = `<b>${APT.icao}</b><span>${esc(APT.name)}</span>`;
+  $('fidsTitle').textContent = `${APT.name} · flight information`;
+  document.querySelectorAll('[data-icao]').forEach(e => e.textContent = APT.icao);
+  $('awcLink').href = `https://aviationweather.gov/data/metar/?id=${APT.icao}&hours=0`;
+  $('wxPaste').placeholder = WX_PRESETS[APT.defWx].metar;
+  if (APT.icao === 'LPMA') $('cmd').placeholder = 'Command, e.g. TAP1681 A30 APP · EZY8712 TAXI C · / to focus, Tab cycles flights';
+  $('exGroup').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<option value="${k}">Exercise ${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</option>`).join('');
+  const others = LIVE_APS.filter(k => k !== APT.icao);
+  $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b>${others.map(k => `<a href="${SITE[k]}#sim">Switch to ${ENDORSE[k].name}</a>`).join('')}`;
+  document.querySelectorAll('.apsw a').forEach(a => { const ic = a.dataset.ap; a.classList.toggle('on', ic === APT.icao); if (ic !== APT.icao) a.href = SITE[ic] + '#' + AP_ROUTE[ic]; });
+  // links to another airport's pages go straight there
+  document.querySelectorAll('a[href^="#"]').forEach(a => { const o = otherPage(a.getAttribute('href').slice(1)); if (o) a.href = o; });
+}
+airportChrome();
 // ── boot ──
 renderAirports(); renderScenarios(); buildToc(); buildTurbTable();
 fromHash();
@@ -375,7 +491,7 @@ function canFull(){ return !!(document.documentElement.requestFullscreen && docu
 function enterFull(){ if (canFull() && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); }
 function exitFull(){ if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); }
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="#sim"]'); if (a) enterFull(); });
-$('tgExit').onclick = () => { exitFull(); location.hash = '#lxgb'; };
+$('tgExit').onclick = () => { exitFull(); location.hash = '#' + HOME_RT; };
 $('tgFull').onclick = () => document.fullscreenElement ? exitFull() : enterFull();
 function syncFull(){ const b = $('tgFull'); b.hidden = !canFull(); b.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; b.classList.toggle('on', !!document.fullscreenElement); }
 document.addEventListener('fullscreenchange', () => { syncFull(); if (curRoute === 'sim') resize(); });
