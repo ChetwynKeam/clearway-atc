@@ -7691,7 +7691,9 @@ function cwSignInForms(){
   let email = '';
   $('cwEmailForm').onsubmit = async ev => {
     ev.preventDefault(); email = $('cwEmail').value.trim(); $('cwSignMsg').textContent = 'Sending…';
-    try { await cwAuth('otp', { email, create_user: true }); $('cwEmailForm').hidden = true; $('cwCodeForm').hidden = false; $('cwCode').focus();
+    // the link comes back to this page (and keeps the test switch on); Supabase must list the site under Redirect URLs
+    const back = location.origin + location.pathname + (CW_TEST ? '?cwtest=on' : '');
+    try { await cwAuth('otp?redirect_to=' + encodeURIComponent(back), { email, create_user: true }); $('cwEmailForm').hidden = true; $('cwCodeForm').hidden = false; $('cwCode').focus();
       $('cwSignMsg').textContent = `We have emailed a sign-in link to ${email}. Open it on this device to sign in, or type the code if your email shows one. It can take a minute; check your spam folder too.`; }
     catch(e) { $('cwSignMsg').textContent = e.message; }
   };
