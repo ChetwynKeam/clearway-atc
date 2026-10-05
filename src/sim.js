@@ -657,8 +657,8 @@ function command(str){
     } else if (t === 'TOW') {
       if (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to) { sys(`${ac.cs} has no tow request.`); continue; }
       const to = ac.tow.to, from = ac.stand, cross = from.area === 'south';
-      setPath(ac, towPath(ac, to), 5, () => { ac.state = 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = null; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is on stand ${to.id}.`); });
-      if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null;
+      setPath(ac, towPath(ac, to), 5, () => { ac.state = 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is on stand ${to.id}.`); });
+      if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null; ac.towCross = cross;
       log('atc', `Tug with ${ac.cs}, tow approved to stand ${to.id}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
       say(`Tug with ${spoken(ac.cs)}, tow approved to stand ${to.id}`, 'atc');
       return renderSel && renderSel();
@@ -949,11 +949,21 @@ function stepGround(ac, dt){
       if (d < 0.025 && turn > 35) spd = Math.min(spd, 8);
     }
     if (ac.held) spd = 0;
+    // a tow crossing from Charlie holds short of the runway while anything is at, or taxiing to, holding point Alpha,
+    // where the crossing comes off; otherwise the tug and that departure block each other with the runway occupied
+    if (ac.state === 'TOW' && ac.towCross && !ac.onRwy && spd > 0) {
+      const off = offOf([ac.x, ac.y]);
+      if (off < -36 && off > -90) {
+        const blk = S.acs.find(o => o !== ac && o.ground && o.hp === 'A' && ['TAXI', 'HOLDPT', 'LINEUP', 'LINEDUP'].includes(o.state));
+        if (blk) { spd = 0; if (ac.waiting !== blk.cs) { ac.waiting = blk.cs; log('plt', `tug with ${ac.cs}, holding short of the runway at Charlie, traffic for Alpha`, 'TUG'); } }
+      }
+    }
     // give way: stop if another aircraft on the ground is close ahead
     if (!ac.path.reverse && spd > 0) for (const o of S.acs) {
       if (o === ac || !o.ground) continue;
       const dd = dist(ac.x, ac.y, o.x, o.y)/M2NM; if (dd > 80 || dd < 1) continue;
       if (o.waiting === ac.cs && (ac.state === 'VACATING' || (o.state !== 'VACATING' && ac.cs < o.cs))) continue; // break a head-on stand-off: the aircraft leaving the runway goes first
+      if (ac.onRwy && !o.onRwy && o.state === 'HOLDPT') continue;   // never stop on the runway for traffic waiting at a holding point
       if (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40 && !(o.state === 'PARKED' || o.state === 'ONSTAND')) { spd = 0; ac.waiting = o.cs; break; }
     }
     if (spd > 0) ac.waiting = null;
