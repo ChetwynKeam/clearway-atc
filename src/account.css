@@ -88,6 +88,10 @@
 .cw-com .badge { margin-left: 6px; }
 .cw-coms > .cw-row { margin-top: 12px; }
 
+/* the private test switch (?cwtest=on) */
+.cw-testpill { position: fixed; left: 18px; bottom: 18px; z-index: 40; padding: 8px 14px; border-radius: 999px; background: #b45309; color: #fff; font: 600 13px var(--font-body); text-decoration: none; box-shadow: var(--shadow-3); }
+body[data-route="sim"] .cw-testpill { bottom: auto; top: 64px; }
+
 /* feedback */
 .cw-fbbtn { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 0; background: var(--brand); color: #fff; font: 600 14px var(--font-body); cursor: pointer; box-shadow: var(--shadow-3); }
 .cw-fbbtn svg { width: 16px; height: 16px; }

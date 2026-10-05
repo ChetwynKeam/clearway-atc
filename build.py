@@ -46,7 +46,7 @@ def cwcfg(live):
     c['offer'] = SUBS.get('offer')
     c['commission'] = SUBS.get('commission', 25)
     c['site'] = SITE_URL
-    if not live: c['enabled'] = False
+    if not live: c['enabled'] = False; c['test_switch'] = False
     return json.dumps(c, ensure_ascii=False)
 # search and social sharing: canonical address, Open Graph / Twitter card, structured data, optional cookieless analytics
 def seo(icao, A):

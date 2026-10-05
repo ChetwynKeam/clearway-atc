@@ -879,6 +879,10 @@ body.embed > *:not(.embed-cv) { display: none !important; }
 .cw-com .badge { margin-left: 6px; }
 .cw-coms > .cw-row { margin-top: 12px; }
 
+/* the private test switch (?cwtest=on) */
+.cw-testpill { position: fixed; left: 18px; bottom: 18px; z-index: 40; padding: 8px 14px; border-radius: 999px; background: #b45309; color: #fff; font: 600 13px var(--font-body); text-decoration: none; box-shadow: var(--shadow-3); }
+body[data-route="sim"] .cw-testpill { bottom: auto; top: 64px; }
+
 /* feedback */
 .cw-fbbtn { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 0; background: var(--brand); color: #fff; font: 600 14px var(--font-body); cursor: pointer; box-shadow: var(--shadow-3); }
 .cw-fbbtn svg { width: 16px; height: 16px; }
@@ -6410,7 +6414,12 @@ addEventListener('keydown', e => { if (e.key === 'Escape' && !atisPop.hidden) cl
 // CW_CFG comes from subs.json via build.py. With enabled: false every airport stays open (the preview) and nothing is sold.
 // Sign-in is Supabase email codes (or the magic link); plans, payments and the airport check go through the Clearway API
 // (api/account.js on Vercel). The check runs in the browser, so it keeps honest players honest rather than locking the code.
-const CW_ON = !!(CW_CFG.enabled && CW_CFG.supabase_url && CW_CFG.supabase_anon_key && CW_CFG.api);
+// Private test switch: ?cwtest=on turns accounts on in this browser only (for trying Stripe test payments), ?cwtest=off undoes it
+const CW_TEST = (() => { if (CW_CFG.test_switch === false) return false; try {
+  const q = (location.search.match(/[?&]cwtest=(on|off)/) || [])[1];
+  if (q === 'on') localStorage.setItem('cw-test', '1'); else if (q === 'off') localStorage.removeItem('cw-test');
+  return !CW_CFG.enabled && localStorage.getItem('cw-test') === '1'; } catch(e) { return false; } })();
+const CW_ON = !!((CW_CFG.enabled || CW_TEST) && CW_CFG.supabase_url && CW_CFG.supabase_anon_key && CW_CFG.api);
 const CW_FB = !!(CW_CFG.feedback && CW_CFG.api);
 const CW_PLANS = [
   { k: 'a1', n: 1, name: 'Alpha', p: 'One airport of your choice' },
@@ -6795,6 +6804,7 @@ function cwRequestForm(){
 // ── boot (after site.js has set up the routes) ──
 function cwInit(){
   if (EMBED) return;
+  if (CW_TEST) document.body.insertAdjacentHTML('beforeend', '<a class="cw-testpill" href="?cwtest=off" title="Only this browser sees sign-in and plans">Test mode: accounts on · turn off</a>');
   document.querySelectorAll('[data-cw="trial"]').forEach(el => el.textContent = CW_CFG.trial_days);
   document.querySelectorAll('[data-cw="early-price"]').forEach(el => el.textContent = cwPrice('early'));
   document.querySelectorAll('[data-cw="commission-price"]').forEach(el => el.textContent = cwComPrice());
