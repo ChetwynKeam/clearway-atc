@@ -728,6 +728,26 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 20px; }
 .hubcard { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow-1); min-width: 0; }
 .hubcard.here { border-color: var(--phos-2, #8fb0ff); }
+/* Academy endorsement picker, after the core course and in the contents list */
+.endpick { margin: 40px 0 8px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: var(--shadow-1); }
+.endpick .lbl { font-family: var(--font-label); font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }
+.endpick .opts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.endpick .opts a { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--ink); font-weight: 500; }
+.endpick .opts a b { font-family: var(--font-data); font-weight: 500; color: var(--dim); }
+.endpick .opts a:hover { border-color: var(--accent); }
+.endpick .opts a.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+.endpick .opts a.on b { color: rgba(255,255,255,.8); }
+.toc .tocap { display: flex; gap: 6px; margin: 10px 0 0; }
+.toc .tocap a { padding: 3px 9px; border: 1px solid var(--line); border-radius: 6px; font-family: var(--font-data); font-size: 12.5px; color: var(--dim); text-decoration: none; }
+.toc .tocap a:hover { color: var(--ink); border-color: var(--faint); }
+.toc .tocap a.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* another airport's maps: a hidden helper frame draws them (see embedDraw in site.js) */
+.embed-helper { position: fixed; left: -10000px; top: 0; width: 1600px; height: 1000px; border: 0; visibility: hidden; pointer-events: none; }
+.embed-fr { display: block; width: 100%; border: 0; pointer-events: none; }
+body.embed { margin: 0; overflow: hidden; background: transparent; }
+body.embed > *:not(.embed-cv) { display: none !important; }
+.embed-cv { position: absolute; left: 0; top: 0; display: block; }
+.embed-cv.full { width: 100vw; height: 100vh; }
 .hubcard h3 { margin: 0; font-family: var(--font-head); font-size: 19px; }
 .hubcard p { margin: 0; font-size: 14px; line-height: 1.45; }
 .hubcard .btn { margin-top: auto; align-self: flex-start; padding: 7px 13px; font-size: 13.5px; }

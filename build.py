@@ -14,8 +14,14 @@ AIRPORTS = {
     'LXGB': dict(title='Clearway ATC Simulator', desc='Clearway: browser-based air traffic control simulation at real airports: Gibraltar (LXGB) and Madeira (LPMA).',
                  geo='geo.json', profile=['airports/lxgb.js'], artifact='gibraltar-atc.html', page='index.html'),
     'LPMA': dict(title='Madeira · Clearway ATC Simulator', desc='Clearway: air traffic control at Madeira (LPMA), with the real procedures, wind limits and live traffic.',
-                 geo='airports/lpma.geo.json', profile=['airports/lpma.js', 'airports/lpma-engine.js'], artifact='madeira-atc.html', page='lpma/index.html'),
+                 geo='airports/lpma.geo.json', profile=['airports/lpma.js', 'airports/lpma-engine.js'], artifact='madeira-atc.html', page='lpma/index.html',
+                 data=('LPMA', 'airports/lpma.js')),
 }
+# One website: the airport whose page is index.html hosts every page of the site (home, airports, every briefing, the
+# whole Academy, Career). The other airports' pages only run their simulator (#sim, #ex/<key>, #wx/<preset>, #live)
+# and send everything else to the host. The host includes their pure-data profiles (data=(global, file)) for
+# scenario cards and names; their maps are drawn by their own page in a hidden helper frame (#embed).
+HOST = next(k for k, v in AIRPORTS.items() if v['page'] == 'index.html')
 # where each airport's page lives, relative to this page (Pages site) or absolute (the claude.ai artifact, a single file)
 SITE_URL = 'https://www.clearway-atc.co.uk/'
 def links(icao, absolute):
@@ -24,6 +30,9 @@ def links(icao, absolute):
     return {k: (up or './') if v['page'] == 'index.html' else up + v['page'].rsplit('/', 1)[0] + '/' for k, v in AIRPORTS.items()}
 def page(icao, A):
     prof = '\n'.join(r(n) for n in A['profile'])
+    others = [(k, B['data']) for k, B in AIRPORTS.items() if k != icao and B.get('data')] if icao == HOST else []
+    prof += ''.join('\n' + r(f) for k, (g, f) in others)
+    ap_data = '{' + ', '.join(f'{k}: {g}' for k, (g, f) in others) + '}'
     out = f'''<meta charset="utf-8">
 <title>{A['title']}</title>
 <link rel="icon" type="image/svg+xml" href="{fav}">
@@ -33,14 +42,16 @@ def page(icao, A):
 <style>
 {r('styles.css')}
 </style>
-<style>[data-apt]:not([data-apt~="{icao}"]){{display:none!important}}</style>
+<style>[data-only]:not([data-only~="{icao}"]){{display:none!important}}</style>
 {r('site.html')}
 <script>
 const AIRPORT = '{icao}';
 const SITE = @@SITE@@;
+const SITE_HOST = '{HOST}';
 const GEO = {r(A['geo']).strip()};
 {r('core.js')}
 {prof}
+const AP_DATA = {ap_data};
 {r('sim.js')}
 {r('ui.js')}
 {r('emerg.js')}
