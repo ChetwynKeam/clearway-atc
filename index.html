@@ -764,7 +764,6 @@ button.atis-letter:hover { background: var(--amber-soft); }
   </a>
   <nav class="nav" aria-label="Site">
     <a href="#airports" data-route="airports">Airports</a>
-    <a href="#sim" data-route="sim">Simulator</a>
     <a href="#training" data-route="training">Academy</a>
     <a href="#career" data-route="career">Career</a>
   </nav>
@@ -3241,13 +3240,15 @@ function renderSel(){
   const ac = S.sel, el = $('sel');
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → ${APT.icao}` : `${APT.icao} → ${ac.d}`;
-  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span><span class="grow"></span><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? 'Tower 131.2' : 'Radar 122.8'}</span></div>
+  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span><span class="grow"></span><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${relCls(ac)}">${relText(ac)}</div>`;
+  // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
+  if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
-  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls Gibraltar Radar at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
+  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? APT.appShort + ' profile' : (ac.tgtAlt ?? '–')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
     ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
@@ -3266,7 +3267,7 @@ function renderSel(){
       if (ac.need === 'Request tow') html += b('TOW', `Approve tow to stand ${ac.tow && ac.tow.to ? ac.tow.to.id : ''}`, true, 'go');
       html += b('POP:push','Start &amp; push…', startReq, startReq ? 'go' : '');
       html += b('POP:taxi', ac.state === 'TAXI' ? 'Re-route taxi…' : 'Taxi…', canTaxi && ac.state !== 'HOLDPT', ac.state === 'READY' && ac.need ? 'go' : '');
-      const R = ac.rel, relOk = R && R.st === 'OK' && !(R.nb && S.t < R.nb), canRel = !['PARKED','TOW'].includes(ac.state) || (ac.state === 'PARKED' && startReq);
+      const R = ac.rel, relOk = R && R.st === 'OK' && !(R.nb && S.t < R.nb), canRel = ac.state !== 'TOW';
       html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
       html += b('LU','Line up', ac.state === 'HOLDPT') + b('CTO','Cleared take-off', ['HOLDPT','LINEUP','LINEDUP'].includes(ac.state), relOk ? 'go' : '');
     } else {
@@ -4783,7 +4784,7 @@ function atisText(){
   const cloud = w.raw.includes('CAVOK') ? 'CAVOK' : w.clouds.length ? 'cloud ' + w.clouds.map(cloudWords).join(', ') : 'no significant cloud';
   if (APT.atisLines) return APT.atisLines({ w, L, E, wind, vis, cloud: cloud[0].toUpperCase() + cloud.slice(1) });
   const out = [
-    `This is Gibraltar information ${L}, time ${zt(S.t).slice(0,5).replace(':', '')}.`,
+    `This is ${APT.name} information ${L}, time ${zt(S.t).slice(0,5).replace(':', '')}.`,
     `Runway in use ${S.rwy}. Expect surveillance radar approach runway ${S.rwy}, terminating at Point ${FINAL[S.rwy].name}.`,
     `Surface wind ${wind}. Visibility ${vis}. ${cloud[0].toUpperCase() + cloud.slice(1)}.`,
     `Temperature ${w.temp}, dew point ${w.dew}. QNH ${w.qnh} hectopascals. Transition level flight level 70.`
