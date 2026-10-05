@@ -226,5 +226,16 @@ function setLive(on){
   if (!on) { liveStatus(''); return; }
   liveStatus('Fetching the current LXGB METAR…'); pollLive(); liveTimer = setInterval(pollLive, 10*60*1000);
 }
-liveBox.onchange = () => setLive(liveBox.checked);
-try { if (localStorage.getItem('cw-livewx')) { liveBox.checked = true; setLive(true); } } catch(_) {}
+// the Weather menu's "Live weather" choice and the Live METAR switch are the same setting
+const wxMenu = $('wxPreset');
+liveBox.onchange = () => {
+  setLive(liveBox.checked);
+  if (liveBox.checked) { wxMenu.value = 'live'; if (liveLast) $('wxPaste').value = liveLast; }
+  else { if (wxMenu.value === 'live') wxMenu.value = 'fair'; if ($('wxPaste').value.trim() === liveLast) $('wxPaste').value = ''; }
+};
+wxMenu.addEventListener('change', () => {
+  const on = wxMenu.value === 'live';
+  if (on !== liveBox.checked) { liveBox.checked = on; liveBox.onchange(); }
+});
+$('trafficSel').addEventListener('change', () => { if (/^live/.test($('trafficSel').value) && wxMenu.value !== 'live') { wxMenu.value = 'live'; liveBox.checked = true; liveBox.onchange(); } });
+try { if (localStorage.getItem('cw-livewx')) { liveBox.checked = true; setLive(true); wxMenu.value = 'live'; } } catch(_) {}

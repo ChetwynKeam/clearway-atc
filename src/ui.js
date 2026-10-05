@@ -631,7 +631,8 @@ $('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; if 
 $('cmd').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const L = S.acs; if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
 document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim') return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === ' ') { e.preventDefault(); $('tgPause').click(); } if (e.key === '/') { e.preventDefault(); $('cmd').focus(); } });
 
-const wxSel = $('wxPreset'); for (const [k,v] of Object.entries(WX_PRESETS)) { const o = document.createElement('option'); o.value = k; o.textContent = v.name; wxSel.appendChild(o); }
+const wxSel = $('wxPreset'); { const o = document.createElement('option'); o.value = 'live'; o.textContent = 'Live weather · current LXGB METAR'; wxSel.appendChild(o); }
+for (const [k,v] of Object.entries(WX_PRESETS)) { const o = document.createElement('option'); o.value = k; o.textContent = v.name; wxSel.appendChild(o); }
 wxSel.value = 'fair';
 // day and hour pickers: each slot carries its own timetable flights
 const daySel = $('daySel'), hourSel = $('hourSel');
@@ -664,8 +665,8 @@ function start(){
   const pasted = $('wxPaste').value.trim();
   const mode = $('trafficSel').value;
   const ex = EXERCISES[mode];
-  if (ex && !S.running) wxSel.value = ex.wx;
-  S.wx = parseMetar(pasted && /\d{3,5}(G\d+)?KT|VRB|Q\d{4}/.test(pasted.toUpperCase()) ? pasted : WX_PRESETS[wxSel.value].metar);
+  if (ex && !S.running) { wxSel.value = ex.wx; if (liveBox.checked) { liveBox.checked = false; liveBox.onchange(); } }   // exercises use their own weather
+  S.wx = parseMetar(pasted && /\d{3,5}(G\d+)?KT|VRB|Q\d{4}/.test(pasted.toUpperCase()) ? pasted : (WX_PRESETS[wxSel.value] || WX_PRESETS.fair).metar);
   const c27 = windComp(S.wx, CRS27), c09 = windComp(S.wx, CRS09);
   const newRwy = c09.head > c27.head + 2 ? '09' : '27';
   if (!S.running) {
@@ -691,12 +692,15 @@ function start(){
 // Real world sessions load today's flights (and the live METAR) before the position opens
 $('startBtn').onclick = async () => {
   const mode = $('trafficSel').value;
-  if (/^live/.test(mode) && !S.running) {
-    const bt = $('startBtn'), txt = bt.textContent; bt.disabled = true; bt.textContent = 'Loading today’s flights…';
+  const liveTraffic = /^live/.test(mode) && !S.running, liveWeather = wxSel.value === 'live' && !S.running;
+  if (liveTraffic || liveWeather) {
+    const bt = $('startBtn'), txt = bt.textContent; bt.disabled = true; bt.textContent = liveTraffic ? 'Loading today’s flights…' : 'Fetching the live METAR…';
     try {
-      await liveLoad(true); LIVE.session = liveSession();
+      if (liveTraffic) { await liveLoad(true); LIVE.session = liveSession(); }
       if (!liveBox.checked) { liveBox.checked = true; setLive(true); }
-      const m = await fetchMetar(); if (m) { $('wxPaste').value = m; liveLast = m; }
+      const m = await fetchMetar();
+      if (m) { $('wxPaste').value = m; liveLast = m; }
+      else if (liveWeather && !$('wxPaste').value.trim()) sys('Live weather is unavailable on this page, so the session uses fair weather.', true);
     } finally { bt.disabled = false; bt.textContent = txt; }
   }
   start();

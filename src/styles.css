@@ -558,3 +558,9 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 .atis-warn { margin-right: 8px; padding: 3px 8px; border: 2px solid #d62d2d; border-radius: 4px; background: #d62d2d; color: #fff; font: 700 12px "Inter Tight", Inter, system-ui, sans-serif; letter-spacing: .08em; cursor: pointer; animation: atisFlash 1s steps(2, jump-none) infinite; }
 @keyframes atisFlash { 0% { background: #d62d2d; color: #fff; } 100% { background: transparent; color: #d62d2d; } }
 @media (prefers-reduced-motion: reduce) { .atis-warn { animation: none; } }
+
+/* Live now feature */
+.live-sec .eyebrow { display: inline-flex; align-items: center; gap: 8px; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 0 rgba(229,72,77,.55); animation: livePulse 1.8s ease-out infinite; }
+@keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(229,72,77,.55); } 70% { box-shadow: 0 0 0 8px rgba(229,72,77,0); } 100% { box-shadow: 0 0 0 0 rgba(229,72,77,0); } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }

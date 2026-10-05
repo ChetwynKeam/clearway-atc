@@ -186,7 +186,7 @@ function renderScenarios(){
   for (const [k, v] of Object.entries(WX_PRESETS)) {
     const b = document.createElement('button'); b.type = 'button';
     b.innerHTML = `<span class="nm">${esc(v.short)}</span><span class="ds">${esc(SCEN_TEXT[k] || v.name)}</span><span class="mt">${esc(v.metar.replace(/^LXGB \d{6}Z /, ''))}</span><span class="go">Open position ›</span>`;
-    b.onclick = () => { $('wxPreset').value = k; $('trafficSel').value = 'summer'; $('wxPaste').value = ''; if (S.running) { S.running = false; resetSession(); } location.hash = 'sim'; openSetup(); };
+    b.onclick = () => { $('wxPreset').value = k; $('wxPreset').dispatchEvent(new Event('change')); $('trafficSel').value = 'summer'; $('wxPaste').value = ''; if (S.running) { S.running = false; resetSession(); } location.hash = 'sim'; openSetup(); };
     g.appendChild(b);
   }
 }
@@ -320,3 +320,9 @@ $('tgFull').onclick = () => document.fullscreenElement ? exitFull() : enterFull(
 function syncFull(){ const b = $('tgFull'); b.hidden = !canFull(); b.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; b.classList.toggle('on', !!document.fullscreenElement); }
 document.addEventListener('fullscreenchange', () => { syncFull(); if (curRoute === 'sim') resize(); });
 syncFull();
+
+// "Live now" links open the simulator set up for a Real world session
+document.querySelectorAll('[data-live]').forEach(a => a.addEventListener('click', () => {
+  const sel = $('trafficSel'); if (S.running) return;
+  sel.value = 'live'; sel.dispatchEvent(new Event('change'));
+}));

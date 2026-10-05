@@ -570,6 +570,12 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 @keyframes atisFlash { 0% { background: #d62d2d; color: #fff; } 100% { background: transparent; color: #d62d2d; } }
 @media (prefers-reduced-motion: reduce) { .atis-warn { animation: none; } }
 
+/* Live now feature */
+.live-sec .eyebrow { display: inline-flex; align-items: center; gap: 8px; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 0 rgba(229,72,77,.55); animation: livePulse 1.8s ease-out infinite; }
+@keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(229,72,77,.55); } 70% { box-shadow: 0 0 0 8px rgba(229,72,77,0); } 100% { box-shadow: 0 0 0 0 rgba(229,72,77,0); } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
 </style>
 </head>
 <body>
@@ -595,9 +601,9 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
-        <a class="pill" href="#lxgb"><b>New</b>Gibraltar LXGB is open for controlling</a>
+        <a class="pill" href="#sim" data-live><b>New</b>Live now: control today’s real Gibraltar flights</a>
         <h1>Real airports. Real charts. <em>Your frequency.</em></h1>
-        <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic follows a weekly airline timetable, tracked from origin to destination.</p>
+        <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic is either the real flights in the air right now or a weekly airline timetable, tracked from origin to destination.</p>
         <div class="ctas">
           <a class="btn primary" href="#airports"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h12M9 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Browse airports</a>
           <a class="btn" href="#lxgb">Gibraltar · LXGB</a>
@@ -650,6 +656,16 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     </div>
   </div></div>
 
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>Gibraltar Airport’s own arrivals and departures, refreshed every 15 minutes, with their real expected times and delays. Each arrival turns round into its real return leg.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Gibraltar inbound comes within range, it becomes your flight to bring in.</span></li>
+        <li><b>The weather outside</b><span>The live LXGB METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
+      </ol>
+    </div>
+  </div></div>
   <div class="section feat-ap"><div class="wrap">
     <div class="fa-grid">
       <div class="fa-shot"><canvas data-thumb="twr" aria-label="Gibraltar tower display"></canvas><span class="fa-tag">LIVE · LXGB TOWER</span></div>
@@ -681,7 +697,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
     <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a></div>
     <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a></div>
-    <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span></div>
+    <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span></div>
   </div></footer>
 </section>
 
@@ -754,6 +770,16 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     </div>
   </div></div>
 
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now at Gibraltar</div><h2>Work today’s real traffic at LXGB.</h2><p>Pick Live now in the session setup and the position opens at the current time with Gibraltar’s real flights, live aircraft positions and the current METAR. The timetable sessions are still there when you want to choose your own day and hour.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>Gibraltar Airport’s own arrivals and departures, refreshed every 15 minutes, with their real expected times and delays. Each arrival turns round into its real return leg.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Gibraltar inbound comes within range, it becomes your flight to bring in.</span></li>
+        <li><b>The weather outside</b><span>The live LXGB METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
+      </ol>
+    </div>
+  </div></div>
   <div class="section"><div class="wrap">
     <div class="section-head">
       <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
@@ -765,11 +791,12 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
   <div class="section"><div class="wrap">
     <div class="sources">
       <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
-        <p class="note">Procedures, fixes, frequencies, runway data and the aerodrome layout come from the UK Mil AIP AD 2 LXGB (AIRAC 07/25 to 05/26 pages). The airline timetable is a representative week, not a live feed. The aerodrome layout follows OpenStreetMap, and en-route tracks between airports are approximate. The R164 northern boundary, the outline of the Rock and the post-departure headings are approximations. This is a training game and is not for real-world navigation. It is not affiliated with the RAF, the Gibraltar Government or any airline.</p></div>
+        <p class="note">Procedures, fixes, frequencies, runway data and the aerodrome layout come from the UK Mil AIP AD 2 LXGB (AIRAC 07/25 to 05/26 pages). The airline timetable is a representative week. In Live now sessions the flights come from Gibraltar Airport’s live flight information and aircraft positions from the adsb.lol and adsb.fi ADS-B networks; once a flight is yours it follows your instructions, not its real track. The aerodrome layout follows OpenStreetMap, and en-route tracks between airports are approximate. The R164 northern boundary, the outline of the Rock and the post-departure headings are approximations. This is a training game and is not for real-world navigation. It is not affiliated with the RAF, the Gibraltar Government or any airline.</p></div>
       <ul>
         <li><b>AD 2.2–2.13</b>Runway 09/27 dimensions, true bearings, threshold coordinates, declared distances, taxiway widths and guard lights.</li>
         <li><b>D1 · E1 · F1</b>Aerodrome, taxi and ramp charts: taxiways, holding points, HS1, aprons, stands and buildings.</li>
         <li><b>OpenStreetMap</b>Taxiway, apron and stand geometry, and the street map under the scope.</li>
+        <li><b>Live now</b>Gibraltar Airport live flight information; live aircraft positions from adsb.lol and adsb.fi.</li>
         <li><b>H1 · K1 · K2</b>Civil arrivals and the runway 09 and 27 SRA procedures: PIMOS, UPMUP, RIPRA, ODLUK, Points X-Ray and Yankee.</li>
         <li><b>B1 · B2 · B3</b>Special procedures: turbulence table, waterspouts, road crossing, SRA minima, missed approach, turnaround rule.</li>
         <li><b>GSHHG</b>Full-resolution shoreline for the Strait, Spain and Morocco.</li>
@@ -1075,7 +1102,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     <section id="t-limits"><h2><span class="n">12</span>What is simplified</h2>
       <ul>
         <li>Radar and Tower are one position, and Ground is worked on the Tower frequency.</li>
-        <li>The timetable is a representative week. It is not a live or historic feed, and routes between airports are approximate.</li>
+        <li>The timetable is a representative week, and routes between airports are approximate. Live now uses today’s real flights and positions, but once a flight is yours it follows your instructions rather than its real track.</li>
         <li>The R164 northern boundary and the outline of the Rock are approximations. The aerodrome layout follows OpenStreetMap, checked against chart D1.</li>
         <li>The post-departure headings and the crew wind limits are modelled, not published.</li>
         <li>Helicopter traffic, birds (a real year-round hazard at LXGB), the arresting gear and lamp signals are not simulated.</li>
@@ -2713,7 +2740,8 @@ $('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; if 
 $('cmd').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const L = S.acs; if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
 document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim') return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === ' ') { e.preventDefault(); $('tgPause').click(); } if (e.key === '/') { e.preventDefault(); $('cmd').focus(); } });
 
-const wxSel = $('wxPreset'); for (const [k,v] of Object.entries(WX_PRESETS)) { const o = document.createElement('option'); o.value = k; o.textContent = v.name; wxSel.appendChild(o); }
+const wxSel = $('wxPreset'); { const o = document.createElement('option'); o.value = 'live'; o.textContent = 'Live weather · current LXGB METAR'; wxSel.appendChild(o); }
+for (const [k,v] of Object.entries(WX_PRESETS)) { const o = document.createElement('option'); o.value = k; o.textContent = v.name; wxSel.appendChild(o); }
 wxSel.value = 'fair';
 // day and hour pickers: each slot carries its own timetable flights
 const daySel = $('daySel'), hourSel = $('hourSel');
@@ -2746,8 +2774,8 @@ function start(){
   const pasted = $('wxPaste').value.trim();
   const mode = $('trafficSel').value;
   const ex = EXERCISES[mode];
-  if (ex && !S.running) wxSel.value = ex.wx;
-  S.wx = parseMetar(pasted && /\d{3,5}(G\d+)?KT|VRB|Q\d{4}/.test(pasted.toUpperCase()) ? pasted : WX_PRESETS[wxSel.value].metar);
+  if (ex && !S.running) { wxSel.value = ex.wx; if (liveBox.checked) { liveBox.checked = false; liveBox.onchange(); } }   // exercises use their own weather
+  S.wx = parseMetar(pasted && /\d{3,5}(G\d+)?KT|VRB|Q\d{4}/.test(pasted.toUpperCase()) ? pasted : (WX_PRESETS[wxSel.value] || WX_PRESETS.fair).metar);
   const c27 = windComp(S.wx, CRS27), c09 = windComp(S.wx, CRS09);
   const newRwy = c09.head > c27.head + 2 ? '09' : '27';
   if (!S.running) {
@@ -2773,12 +2801,15 @@ function start(){
 // Real world sessions load today's flights (and the live METAR) before the position opens
 $('startBtn').onclick = async () => {
   const mode = $('trafficSel').value;
-  if (/^live/.test(mode) && !S.running) {
-    const bt = $('startBtn'), txt = bt.textContent; bt.disabled = true; bt.textContent = 'Loading today’s flights…';
+  const liveTraffic = /^live/.test(mode) && !S.running, liveWeather = wxSel.value === 'live' && !S.running;
+  if (liveTraffic || liveWeather) {
+    const bt = $('startBtn'), txt = bt.textContent; bt.disabled = true; bt.textContent = liveTraffic ? 'Loading today’s flights…' : 'Fetching the live METAR…';
     try {
-      await liveLoad(true); LIVE.session = liveSession();
+      if (liveTraffic) { await liveLoad(true); LIVE.session = liveSession(); }
       if (!liveBox.checked) { liveBox.checked = true; setLive(true); }
-      const m = await fetchMetar(); if (m) { $('wxPaste').value = m; liveLast = m; }
+      const m = await fetchMetar();
+      if (m) { $('wxPaste').value = m; liveLast = m; }
+      else if (liveWeather && !$('wxPaste').value.trim()) sys('Live weather is unavailable on this page, so the session uses fair weather.', true);
     } finally { bt.disabled = false; bt.textContent = txt; }
   }
   start();
@@ -3655,8 +3686,19 @@ function setLive(on){
   if (!on) { liveStatus(''); return; }
   liveStatus('Fetching the current LXGB METAR…'); pollLive(); liveTimer = setInterval(pollLive, 10*60*1000);
 }
-liveBox.onchange = () => setLive(liveBox.checked);
-try { if (localStorage.getItem('cw-livewx')) { liveBox.checked = true; setLive(true); } } catch(_) {}
+// the Weather menu's "Live weather" choice and the Live METAR switch are the same setting
+const wxMenu = $('wxPreset');
+liveBox.onchange = () => {
+  setLive(liveBox.checked);
+  if (liveBox.checked) { wxMenu.value = 'live'; if (liveLast) $('wxPaste').value = liveLast; }
+  else { if (wxMenu.value === 'live') wxMenu.value = 'fair'; if ($('wxPaste').value.trim() === liveLast) $('wxPaste').value = ''; }
+};
+wxMenu.addEventListener('change', () => {
+  const on = wxMenu.value === 'live';
+  if (on !== liveBox.checked) { liveBox.checked = on; liveBox.onchange(); }
+});
+$('trafficSel').addEventListener('change', () => { if (/^live/.test($('trafficSel').value) && wxMenu.value !== 'live') { wxMenu.value = 'live'; liveBox.checked = true; liveBox.onchange(); } });
+try { if (localStorage.getItem('cw-livewx')) { liveBox.checked = true; setLive(true); wxMenu.value = 'live'; } } catch(_) {}
 
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
 const ROUTES = ['home', 'airports', 'lxgb', 'sim', 'training'];
@@ -3846,7 +3888,7 @@ function renderScenarios(){
   for (const [k, v] of Object.entries(WX_PRESETS)) {
     const b = document.createElement('button'); b.type = 'button';
     b.innerHTML = `<span class="nm">${esc(v.short)}</span><span class="ds">${esc(SCEN_TEXT[k] || v.name)}</span><span class="mt">${esc(v.metar.replace(/^LXGB \d{6}Z /, ''))}</span><span class="go">Open position ›</span>`;
-    b.onclick = () => { $('wxPreset').value = k; $('trafficSel').value = 'summer'; $('wxPaste').value = ''; if (S.running) { S.running = false; resetSession(); } location.hash = 'sim'; openSetup(); };
+    b.onclick = () => { $('wxPreset').value = k; $('wxPreset').dispatchEvent(new Event('change')); $('trafficSel').value = 'summer'; $('wxPaste').value = ''; if (S.running) { S.running = false; resetSession(); } location.hash = 'sim'; openSetup(); };
     g.appendChild(b);
   }
 }
@@ -3980,6 +4022,12 @@ $('tgFull').onclick = () => document.fullscreenElement ? exitFull() : enterFull(
 function syncFull(){ const b = $('tgFull'); b.hidden = !canFull(); b.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; b.classList.toggle('on', !!document.fullscreenElement); }
 document.addEventListener('fullscreenchange', () => { syncFull(); if (curRoute === 'sim') resize(); });
 syncFull();
+
+// "Live now" links open the simulator set up for a Real world session
+document.querySelectorAll('[data-live]').forEach(a => a.addEventListener('click', () => {
+  const sel = $('trafficSel'); if (S.running) return;
+  sel.value = 'live'; sel.dispatchEvent(new Event('change'));
+}));
 
 </script>
 </body>
