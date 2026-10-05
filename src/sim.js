@@ -224,6 +224,8 @@ function spawnArrival(f){
   if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
     const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
     ac.x = e[0] + u[0]*PRE_NM*frac; ac.y = e[1] + u[1]*PRE_NM*frac;
+    // another pending track on top of it (the same minute, or two flows sharing the entry point): in trail, 8 NM behind
+    for (let k = 0; k < 6 && S.acs.some(o => o.state === 'PRE' && Math.hypot(o.x - ac.x, o.y - ac.y) < 5); k++) { ac.x += u[0]*8; ac.y += u[1]*8; }
     ac.alt = ENTRY_ALT[f.gate] + (PRE_ALT[f.gate] - ENTRY_ALT[f.gate])*frac; ac.ias = 300; ac.gs = 330;
     ac.hdg = ac.trk = brg(ac.x, ac.y, ...e); ac.state = 'PRE'; ac.preAt = f.m*60; ac.route = []; ac.freq = 'PRE';
     S.acs.push(ac); emit('spawn', ac);
@@ -232,26 +234,38 @@ function spawnArrival(f){
   const d0 = f.m === 0 ? 0.55 : 0;                     // the first arrival starts part-way in
   ac.x = e[0] + (first.p[0]-e[0])*d0; ac.y = e[1] + (first.p[1]-e[1])*d0;
   ac.alt = d0 ? (APT.firstAlt ? APT.firstAlt(f.gate) : 9000) : ENTRY_ALT[f.gate];
-  // another arrival already starting there (busy hours: New York): this one starts 8 NM further out and 1,000 ft higher
-  { const k = S.acs.filter(o => o.kind === 'ARR' && o.state === 'INBOUND' && o.gate === f.gate && Math.hypot(o.x - ac.x, o.y - ac.y) < 40).length;
-    if (k) { const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L]; ac.x += u[0]*8*k; ac.y += u[1]*8*k; ac.alt += 1000*k; } }
+  // another arrival already starting there (busy hours: New York, where two arrival flows share an entry fix):
+  // this one starts 8 NM further out and 1,000 ft higher, as many times as it takes to be clear of everyone
+  { const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L];
+    for (let k = 0; k < 6 && entryBusy(ac, [ac.x, ac.y], ac.alt, 8, 3000); k++) { ac.x += u[0]*8; ac.y += u[1]*8; ac.alt += 1000; } }
   S.acs.push(ac);
   makeInbound(ac);
   emit('spawn', ac);
   return ac;
 }
-function makeInbound(ac){
+function makeInbound(ac, keepAlt){
   const first = WP[ARR_ROUTE[ac.gate][S.rwy][0]];
-  ac.tgtAlt = ac.cleared = APT.inboundAlt(ac.gate); ac.freq = 'RAD';
+  ac.tgtAlt = ac.cleared = keepAlt ? Math.round(ac.alt/100)*100 : APT.inboundAlt(ac.gate); ac.freq = 'RAD';
   ac.ias = 260; ac.hdg = brg(ac.x, ac.y, ...first.p); ac.trk = ac.hdg; ac.state = 'INBOUND';
   ac.route = ARR_ROUTE[ac.gate][S.rwy].slice();
   pilot(ac, PH.checkIn(ac));
   ac.need = 'Initial call';
 }
+// someone already near this point (within nm) and level with it (within ft): a new arrival can't be handed over there yet
+const entryBusy = (ac, p, alt, nm = 6, ft = 1000) => S.acs.some(o => o !== ac && o.airborne && o.state !== 'PRE' && Math.hypot(o.x - p[0], o.y - p[1]) < nm && Math.abs(o.alt - alt) < ft);
 function stepPending(ac, dt){
-  const e = ENTRY[ac.gate], d = dist(ac.x, ac.y, ...e), mv = ac.gs/3600*dt;
+  const e = ENTRY[ac.gate], d = dist(ac.x, ac.y, ...e);
+  // the previous sector hands it over in trail: it slows down outside the entry point until the one ahead has moved on
+  const busy = d < 15 && entryBusy(ac, e, ENTRY_ALT[ac.gate], 8, 3000);   // 8 NM in trail, whatever the one ahead is descending to
+  if (busy) ac.gs = Math.max(200, ac.gs - 3*dt); else if (ac.gs < 330) ac.gs = Math.min(330, ac.gs + 3*dt);
+  const mv = ac.gs/3600*dt;
   ac.hdg = ac.trk = brg(ac.x, ac.y, ...e);
-  if (d <= mv + 0.05 || S.t >= ac.preAt + 90) { ac.x = e[0]; ac.y = e[1]; ac.alt = ENTRY_ALT[ac.gate]; makeInbound(ac); return; }
+  if (busy && d <= mv + 0.5 && S.t < ac.preAt + 600) return;   // waits at the boundary (at most ten minutes)
+  if (busy ? S.t >= ac.preAt + 600 : d <= mv + 0.05 || S.t >= ac.preAt + 90) {
+    // still blocked after the wait: handed over 1,000 ft above the traffic, and it stays there until you descend it
+    ac.x = e[0]; ac.y = e[1]; ac.alt = ENTRY_ALT[ac.gate]; let up = false; while (entryBusy(ac, e, ac.alt)) { ac.alt += 1000; up = true; }
+    makeInbound(ac, up); return;
+  }
   ac.x += (e[0] - ac.x)/d*mv; ac.y += (e[1] - ac.y)/d*mv;
   const left = Math.max(1, ac.preAt - S.t); ac.alt = Math.max(ENTRY_ALT[ac.gate], ac.alt - (ac.alt - ENTRY_ALT[ac.gate])*dt/left);
   ac.vs = -(ac.alt - ENTRY_ALT[ac.gate])/left*60;
