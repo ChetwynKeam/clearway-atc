@@ -1,283 +1,87 @@
 {
- "updated": "2026-10-05T18:32:47Z",
+ "updated": "2026-10-05T21:31:20Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-05": {
    "utcOffsetMin": 60,
    "arr": [
     {
-     "place": "London Luton",
-     "flight": "LS3833",
-     "sched": "17:35",
-     "status": "Arrived",
-     "expected": "17:26"
-    },
-    {
-     "place": "Gran Canaria",
-     "flight": "NT4072",
-     "sched": "17:45",
-     "status": "Arrived",
-     "expected": "17:44"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "EZY8521",
-     "sched": "18:00",
-     "status": "Arrived",
-     "expected": "18:16"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "BA2718",
-     "sched": "18:05",
-     "status": "Arrived",
-     "expected": "18:55"
-    },
-    {
-     "place": "Vilnius",
-     "flight": "GW3311",
-     "sched": "18:15",
-     "status": "Arrived",
-     "expected": "18:23"
-    },
-    {
-     "place": "Brussels",
-     "flight": "TB1563",
-     "sched": "18:20",
-     "status": "Arrived",
-     "expected": "18:30"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1691",
-     "sched": "18:35",
-     "status": "Arrived",
-     "expected": "18:39"
-    },
-    {
-     "place": "Glasgow",
-     "flight": "LS129",
-     "sched": "18:40",
-     "status": "Estimated",
-     "expected": "19:35"
-    },
-    {
-     "place": "East Midlands",
-     "flight": "LS623",
-     "sched": "19:00",
-     "status": "Arrived",
-     "expected": "18:47"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "FR385",
-     "sched": "19:05",
-     "status": "Arrived",
-     "expected": "19:01"
-    },
-    {
-     "place": "Newcastle",
-     "flight": "LS529",
-     "sched": "19:30",
-     "status": "Arrived",
-     "expected": "19:21"
-    },
-    {
-     "place": "Manchester",
-     "flight": "EZY2213",
-     "sched": "19:50",
-     "status": "Estimated",
-     "expected": "20:00"
-    },
-    {
-     "place": "Porto Santo",
-     "flight": "NT4937",
-     "sched": "20:25",
-     "status": "",
-     "expected": ""
-    },
-    {
      "place": "Porto",
      "flight": "EJU6835",
      "sched": "20:35",
-     "status": "Estimated",
-     "expected": "20:35"
+     "status": "Arrived",
+     "expected": "20:57"
     },
     {
      "place": "Edinburgh",
      "flight": "LS735",
      "sched": "20:45",
-     "status": "Estimated",
-     "expected": "20:45"
+     "status": "Arrived",
+     "expected": "20:42"
     },
     {
      "place": "Lisboa",
      "flight": "EJU7627",
      "sched": "20:50",
-     "status": "Estimated",
-     "expected": "20:25"
+     "status": "Arrived",
+     "expected": "20:49"
     },
     {
      "place": "Lisboa",
      "flight": "TP1693",
      "sched": "21:05",
-     "status": "",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "21:05"
     },
     {
      "place": "Porto",
      "flight": "TP1705",
      "sched": "21:50",
-     "status": "",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "21:45"
     },
     {
      "place": "Lisboa",
      "flight": "TP3833",
      "sched": "23:20",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "23:30"
     }
    ],
    "dep": [
     {
-     "place": "Dublin",
-     "flight": "FR363",
-     "sched": "17:30",
-     "status": "Departed",
-     "expected": "17:29"
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "DE1571",
-     "sched": "17:50",
-     "status": "Departed",
-     "expected": "18:02"
-    },
-    {
-     "place": "Leipzig",
-     "flight": "DI6579",
-     "sched": "17:55",
-     "status": "Departed",
-     "expected": "18:05"
-    },
-    {
-     "place": "London Luton",
-     "flight": "LS3834",
-     "sched": "18:25",
-     "status": "Departed",
-     "expected": "18:44"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "EZY8522",
-     "sched": "18:50",
-     "status": "Departed",
-     "expected": "19:17"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "BA2719",
-     "sched": "18:55",
-     "status": "Final Call",
-     "expected": ""
-    },
-    {
-     "place": "Porto Santo",
-     "flight": "NT4936",
-     "sched": "19:00",
-     "status": "Departed",
-     "expected": "19:04"
-    },
-    {
-     "place": "Brussels",
-     "flight": "TB1563",
-     "sched": "19:10",
-     "status": "Departed",
-     "expected": "19:24"
-    },
-    {
-     "place": "Vilnius",
-     "flight": "GW3312",
-     "sched": "19:15",
-     "status": "Closed",
-     "expected": ""
-    },
-    {
-     "place": "Glasgow",
-     "flight": "LS130",
-     "sched": "19:25",
-     "status": "Estimated",
-     "expected": "20:25"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1692",
-     "sched": "19:35",
-     "status": "Boarding",
-     "expected": ""
-    },
-    {
-     "place": "East Midlands",
-     "flight": "LS624",
-     "sched": "19:50",
-     "status": "",
-     "expected": ""
-    },
-    {
-     "place": "Newcastle",
-     "flight": "LS530",
-     "sched": "20:15",
-     "status": "",
-     "expected": ""
-    },
-    {
-     "place": "Porto",
-     "flight": "FR6050",
-     "sched": "20:15",
-     "status": "",
-     "expected": ""
-    },
-    {
-     "place": "Manchester",
-     "flight": "EZY2214",
-     "sched": "20:20",
-     "status": "Estimated",
-     "expected": "20:40"
-    },
-    {
      "place": "Porto",
      "flight": "EJU6836",
      "sched": "21:05",
-     "status": "Estimated",
-     "expected": "21:25"
+     "status": "Departed",
+     "expected": "22:17"
     },
     {
      "place": "Edinburgh",
      "flight": "LS736",
      "sched": "21:40",
-     "status": "",
-     "expected": ""
+     "status": "Departed",
+     "expected": "21:43"
     },
     {
      "place": "Lisboa",
      "flight": "EJU7628",
      "sched": "21:40",
-     "status": "",
-     "expected": ""
+     "status": "Departed",
+     "expected": "21:56"
     },
     {
      "place": "Lisboa",
      "flight": "TP1694",
      "sched": "21:55",
-     "status": "",
-     "expected": ""
+     "status": "Departed",
+     "expected": "22:12"
     },
     {
      "place": "Porto",
      "flight": "TP1706",
      "sched": "22:45",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     }
    ]
