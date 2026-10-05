@@ -1,7 +1,7 @@
 """Turn avionio.com's live arrivals and departures boards for an airport into flights.json for Real world mode.
-Used for London City and Innsbruck, whose own sites refuse automated requests. Codeshare rows are skipped; times are local.
-Usage: avionio_flights.py arrivals.html departures.html out.json [Europe/London]"""
-import datetime, html, json, re, sys
+Used for London City, Innsbruck and New York JFK, whose own sites refuse automated requests. Codeshare rows are skipped; times are local.
+Usage: avionio_flights.py arrivals.html[,page2.html...] departures.html[,...] out.json [Europe/London]"""
+import datetime, html, json, os, re, sys
 from zoneinfo import ZoneInfo
 tz = ZoneInfo(sys.argv[4] if len(sys.argv) > 4 else 'Europe/London')
 MON = {m: i + 1 for i, m in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
@@ -9,9 +9,10 @@ now = datetime.datetime.now(tz)
 out = {'updated': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'source': 'avionio.com', 'days': {}}
 cell = lambda row, c: html.unescape(re.sub(r'<[^>]+>', ' ', (re.search(r'<td class="%s[^"]*"[^>]*>(.*?)</td>' % c, row, re.S) or [None, ''])[1])).split()
 seen = set()
-for path, key in ((sys.argv[1], 'arr'), (sys.argv[2], 'dep')):
-    try: page = open(path, encoding='utf-8').read()
-    except OSError: continue
+# each board may be several pages (New York JFK: ?page=0,1,2... each about half an hour), given comma-separated
+pages = lambda arg: ''.join(open(p, encoding='utf-8').read() for p in arg.split(',') if os.path.exists(p))
+for arg, key in ((sys.argv[1], 'arr'), (sys.argv[2], 'dep')):
+    page = pages(arg)
     for row in re.findall(r'<tr class="tt-row ([^"]*)">(.*?)</tr>', page, re.S):
         cls, row = row
         if 'tt-child' in cls: continue                        # codeshare of the row above

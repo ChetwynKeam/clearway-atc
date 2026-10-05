@@ -2,7 +2,8 @@ name: Refresh airport flights
 # Saves each airport's live arrivals and departures for the simulator's Real world mode:
 # Gibraltar (gibraltarairport.gi) as flights.json, Madeira (madeiraairport.pt, ANA's flight feed) as lpma/flights.json,
 # London City (avionio.com's LCY boards: londoncityairport.com refuses automated requests) as eglc/flights.json,
-# Innsbruck (avionio.com's INN boards: innsbruck-airport.com refuses automated requests) as lowi/flights.json.
+# Innsbruck (avionio.com's INN boards: innsbruck-airport.com refuses automated requests) as lowi/flights.json,
+# New York JFK (avionio.com's JFK boards, eight pages of about half an hour each way) as kjfk/flights.json.
 on:
   schedule:
     - cron: '2,17,32,47 * * * *'
@@ -45,9 +46,19 @@ jobs:
           curl -sSL --compressed -m 30 -A "$UA" -o /tmp/inn_d.html https://www.avionio.com/en/airport/inn/departures || exit 0
           python3 tools/avionio_flights.py /tmp/inn_a.html /tmp/inn_d.html /tmp/lowi.json Europe/Vienna || exit 0
           python3 -c "import json,sys; d=json.load(open('/tmp/lowi.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p lowi && cp /tmp/lowi.json lowi/flights.json || echo "no Innsbruck flights parsed"
+      - name: Fetch New York JFK's flight information
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; A=""; D=""
+          for P in 0 1 2 3 4 5 6 7; do
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/jfk_a$P.html "https://www.avionio.com/en/airport/jfk/arrivals?page=$P" && A="$A,/tmp/jfk_a$P.html"
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/jfk_d$P.html "https://www.avionio.com/en/airport/jfk/departures?page=$P" && D="$D,/tmp/jfk_d$P.html"
+          done
+          [ -n "$A" ] && [ -n "$D" ] || exit 0
+          python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/kjfk.json America/New_York || exit 0
+          python3 -c "import json,sys; d=json.load(open('/tmp/kjfk.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p kjfk && cp /tmp/kjfk.json kjfk/flights.json || echo "no New York JFK flights parsed"
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json; do [ -f "$f" ] && git add "$f"; done; true
+          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json; do [ -f "$f" ] && git add "$f"; done; true
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main
