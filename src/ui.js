@@ -286,14 +286,26 @@ function drawAirport(){
     for (const m of AD.floods) { const [X,Y] = c(m, 214), rr = 50*mpx; const g = cx.createRadialGradient(X, Y, 0, X, Y, rr); g.addColorStop(0, `rgba(255,220,160,${C.flood})`); g.addColorStop(1, 'rgba(255,220,160,0)'); cx.fillStyle = g; cx.beginPath(); cx.arc(X, Y, rr, 0, 7); cx.fill(); }
     cx.restore();
   }
-  // barriers, traffic and pedestrians at the crossing
+  // barriers, traffic and pedestrians at the crossing (laid along the OpenStreetMap crossing: footways, cycle lanes and service road)
   const col = st === 'CLOSED' ? C.xClosed : st === 'OPEN' ? C.xOpen : C.xMid;
-  for (const off of [40, -40]) { cx.strokeStyle = col; cx.lineWidth = Math.max(2, 1.4*mpx); const m0 = XING_M + off*0.34; path([[m0-8, off],[m0+8, off]], false); cx.stroke(); }
+  const down = st === 'CLOSED' || st === 'CLOSING';
+  for (const off of [48, -48]) {
+    const m0 = xingM(off), L = down ? XING_HW : XING_HW*0.35;            // a raised barrier shows as a short stub
+    const a = c(m0 - XING_HW, off), b = c(m0 - XING_HW + 2*L, off), n = 6;
+    cx.lineCap = 'butt'; cx.lineWidth = Math.max(2.5, 1.6*mpx);
+    for (let k = 0; k < n; k++) { cx.strokeStyle = k % 2 ? (C.name === 'dark' ? '#e8edf2' : '#fff') : col; cx.beginPath(); cx.moveTo(a[0] + (b[0]-a[0])*k/n, a[1] + (b[1]-a[1])*k/n); cx.lineTo(a[0] + (b[0]-a[0])*(k+1)/n, a[1] + (b[1]-a[1])*(k+1)/n); cx.stroke(); }
+    for (const e of [-1, 1]) { const q = c(m0 + e*XING_HW, off); cx.fillStyle = '#20262e'; cx.beginPath(); cx.arc(q[0], q[1], Math.max(1.8, 0.8*mpx), 0, 7); cx.fill(); }
+  }
   if (sc > 160) {
-    cx.font = `600 12px ${FONT_L}`; cx.fillStyle = col; const p = c(XING_M - 24, -70); cx.textAlign = 'right'; if (sc > 650) cx.fillText(`WINSTON CHURCHILL AVE · ${st}`, p[0], p[1]); cx.textAlign = 'left';
-    const n = Math.min(70, Math.round(S.xing.queue/3)); cx.fillStyle = rgba('car', .85);
-    for (let i = 0; i < n; i++) { const side = i % 2 ? 1 : -1, d = 50 + Math.floor(i/2)*6; const m = side > 0 ? 1000 + d*0.03 : 985 - (d-22)*0.25; const q = c(m + ((i*7)%3 - 1)*2.5, side*d); cx.fillRect(q[0]-1.6, q[1]-1.6, 3.2, 3.2); }
-    if (st === 'OPEN' || st === 'OPENING') for (let i = 0; i < 10; i++) { const f = ((S.t*0.09 + i*0.1) % 1), o = -60 + f*120, m = 987 + (o+22)/44*13 + (i%2 ? 3 : -3); const q = c(m, i%2 ? o : -o); cx.fillStyle = i % 3 ? rgba('car', .9) : rgba('apt', .9); cx.fillRect(q[0]-1.5, q[1]-1.5, 3, 3); }
+    // people and bikes waiting beyond each barrier, and crossing when it is open
+    const n = Math.min(60, Math.round(S.xing.queue/3)); cx.fillStyle = rgba('car', .85);
+    for (let i = 0; i < n; i++) { const side = i % 2 ? 1 : -1, row = Math.floor(i/2), o = side*(56 + Math.floor(row/4)*4), w = ((row % 4) - 1.5)/1.5*XING_HW*0.75; const q = c(xingM(o) + w, o); cx.beginPath(); cx.arc(q[0], q[1], 1.6, 0, 7); cx.fill(); }
+    if (st === 'OPEN' || st === 'OPENING') for (let i = 0; i < 10; i++) { const f = ((S.t*0.05 + i*0.1) % 1), o = (i % 2 ? 1 : -1)*(-60 + f*120), w = ((i*7) % 5 - 2)/2*XING_HW*0.7; const q = c(xingM(o) + w, o); cx.fillStyle = i % 3 ? rgba('car', .9) : rgba('apt', .9); cx.beginPath(); cx.arc(q[0], q[1], 1.5, 0, 7); cx.fill(); }
+    if (sc > 650) {   // label in a small tag beside the southern barrier, clear of the runway
+      const txt = `WINSTON CHURCHILL AVE · ${st}`, p = c(xingM(-66) - XING_HW - 6, -66); cx.font = `600 11px ${FONT_L}`;
+      const w = cx.measureText(txt).width; cx.fillStyle = C.tagBg; cx.fillRect(p[0] - w - 10, p[1] - 9, w + 8, 16); cx.strokeStyle = col; cx.lineWidth = 1; cx.strokeRect(p[0] - w - 10.5, p[1] - 9.5, w + 9, 17);
+      cx.fillStyle = col; cx.textAlign = 'right'; cx.fillText(txt, p[0] - 6, p[1] + 3); cx.textAlign = 'left';
+    }
   }
   if (sc > 180 && sc < 2400) {
     cx.fillStyle = rgba('lab', .72); cx.font = `600 12px ${FONT_L}`;

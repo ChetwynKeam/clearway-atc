@@ -36,7 +36,9 @@ const W_END = [T09[0]-RU[0]*W_OFF*M2NM, T09[1]-RU[1]*W_OFF*M2NM];
 function rm(m, off=0){ return [W_END[0] + (RU[0]*m + RN[0]*off)*M2NM, W_END[1] + (RU[1]*m + RN[1]*off)*M2NM]; }
 function mOf(p){ return ((p[0]-W_END[0])*RU[0] + (p[1]-W_END[1])*RU[1]) / M2NM; }
 function offOf(p){ return ((p[0]-W_END[0])*RN[0] + (p[1]-W_END[1])*RN[1]) / M2NM; }
-const XING_M = 990;                                     // Winston Churchill Avenue crosses the runway here
+const XING_M = 984;                                     // Winston Churchill Avenue crosses the runway here (centre of the OSM crossing)
+const XING_SKEW = 0.125, XING_HW = 15;                  // the crossing runs slightly skewed to the runway; half-width of the paved crossing (m)
+const xingM = o => XING_M + XING_SKEW*o;                // runway distance of the crossing's centre line at offset o
 const GBR = xy(dms(36,8,36.63), -dms(5,20,33.50));     // TACAN Ch 83X
 const ARP = xy(dms(36,9,4.21), -dms(5,20,59.10));
 
