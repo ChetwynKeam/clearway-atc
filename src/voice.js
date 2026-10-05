@@ -127,7 +127,9 @@ function phraseToCmd(raw){
   if (/ lineup /.test(s)) out.push('LU');
   if (/ cleared( for)? takeoff /.test(s)) out.push('CTO');
   if (/ vacate /.test(s)) out.push('VAC');
-  if (/ (contact|monitor) /.test(s)) out.push('HO');
+  if ((m = s.match(/ (contact|monitor) .*?(1\d\d)( decimal | point | )(\d{1,3}) /))) out.push(`HO ${m[2]}.${m[4]}`);
+  else if (/ (contact|monitor) /.test(s)) out.push('HO');
+  if (/ (request|requesting) release /.test(s) || / release /.test(s) && !/ released /.test(s)) out.push('REL');
   if (/ (squawk )?ident /.test(s)) out.push('IDENT');
   return { ac, cmd: out.join(' ') };
 }

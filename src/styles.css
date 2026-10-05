@@ -157,6 +157,7 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 700; letter-spacing
 #log .who { color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #log .atc .tx { color: var(--phos); } #log .atc .who { color: var(--phos-2); }
 #log .plt .tx { color: var(--ink); }
+#log .coord .tx { color: var(--pink); } #log .coord .who { color: var(--pink); }
 #log .sys .tx { color: var(--warn); } #log .bad .tx { color: var(--alert); }
 .cmd { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--line); align-items: center; }
 .cmd .prompt { color: var(--phos); font-weight: 600; }
@@ -564,3 +565,8 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 0 rgba(229,72,77,.55); animation: livePulse 1.8s ease-out infinite; }
 @keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(229,72,77,.55); } 70% { box-shadow: 0 0 0 8px rgba(229,72,77,0); } 100% { box-shadow: 0 0 0 0 rgba(229,72,77,0); } }
 @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
+/* departure release (Sevilla / Casablanca) */
+.relline { font: 500 12px/1.4 var(--font-data); padding: 5px 8px; border-radius: 6px; margin: 6px 0 2px; background: var(--panel-2); color: var(--ink-2); }
+.relline.ok { color: var(--ok); } .relline.req { color: var(--warn); } .relline.exp { color: var(--alert); }
+.strip .rel { font-weight: 700; } .strip .rel.ok { color: var(--ok); } .strip .rel.req { color: var(--warn); } .strip .rel.exp { color: var(--alert); }

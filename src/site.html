@@ -386,16 +386,23 @@
       </table></div>
       <p>Press <b>Taxi…</b> to open the route picker. It lists each holding point the aircraft can reach with up to three routings, such as Echo via Bravo or Echo via Alpha and Bravo, with their lengths. Hover over one to see it drawn on the map, then click to issue the clearance. The clearance names the taxiways. Aircraft give way to each other: one that stops behind another shows <b>GIVING WAY</b> in its label. Stop one yourself with <code>HP</code> (hold position) and release it with <code>RES</code> (continue taxi). Re-clear a taxiing aircraft to a different holding point with <code>TAXI A</code> and the rest.</p>
       <div class="callout warn"><div class="lbl">Hot spot HS1</div><p>Holding point Alpha sits right at the junction of A and B. An aircraft holding at A blocks traffic along B to and from the civil apron, so sequence the outbound and inbound flows before you clear anyone onto A.</p></div>
-      <h3>Line up and take-off</h3>
-      <p><code>LU</code> lines an aircraft up and backtracks it to the turning circle. <code>CTO</code> clears it for take-off. Issued at the holding point, CTO lines it up, backtracks, turns and rolls in one go. The departure instruction comes with the clearance:</p>
+      <h3>Departure routes and the release</h3>
+      <p>Every departure flies a named standard route, given with the start-up: <b>PIMOS 1A</b> or <b>1B</b> to the east, <b>LINTO 1A/1B</b> to the west and <b>TTN 1A/1B</b> to Morocco. The A routes are for runway 27 (left turn heading 200), the B routes for runway 09 (straight ahead to 1,500 ft, then right heading 160). Both turns keep departures clear of R164 to the north and the Rock to the south. Once clear of the Rock the aircraft routes on to UPMUP and PIMOS, ODLUK and LINTO, or TTN by itself, climbing to 4,000 ft.</p>
       <div class="rt">
-        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, after departure turn left heading 200, climb altitude 4,000 feet, runway 27, cleared for takeoff, wind 260 degrees 8 knots</span></div>
-        <div><span class="w">BAW493</span><span class="p">Left heading 200, 4,000 feet, cleared for takeoff runway 27, Speedbird four niner three</span></div>
+        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, cleared to London Heathrow via PIMOS one Alpha departure, climb altitude 4,000 feet, squawk 4610, start-up and push back approved, facing west, QNH 1018</span></div>
+        <div><span class="w">BAW493</span><span class="p">Cleared London Heathrow, PIMOS one Alpha, 4,000 feet, squawk 4610, start and push approved facing west, QNH 1018, Speedbird four niner three</span></div>
       </div>
-      <p>For runway 09 the clearance is to climb straight ahead to 1,500 ft, then turn right heading 160. Both turns keep departures clear of R164 to the north and the Rock to the south. The departure minimum is <b>1,000 m visibility</b> at the threshold.</p>
-      <div class="callout"><div class="lbl">Modelled, not published</div><p>The AIP does not publish these post-departure headings. They are the simulator's stand-in for the clearances Radar would give.</p></div>
+      <p>Gibraltar sits under Spanish airspace, so no departure goes without a <b>release</b> from the next unit: <b>Sevilla</b> for the east and west routes, <b>Casablanca</b> for TTN. Press <b>Request release</b> or type <code>REL</code> any time after start-up. The call goes down the landline (shown in pink in the log) and the unit calls back within a couple of minutes: usually “released, valid until” a time ten minutes away, sometimes “not before” a time a few minutes ahead. The strip shows <b>REL…</b> while you wait and <b>REL</b> once released. <code>CTO</code> is refused without a valid release. If the window runs out before take-off, ask again.</p>
+      <div class="callout"><div class="lbl">Modelled, not published</div><p>The AIP publishes no SIDs for Gibraltar. These route names and headings are the simulator's stand-in for the departure clearances Gibraltar and Sevilla agree.</p></div>
+      <h3>Line up and take-off</h3>
+      <p><code>LU</code> lines an aircraft up and backtracks it to the turning circle. <code>CTO</code> clears it for take-off. Issued at the holding point, CTO lines it up, backtracks, turns and rolls in one go. The departure route is confirmed with the clearance:</p>
+      <div class="rt">
+        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, PIMOS one Alpha departure, runway 27, cleared for takeoff, wind 260 degrees 8 knots</span></div>
+        <div><span class="w">BAW493</span><span class="p">PIMOS one Alpha, cleared for takeoff runway 27, Speedbird four niner three</span></div>
+      </div>
+      <p>If the runway changed since start-up, Tower gives the amended route. The departure minimum is <b>1,000 m visibility</b> at the threshold.</p>
       <h3>After take-off</h3>
-      <p>Above 1,000 ft the crew wants Radar: press <b>To Radar</b> (<code>HO</code>). Once clear of the Rock it asks for its exit fix: <b>UPMUP</b> then PIMOS for the east, <b>ODLUK</b> then LINTO for the west, or <b>TTN</b> for Morocco. Approve it with <code>DCT UPMUP A80</code>. Beyond about 22 NM it is ready for Sevilla or Casablanca, so transfer it with <code>HO</code>. One that leaves your airspace without a transfer costs points.</p>
+      <p>Above 1,000 ft the crew wants Radar: press <b>To Radar 122.8</b> (<code>HO</code>). On its route it turns towards its exit fix by itself and asks for further climb near 4,000 ft: give it <code>A80</code>. Vector it with a heading and it leaves the route, then asks for its exit fix when clear of the Rock (<code>DCT UPMUP A80</code>). Beyond about 22 NM it is ready for <b>Sevilla Control 132.6</b> or <b>Casablanca Control 125.5</b>. Transfer it with <code>HO</code>, or name the frequency yourself with <code>HO 132.6</code>. Give the wrong one and the crew finds nobody there and comes back to you a little later, which costs points. One that leaves your airspace without a transfer costs more.</p>
     </section>
 
     <section id="t-road"><h2><span class="n">05</span>Winston Churchill Avenue</h2>
@@ -480,14 +487,15 @@
         <tr><td class="mono">DCT fix</td><td>Proceed direct to a fix</td><td class="mono">DCT UPMUP</td></tr>
         <tr><td class="mono">HOLD [fix]</td><td>Hold at a fix, or at present position</td><td class="mono">HOLD UPMUP</td></tr>
         <tr><td class="mono">APP 27 / APP 09</td><td>Clear the surveillance radar approach</td><td class="mono">APP 27</td></tr>
-        <tr><td class="mono">HO</td><td>Transfer: Radar ↔ Tower, then Sevilla or Casablanca</td><td class="mono">HO</td></tr>
+        <tr><td class="mono">HO [freq]</td><td>Transfer: Radar ↔ Tower, then Sevilla 132.6 or Casablanca 125.5. A wrong frequency sends the crew away and back</td><td class="mono">HO 132.6</td></tr>
         <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
         <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
-        <tr><td class="mono">PUSH [E|W]</td><td>Start-up and push back approved, facing east or west</td><td class="mono">BAW493 PUSH E</td></tr>
+        <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west</td><td class="mono">BAW493 PUSH E</td></tr>
         <tr><td class="mono">TAXI [A|C|D|E] [VIA …]</td><td>Taxi to a holding point, by the shortest route or the one you name. <b>Taxi…</b> on the selected flight opens the route picker</td><td class="mono">TAXI E VIA A B</td></tr>
         <tr><td class="mono">HP / RES</td><td>Hold position / continue taxi</td><td class="mono">HP</td></tr>
         <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
-        <tr><td class="mono">CTO</td><td>Cleared for take-off, with the departure instruction</td><td class="mono">CTO</td></tr>
+        <tr><td class="mono">REL</td><td>Request the departure release from Sevilla or Casablanca on the landline</td><td class="mono">REL</td></tr>
+        <tr><td class="mono">CTO</td><td>Cleared for take-off on the departure route. Needs a valid release</td><td class="mono">CTO</td></tr>
         <tr><td class="mono">VAC [A|C|D|E]</td><td>Vacate (backtrack if needed) and taxi to stand</td><td class="mono">VAC</td></tr>
         <tr><td class="mono">IDENT</td><td>Squawk ident</td><td class="mono">IDENT</td></tr>
       </table></div>
@@ -512,7 +520,7 @@
     <section id="t-exercises"><h2><span class="n">11</span>Guided exercises</h2>
       <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. The card tells you what the crew wants, which button or command does it, and moves on when you have done it.</p>
       <div class="exgrid">
-        <div class="ex"><div class="nm">1 · First departure</div><p>One A320neo on stand 3, fair weather, runway 27. Push, taxi via Bravo to Echo, close the road, backtrack and take off, then route it out to Sevilla.</p><button class="btn primary" data-ex="dep">Start exercise</button></div>
+        <div class="ex"><div class="nm">1 · First departure</div><p>One A320neo on stand 3, fair weather, runway 27. Push with its PIMOS 1A route, taxi via Bravo to Echo, get Sevilla's release, close the road, backtrack and take off, then hand it to Sevilla on 132.6.</p><button class="btn primary" data-ex="dep">Start exercise</button></div>
         <div class="ex"><div class="nm">2 · First arrival</div><p>One arrival from the east. Descend it, clear the SRA for runway 27, close the road in time, land it, and backtrack it to Alpha and the stand.</p><button class="btn primary" data-ex="arr">Start exercise</button></div>
         <div class="ex"><div class="nm">3 · Levanter, runway 09</div><p>An easterly gale. The arrival joins via RIPRA and Point X-Ray in the lee of the Rock while an ATR departs from the south apron via Charlie.</p><button class="btn primary" data-ex="lev">Start exercise</button></div>
       </div>

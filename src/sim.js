@@ -163,6 +163,11 @@ const EXIT_FIX = { E: 'PIMOS', W: 'LINTO', S: 'TTN' };
 const EXIT_ROUTE = { E: ['UPMUP','PIMOS'], W: ['ODLUK','LINTO'], S: ['TTN'] };
 const ENTRY = { E: xy(36.33,-4.50), W: xy(35.80,-6.22), S: xy(35.48,-5.33) };
 const NEXT_UNIT = { E: ['Sevilla Control','132.6'], W: ['Sevilla Control','132.6'], S: ['Casablanca Control','125.5'] };
+// Standard departure routes. Gibraltar publishes no SIDs: these named routes are the simulator's own, built from the
+// post-departure turn (27: left heading 200; 09: straight ahead to 1,500 ft, right heading 160) and the exit fixes.
+const sidName = (gate, rwy) => `${EXIT_FIX[gate]} 1${rwy === '27' ? 'A' : 'B'}`;
+const sidSpoken = n => n.replace(/ 1([AB])$/, (m, l) => ' one ' + (l === 'A' ? 'Alpha' : 'Bravo'));
+const relUnit = ac => NEXT_UNIT[ac.gate][0].split(' ')[0];
 
 // ═════════════════════════ aircraft performance ═════════════════════════
 const TYPES = {
@@ -354,6 +359,23 @@ function say(text, who){
 function atc(ac, text){ const line = `${spoken(ac.cs)}, ${text}`; log('atc', line, ac.freq === 'TWR' ? 'TOWER' : 'RADAR'); say(line, 'atc'); }
 function pilot(ac, text){ const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300); }
 function sys(text, bad){ log(bad ? 'bad' : 'sys', text); }
+// landline coordination with Sevilla / Casablanca (not on the frequency)
+function coord(text, who){ log('coord', text, who); say(text, who === 'GIBRALTAR' ? 'atc' : who); }
+function requestRelease(ac){
+  const who = relUnit(ac), sid = sidName(ac.gate, S.rwy);
+  ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
+  coord(`${who}, Gibraltar, request release ${ac.cs}, ${ac.t} to ${ac.d}, ${sid}, runway ${S.rwy}`, 'GIBRALTAR');
+}
+function stepRelease(ac){
+  const R = ac.rel, who = relUnit(ac);
+  if (R.st === 'REQ' && S.t >= R.at) {
+    if (Math.random() < 0.2) { const t = S.t + rnd(120, 240); R.nb = t + (60 - ((S.start/1000 + t) % 60)); }   // not before a whole minute
+    R.st = 'OK'; R.until = (R.nb || S.t) + 600;
+    coord(`Gibraltar, ${who}, ${ac.cs} released${R.nb ? ', not before ' + zt(R.nb).slice(0,5) : ''}, valid until ${zt(R.until).slice(0,5)}`, who.toUpperCase());
+    if (S.sel === ac) renderSel();
+  }
+  if (R.st === 'OK' && ac.ground && !ac.cto && S.t > R.until) { R.st = 'EXP'; sys(`${ac.cs}: the ${who} release has expired. Request a new one with REL.`, true); if (S.sel === ac) renderSel(); }
+}
 const altWords = a => a > 6000 ? 'flight level '+Math.round(a/100) : 'altitude '+a.toLocaleString('en-GB')+' feet';
 const altShort = a => a > 6000 ? 'FL'+Math.round(a/100) : a.toLocaleString('en-GB')+' feet';
 const hdg3 = h => String(Math.round(h) % 360 || 360).padStart(3,'0');
@@ -587,17 +609,18 @@ function command(str){
   select(ac);
   const said = [], reads = [];
   const air = ac.airborne;
+  if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]; let r;
     if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
-      const h = (+r[2]) % 360 || 360; ac.mode = 'HDG'; ac.tgtHdg = h; ac.turnDir = r[1]==='L' ? -1 : r[1]==='R' ? 1 : 0; ac.route = [];
+      const h = (+r[2]) % 360 || 360; ac.mode = 'HDG'; ac.tgtHdg = h; ac.turnDir = r[1]==='L' ? -1 : r[1]==='R' ? 1 : 0; ac.route = []; ac.onSid = false;
       if (['HOLDING','INBOUND','FINAL'].includes(ac.state)) ac.state = 'VECTORS';
       const dif = angDiff(ac.hdg, h);
       const ts = r[1]==='L' ? 'turn left' : r[1]==='R' ? 'turn right' : (Math.abs(dif) < 4 ? 'fly' : dif < 0 ? 'turn left' : 'turn right');
       said.push(`${ts} heading ${hdg3(h)}`); reads.push(`${ts.replace('turn ','').replace('fly','')} heading ${hdg3(h)}`.trim());
     } else if ((r = t.match(/^[ACD](\d{1,5})$/)) && air) {
       let a = +r[1]; if (a < 400) a *= 100; a = clamp(a, 1000, 30000);
-      const up = a > ac.alt + 50; ac.tgtAlt = ac.cleared = a;
+      const up = a > ac.alt + 50; ac.tgtAlt = ac.cleared = a; if (up && ac.need === 'Request climb') ac.need = null;
       const q = a <= 6000 && ac.alt > 6000 ? `, QNH ${S.wx.qnh}` : '';
       said.push(`${up ? 'climb' : 'descend'} ${altWords(a)}${q}`); reads.push(`${up?'climb':'descend'} ${altShort(a)}${q}`);
     } else if ((r = t.match(/^S(\d{2,3})$/)) && air && +r[1] > 0) {
@@ -607,7 +630,7 @@ function command(str){
     else if (t === 'DCT' && air) {
       const id = toks[i+1], w = id && WP[id];
       if (!w) { sys(`Unknown fix ${id||''}. Fixes: ${Object.keys(WP).join(' ')}`); return; }
-      i++; const idx = ac.route.indexOf(id);
+      i++; const idx = ac.route.indexOf(id); ac.onSid = false;
       ac.route = idx >= 0 ? ac.route.slice(idx) : (ac.kind === 'DEP' && EXIT_ROUTE[ac.gate].includes(id) ? EXIT_ROUTE[ac.gate].slice(EXIT_ROUTE[ac.gate].indexOf(id)) : [id]); ac.mode = 'NAV';
       if (ac.alt < 3500 && crossesRock(ac, w.p)) sys(`Caution: ${ac.cs} direct ${id} tracks over the Rock.`, true);
       if (ac.state === 'HOLDING') ac.state = 'VECTORS';
@@ -649,10 +672,17 @@ function command(str){
       goAround(ac, null); said.push('go around, I say again go around, climb altitude 4,000 feet'); reads.push('going around, climbing 4,000 feet');
     } else if (t === 'HO' || t === 'CONT') {
       if (!air) { sys(`${ac.cs} is on the ground and stays with Tower.`); continue; }
-      let unit;
-      if (ac.kind === 'DEP' && ac.freq === 'TWR') { unit = ['Gibraltar Radar','122.8']; ac.freq = 'RAD'; if (ac.need && ac.need.startsWith('Airborne')) ac.need = null; }
-      else if (ac.kind === 'DEP') { unit = NEXT_UNIT[ac.gate]; ac.handed = true; ac.need = null; }
-      else { unit = ['Gibraltar Tower','131.2']; ac.freq = 'TWR'; }
+      const unit = ac.kind === 'DEP' ? (ac.freq === 'TWR' ? ['Gibraltar Radar','122.8'] : NEXT_UNIT[ac.gate]) : ['Gibraltar Tower','131.2'];
+      const fq = toks[i+1] && /^1\d\d(\.\d{1,3})?$/.test(toks[i+1]) ? toks[++i] : unit[1];
+      if (fq !== unit[1] && +fq !== +unit[1]) {   // wrong frequency: the crew reads it back, finds nobody there and comes back
+        ac.lost = { f: fq, until: S.t + rnd(25, 45) };
+        said.push(`contact ${unit[0]} ${fq}`); reads.push(`${fq}, ${ac.kind === 'DEP' && ac.freq !== 'TWR' ? 'good day' : 'thanks'}`);
+        if (ac.need && /^(Airborne|Ready for transfer|Back on)/.test(ac.need)) ac.need = null;
+        continue;
+      }
+      if (ac.kind === 'DEP' && ac.freq === 'TWR') { ac.freq = 'RAD'; if (ac.need && /^(Airborne|Back on)/.test(ac.need)) ac.need = null; }
+      else if (ac.kind === 'DEP') { ac.handed = true; ac.need = null; }
+      else { ac.freq = 'TWR'; if (ac.need === 'Back on frequency') ac.need = null; }
       said.push(`contact ${unit[0]} ${unit[1]}`); reads.push(`${unit[1]}, ${ac.handed ? 'good day' : 'thanks'}`);
     } else if (t === 'TOW') {
       if (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to) { sys(`${ac.cs} has no tow request.`); continue; }
@@ -665,9 +695,10 @@ function command(str){
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
       const dir = { E:'east', EAST:'east', W:'west', WEST:'west' }[toks[i+1]]; if (dir) i++;
-      const face = dir || pushRec(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face;
+      const face = dir || pushRec(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, S.rwy);
       setPath(ac, pushPath(ac, face), 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
-      said.push(`start-up and push back approved, facing ${face}, QNH ${S.wx.qnh}`); reads.push(`start and push approved, facing ${face}, QNH ${S.wx.qnh}`);
+      const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
+      said.push(`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb altitude 4,000 feet, squawk ${ac.sqk}, start-up and push back approved, facing ${face}, QNH ${S.wx.qnh}`); reads.push(`cleared ${dn}, ${sidSpoken(ac.sid)}, 4,000 feet, squawk ${ac.sqk}, start and push approved facing ${face}, QNH ${S.wx.qnh}`);
     } else if (t === 'TAXI') {
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
       let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
@@ -701,10 +732,13 @@ function command(str){
       if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state)) { sys(`${ac.cs} is not ready for takeoff.`); continue; }
       if (S.wx.vis < 1000) { atc(ac, `runway ${S.rwy}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${S.rwy}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
+      { const R = ac.rel, who = relUnit(ac);
+        if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : ': request one with REL first'}.`, true); continue; }
+        if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
+      const sid = sidName(ac.gate, S.rwy), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
       ac.cto = true; ac.need = null; ac.depRwy = S.rwy;
       if (ac.state === 'HOLDPT') startLineUp(ac);
-      const after = S.rwy === '27' ? 'after departure turn left heading 200, climb altitude 4,000 feet' : 'after departure climb straight ahead to 1,500 feet then turn right heading 160, climb altitude 4,000 feet';
-      said.push(`${after}, runway ${S.rwy}, cleared for takeoff, ${windPhrase()}`); reads.push(`${S.rwy === '27' ? 'left heading 200' : 'straight ahead then right heading 160'}, 4,000 feet, cleared for takeoff runway ${S.rwy}`);
+      said.push(`${chg ? 'amended clearance, ' : ''}${sidSpoken(sid)} departure, runway ${S.rwy}, cleared for takeoff, ${windPhrase()}`); reads.push(`${chg ? 'amended, ' : ''}${sidSpoken(sid)}, cleared for takeoff runway ${S.rwy}`);
       if (ac.state === 'LINEDUP') beginTakeoff(ac);
     } else if (t === 'VAC') {
       if (ac.state !== 'ROLLED' && ac.state !== 'ROLLOUT') { sys(`${ac.cs} is not on the runway.`); continue; }
@@ -713,10 +747,15 @@ function command(str){
       setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); turnRound(ac); });
       const stp = ac.stand ? `stand ${ac.stand.id}` : 'as directed';
       said.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}, taxi ${stp}${viaWords(ac.taxiVia || [])}`); reads.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate ${PHON[ac.exit]}, ${stp}`);
+    } else if (t === 'REL') {
+      if (ac.kind !== 'DEP' || air) { sys(`${ac.cs} doesn't need a departure release.`); continue; }
+      if (ac.rel && ac.rel.st === 'REQ') { sys(`Release for ${ac.cs} already requested: ${relUnit(ac)} will call back.`); continue; }
+      if (ac.rel && ac.rel.st === 'OK') { sys(`${ac.cs} is already released until ${zt(ac.rel.until).slice(0,5)}.`); continue; }
+      requestRelease(ac);
     } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
-  if (said.length) { atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call') ac.need = null; emit('cmd', { ac, toks }); }
+  if (said.length) { atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency') ac.need = null; emit('cmd', { ac, toks }); }
   renderSel(); renderStrips(true);
 }
 function willIntercept(ac, F){
@@ -776,6 +815,8 @@ function step(dt){
   for (const ac of S.acs) {
     if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
+    if (ac.rel) stepRelease(ac);
+    if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; S.score.pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
   }
   S.acs = S.acs.filter(ac => {
@@ -888,8 +929,11 @@ function stepAir(ac, dt){
   if (ac.kind === 'DEP' && (ac.state === 'AIRBORNE' || ac.state === 'CLIMB')) {
     if (ac.depRwy === '09' && !ac.turned && ac.alt >= 1500) { ac.turned = true; if (ac.mode === 'HDG' && ac.tgtHdg === Math.round(CRS09)) { ac.tgtHdg = 160; ac.turnDir = 1; } }
     if (ac.alt > 1000 && !ac.calledAir) { ac.calledAir = true; if (ac.freq === 'TWR') ac.need = 'Airborne, transfer to Radar'; }
-    if (ac.freq === 'RAD' && !ac.calledRad) { ac.calledRad = true; ac.state = 'CLIMB'; pilot(ac, `Gibraltar Radar, passing ${Math.round(ac.alt/100)*100} feet climbing ${altShort(ac.tgtAlt)}, heading ${hdg3(ac.hdg)}`); }
-    if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && (ac.y < xy(36.095,0)[1] || ac.x > 2.5 || ac.alt > 3900)) { ac.reqDct = true; const fx = EXIT_ROUTE[ac.gate][0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
+    if (ac.freq === 'RAD' && !ac.calledRad) { ac.calledRad = true; ac.state = 'CLIMB'; pilot(ac, `Gibraltar Radar, passing ${Math.round(ac.alt/100)*100} feet climbing ${altShort(ac.tgtAlt)}, ${ac.onSid && ac.sid ? sidSpoken(ac.sid) + ' departure' : 'heading ' + hdg3(ac.hdg)}`); }
+    const clearRock = ac.y < xy(36.095,0)[1] || ac.x > 2.5 || ac.alt > 3900;
+    if (ac.onSid && ac.mode === 'HDG' && clearRock && (ac.alt > 3500 || !crossesRock(ac, WP[EXIT_ROUTE[ac.gate][0]].p))) { ac.onSid = false; ac.reqDct = true; ac.mode = 'NAV'; ac.route = EXIT_ROUTE[ac.gate].slice(); }
+    if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && clearRock) { ac.reqDct = true; const fx = EXIT_ROUTE[ac.gate][0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
+    if (ac.calledRad && !ac.reqClimb && !ac.need && ac.alt > 3600 && (ac.tgtAlt ?? 0) <= 4000) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
     if (ac.mode === 'NAV' && !ac.route.length) { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
     if (ac.calledRad && !ac.handed && dGBR > 22 && !ac.askedHo) { ac.askedHo = true; ac.need = 'Ready for transfer'; }
   }
@@ -988,7 +1032,7 @@ function stepGround(ac, dt){
     if (ac.ias >= ac.perf.vr) {
       ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = ELEV + 10; ac.ias = ac.perf.vr;
       if (ac.depRwy === '27') { ac.tgtHdg = 200; ac.turnDir = -1; } else { ac.tgtHdg = Math.round(CRS09); ac.turnDir = 0; }
-      ac.tgtAlt = ac.cleared = 4000; S.score.pts += 10;
+      ac.tgtAlt = ac.cleared = 4000; ac.onSid = true; S.score.pts += 10;
       emit('airborne', ac);
     }
   }
