@@ -663,3 +663,16 @@ button.atis-letter:hover { background: var(--amber-soft); }
   .mtabs { grid-row: 3; grid-column: 1 / span 2; }
   .app .mtabs button { min-height: 40px; flex-direction: row; justify-content: center; padding: 6px 2px; }
 }
+
+/* academy figures */
+.figwrap { position: relative; }
+.fig .pin { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font: 700 12.5px/24px var(--font-body); text-align: center; box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.25); pointer-events: none; }
+.fig figcaption b { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; margin-right: 3px; }
+.fig.flow { background: var(--panel); }
+.fig.flow svg { padding: 6px 4px; }
+.fl-line line { stroke: var(--line-2); stroke-width: 3; }
+.fl-win rect { fill: color-mix(in srgb, var(--ok) 14%, transparent); stroke: var(--ok); stroke-dasharray: 4 3; }
+.fl-win text { fill: var(--ok); font: 600 12px var(--font-body); }
+.fl-st circle { fill: var(--panel); stroke: var(--accent); stroke-width: 3; } .fl-st circle.tel { stroke: var(--pink); }
+.fl-tx text { fill: var(--ink); font: 700 13px var(--font-data); } .fl-tx text.tel { fill: var(--pink); font-weight: 600; }
+.fl-sub text { fill: var(--dim); font: 500 11.5px var(--font-body); }

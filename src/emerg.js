@@ -162,11 +162,11 @@ S.listeners.push((ev, ac) => {
 // draw: closed runway crosses, a figure on the crossing during an incursion
 function drawRwyBlock(){
   const E = S.emg; if (!E || (!E.rwyBlock && !E.incursion)) return;
-  const pulse = 0.55 + 0.45*Math.sin(performance.now()/220);
+  const pulse = E.still ? 1 : 0.55 + 0.45*Math.sin(performance.now()/220);
   cx.save(); cx.strokeStyle = C.conf; cx.lineWidth = 3; cx.globalAlpha = pulse;
   if (E.rwyBlock) for (const m of [RWY_M*0.18, RWY_M*0.5, RWY_M*0.82]) {
-    const a = rm(m - 30, -14), b = rm(m + 30, 14), c2 = rm(m - 30, 14), d = rm(m + 30, -14);
-    cx.beginPath(); cx.moveTo(sx(a[0]), sy(a[1])); cx.lineTo(sx(b[0]), sy(b[1])); cx.moveTo(sx(c2[0]), sy(c2[1])); cx.lineTo(sx(d[0]), sy(d[1])); cx.stroke();
+    const c0 = rm(m, 0), X = sx(c0[0]), Y = sy(c0[1]), k = Math.max(7, 30*M2NM*V.scale);   // never smaller than a few pixels
+    cx.beginPath(); cx.moveTo(X - k, Y - k*0.5); cx.lineTo(X + k, Y + k*0.5); cx.moveTo(X - k, Y + k*0.5); cx.lineTo(X + k, Y - k*0.5); cx.stroke();
   }
   if (E.incursion) { const p = rm(xingM(4), 4); cx.fillStyle = C.conf; cx.beginPath(); cx.arc(sx(p[0]), sy(p[1]), 6, 0, 7); cx.fill(); }
   cx.restore();

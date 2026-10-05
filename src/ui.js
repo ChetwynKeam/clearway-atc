@@ -628,7 +628,7 @@ function drawTo(canvas, k, opts = {}){
   if (W && H) {
     viewFor(k); if (opts.tweak) opts.tweak(V);
     if (opts.acs) S.acs = opts.acs; if (opts.proc !== undefined) S.showProc = opts.proc;
-    draw(); out = { cx: V.cx, cy: V.cy, scale: V.scale, W, H };
+    draw(); if (opts.post) opts.post(); out = { cx: V.cx, cy: V.cy, scale: V.scale, W, H, pins: opts.pins ? opts.pins.map(p => [sx(p[0]), sy(p[1])]) : null };
   }
   cv = sv.cv; cx = sv.cx; W = sv.W; H = sv.H; DPR = sv.DPR; V.cx = sv.vx; V.cy = sv.vy; V.scale = sv.vs; V.name = sv.vn; S.acs = sv.acs; S.showProc = sv.proc;
   setTheme(th);

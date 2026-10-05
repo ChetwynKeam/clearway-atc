@@ -218,6 +218,62 @@ function renderFigure(){
   const c = $('figAerodrome'); if (!c) return;
   c.style.aspectRatio = '2.25 / 1';
   drawTo(c, 'gnd', { acs: [], proc: false });
+  renderAcademyFigs();
+}
+// ── Academy figures, drawn live from the simulator so they always match what you see on the scope ──
+const dirNM = h => [Math.sin(h*D2R), Math.cos(h*D2R)];
+const addv = (p, h, d) => [p[0] + dirNM(h)[0]*d, p[1] + dirNM(h)[1]*d];
+function sidPath(gate, rw){
+  const pts = [];
+  if (rw === '27') { const p0 = rm(150, 0); pts.push(p0); let p = addv(p0, CRS27, 0.6); pts.push(p); for (const h of [250, 230, 212]) { p = addv(p, h, 0.35); pts.push(p); } p = addv(p, 200, 2.6); pts.push(p); }
+  else { const p0 = rm(RWY_M - 150, 0); pts.push(p0); let p = addv(p0, CRS09, 1.3); pts.push(p); for (const h of [110, 135, 152]) { p = addv(p, h, 0.35); pts.push(p); } p = addv(p, 160, 2.2); pts.push(p); }
+  for (const id of EXIT_ROUTE[gate]) pts.push(WP[id].p);
+  return pts;
+}
+function figPins(fig, pins){
+  fig.querySelectorAll('.pin').forEach(p => p.remove());
+  const cv = fig.querySelector('canvas'), r = cv.getBoundingClientRect();
+  pins.forEach(([x, y], i) => { const b = document.createElement('span'); b.className = 'pin'; b.textContent = i + 1; b.style.left = (x/r.width*100) + '%'; b.style.top = (y/r.height*100) + '%'; fig.querySelector('.figwrap').appendChild(b); });
+}
+function renderAcademyFigs(){
+  const acs = demoTraffic();
+  // 1 · console anatomy
+  const fc = $('figConsole');
+  if (fc) {
+    fc.style.aspectRatio = '1.7 / 1';
+    const fin = acs.find(a => a.cs === 'BAW492'), tom = acs.find(a => a.cs === 'TOM6262'), ram = acs.find(a => a.cs === 'RAM1473');
+    const r164 = R164.reduce((a, p) => [a[0] + p[0]/R164.length, a[1] + p[1]/R164.length], [0, 0]);
+    const o = drawTo(fc, 'app', { proc: true, acs, tweak: v => { v.scale *= 1.7; v.cx += 2.5; v.cy += 3.5; }, pins: [[tom.x - 1.6, tom.y - 0.4], [ram.x - 1.6, ram.y - 0.4], [fin.x + 0.6, fin.y - 1.6], [WP.UPMUP.p[0] - 1.2, WP.UPMUP.p[1] - 1.2], r164] });
+    if (o) figPins(fc.closest('figure'), o.pins);
+  }
+  // 2 · departure routes
+  const fs = $('figSids');
+  if (fs) {
+    fs.style.aspectRatio = '1.5 / 1';
+    drawTo(fs, 'app', { proc: false, acs: [], tweak: v => { v.scale *= 1.3; v.cx += 0.5; v.cy -= 5.5; }, post: () => {
+      const col = { '27': '#1f5eff', '09': '#c2700a' };
+      cx.save(); cx.lineJoin = cx.lineCap = 'round';
+      for (const rw of ['27', '09']) for (const g of ['E', 'W', 'S']) {
+        const pts = sidPath(g, rw);
+        cx.strokeStyle = 'rgba(255,255,255,.85)'; cx.lineWidth = 6; cx.setLineDash([]); cx.beginPath(); pts.forEach((p, i) => i ? cx.lineTo(sx(p[0]), sy(p[1])) : cx.moveTo(sx(p[0]), sy(p[1]))); cx.stroke();
+        cx.strokeStyle = col[rw]; cx.lineWidth = 2.6; cx.setLineDash(rw === '09' ? [8, 6] : []); cx.stroke();
+      }
+      cx.setLineDash([]); cx.font = `700 12.5px ${FONT_D}`;
+      const lab = { E: [8, -6], W: [-10, -10], S: [12, 4] };
+      for (const g of ['E', 'W', 'S']) { const p = WP[EXIT_FIX[g]].p, X = sx(p[0]) + lab[g][0], Y = sy(p[1]) + lab[g][1]; const t = `${EXIT_FIX[g]} 1A · 1B`; const w = cx.measureText(t).width; const X2 = g === 'W' ? X - w : X; cx.fillStyle = 'rgba(255,255,255,.92)'; cx.fillRect(X2 - 4, Y - 13, w + 8, 18); cx.fillStyle = '#0c1b2e'; cx.fillText(t, X2, Y); }
+      cx.restore();
+    } });
+  }
+  // 3 · emergency on short final with the runway closed
+  const fe = $('figEmerg');
+  if (fe) {
+    fe.style.aspectRatio = '2.2 / 1';
+    const fin = rm(THR27_M + 0.75*1852, 0), hp = GN[HOLDS.A.node].p;
+    const may = new Aircraft({ cs: 'EXS96K', t: 'B738', k: 'ARR', o: 'EGCC' }); Object.assign(may, { kind: 'ARR', state: 'FINAL', mode: 'FINAL', app: '27', freq: 'TWR', x: fin[0], y: fin[1], hdg: CRS27, trk: CRS27, alt: 450, gs: 150, vs: -700, emerg: { k: 'MAYDAY', why: 'engine failure', ack: true }, sqk: '7700', need: 'Runway closed' });
+    const dep = new Aircraft({ cs: 'EZY8902', t: 'A20N', k: 'DEP', d: 'EGKK' }); Object.assign(dep, { kind: 'DEP', ground: true, state: 'HOLDPT', hp: 'A', x: hp[0], y: hp[1], hdg: 180, trk: 180, rel: { st: 'OK', until: 1e9 } });
+    const keep = S.emg; S.emg = { rwyBlock: { why: 'debris', until: 1e12 }, still: true };
+    try { const c0 = rm(RWY_M*0.75, 0); drawTo(fe, 'twr', { proc: true, acs: [may, dep], tweak: v => { v.cx = c0[0] + 0.25; v.cy = c0[1] - 0.12; v.scale *= 2.1; } }); } finally { S.emg = keep; }
+  }
 }
 
 // ── guided exercises (coach card) ──
