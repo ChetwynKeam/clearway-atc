@@ -180,7 +180,9 @@ window.__phrase = phraseToCmd;
 // ═════════════════════════ live METAR ═════════════════════════
 // Pulls the current LXGB report from the NOAA Aviation Weather Center when the page is allowed to reach it, then refreshes
 // every 10 minutes. A new report mid-session is applied like a weather update: new ATIS letter, runway advice.
-const LIVE_SRC = ['https://aviationweather.gov/api/data/metar?ids=LXGB&format=raw&hours=3'];
+// Sources in order: metar.txt beside the page (kept current by a scheduled job in the site's repo, so no cross-site
+// request is needed), then VATSIM's METAR service, then the Aviation Weather Center.
+const LIVE_SRC = ['metar.txt', 'https://metar.vatsim.net/LXGB', 'https://aviationweather.gov/api/data/metar?ids=LXGB&format=raw&hours=3'];
 const liveBox = $('liveWx'), liveSt = $('liveWxSt');
 let liveTimer = null, liveLast = '', liveFailed = false;
 function liveStatus(t, cls){ liveSt.hidden = !t; liveSt.textContent = t; liveSt.className = 'fine' + (cls ? ' ' + cls : ''); }
@@ -188,7 +190,7 @@ async function fetchMetar(){
   for (const url of LIVE_SRC) {
     try {
       const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
-      const r = await fetch(url, { signal: ctl.signal, cache: 'no-store' }); clearTimeout(to);
+      const r = await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Date.now(), { signal: ctl.signal, cache: 'no-store' }); clearTimeout(to);
       if (!r.ok) continue;
       const line = (await r.text()).split('\n').map(x => x.trim()).find(x => /^(METAR |SPECI )?LXGB \d{6}Z/.test(x));
       if (line) return line.replace(/^(METAR|SPECI) /, '').replace(/=$/, '');
