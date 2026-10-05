@@ -1,0 +1,45 @@
+name: Fetch OSM airfield data
+# One-off: downloads Gibraltar aerodrome geometry and a few reference map tiles from OpenStreetMap
+# into the osm-data branch, used to align the simulator's ground markings with the street map.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/osm-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download aerodrome geometry and reference tiles
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          Q='[out:json][timeout:90];(way[aeroway](36.138,-5.368,36.162,-5.328);node[aeroway](36.138,-5.368,36.162,-5.328);relation[aeroway](36.138,-5.368,36.162,-5.328);way[building](36.146,-5.362,36.158,-5.335);way[highway](36.140,-5.362,36.160,-5.335);way[barrier](36.146,-5.362,36.158,-5.335););out geom;'
+          for H in https://overpass-api.de https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+            curl -sSf -A "$UA" --data-urlencode "data=$Q" "$H/api/interpreter" -o osm.json && break || sleep 10
+          done
+          ls -la
+          mkdir tiles
+          cat > list.py <<'PY'
+          import math, sys
+          z = int(sys.argv[1])
+          def t(lat, lon):
+              n = 2**z; r = math.radians(lat)
+              return int((lon + 180)/360*n), int((1 - math.log(math.tan(r) + 1/math.cos(r))/math.pi)/2*n)
+          x0, y0 = t(36.1575, -5.3620); x1, y1 = t(36.1460, -5.3350)
+          for x in range(x0, x1 + 1):
+              for y in range(y0, y1 + 1): print(z, x, y)
+          PY
+          for z in 16 17 18; do
+            python3 list.py $z | while read Z X Y; do curl -sSf -A "$UA" "https://tile.openstreetmap.org/$Z/$X/$Y.png" -o "tiles/${Z}_${X}_${Y}.png" || true; sleep 0.25; done
+          done
+          rm list.py; ls tiles | wc -l
+      - name: Publish to osm-data branch
+        run: |
+          cd out
+          git init -q -b osm-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OSM aerodrome data and reference tiles"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" osm-data
