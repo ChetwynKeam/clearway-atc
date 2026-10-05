@@ -19,6 +19,7 @@ const GEO = {r('geo.json').strip()};
 {r('sim.js')}
 {r('ui.js')}
 {r('ground.js')}
+{r('tiles.js')}
 {r('voice.js')}
 {r('site.js')}
 </script>

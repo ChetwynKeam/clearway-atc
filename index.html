@@ -761,6 +761,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
       <button id="tgTalk" class="talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Hold to talk</button>
       <button id="tgSetup">Session</button>
+      <button id="tgMap" title="Background for the tower and ground views: satellite photo, street map or drawn chart">Satellite</button>
       <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
       <button id="tgFull" title="Full screen">Full screen</button>
     </div>
@@ -2063,16 +2064,21 @@ function draw(){
   // land (even-odd so traced harbours/bays inside the chart frame stay water)
   cx.fillStyle = ground ? C.ground : C.land;
   for (const pg of LAND) { cx.beginPath(); for (const r of pg) { r.forEach((p,i) => { const X = sx(p[0]), Y = sy(p[1]); i ? cx.lineTo(X,Y) : cx.moveTo(X,Y); }); cx.closePath(); } cx.fill('evenodd'); }
-  if (ground) { drawGroundBase(); drawRoads(); }
+  const img = ground && mapImagery();
+  if (img) drawImagery();
+  else if (ground) { drawGroundBase(); drawRoads(); }
   cx.strokeStyle = C.coast; cx.lineWidth = ground ? 1.4 : 1; cx.globalAlpha = ground ? 0.8 : 1;
-  cx.save(); if (ground && typeof AIRSIDE !== 'undefined') { cx.beginPath(); cx.rect(0, 0, W, H); AIRSIDE.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](sx(p[0]), sy(p[1]))); cx.closePath(); cx.clip('evenodd'); }
-  for (const l of COAST) { poly(l, false); cx.stroke(); } cx.restore(); cx.globalAlpha = 1;
-  if (!ground) drawRadarMap(); else drawRockRelief();
+  if (!img) { cx.save(); if (ground && typeof AIRSIDE !== 'undefined') { cx.beginPath(); cx.rect(0, 0, W, H); AIRSIDE.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](sx(p[0]), sy(p[1]))); cx.closePath(); cx.clip('evenodd'); }
+  for (const l of COAST) { poly(l, false); cx.stroke(); } cx.restore(); }
+  cx.globalAlpha = 1;
+  if (!ground) drawRadarMap(); else if (!img) drawRockRelief();
   if (S.showProc) drawProcedures();
   drawAirport();
   if (S.preview) drawPreview(S.preview);
   for (const ac of S.acs) if (!ac.ground) drawAc(ac);
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
+  if (img) drawImageryCredit();
+  else if (ground && MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
   // scale bar
   cx.fillStyle = rgba('lab', .75); cx.font = `11px ${FONT_D}`;
   const nm = sc > 900 ? 0.05 : sc > 300 ? 0.2 : sc > 100 ? 0.5 : sc > 30 ? 1 : 5, lp = nm*sc;
@@ -2171,6 +2177,8 @@ function drawAirport(){
     return;
   }
   const lw = m => Math.max(1, m*mpx);
+  const IMG = mapImagery(), st = S.xing.st;
+  if (!IMG) {
   // airfield ground (D1: non-load-bearing surfaces) and roads
   cx.lineJoin = 'round'; cx.lineCap = 'round';
   cx.strokeStyle = C.road; cx.lineWidth = lw(14);
@@ -2204,9 +2212,10 @@ function drawAirport(){
   drawPavingDetail(c, path, mpx);
   drawBuildings(c, path, mpx);
   // Winston Churchill Avenue across the runway
-  const st = S.xing.st;
   cx.save(); cx.globalAlpha = 0.55; cx.strokeStyle = C.road; cx.lineWidth = lw(14); cx.lineCap = 'butt'; path([[985,-22],[1000,22]], false); cx.stroke(); cx.restore();
+  }
   if (sc > 150) {
+    if (!IMG) {
     // runway markings: AD 2.9 only says the TDZ marks are non-standard, so the set below follows the ICAO Annex 14 layout
     cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
     cx.lineWidth = lw(0.9); path([[0,21.6],[RWY_M,21.6]], false); cx.stroke(); path([[0,-21.6],[RWY_M,-21.6]], false); cx.stroke();   // side stripes
@@ -2248,6 +2257,7 @@ function drawAirport(){
       cx.save(); cx.translate(...c(...nose)); cx.rotate(s.hdg*D2R); cx.fillStyle = C.yellow; cx.fillRect(-4*mpx-2, -0.6, 8*mpx+4, 1.4); cx.restore();
     }
     drawStandDetail(c, path, mpx);
+    } else drawStandTags(c, mpx);
     // closed portion of B and B1: unserviceable crosses
     cx.strokeStyle = 'rgba(255,255,255,.75)'; cx.lineWidth = lw(0.8);
     for (const [m,o] of [[1648,TW.B],[1785,92]]) { const [X,Y] = c(m,o), r = 6*mpx+2; cx.beginPath(); cx.moveTo(X-r,Y-r); cx.lineTo(X+r,Y+r); cx.moveTo(X+r,Y-r); cx.lineTo(X-r,Y+r); cx.stroke(); }
@@ -2255,7 +2265,7 @@ function drawAirport(){
     for (const [k, Hd] of Object.entries(HOLDS)) {
       const s = Math.sign(Hd.off);
       cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
-      for (const [d, dash] of [[0.9,false],[0.3,false],[-0.3,true],[-0.9,true]]) { cx.setLineDash(dash ? [1*mpx+1, 1*mpx+1] : []); path([[Hd.m-9.5, Hd.off + s*d],[Hd.m+9.5, Hd.off + s*d]], false); cx.stroke(); }
+      if (!IMG) for (const [d, dash] of [[0.9,false],[0.3,false],[-0.3,true],[-0.9,true]]) { cx.setLineDash(dash ? [1*mpx+1, 1*mpx+1] : []); path([[Hd.m-9.5, Hd.off + s*d],[Hd.m+9.5, Hd.off + s*d]], false); cx.stroke(); }
       cx.setLineDash([]);
       if (sc > 220) {
         const fs = Math.max(9, 3.4*mpx), q = c(Hd.m + 14, Hd.off + s*2); const txt = `${k}  27-09`; cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(txt).width;
@@ -2296,7 +2306,8 @@ function drawAirport(){
   }
   if (sc > 180 && sc < 2400) {
     cx.fillStyle = rgba('lab', .72); cx.font = `600 12px ${FONT_L}`;
-    const lab = (txt, m, off) => { const p = c(m, off); cx.fillText(txt, p[0], p[1]); };
+    if (IMG) { cx.fillStyle = C.name === 'dark' ? 'rgba(235,242,245,.92)' : '#fff'; cx.strokeStyle = 'rgba(0,0,0,.6)'; cx.lineWidth = 3; cx.lineJoin = 'round'; }
+    const lab = (txt, m, off) => { const p = c(m, off); if (IMG) cx.strokeText(txt, p[0], p[1]); cx.fillText(txt, p[0], p[1]); };
     lab('TERMINAL', 1225, 300); lab('CIVIL APRON', 1235, 228); lab('NORTH APRON', 1450, 240); lab('SOUTH APRON · RAF', 1000, -230); lab('ATC', 1056, 232);
     lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75);
   }
@@ -2912,6 +2923,93 @@ function drawBuildings(c, path, mpx){
   // fuel installation on the south apron (vent pipe marked on D1)
   for (const [m, o, r] of [[1105, -215, 6], [1093, -228, 5]]) { const q = c(m, o); cx.fillStyle = C.gShadow; cx.beginPath(); cx.arc(q[0] + 2*mpx, q[1] + 2*mpx, r*mpx, 0, 7); cx.fill(); cx.fillStyle = C.gRoof; cx.strokeStyle = C.gRoofEdge; cx.beginPath(); cx.arc(q[0], q[1], r*mpx, 0, 7); cx.fill(); cx.stroke(); }
 }
+
+// ═════════════════════════ map imagery (tower and ground views) ═════════════════════════
+// Web Mercator tiles drawn under the airfield overlays. Each tile's corners go through the same xy() projection
+// as everything else, so imagery and sim geometry share one frame. Falls back to the drawn chart when tiles can't
+// load (the claude.ai viewer blocks outside images) or when the player picks "Drawn".
+const MAP_SRC = {
+  sat: { name: 'Satellite', max: 19, url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`,
+         credit: 'Imagery © Esri, Maxar, Earthstar Geographics' },
+  street: { name: 'Map', max: 19, url: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`,
+            credit: '© OpenStreetMap contributors' }
+};
+const TILE = { cache: new Map(), ok: 0, err: 0, failed: false, use: 0 };
+let MAP_LAYER = 'sat';
+try { const v = localStorage.getItem('cw-map'); if (v === 'drawn' || MAP_SRC[v]) MAP_LAYER = v; } catch(_) {}
+
+const tx2lon = (x, z) => x/2**z*360 - 180;
+const ty2lat = (y, z) => Math.atan(Math.sinh(Math.PI*(1 - 2*y/2**z)))*R2D;
+const lon2tx = (lon, z) => (lon + 180)/360*2**z;
+const lat2ty = (lat, z) => { const r = lat*D2R; return (1 - Math.log(Math.tan(r) + 1/Math.cos(r))/Math.PI)/2*2**z; };
+const xy2ll = (x, y) => [y/60 + LAT0, x/(60*COSL) + LON0];
+
+function tileImg(src, z, x, y){
+  const key = `${src}/${z}/${x}/${y}`; let t = TILE.cache.get(key);
+  if (!t) {
+    if (TILE.cache.size > 700) { const old = [...TILE.cache.entries()].sort((a, b) => a[1].use - b[1].use).slice(0, 200); for (const [k] of old) TILE.cache.delete(k); }
+    const img = new Image(); t = { img, ok: false, bad: false, use: 0 };
+    img.onload = () => { t.ok = true; TILE.ok++; };
+    img.onerror = () => { t.bad = true; TILE.err++; if (TILE.ok === 0 && TILE.err >= 6) TILE.failed = true; };
+    img.src = MAP_SRC[src].url(z, x, y); TILE.cache.set(key, t);
+  }
+  t.use = ++TILE.use; return t;
+}
+const peekTile = (src, z, x, y) => TILE.cache.get(`${src}/${z}/${x}/${y}`);
+
+// true when the scope should show imagery instead of the drawn ground
+function mapImagery(){
+  return MAP_LAYER !== 'drawn' && !TILE.failed && V.scale > 70 && cv && cv.id === 'scope';
+}
+function drawImagery(){
+  const src = MAP_LAYER, S0 = MAP_SRC[src];
+  const [la1, lo1] = xy2ll(wx2(0), wy2(0)), [la2, lo2] = xy2ll(wx2(W), wy2(H));
+  const mpp = 1852/V.scale/DPR, res0 = 156543.034*Math.cos(LAT0*D2R);
+  let z = clamp(Math.round(Math.log2(res0/mpp) + 0.6), 12, S0.max);
+  let x0, x1, y0, y1;
+  for (;;) {
+    x0 = Math.floor(lon2tx(lo1, z)); x1 = Math.floor(lon2tx(lo2, z)); y0 = Math.floor(lat2ty(la1, z)); y1 = Math.floor(lat2ty(la2, z));
+    if ((x1 - x0 + 1)*(y1 - y0 + 1) <= 160 || z <= 12) break; z--;
+  }
+  cx.save(); cx.imageSmoothingQuality = 'high';
+  const rect = (zz, x, y) => { const a = xy(ty2lat(y, zz), tx2lon(x, zz)), b = xy(ty2lat(y + 1, zz), tx2lon(x + 1, zz)); return [sx(a[0]), sy(a[1]), sx(b[0]), sy(b[1])]; };
+  for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+    const t = tileImg(src, z, x, y), [X0, Y0, X1, Y1] = rect(z, x, y);
+    if (t.ok) { cx.drawImage(t.img, Math.floor(X0), Math.floor(Y0), Math.ceil(X1 - X0) + 1, Math.ceil(Y1 - Y0) + 1); continue; }
+    // not loaded yet: stretch the nearest cached ancestor so the view never flashes blank
+    for (let up = 1; up <= 5; up++) {
+      const zz = z - up, k = 2**up, px = Math.floor(x/k), py = Math.floor(y/k), p = peekTile(src, zz, px, py);
+      if (p && p.ok) { const s = 256/k; cx.drawImage(p.img, (x - px*k)*s, (y - py*k)*s, s, s, Math.floor(X0), Math.floor(Y0), Math.ceil(X1 - X0) + 1, Math.ceil(Y1 - Y0) + 1); break; }
+    }
+  }
+  // dark theme: dim the photo to a night scene so lighting and data blocks stand out
+  if (C.name === 'dark') { cx.fillStyle = src === 'sat' ? 'rgba(2,10,16,.58)' : 'rgba(2,10,16,.72)'; cx.fillRect(0, 0, W, H); }
+  cx.restore();
+}
+function drawImageryCredit(){
+  const txt = MAP_SRC[MAP_LAYER].credit; cx.font = `10px ${FONT_L}`; const w = cx.measureText(txt).width + 10;
+  cx.fillStyle = 'rgba(255,255,255,.72)'; cx.fillRect(W - 12 - w, H - 19, w, 15); cx.fillStyle = '#334'; cx.fillText(txt, W - 7 - w, H - 8);
+}
+// stand numbers only (the photo already shows the painted stand markings)
+function drawStandTags(c, mpx){
+  if (V.scale <= 160) return;
+  for (const s of STANDS) {
+    const box = s.area === 'civil' ? 40 : s.area === 'north' ? 32 : 46, h = s.hdg*D2R, bh = box*mpx;
+    const fs = Math.max(9, 3.4*mpx); cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(s.id).width + fs*0.6;
+    cx.save(); cx.translate(sx(s.p[0]), sy(s.p[1])); cx.rotate(h);
+    const flip = Math.cos(h) < 0; if (flip) cx.rotate(Math.PI);
+    const yb = flip ? -bh*0.42 - fs*0.2 : bh*0.42 - fs*1.0;
+    cx.fillStyle = '#111'; cx.fillRect(-tw/2, yb, tw, fs*1.2); cx.fillStyle = C.yellow; cx.textAlign = 'center'; cx.fillText(s.id, 0, yb + fs*0.95); cx.textAlign = 'left';
+    cx.restore();
+  }
+}
+function setMapLayer(k){
+  MAP_LAYER = k; TILE.failed = false; TILE.ok = 0; TILE.err = 0;
+  const bt = document.getElementById('tgMap'); if (bt) bt.textContent = k === 'drawn' ? 'Drawn map' : MAP_SRC[k].name;
+  try { localStorage.setItem('cw-map', k); } catch(_) {}
+}
+{ const bt = document.getElementById('tgMap'); if (bt) bt.onclick = () => setMapLayer(MAP_LAYER === 'sat' ? 'street' : MAP_LAYER === 'street' ? 'drawn' : 'sat'); }
+setMapLayer(MAP_LAYER);
 
 // ═════════════════════════ voice: spoken commands and accented pilots ═════════════════════════
 // Speech in: the browser's speech recogniser hears standard phraseology ("Speedbird four niner two, turn left heading

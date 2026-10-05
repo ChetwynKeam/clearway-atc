@@ -50,16 +50,21 @@ function draw(){
   // land (even-odd so traced harbours/bays inside the chart frame stay water)
   cx.fillStyle = ground ? C.ground : C.land;
   for (const pg of LAND) { cx.beginPath(); for (const r of pg) { r.forEach((p,i) => { const X = sx(p[0]), Y = sy(p[1]); i ? cx.lineTo(X,Y) : cx.moveTo(X,Y); }); cx.closePath(); } cx.fill('evenodd'); }
-  if (ground) { drawGroundBase(); drawRoads(); }
+  const img = ground && mapImagery();
+  if (img) drawImagery();
+  else if (ground) { drawGroundBase(); drawRoads(); }
   cx.strokeStyle = C.coast; cx.lineWidth = ground ? 1.4 : 1; cx.globalAlpha = ground ? 0.8 : 1;
-  cx.save(); if (ground && typeof AIRSIDE !== 'undefined') { cx.beginPath(); cx.rect(0, 0, W, H); AIRSIDE.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](sx(p[0]), sy(p[1]))); cx.closePath(); cx.clip('evenodd'); }
-  for (const l of COAST) { poly(l, false); cx.stroke(); } cx.restore(); cx.globalAlpha = 1;
-  if (!ground) drawRadarMap(); else drawRockRelief();
+  if (!img) { cx.save(); if (ground && typeof AIRSIDE !== 'undefined') { cx.beginPath(); cx.rect(0, 0, W, H); AIRSIDE.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](sx(p[0]), sy(p[1]))); cx.closePath(); cx.clip('evenodd'); }
+  for (const l of COAST) { poly(l, false); cx.stroke(); } cx.restore(); }
+  cx.globalAlpha = 1;
+  if (!ground) drawRadarMap(); else if (!img) drawRockRelief();
   if (S.showProc) drawProcedures();
   drawAirport();
   if (S.preview) drawPreview(S.preview);
   for (const ac of S.acs) if (!ac.ground) drawAc(ac);
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
+  if (img) drawImageryCredit();
+  else if (ground && MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
   // scale bar
   cx.fillStyle = rgba('lab', .75); cx.font = `11px ${FONT_D}`;
   const nm = sc > 900 ? 0.05 : sc > 300 ? 0.2 : sc > 100 ? 0.5 : sc > 30 ? 1 : 5, lp = nm*sc;
@@ -158,6 +163,8 @@ function drawAirport(){
     return;
   }
   const lw = m => Math.max(1, m*mpx);
+  const IMG = mapImagery(), st = S.xing.st;
+  if (!IMG) {
   // airfield ground (D1: non-load-bearing surfaces) and roads
   cx.lineJoin = 'round'; cx.lineCap = 'round';
   cx.strokeStyle = C.road; cx.lineWidth = lw(14);
@@ -191,9 +198,10 @@ function drawAirport(){
   drawPavingDetail(c, path, mpx);
   drawBuildings(c, path, mpx);
   // Winston Churchill Avenue across the runway
-  const st = S.xing.st;
   cx.save(); cx.globalAlpha = 0.55; cx.strokeStyle = C.road; cx.lineWidth = lw(14); cx.lineCap = 'butt'; path([[985,-22],[1000,22]], false); cx.stroke(); cx.restore();
+  }
   if (sc > 150) {
+    if (!IMG) {
     // runway markings: AD 2.9 only says the TDZ marks are non-standard, so the set below follows the ICAO Annex 14 layout
     cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
     cx.lineWidth = lw(0.9); path([[0,21.6],[RWY_M,21.6]], false); cx.stroke(); path([[0,-21.6],[RWY_M,-21.6]], false); cx.stroke();   // side stripes
@@ -235,6 +243,7 @@ function drawAirport(){
       cx.save(); cx.translate(...c(...nose)); cx.rotate(s.hdg*D2R); cx.fillStyle = C.yellow; cx.fillRect(-4*mpx-2, -0.6, 8*mpx+4, 1.4); cx.restore();
     }
     drawStandDetail(c, path, mpx);
+    } else drawStandTags(c, mpx);
     // closed portion of B and B1: unserviceable crosses
     cx.strokeStyle = 'rgba(255,255,255,.75)'; cx.lineWidth = lw(0.8);
     for (const [m,o] of [[1648,TW.B],[1785,92]]) { const [X,Y] = c(m,o), r = 6*mpx+2; cx.beginPath(); cx.moveTo(X-r,Y-r); cx.lineTo(X+r,Y+r); cx.moveTo(X+r,Y-r); cx.lineTo(X-r,Y+r); cx.stroke(); }
@@ -242,7 +251,7 @@ function drawAirport(){
     for (const [k, Hd] of Object.entries(HOLDS)) {
       const s = Math.sign(Hd.off);
       cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
-      for (const [d, dash] of [[0.9,false],[0.3,false],[-0.3,true],[-0.9,true]]) { cx.setLineDash(dash ? [1*mpx+1, 1*mpx+1] : []); path([[Hd.m-9.5, Hd.off + s*d],[Hd.m+9.5, Hd.off + s*d]], false); cx.stroke(); }
+      if (!IMG) for (const [d, dash] of [[0.9,false],[0.3,false],[-0.3,true],[-0.9,true]]) { cx.setLineDash(dash ? [1*mpx+1, 1*mpx+1] : []); path([[Hd.m-9.5, Hd.off + s*d],[Hd.m+9.5, Hd.off + s*d]], false); cx.stroke(); }
       cx.setLineDash([]);
       if (sc > 220) {
         const fs = Math.max(9, 3.4*mpx), q = c(Hd.m + 14, Hd.off + s*2); const txt = `${k}  27-09`; cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(txt).width;
@@ -283,7 +292,8 @@ function drawAirport(){
   }
   if (sc > 180 && sc < 2400) {
     cx.fillStyle = rgba('lab', .72); cx.font = `600 12px ${FONT_L}`;
-    const lab = (txt, m, off) => { const p = c(m, off); cx.fillText(txt, p[0], p[1]); };
+    if (IMG) { cx.fillStyle = C.name === 'dark' ? 'rgba(235,242,245,.92)' : '#fff'; cx.strokeStyle = 'rgba(0,0,0,.6)'; cx.lineWidth = 3; cx.lineJoin = 'round'; }
+    const lab = (txt, m, off) => { const p = c(m, off); if (IMG) cx.strokeText(txt, p[0], p[1]); cx.fillText(txt, p[0], p[1]); };
     lab('TERMINAL', 1225, 300); lab('CIVIL APRON', 1235, 228); lab('NORTH APRON', 1450, 240); lab('SOUTH APRON · RAF', 1000, -230); lab('ATC', 1056, 232);
     lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75);
   }
