@@ -903,7 +903,8 @@
         <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
         <tr><td class="mono">REL</td><td>Request the departure release from the next unit on the landline</td><td class="mono">REL</td></tr>
         <tr><td class="mono">CTO</td><td>Cleared for take-off on the departure route. Needs a valid release</td><td class="mono">CTO</td></tr>
-        <tr><td class="mono">VAC [exit]</td><td>Vacate (backtrack if needed) and taxi to stand</td><td class="mono">VAC</td></tr>
+        <tr><td class="mono">VAC [exit]</td><td>Vacate via another exit (backtrack if needed). Arrivals vacate by themselves; this overrides their choice</td><td class="mono">VAC</td></tr>
+        <tr><td class="mono">TAXI [stand] [VIA …]</td><td>An arrival clear of the runway stops and asks for taxi: this sends it to its planned stand, or the one you name</td><td class="mono">EZY8901 TAXI 3</td></tr>
         <tr><td class="mono">ROG</td><td>Acknowledge a MAYDAY or PAN (any instruction to it also does)</td><td class="mono">EXS96K ROG</td></tr>
         <tr><td class="mono">WS</td><td>Pass the latest windshear report to an arrival</td><td class="mono">BAW492 WS</td></tr>
         <tr><td class="mono">IDENT</td><td>Squawk ident</td><td class="mono">IDENT</td></tr>
@@ -1069,7 +1070,7 @@
       <h3>Separation</h3>
       <p>Keep <b>3 NM or 1,000 ft</b> between airborne aircraft, reduced to 2.5 NM when both are established on final. Holding at UPMUP stacks traffic 1,000 ft apart. A loss of separation costs 50 points and turns both targets red.</p>
       <h3>After landing</h3>
-      <p>Landings on 27 usually roll well past the mid-field taxiways and stop near the west end. <code>VAC</code> sends the aircraft on to the turning circle and back along the runway (across the road) to Alpha, then on to its stand. Landings on 09 can usually turn off at Echo. Name an exit with <code>VAC A</code> or <code>VAC E</code>.</p>
+      <p>Landings on 27 usually roll well past the mid-field taxiways and stop near the west end. <code>VAC</code> sends the aircraft on to the turning circle and back along the runway (across the road) to Alpha, where it stops clear of the runway and asks for taxi (<code>TAXI</code>). Landings on 09 can usually turn off at Echo. Name an exit with <code>VAC A</code> or <code>VAC E</code>.</p>
     </section>
 
     <section id="t-weather" data-apt="LXGB" data-track="ap"><h2><span class="n">07</span>Weather</h2>
@@ -1246,7 +1247,7 @@
         <div><span class="w">APP</span><span class="a">Easy eight seven one one, descend altitude 3,000 feet, QNH 1019, cleared VOR approach runway 05, report visual</span></div>
         <div><span class="w">EZY8711</span><span class="p">Descend 3,000 feet, QNH 1019, cleared VOR approach runway 05, Easy eight seven one one</span></div>
       </div>
-      <p>Hand the arrival to Tower with <code>HO</code> and clear it to land with <code>CTL</code> once the runway is free. After landing, <code>VAC</code> turns it off at Bravo or Charlie and taxies it to its stand.</p>
+      <p>Hand the arrival to Tower with <code>HO</code> and clear it to land with <code>CTL</code> once the runway is free. After landing, it turns off at Bravo or Charlie (<code>VAC</code> and an exit picks one), stops clear of the runway and asks for taxi: <code>TAXI</code> sends it to its stand.</p>
     </section>
 
     <section id="m-rnp" data-apt="LPMA" data-track="ap"><h2><span class="n">05</span>RNP AR approaches</h2>

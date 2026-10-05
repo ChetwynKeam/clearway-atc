@@ -673,6 +673,9 @@ S.listeners.push((ev, d) => {
 });
 const st = (cs, ...l) => { const a = A(cs); return !!a && l.includes(a.state); };
 const sn = cs => seen[cs] || {};
+// an arrival stops once it is clear of the runway and asks for taxi
+const taxiInStep = (cs, p, h = 'Taxi it to its stand') => ({ h, p: p || `Once it is clear of the runway it stops and asks for taxi. Press <b>Taxi to stand</b> or type <code>${cs} TAXI</code>. To send it to another stand, add the stand (<code>${cs} TAXI 4</code>); to choose the route, add <code>VIA</code> and the taxiways.`,
+  cmd: `${cs} TAXI`, ok: () => { const a = A(cs); return !!a && (!!a.taxiIn || a.kind === 'DEP') || !!sn(cs).onstand; }, wait: () => { const a = A(cs); return !!a && !a.vacated; } });
 const roadShut = () => S.xing.st === 'CLOSING' || S.xing.st === 'CLOSED';
 const COACH = {
   dep: [
@@ -694,7 +697,8 @@ const COACH = {
     { h: 'Transfer to Tower', p: 'At about 5 NM, transfer the flight to Tower on 131.2 with <code>EZY8901 HO</code>.', cmd: 'EZY8901 HO', ok: () => (A('EZY8901') && A('EZY8901').freq === 'TWR') || sn('EZY8901').landed },
     { h: 'Clear to land', p: 'With the road closed, type <code>EZY8901 CTL</code>. Without a landing clearance by short final, the crew goes around.', cmd: 'EZY8901 CTL', ok: () => !!(A('EZY8901') && A('EZY8901').ctl) || sn('EZY8901').landed },
     { h: 'Watch the landing', p: 'Scroll in on the runway to see the touchdown. Gibraltar has no rapid exits, so the aircraft rolls out on the runway and vacates by itself.', ok: () => sn('EZY8901').landed && st('EZY8901','ROLLED','VACATING','ONSTAND') },
-    { h: 'Watch it vacate', p: 'As it slows, the crew picks its exit and vacates by itself: it backtracks, turns off at Alpha or Echo and taxies to a civil stand. To send it another way, press an exit button or type <code>EZY8901 VAC E</code> before it leaves the runway. The road stays shut until it is off.', ok: () => (st('EZY8901','VACATING','ONSTAND') && !A('EZY8901').onRwy) || sn('EZY8901').onstand },
+    { h: 'Watch it vacate', p: 'As it slows, the crew picks its exit and vacates by itself: it backtracks, turns off at Alpha or Echo and stops once it is clear. To send it another way, press an exit button or type <code>EZY8901 VAC E</code> before it leaves the runway. The road stays shut until it is off.', ok: () => (st('EZY8901','VACATING','ONSTAND') && !A('EZY8901').onRwy) || sn('EZY8901').onstand },
+    taxiInStep('EZY8901'),
     { h: 'Reopen the road', p: 'Once the aircraft is off the runway, press <b>Open road</b>.', road: true, ok: () => S.xing.st === 'OPEN' || S.xing.st === 'OPENING' }
   ],
   lev: [
@@ -704,7 +708,8 @@ const COACH = {
     { h: 'Taxi the ATR to Charlie', p: 'Type <code>RAM1472 TAXI C</code>. Charlie leads straight from the south apron to the runway, just east of the road. The ATR waits there while the arrival lands.', cmd: 'RAM1472 TAXI C', ok: () => st('RAM1472','TAXI','HOLDPT','LINEUP','LINEDUP','TAKEOFF') || sn('RAM1472').airborne },
     { h: 'Close the road', p: 'Press <b>Close road</b> before the arrival reaches 10 NM.', road: true, ok: () => roadShut() || sn('BAW492').landed },
     { h: 'Transfer and clear BAW492 to land', p: 'Send it to Tower with <code>BAW492 HO</code>, then <code>BAW492 CTL</code>. In this wind, a windshear go-around is possible. If it happens, re-clear the approach with <code>APP</code>.', cmd: ['BAW492 HO', 'BAW492 CTL'], ok: () => !!(A('BAW492') && A('BAW492').ctl) || sn('BAW492').landed },
-    { h: 'Let the arrival vacate', p: 'After touchdown it vacates by itself and taxies to the civil apron (<code>BAW492 VAC</code> and an exit overrides its choice). Wait until it is off the runway before you line up the ATR.', ok: () => (st('BAW492','VACATING','ONSTAND') && !A('BAW492').onRwy) || sn('BAW492').onstand },
+    { h: 'Let the arrival vacate', p: 'After touchdown it vacates by itself (<code>BAW492 VAC</code> and an exit overrides its choice). Wait until it is off the runway before you line up the ATR.', ok: () => (st('BAW492','VACATING','ONSTAND') && !A('BAW492').onRwy) || sn('BAW492').onstand },
+    taxiInStep('BAW492', 'Clear of the runway it stops and asks for taxi. Send it to the civil apron with <code>BAW492 TAXI</code>.'),
     { h: 'Get the release from Casablanca', p: 'RAM1472 is going south to Morocco, so its release comes from Casablanca rather than Sevilla. A release is only valid for about ten minutes, so ask now, as the arrival vacates: type <code>RAM1472 REL</code>.', cmd: 'RAM1472 REL', ok: () => !!(A('RAM1472') && A('RAM1472').rel) || sn('RAM1472').airborne },
     { h: 'Line up and depart the ATR', p: 'With BAW492 off the runway and Casablanca’s release in, type <code>RAM1472 LU</code>, then <code>RAM1472 CTO</code>.', cmd: ['RAM1472 LU', 'RAM1472 CTO'], ok: () => sn('RAM1472').takeoff || sn('RAM1472').airborne, wait: () => { const a = A('RAM1472'); return !!a && !(a.rel && a.rel.st === 'OK'); } },
     { h: 'Hand off and reopen', p: 'Transfer RAM1472 to Radar with <code>HO</code>, and later to Casablanca Control on 125.5 with <code>HO 125.5</code>. Press <b>Open road</b> once the runway is clear.', cmd: 'RAM1472 HO', road: true, ok: () => (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') && sn('RAM1472').airborne }
@@ -728,7 +733,8 @@ Object.assign(COACH, {
     { h: 'Transfer to Tower', p: 'Once it is established on the approach, send it to Madeira Tower on 124.660 with <code>EZY8711 HO</code>.', cmd: 'EZY8711 HO', ok: () => (A('EZY8711') && A('EZY8711').freq === 'TWR') || sn('EZY8711').landed },
     { h: 'Clear to land', p: 'Type <code>EZY8711 CTL</code>. Then zoom in and watch the circuit: a right turn past the GELO point at 850 ft and Rosário at 460 ft, onto a short final over the sea.', cmd: 'EZY8711 CTL', ok: () => !!(A('EZY8711') && A('EZY8711').ctl) || sn('EZY8711').landed },
     { h: 'Watch the landing', p: 'After touchdown the aircraft rolls out, slows and picks its own exit.', ok: () => sn('EZY8711').landed && st('EZY8711','ROLLED','VACATING','ONSTAND') },
-    { h: 'Watch it vacate', p: 'As it slows, the crew picks its exit and vacates by itself: it turns off at Bravo, or backtracks to it, and taxies along Alpha to its stand. To use Charlie instead, press its exit button or type <code>EZY8711 VAC C</code> while it is still on the runway.', ok: () => (st('EZY8711','VACATING','ONSTAND') && !A('EZY8711').onRwy) || sn('EZY8711').onstand }
+    { h: 'Watch it vacate', p: 'As it slows, the crew picks its exit and vacates by itself: it turns off at Bravo, or backtracks to it, and stops once it is clear. To use Charlie instead, press its exit button or type <code>EZY8711 VAC C</code> while it is still on the runway.', ok: () => (st('EZY8711','VACATING','ONSTAND') && !A('EZY8711').onRwy) || sn('EZY8711').onstand },
+    taxiInStep('EZY8711')
   ],
   mwind: [
     { h: 'Read the anemometers', p: 'A strong northerly is blowing. The ATIS panel shows the MID and Rosário readings, and the line is red: the wind from 300°–010° is over the 15 kt / gust 25 limit for landing. Two arrivals are on their way in.', ok: () => !!(A('EXS1291') && A('EXS1291').need) },
