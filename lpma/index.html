@@ -732,11 +732,6 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .fl-sub text { fill: var(--dim); font: 500 11.5px var(--font-body); }
 
 /* ── multi-airport: airport switch, Academy hub, career airport tags ── */
-.apsw { display: inline-flex; border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; background: var(--panel); }
-.apsw a { padding: 6px 10px; font-family: var(--font-data); font-size: 12.5px; color: var(--dim); text-decoration: none; }
-.apsw a + a { border-left: 1px solid var(--line-2); }
-.apsw a.on { background: var(--phos-soft, #e8efff); color: var(--phos, #1f5eff); font-weight: 600; }
-.apsw a:hover { color: var(--ink); }
 .badge.new { color: #fff; background: var(--phos, #1f5eff); border-color: transparent; }
 .badge.new::before { display: none; }
 .apline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
@@ -754,7 +749,6 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .toc #tocList .lbl { margin-top: 14px; }
 .toc #tocList .lbl:first-child { margin-top: 0; }
 .cr-ap { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--panel-2); color: var(--dim); vertical-align: 1px; }
-@media (max-width: 900px) { .topbar .apsw { display: none; } }
 
 </style>
 </head>
@@ -772,7 +766,6 @@ button.atis-letter:hover { background: var(--amber-soft); }
   </nav>
   <div class="status">
     <span class="live clk"><i></i><span id="topClock">--:--Z</span></span>
-    <div class="apsw" role="group" aria-label="Airport"><a href="#lxgb" data-ap="LXGB" title="Gibraltar">LXGB</a><a href="#lpma" data-ap="LPMA" title="Madeira">LPMA</a></div>
     <a class="btn primary" href="#sim">Launch</a>
   </div>
 </header>
@@ -5341,8 +5334,8 @@ const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
   { icao:'LPMA', ll:[32.698, -16.774], iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
   { icao:'EGLC', ll:[51.505, 0.055], iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'dev', pos:['TWR','GND'], diff:3, blurb:'Steep approaches between the Docklands towers, a short runway and a tight apron.' },
-  { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'plan', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
-  { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
+  { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'dev', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
+  { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'dev', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
   { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'plan', pos:['APP','TWR','GND'], diff:5, blurb:'Four holding stacks, runway alternation and a heavy wake mix on two parallel runways.' },
   { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L','08L/26R'], status:'plan', pos:['TWR','GND'], diff:4, blurb:'One of the busiest single-runway operations in the world. Every gap in the departure flow counts.' },
@@ -5966,7 +5959,6 @@ function airportChrome(){
   $('exGroup').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<option value="${k}">Exercise ${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</option>`).join('');
   const others = LIVE_APS.filter(k => k !== APT.icao);
   $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b>${others.map(k => `<a href="${SITE[k]}#sim">Switch to ${ENDORSE[k].name}</a>`).join('')}`;
-  document.querySelectorAll('.apsw a').forEach(a => { const ic = a.dataset.ap; a.classList.toggle('on', ic === APT.icao); if (ic !== APT.icao) a.href = SITE[ic] + '#' + AP_ROUTE[ic]; });
   // links to another airport's pages go straight there
   document.querySelectorAll('a[href^="#"]').forEach(a => { const o = otherPage(a.getAttribute('href').slice(1)); if (o) a.href = o; });
 }

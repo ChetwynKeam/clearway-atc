@@ -10,7 +10,6 @@
   </nav>
   <div class="status">
     <span class="live clk"><i></i><span id="topClock">--:--Z</span></span>
-    <div class="apsw" role="group" aria-label="Airport"><a href="#lxgb" data-ap="LXGB" title="Gibraltar">LXGB</a><a href="#lpma" data-ap="LPMA" title="Madeira">LPMA</a></div>
     <a class="btn primary" href="#sim">Launch</a>
   </div>
 </header>
@@ -31,10 +30,10 @@
         </div>
       </div>
       <div class="frame">
-        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-apt="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-apt="LPMA">LPMA · Madeira Approach · 119.605</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
+        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
         <div class="frame-body">
           <canvas id="heroScope" aria-label="Animated radar picture"></canvas>
-          <div class="frame-side" aria-hidden="true" data-apt="LPMA">
+          <div class="frame-side" aria-hidden="true" data-only="LPMA">
             <div class="fs-h"><span>ATIS</span><b>D</b><span class="r">RWY 05</span></div>
             <div class="fs-m">LPMA 04012KT 9999 FEW025 22/16 Q1019</div>
             <div class="fs-strip arr"><b>TAP1681</b><span>LPPT › LPMA</span><em>VOR 05</em></div>
@@ -42,7 +41,7 @@
             <div class="fs-strip arr"><b>EXS1291</b><span>EGCC › LPMA</span><em>PILIM</em></div>
             <div class="fs-strip dep need"><b>TOM4407</b><span>LPMA › EGBB</span><em>◆ Start-up</em></div>
           </div>
-          <div class="frame-side" aria-hidden="true" data-apt="LXGB">
+          <div class="frame-side" aria-hidden="true" data-only="LXGB">
             <div class="fs-h"><span>ATIS</span><b>K</b><span class="r">RWY 27</span></div>
             <div class="fs-m">LXGB 26008KT 9999 FEW030 22/15 Q1018</div>
             <div class="fs-strip arr"><b>BAW492</b><span>EGLL › LXGB</span><em>SRA 27</em></div>
@@ -396,13 +395,13 @@
     <div class="overlay" id="setup">
       <div class="card">
         <div class="apline" id="setupAp"></div>
-        <div data-apt="LXGB">
+        <div data-only="LXGB">
         <div class="eyebrow">Position briefing</div>
         <h1>Gibraltar Radar &amp; Tower</h1>
         <div class="sub">LXGB · RWY 09/27 1798 × 45 m · ELEV 12 ft · GBR TACAN Ch 83X · TA 6000 · Radar 122.8 · Tower 131.2</div>
         <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Gibraltar flights from the current time with the live METAR. Bring arrivals in on surveillance radar approaches, keep them out of R164 and off the Rock, work the departures from stand to Sevilla, and keep Winston Churchill Avenue shut whenever anything uses the runway.</p>
         </div>
-        <div data-apt="LPMA">
+        <div data-only="LPMA">
         <div class="eyebrow">Position briefing</div>
         <h1>Madeira Approach &amp; Tower</h1>
         <div class="sub">LPMA · RWY 05/23 2781 × 45 m · ELEV 191 ft · FUN DVOR 112.2 · TA 5000 · Approach 119.605 · Tower 124.660</div>
@@ -435,18 +434,18 @@
         <div class="fine" id="liveWxSt" hidden></div>
         <p class="fine" style="margin-top:6px">Copy the current <span data-icao>LXGB</span> METAR from <a id="awcLink" href="https://aviationweather.gov/data/metar/?id=LXGB&amp;hours=0" target="_blank" rel="noopener">aviationweather.gov</a>, or paste any other METAR.</p>
         <h2>Before you start</h2>
-        <ul data-apt="LXGB">
+        <ul data-only="LXGB">
           <li>Close the road early: by 15 NM for walkers and 10 NM for traffic. Closure takes about 2½ minutes.</li>
           <li>Departures for 27 taxi to Echo and backtrack to the east turning circle. For 09 they taxi to Alpha and backtrack across the road to the west circle.</li>
           <li>Type commands in the bar under the scope, for example <code>BAW492 H250 A40</code>, or use the buttons on the selected flight. The training guide has the full list.</li>
         </ul>
-        <ul data-apt="LPMA">
+        <ul data-only="LPMA">
           <li>Check the anemometers in the ATIS panel. When the wind is out of limits, hold arrivals at PILIM and expect diversions to Porto Santo.</li>
           <li>Runway 05 departures taxi to Charlie and backtrack to the 05 turn pad; runway 23 departures use Bravo. Every one needs a release from Lisboa.</li>
           <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine"><span data-apt="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-apt="LPMA">Data from AIP Portugal AD 2 LPMA.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>
@@ -584,6 +583,9 @@
       </table></div>
       <p>Every session you work for more than a minute goes into your <a href="#career">Career</a> logbook: time on frequency, movements, go-arounds, separation losses and score, with a chart of your recent scores and badges to earn, from <b>First contact</b> to <b>Ten hours</b>. One logbook covers every airport, and each airport adds badges of its own, such as Madeira’s <b>Rosário turn</b> and <b>Island endorsement</b>. The logbook is kept in your browser, so it stays on this device.</p>
     </section>
+
+    <!-- ── the endorsement picker: every airport's endorsement follows, one shown at a time ── -->
+    <div class="endpick" id="endPick"></div>
 
     <!-- ── Gibraltar endorsement ── -->
     <section id="t-position" data-apt="LXGB" data-track="ap"><h2><span class="n">01</span>Your position at Gibraltar</h2>

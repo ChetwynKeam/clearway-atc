@@ -1,10 +1,18 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
 const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'sim', 'training', 'career'];
-// one page per airport (SITE, from build.py): another airport's briefing, Academy endorsement or exercise opens on its page
+// One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
+// Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
+// Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
 const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
-const otherPage = h => { const r = h.split('/')[0]; const ap = Object.keys(AP_ROUTE).find(k => AP_ROUTE[k] === r); return ap && ap !== APT.icao ? SITE[ap] + '#' + h : null; };
-try { localStorage.setItem('cw-airport', APT.icao); } catch(e) {}
+const IS_HOST = APT.icao === SITE_HOST, EMBED = location.hash.startsWith('#embed');
+const SIM_HASH = /^(sim|ex\/|wx\/|live$)/;
+const otherPage = h => IS_HOST || EMBED || SIM_HASH.test(h) ? null : SITE[SITE_HOST] + '#' + (h || HOME_RT);
+const isApRoute = r => Object.values(AP_ROUTE).includes(r);
+// the airport a block of the site belongs to: its data-apt, or the airport briefing page it sits on
+const blockAp = el => { const a = el.closest('[data-apt]'); if (a) return a.dataset.apt; const p = el.closest('[data-page]'); return p && LIVE_APS.find(k => AP_ROUTE[k] === p.dataset.page) || null; };
+if (otherPage(location.hash.slice(1))) location.replace(otherPage(location.hash.slice(1)));
+if (!EMBED) try { localStorage.setItem('cw-airport', APT.icao); } catch(e) {}
 let curRoute = null;
 function go(r){
   if (!ROUTES.includes(r)) r = 'home';
@@ -17,7 +25,7 @@ function go(r){
   if (r === 'sim') { resize(); if (!S.running) setView(V.name || 'app'); }
   if (prev === 'sim' && r !== 'sim') exitFull();
   if (r !== 'sim' && prev === 'sim' && S.running && !S.paused) { S.paused = true; $('tgPause').textContent = 'Resume'; sys('Simulation paused while you are away from the scope.'); }
-  if (r === 'home' || r === HOME_RT) requestAnimationFrame(renderThumbs);
+  if (r === 'home' || isApRoute(r)) requestAnimationFrame(renderThumbs);
   if (r === 'training') requestAnimationFrame(() => { renderFigure(); spy(); });
   if (r === 'career') renderCareer();
   if (r === 'airports' && apf.view === 'map') requestAnimationFrame(wmRender);
@@ -25,11 +33,15 @@ function go(r){
 }
 function fromHash(){
   const h = location.hash.replace('#', '');
-  // #ex/<key>: open a guided exercise (from another airport's Academy page)
+  if (EMBED) return;
+  { const o = otherPage(h); if (o) { location.replace(o); return; } }
+  // from the host page's Academy, scenario cards and Live now links: #ex/<key>, #wx/<preset>, #live
   if (h.startsWith('ex/')) { const k = h.slice(3); if (EXERCISES[k]) { history.replaceState(null, '', '#sim'); return startExercise(k); } }
+  if (h.startsWith('wx/')) { const k = h.slice(3); history.replaceState(null, '', '#sim'); return WX_PRESETS[k] ? openScenario(k) : go('sim'); }
+  if (h === 'live') { history.replaceState(null, '', '#sim'); go('sim'); const sel = $('trafficSel'); if (!S.running) { sel.value = 'live'; sel.dispatchEvent(new Event('change')); } return; }
   if (ROUTES.includes(h)) return go(h);
   const el = h && document.getElementById(h);
-  if (el && el.closest('[data-page="training"]')) { go('training'); requestAnimationFrame(() => el.scrollIntoView()); return; }
+  if (el && el.closest('[data-page="training"]')) { const ap = el.closest('[data-apt]'); if (ap) setEndorse(ap.dataset.apt); go('training'); requestAnimationFrame(() => el.scrollIntoView()); return; }
   go(curRoute || 'home');
 }
 window.addEventListener('hashchange', fromHash);
@@ -45,8 +57,8 @@ const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
   { icao:'LPMA', ll:[32.698, -16.774], iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
   { icao:'EGLC', ll:[51.505, 0.055], iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'dev', pos:['TWR','GND'], diff:3, blurb:'Steep approaches between the Docklands towers, a short runway and a tight apron.' },
-  { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'plan', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
-  { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
+  { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'dev', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
+  { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'dev', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
   { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'plan', pos:['APP','TWR','GND'], diff:5, blurb:'Four holding stacks, runway alternation and a heavy wake mix on two parallel runways.' },
   { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L','08L/26R'], status:'plan', pos:['TWR','GND'], diff:4, blurb:'One of the busiest single-runway operations in the world. Every gap in the departure flow counts.' },
@@ -82,7 +94,7 @@ function rwyDiagram(ap){
 }
 function apCard(ap){
   const live = ap.status === 'live', tag = live ? 'a' : 'div', rt = AP_ROUTE[ap.icao];
-  const href = !live ? '' : ap.icao === APT.icao ? '#' + rt : SITE[ap.icao] + '#' + rt;
+  const href = live ? '#' + rt : '';
   return `<${tag} class="ap${live ? '' : ' off'}"${live ? ` href="${href}"` : ''}>
     <div class="dia">${rwyDiagram(ap)}</div>
     <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
@@ -204,7 +216,7 @@ function wmPins(){
   $('apMapPins').querySelectorAll('.wm-pin').forEach(b => b.onclick = e => { e.stopPropagation(); wmOpen(b.dataset.icao); });
   wmPopPlace();
 }
-function wmHref(ap){ const rt = AP_ROUTE[ap.icao]; return ap.icao === APT.icao ? '#' + rt : SITE[ap.icao] + '#' + rt; }
+function wmHref(ap){ return '#' + AP_ROUTE[ap.icao]; }
 function wmOpen(icao){
   const ap = AIRPORTS_NET.find(a => a.icao === icao);
   if (ap.status === 'live') { location.href = wmHref(ap); return; }
@@ -352,7 +364,7 @@ function heroFrame(now){
   }
   requestAnimationFrame(heroFrame);
 }
-window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === HOME_RT) renderThumbs(); if (curRoute === 'training') renderFigure(); if (curRoute === 'career') renderCareer(); });
+window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || isApRoute(curRoute)) renderThumbs(); if (curRoute === 'training') renderFigure(); if (curRoute === 'career') renderCareer(); });
 
 // position thumbnails reuse the real renderer
 // sample traffic for the previews: parked, taxiing, on final and climbing out
@@ -385,20 +397,74 @@ function demoTraffic(){
 function renderThumbs(){
   const acs = demoTraffic();
   document.querySelectorAll('canvas[data-thumb]').forEach(c => {
+    if (!c.getBoundingClientRect().width) return;
+    const ap = blockAp(c) || APT.icao;
+    if (ap === APT.icao) drawThumb(c, acs); else embedDraw(c, ap, 'thumb');
+  });
+}
+function drawThumb(c, acs){
+  {
     const k = c.dataset.thumb;
     // the ground card zooms in on the civil apron; the aerodrome figure keeps the whole runway
-    if (!c.getBoundingClientRect().width) return;
     const lp = APT.icao === 'LPMA', apron = c.dataset.zoom === 'apron' ? (lp ? STANDS.reduce((a, s) => [a[0] + s.p[0]/STANDS.length, a[1] + s.p[1]/STANDS.length], [0, 0]) : rm(1215, 95)) : null;
     // Madeira's runway runs diagonally: frame the whole runway (aerodrome) or the 05 end and short final (tower)
     const W = c.getBoundingClientRect().width, mid = lp && rm(RWY_M*0.5, -120), twr = lp && (() => { const FP = FINAL[RW_LO].pts, f = FP[FP.length - 3], t = rm(THR_LO_M, 0); return [(f[0] + t[0])/2, (f[1] + t[1])/2]; })();
     const lpT = k === 'gnd' ? (v => { v.cx = mid[0]; v.cy = mid[1]; v.scale = W/2900*1852; }) : k === 'twr' ? (v => { v.cx = twr[0]; v.cy = twr[1]; v.scale = W/3; }) : null;
     drawTo(c, k, { proc: true, acs, tweak: k === 'app' ? (lp ? (v => { v.scale *= 1.3; }) : (v => { v.scale *= 1.6; v.cx += 2; v.cy += 3; })) : apron ? (v => { v.cx = apron[0]; v.cy = apron[1]; v.scale = 1852*(lp ? 0.8 : 1.05); }) : lp ? lpT : null });
-  });
+  }
 }
-function refreshPreviews(){ if (curRoute === 'home' || curRoute === HOME_RT) { renderThumbs(); hero.map = null; } }
+function refreshPreviews(){
+  if (EMBED) { if (window.cwOnRefresh) window.cwOnRefresh(); else if (window.cwPaint) window.cwPaint(); return; }
+  if (curRoute === 'home' || isApRoute(curRoute)) { renderThumbs(); hero.map = null; }
+  if (curRoute === 'training') renderFigure();
+}
+
+// ── another airport's maps on the host page ──
+// Each airport's maps need its own engine (geometry, stands, procedures), so the host page asks that airport's page to
+// draw them: a hidden same-origin helper frame (#embed) draws each canvas at the right size and the host copies the
+// pixels. Where the frame can't be scripted (a different origin), the canvas is replaced by a small frame of its own.
+const HELP = {};
+function helperFor(ic){
+  if (HELP[ic]) return HELP[ic];
+  const fr = document.createElement('iframe'), h = HELP[ic] = { fr, win: null, dead: false };
+  fr.className = 'embed-helper'; fr.tabIndex = -1; fr.title = `${ic} map renderer`; fr.setAttribute('aria-hidden', 'true');
+  fr.addEventListener('load', () => {
+    try { const w = fr.contentWindow; if (typeof w.cwDraw !== 'function') throw 0; w.cwOnRefresh = () => drawEmbeds(ic); h.win = w; } catch(e) { h.dead = true; }
+    drawEmbeds(ic);
+  });
+  fr.src = SITE[ic] + '#embed'; document.body.appendChild(fr);
+  return h;
+}
+function embedDraw(c, ic, kind){
+  c.dataset.embed = ic; c.dataset.embedKind = kind;
+  const h = helperFor(ic), r = c.getBoundingClientRect(); if (!r.width) return;
+  const sp = { kind, k: c.dataset.thumb, zoom: c.dataset.zoom };
+  if (h.win) {
+    try { const src = h.win.cwDraw(sp, r.width, r.height); c.width = src.width; c.height = src.height; c.getContext('2d').drawImage(src, 0, 0); } catch(e) { console.warn('embed', e); }
+  } else if (h.dead && !c.dataset.framed) {
+    c.dataset.framed = '1';
+    const f = document.createElement('iframe'); f.className = 'embed-fr'; f.loading = 'lazy'; f.tabIndex = -1; f.title = c.getAttribute('aria-label') || ic;
+    f.src = `${SITE[ic]}#embed:${kind}:${sp.k || ''}:${sp.zoom || ''}`; f.style.aspectRatio = `${r.width} / ${r.height}`;
+    c.style.display = 'none'; c.after(f);
+  }
+}
+function drawEmbeds(ic){ document.querySelectorAll(`canvas[data-embed="${ic}"]`).forEach(c => { if (c.getBoundingClientRect().width) embedDraw(c, ic, c.dataset.embedKind); }); }
+// this page as the renderer: cwDraw for the host's helper frame, or one full-window map for #embed:<kind>:<key>:<zoom>
+function drawSpec(c, sp){
+  if (sp.kind === 'fig') return drawTo(c, 'gnd', { acs: [], proc: false });
+  c.dataset.thumb = sp.k; if (sp.zoom) c.dataset.zoom = sp.zoom; else delete c.dataset.zoom;
+  drawThumb(c, demoTraffic());
+}
+if (EMBED) {
+  document.body.classList.add('embed');
+  const ecv = document.createElement('canvas'), [, kind, k, zoom] = location.hash.split(':');
+  ecv.className = 'embed-cv'; document.body.appendChild(ecv);
+  window.cwDraw = (sp, w, h) => { ecv.style.width = w + 'px'; ecv.style.height = h + 'px'; drawSpec(ecv, sp); return ecv; };
+  if (kind) { ecv.classList.add('full'); window.cwPaint = () => drawSpec(ecv, { kind, k, zoom }); window.addEventListener('resize', window.cwPaint); requestAnimationFrame(window.cwPaint); }
+}
 
 // scenarios: one card per weather preset, opening the simulator with that weather
-const SCEN_TEXT = APT.icao === 'LPMA' ? {
+const SCEN_TEXT = { LPMA: {
   trade: 'The north-east trade wind, the usual Madeira day. Runway 05 with the VOR approach and the Rosário circuit.',
   nortada: 'A strong northerly over the limit at Rosário. Arrivals refuse the approach: hold them at PILIM and plan for Porto Santo.',
   tradeMax: 'The trade wind at gale force, right at the 05 limit. Some crews land, some hold. Watch every gust.',
@@ -407,7 +473,7 @@ const SCEN_TEXT = APT.icao === 'LPMA' ? {
   murk: 'Drizzle and cloud at 800 ft. Below the VOR circling minima but above the RNP ones, so every arrival needs an RNP AR approach.',
   calima: 'Saharan dust from the south-east. Visibility down to 3 km and a light easterly.',
   calm: 'Light and variable wind and a clear sky. A good day to learn the circuit.'
-} : {
+}, LXGB: {
   fair: 'A gentle westerly and good visibility. Learn the flow: road closures, backtracks and the SRA to runway 27.',
   levanter: 'The easterly gale and its banner cloud. Runway 09, approaches through RIPRA, and turbulence curling off the Rock.',
   southerly: 'The Rock sits directly upwind of final. The wind is beyond the Special Procedures turbulence limit, so expect go-arounds.',
@@ -415,25 +481,49 @@ const SCEN_TEXT = APT.icao === 'LPMA' ? {
   cross: 'A northerly blowing straight across the runway. Smaller types will refuse the approach and hold.',
   fog: 'Sea fog below SRA minima. Hold arrivals, plan diversions to Málaga and Tangier, and keep the departures moving.',
   storm: 'Cumulonimbus in the Strait. Reduced visibility, gusts, and crews asking to avoid cells.'
-};
+} };
+function openScenario(k){
+  $('wxPreset').value = k; $('wxPreset').dispatchEvent(new Event('change')); $('trafficSel').value = 'summer'; $('wxPaste').value = '';
+  if (S.running) { S.running = false; resetSession(); }
+  location.hash = 'sim'; go('sim'); openSetup();
+}
+// each grid shows its own airport's presets; another airport's card opens that airport's simulator
 function renderScenarios(){
   document.querySelectorAll('[data-scen]').forEach(g => { g.innerHTML = '';
-  for (const [k, v] of Object.entries(WX_PRESETS)) {
+  const ic = blockAp(g) || APT.icao, here = ic === APT.icao, P = here ? WX_PRESETS : AP_DATA[ic] && AP_DATA[ic].WX_PRESETS;
+  for (const [k, v] of Object.entries(P || {})) {
     const b = document.createElement('button'); b.type = 'button';
-    b.innerHTML = `<span class="nm">${esc(v.short)}</span><span class="ds">${esc(SCEN_TEXT[k] || v.name)}</span><span class="mt">${esc(v.metar.replace(/^[A-Z]{4} \d{6}Z /, ''))}</span><span class="go">Open position ›</span>`;
-    b.onclick = () => { $('wxPreset').value = k; $('wxPreset').dispatchEvent(new Event('change')); $('trafficSel').value = 'summer'; $('wxPaste').value = ''; if (S.running) { S.running = false; resetSession(); } location.hash = 'sim'; openSetup(); };
+    b.innerHTML = `<span class="nm">${esc(v.short)}</span><span class="ds">${esc((SCEN_TEXT[ic] || {})[k] || v.name)}</span><span class="mt">${esc(v.metar.replace(/^[A-Z]{4} \d{6}Z /, ''))}</span><span class="go">Open position ›</span>`;
+    b.onclick = () => here ? openScenario(k) : (location.href = SITE[ic] + '#wx/' + k);
     g.appendChild(b);
   } });
 }
 
 // ── training guide ──
-const guideSecs = () => [...document.querySelectorAll('#page-training section[data-track]')].filter(s => !s.dataset.apt || s.dataset.apt === APT.icao);
+// The core course, then one airport endorsement at a time: pick it on the hub, the picker after the core course or the
+// contents list. Every airport's endorsement is on this page, so the choice only shows and hides sections.
+let endorse = (() => { try { const v = localStorage.getItem('cw-endorse'); if (LIVE_APS.includes(v)) return v; } catch(e) {} return APT.icao; })();
+const endorseCss = document.head.appendChild(document.createElement('style'));
+const firstSec = ic => document.querySelector(`#page-training section[data-track="ap"][data-apt="${ic}"]`);
+function setEndorse(ic){
+  if (!LIVE_APS.includes(ic) || !firstSec(ic)) return;
+  endorse = ic; try { localStorage.setItem('cw-endorse', ic); } catch(e) {}
+  endorseCss.textContent = `#page-training [data-apt]:not([data-apt~="${ic}"]){display:none!important}`;
+  buildToc(); renderPicker();
+  if (curRoute === 'training') requestAnimationFrame(() => { renderFigure(); spy(); });
+}
+function renderPicker(){
+  const pk = $('endPick'); if (!pk) return;
+  pk.innerHTML = `<div class="lbl">Core course complete? Choose your endorsement</div><div class="opts">${LIVE_APS.filter(firstSec).map(ic => `<a href="#${firstSec(ic).id}" class="${ic === endorse ? 'on' : ''}" aria-current="${ic === endorse}"><b>${ic}</b>${esc(ENDORSE[ic].name)}</a>`).join('')}</div>`;
+}
+const guideSecs = () => [...document.querySelectorAll('#page-training section[data-track]')].filter(s => !s.dataset.apt || s.dataset.apt === endorse);
 function buildToc(){
   const box = $('tocList'); box.innerHTML = '';
-  const groups = [['core', 'Core course'], ['ap', `${APT.name} endorsement`]];
+  const groups = [['core', 'Core course'], ['ap', `${ENDORSE[endorse].name} endorsement`]];
   let n = 0;
   for (const [tr, title] of groups) {
     const lbl = document.createElement('div'); lbl.className = 'lbl'; lbl.textContent = title; box.appendChild(lbl);
+    if (tr === 'ap') { const sw = document.createElement('div'); sw.className = 'tocap'; sw.innerHTML = LIVE_APS.filter(firstSec).map(ic => `<a href="#${firstSec(ic).id}" class="${ic === endorse ? 'on' : ''}" title="${esc(ENDORSE[ic].name)} endorsement">${ic}</a>`).join(''); box.appendChild(sw); }
     const ol = document.createElement('ol'); box.appendChild(ol); let k = 0;
     for (const sec of guideSecs().filter(s => s.dataset.track === tr)) {
       const h = sec.querySelector('h2'); if (!h) continue;
@@ -443,7 +533,9 @@ function buildToc(){
       li.appendChild(a); ol.appendChild(li);
     }
   }
-  $('tocEx').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<button class="btn" data-ex="${k}">${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</button>`).join('');
+  // the endorsement's exercises, named as on its exercise cards
+  const exName = k => { const b = document.querySelector(`#page-training .ex [data-ex="${k}"]`), nm = b && b.closest('.ex').querySelector('.nm'); return nm ? nm.textContent : k; };
+  $('tocEx').innerHTML = ENDORSE[endorse].ex.map(k => `<button class="btn" data-ex="${k}">${esc(exName(k))}</button>`).join('');
   $('tocEx').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => startExercise(b.dataset.ex));
 }
 // Academy hub: the core course and one endorsement card per open airport, with exercise progress from the logbook
@@ -454,20 +546,20 @@ const ENDORSE = {
 function renderHub(){
   const h = $('acHub'); if (!h) return;
   const done = k => !!(CAR.ex && CAR.ex[k]);
-  const card = (ic, E) => { const n = E.ex.filter(done).length, here = ic === APT.icao, got = CAR.badges && CAR.badges[E.badge], b = BADGES.find(x => x.id === E.badge);
+  const card = (ic, E) => { const n = E.ex.filter(done).length, here = ic === endorse, got = CAR.badges && CAR.badges[E.badge], b = BADGES.find(x => x.id === E.badge);
     return `<div class="hubcard${here ? ' here' : ''}"><div class="lbl">${ic} · endorsement</div><h3>${E.name}</h3><p>${E.p}</p>
       <div class="hubprog">${E.ex.map(k => `<i class="${done(k) ? 'done' : ''}"></i>`).join('')}<span>${n} of 3 exercises${got ? ` · <b>${esc(b.name)}</b> earned` : ''}</span></div>
-      <a class="btn${here ? ' primary' : ''}" href="${here ? '#' + guideSecs().find(s => s.dataset.track === 'ap').id : SITE[ic] + '#training'}">${here ? 'Read the briefing' : 'Open ' + E.name}</a></div>`; };
+      <a class="btn${here ? ' primary' : ''}" href="#${firstSec(ic) ? firstSec(ic).id : 'training'}">${here ? 'Read the briefing' : 'Open ' + E.name}</a></div>`; };
   const core = guideSecs().find(s => s.dataset.track === 'core');
   h.innerHTML = `<div class="hubcard"><div class="lbl">Every airport</div><h3>Core course</h3><p>The scope, strips and side panel, the radio, every command, emergencies and how scoring works.</p><div class="hubprog"><span>${guideSecs().filter(s => s.dataset.track === 'core').length} lessons</span></div><a class="btn" href="#${core ? core.id : ''}">Start the core course</a></div>`
-    + LIVE_APS.map(ic => card(ic, ENDORSE[ic])).join('');
+    + LIVE_APS.filter(ic => ENDORSE[ic]).map(ic => card(ic, ENDORSE[ic])).join('');
 }
 function spy(){
   if (curRoute !== 'training') return;
   const secs = guideSecs();
   let cur = secs[0];
   for (const s of secs) if (s.getBoundingClientRect().top < 140) cur = s;
-  document.querySelectorAll('#tocList a').forEach(a => a.classList.toggle('on', cur && a.dataset.for === cur.id));
+  document.querySelectorAll('#tocList li a').forEach(a => a.classList.toggle('on', cur && a.dataset.for === cur.id));
 }
 window.addEventListener('scroll', spy, { passive: true });
 function buildTurbTable(){
@@ -477,9 +569,10 @@ function buildTurbTable(){
 function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
-    if (c.closest('[data-apt]') && c.closest('[data-apt]').dataset.apt !== APT.icao) return;
-    c.style.aspectRatio = APT.icao === 'LPMA' ? '1.9 / 1' : '2.25 / 1';
-    drawTo(c, 'gnd', { acs: [], proc: false });
+    const ap = blockAp(c) || APT.icao;
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : '2.25 / 1';
+    if (!c.getBoundingClientRect().width) return;
+    if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });
   renderAcademyFigs();
 }
@@ -670,16 +763,21 @@ function airportChrome(){
   $('exGroup').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<option value="${k}">Exercise ${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</option>`).join('');
   const others = LIVE_APS.filter(k => k !== APT.icao);
   $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b>${others.map(k => `<a href="${SITE[k]}#sim">Switch to ${ENDORSE[k].name}</a>`).join('')}`;
-  document.querySelectorAll('.apsw a').forEach(a => { const ic = a.dataset.ap; a.classList.toggle('on', ic === APT.icao); if (ic !== APT.icao) a.href = SITE[ic] + '#' + AP_ROUTE[ic]; });
-  // links to another airport's pages go straight there
-  document.querySelectorAll('a[href^="#"]').forEach(a => { const o = otherPage(a.getAttribute('href').slice(1)); if (o) a.href = o; });
+  // on another airport's page, site links go to the host page; on the host, another airport's position and Live now
+  // buttons open its own simulator, and its "Academy" buttons open its endorsement
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    const h = a.getAttribute('href').slice(1), o = otherPage(h); if (o) { a.href = o; return; }
+    const ic = IS_HOST && blockAp(a); if (!ic || ic === APT.icao) return;
+    if (h === 'sim') a.href = SITE[ic] + (a.hasAttribute('data-live') ? '#live' : '#sim');
+    else if (h === 'training' && firstSec(ic)) a.href = '#' + firstSec(ic).id;
+  });
 }
 airportChrome();
 // ── boot ──
-renderAirports(); renderScenarios(); buildToc(); buildTurbTable();
+renderAirports(); renderScenarios(); setEndorse(endorse); buildTurbTable();
 fromHash();
 resize(); setView('app'); renderAtis(); renderSel(); renderStrips(true); renderScore();
-requestAnimationFrame(frame); requestAnimationFrame(heroFrame);
+if (!EMBED) { requestAnimationFrame(frame); requestAnimationFrame(heroFrame); }
 
 // full-screen position: Launch takes the browser full screen (where the frame allows it) and the site bar hides on #sim
 function canFull(){ return !!(document.documentElement.requestFullscreen && document.fullscreenEnabled); }
@@ -694,6 +792,7 @@ syncFull();
 
 // "Live now" links open the simulator set up for a Real world session
 document.querySelectorAll('[data-live]').forEach(a => a.addEventListener('click', () => {
+  if (a.getAttribute('href') !== '#sim') return;
   const sel = $('trafficSel'); if (S.running) return;
   sel.value = 'live'; sel.dispatchEvent(new Event('change'));
 }));
