@@ -201,15 +201,45 @@ textarea { background: #fff; border: 1px solid var(--line-2); border-radius: 4px
 
 @media (max-width: 1000px) {
 }
-@media (max-width: 900px) {
-  body[data-route="sim"] { overflow: auto; }
-  .app { grid-template-columns: 1fr; grid-template-rows: 64vh 220px auto; height: auto; }
-  .side { grid-row: 3; grid-column: 1; border-left: 0; border-top: 1px solid var(--line); }
-  .bottom { grid-row: 2; }
-  .strips { max-height: 360px; }
+@media (max-width: 1180px) and (min-width: 901px) {   /* tablets in landscape */
+  .app { grid-template-columns: minmax(0,1fr) 330px; grid-template-rows: minmax(0,1fr) 150px; }
+  .toolbar { right: 12px; }
+}
+.mtabs { display: none; }
+@media (max-width: 900px) {   /* phones and tablets in portrait: scope on top, one panel below, chosen from a tab bar */
+  body[data-route="sim"] { overflow: hidden; }
+  body[data-route="sim"] .topbar { display: none; }
+  .app { grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr) auto auto auto; height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top, 0px); }
+  .scopewrap { grid-row: 1; grid-column: 1; }
+  .side { grid-row: 2; grid-column: 1; border-left: 0; border-top: 1px solid var(--line); height: 44dvh; overflow-y: auto; }
+  .bottom { grid-row: 3; grid-column: 1; grid-template-rows: auto auto; }
+  #log { display: none; height: 44dvh; border-bottom: 1px solid var(--line); }
+  .app[data-mtab="log"] .side, .app[data-mtab="map"] .side { display: none; }
+  .app[data-mtab="log"] #log { display: block; }
+  .app[data-mtab="flight"] .side > :not(#sel), .app[data-mtab="atis"] .side > :not(#atis), .app[data-mtab="strips"] #atis, .app[data-mtab="strips"] #sel { display: none; }
+  .app[data-mtab="strips"] .strips { flex: 1; }
+  .mtabs { grid-row: 4; grid-column: 1; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .app .mtabs button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; border-radius: 0; background: none; padding: 7px 2px 8px; font-size: 11px; letter-spacing: .04em; color: var(--dim); min-height: 52px; }
+  .app .mtabs button.on { color: var(--accent); background: var(--accent-soft); }
+  .mtabs svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .mt-n { position: absolute; top: 4px; left: calc(50% + 8px); min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--alert); color: #fff; font: 700 10.5px/17px var(--font-body); }
+  .toolbar { top: 8px; left: 8px; right: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 6px; padding-bottom: 4px; }
+  .toolbar::-webkit-scrollbar { display: none; }
+  .toolbar > * { flex: none; }
+  .toolbar .theme, #tgFull, .apchip span { display: none; }
+  .app button { padding: 8px 11px; font-size: 13.5px; }
+  .app input, .app select, #cmd { font-size: 16px; }
+  .cmd { padding: 6px 8px; }
+  .app button.strip { font-size: 12.5px; min-height: 48px; }
   .hud-score { display: none; }
-  .hud-clock { bottom: 12px; }
-  .hud-clock .t { font-size: 20px; }
+  .hud-clock { bottom: 10px; right: 10px; }
+  .hud-clock .t { font-size: 18px; }
+  .hud-clock .lbl { display: none; }
+  .overlay { position: fixed; z-index: 30; align-items: flex-start; overflow-y: auto; }
+  .overlay .card { max-height: none; padding: 18px 16px; }
+  .coach { top: auto; bottom: 10px; max-height: 48%; overflow-y: auto; }
+  .fids { top: 56px; max-height: calc(100% - 70px); }
+  #sel .btns { gap: 6px; }
 }
 @media (max-width: 680px) {
   .grid2 { grid-template-columns: 1fr; }
@@ -582,6 +612,82 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 .relline.ok { color: var(--ok); } .relline.req { color: var(--warn); } .relline.exp { color: var(--alert); }
 .strip .rel { font-weight: 700; } .strip .rel.ok { color: var(--ok); } .strip .rel.req { color: var(--warn); } .strip .rel.exp { color: var(--alert); }
 
+/* emergencies */
+.app button.strip.emg { box-shadow: inset 0 0 0 2px var(--alert); }
+.app button.strip.emg .bar { background: var(--alert); animation: emgPulse 1s ease-in-out infinite; }
+@keyframes emgPulse { 50% { opacity: .35; } }
+.emgline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 2px; padding: 6px 8px; border-radius: 6px; background: color-mix(in srgb, var(--alert) 12%, transparent); color: var(--alert); font-size: 12.5px; }
+.emgline b { font-family: var(--font-data); letter-spacing: .04em; }
+.emgline button { margin-left: auto; }
+.warnline.bad { color: var(--alert); border-color: var(--alert); }
+
+/* radio realism */
+#log .blk .tx { color: var(--faint); font-style: italic; } #log .blk .who { color: var(--faint); }
+button.atis-letter { cursor: pointer; background: none; }
+button.atis-letter:hover { background: var(--amber-soft); }
+.atis-pop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(8,16,28,.45); }
+.atis-pop[hidden] { display: none; }
+.atis-card { position: relative; width: min(620px, 100%); max-height: 85vh; overflow: auto; background: var(--panel); color: var(--ink); border: 1px solid var(--line-2); border-radius: 12px; padding: 16px 18px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: grid; gap: 12px; }
+.atis-card .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.atis-card .pop-x { width: 30px; height: 30px; border: 0; background: none; color: var(--dim); font-size: 22px; cursor: pointer; border-radius: 4px; }
+.atis-body { font: 500 14px/1.6 var(--font-data); margin: 0; text-transform: uppercase; letter-spacing: .01em; }
+
+/* career log */
+.career { display: grid; gap: 20px; padding-block: 8px; }
+.cr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.cr-stat { background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px 16px; }
+.cr-stat .v { font: 700 28px/1.1 var(--font-head); margin-top: 6px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.cr-box { background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; padding: 18px 20px; min-width: 0; }
+.cr-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.cr-h h2 { margin: 0; font-size: 18px; }
+.cr-h .grow { flex: 1; }
+.cr-chart svg { width: 100%; height: auto; display: block; }
+.cr-chart text { font: 500 11px var(--font-data); fill: var(--dim); }
+.cr-chart line.grid { stroke: var(--line); } .cr-chart line.zero { stroke: var(--line-2); stroke-width: 1.5; }
+.cr-chart rect.pos { fill: var(--accent); } .cr-chart rect.neg { fill: var(--alert); } .cr-chart rect.ex { fill: var(--faint); }
+.cr-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.cr-badge { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px dashed var(--line-2); border-radius: 10px; color: var(--dim); }
+.cr-badge svg { flex: none; width: 40px; height: 40px; padding: 8px; border-radius: 50%; background: var(--panel-2); fill: none; stroke: var(--faint); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cr-badge > div { min-width: 0; }
+.cr-badge b { color: var(--ink-2); font-size: 14px; } .cr-badge p { margin: 2px 0 6px; font-size: 13px; line-height: 1.4; font-weight: 400; white-space: normal; }
+.cr-badge.got { border-style: solid; border-color: var(--line-2); background: var(--panel); color: var(--ink-2); }
+.cr-badge.got svg { background: var(--amber-soft); stroke: var(--amber); }
+.cr-badge.got b { color: var(--ink); }
+.cr-table table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.cr-table th, .cr-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cr-table .n { text-align: right; font-variant-numeric: tabular-nums; } .cr-table .bad { color: var(--alert); }
+.cr-confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+@media (min-width: 600px) and (max-width: 900px) and (min-height: 521px) {   /* tablet portrait: flight and strips side by side */
+  .app[data-mtab="strips"] .side, .app[data-mtab="flight"] .side { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); }
+  .app[data-mtab="strips"] .side > #sel, .app[data-mtab="flight"] .side > #sel { display: block; grid-column: 1; grid-row: 1 / span 2; overflow-y: auto; border-right: 1px solid var(--line); }
+  .app[data-mtab="flight"] .side > .strips-head:not(#x), .app[data-mtab="strips"] .side > .strips-head:not(#x) { display: block; grid-column: 2; grid-row: 1; }
+  .app[data-mtab="flight"] .side > #strips, .app[data-mtab="strips"] .side > #strips { display: flex; grid-column: 2; grid-row: 2; }
+  .app[data-mtab="flight"] .side > #atis, .app[data-mtab="strips"] .side > #atis { display: none; }
+}
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {   /* phone on its side: scope left, panel right */
+  .app { grid-template-columns: minmax(0,1fr) min(340px, 44vw); grid-template-rows: minmax(0,1fr) auto auto; }
+  .scopewrap { grid-row: 1 / span 2; grid-column: 1; }
+  .side { grid-row: 1; grid-column: 2; height: auto; border-top: 0; border-left: 1px solid var(--line); }
+  .bottom { grid-row: 2; grid-column: 2; border-left: 1px solid var(--line); }
+  .app[data-mtab="log"] .bottom, .app[data-mtab="map"] .bottom { grid-row: 1 / span 2; }
+  #log { height: auto; }
+  .mtabs { grid-row: 3; grid-column: 1 / span 2; }
+  .app .mtabs button { min-height: 40px; flex-direction: row; justify-content: center; padding: 6px 2px; }
+}
+
+/* academy figures */
+.figwrap { position: relative; }
+.fig .pin { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font: 700 12.5px/24px var(--font-body); text-align: center; box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.25); pointer-events: none; }
+.fig figcaption b { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; margin-right: 3px; }
+.fig.flow { background: var(--panel); }
+.fig.flow svg { padding: 6px 4px; }
+.fl-line line { stroke: var(--line-2); stroke-width: 3; }
+.fl-win rect { fill: color-mix(in srgb, var(--ok) 14%, transparent); stroke: var(--ok); stroke-dasharray: 4 3; }
+.fl-win text { fill: var(--ok); font: 600 12px var(--font-body); }
+.fl-st circle { fill: var(--panel); stroke: var(--accent); stroke-width: 3; } .fl-st circle.tel { stroke: var(--pink); }
+.fl-tx text { fill: var(--ink); font: 700 13px var(--font-data); } .fl-tx text.tel { fill: var(--pink); font-weight: 600; }
+.fl-sub text { fill: var(--dim); font: 500 11.5px var(--font-body); }
+
 </style>
 </head>
 <body>
@@ -594,6 +700,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     <a href="#airports" data-route="airports">Airports</a>
     <a href="#sim" data-route="sim">Simulator</a>
     <a href="#training" data-route="training">Academy</a>
+    <a href="#career" data-route="career">Career</a>
   </nav>
   <div class="status">
     <span class="live clk"><i></i><span id="topClock">--:--Z</span></span>
@@ -656,9 +763,12 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26h24M8 26V10h16v16"/><path d="M12 14h3M17 14h3M12 19h3M17 19h3"/></svg><h3>Chart-accurate aerodromes</h3><p>Runways, taxiways, holding points, stands, guard lights and hot spots are mapped to scale from OpenStreetMap and checked against the aerodrome chart, over a live street map. Taxi routing runs over the real taxiway network.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="16" cy="16" r="12"/><circle cx="16" cy="16" r="6"/><path d="M16 16l8-8"/></svg><h3>One map, radar to stand</h3><p>Scroll from the approach radar down to a single stand on one zoomable map. Zoom out and every flight is still there, flying its route from origin to destination.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 22c4-3 8-3 12 0s8 3 12 0M4 15c4-3 8-3 12 0s8 3 12 0"/><path d="M8 8h16" stroke-dasharray="2 3"/></svg><h3>Weather that matters</h3><p>Use the live METAR, refreshed every 30 minutes, paste your own or pick a scenario. A flashing ATIS warning tells you when it changes. Wind sets the runway, crosswind and turbulence limits make crews refuse approaches, and low cloud forces holds and diversions.</p></div>
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 9h22M5 16h16M5 23h19"/><circle cx="26" cy="16" r="2"/></svg><h3>Full R/T with read-backs</h3><p>Every clearance is spoken in standard phraseology with airline telephony, and crews read it back. Turn on voice to hear it, with a different accent for each airline, and hold to talk to give clearances by voice.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 9h22M5 16h16M5 23h19"/><circle cx="26" cy="16" r="2"/></svg><h3>A radio that sounds real</h3><p>Every clearance is spoken in standard phraseology with airline telephony, and crews read it back with squelch and static. Crews ask you to say again, two stations block each other, and the full ATIS is there to read. Hold to talk to give clearances by voice.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="6" width="22" height="20" rx="2"/><path d="M5 12h22M11 6v20"/></svg><h3>Flight progress strips</h3><p>Paper-style strips sort the flights waiting on you to the top. Click a strip for push-back and taxi pop-outs that preview the route on the map before you clear it. A Flights board lists the day's arrivals and departures.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6h14l6 6v14H6z"/><path d="M20 6v6h6M10 17h12M10 21h8"/></svg><h3>Academy and scoring</h3><p>A written guide for each airport, step-by-step exercises with an on-scope coach, and a score that counts separation, late road closures and airspace infringements.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M16 4l13 23H3z"/><path d="M16 13v6M16 23v.5"/></svg><h3>Emergencies and surprises</h3><p>MAYDAYs, medical diversions, bird strikes, debris closing the runway, a pedestrian over the barrier on short final and windshear reports in the levanter. Choose how often things go wrong.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Coordination with Spain</h3><p>Departures fly named routes and need a release from Sevilla or Casablanca on the landline before take-off. Releases take time and expire, and each flight is handed on to the right frequency.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 26V6M6 26h20"/><path d="M10 21l5-6 4 3 6-8"/></svg><h3>Career logbook, anywhere</h3><p>Your hours on frequency, score history and twelve badges are logged as you play. The console reshapes itself for phones and tablets, with the scope on top and a tab bar for the panels.</p></div>
     </div>
   </div></div>
 
@@ -691,12 +801,12 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
       <ol class="steps3">
         <li><b>Read the briefing</b><span>Aerodrome, procedures, weather and phraseology, in the order you meet them on shift.</span></li>
         <li><b>Fly the exercises</b><span>Your first departure, your first arrival, then a gale on the other runway.</span></li>
-        <li><b>Take a full session</b><span>Pick any day and hour from the timetable and run the rest of the day, scored as you go.</span></li>
+        <li><b>Take a full session</b><span>Pick any day and hour from the timetable, or Live now, and run the rest of the day. Every session goes into your career logbook.</span></li>
       </ol>
     </div>
   </div></div>
   <div class="section" style="padding-top:0"><div class="wrap"><div class="cta-band">
-    <div><h2>Take the frequency at Gibraltar.</h2><p>No download and no account. Open the position in your browser, pick the weather and start working traffic.</p></div>
+    <div><h2>Take the frequency at Gibraltar.</h2><p>No download and no account. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
     <div class="ctas"><a class="btn primary" href="#sim">Launch the simulator</a><a class="btn ghost" href="#training">Start with the Academy</a></div>
   </div></div></div>
   <footer class="footer2"><div class="wrap">
@@ -705,6 +815,22 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span></div>
   </div></footer>
+</section>
+
+<!-- ═════════════════════ CAREER LOG ═════════════════════ -->
+<section class="page" id="page-career" data-page="career" hidden>
+  <div class="pagehead"><div class="wrap">
+    <div class="eyebrow">Career</div>
+    <h1>Your logbook</h1>
+    <p>Every session you work is logged here: time on frequency, movements, your score and the badges you have earned. It is kept in this browser only, so it stays private to you and this device.</p>
+  </div></div>
+  <div class="wrap career">
+    <div class="cr-stats" id="crStats"></div>
+    <div class="cr-box"><div class="cr-h"><h2>Score history</h2><span class="lbl">Last 24 sessions · exercises in grey</span></div><div class="cr-chart" id="crChart"></div></div>
+    <div class="cr-box"><div class="cr-h"><h2>Badges</h2></div><div class="cr-badges" id="crBadges"></div></div>
+    <div class="cr-box"><div class="cr-h"><h2>Recent sessions</h2><span class="grow"></span><button class="btn" id="crReset">Clear logbook</button><span id="crResetConfirm" class="cr-confirm" hidden>Delete every session and badge? <button class="btn" data-a="yes">Delete</button> <button class="btn" data-a="no">Keep</button></span></div><div class="cr-table" id="crTable" style="overflow-x:auto"></div></div>
+    <p style="margin:8px 0 72px"><a class="btn primary" href="#sim">Open a position</a></p>
+  </div>
 </section>
 
 <!-- ═════════════════════ AIRPORTS ═════════════════════ -->
@@ -868,6 +994,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
           <label><span class="lbl">Weather</span><select id="wxPreset"></select></label>
           <label><span class="lbl">Day</span><select id="daySel"></select></label>
           <label><span class="lbl">Start time</span><select id="hourSel"></select></label>
+          <label><span class="lbl">Emergencies</span><select id="emgSel"><option value="off">Off · routine flights only</option><option value="some" selected>Occasional · about every 20 minutes</option><option value="often">Frequent · about every 10 minutes</option></select></label>
         </div>
         <div class="slotlist" id="slotList" aria-live="polite"></div>
         <label style="display:block;margin-top:12px"><span class="lbl">Live METAR (optional, overrides the weather)</span>
@@ -900,6 +1027,13 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
       <button class="go" type="submit">Send</button>
     </form>
   </div>
+  <nav class="mtabs" id="mtabs" aria-label="Console panels">
+    <button data-mtab="map"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3.5"/><path d="M10 10l5-5"/></svg>Scope</button>
+    <button data-mtab="flight"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v15M3 11l7-3 7 3M7 17h6"/></svg>Flight</button>
+    <button data-mtab="strips"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3.5" width="14" height="4" rx="1"/><rect x="3" y="9.5" width="14" height="4" rx="1"/><path d="M3 16.5h14"/></svg>Strips<span class="mt-n" id="mtNeed" hidden></span></button>
+    <button data-mtab="atis"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h9a2.5 2.5 0 1 0-2.5-2.5M3 11h12a2.5 2.5 0 1 1-2.5 2.5M3 15h6"/></svg>ATIS</button>
+    <button data-mtab="log"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 15V8a6 6 0 0 1 12 0v7M7 15v-3M13 15v-3M10 15V6"/></svg>Radio</button>
+  </nav>
 </div>
 </section>
 
@@ -920,7 +1054,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     <header>
       <div class="eyebrow">Academy · Gibraltar LXGB</div>
       <h1>Working Gibraltar, from stand to Sevilla.</h1>
-      <p>This guide teaches the position the way a unit briefing would. It covers the aerodrome, the road, the approaches, the weather and the words, in the order you will meet them on shift. Each section ends where the simulator picks up, and three guided exercises walk you through your first movements step by step.</p>
+      <p>This guide teaches the position the way a unit briefing would. It covers the aerodrome, the road, departures and the release from Spain, the approaches, the weather, emergencies and the radio, in the order you will meet them on shift. Each section ends where the simulator picks up, and three guided exercises walk you through your first movements step by step.</p>
     </header>
 
     <section id="t-position"><h2><span class="n">01</span>Your position</h2>
@@ -949,13 +1083,16 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 
     <section id="t-console"><h2><span class="n">03</span>Reading the console</h2>
       <h3>The scope</h3>
-      <p><b>Radar</b> shows 40 NM around the GBR TACAN with range rings every 5 NM, the bearing scale, R164, the Rock, the arrival routes and holds, and both SRA final paths. Scroll or pinch in to see the runway, finals and the aerodrome to scale over the street map. Zoom right out to follow flights across Europe and Africa: beyond radar cover they show as yellow plane icons with the same data tag. Drag to pan.</p>
+      <p>The scope is one map you scroll or pinch to zoom. Zoomed out it shows 40 NM around the GBR TACAN with range rings every 5 NM, the bearing scale, R164, the Rock, the arrival routes and holds, and both SRA final paths. Zoom in and the runway, finals and the aerodrome appear to scale over the street map. Zoom right out to follow flights across Europe and Africa. Drag to pan.</p>
+      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on the SRA final for runway 27, label in Tower colours. <b>4</b> The UPMUP hold. <b>5</b> R164, Spanish restricted airspace from the surface to FL300.</figcaption></figure>
       <div class="rt"><div><span class="w">Line 1</span><span class="p">EZY8901 ◆ — callsign, ◆ means the crew is waiting on you</span></div><div><span class="w">Line 2</span><span class="p">045↓030 21 — FL/altitude in hundreds, trend, cleared level (or SRA), groundspeed ÷ 10</span></div><div><span class="w">Line 3</span><span class="p">A20N R27 T — type, runway of the approach (or destination), T when on Tower</span></div></div>
-      <p>Arrivals are amber squares, departures blue circles, and the selected flight is white. Anything in conflict turns red. Beyond 60 NM flights are plane icons, and inbounds about to call appear as pending tracks. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
+      <p>Your traffic is drawn as plane icons in the shape of the real type (airliner, wide-body, business jet, turboprop or military) pointing the way the nose points. Arrivals are amber, departures blue and the selected flight is outlined. Anything in conflict, and any aircraft in an emergency, turns red. Grey icons with a short tag are real aircraft from the live feed that are not yours. Beyond radar cover your flights become yellow icons, and inbounds about to call appear as pending tracks. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
       <h3>The side panel</h3>
-      <p>The <b>ATIS</b> block shows the current information letter, the runway selector, the METAR and tiles for wind, head and crosswind on the runway in use, visibility and cloud, QNH, SRA minima and temperature. Below it is the <b>road crossing</b> control with its countdown. The <b>selected flight</b> card has the buttons that make sense for that aircraft right now. The <b>strips</b> are sorted with the flights waiting on you first. When the ATIS changes a red <b>ATIS</b> warning flashes by the runway until you click it, and the <b>Flights</b> button opens the day's arrivals and departures board.</p>
+      <p>The <b>ATIS</b> block shows the current information letter (click it to read the full broadcast), the runway selector, the METAR and tiles for wind, head and crosswind on the runway in use, visibility and cloud, QNH, SRA minima and temperature. Below it is the <b>road crossing</b> control with its countdown. The <b>selected flight</b> card has the buttons that make sense for that aircraft right now. The <b>strips</b> are sorted with the flights waiting on you first. When the ATIS changes a red <b>ATIS</b> warning flashes by the runway until you click it, and the <b>Flights</b> button opens the day's arrivals and departures board.</p>
       <h3>The command line</h3>
-      <p>Type a callsign (or just its digits, such as <code>8901</code>) followed by one or more instructions, then press Enter. With a flight selected you can leave the callsign out. Press <kbd>/</kbd> to jump to the command line, <kbd>Tab</kbd> to cycle flights and <kbd>Space</kbd> to pause.</p>
+      <p>Type a callsign (or just its digits, such as <code>8901</code>) followed by one or more instructions, then press Enter. With a flight selected you can leave the callsign out. Press <kbd>/</kbd> to jump to the command line, <kbd>Tab</kbd> to cycle flights and <kbd>Space</kbd> to pause. With <b>Voice</b> on you hear every transmission, and <b>Hold to talk</b> lets you say the instruction in standard phraseology instead.</p>
+      <h3>On a phone or tablet</h3>
+      <p>On a narrow screen the scope sits on top and a tab bar along the bottom chooses one panel under it: <b>Flight</b> (the selected aircraft and its buttons), <b>Strips</b> (with a red count of flights waiting on you), <b>ATIS</b>, <b>Radio</b> (the message log) or <b>Scope</b> for the map on its own. Tap an aircraft or a strip and the Flight panel opens. On a tablet held upright Flight and Strips sit side by side, and on a phone turned on its side the panel moves to the right of the scope.</p>
     </section>
 
     <section id="t-ground"><h2><span class="n">04</span>Ground and departures</h2>
@@ -973,16 +1110,31 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
       </table></div>
       <p>Press <b>Taxi…</b> to open the route picker. It lists each holding point the aircraft can reach with up to three routings, such as Echo via Bravo or Echo via Alpha and Bravo, with their lengths. Hover over one to see it drawn on the map, then click to issue the clearance. The clearance names the taxiways. Aircraft give way to each other: one that stops behind another shows <b>GIVING WAY</b> in its label. Stop one yourself with <code>HP</code> (hold position) and release it with <code>RES</code> (continue taxi). Re-clear a taxiing aircraft to a different holding point with <code>TAXI A</code> and the rest.</p>
       <div class="callout warn"><div class="lbl">Hot spot HS1</div><p>Holding point Alpha sits right at the junction of A and B. An aircraft holding at A blocks traffic along B to and from the civil apron, so sequence the outbound and inbound flows before you clear anyone onto A.</p></div>
-      <h3>Line up and take-off</h3>
-      <p><code>LU</code> lines an aircraft up and backtracks it to the turning circle. <code>CTO</code> clears it for take-off. Issued at the holding point, CTO lines it up, backtracks, turns and rolls in one go. The departure instruction comes with the clearance:</p>
+      <h3>Departure routes and the release</h3>
+      <p>Every departure flies a named standard route, given with the start-up: <b>PIMOS 1A</b> or <b>1B</b> to the east, <b>LINTO 1A/1B</b> to the west and <b>TTN 1A/1B</b> to Morocco. The A routes are for runway 27 (left turn heading 200), the B routes for runway 09 (straight ahead to 1,500 ft, then right heading 160). Both turns keep departures clear of R164 to the north and the Rock to the south. Once clear of the Rock the aircraft routes on to UPMUP and PIMOS, ODLUK and LINTO, or TTN by itself, climbing to 4,000 ft.</p>
+      <figure class="fig"><canvas id="figSids" aria-label="Map of the six departure routes"></canvas><figcaption>The six departure routes. Solid blue: the A routes off runway 27, turning left onto 200. Dashed amber: the B routes off runway 09, straight ahead and then right onto 160. Both join the same exit fixes: UPMUP and PIMOS for the east, ODLUK and LINTO for the west, Tetouan (TTN) for Morocco.</figcaption></figure>
       <div class="rt">
-        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, after departure turn left heading 200, climb altitude 4,000 feet, runway 27, cleared for takeoff, wind 260 degrees 8 knots</span></div>
-        <div><span class="w">BAW493</span><span class="p">Left heading 200, 4,000 feet, cleared for takeoff runway 27, Speedbird four niner three</span></div>
+        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, cleared to London Heathrow via PIMOS one Alpha departure, climb altitude 4,000 feet, squawk 4610, start-up and push back approved, facing west, QNH 1018</span></div>
+        <div><span class="w">BAW493</span><span class="p">Cleared London Heathrow, PIMOS one Alpha, 4,000 feet, squawk 4610, start and push approved facing west, QNH 1018, Speedbird four niner three</span></div>
       </div>
-      <p>For runway 09 the clearance is to climb straight ahead to 1,500 ft, then turn right heading 160. Both turns keep departures clear of R164 to the north and the Rock to the south. The departure minimum is <b>1,000 m visibility</b> at the threshold.</p>
-      <div class="callout"><div class="lbl">Modelled, not published</div><p>The AIP does not publish these post-departure headings. They are the simulator's stand-in for the clearances Radar would give.</p></div>
+      <p>Gibraltar sits under Spanish airspace, so no departure goes without a <b>release</b> from the next unit: <b>Sevilla</b> for the east and west routes, <b>Casablanca</b> for TTN. Press <b>Request release</b> or type <code>REL</code> any time after start-up. The call goes down the landline (shown in pink in the log) and the unit calls back within a couple of minutes: usually “released, valid until” a time ten minutes away, sometimes “not before” a time a few minutes ahead. The strip shows <b>REL…</b> while you wait and <b>REL</b> once released. <code>CTO</code> is refused without a valid release. If the window runs out before take-off, ask again.</p>
+      <figure class="fig flow"><svg viewBox="0 0 760 150" role="img" aria-label="A departure from stand to Sevilla: start-up with route, taxi, request release, released for ten minutes, take-off, Radar, Sevilla">
+        <g class="fl-line"><line x1="40" y1="62" x2="720" y2="62"/></g>
+        <g class="fl-win"><rect x="330" y="44" width="250" height="36" rx="18"/><text x="455" y="104" text-anchor="middle">release valid about 10 minutes</text></g>
+        <g class="fl-st"><circle cx="40" cy="62" r="9"/><circle cx="150" cy="62" r="9"/><circle cx="260" cy="62" r="9"/><circle class="tel" cx="345" cy="62" r="9"/><circle cx="460" cy="62" r="9"/><circle cx="600" cy="62" r="9"/><circle cx="720" cy="62" r="9"/></g>
+        <g class="fl-tx"><text x="40" y="30" text-anchor="middle">PUSH</text><text x="150" y="30" text-anchor="middle">TAXI</text><text x="260" y="30" text-anchor="middle">REL</text><text x="345" y="30" text-anchor="middle" class="tel">landline</text><text x="460" y="30" text-anchor="middle">CTO</text><text x="600" y="30" text-anchor="middle">HO 122.8</text><text x="750" y="30" text-anchor="end">HO 132.6</text></g>
+        <g class="fl-sub"><text x="40" y="104" text-anchor="middle">route and</text><text x="40" y="120" text-anchor="middle">squawk</text><text x="150" y="104" text-anchor="middle">to E or A</text><text x="260" y="104" text-anchor="middle">ask Sevilla</text><text x="260" y="120" text-anchor="middle">or Casablanca</text><text x="600" y="104" text-anchor="middle">Radar</text><text x="750" y="104" text-anchor="end">Sevilla, or</text><text x="750" y="120" text-anchor="end">Casablanca 125.5</text></g>
+      </svg><figcaption>A departure from stand to Sevilla. Ask for the release once the aircraft is taxiing so it comes back before the aircraft reaches the holding point, and use it before it expires.</figcaption></figure>
+      <div class="callout"><div class="lbl">Modelled, not published</div><p>The AIP publishes no SIDs for Gibraltar. These route names and headings are the simulator's stand-in for the departure clearances Gibraltar and Sevilla agree.</p></div>
+      <h3>Line up and take-off</h3>
+      <p><code>LU</code> lines an aircraft up and backtracks it to the turning circle. <code>CTO</code> clears it for take-off. Issued at the holding point, CTO lines it up, backtracks, turns and rolls in one go. The departure route is confirmed with the clearance:</p>
+      <div class="rt">
+        <div><span class="w">TWR</span><span class="a">Speedbird four niner three, PIMOS one Alpha departure, runway 27, cleared for takeoff, wind 260 degrees 8 knots</span></div>
+        <div><span class="w">BAW493</span><span class="p">PIMOS one Alpha, cleared for takeoff runway 27, Speedbird four niner three</span></div>
+      </div>
+      <p>If the runway changed since start-up, Tower gives the amended route. The departure minimum is <b>1,000 m visibility</b> at the threshold.</p>
       <h3>After take-off</h3>
-      <p>Above 1,000 ft the crew wants Radar: press <b>To Radar</b> (<code>HO</code>). Once clear of the Rock it asks for its exit fix: <b>UPMUP</b> then PIMOS for the east, <b>ODLUK</b> then LINTO for the west, or <b>TTN</b> for Morocco. Approve it with <code>DCT UPMUP A80</code>. Beyond about 22 NM it is ready for Sevilla or Casablanca, so transfer it with <code>HO</code>. One that leaves your airspace without a transfer costs points.</p>
+      <p>Above 1,000 ft the crew wants Radar: press <b>To Radar 122.8</b> (<code>HO</code>). On its route it turns towards its exit fix by itself and asks for further climb near 4,000 ft: give it <code>A80</code>. Vector it with a heading and it leaves the route, then asks for its exit fix when clear of the Rock (<code>DCT UPMUP A80</code>). Beyond about 22 NM it is ready for <b>Sevilla Control 132.6</b> or <b>Casablanca Control 125.5</b>. Transfer it with <code>HO</code>, or name the frequency yourself with <code>HO 132.6</code>. Give the wrong one and the crew finds nobody there and comes back to you a little later, which costs points. One that leaves your airspace without a transfer costs more.</p>
     </section>
 
     <section id="t-road"><h2><span class="n">05</span>Winston Churchill Avenue</h2>
@@ -1058,7 +1210,38 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
       <p>Helicopter routes in the Bay of Gibraltar conflict with the 09 approach and the 27 departure. They are not simulated, but they are one more reason the published procedures keep traffic tight to the runway.</p>
     </section>
 
-    <section id="t-commands"><h2><span class="n">09</span>Command reference</h2>
+    <section id="t-emergencies"><h2><span class="n">09</span>Emergencies and the unexpected</h2>
+      <p>Pick how often things go wrong when you open a session: <b>Off</b>, <b>Occasional</b> (about every 20 minutes) or <b>Frequent</b> (about every 10). Guided exercises have none. An emergency aircraft turns red on the scope and the strips, squawks 7700 for a MAYDAY, and its card shows what is wrong with a <b>Roger</b> button. Your first transmission to it acknowledges it, so you can roger it and give the approach in one go.</p>
+      <figure class="fig"><canvas id="figEmerg" aria-label="A MAYDAY aircraft on short final with the runway closed"></canvas><figcaption>Runway 27 closed for debris, with red crosses along it, while EXS96K comes down final under a MAYDAY. It cannot be cleared to land: send it around or hold it until the runway reopens. EZY8902 waits at Alpha with its release.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Event</th><th>What happens</th><th>What to do</th></tr>
+        <tr><td>MAYDAY</td><td>Engine failure or fire, smoke in the cabin, hydraulic failure. A departure turns back</td><td>Acknowledge, make it number one with a straight-in SRA, keep others out of its way. The runway is inspected after it lands</td></tr>
+        <tr><td>PAN medical</td><td>An arrival has a sick passenger and wants priority and an ambulance</td><td>Acknowledge and sequence it first</td></tr>
+        <tr><td>Medical diversion</td><td>An overflight bound for Morocco or the Canaries diverts in from the boundary</td><td>Treat it as an extra arrival with priority</td></tr>
+        <tr><td>Bird strike</td><td>A departure hits birds after take-off and returns, or an arrival reports birds on short final</td><td>Bring the returning aircraft in. The runway closes for an inspection</td></tr>
+        <tr><td>Runway closed</td><td>Debris, a tyre fragment or a fuel spill, for four to seven minutes</td><td>Cancel landing clearances (<code>GA</code> or <code>HOLD</code>) and hold departures until it reopens</td></tr>
+        <tr><td>Person on the runway</td><td>Someone climbs the barrier at Winston Churchill Avenue while an arrival is on final</td><td>Send it around straight away with <code>GA</code>. Leave it to the crew and they go around anyway, but late</td></tr>
+        <tr><td>Windshear report</td><td>In the levanter or gusty winds a crew reports a loss of airspeed on final. It goes into the ATIS</td><td>Pass it to every arrival on approach with <code>WS</code>. Briefed crews cope better</td></tr>
+      </table></div>
+    </section>
+
+    <section id="t-radio"><h2><span class="n">10</span>The radio</h2>
+      <p>With Voice on, every transmission opens and closes with a squelch click and a burst of static. Calls to Sevilla and Casablanca go down the landline, so they have none and show in pink in the log.</p>
+      <ul>
+        <li><b>Say again.</b> Now and then a crew misses an instruction and asks you to repeat it. Nothing you said has been applied: press the <b>Say again</b> button on its card or send it again.</li>
+        <li><b>Blocked transmissions.</b> When two stations call at once you hear a squeal and see <i>two stations transmitting at once, blocked</i> in the log. The crew calls again a few seconds later.</li>
+        <li><b>Wrong frequency.</b> Send a crew to the wrong frequency with <code>HO</code> and it comes back to you after half a minute, saying there was no reply.</li>
+      </ul>
+      <div class="rt">
+        <div><span class="w">RADAR</span><span class="a">Speedbird four niner two, turn left heading 240, descend altitude 4,000 feet</span></div>
+        <div><span class="w">BAW492</span><span class="p">Gibraltar, readability two, say again, Speedbird four niner two</span></div>
+        <div><span class="w">· · ·</span><span class="p">two stations transmitting at once, blocked</span></div>
+      </div>
+      <h3>The ATIS</h3>
+      <p>Click the information letter in the ATIS panel to read the full broadcast, and press <b>Broadcast it</b> to hear it. It carries the runway, the approach in use, wind, visibility, cloud, temperature, QNH, the transition level, turbulence and windshear warnings, any runway closure and the reminders about the road and the departure release. When it changes, a red ATIS button flashes until you click it.</p>
+    </section>
+
+    <section id="t-commands"><h2><span class="n">11</span>Command reference</h2>
       <div class="tbl"><table>
         <tr><th>Command</th><th>Meaning</th><th>Example</th></tr>
         <tr><td class="mono">H### / L### / R###</td><td>Fly heading, turn left or turn right heading</td><td class="mono">EZY8901 L200</td></tr>
@@ -1067,21 +1250,24 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
         <tr><td class="mono">DCT fix</td><td>Proceed direct to a fix</td><td class="mono">DCT UPMUP</td></tr>
         <tr><td class="mono">HOLD [fix]</td><td>Hold at a fix, or at present position</td><td class="mono">HOLD UPMUP</td></tr>
         <tr><td class="mono">APP 27 / APP 09</td><td>Clear the surveillance radar approach</td><td class="mono">APP 27</td></tr>
-        <tr><td class="mono">HO</td><td>Transfer: Radar ↔ Tower, then Sevilla or Casablanca</td><td class="mono">HO</td></tr>
+        <tr><td class="mono">HO [freq]</td><td>Transfer: Radar ↔ Tower, then Sevilla 132.6 or Casablanca 125.5. A wrong frequency sends the crew away and back</td><td class="mono">HO 132.6</td></tr>
         <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
         <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
-        <tr><td class="mono">PUSH [E|W]</td><td>Start-up and push back approved, facing east or west</td><td class="mono">BAW493 PUSH E</td></tr>
+        <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west</td><td class="mono">BAW493 PUSH E</td></tr>
         <tr><td class="mono">TAXI [A|C|D|E] [VIA …]</td><td>Taxi to a holding point, by the shortest route or the one you name. <b>Taxi…</b> on the selected flight opens the route picker</td><td class="mono">TAXI E VIA A B</td></tr>
         <tr><td class="mono">HP / RES</td><td>Hold position / continue taxi</td><td class="mono">HP</td></tr>
         <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
-        <tr><td class="mono">CTO</td><td>Cleared for take-off, with the departure instruction</td><td class="mono">CTO</td></tr>
+        <tr><td class="mono">REL</td><td>Request the departure release from Sevilla or Casablanca on the landline</td><td class="mono">REL</td></tr>
+        <tr><td class="mono">CTO</td><td>Cleared for take-off on the departure route. Needs a valid release</td><td class="mono">CTO</td></tr>
         <tr><td class="mono">VAC [A|C|D|E]</td><td>Vacate (backtrack if needed) and taxi to stand</td><td class="mono">VAC</td></tr>
+        <tr><td class="mono">ROG</td><td>Acknowledge a MAYDAY or PAN (any instruction to it also does)</td><td class="mono">EXS96K ROG</td></tr>
+        <tr><td class="mono">WS</td><td>Pass the latest windshear report to an arrival</td><td class="mono">BAW492 WS</td></tr>
         <tr><td class="mono">IDENT</td><td>Squawk ident</td><td class="mono">IDENT</td></tr>
       </table></div>
       <p>Commands chain: <code>EZY6497 L180 A40 S200</code> is one transmission. The callsign can be shortened to its unique digits.</p>
     </section>
 
-    <section id="t-scoring"><h2><span class="n">10</span>Scoring</h2>
+    <section id="t-scoring"><h2><span class="n">12</span>Scoring and your career</h2>
       <div class="tbl"><table>
         <tr><th>Event</th><th>Points</th></tr>
         <tr><td>Landing</td><td class="mono">+25</td></tr>
@@ -1093,25 +1279,32 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
         <tr><td>Loss of separation</td><td class="mono">−50</td></tr>
         <tr><td>Movement across the road with barriers up, or landing with the road open</td><td class="mono">−60</td></tr>
         <tr><td>Over the Rock below 3,000 ft (below 1,800 ft)</td><td class="mono">−30 (−80)</td></tr>
+        <tr><td>Emergency acknowledged in time · landed safely</td><td class="mono">+10 · +40</td></tr>
+        <tr><td>Arrival sent around for a person on the runway · windshear passed</td><td class="mono">+20 · +5</td></tr>
+        <tr><td>Emergency not acknowledged within a minute · crew sent to a wrong frequency</td><td class="mono">−10 · −10</td></tr>
+        <tr><td>Crew had to go around on its own for a person on the runway</td><td class="mono">−25</td></tr>
+        <tr><td>Arrival still cleared to land on a closed runway</td><td class="mono">−30</td></tr>
       </table></div>
+      <p>Every session you work for more than a minute goes into your <a href="#career">Career</a> logbook: time on frequency, movements, go-arounds, separation losses and score, with a chart of your recent scores and twelve badges to earn, from <b>First contact</b> to <b>Ten hours</b>. The logbook is kept in your browser, so it stays on this device.</p>
     </section>
 
-    <section id="t-exercises"><h2><span class="n">11</span>Guided exercises</h2>
+    <section id="t-exercises"><h2><span class="n">13</span>Guided exercises</h2>
       <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. The card tells you what the crew wants, which button or command does it, and moves on when you have done it.</p>
       <div class="exgrid">
-        <div class="ex"><div class="nm">1 · First departure</div><p>One A320neo on stand 3, fair weather, runway 27. Push, taxi via Bravo to Echo, close the road, backtrack and take off, then route it out to Sevilla.</p><button class="btn primary" data-ex="dep">Start exercise</button></div>
+        <div class="ex"><div class="nm">1 · First departure</div><p>One A320neo on stand 3, fair weather, runway 27. Push with its PIMOS 1A route, taxi via Bravo to Echo, get Sevilla's release, close the road, backtrack and take off, then hand it to Sevilla on 132.6.</p><button class="btn primary" data-ex="dep">Start exercise</button></div>
         <div class="ex"><div class="nm">2 · First arrival</div><p>One arrival from the east. Descend it, clear the SRA for runway 27, close the road in time, land it, and backtrack it to Alpha and the stand.</p><button class="btn primary" data-ex="arr">Start exercise</button></div>
-        <div class="ex"><div class="nm">3 · Levanter, runway 09</div><p>An easterly gale. The arrival joins via RIPRA and Point X-Ray in the lee of the Rock while an ATR departs from the south apron via Charlie.</p><button class="btn primary" data-ex="lev">Start exercise</button></div>
+        <div class="ex"><div class="nm">3 · Levanter, runway 09</div><p>An easterly gale. The arrival joins via RIPRA and Point X-Ray in the lee of the Rock while an ATR departs from the south apron via Charlie, released by Casablanca.</p><button class="btn primary" data-ex="lev">Start exercise</button></div>
       </div>
     </section>
 
-    <section id="t-limits"><h2><span class="n">12</span>What is simplified</h2>
+    <section id="t-limits"><h2><span class="n">14</span>What is simplified</h2>
       <ul>
         <li>Radar and Tower are one position, and Ground is worked on the Tower frequency.</li>
         <li>The timetable is a representative week, and routes between airports are approximate. Live now uses today’s real flights and positions, but once a flight is yours it follows your instructions rather than its real track.</li>
         <li>The R164 northern boundary and the outline of the Rock are approximations. The aerodrome layout follows OpenStreetMap, checked against chart D1.</li>
-        <li>The post-departure headings and the crew wind limits are modelled, not published.</li>
-        <li>Helicopter traffic, birds (a real year-round hazard at LXGB), the arresting gear and lamp signals are not simulated.</li>
+        <li>The departure route names, post-departure headings, release times and crew wind limits are modelled, not published.</li>
+        <li>Emergencies follow a simple script: the crew declares, you acknowledge and give priority, and it lands. Fire service, ambulance and inspections are reported in the log rather than drawn.</li>
+        <li>Helicopter traffic, the arresting gear and lamp signals are not simulated.</li>
       </ul>
     </section>
   </article>
@@ -1481,10 +1674,19 @@ function say(text, who){
   } catch(e) {}
 }
 function atc(ac, text){ const line = `${spoken(ac.cs)}, ${text}`; log('atc', line, ac.freq === 'TWR' ? 'TOWER' : 'RADAR'); say(line, 'atc'); }
-function pilot(ac, text){ const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300); }
+// Unprompted calls (not read-backs) now and then collide with another station and are blocked; the crew calls again.
+let inCmd = false, lastCallT = -99;
+function pilot(ac, text, again){
+  if (!inCmd && !again && S.running && !ac.emerg && (S.t - lastCallT < 3 ? Math.random() < 0.6 : Math.random() < 0.025)) {
+    log('blk', 'two stations transmitting at once, blocked', '· · ·'); if (typeof radioFx === 'function') radioFx('blocked');
+    (S.recalls ||= []).push({ at: S.t + rnd(8, 16), ac, text }); lastCallT = S.t; return;
+  }
+  if (!inCmd) lastCallT = S.t;
+  const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300);
+}
 function sys(text, bad){ log(bad ? 'bad' : 'sys', text); }
 // landline coordination with Sevilla / Casablanca (not on the frequency)
-function coord(text, who){ log('coord', text, who); say(text, who === 'GIBRALTAR' ? 'atc' : who); }
+function coord(text, who){ log('coord', text, who); say(text, 'tel:' + who); }
 function requestRelease(ac){
   const who = relUnit(ac), sid = sidName(ac.gate, S.rwy);
   ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
@@ -1723,7 +1925,10 @@ function findAc(token){
 }
 function windPhrase(){ const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3(w.dir)+' degrees'} ${w.spd} knots${w.gust ? ' gusting '+w.gust : ''}`; }
 const viaWords = v => v.length ? ' via ' + v.map(t => PHON[t] || t).join(', ') : '';
-function command(str){
+const SAY_AGAIN = ['say again', 'say again, you were broken', 'Gibraltar, readability two, say again', 'say again the last instruction'];
+const garbleable = (ac, toks) => ac.airborne && !ac.emerg && ac.mode !== 'FINAL' && ac.state !== 'PRE' && toks.length && toks.every(t => /^([HLRACDS]\d{1,5}|SN|DCT|APP|HOLD|09|27)$/.test(t) || WP[t]);
+function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
+function commandRun(str){
   const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
   if (!toks.length) return;
   let ac = findAc(toks[0]);
@@ -1734,6 +1939,7 @@ function command(str){
   const said = [], reads = [];
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
+  const snap = garbleable(ac, toks) && Math.random() < 0.05 ? { ...ac } : null;   // the crew misses it now and then
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]; let r;
     if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
@@ -1788,12 +1994,13 @@ function command(str){
       reads.push(`hold ${ac.hold.name}`);
     } else if (t === 'CTL') {
       if (ac.kind !== 'ARR' || !air) { sys(`${ac.cs} is not on approach.`); continue; }
+      { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): you can't clear ${ac.cs} to land. Hold it or send it around.`, true); continue; } }
       const rw = ac.app || S.rwy; ac.ctl = true; ac.need = null; ac.freq = 'TWR';
       said.push(`runway ${rw}, cleared to land, ${windPhrase()}`); reads.push(`cleared to land runway ${rw}`);
       if (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') sys('Winston Churchill Avenue is still open.');
     } else if (t === 'GA' && air) {
       if (ac.kind !== 'ARR') { sys(`${ac.cs} is a departure.`); continue; }
-      goAround(ac, null); said.push('go around, I say again go around, climb altitude 4,000 feet'); reads.push('going around, climbing 4,000 feet');
+      emgOnGA(ac); goAround(ac, null); said.push('go around, I say again go around, climb altitude 4,000 feet'); reads.push('going around, climbing 4,000 feet');
     } else if (t === 'HO' || t === 'CONT') {
       if (!air) { sys(`${ac.cs} is on the ground and stays with Tower.`); continue; }
       const unit = ac.kind === 'DEP' ? (ac.freq === 'TWR' ? ['Gibraltar Radar','122.8'] : NEXT_UNIT[ac.gate]) : ['Gibraltar Tower','131.2'];
@@ -1856,6 +2063,7 @@ function command(str){
       if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state)) { sys(`${ac.cs} is not ready for takeoff.`); continue; }
       if (S.wx.vis < 1000) { atc(ac, `runway ${S.rwy}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${S.rwy}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
+      { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
       { const R = ac.rel, who = relUnit(ac);
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
@@ -1871,6 +2079,10 @@ function command(str){
       setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); turnRound(ac); });
       const stp = ac.stand ? `stand ${ac.stand.id}` : 'as directed';
       said.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}, taxi ${stp}${viaWords(ac.taxiVia || [])}`); reads.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate ${PHON[ac.exit]}, ${stp}`);
+    } else if (t === 'ROG') {
+      const a = emgAck(ac); if (!a) { sys(`${ac.cs} has not declared an emergency.`); continue; } said.push(a); reads.push('roger');
+    } else if (t === 'WS') {
+      const a = emgWS(ac); if (!a) { sys('No windshear has been reported.'); continue; } said.push(a); reads.push('copied the windshear');
     } else if (t === 'REL') {
       if (ac.kind !== 'DEP' || air) { sys(`${ac.cs} doesn't need a departure release.`); continue; }
       if (ac.rel && ac.rel.st === 'REQ') { sys(`Release for ${ac.cs} already requested: ${relUnit(ac)} will call back.`); continue; }
@@ -1879,7 +2091,14 @@ function command(str){
     } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
-  if (said.length) { atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency') ac.need = null; emit('cmd', { ac, toks }); }
+  if (said.length && snap) {
+    atc(ac, said.join(', '));
+    for (const k of Object.keys(ac)) if (!(k in snap)) delete ac[k];
+    Object.assign(ac, snap); ac.lastCmd = toks.join(' ');
+    pilot(ac, SAY_AGAIN[Math.floor(Math.random()*SAY_AGAIN.length)]); ac.need = 'Say again';
+    renderSel(); renderStrips(true); return;
+  }
+  if (said.length) { if (ac.emerg && !ac.emerg.ack) { const a = emgAck(ac); if (a) { said.unshift(a); reads.unshift('roger'); } } atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency' || ac.need === 'Say again') ac.need = null; emit('cmd', { ac, toks }); }
   renderSel(); renderStrips(true);
 }
 function willIntercept(ac, F){
@@ -1935,7 +2154,8 @@ function step(dt){
   if (X.st === 'OPENING' && S.t >= X.t) { X.st = 'OPEN'; renderAtis(); emit('xing', 'OPEN'); }
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
 
-  stepTows();
+  stepTows(); if (S.emg) stepEmerg(dt);
+  if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
@@ -2085,9 +2305,11 @@ function stepAir(ac, dt){
       if (rw === '27' && w.dir >= 200 && w.dir <= 250 && w.spd >= 25 && Math.random() < 0.25) return goAround(ac, 'waterspout on the approach');
       if (w.cb) p = Math.max(p, 0.15);
       const lim = windLimit(ac, rw); if (lim) return goAround(ac, lim);
-      if (Math.random() < p) return goAround(ac, rw === '09' ? 'severe turbulence and windshear in the lee of the Rock' : 'windshear');
+      if (ac.wsTold) p *= 0.6;   // briefed crews add speed and are ready for it
+      if (Math.random() < p) { if (S.emg && (!S.emg.ws || S.t - S.emg.ws.t > 300)) shearReport(ac, rw); return goAround(ac, rw === '09' ? 'severe turbulence and windshear in the lee of the Rock' : 'windshear'); }
     }
     if (fin.togo < 0.9 && !ac.ctl && !ac.warnedCtl) { ac.warnedCtl = true; pilot(ac, `short final runway ${rw}, request landing clearance`); ac.need = 'Short final, no clearance'; }
+    { const blk = rwyBlocked(); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && S.acs.some(o => o !== ac && o.onRwy)) return goAround(ac, 'runway occupied');
     if (fin.togo < 0.4 && S.xing.st !== 'CLOSED') { S.score.incidents++; S.score.pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
@@ -2239,6 +2461,7 @@ function draw(){
   if (S.preview) drawPreview(S.preview);
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
+  if (typeof drawRwyBlock === 'function') drawRwyBlock();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
   if (img) drawImageryCredit();
@@ -2522,7 +2745,7 @@ function drawAc(ac){
   const sc = V.scale, X = sx(ac.x), Y = sy(ac.y);
   if (X < -200 || Y < -200 || X > W+200 || Y > H+200) return;
   const sel = S.sel === ac, conf = S.conflictSet.has(ac.cs);
-  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : conf ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
+  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : conf || (ac.emerg && !ac.emerg.done) ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
   cx.fillStyle = col; cx.globalAlpha = 0.45;
   if (!ac.ground && sc < 400) for (const [hx,hy] of ac.hist) cx.fillRect(sx(hx)-1, sy(hy)-1, 2, 2);
   cx.globalAlpha = 1;
@@ -2543,7 +2766,7 @@ function drawAc(ac){
   const lx = X + 16, ly = Y - 26;
   cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+8, Y-8); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
   cx.font = `500 11.5px ${FONT_D}`;
-  const l1 = ac.cs + (ac.need ? ' ◆' : '');
+  const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need ? ' ◆' : '');
   let l2, l3 = '';
   if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN'; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
   else {
@@ -2565,12 +2788,25 @@ function stateLabel(ac){
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
 function select(ac){ S.sel = ac; renderSel(); renderStrips(true); }
+// ── phone and tablet: one panel at a time under the scope, chosen from a tab bar ──
+const phoneMQ = matchMedia('(max-width: 900px)');
+function setMTab(t){
+  const app = document.querySelector('.app'); if (!app) return;
+  app.dataset.mtab = t;
+  document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.classList.toggle('on', b.dataset.mtab === t));
+  if (t === 'log') { const l = $('log'); l.scrollTop = l.scrollHeight; }
+  requestAnimationFrame(resize);
+}
+function tapSelect(ac){ select(ac); if (phoneMQ.matches && document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight'); }
+document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.onclick = () => setMTab(b.dataset.mtab));
+setMTab('strips');
+phoneMQ.addEventListener && phoneMQ.addEventListener('change', () => requestAnimationFrame(resize));
 function renderAtis(){
   const w = S.wx, c = windComp(w, S.rwy === '27' ? CRS27 : CRS09), X = S.xing, tex = turbExcess(w);
   const cloud = w.clouds.length ? w.clouds.join(' ') : (w.raw.includes('CAVOK') ? 'CAVOK' : 'NSC');
   const pct = X.st === 'CLOSING' ? clamp(1 - (X.t - S.t)/150, 0, 1) : X.st === 'CLOSED' ? 1 : X.st === 'OPENING' ? clamp((X.t - S.t)/15, 0, 1) : 0;
   $('atis').innerHTML = `
-    <div class="ph"><span class="lbl">ATIS</span><span class="atis-letter">${S.atis}</span><span class="lbl dimmer">${phonetic(S.atis)}</span>
+    <div class="ph"><span class="lbl">ATIS</span><button id="atisRead" class="atis-letter" title="Read the ATIS broadcast">${S.atis}</button><span class="lbl dimmer">${phonetic(S.atis)}</span>
       <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">Runway</span>
       <span class="seg sm"><button id="rw27" class="${S.rwy==='27'?'on':''}">27</button><button id="rw09" class="${S.rwy==='09'?'on':''}">09</button></span></div>
     <div class="metar"></div>
@@ -2582,6 +2818,8 @@ function renderAtis(){
       <div class="tile"><div class="lbl">SRA mins</div><div class="v ${sraMinsOk(w)?'ok':'bad'}">${sraMinsOk(w)?'OK':'BELOW'}</div></div>
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
+    ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${S.rwy} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
+    ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the Special Procedures limit. Expect windshear on final.</div>` : ''}
     <div class="xing st-${X.st}">
       <div class="xing-l"><div class="lbl">Winston Churchill Avenue</div>
@@ -2589,6 +2827,7 @@ function renderAtis(){
         <div class="bar"><i style="width:${Math.round(pct*100)}%"></i></div></div>
       <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`;
   $('atis').querySelector('.metar').textContent = w.raw;
+  $('atisRead').onclick = () => openAtis();
   $('rw27').onclick = () => setRwy('27'); $('rw09').onclick = () => setRwy('09');
   if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
   $('xBtn').onclick = toggleXing;
@@ -2620,7 +2859,8 @@ function renderSel(){
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → LXGB` : `LXGB → ${ac.d}`;
   let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span><span class="grow"></span><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? 'Tower 131.2' : 'Radar 122.8'}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
-  if (ac.need) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
+  if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
+  if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${relCls(ac)}">${relText(ac)}</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-GBR[0], ac.y-GBR[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls Gibraltar Radar at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
@@ -2629,6 +2869,8 @@ function renderSel(){
     ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
     <div class="ctl"><label><span class="lbl">Heading</span><input id="iH" placeholder="270" inputmode="numeric"></label><label><span class="lbl">Altitude ×100</span><input id="iA" placeholder="40" inputmode="numeric"></label><label><span class="lbl">Speed</span><input id="iS" placeholder="180" inputmode="numeric"></label></div><div class="btns">`;
     if (ac.diverting) html += b(`DCT ${ac.diverting} A80`, 'Approve diversion', true, 'go');
+    if (ac.need === 'Say again' && ac.lastCmd) html += b(ac.lastCmd, 'Say again: ' + esc(ac.lastCmd), true, 'go');
+    if (ac.kind === 'ARR' && S.emg && S.emg.ws && !ac.wsTold) html += b('WS', 'Pass windshear', true, 'go');
     if (ac.kind === 'ARR') html += b('APP 27','SRA 27', true, S.rwy==='27'?'on':'') + b('APP 09','SRA 09', true, S.rwy==='09'?'on':'') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
     else html += b('HO', ac.freq === 'TWR' ? 'To Radar 122.8' : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A80','Climb FL80');
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).map(k => `<option>${k}</option>`).join('')}</select></div>`;
@@ -2737,7 +2979,7 @@ function renderStrips(force){
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
   for (const ac of list) {
-    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}`;
+    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}`;
     d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
     d.querySelector('.cs').textContent = ac.cs;
     d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
@@ -2746,10 +2988,11 @@ function renderStrips(force){
     const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
     d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
     if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = document.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
-    d.onclick = () => select(ac); el.appendChild(d);
+    d.onclick = () => tapSelect(ac); el.appendChild(d);
   }
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
+  { const n = S.acs.filter(a => a.need).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
 }
 function renderScore(){
@@ -2778,7 +3021,7 @@ function drawTo(canvas, k, opts = {}){
   if (W && H) {
     viewFor(k); if (opts.tweak) opts.tweak(V);
     if (opts.acs) S.acs = opts.acs; if (opts.proc !== undefined) S.showProc = opts.proc;
-    draw(); out = { cx: V.cx, cy: V.cy, scale: V.scale, W, H };
+    draw(); if (opts.post) opts.post(); out = { cx: V.cx, cy: V.cy, scale: V.scale, W, H, pins: opts.pins ? opts.pins.map(p => [sx(p[0]), sy(p[1])]) : null };
   }
   cv = sv.cv; cx = sv.cx; W = sv.W; H = sv.H; DPR = sv.DPR; V.cx = sv.vx; V.cy = sv.vy; V.scale = sv.vs; V.name = sv.vn; S.acs = sv.acs; S.showProc = sv.proc;
   setTheme(th);
@@ -2817,7 +3060,7 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) select(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
@@ -2853,7 +3096,7 @@ daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListen
 renderSlots();
 function resetSession(){
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
-  S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+  S.emg = null; S.recalls = []; S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
@@ -2878,6 +3121,8 @@ function start(){
     else if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys('Wind exceeds the Special Procedures turbulence limit: expect windshear on final and go-arounds.');
     if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft): arrivals will not be able to land.');
+    emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
+    if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');
     emit('start', mode);
   } else { nextAtis(); sys(`Weather updated: ${S.wx.raw}. Information ${phonetic(S.atis)}.`); if (newRwy !== S.rwy) sys(`Wind now favours runway ${newRwy}.`); }
@@ -2906,7 +3151,7 @@ let last = performance.now(), uiT = 0;
 function frame(now){
   const dtr = Math.min(0.25, (now - last)/1000); last = now;
   if (S.running && !S.paused) { let t = dtr*S.speed; while (t > 0) { const h = Math.min(0.2, t); step(h); t -= h; } }
-  uiT += dtr;
+  uiT += dtr; if (typeof careerTick === 'function') careerTick(dtr);
   if (document.body.dataset.route === 'sim') {
     if (uiT > 0.5) { uiT = 0; renderStrips(); renderScore(); if (S.sel) { const a = document.activeElement; if (!(a && a.closest && a.closest('#sel'))) renderSel(); } emit('tick'); }
     if (cv.clientWidth && (Math.abs(cv.clientWidth - W) > 1 || Math.abs(cv.clientHeight - H) > 1)) resize();
@@ -2915,6 +3160,287 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 window.__S = S; window.__cmd = command; window.__step = step; window.__start = start;
+
+// ═════════════════════════ emergencies and things going wrong ═════════════════════════
+// A scheduler picks an event that fits the traffic on frequency: a MAYDAY, a medical PAN, a medical diversion from an
+// overflight, a bird strike, debris or an inspection closing the runway, a pedestrian jumping the barrier on the
+// avenue, or a windshear report in the levanter. The first transmission to an emergency acknowledges it.
+const EMG_RATE = { off: 0, some: 22*60, often: 9*60 };
+const DIVERTS = [
+  { cs: 'TOM5HM', t: 'B738', o: 'EGBB', gate: 'E', to: 'Marrakech' },
+  { cs: 'EZY35KM', t: 'A20N', o: 'EGKK', gate: 'E', to: 'Marrakech' },
+  { cs: 'EXS4LW', t: 'B738', o: 'EGCC', gate: 'W', to: 'Tenerife' },
+  { cs: 'RAM970', t: 'B738', o: 'GMMN', gate: 'S', to: 'Paris' }
+];
+const MAYDAYS = ['engine failure', 'engine fire, fire is out', 'smoke in the cabin', 'hydraulic failure'];
+const MEDICAL = ['a passenger with suspected heart attack', 'a passenger having a stroke', 'a passenger unconscious, not responding', 'a crew member taken seriously ill'];
+const pob = ac => ac.perf.wake === 'L' ? Math.round(rnd(3, 9)) : ac.t === 'AT76' ? Math.round(rnd(40, 68)) : Math.round(rnd(120, 186));
+function emgInit(level){
+  S.emg = { level, rate: EMG_RATE[level] || 0, next: S.t + rnd(7, 13)*60, rwyBlock: null, incursion: null, ws: null, inspectAfter: null, handled: 0 };
+}
+const rwyBlocked = () => S.emg && (S.emg.rwyBlock ? S.emg.rwyBlock.why : S.emg.incursion ? 'a pedestrian on the runway at the crossing' : null);
+const onFinalNear = (ac, nm) => ac.airborne && ac.kind === 'ARR' && ac.mode === 'FINAL' && ac.app && ac.state !== 'MISSED' && finalDist(ac) < nm;
+function finalDist(ac){ const F = FINAL[ac.app]; return F ? onFinal(ac, F).togo : 99; }
+
+function declare(ac, k, why, extra){
+  ac.emerg = { k, why, t: S.t, ack: false };
+  ac.sqkWas = ac.sqk; ac.sqk = k === 'MAYDAY' ? '7700' : ac.sqk;
+  const three = k === 'MAYDAY' ? 'MAYDAY MAYDAY MAYDAY' : 'PAN PAN, PAN PAN, PAN PAN';
+  pilot(ac, `${three}, ${ac.unit()}, ${spoken(ac.cs)}, ${why}, ${extra}, ${pob(ac)} persons on board`);
+  ac.need = `${k}: ${why.split(',')[0]}`;
+  sys(`${k === 'MAYDAY' ? 'Distress' : 'Urgency'}: ${ac.cs} ${why}. Acknowledge it, give it priority and a straight-in approach. Emergency services are alerted.`, true);
+  emit('emergency', ac);
+  if (S.sel !== ac) select(ac);
+}
+// a departure in trouble becomes an arrival back to Gibraltar
+function makeReturn(ac){
+  Object.assign(ac, { kind: 'ARR', o: 'LXGB', d: undefined, state: 'VECTORS', route: [], app: null, ctl: false, onSid: false, handed: false, turn: null, stand: null,
+    checked: false, shearChecked: false, warnedCtl: false, warned15: false, warned10: false, askedApp: true, cto: false });
+  if (ac.mode === 'NAV') { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
+  ac.tgtAlt = ac.cleared = Math.min(ac.tgtAlt || 4000, 4000);
+  S.score.pts += 0;
+}
+function block(why, mins){
+  const E = S.emg; E.rwyBlock = { why, until: S.t + mins*60 };
+  sys(`Runway ${S.rwy} CLOSED: ${why}. About ${Math.round(mins)} minutes. Send arrivals around or hold them, and hold departures.`, true);
+  for (const a of S.acs) if (a.ctl && a.airborne && a.mode === 'FINAL') sys(`${a.cs} is cleared to land on a closed runway: send it around.`, true);
+  nextAtis(); renderAtis(); emit('rwyblock', why);
+}
+
+const EVENTS = {
+  mayday(){
+    const c = S.acs.filter(a => a.airborne && !a.emerg && a.state !== 'PRE' && !a.handed && a.state !== 'MISSED' && a.state !== 'DIVERTING' &&
+      ((a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state) && Math.hypot(a.x - GBR[0], a.y - GBR[1]) > 10) || (a.kind === 'DEP' && a.state === 'CLIMB' && a.alt > 2500)));
+    if (!c.length) return false;
+    const ac = c[Math.floor(Math.random()*c.length)], why = MAYDAYS[Math.floor(Math.random()*MAYDAYS.length)];
+    const ret = ac.kind === 'DEP'; if (ret) makeReturn(ac);
+    if (/engine/.test(why)) ac.tgtSpd = Math.min(ac.tgtSpd || 999, ac.perf.vapp + 40);
+    declare(ac, 'MAYDAY', why, `${altShort(Math.round(ac.alt/100)*100)}, request ${ret ? 'immediate return, ' : ''}priority landing runway ${S.rwy}`);
+    return true;
+  },
+  medical(){
+    const c = S.acs.filter(a => a.airborne && !a.emerg && a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state));
+    if (!c.length) return false;
+    const ac = c[Math.floor(Math.random()*c.length)];
+    declare(ac, 'PAN', `medical emergency, ${MEDICAL[Math.floor(Math.random()*MEDICAL.length)]}`, 'request priority and an ambulance on arrival');
+    return true;
+  },
+  divert(){
+    if (S.acs.filter(a => a.airborne && a.kind === 'ARR').length > 5) return false;
+    const opts = DIVERTS.filter(d => !S.acs.some(a => a.cs === d.cs)); if (!opts.length) return false;
+    const d = opts[Math.floor(Math.random()*opts.length)];
+    const ac = spawnArrival({ cs: d.cs, t: d.t, k: 'ARR', o: d.o, gate: d.gate, m: S.t/60, diverted: true });
+    ac.need = null;
+    declare(ac, 'PAN', `medical diversion, ${MEDICAL[Math.floor(Math.random()*MEDICAL.length)]}, we were en route to ${d.to}`, 'request diversion to Gibraltar and an ambulance on arrival');
+    return true;
+  },
+  bird(){
+    const dep = S.acs.filter(a => a.kind === 'DEP' && a.airborne && !a.emerg && a.alt < 2500 && a.alt > 400);
+    if (dep.length) {
+      const ac = dep[0]; makeReturn(ac); ac.tgtSpd = ac.perf.vapp + 40;
+      declare(ac, 'PAN', 'bird strike on departure, vibration on number two engine', `${altShort(Math.round(ac.alt/100)*100)}, request return runway ${S.rwy}`);
+      S.emg.inspectAfter = 'bird'; block('runway inspection after a bird strike on departure', rnd(3, 5));
+      return true;
+    }
+    const arr = S.acs.find(a => a.kind === 'ARR' && (a.state === 'ROLLED' || a.state === 'ROLLOUT'));
+    if (arr) { pilot(arr, `be advised, we had a bird strike on short final, birds over the runway`); block('bird strike reported on short final, runway inspection and bird scaring', rnd(3, 5)); return true; }
+    return false;
+  },
+  fod(){
+    if (S.emg.rwyBlock || S.acs.some(a => a.onRwy || onFinalNear(a, 2))) return false;
+    const what = ['debris (FOD) found on the runway near the crossing', 'a tyre fragment found on the runway', 'a fuel spill on the runway from a vehicle at the crossing'][Math.floor(Math.random()*3)];
+    block(what, rnd(4, 7)); return true;
+  },
+  incursion(){
+    if (S.xing.st !== 'CLOSED' || S.emg.incursion) return false;
+    const ac = S.acs.find(a => onFinalNear(a, 4) && finalDist(a) > 1.2); if (!ac) return false;
+    S.emg.incursion = { until: S.t + rnd(70, 110), ac: ac.cs, gaBy: null };
+    sys(`RUNWAY INCURSION: a pedestrian has climbed the barrier at Winston Churchill Avenue and is on the runway. ${ac.cs} is on ${finalDist(ac).toFixed(1)} NM final: send it around (GA).`, true);
+    emit('incursion', ac); if (S.sel !== ac) select(ac);
+    return true;
+  },
+  windshear(){
+    const w = S.wx, lev = w.dir >= 40 && w.dir <= 140 && w.spd >= 15;
+    if (!lev && (w.gust || 0) < 25) return false;
+    const ac = S.acs.find(a => onFinalNear(a, 4)) || S.acs.find(a => a.kind === 'ARR' && (a.state === 'ROLLED' || a.state === 'ROLLOUT'));
+    if (!ac) return false;
+    shearReport(ac, ac.app || S.rwy); return true;
+  }
+};
+const loss = () => Math.round(rnd(3, 5))*5;
+function shearReport(ac, rw){
+  const kt = loss(), ft = Math.round(rnd(3, 8))*100;
+  S.emg.ws = { t: S.t, rw, by: `${ac.t}`, cs: ac.cs, text: `loss of ${kt} knots at ${ft} feet` };
+  pilot(ac, `be advised, windshear on final runway ${rw}, ${S.emg.ws.text}`);
+  sys(`Windshear report from ${ac.cs}: pass it to arrivals on approach with WS. It is now on the ATIS.`, true);
+  for (const a of S.acs) a.wsTold = false;
+  nextAtis(); renderAtis();
+}
+function stepEmerg(dt){
+  const E = S.emg; if (!E) return;
+  if (E.rwyBlock && S.t >= E.rwyBlock.until) { E.rwyBlock = null; sys(`Runway ${S.rwy} inspection complete: the runway is open again.`); nextAtis(); renderAtis(); emit('rwyopen'); }
+  if (E.incursion && S.t >= E.incursion.until) { E.incursion = null; sys('The pedestrian has been escorted off the runway by the police: the crossing is clear.'); }
+  if (E.ws && S.t - E.ws.t > 25*60) { E.ws = null; nextAtis(); renderAtis(); }
+  if (E.inspectAfter && E.inspectAfter.cs && !E.inspectAfter.onRwy && !E.inspectAfter.airborne) { E.inspectAfter = null; block('runway inspection after the emergency landing', rnd(2.5, 4)); }
+  for (const ac of S.acs) if (ac.emerg && !ac.emerg.ack && !ac.emerg.late && S.t - ac.emerg.t > 60) { ac.emerg.late = true; S.score.pts -= 10; sys(`${ac.cs}'s ${ac.emerg.k} has not been acknowledged.`, true); }
+  if (E.rate && S.t >= E.next && S.running) {
+    E.next = S.t + E.rate*rnd(0.7, 1.3);
+    const w = S.wx, windy = (w.dir >= 40 && w.dir <= 140 && w.spd >= 15) || (w.gust || 0) >= 25;
+    const bag = ['mayday','medical','medical','divert','bird','bird','fod','incursion','incursion', ...(windy ? ['windshear','windshear','windshear'] : [])];
+    for (let n = 0; n < 6; n++) { const k = bag.splice(Math.floor(Math.random()*bag.length), 1)[0]; if (k && EVENTS[k]()) break; }
+  }
+}
+// hooks called from the command parser and the approach logic
+function emgAck(ac){
+  if (!ac.emerg || ac.emerg.ack) return null;
+  ac.emerg.ack = true; if (!ac.emerg.late) S.score.pts += 10;
+  if (ac.need && /^(MAYDAY|PAN)/.test(ac.need)) ac.need = null;
+  return `roger ${ac.emerg.k}, ${ac.emerg.k === 'MAYDAY' ? 'you are number one, ' : ''}runway ${S.rwy}, emergency services are standing by`;
+}
+function emgOnGA(ac){
+  const I = S.emg && S.emg.incursion;
+  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; S.score.pts += 20; S.score.good = (S.score.good || 0) + 1; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
+}
+function emgBlockedFinal(ac, why){   // an arrival reaching short final with the runway closed goes around by itself
+  const I = S.emg.incursion;
+  if (I && I.ac === ac.cs) { I.gaBy = 'crew'; S.score.pts -= 25; sys(`${ac.cs}'s crew saw the pedestrian on the runway and went around on their own.`, true); }
+  else if (ac.ctl) { S.score.pts -= 30; S.score.incidents++; sys(`${ac.cs} was still cleared to land on a closed runway and went around at short final.`, true); }
+  return goAround(ac, I ? 'person on the runway' : 'runway closed');
+}
+function emgWS(ac){
+  const W = S.emg && S.emg.ws;
+  if (!W) return null;
+  if (!ac.wsTold) { ac.wsTold = true; S.score.pts += 5; }
+  const ago = Math.max(1, Math.round((S.t - W.t)/60));
+  return `windshear reported on final runway ${W.rw} by ${W.cs === ac.cs ? 'you' : 'a ' + (TYPES[W.by] ? TYPES[W.by].name : W.by)} ${ago} minute${ago === 1 ? '' : 's'} ago, ${W.text}`;
+}
+S.listeners.push((ev, ac) => {
+  if (ev === 'landed' && ac && ac.emerg) {
+    S.score.pts += 40; S.emg.handled++;
+    sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'Fire service following it in.' : 'Ambulance meeting it on stand.'}`);
+    if (ac.emerg.k === 'MAYDAY' || S.emg.inspectAfter === 'bird') S.emg.inspectAfter = ac;
+    ac.emerg.done = true;
+  }
+});
+// draw: closed runway crosses, a figure on the crossing during an incursion
+function drawRwyBlock(){
+  const E = S.emg; if (!E || (!E.rwyBlock && !E.incursion)) return;
+  const pulse = E.still ? 1 : 0.55 + 0.45*Math.sin(performance.now()/220);
+  cx.save(); cx.strokeStyle = C.conf; cx.lineWidth = 3; cx.globalAlpha = pulse;
+  if (E.rwyBlock) for (const m of [RWY_M*0.18, RWY_M*0.5, RWY_M*0.82]) {
+    const c0 = rm(m, 0), X = sx(c0[0]), Y = sy(c0[1]), k = Math.max(7, 30*M2NM*V.scale);   // never smaller than a few pixels
+    cx.beginPath(); cx.moveTo(X - k, Y - k*0.5); cx.lineTo(X + k, Y + k*0.5); cx.moveTo(X - k, Y + k*0.5); cx.lineTo(X + k, Y - k*0.5); cx.stroke();
+  }
+  if (E.incursion) { const p = rm(xingM(4), 4); cx.fillStyle = C.conf; cx.beginPath(); cx.arc(sx(p[0]), sy(p[1]), 6, 0, 7); cx.fill(); }
+  cx.restore();
+}
+
+// ═════════════════════════ career log: time on frequency, score history, badges ═════════════════════════
+// Kept in this browser's local storage. Each session is one entry, updated as it runs, so closing the tab keeps it.
+const CAREER_KEY = 'cw-career';
+const BADGES = [
+  { id: 'first',    name: 'First contact',     d: 'Work a position for five minutes.',                          ic: 'M12 3v4M5 8l3 2M19 8l-3 2M7 17a5 5 0 0 1 10 0' },
+  { id: 'wheels',   name: 'Wheels down',       d: 'Land your first arrival.',                                  ic: 'M3 17h18M6 13l4-1 6-6 2 1-4 6 4 1-1 2-6-1-4 1z' },
+  { id: 'clean',    name: 'Clean shift',       d: '30 minutes and 6+ movements with no loss of separation or incident.', ic: 'M5 12l4 4 10-10' },
+  { id: 'busy',     name: 'Busy Rock',         d: '20 movements in one session.',                              ic: 'M3 20l6-12 4 6 3-4 5 10z' },
+  { id: 'levanter', name: 'Levanter tamer',    d: 'Land three aircraft in one session with a strong easterly.', ic: 'M3 8h12a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8' },
+  { id: 'coolhead', name: 'Cool head',         d: 'Bring an emergency aircraft in safely.',                    ic: 'M12 3l9 16H3zM12 10v4M12 17v.5' },
+  { id: 'goodcall', name: 'Good call',         d: 'Send an arrival around for a person on the runway.',        ic: 'M4 18c4-8 8-12 16-12M16 3l4 3-3 4' },
+  { id: 'live',     name: 'Real world',        d: 'Work 15 minutes of Live now with real flights.',            ic: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18' },
+  { id: 'graduate', name: 'Academy graduate',  d: 'Complete all three guided exercises.',                      ic: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5' },
+  { id: 'hour',     name: 'One hour',          d: 'One hour on frequency in total.',                           ic: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z' },
+  { id: 'ten',      name: 'Ten hours',         d: 'Ten hours on frequency in total.',                          ic: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM4 4l2 2M20 4l-2 2' },
+  { id: 'century',  name: 'Century',           d: '100 movements in total.',                                   ic: 'M4 17V7M8 7h4v10H8zM14 7h4v10h-4z' }
+];
+function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
+function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
+let CAR = careerLoad(), carCur = null, carDirty = false;
+const carTotals = c => {
+  const t = { secs: 0, mov: 0, n: c.sessions.length, best: null, land: 0, dep: 0 };
+  for (const s of c.sessions) { t.secs += s.secs; t.mov += s.landed + s.departed; t.land += s.landed; t.dep += s.departed; if (t.best === null || s.pts > t.best) t.best = s.pts; }
+  return t;
+};
+function careerAward(id){
+  if (CAR.badges[id]) return;
+  CAR.badges[id] = Date.now(); const b = BADGES.find(x => x.id === id);
+  if (b && S.running) sys(`Badge earned: ${b.name}. ${b.d}`);
+  carDirty = true;
+}
+function careerCheck(){
+  const s = carCur, T = carTotals(CAR);
+  if (s) {
+    const mov = s.landed + s.departed;
+    if (s.secs >= 300 && !s.ex) careerAward('first');
+    if (s.landed >= 1) careerAward('wheels');
+    if (s.secs >= 1800 && mov >= 6 && !s.los && !s.incidents) careerAward('clean');
+    if (mov >= 20) careerAward('busy');
+    if (s.levanter && s.landed >= 3) careerAward('levanter');
+    if (s.emg >= 1) careerAward('coolhead');
+    if (s.good >= 1) careerAward('goodcall');
+    if (/^live/.test(s.mode) && s.secs >= 900) careerAward('live');
+  }
+  if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
+  if (T.secs >= 3600) careerAward('hour');
+  if (T.secs >= 36000) careerAward('ten');
+  if (T.mov >= 100) careerAward('century');
+}
+// called every frame with the real seconds that passed while the sim ran
+function careerTick(dtr){
+  if (!S.running || S.paused || !carCur) return;
+  carCur.secs += dtr; carDirty = true;
+}
+function careerSync(){
+  if (!carCur) return;
+  const sc = S.score;
+  Object.assign(carCur, { pts: sc.pts, landed: sc.landed, departed: sc.departed, ga: sc.ga, los: sc.los, incidents: sc.incidents + sc.infr, emg: S.emg ? S.emg.handled : 0, good: sc.good || 0 });
+  if (carCur.secs >= 60 && !CAR.sessions.includes(carCur)) CAR.sessions.push(carCur);
+  if (CAR.sessions.length > 200) CAR.sessions.splice(0, CAR.sessions.length - 200);
+  careerCheck();
+  if (carDirty) { careerSave(CAR); carDirty = false; }
+}
+S.listeners.push((ev, d) => {
+  if (ev === 'start') {
+    careerSync();
+    const w = S.wx, lev = w.dir >= 40 && w.dir <= 140 && w.spd >= 18;
+    carCur = { at: Date.now(), mode: S.mode, ex: !!EXERCISES[S.mode], ap: 'LXGB', wx: w.raw.split(' ').slice(2, 3).join(''), rwy: S.rwy, levanter: lev, secs: 0, pts: 0, landed: 0, departed: 0, ga: 0, los: 0, incidents: 0, emg: 0, good: 0 };
+  }
+});
+setInterval(careerSync, 15000);
+addEventListener('pagehide', careerSync);
+function careerExercise(ex){ if (!CAR.ex[ex]) { CAR.ex[ex] = Date.now(); carDirty = true; careerSync(); } }
+
+// ── career page ──
+const fmtHrs = s => s < 3600 ? `${Math.round(s/60)} min` : `${(s/3600).toFixed(s < 36000 ? 1 : 0)} h`;
+const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3' };
+function renderCareer(){
+  careerSync();
+  const T = carTotals(CAR), L = CAR.sessions.slice().reverse();
+  $('crStats').innerHTML = [
+    ['On frequency', fmtHrs(T.secs)], ['Sessions', T.n], ['Movements', T.mov], ['Best score', T.best ?? '–'], ['Badges', `${Object.keys(CAR.badges).length} / ${BADGES.length}`]
+  ].map(([k, v]) => `<div class="cr-stat"><div class="lbl">${k}</div><div class="v">${v}</div></div>`).join('');
+  // score history: last 24 sessions, bars to one scale with a zero line
+  const H = CAR.sessions.slice(-24), W = Math.max(340, $('crChart').clientWidth || 720), Ht = 220, pad = { l: 44, r: 12, t: 14, b: 26 };
+  let svg = '';
+  if (H.length) {
+    const hi = Math.max(50, ...H.map(s => s.pts)), lo = Math.min(0, ...H.map(s => s.pts));
+    const step = (hi - lo) > 400 ? 200 : (hi - lo) > 200 ? 100 : 50;
+    const top = Math.ceil(hi/step)*step, bot = Math.floor(lo/step)*step;
+    const y = v => pad.t + (top - v)/(top - bot)*(Ht - pad.t - pad.b), bw = (W - pad.l - pad.r)/Math.max(H.length, 8);
+    for (let v = bot; v <= top; v += step) svg += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" class="${v === 0 ? 'zero' : 'grid'}"/><text x="${pad.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    H.forEach((s, i) => {
+      const x = pad.l + i*bw + bw*0.18, w = bw*0.64, y0 = y(0), y1 = y(s.pts);
+      svg += `<rect x="${x.toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(1, Math.abs(y1 - y0)).toFixed(1)}" rx="2" class="${s.pts < 0 ? 'neg' : s.ex ? 'ex' : 'pos'}"><title>${new Date(s.at).toLocaleDateString('en-GB')} · ${MODE_NAME[s.mode] || s.mode} · ${s.pts} pts</title></rect>`;
+      if (H.length*46 <= W || i % 2 === 0) svg += `<text x="${(x + w/2).toFixed(1)}" y="${Ht - 8}" text-anchor="middle">${new Date(s.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</text>`;
+    });
+  }
+  $('crChart').innerHTML = H.length ? `<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Score per session">${svg}</svg>` : `<p class="empty">No sessions yet. Work a position for a minute or more and it appears here.</p>`;
+  $('crBadges').innerHTML = BADGES.map(b => { const got = CAR.badges[b.id]; return `<div class="cr-badge ${got ? 'got' : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${b.ic}"/></svg><div><b>${b.name}</b><p>${b.d}</p><span class="lbl">${got ? 'Earned ' + new Date(got).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Locked'}</span></div></div>`; }).join('');
+  $('crTable').innerHTML = L.length ? `<table><tr><th>Date</th><th>Session</th><th>Runway</th><th class="n">Time</th><th class="n">Landed</th><th class="n">Departed</th><th class="n">Go-arounds</th><th class="n">LoS / incidents</th><th class="n">Score</th></tr>${L.slice(0, 30).map(s => `<tr><td>${new Date(s.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td><td>${MODE_NAME[s.mode] || esc(s.mode)}</td><td class="mono">${s.rwy}</td><td class="n">${fmtHrs(s.secs)}</td><td class="n">${s.landed}</td><td class="n">${s.departed}</td><td class="n">${s.ga}</td><td class="n">${s.los} / ${s.incidents}</td><td class="n ${s.pts < 0 ? 'bad' : ''}"><b>${s.pts}</b></td></tr>`).join('')}</table>` : '';
+  const rb = $('crReset'), rc = $('crResetConfirm');
+  rb.onclick = () => { rc.hidden = false; rb.hidden = true; };
+  rc.querySelector('[data-a=no]').onclick = () => { rc.hidden = true; rb.hidden = false; };
+  rc.querySelector('[data-a=yes]').onclick = () => { CAR = { sessions: [], badges: {}, ex: {} }; carCur = null; careerSave(CAR); rc.hidden = true; rb.hidden = false; renderCareer(); };
+}
 
 // ═════════════════════════ ground detail: surfaces, textures, town, stands ═════════════════════════
 // Drawn in the tower and ground views (scale > 70 px/NM). Airfield geometry follows chart D1/E1 (runway, taxiways,
@@ -3604,6 +4130,7 @@ say = function(text, who){
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
     const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; }
     u.rate = who === 'atc' ? 1.1 : 1.05 + (hash(who) % 20)/100; u.pitch = who === 'atc' ? 1 : 0.85 + (hash(who+'p') % 30)/100;
+    if (!/^tel:/.test(who) && typeof radioFx === 'function') { u.onstart = () => radioFx('open'); u.onend = () => radioFx('close'); }   // landline calls have no squelch
     speechSynthesis.speak(u);
   } catch(e) {}
 };
@@ -3697,6 +4224,8 @@ function phraseToCmd(raw){
   else if (/ (contact|monitor) /.test(s)) out.push('HO');
   if (/ (request|requesting) release /.test(s) || / release /.test(s) && !/ released /.test(s)) out.push('REL');
   if (/ (squawk )?ident /.test(s)) out.push('IDENT');
+  if (/ roger (mayday|pan)/.test(s)) out.push('ROG');
+  if (/ windshear /.test(s)) out.push('WS');
   return { ac, cmd: out.join(' ') };
 }
 
@@ -3808,8 +4337,86 @@ wxMenu.addEventListener('change', () => {
 $('trafficSel').addEventListener('change', () => { if (/^live/.test($('trafficSel').value) && wxMenu.value !== 'live') { wxMenu.value = 'live'; liveBox.checked = true; liveBox.onchange(); } });
 try { if (localStorage.getItem('cw-livewx')) { liveBox.checked = true; setLive(true); wxMenu.value = 'live'; } } catch(_) {}
 
+// ═════════════════════════ radio realism ═════════════════════════
+// Squelch clicks and band-limited hiss around each transmission, a heterodyne squeal when two stations transmit at
+// once, and the written ATIS broadcast. Sounds play only with Voice on, and only after the user has clicked something.
+let actx = null;
+function audio(){
+  if (!actx) try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+  if (actx.state === 'suspended') actx.resume().catch(() => {});
+  return actx;
+}
+function noiseBuf(a){
+  if (a._nb) return a._nb;
+  const n = Math.floor(a.sampleRate*1.6), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random()*2 - 1;
+  return a._nb = b;
+}
+function radioFx(kind){
+  if (!S.voice) return;
+  const a = audio(); if (!a) return;
+  try {
+    const t = a.currentTime, out = a.createGain(); out.gain.value = 0.16; out.connect(a.destination);
+    // hiss: noise through a narrow "radio" band
+    const src = a.createBufferSource(); src.buffer = noiseBuf(a);
+    const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1900; bp.Q.value = 0.9;
+    const g = a.createGain(); src.connect(bp); bp.connect(g); g.connect(out);
+    const dur = kind === 'close' ? 0.22 : kind === 'blocked' ? 1.5 : 0.1;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(kind === 'close' ? 0.9 : 0.55, t + 0.006); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.start(t); src.stop(t + dur + 0.05);
+    // key-up / key-down click
+    const o = a.createOscillator(), og = a.createGain(); o.type = 'square'; o.frequency.value = kind === 'close' ? 820 : 1350;
+    og.gain.setValueAtTime(0.22, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.03); o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.04);
+    if (kind === 'blocked') {   // two carriers beating against each other
+      for (const [f, w] of [[1020, 'sawtooth'], [1061, 'sawtooth'], [530, 'square']]) {
+        const h = a.createOscillator(), hg = a.createGain(); h.type = w; h.frequency.setValueAtTime(f, t); h.frequency.linearRampToValueAtTime(f*1.04, t + 1.3);
+        hg.gain.setValueAtTime(0.0001, t); hg.gain.linearRampToValueAtTime(0.07, t + 0.05); hg.gain.setValueAtTime(0.07, t + 1.2); hg.gain.exponentialRampToValueAtTime(0.001, t + 1.45);
+        h.connect(hg); hg.connect(out); h.start(t); h.stop(t + 1.5);
+      }
+    }
+  } catch(e) {}
+}
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { if (S.voice) audio(); }, { once: true, capture: true }));
+
+// ── written ATIS ──
+const cloudWords = c => { const m = /^(FEW|SCT|BKN|OVC)(\d{3})(CB|TCU)?/.exec(c); if (!m) return c; return `${{ FEW: 'few', SCT: 'scattered', BKN: 'broken', OVC: 'overcast' }[m[1]]} ${(+m[2]*100).toLocaleString('en-GB')} feet${m[3] === 'CB' ? ' cumulonimbus' : m[3] === 'TCU' ? ' towering cumulus' : ''}`; };
+function atisText(){
+  const w = S.wx, L = phonetic(S.atis), E = S.emg;
+  const wind = w.vrb ? `variable ${w.spd} knots` : `${hdg3(w.dir)} degrees ${w.spd} knots${w.gust ? ' gusting ' + w.gust + ' knots' : ''}`;
+  const vis = w.vis >= 9999 ? '10 kilometres or more' : w.vis >= 5000 ? `${Math.round(w.vis/1000)} kilometres` : `${w.vis} metres`;
+  const cloud = w.raw.includes('CAVOK') ? 'CAVOK' : w.clouds.length ? 'cloud ' + w.clouds.map(cloudWords).join(', ') : 'no significant cloud';
+  const out = [
+    `This is Gibraltar information ${L}, time ${zt(S.t).slice(0,5).replace(':', '')}.`,
+    `Runway in use ${S.rwy}. Expect surveillance radar approach runway ${S.rwy}, terminating at Point ${FINAL[S.rwy].name}.`,
+    `Surface wind ${wind}. Visibility ${vis}. ${cloud[0].toUpperCase() + cloud.slice(1)}.`,
+    `Temperature ${w.temp}, dew point ${w.dew}. QNH ${w.qnh} hectopascals. Transition level flight level 70.`
+  ];
+  if (turbExcess(w) > 0) out.push(`Warning: surface wind exceeds the Special Procedures turbulence limit. Expect moderate to severe turbulence and windshear on final${S.rwy === '09' ? ' in the lee of the Rock' : ''}.`);
+  if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
+  if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+  if (!sraMinsOk(w)) out.push('Weather below SRA minima.');
+  out.push('Winston Churchill Avenue is closed to traffic for all runway movements.');
+  out.push('Departures: release from Sevilla or Casablanca is required before take-off.');
+  out.push(`Acknowledge receipt of information ${L} and advise aircraft type on first contact.`);
+  return out;
+}
+const atisPop = document.createElement('div'); atisPop.className = 'atis-pop'; atisPop.hidden = true; atisPop.setAttribute('role', 'dialog'); atisPop.setAttribute('aria-label', 'ATIS broadcast'); document.body.appendChild(atisPop);
+function openAtis(){
+  const lines = atisText();
+  atisPop.innerHTML = `<div class="atis-card"><div class="row"><span class="lbl">ATIS broadcast · 131.2</span><span class="atis-letter">${S.atis}</span><span class="grow"></span><button class="pop-x" aria-label="Close">×</button></div>
+    <p class="atis-body">${lines.map(esc).join(' ')}</p>
+    <div class="row"><button class="btn" data-a="play">Broadcast it</button><button class="btn" data-a="stop">Stop</button><span class="grow"></span><span class="lbl dimmer">${esc(S.wx.raw)}</span></div></div>`;
+  atisPop.hidden = false;
+  atisPop.querySelector('.pop-x').onclick = closeAtis;
+  atisPop.querySelector('[data-a=play]').onclick = () => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(lines.join(' ').replace(/FL(\d+)|flight level (\d+)/g, (m, a, b) => 'flight level ' + (a || b).split('').map(d => DIG[d]).join(' '))); u.rate = 1.0; const v = typeof voiceFor === 'function' ? voiceFor('atis') : null; if (v) { u.voice = v; u.lang = v.lang; } speechSynthesis.speak(u); } catch(e) {} };
+  atisPop.querySelector('[data-a=stop]').onclick = () => { try { speechSynthesis.cancel(); } catch(e) {} };
+}
+function closeAtis(){ atisPop.hidden = true; try { speechSynthesis.cancel(); } catch(e) {} }
+atisPop.addEventListener('click', e => { if (e.target === atisPop) closeAtis(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !atisPop.hidden) closeAtis(); });
+
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'sim', 'training'];
+const ROUTES = ['home', 'airports', 'lxgb', 'sim', 'training', 'career'];
 let curRoute = null;
 function go(r){
   if (!ROUTES.includes(r)) r = 'home';
@@ -3823,6 +4430,7 @@ function go(r){
   if (r !== 'sim' && prev === 'sim' && S.running && !S.paused) { S.paused = true; $('tgPause').textContent = 'Resume'; sys('Simulation paused while you are away from the scope.'); }
   if (r === 'home' || r === 'lxgb') requestAnimationFrame(renderThumbs);
   if (r === 'training') requestAnimationFrame(() => { renderFigure(); spy(); });
+  if (r === 'career') renderCareer();
   window.scrollTo(0, 0);
 }
 function fromHash(){
@@ -3953,7 +4561,7 @@ function heroFrame(now){
   }
   requestAnimationFrame(heroFrame);
 }
-window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === 'lxgb') renderThumbs(); if (curRoute === 'training') renderFigure(); });
+window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === 'lxgb') renderThumbs(); if (curRoute === 'training') renderFigure(); if (curRoute === 'career') renderCareer(); });
 
 // position thumbnails reuse the real renderer
 // sample traffic for the previews: parked, taxiing, on final and climbing out
@@ -4027,6 +4635,62 @@ function renderFigure(){
   const c = $('figAerodrome'); if (!c) return;
   c.style.aspectRatio = '2.25 / 1';
   drawTo(c, 'gnd', { acs: [], proc: false });
+  renderAcademyFigs();
+}
+// ── Academy figures, drawn live from the simulator so they always match what you see on the scope ──
+const dirNM = h => [Math.sin(h*D2R), Math.cos(h*D2R)];
+const addv = (p, h, d) => [p[0] + dirNM(h)[0]*d, p[1] + dirNM(h)[1]*d];
+function sidPath(gate, rw){
+  const pts = [];
+  if (rw === '27') { const p0 = rm(150, 0); pts.push(p0); let p = addv(p0, CRS27, 0.6); pts.push(p); for (const h of [250, 230, 212]) { p = addv(p, h, 0.35); pts.push(p); } p = addv(p, 200, 2.6); pts.push(p); }
+  else { const p0 = rm(RWY_M - 150, 0); pts.push(p0); let p = addv(p0, CRS09, 1.3); pts.push(p); for (const h of [110, 135, 152]) { p = addv(p, h, 0.35); pts.push(p); } p = addv(p, 160, 2.2); pts.push(p); }
+  for (const id of EXIT_ROUTE[gate]) pts.push(WP[id].p);
+  return pts;
+}
+function figPins(fig, pins){
+  fig.querySelectorAll('.pin').forEach(p => p.remove());
+  const cv = fig.querySelector('canvas'), r = cv.getBoundingClientRect();
+  pins.forEach(([x, y], i) => { const b = document.createElement('span'); b.className = 'pin'; b.textContent = i + 1; b.style.left = (x/r.width*100) + '%'; b.style.top = (y/r.height*100) + '%'; fig.querySelector('.figwrap').appendChild(b); });
+}
+function renderAcademyFigs(){
+  const acs = demoTraffic();
+  // 1 · console anatomy
+  const fc = $('figConsole');
+  if (fc) {
+    fc.style.aspectRatio = '1.7 / 1';
+    const fin = acs.find(a => a.cs === 'BAW492'), tom = acs.find(a => a.cs === 'TOM6262'), ram = acs.find(a => a.cs === 'RAM1473');
+    const r164 = R164.reduce((a, p) => [a[0] + p[0]/R164.length, a[1] + p[1]/R164.length], [0, 0]);
+    const o = drawTo(fc, 'app', { proc: true, acs, tweak: v => { v.scale *= 1.7; v.cx += 2.5; v.cy += 3.5; }, pins: [[tom.x - 1.6, tom.y - 0.4], [ram.x - 1.6, ram.y - 0.4], [fin.x + 0.6, fin.y - 1.6], [WP.UPMUP.p[0] - 1.2, WP.UPMUP.p[1] - 1.2], r164] });
+    if (o) figPins(fc.closest('figure'), o.pins);
+  }
+  // 2 · departure routes
+  const fs = $('figSids');
+  if (fs) {
+    fs.style.aspectRatio = '1.5 / 1';
+    drawTo(fs, 'app', { proc: false, acs: [], tweak: v => { v.scale *= 1.3; v.cx += 0.5; v.cy -= 5.5; }, post: () => {
+      const col = { '27': '#1f5eff', '09': '#c2700a' };
+      cx.save(); cx.lineJoin = cx.lineCap = 'round';
+      for (const rw of ['27', '09']) for (const g of ['E', 'W', 'S']) {
+        const pts = sidPath(g, rw);
+        cx.strokeStyle = 'rgba(255,255,255,.85)'; cx.lineWidth = 6; cx.setLineDash([]); cx.beginPath(); pts.forEach((p, i) => i ? cx.lineTo(sx(p[0]), sy(p[1])) : cx.moveTo(sx(p[0]), sy(p[1]))); cx.stroke();
+        cx.strokeStyle = col[rw]; cx.lineWidth = 2.6; cx.setLineDash(rw === '09' ? [8, 6] : []); cx.stroke();
+      }
+      cx.setLineDash([]); cx.font = `700 12.5px ${FONT_D}`;
+      const lab = { E: [8, -6], W: [-10, -10], S: [12, 4] };
+      for (const g of ['E', 'W', 'S']) { const p = WP[EXIT_FIX[g]].p, X = sx(p[0]) + lab[g][0], Y = sy(p[1]) + lab[g][1]; const t = `${EXIT_FIX[g]} 1A · 1B`; const w = cx.measureText(t).width; const X2 = g === 'W' ? X - w : X; cx.fillStyle = 'rgba(255,255,255,.92)'; cx.fillRect(X2 - 4, Y - 13, w + 8, 18); cx.fillStyle = '#0c1b2e'; cx.fillText(t, X2, Y); }
+      cx.restore();
+    } });
+  }
+  // 3 · emergency on short final with the runway closed
+  const fe = $('figEmerg');
+  if (fe) {
+    fe.style.aspectRatio = '2.2 / 1';
+    const fin = rm(THR27_M + 0.75*1852, 0), hp = GN[HOLDS.A.node].p;
+    const may = new Aircraft({ cs: 'EXS96K', t: 'B738', k: 'ARR', o: 'EGCC' }); Object.assign(may, { kind: 'ARR', state: 'FINAL', mode: 'FINAL', app: '27', freq: 'TWR', x: fin[0], y: fin[1], hdg: CRS27, trk: CRS27, alt: 450, gs: 150, vs: -700, emerg: { k: 'MAYDAY', why: 'engine failure', ack: true }, sqk: '7700', need: 'Runway closed' });
+    const dep = new Aircraft({ cs: 'EZY8902', t: 'A20N', k: 'DEP', d: 'EGKK' }); Object.assign(dep, { kind: 'DEP', ground: true, state: 'HOLDPT', hp: 'A', x: hp[0], y: hp[1], hdg: 180, trk: 180, rel: { st: 'OK', until: 1e9 } });
+    const keep = S.emg; S.emg = { rwyBlock: { why: 'debris', until: 1e12 }, still: true };
+    try { const c0 = rm(RWY_M*0.75, 0); drawTo(fe, 'twr', { proc: true, acs: [may, dep], tweak: v => { v.cx = c0[0] + 0.25; v.cy = c0[1] - 0.12; v.scale *= 2.1; } }); } finally { S.emg = keep; }
+  }
 }
 
 // ── guided exercises (coach card) ──
@@ -4091,6 +4755,7 @@ function renderCoach(){
   const el = $('coach'), L = COACH[coach.ex], n = L.length, done = coach.i >= n, s = L[Math.min(coach.i, n-1)];
   el.dataset.sig = coachSig(); el.hidden = coach.hidden || curRoute !== 'sim';
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
+  if (done) careerExercise(coach.ex);
   el.innerHTML = done
     ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="t-exercises">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;

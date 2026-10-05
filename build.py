@@ -23,11 +23,14 @@ out = f'''<meta charset="utf-8">
 const GEO = {r('geo.json').strip()};
 {r('sim.js')}
 {r('ui.js')}
+{r('emerg.js')}
+{r('career.js')}
 {r('ground.js')}
 {r('tiles.js')}
 {r('far.js')}
 {r('live.js')}
 {r('voice.js')}
+{r('radio.js')}
 {r('site.js')}
 </script>
 '''

@@ -38,6 +38,7 @@ say = function(text, who){
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
     const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; }
     u.rate = who === 'atc' ? 1.1 : 1.05 + (hash(who) % 20)/100; u.pitch = who === 'atc' ? 1 : 0.85 + (hash(who+'p') % 30)/100;
+    if (!/^tel:/.test(who) && typeof radioFx === 'function') { u.onstart = () => radioFx('open'); u.onend = () => radioFx('close'); }   // landline calls have no squelch
     speechSynthesis.speak(u);
   } catch(e) {}
 };
@@ -131,6 +132,8 @@ function phraseToCmd(raw){
   else if (/ (contact|monitor) /.test(s)) out.push('HO');
   if (/ (request|requesting) release /.test(s) || / release /.test(s) && !/ released /.test(s)) out.push('REL');
   if (/ (squawk )?ident /.test(s)) out.push('IDENT');
+  if (/ roger (mayday|pan)/.test(s)) out.push('ROG');
+  if (/ windshear /.test(s)) out.push('WS');
   return { ac, cmd: out.join(' ') };
 }
 

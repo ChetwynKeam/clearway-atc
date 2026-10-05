@@ -357,10 +357,19 @@ function say(text, who){
   } catch(e) {}
 }
 function atc(ac, text){ const line = `${spoken(ac.cs)}, ${text}`; log('atc', line, ac.freq === 'TWR' ? 'TOWER' : 'RADAR'); say(line, 'atc'); }
-function pilot(ac, text){ const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300); }
+// Unprompted calls (not read-backs) now and then collide with another station and are blocked; the crew calls again.
+let inCmd = false, lastCallT = -99;
+function pilot(ac, text, again){
+  if (!inCmd && !again && S.running && !ac.emerg && (S.t - lastCallT < 3 ? Math.random() < 0.6 : Math.random() < 0.025)) {
+    log('blk', 'two stations transmitting at once, blocked', '· · ·'); if (typeof radioFx === 'function') radioFx('blocked');
+    (S.recalls ||= []).push({ at: S.t + rnd(8, 16), ac, text }); lastCallT = S.t; return;
+  }
+  if (!inCmd) lastCallT = S.t;
+  const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300);
+}
 function sys(text, bad){ log(bad ? 'bad' : 'sys', text); }
 // landline coordination with Sevilla / Casablanca (not on the frequency)
-function coord(text, who){ log('coord', text, who); say(text, who === 'GIBRALTAR' ? 'atc' : who); }
+function coord(text, who){ log('coord', text, who); say(text, 'tel:' + who); }
 function requestRelease(ac){
   const who = relUnit(ac), sid = sidName(ac.gate, S.rwy);
   ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
@@ -599,7 +608,10 @@ function findAc(token){
 }
 function windPhrase(){ const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3(w.dir)+' degrees'} ${w.spd} knots${w.gust ? ' gusting '+w.gust : ''}`; }
 const viaWords = v => v.length ? ' via ' + v.map(t => PHON[t] || t).join(', ') : '';
-function command(str){
+const SAY_AGAIN = ['say again', 'say again, you were broken', 'Gibraltar, readability two, say again', 'say again the last instruction'];
+const garbleable = (ac, toks) => ac.airborne && !ac.emerg && ac.mode !== 'FINAL' && ac.state !== 'PRE' && toks.length && toks.every(t => /^([HLRACDS]\d{1,5}|SN|DCT|APP|HOLD|09|27)$/.test(t) || WP[t]);
+function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
+function commandRun(str){
   const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
   if (!toks.length) return;
   let ac = findAc(toks[0]);
@@ -610,6 +622,7 @@ function command(str){
   const said = [], reads = [];
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
+  const snap = garbleable(ac, toks) && Math.random() < 0.05 ? { ...ac } : null;   // the crew misses it now and then
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]; let r;
     if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
@@ -664,12 +677,13 @@ function command(str){
       reads.push(`hold ${ac.hold.name}`);
     } else if (t === 'CTL') {
       if (ac.kind !== 'ARR' || !air) { sys(`${ac.cs} is not on approach.`); continue; }
+      { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): you can't clear ${ac.cs} to land. Hold it or send it around.`, true); continue; } }
       const rw = ac.app || S.rwy; ac.ctl = true; ac.need = null; ac.freq = 'TWR';
       said.push(`runway ${rw}, cleared to land, ${windPhrase()}`); reads.push(`cleared to land runway ${rw}`);
       if (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') sys('Winston Churchill Avenue is still open.');
     } else if (t === 'GA' && air) {
       if (ac.kind !== 'ARR') { sys(`${ac.cs} is a departure.`); continue; }
-      goAround(ac, null); said.push('go around, I say again go around, climb altitude 4,000 feet'); reads.push('going around, climbing 4,000 feet');
+      emgOnGA(ac); goAround(ac, null); said.push('go around, I say again go around, climb altitude 4,000 feet'); reads.push('going around, climbing 4,000 feet');
     } else if (t === 'HO' || t === 'CONT') {
       if (!air) { sys(`${ac.cs} is on the ground and stays with Tower.`); continue; }
       const unit = ac.kind === 'DEP' ? (ac.freq === 'TWR' ? ['Gibraltar Radar','122.8'] : NEXT_UNIT[ac.gate]) : ['Gibraltar Tower','131.2'];
@@ -732,6 +746,7 @@ function command(str){
       if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state)) { sys(`${ac.cs} is not ready for takeoff.`); continue; }
       if (S.wx.vis < 1000) { atc(ac, `runway ${S.rwy}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${S.rwy}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
+      { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
       { const R = ac.rel, who = relUnit(ac);
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
@@ -747,6 +762,10 @@ function command(str){
       setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); turnRound(ac); });
       const stp = ac.stand ? `stand ${ac.stand.id}` : 'as directed';
       said.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}, taxi ${stp}${viaWords(ac.taxiVia || [])}`); reads.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate ${PHON[ac.exit]}, ${stp}`);
+    } else if (t === 'ROG') {
+      const a = emgAck(ac); if (!a) { sys(`${ac.cs} has not declared an emergency.`); continue; } said.push(a); reads.push('roger');
+    } else if (t === 'WS') {
+      const a = emgWS(ac); if (!a) { sys('No windshear has been reported.'); continue; } said.push(a); reads.push('copied the windshear');
     } else if (t === 'REL') {
       if (ac.kind !== 'DEP' || air) { sys(`${ac.cs} doesn't need a departure release.`); continue; }
       if (ac.rel && ac.rel.st === 'REQ') { sys(`Release for ${ac.cs} already requested: ${relUnit(ac)} will call back.`); continue; }
@@ -755,7 +774,14 @@ function command(str){
     } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
-  if (said.length) { atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency') ac.need = null; emit('cmd', { ac, toks }); }
+  if (said.length && snap) {
+    atc(ac, said.join(', '));
+    for (const k of Object.keys(ac)) if (!(k in snap)) delete ac[k];
+    Object.assign(ac, snap); ac.lastCmd = toks.join(' ');
+    pilot(ac, SAY_AGAIN[Math.floor(Math.random()*SAY_AGAIN.length)]); ac.need = 'Say again';
+    renderSel(); renderStrips(true); return;
+  }
+  if (said.length) { if (ac.emerg && !ac.emerg.ack) { const a = emgAck(ac); if (a) { said.unshift(a); reads.unshift('roger'); } } atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency' || ac.need === 'Say again') ac.need = null; emit('cmd', { ac, toks }); }
   renderSel(); renderStrips(true);
 }
 function willIntercept(ac, F){
@@ -811,7 +837,8 @@ function step(dt){
   if (X.st === 'OPENING' && S.t >= X.t) { X.st = 'OPEN'; renderAtis(); emit('xing', 'OPEN'); }
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
 
-  stepTows();
+  stepTows(); if (S.emg) stepEmerg(dt);
+  if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
@@ -961,9 +988,11 @@ function stepAir(ac, dt){
       if (rw === '27' && w.dir >= 200 && w.dir <= 250 && w.spd >= 25 && Math.random() < 0.25) return goAround(ac, 'waterspout on the approach');
       if (w.cb) p = Math.max(p, 0.15);
       const lim = windLimit(ac, rw); if (lim) return goAround(ac, lim);
-      if (Math.random() < p) return goAround(ac, rw === '09' ? 'severe turbulence and windshear in the lee of the Rock' : 'windshear');
+      if (ac.wsTold) p *= 0.6;   // briefed crews add speed and are ready for it
+      if (Math.random() < p) { if (S.emg && (!S.emg.ws || S.t - S.emg.ws.t > 300)) shearReport(ac, rw); return goAround(ac, rw === '09' ? 'severe turbulence and windshear in the lee of the Rock' : 'windshear'); }
     }
     if (fin.togo < 0.9 && !ac.ctl && !ac.warnedCtl) { ac.warnedCtl = true; pilot(ac, `short final runway ${rw}, request landing clearance`); ac.need = 'Short final, no clearance'; }
+    { const blk = rwyBlocked(); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && S.acs.some(o => o !== ac && o.onRwy)) return goAround(ac, 'runway occupied');
     if (fin.togo < 0.4 && S.xing.st !== 'CLOSED') { S.score.incidents++; S.score.pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
