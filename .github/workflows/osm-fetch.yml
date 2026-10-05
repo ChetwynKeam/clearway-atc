@@ -1,6 +1,6 @@
 name: Fetch OSM airfield data
 # One-off: downloads Gibraltar aerodrome geometry and a few reference map tiles from OpenStreetMap
-# into the osm-data branch, used to align the simulator's ground markings with the street map.
+# into the osm-data branch, used to align (and preview) the simulator's ground markings with the street map.
 on:
   workflow_dispatch:
   push:
@@ -28,11 +28,13 @@ jobs:
           def t(lat, lon):
               n = 2**z; r = math.radians(lat)
               return int((lon + 180)/360*n), int((1 - math.log(math.tan(r) + 1/math.cos(r))/math.pi)/2*n)
-          x0, y0 = t(36.1575, -5.3620); x1, y1 = t(36.1460, -5.3350)
+          # website preview areas: the approach radar at low zoom, the bay at mid zoom, the airfield close up
+          box = (37.2, -6.6, 35.2, -4.2) if z <= 11 else (36.30, -5.55, 36.00, -5.20) if z <= 14 else (36.1575, -5.3620, 36.1460, -5.3350)
+          x0, y0 = t(box[0], box[1]); x1, y1 = t(box[2], box[3])
           for x in range(x0, x1 + 1):
               for y in range(y0, y1 + 1): print(z, x, y)
           PY
-          for z in 16 17 18; do
+          for z in 8 9 10 11 12 13 14 15 16 17 18; do
             python3 list.py $z | while read Z X Y; do curl -sSf -A "$UA" "https://tile.openstreetmap.org/$Z/$X/$Y.png" -o "tiles/${Z}_${X}_${Y}.png" || true; sleep 0.25; done
           done
           rm list.py; ls tiles | wc -l
