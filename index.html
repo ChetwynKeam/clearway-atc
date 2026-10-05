@@ -3282,7 +3282,7 @@ function renderFids(){
 // their expected times and delays. Aircraft in the air right now come from free ADS-B networks (adsb.lol, adsb.fi)
 // through a small relay, because those feeds can't be read by a web page directly. Real Gibraltar inbounds take over
 // their scheduled flight when they come within range; everything else is shown as background traffic.
-const RELAY_URL = '';                     // the Cloudflare Worker in relay/worker.js, once deployed
+const RELAY_URL = 'https://clearway-relay.ventrogroup.workers.dev';                     // the Cloudflare Worker in relay/worker.js, once deployed
 const RELAY = (() => { try { return localStorage.getItem('cw-relay') || RELAY_URL; } catch (e) { return RELAY_URL; } })();
 const LIVE = { data: null, loadedAt: 0, session: null, rows: null, ac: new Map(), ok: 0, err: 0, timer: null, bound: new Set(), hide: new Set() };
 const isLiveMode = m => /^live/.test(m || S.mode || '');
