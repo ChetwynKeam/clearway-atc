@@ -29,7 +29,7 @@ function frontierOff(m){ // fence offset (m north of the centreline) at distance
 }
 // airside boundary: the fence on the north, the RAF/airport boundary on the south (approximate)
 const AIRSIDE_RM = [[-30, 470], [300, 448], [718, 414], [1300, 268], [1840, 128], [1846, -60], [1700, -95], [1300, -110], [1240, -150], [1190, -215], [1135, -285], [1040, -300], [960, -230], [930, -120], [600, -95], [200, -90], [-30, -90]];
-const AIRSIDE = rmPoly(AIRSIDE_RM);
+const AIRSIDE = APT.drawnTown ? rmPoly(AIRSIDE_RM) : null;   // Gibraltar only: other airports rely on the street map
 const SAND_RM = [[1846, 40], [1880, 30], [1905, -120], [1898, -330], [1870, -340], [1852, -120]];
 
 // ── town generator (deterministic) ──
@@ -90,6 +90,7 @@ const RWY_ANGLE = () => Math.atan2(-RU[1], RU[0]) * 180/Math.PI;
 
 // ── base layer: town, airside grass, the Rock, beach ──
 function drawGroundBase(){
+  if (!APT.drawnTown) return;
   if (!GROUND) groundInit();
   if (TEX.built !== (C.name || 'light')) buildTextures();
   const sc = V.scale;
@@ -120,6 +121,7 @@ const ROADS = [
   { name: 'Bayside Road', w: 10, pts: [[960, -420], [700, -460], [450, -470], [250, -480]] }
 ];
 function drawRoads(){
+  if (!APT.drawnTown) return;
   const mpx = V.scale/1852, c = (m, o) => { const p = rm(m, o); return [sx(p[0]), sy(p[1])]; };
   cx.save(); cx.lineJoin = cx.lineCap = 'round';
   for (const r of ROADS) {
@@ -136,14 +138,14 @@ function drawRoads(){
 
 function drawRunwayShoulders(path){
   cx.fillStyle = C.gShoulder;
-  for (const sgn of [-1, 1]) { path([[196, sgn*22], [1690, sgn*22], [1690, sgn*30], [196, sgn*30]]); cx.fill(); }
+  const [s0, s1] = AD.shoulder || [0, RWY_M]; for (const sgn of [-1, 1]) { path([[s0, sgn*22], [s1, sgn*22], [s1, sgn*30], [s0, sgn*30]]); cx.fill(); }
 }
 // ── detailed paving: shoulders, rubber, slab joints (called inside drawAirport before markings) ──
 function drawPavingDetail(c, path, mpx){
   // runway shoulders (paler) then the textured runway surface 45 m wide
   cx.fillStyle = texPattern('asphalt', 40, RWY_ANGLE()) || C.gRwy; path(AD.rwyPoly); cx.fill();
   // rubber deposits in both touchdown zones
-  for (const [m0, dir] of [[THR09_M, 1], [THR27_M, -1]]) for (let k = 0; k < 14; k++) {
+  for (const [m0, dir] of [[THR_LO_M, 1], [THR_HI_M, -1]]) for (let k = 0; k < 14; k++) {
     const a = m0 + dir*(120 + k*28), len = 30 + seeded(k + m0)*40, w = 4 + seeded(k*3 + m0)*5;
     cx.fillStyle = C.gRubber; cx.globalAlpha = 0.12 + 0.3*seeded(k*7 + m0)*(1 - k/16);
     for (const s of [-1, 1]) { path([[a, s*3.5 - w/2], [a + dir*len, s*3.5 - w/2], [a + dir*len, s*3.5 + w/2], [a, s*3.5 + w/2]]); cx.fill(); }
@@ -153,17 +155,19 @@ function drawPavingDetail(c, path, mpx){
 function drawApronSlabs(path){
   const pat = texPattern('slab', 25, RWY_ANGLE());
   if (!pat) return;
-  cx.fillStyle = pat; path(AD.civil); cx.fill(); path(AD.north); cx.fill(); path(AD.south); cx.fill();
+  cx.fillStyle = pat; for (const a of AD.aprons) { path(a); cx.fill(); }
 }
 
 // ── stands: lead-in, stop bar, safety box, number box; service road ──
 function drawStandDetail(c, path, mpx){
   const sc = V.scale;
   // airport service vehicle route (E1): white edge lines along the south edge of the civil apron, zebra where lead-ins cross
+  if (AD.serviceRoad) {
   cx.strokeStyle = C.gWhite; cx.lineWidth = Math.max(1, 0.25*mpx);
   for (const o of [120, 130]) { path([[1108, o], [1313, o]], false); cx.stroke(); }
   cx.setLineDash([3*mpx, 3*mpx]); path([[1108, 125], [1313, 125]], false); cx.stroke(); cx.setLineDash([]);
   if (sc > 350) { cx.font = `600 ${Math.max(8, 2.6*mpx)}px ${FONT_L}`; cx.fillStyle = C.gWhite; cx.textAlign = 'center'; const q = c(1270, 125); cx.save(); cx.translate(...q); cx.rotate(RWY_ANGLE()*Math.PI/180); cx.fillText('SERVICE ROAD', 0, Math.max(3, 0.9*mpx)); cx.restore(); cx.textAlign = 'left'; }
+  }
   for (const s of STANDS) {
     const civil = s.area === 'civil', box = civil ? [33, 38] : s.area === 'north' ? [32, 32] : [44, 46];
     const h = s.hdg*D2R, P = [sx(s.p[0]), sy(s.p[1])];
@@ -189,10 +193,7 @@ function drawStandDetail(c, path, mpx){
 }
 
 // ── buildings with height: shadow, roof, roof detail ──
-const BLD_INFO = () => [
-  { pts: AD.terminal, h: 14, roof: 'terminal' }, { pts: AD.atc, h: 18, roof: 'atc' },
-  ...AD.hangars.map(p => ({ pts: p, h: 12, roof: 'hangar' }))
-];
+const BLD_INFO = () => AD.buildings || [];
 function drawBuildings(c, path, mpx){
   const sc = V.scale, sh = (m) => m*mpx*0.6;
   for (const b of BLD_INFO()) {
@@ -210,5 +211,5 @@ function drawBuildings(c, path, mpx){
     if (b.roof === 'atc') { const q = c(1040, 230); cx.fillStyle = C.name === 'dark' ? '#3d5a63' : '#7fa3b8'; cx.strokeStyle = C.gRoofEdge; cx.beginPath(); cx.arc(q[0] + sh(b.h)*0.3, q[1] - sh(b.h)*0.2, Math.max(3, 7*mpx), 0, 7); cx.fill(); cx.stroke(); }
   }
   // fuel installation on the south apron (vent pipe marked on D1)
-  for (const [m, o, r] of [[1105, -215, 6], [1093, -228, 5]]) { const q = c(m, o); cx.fillStyle = C.gShadow; cx.beginPath(); cx.arc(q[0] + 2*mpx, q[1] + 2*mpx, r*mpx, 0, 7); cx.fill(); cx.fillStyle = C.gRoof; cx.strokeStyle = C.gRoofEdge; cx.beginPath(); cx.arc(q[0], q[1], r*mpx, 0, 7); cx.fill(); cx.stroke(); }
+  if (APT.drawnTown) for (const [m, o, r] of [[1105, -215, 6], [1093, -228, 5]]) { const q = c(m, o); cx.fillStyle = C.gShadow; cx.beginPath(); cx.arc(q[0] + 2*mpx, q[1] + 2*mpx, r*mpx, 0, 7); cx.fill(); cx.fillStyle = C.gRoof; cx.strokeStyle = C.gRoofEdge; cx.beginPath(); cx.arc(q[0], q[1], r*mpx, 0, 7); cx.fill(); cx.stroke(); }
 }

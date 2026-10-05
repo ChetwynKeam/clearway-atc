@@ -11,6 +11,7 @@
   </nav>
   <div class="status">
     <span class="live clk"><i></i><span id="topClock">--:--Z</span></span>
+    <div class="apsw" role="group" aria-label="Airport"><a href="#lxgb" data-ap="LXGB" title="Gibraltar">LXGB</a><a href="#lpma" data-ap="LPMA" title="Madeira">LPMA</a></div>
     <a class="btn primary" href="#sim">Launch</a>
   </div>
 </header>
@@ -21,19 +22,28 @@
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
-        <a class="pill" href="#sim" data-live><b>New</b>Live now: control today’s real Gibraltar flights</a>
+        <a class="pill" href="#lpma"><b>New</b>Madeira is open: wind limits, the Rosário turn and live traffic</a>
         <h1>Real airports. Real charts. <em>Your frequency.</em></h1>
         <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic is either the real flights in the air right now or a weekly airline timetable, tracked from origin to destination.</p>
         <div class="ctas">
           <a class="btn primary" href="#airports"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h12M9 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Browse airports</a>
           <a class="btn" href="#lxgb">Gibraltar · LXGB</a>
+          <a class="btn" href="#lpma">Madeira · LPMA</a>
         </div>
       </div>
       <div class="frame">
-        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl">LXGB · Gibraltar Radar · 122.800</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
+        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-apt="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-apt="LPMA">LPMA · Madeira Approach · 119.605</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
         <div class="frame-body">
-          <canvas id="heroScope" aria-label="Animated radar picture of the Strait of Gibraltar"></canvas>
-          <div class="frame-side" aria-hidden="true">
+          <canvas id="heroScope" aria-label="Animated radar picture"></canvas>
+          <div class="frame-side" aria-hidden="true" data-apt="LPMA">
+            <div class="fs-h"><span>ATIS</span><b>D</b><span class="r">RWY 05</span></div>
+            <div class="fs-m">LPMA 04012KT 9999 FEW025 22/16 Q1019</div>
+            <div class="fs-strip arr"><b>TAP1681</b><span>LPPT › LPMA</span><em>VOR 05</em></div>
+            <div class="fs-strip dep"><b>EZY8712</b><span>LPMA › EGKK</span><em>TAXI C</em></div>
+            <div class="fs-strip arr"><b>EXS1291</b><span>EGCC › LPMA</span><em>PILIM</em></div>
+            <div class="fs-strip dep need"><b>TOM4407</b><span>LPMA › EGBB</span><em>◆ Start-up</em></div>
+          </div>
+          <div class="frame-side" aria-hidden="true" data-apt="LXGB">
             <div class="fs-h"><span>ATIS</span><b>K</b><span class="r">RWY 27</span></div>
             <div class="fs-m">LXGB 26008KT 9999 FEW030 22/15 Q1018</div>
             <div class="fs-strip arr"><b>BAW492</b><span>EGLL › LXGB</span><em>SRA 27</em></div>
@@ -55,7 +65,7 @@
   <div class="section"><div class="wrap">
     <div class="section-head">
       <div><div class="eyebrow">The network</div><h2>Choose your airport.</h2></div>
-      <p>Each airport is built separately from its own aerodrome charts, procedures and local rules. Gibraltar is open now. The others are on the roadmap, starting with the airports that are hardest to work.</p>
+      <p>Each airport is built separately from its own aerodrome charts, procedures and local rules. Gibraltar and Madeira are open now. The others are on the roadmap, starting with the airports that are hardest to work.</p>
     </div>
     <div class="apgrid" id="apFeatured"></div>
     <div class="more"><a class="btn" href="#airports">View all airports</a></div>
@@ -74,22 +84,34 @@
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="6" width="22" height="20" rx="2"/><path d="M5 12h22M11 6v20"/></svg><h3>Flight progress strips</h3><p>Paper-style strips sort the flights waiting on you to the top. Click a strip for push-back and taxi pop-outs that preview the route on the map before you clear it. A Flights board lists the day's arrivals and departures.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6h14l6 6v14H6z"/><path d="M20 6v6h6M10 17h12M10 21h8"/></svg><h3>Academy and scoring</h3><p>A written guide for each airport, step-by-step exercises with an on-scope coach, and a score that counts separation, late road closures and airspace infringements.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M16 4l13 23H3z"/><path d="M16 13v6M16 23v.5"/></svg><h3>Emergencies and surprises</h3><p>MAYDAYs, medical diversions, bird strikes, debris closing the runway, a pedestrian over the barrier on short final and windshear reports in the levanter. Choose how often things go wrong.</p></div>
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Coordination with Spain</h3><p>Departures fly named routes and need a release from Sevilla or Casablanca on the landline before take-off. Releases take time and expire, and each flight is handed on to the right frequency.</p></div>
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 26V6M6 26h20"/><path d="M10 21l5-6 4 3 6-8"/></svg><h3>Career logbook, anywhere</h3><p>Your hours on frequency, score history and twelve badges are logged as you play. The console reshapes itself for phones and tablets, with the scope on top and a tab bar for the panels.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Coordination with the next unit</h3><p>Departures fly named routes and need a release on the landline before take-off: from Sevilla or Casablanca at Gibraltar, from Lisboa at Madeira. Releases take time and expire, and each flight is handed on to the right frequency.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 26V6M6 26h20"/><path d="M10 21l5-6 4 3 6-8"/></svg><h3>Career logbook, anywhere</h3><p>One logbook for every airport: your hours on frequency, score history and badges, with new ones to earn at each airport. The console reshapes itself for phones and tablets, with the scope on top and a tab bar for the panels.</p></div>
     </div>
   </div></div>
 
   <div class="section live-sec"><div class="wrap">
     <div class="academy">
-      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar or Madeira. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
       <ol class="steps3">
-        <li><b>Today’s real schedule</b><span>Gibraltar Airport’s own arrivals and departures, refreshed every 15 minutes, with their real expected times and delays. Each arrival turns round into its real return leg.</span></li>
-        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Gibraltar inbound comes within range, it becomes your flight to bring in.</span></li>
-        <li><b>The weather outside</b><span>The live LXGB METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
+        <li><b>Today’s real schedule</b><span>Each airport’s own arrivals and departures, refreshed every 15 minutes, with their real expected times and delays. Each arrival turns round into its real return leg.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real inbound comes within range, it becomes your flight to bring in.</span></li>
+        <li><b>The weather outside</b><span>The live METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
       </ol>
     </div>
   </div></div>
-  <div class="section feat-ap"><div class="wrap">
+  <div class="section feat-ap" data-apt="LPMA"><div class="wrap">
+    <div class="fa-grid">
+      <div class="fa-shot"><canvas data-thumb="twr" aria-label="Madeira tower display"></canvas><span class="fa-tag">LIVE · LPMA TOWER</span></div>
+      <div>
+        <div class="eyebrow">New airport</div>
+        <h2>Madeira, where the wind decides.</h2>
+        <p>Runway 05/23 sits on columns over the sea at the foot of the island’s cliffs. There is no straight-in approach to 05: arrivals circle past Rosário onto a short final, and when the wind at either anemometer goes over the published limits, the airport stops and the hold at PILIM fills up.</p>
+        <div class="kv"><span>RWY <b>05/23</b></span><span>LDA <b>2,481 m</b></span><span>Elev <b>191 ft</b></span><span>Approach <b>VOR circling</b></span></div>
+        <div class="ctas"><a class="btn primary" href="#sim">Open the position</a><a class="btn" href="#lpma">Airport briefing</a></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="section feat-ap" data-apt="LXGB"><div class="wrap">
     <div class="fa-grid">
       <div class="fa-shot"><canvas data-thumb="twr" aria-label="Gibraltar tower display"></canvas><span class="fa-tag">LIVE · LXGB TOWER</span></div>
       <div>
@@ -107,19 +129,19 @@
       <div><div class="eyebrow">Academy</div><h2>New to the frequency? Start here.</h2><p>Each airport comes with a written briefing and guided exercises. A coach card on the scope tells you what the crew wants and which command does it, then moves on once you have done it.</p><a class="btn" href="#training">Open the Academy</a></div>
       <ol class="steps3">
         <li><b>Read the briefing</b><span>Aerodrome, procedures, weather and phraseology, in the order you meet them on shift.</span></li>
-        <li><b>Fly the exercises</b><span>Your first departure, your first arrival, then a gale on the other runway.</span></li>
+        <li><b>Earn the endorsements</b><span>A core course for every airport, then three guided exercises at each one: a departure, an arrival, and the weather it is known for.</span></li>
         <li><b>Take a full session</b><span>Pick any day and hour from the timetable, or Live now, and run the rest of the day. Every session goes into your career logbook.</span></li>
       </ol>
     </div>
   </div></div>
   <div class="section" style="padding-top:0"><div class="wrap"><div class="cta-band">
-    <div><h2>Take the frequency at Gibraltar.</h2><p>No download and no account. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
+    <div><h2>Take the frequency at Gibraltar or Madeira.</h2><p>No download and no account. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
     <div class="ctas"><a class="btn primary" href="#sim">Launch the simulator</a><a class="btn ghost" href="#training">Start with the Academy</a></div>
   </div></div></div>
   <footer class="footer2"><div class="wrap">
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
     <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a></div>
-    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a></div>
+    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span></div>
   </div></footer>
 </section>
@@ -129,7 +151,7 @@
   <div class="pagehead"><div class="wrap">
     <div class="eyebrow">Career</div>
     <h1>Your logbook</h1>
-    <p>Every session you work is logged here: time on frequency, movements, your score and the badges you have earned. It is kept in this browser only, so it stays private to you and this device.</p>
+    <p>Every session you work, at every airport, is logged here: time on frequency, movements, your score and the badges you have earned. It is kept in this browser only, so it stays private to you and this device.</p>
   </div></div>
   <div class="wrap career">
     <div class="cr-stats" id="crStats"></div>
@@ -224,7 +246,7 @@
       <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
       <p>Each scenario is a METAR the simulation reads for wind, visibility, cloud and QNH. You can also switch on Live METAR to use the current LXGB report, or paste one yourself.</p>
     </div>
-    <div class="scen" id="scenGrid"></div>
+    <div class="scen" data-scen></div>
   </div></div>
 
   <div class="section"><div class="wrap">
@@ -245,14 +267,103 @@
   <footer class="footer"><div class="wrap"><span>Clearway · Gibraltar LXGB</span><span>Calpe is the classical name for the Rock of Gibraltar.</span></div></footer>
 </section>
 
+<!-- ═════════════════════ AIRPORT: MADEIRA ═════════════════════ -->
+<section class="page" id="page-lpma" data-page="lpma" hidden>
+  <div class="aphead">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#airports">Airports</a><span>›</span><span>Europe</span><span>›</span><b>Madeira</b></nav>
+      <div class="ap-grid">
+        <div>
+          <div class="ap-id"><span class="icao">LPMA</span><span class="iata">FNC</span><span class="badge live">Open now</span><span class="badge new">New</span></div>
+          <h1>Madeira Cristiano Ronaldo</h1>
+          <p class="lede">A runway built out over the sea on 180 columns, between the cliffs of the island and the Atlantic. You work Madeira Approach and Madeira Tower combined, from the TMA boundary to the stand, with wind limits that can close the airport in minutes.</p>
+          <div class="kv"><span>Approach <b>119.605</b></span><span>Tower <b>124.660</b></span><span>DVOR <b>FUN 112.2</b></span><span>TA <b>5000 ft</b></span><span>AIRAC <b>AIP Portugal AD 2</b></span></div>
+          <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
+        </div>
+        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="Madeira aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+      </div>
+    </div>
+    <div class="wrap"><div class="facts">
+      <div><b>2,781 m</b><span>Runway 05/23 × 45 m, pads at both ends</span></div>
+      <div><b>191 ft</b><span>Aerodrome elevation, THR 05 at 146 ft</span></div>
+      <div><b>2,481 m</b><span>Landing distance, both runways</span></div>
+      <div><b>940 ft</b><span>VOR 05 circling MDA, then visual</span></div>
+      <div><b>15–25 kt</b><span>Wind limits at the two anemometers</span></div>
+      <div><b>9,000 ft</b><span>Minimum vectoring altitude over the island</span></div>
+    </div></div>
+  </div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">What makes it Madeira</div><h2>Built from the Portuguese AIP charts.</h2></div>
+      <p>The aerodrome, SIDs, STARs, approaches and wind limits come from AIP Portugal AD 2 LPMA: the aerodrome and parking charts, the SID and STAR charts, the VOR and RNP approach charts and the visual approach chart. The taxiway, apron and stand layout follows OpenStreetMap, checked against the aerodrome chart.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 22c4-3 8-3 12 0s8 3 12 0M4 15c4-3 8-3 12 0s8 3 12 0"/><path d="M24 4v6M21 7h6"/></svg><h3>Wind limits that close the runway</h3><p>The mean wind or gust at either anemometer, MID or Rosário, sets what is allowed. A northerly above 15 kt or gusting 25, or a north-easterly above 20 kt, and crews refuse to land. Arrivals hold at PILIM, then divert to Porto Santo.</p><div class="src">Wind rose on every approach chart · AD 2.20</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M26 6C16 6 10 12 10 20v6"/><circle cx="20" cy="9" r="2"/><circle cx="12" cy="16" r="2"/><path d="M6 26h8"/></svg><h3>The Rosário circuit</h3><p>Runway 05 has no straight-in approach. The VOR approach comes down 211° to the missed approach point, then turns right past the GELO point (not below 850 ft) and Rosário (not below 460 ft) onto a short final over the sea.</p><div class="src">DVOR/DME circling RWY 05 · visual approach chart</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26l8-14 5 7 4-6 7 13z"/><path d="M14 6h4" stroke-dasharray="2 2"/></svg><h3>An island in the way</h3><p>The ground rises to over 1,800 m a few miles from the runway. The minimum vectoring altitude over the island is 9,000 ft, and runway 05 departures turn right as soon as practicable, away from the high ground.</p><div class="src">AD 2.24.11 radar vectoring chart · SIDs</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 12l13-7 13 7"/><path d="M6 12v12h20V12"/><path d="M11 18h10"/></svg><h3>RNAV SIDs and STARs</h3><p>Departures fly DEGUN, LAPPA, GALOZ, GOSGA, MARCU or NIDUL 1E off runway 05 and 1W off 23. Arrivals come in on the LIDRO, KICAS, IBBAN and EKNOT 1P STARs to the PILIM hold, and leave or join Lisboa Control on 132.255.</p><div class="src">AD 2.24.08 · AD 2.24.10</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26h24M8 26V10h16v16"/><path d="M12 14h3M17 14h3M12 19h3M17 19h3"/></svg><h3>One apron, two exits, backtracks</h3><p>Taxiways Bravo and Charlie join the runway to taxilane Alpha along apron A, with stands A1 to A18. There is no parallel taxiway, so departures backtrack to the turn pads at either end before take-off.</p><div class="src">AD 2.24.01 · 2.24.02 · OpenStreetMap</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Lisboa releases and handoffs</h3><p>Every departure needs a release from Lisboa Control on the landline before take-off, and you hand it on to Lisboa once it is established on its SID. Crews speak with TAP, Binter, Azores Airlines, Jet2 and easyJet telephony.</p><div class="src">AIP Portugal ENR · simulator procedure</div></div>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Two positions, one console</div><h2>From the TMA boundary to stand A18.</h2></div>
+      <p>Madeira Approach and Madeira Tower are combined on one position. Scroll out for the TMA and Porto Santo, and scroll in for the runway on its columns, the apron and the stands.</p>
+    </div>
+    <div class="positions">
+      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">MADEIRA APPROACH · 119.605</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards PILIM. Descend them, hold them when the wind is over the limits, and clear the VOR approach. Keep departures on their SIDs, away from the island, and hand them to Lisboa.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">MADEIRA TOWER · 124.660</div><h3>Tower</h3><p>Check the anemometers before every clearance. Clear arrivals to land as they come round Rosário, and backtrack departures to the turn pad before you clear them for take-off.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">GROUND MOVEMENT · ON TOWER</div><h3>Ground</h3><p>Approve start-up and push onto taxilane Alpha, then taxi departures to Charlie for runway 05 or Bravo for 23. Arrivals vacate at the same two taxiways and taxi to their stand on apron A.</p></div></div>
+    </div>
+  </div></div>
+
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now at Madeira</div><h2>Work today’s real traffic at LPMA.</h2><p>Pick Live now in the session setup and the position opens at the current time with Madeira’s real flights, live aircraft positions and the current METAR. The timetable sessions are still there when you want to choose your own day and hour.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>Madeira Airport’s own arrivals and departures from ANA, refreshed every 15 minutes, with their real expected times and delays.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Madeira inbound comes within range, it becomes your flight.</span></li>
+        <li><b>The weather outside</b><span>The live LPMA METAR sets the runway, the ATIS and whether the wind limits are exceeded.</span></li>
+      </ol>
+    </div>
+  </div></div>
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
+      <p>Each scenario is a METAR the simulation reads for wind, visibility, cloud and QNH. You can also switch on Live METAR to use the current LPMA report, or paste one yourself.</p>
+    </div>
+    <div class="scen" data-scen></div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="sources">
+      <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
+        <p class="note">Procedures, fixes, frequencies, runway data, stands and wind limits come from AIP Portugal AD 2 LPMA. The airline timetable is a representative week. In Live now sessions the flights come from Madeira Airport’s live flight information (ANA) and aircraft positions from the adsb.lol and adsb.fi networks; once a flight is yours it follows your instructions, not its real track. The aerodrome layout and coastline follow OpenStreetMap. The MID and Rosário anemometer readings are derived from the METAR wind, the RNP AR approaches are not yet flown, and the take-off headings are simplified. This is a training game and is not for real-world navigation. It is not affiliated with NAV Portugal, ANA or any airline.</p></div>
+      <ul>
+        <li><b>AD 2.24.01–04</b>Aerodrome, parking and docking charts: runway 05/23, taxiways A, B and C, stands A1–A18.</li>
+        <li><b>AD 2.24.08</b>RNAV SIDs off runways 05 and 23, with the right turn off 05.</li>
+        <li><b>AD 2.24.10</b>RNAV STARs to PILIM and MONEC.</li>
+        <li><b>AD 2.24.12–13</b>DVOR/DME circling approaches to 05 and 23, the visual approach via GELO and Rosário, and the wind limit roses.</li>
+        <li><b>AD 2.24.11</b>Radar vectoring chart: TMA Madeira and the 9,000 ft sector over the island.</li>
+        <li><b>OpenStreetMap</b>Taxiway, apron and stand geometry, the coastline and the street map under the scope.</li>
+        <li><b>Live now</b>ANA live flight information; live aircraft positions from adsb.lol and adsb.fi.</li>
+      </ul>
+    </div>
+  </div></div>
+  <footer class="footer"><div class="wrap"><span>Clearway · Madeira LPMA</span><span>Funchal’s runway was extended over the sea on columns in 2000.</span></div></footer>
+</section>
+
 <!-- ═════════════════════ SIMULATOR ═════════════════════ -->
 <section class="page" id="page-sim" data-page="sim" hidden>
 <div class="app">
   <div class="scopewrap">
-    <canvas id="scope" aria-label="Gibraltar radar and aerodrome display"></canvas>
+    <canvas id="scope" aria-label="Radar and aerodrome display"></canvas>
     <div class="toolbar">
       <button class="exit" id="tgExit" title="Leave the position and return to the airport page"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</button>
-      <a class="apchip" href="#lxgb" title="Gibraltar airport briefing"><b>LXGB</b><span>Gibraltar</span></a>
+      <a class="apchip" id="apChip" href="#lxgb" title="Airport briefing"><b>LXGB</b><span>Gibraltar</span></a>
       <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
       <button id="tgProc" class="on">Procedures</button>
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
@@ -264,7 +375,7 @@
       <button id="tgFull" title="Full screen">Full screen</button>
     </div>
     <div class="fids" id="fids" hidden role="dialog" aria-label="Flight information">
-      <div class="fids-hd"><div><b>Gibraltar · flight information</b><span id="fidsClock"></span></div>
+      <div class="fids-hd"><div><b id="fidsTitle">Flight information</b><span id="fidsClock"></span></div>
         <div class="seg" role="tablist"><button data-fids="ARR" class="on">Arrivals</button><button data-fids="DEP">Departures</button></div>
         <button class="x" id="fidsClose" aria-label="Close">×</button></div>
       <div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th id="fidsAp">From</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fidsBody"></tbody></table></div>
@@ -275,10 +386,19 @@
     <div class="coach" id="coach" hidden></div>
     <div class="overlay" id="setup">
       <div class="card">
+        <div class="apline" id="setupAp"></div>
+        <div data-apt="LXGB">
         <div class="eyebrow">Position briefing</div>
         <h1>Gibraltar Radar &amp; Tower</h1>
         <div class="sub">LXGB · RWY 09/27 1798 × 45 m · ELEV 12 ft · GBR TACAN Ch 83X · TA 6000 · Radar 122.8 · Tower 131.2</div>
         <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Gibraltar flights from the current time with the live METAR. Bring arrivals in on surveillance radar approaches, keep them out of R164 and off the Rock, work the departures from stand to Sevilla, and keep Winston Churchill Avenue shut whenever anything uses the runway.</p>
+        </div>
+        <div data-apt="LPMA">
+        <div class="eyebrow">Position briefing</div>
+        <h1>Madeira Approach &amp; Tower</h1>
+        <div class="sub">LPMA · RWY 05/23 2781 × 45 m · ELEV 191 ft · FUN DVOR 112.2 · TA 5000 · Approach 119.605 · Tower 124.660</div>
+        <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Madeira flights from the current time with the live METAR. Bring arrivals in on their STARs to PILIM and the VOR approach, watch the wind limits at both anemometers, and work the departures from stand A to their SIDs and Lisboa.</p>
+        </div>
         <h2>Session</h2>
         <div class="grid2">
           <label><span class="lbl">Traffic</span>
@@ -292,11 +412,7 @@
                 <option value="summer">Timetable plus charters and bizjets</option>
                 <option value="event">VATSIM-style event (busy)</option>
               </optgroup>
-              <optgroup label="Guided training">
-                <option value="dep">Exercise 1 · First departure</option>
-                <option value="arr">Exercise 2 · First arrival</option>
-                <option value="lev">Exercise 3 · Levanter, runway 09</option>
-              </optgroup>
+              <optgroup label="Guided training" id="exGroup"></optgroup>
             </select></label>
           <label><span class="lbl">Weather</span><select id="wxPreset"></select></label>
           <label><span class="lbl">Day</span><select id="daySel"></select></label>
@@ -306,17 +422,22 @@
         <div class="slotlist" id="slotList" aria-live="polite"></div>
         <label style="display:block;margin-top:12px"><span class="lbl">Live METAR (optional, overrides the weather)</span>
           <textarea id="wxPaste" rows="2" placeholder="LXGB 042020Z 24018G28KT 9999 FEW020 21/17 Q1016"></textarea></label>
-        <label class="livewx"><input type="checkbox" id="liveWx"> <span><b>Live METAR</b> · use the current LXGB report and check for a new one every 10 minutes during the session (the site refreshes it every 30)</span></label>
+        <label class="livewx"><input type="checkbox" id="liveWx"> <span><b>Live METAR</b> · use the current <span data-icao>LXGB</span> report and check for a new one every 10 minutes during the session (the site refreshes it every 30)</span></label>
         <div class="fine" id="liveWxSt" hidden></div>
-        <p class="fine" style="margin-top:6px">Copy the current LXGB METAR from <a href="https://aviationweather.gov/data/metar/?id=LXGB&amp;hours=0" target="_blank" rel="noopener">aviationweather.gov</a>, or paste any other METAR.</p>
+        <p class="fine" style="margin-top:6px">Copy the current <span data-icao>LXGB</span> METAR from <a id="awcLink" href="https://aviationweather.gov/data/metar/?id=LXGB&amp;hours=0" target="_blank" rel="noopener">aviationweather.gov</a>, or paste any other METAR.</p>
         <h2>Before you start</h2>
-        <ul>
+        <ul data-apt="LXGB">
           <li>Close the road early: by 15 NM for walkers and 10 NM for traffic. Closure takes about 2½ minutes.</li>
           <li>Departures for 27 taxi to Echo and backtrack to the east turning circle. For 09 they taxi to Alpha and backtrack across the road to the west circle.</li>
           <li>Type commands in the bar under the scope, for example <code>BAW492 H250 A40</code>, or use the buttons on the selected flight. The training guide has the full list.</li>
         </ul>
+        <ul data-apt="LPMA">
+          <li>Check the anemometers in the ATIS panel. When the wind is out of limits, hold arrivals at PILIM and expect diversions to Porto Santo.</li>
+          <li>Runway 05 departures taxi to Charlie and backtrack to the 05 turn pad; runway 23 departures use Bravo. Every one needs a release from Lisboa.</li>
+          <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
+        </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine">Data from UK Mil AIP AD 2 LXGB. Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-apt="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-apt="LPMA">Data from AIP Portugal AD 2 LPMA.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>
@@ -348,30 +469,122 @@
 <section class="page" id="page-training" data-page="training" hidden>
 <div class="wrap guide">
   <nav class="toc" aria-label="Training guide contents">
-    <div class="lbl">Gibraltar briefing</div>
-    <ol id="tocList"></ol>
+    <div id="tocList"></div>
     <div class="exlinks">
       <div class="lbl" style="margin-top:6px">Guided exercises</div>
-      <button class="btn" data-ex="dep">1 · First departure</button>
-      <button class="btn" data-ex="arr">2 · First arrival</button>
-      <button class="btn" data-ex="lev">3 · Levanter, runway 09</button>
+      <div id="tocEx"></div>
     </div>
   </nav>
   <article class="doc">
     <header>
-      <div class="eyebrow">Academy · Gibraltar LXGB</div>
-      <h1>Working Gibraltar, from stand to Sevilla.</h1>
-      <p>This guide teaches the position the way a unit briefing would. It covers the aerodrome, the road, departures and the release from Spain, the approaches, the weather, emergencies and the radio, in the order you will meet them on shift. Each section ends where the simulator picks up, and three guided exercises walk you through your first movements step by step.</p>
+      <div class="eyebrow">Clearway Academy</div>
+      <h1>Learn the console once, then earn each airport.</h1>
+      <p>The Academy has two parts. The <b>core course</b> teaches what is the same everywhere: reading the scope and the strips, the radio, the commands, emergencies and how you are scored. Each airport then has its own <b>endorsement</b>: a unit briefing on its aerodrome, procedures, weather and local rules, and three guided exercises with a coach card on the scope. Finish all three for that airport’s badge.</p>
+      <div class="hub" id="acHub"></div>
     </header>
 
-    <section id="t-position"><h2><span class="n">01</span>Your position</h2>
+    <!-- ── core course ── -->
+    <section id="t-console" data-track="core"><h2><span class="n">03</span>Reading the console</h2>
+      <h3>The scope</h3>
+      <p>The scope is one map you scroll or pinch to zoom. Zoomed out it shows the airspace round the airport’s radar reference (the GBR TACAN at Gibraltar, the FUN DVOR at Madeira) with range rings every 5 NM, the bearing scale, restricted airspace and high ground, the arrival routes and holds, and the final approach paths. Zoom in and the runway, finals and the aerodrome appear to scale over the street map. Zoom right out to follow flights across Europe and Africa. Drag to pan.</p>
+      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span></figcaption></figure>
+      <div class="rt"><div><span class="w">Line 1</span><span class="p">EZY8901 ◆ — callsign, ◆ means the crew is waiting on you</span></div><div><span class="w">Line 2</span><span class="p">045↓030 21 — FL/altitude in hundreds, trend, cleared level (or the approach), groundspeed ÷ 10</span></div><div><span class="w">Line 3</span><span class="p">A20N R27 T — type, runway of the approach (or destination), T when on Tower</span></div></div>
+      <p>Your traffic is drawn as plane icons in the shape of the real type (airliner, wide-body, business jet, turboprop or military) pointing the way the nose points. Arrivals are amber, departures blue and the selected flight is outlined. Anything in conflict, and any aircraft in an emergency, turns red. Grey icons with a short tag are real aircraft from the live feed that are not yours. Beyond radar cover your flights become yellow icons, and inbounds about to call appear as pending tracks. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
+      <h3>The side panel</h3>
+      <p>The <b>ATIS</b> block shows the current information letter (click it to read the full broadcast), the runway selector, the METAR and tiles for wind, head and crosswind on the runway in use, visibility and cloud, QNH, approach minima and temperature. Below it is what the airport needs on top: the <b>road crossing</b> control at Gibraltar, the <b>anemometer</b> readings and wind-limit state at Madeira. The <b>selected flight</b> card has the buttons that make sense for that aircraft right now. The <b>strips</b> are sorted with the flights waiting on you first. When the ATIS changes a red <b>ATIS</b> warning flashes by the runway until you click it, and the <b>Flights</b> button opens the day's arrivals and departures board.</p>
+      <h3>The command line</h3>
+      <p>Type a callsign (or just its digits, such as <code>8901</code>) followed by one or more instructions, then press Enter. With a flight selected you can leave the callsign out. Press <kbd>/</kbd> to jump to the command line, <kbd>Tab</kbd> to cycle flights and <kbd>Space</kbd> to pause. With <b>Voice</b> on you hear every transmission, and <b>Hold to talk</b> lets you say the instruction in standard phraseology instead.</p>
+      <h3>On a phone or tablet</h3>
+      <p>On a narrow screen the scope sits on top and a tab bar along the bottom chooses one panel under it: <b>Flight</b> (the selected aircraft and its buttons), <b>Strips</b> (with a red count of flights waiting on you), <b>ATIS</b>, <b>Radio</b> (the message log) or <b>Scope</b> for the map on its own. Tap an aircraft or a strip and the Flight panel opens. On a tablet held upright Flight and Strips sit side by side, and on a phone turned on its side the panel moves to the right of the scope.</p>
+    </section>
+
+    <section id="t-radio" data-track="core"><h2><span class="n">10</span>The radio</h2>
+      <p>With Voice on, every transmission opens and closes with a squelch click and a burst of static. Calls to the next unit (Sevilla or Casablanca from Gibraltar, Lisboa from Madeira) go down the landline, so they have none and show in pink in the log.</p>
+      <ul>
+        <li><b>Say again.</b> Now and then a crew misses an instruction and asks you to repeat it. Nothing you said has been applied: press the <b>Say again</b> button on its card or send it again.</li>
+        <li><b>Blocked transmissions.</b> When two stations call at once you hear a squeal and see <i>two stations transmitting at once, blocked</i> in the log. The crew calls again a few seconds later.</li>
+        <li><b>Wrong frequency.</b> Send a crew to the wrong frequency with <code>HO</code> and it comes back to you after half a minute, saying there was no reply.</li>
+      </ul>
+      <div class="rt">
+        <div><span class="w">RADAR</span><span class="a">Speedbird four niner two, turn left heading 240, descend altitude 4,000 feet</span></div>
+        <div><span class="w">BAW492</span><span class="p">Gibraltar, readability two, say again, Speedbird four niner two</span></div>
+        <div><span class="w">· · ·</span><span class="p">two stations transmitting at once, blocked</span></div>
+      </div>
+      <h3>The ATIS</h3>
+      <p>Click the information letter in the ATIS panel to read the full broadcast, and press <b>Broadcast it</b> to hear it. It carries the runway, the approach in use, wind, visibility, cloud, temperature, QNH, the transition level, turbulence, windshear and wind-limit warnings, any runway closure and the local reminders, such as the road at Gibraltar and the departure release. When it changes, a red ATIS button flashes until you click it.</p>
+    </section>
+
+    <section id="t-commands" data-track="core"><h2><span class="n">11</span>Command reference</h2>
+      <div class="tbl"><table>
+        <tr><th>Command</th><th>Meaning</th><th>Example</th></tr>
+        <tr><td class="mono">H### / L### / R###</td><td>Fly heading, turn left or turn right heading</td><td class="mono">EZY8901 L200</td></tr>
+        <tr><td class="mono">A## / C## / D##</td><td>Climb or descend. Below 400 means hundreds of feet. Above the transition altitude (6,000 ft at Gibraltar, 5,000 ft at Madeira) it is a flight level</td><td class="mono">A40 · A80</td></tr>
+        <tr><td class="mono">S### / SN</td><td>Assign speed, or remove the restriction</td><td class="mono">S180</td></tr>
+        <tr><td class="mono">DCT fix</td><td>Proceed direct to a fix</td><td class="mono">DCT UPMUP</td></tr>
+        <tr><td class="mono">HOLD [fix]</td><td>Hold at a fix, or at present position</td><td class="mono">HOLD UPMUP</td></tr>
+        <tr><td class="mono">APP [runway]</td><td>Clear the approach: the SRA at Gibraltar, the VOR approach at Madeira</td><td class="mono">APP 27 · APP 05</td></tr>
+        <tr><td class="mono">HO [freq]</td><td>Transfer: Radar or Approach ↔ Tower, then the next unit (Sevilla 132.6 or Casablanca 125.5 from Gibraltar, Lisboa 132.255 from Madeira). A wrong frequency sends the crew away and back</td><td class="mono">HO 132.6</td></tr>
+        <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
+        <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
+        <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west (north-east or south-west at Madeira)</td><td class="mono">BAW493 PUSH E</td></tr>
+        <tr><td class="mono">TAXI [hp] [VIA …]</td><td>Taxi to a holding point (A, C, D or E at Gibraltar, B or C at Madeira), by the shortest route or the one you name. <b>Taxi…</b> on the selected flight opens the route picker</td><td class="mono">TAXI E VIA A B</td></tr>
+        <tr><td class="mono">HP / RES</td><td>Hold position / continue taxi</td><td class="mono">HP</td></tr>
+        <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
+        <tr><td class="mono">REL</td><td>Request the departure release from the next unit on the landline</td><td class="mono">REL</td></tr>
+        <tr><td class="mono">CTO</td><td>Cleared for take-off on the departure route. Needs a valid release</td><td class="mono">CTO</td></tr>
+        <tr><td class="mono">VAC [exit]</td><td>Vacate (backtrack if needed) and taxi to stand</td><td class="mono">VAC</td></tr>
+        <tr><td class="mono">ROG</td><td>Acknowledge a MAYDAY or PAN (any instruction to it also does)</td><td class="mono">EXS96K ROG</td></tr>
+        <tr><td class="mono">WS</td><td>Pass the latest windshear report to an arrival</td><td class="mono">BAW492 WS</td></tr>
+        <tr><td class="mono">IDENT</td><td>Squawk ident</td><td class="mono">IDENT</td></tr>
+      </table></div>
+      <p>Commands chain: <code>EZY6497 L180 A40 S200</code> is one transmission. The callsign can be shortened to its unique digits.</p>
+    </section>
+
+    <section id="t-emergencies" data-track="core"><h2><span class="n">09</span>Emergencies and the unexpected</h2>
+      <p>Pick how often things go wrong when you open a session: <b>Off</b>, <b>Occasional</b> (about every 20 minutes) or <b>Frequent</b> (about every 10). Guided exercises have none. An emergency aircraft turns red on the scope and the strips, squawks 7700 for a MAYDAY, and its card shows what is wrong with a <b>Roger</b> button. Your first transmission to it acknowledges it, so you can roger it and give the approach in one go.</p>
+      <figure class="fig"><canvas id="figEmerg" aria-label="A MAYDAY aircraft on short final with the runway closed"></canvas><figcaption>The runway closed for debris, with red crosses along it, while EXS96K comes down final under a MAYDAY. It cannot be cleared to land: send it around or hold it until the runway reopens. A departure waits at the holding point with its release.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Event</th><th>What happens</th><th>What to do</th></tr>
+        <tr><td>MAYDAY</td><td>Engine failure or fire, smoke in the cabin, hydraulic failure. A departure turns back</td><td>Acknowledge, make it number one on the approach, keep others out of its way. The runway is inspected after it lands</td></tr>
+        <tr><td>PAN medical</td><td>An arrival has a sick passenger and wants priority and an ambulance</td><td>Acknowledge and sequence it first</td></tr>
+        <tr><td>Medical diversion</td><td>An overflight diverts in from the edge of your airspace</td><td>Treat it as an extra arrival with priority</td></tr>
+        <tr><td>Bird strike</td><td>A departure hits birds after take-off and returns, or an arrival reports birds on short final</td><td>Bring the returning aircraft in. The runway closes for an inspection</td></tr>
+        <tr><td>Runway closed</td><td>Debris, a tyre fragment or a fuel spill, for four to seven minutes</td><td>Cancel landing clearances (<code>GA</code> or <code>HOLD</code>) and hold departures until it reopens</td></tr>
+        <tr><td>Person on the runway (Gibraltar)</td><td>Someone climbs the barrier at Winston Churchill Avenue while an arrival is on final</td><td>Send it around straight away with <code>GA</code>. Leave it to the crew and they go around anyway, but late</td></tr>
+        <tr><td>Windshear report</td><td>In strong or gusty winds a crew reports a loss of airspeed on final. It goes into the ATIS</td><td>Pass it to every arrival on approach with <code>WS</code>. Briefed crews cope better</td></tr>
+      </table></div>
+    </section>
+
+    <section id="t-scoring" data-track="core"><h2><span class="n">12</span>Scoring and your career</h2>
+      <div class="tbl"><table>
+        <tr><th>Event</th><th>Points</th></tr>
+        <tr><td>Landing</td><td class="mono">+25</td></tr>
+        <tr><td>Take-off · departure transferred and gone</td><td class="mono">+10 · +20</td></tr>
+        <tr><td>Road still open at 10 NM (Gibraltar)</td><td class="mono">−15</td></tr>
+        <tr><td>Departure leaves without a transfer</td><td class="mono">−30</td></tr>
+        <tr><td>R164 infringement (Gibraltar) · unplanned diversion</td><td class="mono">−40</td></tr>
+        <tr><td>Below the minimum at an approach gate (920 ft at Gibraltar’s 3 NM point; GELO and Rosário at Madeira)</td><td class="mono">−40</td></tr>
+        <tr><td>Loss of separation</td><td class="mono">−50</td></tr>
+        <tr><td>Movement across the road with barriers up, or landing with the road open (Gibraltar)</td><td class="mono">−60</td></tr>
+        <tr><td>Over high ground below its minimum: the Rock below 3,000 ft (1,800 ft), Madeira’s interior below 5,000 ft (3,000 ft)</td><td class="mono">−30 (−80)</td></tr>
+        <tr><td>Emergency acknowledged in time · landed safely</td><td class="mono">+10 · +40</td></tr>
+        <tr><td>Arrival sent around for a person on the runway · windshear passed</td><td class="mono">+20 · +5</td></tr>
+        <tr><td>Emergency not acknowledged within a minute · crew sent to a wrong frequency</td><td class="mono">−10 · −10</td></tr>
+        <tr><td>Crew had to go around on its own for a person on the runway</td><td class="mono">−25</td></tr>
+        <tr><td>Arrival still cleared to land on a closed runway</td><td class="mono">−30</td></tr>
+      </table></div>
+      <p>Every session you work for more than a minute goes into your <a href="#career">Career</a> logbook: time on frequency, movements, go-arounds, separation losses and score, with a chart of your recent scores and badges to earn, from <b>First contact</b> to <b>Ten hours</b>. One logbook covers every airport, and each airport adds badges of its own, such as Madeira’s <b>Rosário turn</b> and <b>Island endorsement</b>. The logbook is kept in your browser, so it stays on this device.</p>
+    </section>
+
+    <!-- ── Gibraltar endorsement ── -->
+    <section id="t-position" data-apt="LXGB" data-track="ap"><h2><span class="n">01</span>Your position at Gibraltar</h2>
       <p>You are <b>Gibraltar Radar (122.8)</b> and <b>Gibraltar Tower (131.2)</b> combined. Ground movement is handled on the Tower frequency. Arrivals call Radar at about 50 NM inbound. You hand them to Tower once they are established on the approach, or you clear them to land yourself. Departures start with Tower, go to Radar once airborne, and you transfer them to <b>Sevilla Control 132.6</b> (north and west) or <b>Casablanca Control 125.5</b> (south) beyond about 22 NM.</p>
       <p>A session starts at the day and hour you pick and runs to the end of that day's timetable. The guided exercises start at 1855Z (2055 local). The aerodrome is drawn with its edge lights, threshold and end lights, blue taxiway edge lights, flashing runway guard lights and floodlit apron.</p>
       <div class="callout"><div class="lbl">Simplification</div><p>The real unit splits Radar and Tower across separate controllers. Here they are one seat, so every handover between them is a button press that you make to yourself.</p></div>
     </section>
 
-    <section id="t-aerodrome"><h2><span class="n">02</span>The aerodrome</h2>
-      <figure class="fig"><canvas id="figAerodrome" aria-label="Aerodrome diagram with taxiways and holding points"></canvas><figcaption>The aerodrome as drawn in the simulator: taxiways, aprons and stands from OpenStreetMap, checked against charts D1, E1 and F1. North is up. Spain is beyond the frontier fence at the top, and the Rock lies off the bottom of the frame.</figcaption></figure>
+    <section id="t-aerodrome" data-apt="LXGB" data-track="ap"><h2><span class="n">02</span>The aerodrome</h2>
+      <figure class="fig"><canvas data-fig="aerodrome" aria-label="Aerodrome diagram with taxiways and holding points"></canvas><figcaption>The aerodrome as drawn in the simulator: taxiways, aprons and stands from OpenStreetMap, checked against charts D1, E1 and F1. North is up. Spain is beyond the frontier fence at the top, and the Rock lies off the bottom of the frame.</figcaption></figure>
       <div class="tbl"><table>
         <tr><th>Item</th><th>Value</th><th>Source</th></tr>
         <tr><td>Runway</td><td>09/27, 1,798 × 45 m, true bearing 087.5°/267.5°, blacktop</td><td class="mono">AD 2.12</td></tr>
@@ -388,21 +601,7 @@
       <p><b>Alpha</b> (north side, west of the terminal) and <b>Echo</b> (north side, east) serve the civil and north aprons. <b>Charlie</b> and <b>Delta</b> serve the south apron. Every entry to the runway is mid-field, so <b>every departure backtracks</b>. Runway 27 departures normally enter at Echo and backtrack east to the east turning circle. Runway 09 departures enter at Alpha and backtrack west across the road to the west turning circle.</p>
     </section>
 
-    <section id="t-console"><h2><span class="n">03</span>Reading the console</h2>
-      <h3>The scope</h3>
-      <p>The scope is one map you scroll or pinch to zoom. Zoomed out it shows 40 NM around the GBR TACAN with range rings every 5 NM, the bearing scale, R164, the Rock, the arrival routes and holds, and both SRA final paths. Zoom in and the runway, finals and the aerodrome appear to scale over the street map. Zoom right out to follow flights across Europe and Africa. Drag to pan.</p>
-      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on the SRA final for runway 27, label in Tower colours. <b>4</b> The UPMUP hold. <b>5</b> R164, Spanish restricted airspace from the surface to FL300.</figcaption></figure>
-      <div class="rt"><div><span class="w">Line 1</span><span class="p">EZY8901 ◆ — callsign, ◆ means the crew is waiting on you</span></div><div><span class="w">Line 2</span><span class="p">045↓030 21 — FL/altitude in hundreds, trend, cleared level (or SRA), groundspeed ÷ 10</span></div><div><span class="w">Line 3</span><span class="p">A20N R27 T — type, runway of the approach (or destination), T when on Tower</span></div></div>
-      <p>Your traffic is drawn as plane icons in the shape of the real type (airliner, wide-body, business jet, turboprop or military) pointing the way the nose points. Arrivals are amber, departures blue and the selected flight is outlined. Anything in conflict, and any aircraft in an emergency, turns red. Grey icons with a short tag are real aircraft from the live feed that are not yours. Beyond radar cover your flights become yellow icons, and inbounds about to call appear as pending tracks. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
-      <h3>The side panel</h3>
-      <p>The <b>ATIS</b> block shows the current information letter (click it to read the full broadcast), the runway selector, the METAR and tiles for wind, head and crosswind on the runway in use, visibility and cloud, QNH, SRA minima and temperature. Below it is the <b>road crossing</b> control with its countdown. The <b>selected flight</b> card has the buttons that make sense for that aircraft right now. The <b>strips</b> are sorted with the flights waiting on you first. When the ATIS changes a red <b>ATIS</b> warning flashes by the runway until you click it, and the <b>Flights</b> button opens the day's arrivals and departures board.</p>
-      <h3>The command line</h3>
-      <p>Type a callsign (or just its digits, such as <code>8901</code>) followed by one or more instructions, then press Enter. With a flight selected you can leave the callsign out. Press <kbd>/</kbd> to jump to the command line, <kbd>Tab</kbd> to cycle flights and <kbd>Space</kbd> to pause. With <b>Voice</b> on you hear every transmission, and <b>Hold to talk</b> lets you say the instruction in standard phraseology instead.</p>
-      <h3>On a phone or tablet</h3>
-      <p>On a narrow screen the scope sits on top and a tab bar along the bottom chooses one panel under it: <b>Flight</b> (the selected aircraft and its buttons), <b>Strips</b> (with a red count of flights waiting on you), <b>ATIS</b>, <b>Radio</b> (the message log) or <b>Scope</b> for the map on its own. Tap an aircraft or a strip and the Flight panel opens. On a tablet held upright Flight and Strips sit side by side, and on a phone turned on its side the panel moves to the right of the scope.</p>
-    </section>
-
-    <section id="t-ground"><h2><span class="n">04</span>Ground and departures</h2>
+    <section id="t-ground" data-apt="LXGB" data-track="ap"><h2><span class="n">04</span>Ground and departures</h2>
       <h3>Start-up and push</h3>
       <p>Departures call from the stand with the ATIS letter. Select the flight and press <b>Start &amp; push…</b>: a pop-out asks which way the nose should face after the push, previews the push on the map and recommends the side that leads to the departure holding point (east for runway 27, west for 09). Typed, it is <code>PUSH E</code> or <code>PUSH W</code>. A few seconds after the push the crew reports ready to taxi.</p>
       <h3>Taxi</h3>
@@ -444,7 +643,7 @@
       <p>Above 1,000 ft the crew wants Radar: press <b>To Radar 122.8</b> (<code>HO</code>). On its route it turns towards its exit fix by itself and asks for further climb near 4,000 ft: give it <code>A80</code>. Vector it with a heading and it leaves the route, then asks for its exit fix when clear of the Rock (<code>DCT UPMUP A80</code>). Beyond about 22 NM it is ready for <b>Sevilla Control 132.6</b> or <b>Casablanca Control 125.5</b>. Transfer it with <code>HO</code>, or name the frequency yourself with <code>HO 132.6</code>. Give the wrong one and the crew finds nobody there and comes back to you a little later, which costs points. One that leaves your airspace without a transfer costs more.</p>
     </section>
 
-    <section id="t-road"><h2><span class="n">05</span>Winston Churchill Avenue</h2>
+    <section id="t-road" data-apt="LXGB" data-track="ap"><h2><span class="n">05</span>Winston Churchill Avenue</h2>
       <p>Gibraltar's runway is crossed at mid-point by a four-lane public road, footpath and cycle lane. The published rule is to close it to <b>pedestrians by 15 NM</b> and to <b>vehicles by 10 NM</b>, which gives about three minutes to clear it. A FOD inspection follows before any jet movement.</p>
       <ul>
         <li><b>Closing</b> takes 150 seconds in the simulator. The barriers turn amber, then red when it is closed.</li>
@@ -455,7 +654,7 @@
       <div class="callout"><div class="lbl">Planning tip</div><p>A runway 09 departure backtracks across the road to the west turning circle, and a runway 27 arrival usually rolls past it and backtracks over it to vacate at Alpha. Close the road once for a whole sequence of movements, not once per aircraft.</p></div>
     </section>
 
-    <section id="t-arrivals"><h2><span class="n">06</span>Arrivals and the SRA</h2>
+    <section id="t-arrivals" data-apt="LXGB" data-track="ap"><h2><span class="n">06</span>Arrivals and the SRA</h2>
       <h3>Inbound</h3>
       <p>Arrivals contact Radar at 50 NM from the east via <b>PIMOS</b>, from the west via <b>LINTO</b> and ODLUK, or from Morocco via Tetouan. Descend them early: Gibraltar is close to everything. The published holds are <b>UPMUP</b> (inbound 297°, minimum 3,000 ft) and <b>ODLUK</b> (inbound 074°, minimum 4,000 ft). About 8 NM before the end of its routing (10 NM final for 27, RIPRA for 09) the crew asks for the SRA. Without a clearance it holds over that fix and asks again. Clear it with <code>APP</code> and it turns straight onto the approach.</p>
       <h3>The surveillance radar approach</h3>
@@ -499,7 +698,7 @@
       <p>Landings on 27 usually roll well past the mid-field taxiways and stop near the west end. <code>VAC</code> sends the aircraft on to the turning circle and back along the runway (across the road) to Alpha, then on to its stand. Landings on 09 can usually turn off at Echo. Name an exit with <code>VAC A</code> or <code>VAC E</code>.</p>
     </section>
 
-    <section id="t-weather"><h2><span class="n">07</span>Weather</h2>
+    <section id="t-weather" data-apt="LXGB" data-track="ap"><h2><span class="n">07</span>Weather</h2>
       <p>When the wind is between 110° and 250°, the Rock sits upwind of the approach, and above these speeds turbulence and windshear are likely on final:</p>
       <div class="tbl"><table id="turbTable"></table></div>
       <ul>
@@ -511,92 +710,14 @@
       <div class="callout"><div class="lbl">Crew limits in the simulator</div><p>Crews refuse an approach and go around when the crosswind including gusts is above 33 kt (22 kt for light aircraft) or the tailwind is above 10 kt. After a second weather go-around they divert. These are the simulator's typical airline limits, not published LXGB figures.</p></div>
     </section>
 
-    <section id="t-airspace"><h2><span class="n">08</span>Airspace and terrain</h2>
+    <section id="t-airspace" data-apt="LXGB" data-track="ap"><h2><span class="n">08</span>Airspace and terrain</h2>
       <p><b>R164</b> is Spanish restricted airspace from the surface to FL300, beginning at the frontier fence just north of the runway. Any aircraft below FL300 inside it is an infringement. Runway 27 departures turn left onto 200° to stay out, and missed approaches turn south.</p>
       <p><b>The Rock</b> rises to 1,398 ft immediately south of the aerodrome. Overflight is prohibited, and below 3,000 ft it is penalised as a terrain hazard. When you give a departure a direct routing below 3,500 ft, you get a warning if the track crosses the Rock.</p>
       <p>Helicopter routes in the Bay of Gibraltar conflict with the 09 approach and the 27 departure. They are not simulated, but they are one more reason the published procedures keep traffic tight to the runway.</p>
     </section>
 
-    <section id="t-emergencies"><h2><span class="n">09</span>Emergencies and the unexpected</h2>
-      <p>Pick how often things go wrong when you open a session: <b>Off</b>, <b>Occasional</b> (about every 20 minutes) or <b>Frequent</b> (about every 10). Guided exercises have none. An emergency aircraft turns red on the scope and the strips, squawks 7700 for a MAYDAY, and its card shows what is wrong with a <b>Roger</b> button. Your first transmission to it acknowledges it, so you can roger it and give the approach in one go.</p>
-      <figure class="fig"><canvas id="figEmerg" aria-label="A MAYDAY aircraft on short final with the runway closed"></canvas><figcaption>Runway 27 closed for debris, with red crosses along it, while EXS96K comes down final under a MAYDAY. It cannot be cleared to land: send it around or hold it until the runway reopens. EZY8902 waits at Alpha with its release.</figcaption></figure>
-      <div class="tbl"><table>
-        <tr><th>Event</th><th>What happens</th><th>What to do</th></tr>
-        <tr><td>MAYDAY</td><td>Engine failure or fire, smoke in the cabin, hydraulic failure. A departure turns back</td><td>Acknowledge, make it number one with a straight-in SRA, keep others out of its way. The runway is inspected after it lands</td></tr>
-        <tr><td>PAN medical</td><td>An arrival has a sick passenger and wants priority and an ambulance</td><td>Acknowledge and sequence it first</td></tr>
-        <tr><td>Medical diversion</td><td>An overflight bound for Morocco or the Canaries diverts in from the boundary</td><td>Treat it as an extra arrival with priority</td></tr>
-        <tr><td>Bird strike</td><td>A departure hits birds after take-off and returns, or an arrival reports birds on short final</td><td>Bring the returning aircraft in. The runway closes for an inspection</td></tr>
-        <tr><td>Runway closed</td><td>Debris, a tyre fragment or a fuel spill, for four to seven minutes</td><td>Cancel landing clearances (<code>GA</code> or <code>HOLD</code>) and hold departures until it reopens</td></tr>
-        <tr><td>Person on the runway</td><td>Someone climbs the barrier at Winston Churchill Avenue while an arrival is on final</td><td>Send it around straight away with <code>GA</code>. Leave it to the crew and they go around anyway, but late</td></tr>
-        <tr><td>Windshear report</td><td>In the levanter or gusty winds a crew reports a loss of airspeed on final. It goes into the ATIS</td><td>Pass it to every arrival on approach with <code>WS</code>. Briefed crews cope better</td></tr>
-      </table></div>
-    </section>
-
-    <section id="t-radio"><h2><span class="n">10</span>The radio</h2>
-      <p>With Voice on, every transmission opens and closes with a squelch click and a burst of static. Calls to Sevilla and Casablanca go down the landline, so they have none and show in pink in the log.</p>
-      <ul>
-        <li><b>Say again.</b> Now and then a crew misses an instruction and asks you to repeat it. Nothing you said has been applied: press the <b>Say again</b> button on its card or send it again.</li>
-        <li><b>Blocked transmissions.</b> When two stations call at once you hear a squeal and see <i>two stations transmitting at once, blocked</i> in the log. The crew calls again a few seconds later.</li>
-        <li><b>Wrong frequency.</b> Send a crew to the wrong frequency with <code>HO</code> and it comes back to you after half a minute, saying there was no reply.</li>
-      </ul>
-      <div class="rt">
-        <div><span class="w">RADAR</span><span class="a">Speedbird four niner two, turn left heading 240, descend altitude 4,000 feet</span></div>
-        <div><span class="w">BAW492</span><span class="p">Gibraltar, readability two, say again, Speedbird four niner two</span></div>
-        <div><span class="w">· · ·</span><span class="p">two stations transmitting at once, blocked</span></div>
-      </div>
-      <h3>The ATIS</h3>
-      <p>Click the information letter in the ATIS panel to read the full broadcast, and press <b>Broadcast it</b> to hear it. It carries the runway, the approach in use, wind, visibility, cloud, temperature, QNH, the transition level, turbulence and windshear warnings, any runway closure and the reminders about the road and the departure release. When it changes, a red ATIS button flashes until you click it.</p>
-    </section>
-
-    <section id="t-commands"><h2><span class="n">11</span>Command reference</h2>
-      <div class="tbl"><table>
-        <tr><th>Command</th><th>Meaning</th><th>Example</th></tr>
-        <tr><td class="mono">H### / L### / R###</td><td>Fly heading, turn left or turn right heading</td><td class="mono">EZY8901 L200</td></tr>
-        <tr><td class="mono">A## / C## / D##</td><td>Climb or descend. Below 400 means hundreds of feet. Above 6,000 ft is a flight level</td><td class="mono">A40 · A80</td></tr>
-        <tr><td class="mono">S### / SN</td><td>Assign speed, or remove the restriction</td><td class="mono">S180</td></tr>
-        <tr><td class="mono">DCT fix</td><td>Proceed direct to a fix</td><td class="mono">DCT UPMUP</td></tr>
-        <tr><td class="mono">HOLD [fix]</td><td>Hold at a fix, or at present position</td><td class="mono">HOLD UPMUP</td></tr>
-        <tr><td class="mono">APP 27 / APP 09</td><td>Clear the surveillance radar approach</td><td class="mono">APP 27</td></tr>
-        <tr><td class="mono">HO [freq]</td><td>Transfer: Radar ↔ Tower, then Sevilla 132.6 or Casablanca 125.5. A wrong frequency sends the crew away and back</td><td class="mono">HO 132.6</td></tr>
-        <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
-        <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
-        <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west</td><td class="mono">BAW493 PUSH E</td></tr>
-        <tr><td class="mono">TAXI [A|C|D|E] [VIA …]</td><td>Taxi to a holding point, by the shortest route or the one you name. <b>Taxi…</b> on the selected flight opens the route picker</td><td class="mono">TAXI E VIA A B</td></tr>
-        <tr><td class="mono">HP / RES</td><td>Hold position / continue taxi</td><td class="mono">HP</td></tr>
-        <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
-        <tr><td class="mono">REL</td><td>Request the departure release from Sevilla or Casablanca on the landline</td><td class="mono">REL</td></tr>
-        <tr><td class="mono">CTO</td><td>Cleared for take-off on the departure route. Needs a valid release</td><td class="mono">CTO</td></tr>
-        <tr><td class="mono">VAC [A|C|D|E]</td><td>Vacate (backtrack if needed) and taxi to stand</td><td class="mono">VAC</td></tr>
-        <tr><td class="mono">ROG</td><td>Acknowledge a MAYDAY or PAN (any instruction to it also does)</td><td class="mono">EXS96K ROG</td></tr>
-        <tr><td class="mono">WS</td><td>Pass the latest windshear report to an arrival</td><td class="mono">BAW492 WS</td></tr>
-        <tr><td class="mono">IDENT</td><td>Squawk ident</td><td class="mono">IDENT</td></tr>
-      </table></div>
-      <p>Commands chain: <code>EZY6497 L180 A40 S200</code> is one transmission. The callsign can be shortened to its unique digits.</p>
-    </section>
-
-    <section id="t-scoring"><h2><span class="n">12</span>Scoring and your career</h2>
-      <div class="tbl"><table>
-        <tr><th>Event</th><th>Points</th></tr>
-        <tr><td>Landing</td><td class="mono">+25</td></tr>
-        <tr><td>Take-off · departure transferred and gone</td><td class="mono">+10 · +20</td></tr>
-        <tr><td>Road still open at 10 NM</td><td class="mono">−15</td></tr>
-        <tr><td>Departure leaves without a transfer</td><td class="mono">−30</td></tr>
-        <tr><td>R164 infringement · unplanned diversion</td><td class="mono">−40</td></tr>
-        <tr><td>Below 920 ft at the 3 NM point</td><td class="mono">−40</td></tr>
-        <tr><td>Loss of separation</td><td class="mono">−50</td></tr>
-        <tr><td>Movement across the road with barriers up, or landing with the road open</td><td class="mono">−60</td></tr>
-        <tr><td>Over the Rock below 3,000 ft (below 1,800 ft)</td><td class="mono">−30 (−80)</td></tr>
-        <tr><td>Emergency acknowledged in time · landed safely</td><td class="mono">+10 · +40</td></tr>
-        <tr><td>Arrival sent around for a person on the runway · windshear passed</td><td class="mono">+20 · +5</td></tr>
-        <tr><td>Emergency not acknowledged within a minute · crew sent to a wrong frequency</td><td class="mono">−10 · −10</td></tr>
-        <tr><td>Crew had to go around on its own for a person on the runway</td><td class="mono">−25</td></tr>
-        <tr><td>Arrival still cleared to land on a closed runway</td><td class="mono">−30</td></tr>
-      </table></div>
-      <p>Every session you work for more than a minute goes into your <a href="#career">Career</a> logbook: time on frequency, movements, go-arounds, separation losses and score, with a chart of your recent scores and twelve badges to earn, from <b>First contact</b> to <b>Ten hours</b>. The logbook is kept in your browser, so it stays on this device.</p>
-    </section>
-
-    <section id="t-exercises"><h2><span class="n">13</span>Guided exercises</h2>
-      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. The card tells you what the crew wants, which button or command does it, and moves on when you have done it.</p>
+    <section id="t-exercises" data-apt="LXGB" data-track="ap"><h2><span class="n">13</span>Guided exercises</h2>
+      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. The card tells you what the crew wants, which button or command does it, and moves on when you have done it. Complete all three for the <b>Academy graduate</b> badge.</p>
       <div class="exgrid">
         <div class="ex"><div class="nm">1 · First departure</div><p>One A320neo on stand 3, fair weather, runway 27. Push with its PIMOS 1A route, taxi via Bravo to Echo, get Sevilla's release, close the road, backtrack and take off, then hand it to Sevilla on 132.6.</p><button class="btn primary" data-ex="dep">Start exercise</button></div>
         <div class="ex"><div class="nm">2 · First arrival</div><p>One arrival from the east. Descend it, clear the SRA for runway 27, close the road in time, land it, and backtrack it to Alpha and the stand.</p><button class="btn primary" data-ex="arr">Start exercise</button></div>
@@ -604,7 +725,7 @@
       </div>
     </section>
 
-    <section id="t-limits"><h2><span class="n">14</span>What is simplified</h2>
+    <section id="t-limits" data-apt="LXGB" data-track="ap"><h2><span class="n">14</span>What is simplified at Gibraltar</h2>
       <ul>
         <li>Radar and Tower are one position, and Ground is worked on the Tower frequency.</li>
         <li>The timetable is a representative week, and routes between airports are approximate. Live now uses today’s real flights and positions, but once a flight is yours it follows your instructions rather than its real track.</li>
@@ -614,8 +735,108 @@
         <li>Helicopter traffic, the arresting gear and lamp signals are not simulated.</li>
       </ul>
     </section>
+    <!-- ── Madeira endorsement ── -->
+    <section id="m-position" data-apt="LPMA" data-track="ap"><h2><span class="n">01</span>Your position at Madeira</h2>
+      <p>You are <b>Madeira Approach (119.605)</b> and <b>Madeira Tower (124.660)</b> combined, with ground movement on the Tower frequency. Arrivals call Approach on their STAR, inbound to the <b>PILIM</b> hold. You hand them to Tower once they are on the approach. Departures start with Tower, go to Approach once airborne, and you transfer them to <b>Lisboa Control 132.255</b> once they are established on their SID. The ATIS is <b>Madeira Information</b> on 130.355.</p>
+      <p>The transition altitude is <b>5,000 ft</b>, so levels above it are flight levels. The minimum sector altitude is 3,500 ft over the sea to the east and 8,200 ft everywhere else, because of the island.</p>
+      <div class="callout"><div class="lbl">Simplification</div><p>The real unit has separate Approach and Tower controllers. Here they are one seat, so every handover between them is a button press that you make to yourself.</p></div>
+    </section>
+
+    <section id="m-aerodrome" data-apt="LPMA" data-track="ap"><h2><span class="n">02</span>The aerodrome</h2>
+      <figure class="fig"><canvas data-fig="aerodrome" aria-label="Madeira aerodrome diagram with taxiways and stands"></canvas><figcaption>The aerodrome as drawn in the simulator: runway 05/23 along the coast, taxiways Bravo and Charlie and apron A with its stands, from OpenStreetMap and checked against the AIP aerodrome chart. North is up and the sea is to the south-east.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Item</th><th>Value</th><th>Source</th></tr>
+        <tr><td>Runway</td><td>05/23, 2,781 m of pavement × 45 m, magnetic 049°/229°. LDA 2,481 m on both runways</td><td class="mono">AD 2.12–2.13</td></tr>
+        <tr><td>Thresholds</td><td>THR 05 at 146 ft, THR 23 at 191 ft. PAPI 3° on both. The 05 PAPI is slewed 5° towards the sea</td><td class="mono">AD 2.24.01</td></tr>
+        <tr><td>Turn pads</td><td>At both runway ends, the larger at the 23 end</td><td class="mono">AD 2.24.01</td></tr>
+        <tr><td>Taxiways</td><td>Bravo (north-east) and Charlie (south-west) join the runway to taxilane Alpha. No parallel taxiway</td><td class="mono">AD 2.24.01</td></tr>
+        <tr><td>Apron</td><td>Apron A, stands A1–A18, nose-in with push back onto taxilane Alpha. A18 takes a wide-body and closes A14–A17</td><td class="mono">AD 2.24.02</td></tr>
+      </table></div>
+      <h3>Where departures go</h3>
+      <p>Runway 05 departures taxi to <b>Charlie</b> and backtrack to the 05 turn pad. Runway 23 departures taxi to <b>Bravo</b> and backtrack to the 23 pad. Arrivals vacate at whichever of the two they reach, backtracking if they stop past it.</p>
+    </section>
+
+    <section id="m-ground" data-apt="LPMA" data-track="ap"><h2><span class="n">03</span>Ground and departures</h2>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Holding point</th><th>Push</th><th>Command</th></tr>
+        <tr><td>05</td><td>Charlie</td><td>Facing south-west</td><td class="mono">PUSH · TAXI C</td></tr>
+        <tr><td>23</td><td>Bravo</td><td>Facing north-east</td><td class="mono">PUSH · TAXI B</td></tr>
+      </table></div>
+      <h3>SIDs</h3>
+      <p>Every departure flies an RNAV SID named for its exit fix: <b>DEGUN</b> for mainland Portugal, Spain and central Europe, <b>LAPPA</b> for the UK, Ireland and northern Europe, <b>GALOZ</b> for the Azores and North America, <b>GOSGA</b> for the Canaries and Africa, and <b>MARCU</b> for Porto Santo. Off runway 05 they are the <b>1E</b> routes: start a right turn as soon as practicable onto 087°, away from the high ground. Off 23 they are the <b>1W</b> routes: left onto 175°, and the DEGUN, LAPPA and MARCU 1W cross 4,000 ft before turning back north.</p>
+      <div class="rt">
+        <div><span class="w">TWR</span><span class="a">Air Portugal one six eight eight, cleared to Lisbon via DEGUN one Echo departure, climb flight level 60, squawk 3201, start-up and push back approved, facing south-west, QNH 1019</span></div>
+        <div><span class="w">TAP1688</span><span class="p">Cleared Lisbon, DEGUN one Echo, flight level 60, squawk 3201, start and push approved facing south-west, QNH 1019, Air Portugal one six eight eight</span></div>
+      </div>
+      <h3>The release from Lisboa</h3>
+      <p>Madeira sits inside the Lisboa FIR, and every departure needs a <b>release from Lisboa Control</b> on the landline. Press <b>Request release</b> or type <code>REL</code> once the aircraft is taxiing. The release is usually valid for about ten minutes. <code>CTO</code> is refused without one.</p>
+      <h3>Take-off wind limits</h3>
+      <p>Crews will not take off with a wind from 300°–010° above 20 kt, or from 020°–040° or 120°–190° above 25 kt. They wait at the holding point and tell you why. Once airborne, hand them to Approach with <code>HO</code>, climb them when they ask, and transfer them to Lisboa with <code>HO 132.255</code>.</p>
+    </section>
+
+    <section id="m-arrivals" data-apt="LPMA" data-track="ap"><h2><span class="n">04</span>Arrivals and the VOR approach</h2>
+      <h3>STARs and holding</h3>
+      <p>Arrivals fly the <b>LIDRO 1P</b> from Portugal and Spain, <b>KICAS 1P</b> from the UK and the north, <b>IBBAN 1P</b> from the Azores and America and <b>EKNOT 1P</b> from the Canaries, all to <b>PILIM</b> at 3,000 ft or above. PILIM is the published hold, and it is where they wait when the wind is out of limits.</p>
+      <h3>VOR approach and the Rosário circuit to runway 05</h3>
+      <p>Clear the approach with <code>APP</code> (or <code>APP 05</code>). The aircraft routes via ABUSU onto the FUN 211° radial, descends to the missed approach point at 3.6 DME, then flies the visual circuit: a right turn round the GELO point, not below <b>850 ft</b>, and the Rosário point, not below <b>460 ft</b>, onto a short final over the sea. The circling minima are an MDA of 940 ft, 5 km visibility and an 800 ft ceiling.</p>
+      <h3>VOR approach to runway 23</h3>
+      <p>The same approach via ABUSU, then a visual track of 235° to the runway, staying left of the extended centreline. The minima are higher: MDA 1,300 ft, 7 km and a 1,200 ft ceiling.</p>
+      <div class="tbl"><table>
+        <tr><th></th><th>Runway 05</th><th>Runway 23</th></tr>
+        <tr><td>Approach</td><td>DVOR/DME via ABUSU, final 211° to MAPt 3.6 DME FUN</td><td>DVOR/DME via ABUSU, final 211° to MAPt</td></tr>
+        <tr><td>Visual segment</td><td>Right turn past GELO (850 ft) and Rosário (460 ft)</td><td>Track 235° to the runway</td></tr>
+        <tr><td>Minima</td><td>MDA 940 ft · 5 km · ceiling 800 ft</td><td>MDA 1,300 ft · 7 km · ceiling 1,200 ft</td></tr>
+        <tr><td>Missed approach</td><td colspan="2">Left onto 137° over the sea, climb to 3,000 ft</td></tr>
+      </table></div>
+      <div class="rt">
+        <div><span class="w">APP</span><span class="a">Easy eight seven one one, descend altitude 3,000 feet, QNH 1019, cleared VOR approach runway 05, report visual</span></div>
+        <div><span class="w">EZY8711</span><span class="p">Descend 3,000 feet, QNH 1019, cleared VOR approach runway 05, Easy eight seven one one</span></div>
+      </div>
+      <p>Hand the arrival to Tower with <code>HO</code> and clear it to land with <code>CTL</code> once the runway is free. After landing, <code>VAC</code> turns it off at Bravo or Charlie and taxies it to its stand.</p>
+    </section>
+
+    <section id="m-wind" data-apt="LPMA" data-track="ap"><h2><span class="n">05</span>Wind limits</h2>
+      <p>Madeira’s wind limits are published as a wind rose on every approach chart. They apply to the mean wind <b>or</b> the gust at either anemometer, <b>MID</b> (mid-runway) or <b>ROSÁRIO</b> (on the cliffs under the 05 circuit). The ATIS panel shows both readings and turns red when a limit is exceeded.</p>
+      <div class="tbl"><table>
+        <tr><th>Wind from</th><th>Runway 05</th><th>Runway 23</th></tr>
+        <tr><td>300°–010°</td><td>15 kt, gust 25</td><td>15 kt, gust 25</td></tr>
+        <tr><td>020°–040°</td><td>20 kt, gust 30</td><td>20 kt, gust 30</td></tr>
+        <tr><td>120°–200°</td><td>20 kt, gust 30</td><td>15 kt, gust 25</td></tr>
+        <tr><td>200°–230°</td><td>25 kt</td><td>25 kt</td></tr>
+      </table></div>
+      <ul>
+        <li>Out of limits, a crew refuses the approach and holds. Send it to <b>PILIM</b> with <code>HOLD PILIM</code> and stack the next one 1,000 ft above.</li>
+        <li>After a couple of minutes in the hold the crew asks to divert, usually to <b>Porto Santo</b> via MARCU. Approve it with <b>Approve diversion</b>.</li>
+        <li>A tailwind above 10 kt also stops a landing, so change the runway when the wind swings round.</li>
+      </ul>
+      <div class="callout"><div class="lbl">On the real island</div><p>Days with dozens of diversions to Porto Santo, Lisbon or the Canaries are not unusual in winter. Holding until the wind drops, then landing the stack in a short window, is the Madeira controller’s signature job.</p></div>
+    </section>
+
+    <section id="m-airspace" data-apt="LPMA" data-track="ap"><h2><span class="n">06</span>Airspace and terrain</h2>
+      <p>TMA Madeira is roughly a 60 NM circle round Porto Santo, with the entry and exit fixes on its edge. Radar vectoring is done from the Porto Santo antenna. The <b>minimum vectoring altitude</b> is 3,000 ft over the sea and <b>9,000 ft over the island</b>. In the simulator, any aircraft over the island’s high ground below 5,000 ft is a terrain incident, and below 3,000 ft a serious one.</p>
+      <p>There is no restricted area next to the field, but the island itself does the same job: departures turn out to sea, and missed approaches turn left onto 137° away from the cliffs.</p>
+    </section>
+
+    <section id="m-exercises" data-apt="LPMA" data-track="ap"><h2><span class="n">07</span>Guided exercises</h2>
+      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. Complete all three for the <b>Island endorsement</b> badge.</p>
+      <div class="exgrid">
+        <div class="ex"><div class="nm">1 · First departure</div><p>An A321 on stand A7 for Lisbon, trade wind, runway 05. Push with its DEGUN 1E SID, taxi to Charlie, get Lisboa’s release, backtrack, take off and turn right, then hand it to Lisboa.</p><button class="btn primary" data-ex="mdep">Start exercise</button></div>
+        <div class="ex"><div class="nm">2 · The Rosário circuit</div><p>An A320neo from Gatwick. Clear the VOR approach for runway 05, watch it round GELO and Rosário onto the short final, land it and taxi it in.</p><button class="btn primary" data-ex="marr">Start exercise</button></div>
+        <div class="ex"><div class="nm">3 · Wind limits and Porto Santo</div><p>A strong northerly is over the limit at Rosário. Two arrivals call: offer the approach, hold them at PILIM 1,000 ft apart, and approve their diversions to Porto Santo.</p><button class="btn primary" data-ex="mwind">Start exercise</button></div>
+      </div>
+    </section>
+
+    <section id="m-limits" data-apt="LPMA" data-track="ap"><h2><span class="n">08</span>What is simplified at Madeira</h2>
+      <ul>
+        <li>Approach and Tower are one position, and Ground is worked on the Tower frequency.</li>
+        <li>The RNP AR approaches (RNP Y and Z 05, RNP 23) are published but not yet flown in the simulator. Every arrival flies the VOR approach.</li>
+        <li>The MID and Rosário anemometer readings are derived from the METAR wind rather than measured separately.</li>
+        <li>SIDs are flown as headings to the turn and then direct to the exit fix, and the release times are modelled.</li>
+        <li>The timetable is a representative week. Live now uses today’s real flights and positions.</li>
+      </ul>
+    </section>
   </article>
 </div>
-<footer class="footer"><div class="wrap"><span>Clearway Academy · Gibraltar LXGB</span><span>Based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span></div></footer>
+<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span></div></footer>
 </section>
 </main>
