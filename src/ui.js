@@ -289,7 +289,7 @@ function drawAirport(){
   const col = st === 'CLOSED' ? C.xClosed : st === 'OPEN' ? C.xOpen : C.xMid;
   for (const off of [40, -40]) { cx.strokeStyle = col; cx.lineWidth = Math.max(2, 1.4*mpx); const m0 = XING_M + off*0.34; path([[m0-8, off],[m0+8, off]], false); cx.stroke(); }
   if (sc > 160) {
-    cx.font = `600 12px ${FONT_L}`; cx.fillStyle = col; const p = c(XING_M - 24, -70); cx.textAlign = 'right'; cx.fillText(`WINSTON CHURCHILL AVE · ${st}`, p[0], p[1]); cx.textAlign = 'left';
+    cx.font = `600 12px ${FONT_L}`; cx.fillStyle = col; const p = c(XING_M - 24, -70); cx.textAlign = 'right'; if (sc > 650) cx.fillText(`WINSTON CHURCHILL AVE · ${st}`, p[0], p[1]); cx.textAlign = 'left';
     const n = Math.min(70, Math.round(S.xing.queue/3)); cx.fillStyle = rgba('car', .85);
     for (let i = 0; i < n; i++) { const side = i % 2 ? 1 : -1, d = 50 + Math.floor(i/2)*6; const m = side > 0 ? 1000 + d*0.03 : 985 - (d-22)*0.25; const q = c(m + ((i*7)%3 - 1)*2.5, side*d); cx.fillRect(q[0]-1.6, q[1]-1.6, 3.2, 3.2); }
     if (st === 'OPEN' || st === 'OPENING') for (let i = 0; i < 10; i++) { const f = ((S.t*0.09 + i*0.1) % 1), o = -60 + f*120, m = 987 + (o+22)/44*13 + (i%2 ? 3 : -3); const q = c(m, i%2 ? o : -o); cx.fillStyle = i % 3 ? rgba('car', .9) : rgba('apt', .9); cx.fillRect(q[0]-1.5, q[1]-1.5, 3, 3); }
@@ -299,7 +299,7 @@ function drawAirport(){
     if (IMG) { cx.fillStyle = C.name === 'dark' ? 'rgba(235,242,245,.92)' : '#fff'; cx.strokeStyle = 'rgba(0,0,0,.6)'; cx.lineWidth = 3; cx.lineJoin = 'round'; }
     const lab = (txt, m, off) => { const p = c(m, off); if (IMG) cx.strokeText(txt, p[0], p[1]); cx.fillText(txt, p[0], p[1]); };
     if (!IMG) { lab('TERMINAL', 1225, 300); lab('CIVIL APRON', 1235, 228); lab('NORTH APRON', 1450, 240); lab('SOUTH APRON · RAF', 1000, -230); lab('ATC', 1056, 232); }
-    if (!IMG) { lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); } lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75);
+    if (!IMG) { lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); } if (sc > 650) { lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75); }
   }
 }
 
@@ -572,7 +572,7 @@ const RWY_MID = rm(900, 0);
 function viewFor(k){
   const m = Math.min(W, H) || 600;
   if (k === 'app') { V.cx = GBR[0] - 2; V.cy = GBR[1] - 4; V.scale = m/84; }
-  else if (k === 'twr') { V.cx = RWY_MID[0] - 1.2; V.cy = RWY_MID[1] - 1.1; V.scale = m/10; }
+  else if (k === 'twr') { V.cx = RWY_MID[0] + 1.45; V.cy = RWY_MID[1] + 0.1; V.scale = m/4.6; }
   else { const c = rm(1000, 0); V.cx = c[0]; V.cy = c[1]; V.scale = Math.min(W/(1950*M2NM), H/(820*M2NM)); }
   V.name = k;
 }

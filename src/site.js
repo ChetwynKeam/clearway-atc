@@ -150,12 +150,12 @@ window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'hom
 function demoTraffic(){
   const mk = (cs, t, k, set) => { const ac = new Aircraft({ cs, t, k, o: 'EGLL', d: 'EGKK' }); ac.kind = k; Object.assign(ac, set); ac.trk = ac.hdg; return ac; };
   const st = id => STANDS.find(s => s.id === id), park = (id, extra) => ({ ground: true, state: 'PARKED', stand: st(id), x: st(id).p[0], y: st(id).p[1], hdg: st(id).hdg, reqAt: 0, need: 'Start-up', ...extra });
-  const fin = rm(THR27_M + 3.2*1852, 0), out = rm(-4*1852, -2*1852), twy = GN.L4.p, inb = xy(36.42, -4.86);
+  const fin = rm(THR27_M + 2.1*1852, 0), out = rm(-9*1852, -9*1852), twy = GN.L4.p, inb = xy(36.42, -4.86);
   return [
     mk('BAW491', 'A20N', 'DEP', park('2', { need: null, reqAt: 99999 })), mk('EZY8904', 'A20N', 'DEP', park('3', { need: null, reqAt: 99999 })), mk('RRR4419', 'A400', 'DEP', park('S2', { need: null, reqAt: 99999 })),
     mk('GXJET', 'C56X', 'DEP', park('N1', { need: null, reqAt: 99999 })),
     mk('EZY8902', 'A20N', 'DEP', { ground: true, state: 'TAXI', hp: 'E', x: twy[0], y: twy[1], hdg: CRS09, gs: 12 }),
-    mk('BAW492', 'A20N', 'ARR', { state: 'FINAL', mode: 'FINAL', app: '27', freq: 'TWR', x: fin[0], y: fin[1], hdg: CRS27, alt: 1050, gs: 140, vs: -700, o: 'EGLL' }),
+    mk('BAW492', 'A20N', 'ARR', { state: 'FINAL', mode: 'FINAL', app: '27', freq: 'TWR', x: fin[0], y: fin[1], hdg: CRS27, alt: 700, gs: 140, vs: -700, o: 'EGLL' }),
     mk('RAM1473', 'AT76', 'DEP', { state: 'CLIMB', x: out[0], y: out[1], hdg: 200, alt: 4000, gs: 200, vs: 1200, tgtAlt: 6000, d: 'GMMN' }),
     mk('TOM6262', 'B738', 'ARR', { state: 'INBOUND', x: inb[0], y: inb[1], hdg: 245, alt: 8000, gs: 280, vs: -1200, tgtAlt: 7000, o: 'EGGW' })
   ];
@@ -164,7 +164,9 @@ function renderThumbs(){
   const acs = demoTraffic();
   document.querySelectorAll('canvas[data-thumb]').forEach(c => {
     const k = c.dataset.thumb;
-    drawTo(c, k, { proc: true, acs, tweak: k === 'app' ? (v => { v.scale *= 1.6; v.cx += 2; v.cy += 3; }) : null });
+    // the ground card zooms in on the civil apron; the aerodrome figure keeps the whole runway
+    const apron = c.dataset.zoom === 'apron' ? rm(1215, 95) : null;
+    drawTo(c, k, { proc: true, acs, tweak: k === 'app' ? (v => { v.scale *= 1.6; v.cx += 2; v.cy += 3; }) : apron ? (v => { v.cx = apron[0]; v.cy = apron[1]; v.scale = 1852*1.05; }) : null });
   });
 }
 function refreshPreviews(){ if (curRoute === 'home' || curRoute === 'lxgb') { renderThumbs(); hero.map = null; } }

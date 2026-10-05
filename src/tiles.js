@@ -22,7 +22,7 @@ function tileImg(src, z, x, y){
   if (!t) {
     if (TILE.cache.size > 700) { const old = [...TILE.cache.entries()].sort((a, b) => a[1].use - b[1].use).slice(0, 200); for (const [k] of old) TILE.cache.delete(k); }
     const img = new Image(); t = { img, ok: false, bad: false, use: 0 };
-    img.onload = () => { t.ok = true; TILE.ok++; if (cv && cv.id !== 'scope') tilesForPreviews(); };
+    img.onload = () => { t.ok = true; TILE.ok++; if (typeof curRoute === 'undefined' || curRoute !== 'sim') tilesForPreviews(); };
     img.onerror = () => { t.bad = true; TILE.err++; if (TILE.ok === 0 && TILE.err >= 6) TILE.failed = true; };
     img.src = MAP_SRC[src].url(z, x, y); TILE.cache.set(key, t);
   }

@@ -750,7 +750,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
     <div class="positions">
       <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Radar display"></canvas></div><div class="body"><div class="freq">GIBRALTAR RADAR · 122.8</div><h3>Approach and departure</h3><p>Arrivals call at 50 NM via PIMOS, LINTO or Tetouan. Descend them, hold them at UPMUP or ODLUK, vector them into the SRA and keep them 3 NM or 1,000 ft apart. Route departures out and hand them to Sevilla or Casablanca.</p></div></div>
       <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">GIBRALTAR TOWER · 131.2</div><h3>Tower</h3><p>Clear arrivals to land once the road is shut. Line departures up and backtrack them along the runway to the turning circles, since nothing over 17 tonnes may turn on the runway itself. Then clear them for take-off.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="gnd" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">GROUND MOVEMENT · ON TOWER</div><h3>Ground</h3><p>Approve start-up and push, taxi to the holding points with real routings, hold aircraft in position and sequence them around the HS1 hot spot. At night the edge lights, guard lights and floodlit apron are all drawn.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">GROUND MOVEMENT · ON TOWER</div><h3>Ground</h3><p>Approve start-up and push, taxi to the holding points with real routings, hold aircraft in position and sequence them around the HS1 hot spot. At night the edge lights, guard lights and floodlit apron are all drawn.</p></div></div>
     </div>
   </div></div>
 
@@ -2366,7 +2366,7 @@ function drawAirport(){
   const col = st === 'CLOSED' ? C.xClosed : st === 'OPEN' ? C.xOpen : C.xMid;
   for (const off of [40, -40]) { cx.strokeStyle = col; cx.lineWidth = Math.max(2, 1.4*mpx); const m0 = XING_M + off*0.34; path([[m0-8, off],[m0+8, off]], false); cx.stroke(); }
   if (sc > 160) {
-    cx.font = `600 12px ${FONT_L}`; cx.fillStyle = col; const p = c(XING_M - 24, -70); cx.textAlign = 'right'; cx.fillText(`WINSTON CHURCHILL AVE · ${st}`, p[0], p[1]); cx.textAlign = 'left';
+    cx.font = `600 12px ${FONT_L}`; cx.fillStyle = col; const p = c(XING_M - 24, -70); cx.textAlign = 'right'; if (sc > 650) cx.fillText(`WINSTON CHURCHILL AVE · ${st}`, p[0], p[1]); cx.textAlign = 'left';
     const n = Math.min(70, Math.round(S.xing.queue/3)); cx.fillStyle = rgba('car', .85);
     for (let i = 0; i < n; i++) { const side = i % 2 ? 1 : -1, d = 50 + Math.floor(i/2)*6; const m = side > 0 ? 1000 + d*0.03 : 985 - (d-22)*0.25; const q = c(m + ((i*7)%3 - 1)*2.5, side*d); cx.fillRect(q[0]-1.6, q[1]-1.6, 3.2, 3.2); }
     if (st === 'OPEN' || st === 'OPENING') for (let i = 0; i < 10; i++) { const f = ((S.t*0.09 + i*0.1) % 1), o = -60 + f*120, m = 987 + (o+22)/44*13 + (i%2 ? 3 : -3); const q = c(m, i%2 ? o : -o); cx.fillStyle = i % 3 ? rgba('car', .9) : rgba('apt', .9); cx.fillRect(q[0]-1.5, q[1]-1.5, 3, 3); }
@@ -2376,7 +2376,7 @@ function drawAirport(){
     if (IMG) { cx.fillStyle = C.name === 'dark' ? 'rgba(235,242,245,.92)' : '#fff'; cx.strokeStyle = 'rgba(0,0,0,.6)'; cx.lineWidth = 3; cx.lineJoin = 'round'; }
     const lab = (txt, m, off) => { const p = c(m, off); if (IMG) cx.strokeText(txt, p[0], p[1]); cx.fillText(txt, p[0], p[1]); };
     if (!IMG) { lab('TERMINAL', 1225, 300); lab('CIVIL APRON', 1235, 228); lab('NORTH APRON', 1450, 240); lab('SOUTH APRON · RAF', 1000, -230); lab('ATC', 1056, 232); }
-    if (!IMG) { lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); } lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75);
+    if (!IMG) { lab('SPAIN · LA LÍNEA', 600, 520); lab('GIBRALTAR', 1350, -420); } if (sc > 650) { lab('WEST TURNING CIRCLE', 0, -78); lab('EAST TURNING CIRCLE', 1660, 75); }
   }
 }
 
@@ -2649,7 +2649,7 @@ const RWY_MID = rm(900, 0);
 function viewFor(k){
   const m = Math.min(W, H) || 600;
   if (k === 'app') { V.cx = GBR[0] - 2; V.cy = GBR[1] - 4; V.scale = m/84; }
-  else if (k === 'twr') { V.cx = RWY_MID[0] - 1.2; V.cy = RWY_MID[1] - 1.1; V.scale = m/10; }
+  else if (k === 'twr') { V.cx = RWY_MID[0] + 1.45; V.cy = RWY_MID[1] + 0.1; V.scale = m/4.6; }
   else { const c = rm(1000, 0); V.cx = c[0]; V.cy = c[1]; V.scale = Math.min(W/(1950*M2NM), H/(820*M2NM)); }
   V.name = k;
 }
@@ -3016,7 +3016,7 @@ function tileImg(src, z, x, y){
   if (!t) {
     if (TILE.cache.size > 700) { const old = [...TILE.cache.entries()].sort((a, b) => a[1].use - b[1].use).slice(0, 200); for (const [k] of old) TILE.cache.delete(k); }
     const img = new Image(); t = { img, ok: false, bad: false, use: 0 };
-    img.onload = () => { t.ok = true; TILE.ok++; if (cv && cv.id !== 'scope') tilesForPreviews(); };
+    img.onload = () => { t.ok = true; TILE.ok++; if (typeof curRoute === 'undefined' || curRoute !== 'sim') tilesForPreviews(); };
     img.onerror = () => { t.bad = true; TILE.err++; if (TILE.ok === 0 && TILE.err >= 6) TILE.failed = true; };
     img.src = MAP_SRC[src].url(z, x, y); TILE.cache.set(key, t);
   }
@@ -3628,12 +3628,12 @@ window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'hom
 function demoTraffic(){
   const mk = (cs, t, k, set) => { const ac = new Aircraft({ cs, t, k, o: 'EGLL', d: 'EGKK' }); ac.kind = k; Object.assign(ac, set); ac.trk = ac.hdg; return ac; };
   const st = id => STANDS.find(s => s.id === id), park = (id, extra) => ({ ground: true, state: 'PARKED', stand: st(id), x: st(id).p[0], y: st(id).p[1], hdg: st(id).hdg, reqAt: 0, need: 'Start-up', ...extra });
-  const fin = rm(THR27_M + 3.2*1852, 0), out = rm(-4*1852, -2*1852), twy = GN.L4.p, inb = xy(36.42, -4.86);
+  const fin = rm(THR27_M + 2.1*1852, 0), out = rm(-9*1852, -9*1852), twy = GN.L4.p, inb = xy(36.42, -4.86);
   return [
     mk('BAW491', 'A20N', 'DEP', park('2', { need: null, reqAt: 99999 })), mk('EZY8904', 'A20N', 'DEP', park('3', { need: null, reqAt: 99999 })), mk('RRR4419', 'A400', 'DEP', park('S2', { need: null, reqAt: 99999 })),
     mk('GXJET', 'C56X', 'DEP', park('N1', { need: null, reqAt: 99999 })),
     mk('EZY8902', 'A20N', 'DEP', { ground: true, state: 'TAXI', hp: 'E', x: twy[0], y: twy[1], hdg: CRS09, gs: 12 }),
-    mk('BAW492', 'A20N', 'ARR', { state: 'FINAL', mode: 'FINAL', app: '27', freq: 'TWR', x: fin[0], y: fin[1], hdg: CRS27, alt: 1050, gs: 140, vs: -700, o: 'EGLL' }),
+    mk('BAW492', 'A20N', 'ARR', { state: 'FINAL', mode: 'FINAL', app: '27', freq: 'TWR', x: fin[0], y: fin[1], hdg: CRS27, alt: 700, gs: 140, vs: -700, o: 'EGLL' }),
     mk('RAM1473', 'AT76', 'DEP', { state: 'CLIMB', x: out[0], y: out[1], hdg: 200, alt: 4000, gs: 200, vs: 1200, tgtAlt: 6000, d: 'GMMN' }),
     mk('TOM6262', 'B738', 'ARR', { state: 'INBOUND', x: inb[0], y: inb[1], hdg: 245, alt: 8000, gs: 280, vs: -1200, tgtAlt: 7000, o: 'EGGW' })
   ];
@@ -3642,7 +3642,9 @@ function renderThumbs(){
   const acs = demoTraffic();
   document.querySelectorAll('canvas[data-thumb]').forEach(c => {
     const k = c.dataset.thumb;
-    drawTo(c, k, { proc: true, acs, tweak: k === 'app' ? (v => { v.scale *= 1.6; v.cx += 2; v.cy += 3; }) : null });
+    // the ground card zooms in on the civil apron; the aerodrome figure keeps the whole runway
+    const apron = c.dataset.zoom === 'apron' ? rm(1215, 95) : null;
+    drawTo(c, k, { proc: true, acs, tweak: k === 'app' ? (v => { v.scale *= 1.6; v.cx += 2; v.cy += 3; }) : apron ? (v => { v.cx = apron[0]; v.cy = apron[1]; v.scale = 1852*1.05; }) : null });
   });
 }
 function refreshPreviews(){ if (curRoute === 'home' || curRoute === 'lxgb') { renderThumbs(); hero.map = null; } }
