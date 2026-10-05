@@ -1,17 +1,19 @@
 // Stripe webhook (Vercel function: /api/stripe-webhook). Keeps each player's plan in Supabase in step with Stripe.
 // Events: checkout.session.completed (plans and airport commissions), customer.subscription.created / updated / deleted.
-import { stripeEvent, stripe, db, saveAccount, planOfPrice, EARLY_PRICE, PLANS } from './_lib.js';
+import { stripeEvent, stripe, db, saveAccount, planOfPrice, grantCommission, EARLY_PRICE, PLANS } from './_lib.js';
 
-// a paid commission: the airport joins the player's account for good, with a month before it opens to everyone
+const commissionOf = async o => (await db(`commissions?id=eq.${+o.metadata.commission_id}&user_id=eq.${o.metadata.user_id || o.client_reference_id}&select=*`))[0];
+// a commission's card is saved: it waits for the airport to be built, and is charged on release
+async function commissionCard(o){
+  const c = await commissionOf(o); if (!c || c.status !== 'card') return;
+  const si = await stripe(`setup_intents/${o.setup_intent}`);
+  await db(`commissions?id=eq.${c.id}`, { method: 'PATCH', body: { status: 'requested', payment_method: si.payment_method } });
+}
+// paid by hand (the release charge needed the player): the airport is theirs
 async function commissionPaid(o){
-  const id = +o.metadata.commission_id, user = o.metadata.user_id || o.client_reference_id;
-  const [c] = await db(`commissions?id=eq.${id}&user_id=eq.${user}&select=*`);
+  const c = await commissionOf(o);
   if (!c || c.status === 'paid' || c.status === 'launched') return;   // Stripe can send an event twice
-  const now = new Date(), pub = new Date(now); pub.setMonth(pub.getMonth() + 1);
-  await db(`commissions?id=eq.${id}`, { method: 'PATCH', body: { status: 'paid', paid_at: now.toISOString(), public_from: pub.toISOString(), stripe_session: o.id } });
-  const [a] = await db(`accounts?user_id=eq.${user}&select=owned,stripe_customer`);
-  const owned = [...new Set([...((a && a.owned) || []), c.icao])];
-  await saveAccount(user, { owned, ...(a && !a.stripe_customer && o.customer ? { stripe_customer: o.customer } : {}) });
+  await grantCommission(c, { stripe_session: o.id });
 }
 
 const iso = s => s ? new Date(s*1000).toISOString() : null;
@@ -45,6 +47,7 @@ export async function POST(req){
       await sync(await stripe(`subscriptions/${o.subscription}`), o.client_reference_id);
     } else if (/^checkout\.session\.(completed|async_payment_succeeded)$/.test(ev.type) && o.mode === 'payment' && o.payment_status === 'paid'
       && o.metadata && o.metadata.kind === 'commission') await commissionPaid(o);
+    else if (ev.type === 'checkout.session.completed' && o.mode === 'setup' && o.metadata && o.metadata.kind === 'commission') await commissionCard(o);
     else if (/^customer\.subscription\./.test(ev.type)) await sync(o);
   } catch (e) { console.error(e); return new Response('retry', { status: 500 }); }   // Stripe retries on failure
   return new Response('ok');

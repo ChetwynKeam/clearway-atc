@@ -875,6 +875,7 @@ body.embed > *:not(.embed-cv) { display: none !important; }
 .cw-coms { display: grid; gap: 4px; }
 .cw-com { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .cw-com b { font-family: var(--font-data); }
+.cw-com .btn { flex: none; white-space: nowrap; }
 .cw-com .badge { margin-left: 6px; }
 .cw-coms > .cw-row { margin-top: 12px; }
 
@@ -2429,7 +2430,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     <div class="cw-own">
       <div><div class="eyebrow">Your own airport</div>
         <h2>Want an airport we have not built? Commission it.</h2>
-        <p>Tell us your local airport, or the one you have always wanted to work. We build it first and you pay nothing until it is ready. Then it is <span data-cw="commission-price">£25</span>, once, and it is yours for good, whatever plan you are on, even with none. You get it a month before anyone else.</p></div>
+        <p>Tell us your local airport, or the one you have always wanted to work, and save a card. We build it, and <span data-cw="commission-price">£25</span> is taken once, only when we release it to you. Then it is yours for good, whatever plan you are on, even with none, and you get it a month before anyone else.</p></div>
       <a class="btn primary" href="#request">Commission an airport</a>
     </div>
     <div class="cw-faq">
@@ -2437,7 +2438,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <details><summary>How does the free trial work?</summary><p>Choose a plan and start your trial. For <span data-cw="trial">2</span> days you can control one airport of your choice, free. Cancel from your account before the trial ends and you pay nothing. Otherwise your plan starts, the rest of its airports unlock, and it renews monthly until you cancel. The trial is available once per player.</p></details>
       <details><summary>How do I choose my airports?</summary><p>After you subscribe, open <a href="#account">your account</a> and tick the airports your plan includes. You can fill empty places at any time. Swapping an airport out is free during the trial and then once every 30 days. Unlimited includes every airport, including new ones as they open.</p></details>
       <details><summary>Can I change or cancel my plan?</summary><p>Yes. Open <a href="#account">your account</a> and choose Manage billing to move up or down a plan, update your card, download invoices or cancel. A cancelled plan stays active until the end of the month you have paid for.</p></details>
-      <details><summary>How does commissioning an airport work?</summary><p>Sign in and send us the airport from the <a href="#request">Request page</a>. We check it can be built from published charts and tell you if it cannot. Once it is built you get a Pay button on your account: a one-off <span data-cw="commission-price">£25</span>, with no subscription needed. It is then yours to control for good, whatever plan you are on, and only you can control it for its first month before it opens to subscribers.</p></details>
+      <details><summary>How does commissioning an airport work?</summary><p>Sign in, send us the airport from the <a href="#request">Request page</a> and save a card with our payment provider, Stripe. Nothing is taken then. We check it can be built from published charts; if it cannot, we tell you and nothing is ever charged. When it is built we release it to you and take a one-off <span data-cw="commission-price">£25</span> from the saved card, with no subscription needed. It is then yours to control for good, whatever plan you are on, and only you can control it for its first month before it opens to subscribers. You can withdraw any time before release.</p></details>
       <details><summary>What is free?</summary><p>The website, every airport briefing, the Academy reading, the airport map and your career logbook. Opening a position at an airport needs a trial or a plan.</p></details>
       <details><summary>Is this real air traffic control training?</summary><p>No. Clearway is a simulation game built from published charts. It is not approved for real-world training or navigation and is not affiliated with any air navigation service provider, airport or airline.</p></details>
     </div>
@@ -2484,15 +2485,22 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     </form>
     <form class="cw-box cw-form" id="cwComForm">
       <h2>Or commission it: <span data-cw="commission-price">£25</span> once, yours for good</h2>
-      <p class="cw-sub" style="margin:0">Don’t want to wait for the vote? We build the airport for you first, and you pay only when it is ready. It stays on your account whatever plan you are on, and you get it a month before everyone else.</p>
+      <p class="cw-sub" style="margin:0">Don’t want to wait for the vote? Save a card and we build the airport for you. Nothing is taken until we release it to you. It then stays on your account whatever plan you are on, and you get it a month before everyone else.</p>
       <div class="cw-two"><label>ICAO code<input id="cwComIcao" maxlength="4" required placeholder="EGHI" autocapitalize="characters" spellcheck="false"></label><label>Airport<input id="cwComName" maxlength="80" placeholder="Southampton"></label></div>
       <label>Anything we should know? <span class="lbl">optional</span><textarea id="cwComWhy" rows="3" maxlength="1500" placeholder="Why this airport, the positions you want to work, local procedures you know well…"></textarea></label>
-      <div class="cw-row"><button class="btn primary">Commission this airport</button><span class="cw-msg" id="cwComNote"></span></div>
+      <div class="cw-row"><button class="btn primary">Commission and save a card</button><span class="cw-msg" id="cwComNote"></span></div>
       <p class="cw-msg" id="cwComOut"></p>
     </form>
     <div class="cw-box"><h2>Most requested</h2><div id="cwReqList" class="cw-reqlist"><p class="cw-sub">Loading…</p></div></div>
     <div class="cw-box"><h2>Already on the roadmap</h2><div id="cwRoadmap" class="cw-reqlist"></div></div>
   </div>
+  <div style="height:72px"></div>
+</section>
+
+<!-- ═════════════════════ OWNER (not linked) ═════════════════════ -->
+<section class="page" id="page-admin" data-page="admin" hidden>
+  <div class="pagehead"><div class="wrap"><div class="eyebrow">Clearway team</div><h1>Commissions</h1><p>Build each airport, then release it: the player’s saved card is charged once and the airport unlocks on their account.</p></div></div>
+  <div class="wrap cw-acc"><div class="cw-box"><div id="cwAdmin" class="cw-coms"></div><p class="cw-msg" id="cwAdminMsg"></p></div></div>
   <div style="height:72px"></div>
 </section>
 
@@ -2506,7 +2514,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     <h2>Subscriptions and the free trial</h2><p>Plans are billed monthly in advance through our payment provider, Stripe, and renew automatically until you cancel. New players can try one airport of their choice free for <span data-cw="trial">2</span> days, once, on the plan they choose; if you do not cancel before the trial ends, the first monthly payment is taken then and the rest of the plan’s airports unlock. You can change plan, update your card or cancel at any time from your account. Cancelling stops the next renewal and your plan stays active until the end of the period you have paid for. Prices include any VAT that applies and may change with at least 30 days’ notice by email.</p>
     <h2>Your right to cancel</h2><p>If you are a consumer in the UK or EU you normally have 14 days to cancel a new subscription. Because Clearway gives you access to digital content straight away, you agree when subscribing that access starts immediately and that you lose that right once it has started, except where the law says otherwise. The free trial gives you time to decide before paying. If something has gone wrong, contact us and we will look at a refund.</p>
     <h2>Airports and early access</h2><p>Your plan lets you open the number of airports it includes. Airports in development, offered through early access, are unfinished and may change or be withdrawn. We may update, improve or retire features; if we withdraw an airport you have chosen you can pick another.</p>
-    <h2>Commissioned airports</h2><p>You can ask us to build an airport for a one-off price, shown when you ask. We may decline a request, for example if there is not enough published information to build it; you pay nothing in that case. You pay only once the airport is built and playable. A paid airport is added to your account for as long as Clearway runs it, whatever plan you are on, including none. For its first month only you can control it; after that we may open it to other players. It is built to the same standard as other Clearway airports and may be updated like them. Because it is made to your request and you can play it straight away, the 14-day right to cancel does not apply once you have paid and it is unlocked, except where the law says otherwise.</p>
+    <h2>Commissioned airports</h2><p>You can ask us to build an airport for a one-off price, shown when you ask. When you ask, you save a card with Stripe and authorise us to charge that price to it once, when the airport is built and released to you. Nothing is taken before then, and you can withdraw at any time before release. We may decline a request, for example if there is not enough published information to build it; nothing is charged in that case. If the charge needs your confirmation or fails, the airport waits on your account until you pay. A paid airport is added to your account for as long as Clearway runs it, whatever plan you are on, including none. For its first month only you can control it; after that we may open it to other players. It is built to the same standard as other Clearway airports and may be updated like them. Because it is made to your request and you can play it straight away, the 14-day right to cancel does not apply once you have paid and it is unlocked, except where the law says otherwise.</p>
     <h2>Fair use</h2><p>Do not share your account, copy or resell the simulator, try to get around access controls, or disrupt the service.</p>
     <h2>Feedback</h2><p>Feedback and airport requests you send may be used to improve Clearway without payment to you.</p>
     <h2>Liability</h2><p>Clearway is provided as it is. Nothing in these terms limits liability that cannot be limited by law. Otherwise our total liability to you is limited to what you paid us in the 12 months before the claim.</p>
@@ -6522,6 +6530,7 @@ function cwOnRoute(){
   if (r === 'pricing') cwRenderPricing();
   if (r === 'account') cwRenderAccount();
   if (r === 'request') { cwRenderRequests(); cwRenderCommission(); }
+  if (r === 'admin') cwRenderAdmin();
 }
 
 // ── pricing ──
@@ -6560,13 +6569,15 @@ async function cwRenderAccount(){
   if (CW.signErr) { $('cwSignMsg').textContent = CW.signErr; CW.signErr = null; }
   if (!signed) return;
   $('cwWho').textContent = CW.ses.email;
-  const done = /checkout=done/.test(location.search);
+  const done = /(checkout|card)=done/.test(location.search);
   if (!CW.ent || done) $('cwPlanBox').innerHTML = '<p class="cw-sub">Loading your plan…</p>';
   await cwLoad(done);
   // just back from Stripe: the webhook can take a few seconds to land
   // a commission payment is back when that airport is owned; a plan when it is active
   const paying = (() => { try { return sessionStorage.getItem('cw-paying'); } catch(_) { return null; } })();
-  const landed = () => CW.ent && (paying && paying !== 'plan' ? (CW.ent.owned || []).includes(paying) : CW.ent.active);
+  const card = /card=done/.test(location.search);
+  const landed = () => CW.ent && (card ? !(CW.ent.commissions || []).some(c => c.status === 'card')
+    : paying && paying !== 'plan' ? (CW.ent.owned || []).includes(paying) : CW.ent.active);
   for (let i = 0; done && i < 6 && !landed(); i++) { await new Promise(r => setTimeout(r, 2000)); await cwLoad(true); }
   if (done) try { sessionStorage.removeItem('cw-paying'); } catch(_) {}
   if (done) history.replaceState(null, '', location.pathname + '#account');
@@ -6618,9 +6629,10 @@ function cwRenderPicks(){
   }
   if (e.early && dev.length) $('cwPicks').insertAdjacentHTML('beforeend', `<p class="cw-sub" style="grid-column:1/-1">Early access: ${dev.map(a => esc(a.name)).join(', ')} open${dev.length === 1 ? 's' : ''} to you as soon as its first build is playable.</p>`);
 }
-// ── commissioned airports: built first, then a one-off payment, then the player's for good ──
+// ── commissioned airports: card saved on request, charged once on release, then the player's for good ──
 const cwComPrice = () => CW_CFG.currency + (+CW_CFG.commission || 25);
-const CW_CST = { requested: ['Requested', 'soon'], building: ['Being built', 'dev'], ready: ['Ready to pay', 'new'], paid: ['Yours', 'live'], launched: ['Yours', 'live'], declined: ['Not possible', 'soon'] };
+const cwPence = c => CW_CFG.currency + ((c.price_pence || 2500)/100).toFixed(0);
+const CW_CST = { card: ['Card needed', 'dev'], requested: ['Requested', 'soon'], building: ['Being built', 'dev'], ready: ['Payment needed', 'new'], paid: ['Yours', 'live'], launched: ['Yours', 'live'], declined: ['Not possible', 'soon'] };
 function cwSaveEnt(patch){ CW.ent = { ...CW.ent, ...patch }; cwLS.set('cw-ent', { at: Date.now(), email: CW.ses.email, ent: CW.ent }); }
 function cwRenderCommissions(){
   const e = CW.ent, box = $('cwComBox'), list = (e && e.commissions) || [];
@@ -6629,26 +6641,32 @@ function cwRenderCommissions(){
   const owned = (e.owned || []).filter(i => !list.some(c => c.icao === i && (c.status === 'paid' || c.status === 'launched')));
   const row = c => {
     const [txt, cls] = CW_CST[c.status] || [c.status, 'soon'], mine = c.status === 'paid' || c.status === 'launched';
-    const when = c.status === 'requested' ? `Asked on ${cwDate(c.created_at)}. We will be in touch before building it.`
-      : c.status === 'building' ? 'We are building it now. You pay nothing until it is ready.'
-      : c.status === 'ready' ? `Built and ready. Pay ${CW_CFG.currency}${((c.price_pence || 2500)/100).toFixed(0)} once and it is yours for good.`
+    const when = c.status === 'card' ? 'Add a card to send your request. Nothing is taken until the airport is released to you.'
+      : c.status === 'requested' ? `Asked on ${cwDate(c.created_at)}. Your card is saved; ${cwPence(c)} is taken only when we release it to you.`
+      : c.status === 'building' ? `We are building it now. ${cwPence(c)} is taken from your saved card when we release it to you.`
+      : c.status === 'ready' ? `Built and released, but your bank needs you to confirm the ${cwPence(c)} payment. Pay once and it is yours for good.`
       : c.status === 'paid' ? `Yours for good. Only you can control it until ${cwDate(c.public_from)}, then it opens to everyone.`
       : c.status === 'launched' ? 'Yours for good, whatever plan you are on.' : 'We could not build this one.';
-    const btn = c.status === 'ready' ? `<button class="btn primary" data-cpay="${c.id}" data-icao="${esc(c.icao)}">Pay ${CW_CFG.currency}${((c.price_pence || 2500)/100).toFixed(0)}</button>`
+    const btn = c.status === 'ready' ? `<button class="btn primary" data-cpay="${c.id}" data-icao="${esc(c.icao)}">Pay ${cwPence(c)}</button>`
+      : c.status === 'card' ? `<span class="cw-row"><button class="btn primary" data-ccard="${c.id}">Add card</button><button class="btn" data-cdel="${c.id}">Withdraw</button></span>`
       : mine && SITE[c.icao] ? `<a class="btn" href="${SITE[c.icao]}#sim">Control ${esc(c.icao)}</a>`
       : c.status === 'requested' || c.status === 'building' ? `<button class="btn" data-cdel="${c.id}">Withdraw</button>` : '';
     return `<div class="cw-com"><div><b>${esc(c.icao)}</b> ${esc(c.name || '')} <span class="badge ${cls}">${txt}</span><p class="cw-sub">${when}${c.reply ? ' ' + esc(c.reply) : ''}</p></div>${btn}</div>`;
   };
   $('cwComs').innerHTML = list.map(row).join('') + owned.map(i => row({ icao: i, status: 'launched' })).join('')
-    + (list.length || owned.length ? '' : `<p class="cw-sub">Want an airport we have not built? Commission it: we build it first, then you pay ${cwComPrice()} once and keep it whatever plan you are on.</p>`)
+    + (list.length || owned.length ? '' : `<p class="cw-sub">Want an airport we have not built? Commission it: save a card, we build it, and ${cwComPrice()} is taken once when we release it to you. It is yours whatever plan you are on.</p>`)
     + `<div class="cw-row"><a class="btn" href="#request">Commission an airport</a></div>`;
   $('cwComs').querySelectorAll('[data-cpay]').forEach(b => b.onclick = async () => {
     b.disabled = true; b.textContent = 'Opening secure checkout…';
     try { const { url } = await cwApi('account', { action: 'commission_pay', id: +b.dataset.cpay });
       try { sessionStorage.setItem('cw-paying', b.dataset.icao); } catch(_) {} location.href = url; } catch(err) { b.disabled = false; $('cwComMsg').textContent = err.message; b.textContent = 'Pay'; }
   });
+  $('cwComs').querySelectorAll('[data-ccard]').forEach(b => b.onclick = async () => {
+    b.disabled = true; b.textContent = 'Opening secure checkout…';
+    try { location.href = (await cwApi('account', { action: 'commission_card', id: +b.dataset.ccard })).url; } catch(err) { b.disabled = false; b.textContent = 'Add card'; $('cwComMsg').textContent = err.message; }
+  });
   $('cwComs').querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
-    if (!confirm('Withdraw this commission?')) return;
+    if (!confirm('Withdraw this commission? Nothing is charged and your saved card is removed.')) return;
     b.disabled = true;
     try { cwSaveEnt(await cwApi('account', { action: 'commission_cancel', id: +b.dataset.cdel })); cwRenderCommissions(); } catch(err) { b.disabled = false; $('cwComMsg').textContent = err.message; }
   });
@@ -6667,11 +6685,44 @@ function cwCommissionForm(){
     ev.preventDefault(); const out = $('cwComOut');
     const icao = $('cwComIcao').value, known = AIRPORTS_NET.find(a => a.icao === icao);
     if (known && known.status === 'live') { out.textContent = `${known.name} is already open: pick it in your plan.`; return; }
-    out.textContent = 'Sending…';
-    try { cwSaveEnt(await cwApi('account', { action: 'commission', icao, name: $('cwComName').value, notes: $('cwComWhy').value }));
-      $('cwComForm').reset(); out.innerHTML = `Thanks! ${esc(icao)} is on your <a href="#account">account</a>. We will check it can be built and tell you when it is ready to pay for.`; }
+    out.textContent = 'Opening secure checkout to save your card…';
+    // Stripe saves the card; nothing is taken until the airport is released
+    try { location.href = (await cwApi('account', { action: 'commission', icao, name: $('cwComName').value, notes: $('cwComWhy').value })).url; }
     catch(e) { out.textContent = e.message; }
   };
+}
+// ── the owner's page (#admin, not linked): commissions to build and release. The API checks ADMIN_EMAILS. ──
+async function cwRenderAdmin(){
+  const box = $('cwAdmin');
+  if (!CW_ON) { box.innerHTML = '<p class="cw-sub">Accounts are switched off in subs.json.</p>'; return; }
+  if (!CW.ses) { box.innerHTML = '<p class="cw-sub"><a href="#account">Sign in</a> with an admin email first.</p>'; return; }
+  box.innerHTML = '<p class="cw-sub">Loading…</p>';
+  try { cwDrawAdmin((await cwApi('admin')).commissions); } catch(e) { box.innerHTML = `<p class="cw-sub">${esc(e.message)}</p>`; }
+}
+function cwDrawAdmin(list){
+  const box = $('cwAdmin'), st = s => (CW_CST[s] || [s])[0];
+  box.innerHTML = list.length ? list.map(c => {
+    const open = ['requested', 'building'].includes(c.status);
+    return `<div class="cw-com"><div><b>${esc(c.icao)}</b> ${esc(c.name || '')} <span class="badge">${esc(st(c.status))}</span>
+      <p class="cw-sub">${esc(c.email || '')} · ${cwDate(c.created_at)} · ${cwPence(c)}${c.paid_at ? ' · paid ' + cwDate(c.paid_at) : ''}${c.public_from ? ' · public from ' + cwDate(c.public_from) : ''}</p>
+      ${c.notes ? `<p class="cw-sub">“${esc(c.notes)}”</p>` : ''}${c.reply ? `<p class="cw-sub">Your note: ${esc(c.reply)}</p>` : ''}</div>
+      <span class="cw-row">${c.status === 'requested' ? `<button class="btn" data-a="building" data-id="${c.id}">Building</button>` : ''}
+      ${open ? `<button class="btn primary" data-a="release" data-id="${c.id}">Release and charge ${cwPence(c)}</button>` : ''}
+      ${['card', 'requested', 'building'].includes(c.status) ? `<button class="btn" data-a="declined" data-id="${c.id}">Decline</button>` : ''}
+      ${c.status === 'paid' ? `<button class="btn" data-a="launched" data-id="${c.id}">Opened to everyone</button>` : ''}</span></div>`;
+  }).join('') : '<p class="cw-sub">No commissions yet.</p>';
+  box.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
+    const a = b.dataset.a, id = +b.dataset.id, msg = $('cwAdminMsg');
+    let reply;
+    if (a === 'release' && !confirm('Release this airport to the player and charge their card?')) return;
+    if (a === 'declined' && (reply = prompt('Why can it not be built? The player sees this.', '')) === null) return;
+    b.disabled = true; msg.textContent = 'Working…';
+    try {
+      const r = await cwApi('admin', a === 'release' ? { action: 'release', id } : { action: 'status', id, status: a, ...(reply != null ? { reply } : {}) });
+      msg.textContent = a !== 'release' ? 'Saved.' : r.paid ? 'Charged and released: it is on their account.' : 'Released, but the card could not be charged without the player. Their account now shows a Pay button; email them to let them know.';
+      cwDrawAdmin(r.commissions);
+    } catch(e) { b.disabled = false; msg.textContent = e.message; }
+  });
 }
 function cwSignInForms(){
   let email = '';
@@ -6765,7 +6816,7 @@ function cwInit(){
 setTimeout(cwInit, 0);
 
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).

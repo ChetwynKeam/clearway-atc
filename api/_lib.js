@@ -84,14 +84,16 @@ const form = (o, pre = '') => Object.entries(o).flatMap(([k, v]) => {
   if (typeof v === 'object') return form(v, key);
   return [`${encodeURIComponent(key)}=${encodeURIComponent(v)}`];
 }).flat();
-export async function stripe(path, params, method = params ? 'POST' : 'GET'){
+export async function stripe(path, params, method = params ? 'POST' : 'GET', idem){
   const res = await fetch(`https://api.stripe.com/v1/${path}`, { method, headers: { authorization: `Bearer ${env('STRIPE_SECRET_KEY')}`,
-    'content-type': 'application/x-www-form-urlencoded' }, body: params ? form(params).join('&') : undefined });
+    'content-type': 'application/x-www-form-urlencoded', ...(idem ? { 'idempotency-key': idem } : {}) }, body: params ? form(params).join('&') : undefined });
   const j = await res.json();
-  if (!res.ok) throw new Error(`stripe ${res.status}: ${j.error && j.error.message}`);
+  if (!res.ok) { const e = new Error(`stripe ${res.status}: ${j.error && j.error.message}`); e.stripe = j.error || {}; throw e; }
   return j;
 }
 export const stripeOn = () => !!env('STRIPE_SECRET_KEY');
+// the site owner: emails listed in ADMIN_EMAILS (comma separated) may use /api/admin
+export const isAdmin = u => !!u && env('ADMIN_EMAILS').toLowerCase().split(/[\s,]+/).filter(Boolean).includes(String(u.email || '').toLowerCase());
 // Stripe-Signature check (t=..., v1=...): HMAC-SHA256 of "t.payload" with the endpoint secret, within 5 minutes
 export function stripeEvent(raw, sig){
   const secret = env('STRIPE_WEBHOOK_SECRET'); if (!secret || !sig) return null;
@@ -102,5 +104,44 @@ export function stripeEvent(raw, sig){
   const ok = v1.some(s => s.length === want.length && crypto.timingSafeEqual(Buffer.from(s), Buffer.from(want)));
   return ok ? JSON.parse(raw) : null;
 }
+// ── airport commissions ──
+// the player's Stripe customer, created on first need so a card can be saved to it
+export async function customerOf(u, a){
+  if (a.stripe_customer) return a.stripe_customer;
+  const c = await stripe('customers', { email: u.email, metadata: { user_id: u.id } });
+  await saveAccount(u.id, { stripe_customer: c.id });
+  return c.id;
+}
+// Checkout in setup mode: the player saves a card and agrees to be charged once the airport is released
+export const commissionCardSession = (c, customer) => stripe('checkout/sessions', {
+  mode: 'setup', currency: 'gbp', customer, client_reference_id: c.user_id, payment_method_types: ['card'],
+  metadata: { kind: 'commission', commission_id: c.id, user_id: c.user_id },
+  setup_intent_data: { metadata: { kind: 'commission', commission_id: c.id, user_id: c.user_id } },
+  custom_text: { submit: { message: `Nothing is taken now. We charge £${((c.price_pence || COMMISSION_PENCE())/100).toFixed(2)} to this card only when ${c.icao} is built and released to you. You can withdraw before then.` } },
+  success_url: SITE_URL + '?card=done#account', cancel_url: SITE_URL + '#account',
+});
+// paid: the airport joins the player's account for good, and only they can control it for a month
+export async function grantCommission(c, extra = {}){
+  const now = new Date(), pub = new Date(now); pub.setMonth(pub.getMonth() + 1);
+  await db(`commissions?id=eq.${c.id}`, { method: 'PATCH', body: { status: 'paid', paid_at: now.toISOString(), public_from: pub.toISOString(), ...extra } });
+  const [a] = await db(`accounts?user_id=eq.${c.user_id}&select=owned`);
+  await saveAccount(c.user_id, { owned: [...new Set([...((a && a.owned) || []), c.icao])] });
+}
+// release: take the payment from the saved card. If the bank wants the player to confirm, or the card fails,
+// the commission becomes 'ready' and the player pays from their account instead.
+export async function chargeCommission(c){
+  const [a] = await db(`accounts?user_id=eq.${c.user_id}&select=stripe_customer`);
+  if (c.payment_method && a && a.stripe_customer) {
+    try {
+      const pi = await stripe('payment_intents', { amount: c.price_pence || COMMISSION_PENCE(), currency: 'gbp', customer: a.stripe_customer,
+        payment_method: c.payment_method, off_session: 'true', confirm: 'true', description: `Clearway airport commission: ${c.icao}`,
+        metadata: { kind: 'commission', commission_id: c.id, user_id: c.user_id } }, 'POST', `commission-${c.id}`);
+      if (pi.status === 'succeeded') { await grantCommission(c, { payment_intent: pi.id }); return { paid: true }; }
+    } catch (e) { if (!e.stripe) throw e; console.error(e.message); }
+  }
+  await db(`commissions?id=eq.${c.id}`, { method: 'PATCH', body: { status: 'ready' } });
+  return { paid: false };
+}
+
 // a one-way hash for anonymous votes and rate limits (no raw IPs are stored)
 export const anonId = req => crypto.createHash('sha256').update((req.headers.get('x-forwarded-for') || '').split(',')[0].trim() + '|' + env('SUPABASE_SERVICE_ROLE_KEY').slice(-12)).digest('hex').slice(0, 24);

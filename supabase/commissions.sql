@@ -1,5 +1,6 @@
--- Airport commissions: a player asks for an airport, it is built, then they pay a one-off sum and own it forever.
--- Run once in Supabase, after schema.sql: SQL Editor > New query > paste > Run. Safe to run again.
+-- Airport commissions: a player asks for an airport and saves a card; it is built; on release the card is charged
+-- once and the airport is theirs for good. Run once in Supabase, after schema.sql: SQL Editor > New query > paste > Run.
+-- Safe to run again.
 
 alter table public.accounts add column if not exists owned text[] not null default '{}';   -- commissioned airports, playable whatever the plan
 
@@ -11,24 +12,23 @@ create table if not exists public.commissions (
   icao text not null,
   name text,
   notes text,
-  -- you move it along: requested -> building -> ready (the player can now pay) -> paid (by Stripe) -> launched (open to everyone)
-  -- or declined (say why in reply), or cancelled (by the player, before paying)
-  status text not null default 'requested',
+  -- card (waiting for the player to save a card) -> requested -> building -> paid (charged on release) -> launched (open to everyone)
+  -- ready: released but the card could not be charged, so the player pays from their account
+  -- declined (say why in reply; nothing is charged), cancelled (withdrawn by the player)
+  status text not null default 'card',
   price_pence int not null default 2500,
   reply text,                     -- optional note shown to the player on their account
-  ready_at timestamptz,
+  payment_method text,            -- the saved card (Stripe), charged on release
+  payment_intent text,
+  stripe_session text,
+  ready_at timestamptz,           -- released
   paid_at timestamptz,
-  public_from timestamptz,        -- paid_at + 1 month: the owner's head start before everyone else
-  stripe_session text
+  public_from timestamptz         -- paid_at + 1 month: the owner's head start before everyone else
 );
+alter table public.commissions add column if not exists payment_method text;
+alter table public.commissions add column if not exists payment_intent text;
+alter table public.commissions alter column status set default 'card';
 alter table public.commissions enable row level security;
 create index if not exists commissions_user on public.commissions (user_id, created_at);
-
--- stamp ready_at when you set status to ready in the Table Editor
-create or replace function public.commission_ready() returns trigger language plpgsql as $$
-begin
-  if new.status = 'ready' and (old.status is distinct from 'ready') and new.ready_at is null then new.ready_at := now(); end if;
-  return new;
-end $$;
 drop trigger if exists commission_ready on public.commissions;
-create trigger commission_ready before update on public.commissions for each row execute function public.commission_ready();
+drop function if exists public.commission_ready();

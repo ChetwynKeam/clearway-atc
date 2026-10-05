@@ -75,6 +75,7 @@ SITE_URL                  https://www.clearway-atc.co.uk/
 TRIAL_DAYS                2
 STRIPE_COUPON             (the launch offer coupon ID, optional)
 COMMISSION_PRICE          2500 (a commissioned airport, in pence; optional, 2500 = £25)
+ADMIN_EMAILS              your sign-in email (comma separated for more); opens the #admin page
 ```
 
 ### 4. Turn it on (`subs.json`, then `python3 build.py` and copy the pages)
@@ -93,16 +94,20 @@ checked first; they are a reasonable starting draft for a UK sole trader, not le
 ## Reading feedback and requests
 Supabase > Table Editor: `feedback` (set `status` to read / planned / done as you go) and `request_tally` (requests, most votes first).
 
-## Commissioned airports (£25 once, yours for good)
+## Commissioned airports (card saved on request, £25 taken on release)
 Run `supabase/commissions.sql` once in the SQL Editor (after `schema.sql`). It adds the `commissions` table and an
-`owned` list on each account. No Stripe product is needed: the checkout creates a one-off £25 line itself.
+`owned` list on each account. No Stripe product is needed. Add your sign-in email to `ADMIN_EMAILS` in Vercel.
 
-1. A signed-in player sends an airport from the Request page. It appears in Table Editor > `commissions` as `requested`.
-   Nothing is charged.
-2. Set `status` to `building` while you work on it (the player sees "Being built"), or `declined` with a short note in
-   `reply` if it cannot be built. A player can withdraw it until it is ready.
-3. When the airport's simulator is live on the site (it can still show as In development), set `status` to `ready`.
-   The player gets a Pay £25 button on their account.
-4. Stripe takes the payment and the webhook marks it `paid`, sets `public_from` to a month later and adds the airport to
-   the player's `owned` list. Owned airports open whatever plan the player is on, including none.
-5. After `public_from`, mark the airport live in the catalogue for everyone and set the commission to `launched`.
+1. A signed-in player sends an airport from the Request page and saves a card in Stripe Checkout (setup mode).
+   Nothing is taken. The webhook stores the card on the commission and marks it `requested`.
+2. Open www.clearway-atc.co.uk/#admin (signed in with an `ADMIN_EMAILS` address). It lists every commission with the
+   player's email and notes. Mark it **Building** while you work on it, or **Decline** with a note (nothing is charged).
+3. When the airport is playable on the site (it can still show as In development), press **Release and charge £25**.
+   The saved card is charged once (off-session). The airport is added to the player's `owned` list and only they can
+   control it for a month (`public_from`). Owned airports open whatever plan the player is on, including none.
+4. If the bank wants the player to confirm (3D Secure) or the card fails, the commission becomes `ready` and the player
+   gets a Pay £25 button on their account. Email them to say it is waiting. Paying there unlocks it the same way.
+5. After `public_from`, open the airport to everyone in the catalogue and press **Opened to everyone**.
+
+Why not a hold on the card? A bank authorisation hold lapses after about 7 days, which is shorter than a build.
+Saving the card with the player's agreement is how Stripe recommends charging later.

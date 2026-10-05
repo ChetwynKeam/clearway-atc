@@ -122,6 +122,7 @@ function cwOnRoute(){
   if (r === 'pricing') cwRenderPricing();
   if (r === 'account') cwRenderAccount();
   if (r === 'request') { cwRenderRequests(); cwRenderCommission(); }
+  if (r === 'admin') cwRenderAdmin();
 }
 
 // ── pricing ──
@@ -160,13 +161,15 @@ async function cwRenderAccount(){
   if (CW.signErr) { $('cwSignMsg').textContent = CW.signErr; CW.signErr = null; }
   if (!signed) return;
   $('cwWho').textContent = CW.ses.email;
-  const done = /checkout=done/.test(location.search);
+  const done = /(checkout|card)=done/.test(location.search);
   if (!CW.ent || done) $('cwPlanBox').innerHTML = '<p class="cw-sub">Loading your plan…</p>';
   await cwLoad(done);
   // just back from Stripe: the webhook can take a few seconds to land
   // a commission payment is back when that airport is owned; a plan when it is active
   const paying = (() => { try { return sessionStorage.getItem('cw-paying'); } catch(_) { return null; } })();
-  const landed = () => CW.ent && (paying && paying !== 'plan' ? (CW.ent.owned || []).includes(paying) : CW.ent.active);
+  const card = /card=done/.test(location.search);
+  const landed = () => CW.ent && (card ? !(CW.ent.commissions || []).some(c => c.status === 'card')
+    : paying && paying !== 'plan' ? (CW.ent.owned || []).includes(paying) : CW.ent.active);
   for (let i = 0; done && i < 6 && !landed(); i++) { await new Promise(r => setTimeout(r, 2000)); await cwLoad(true); }
   if (done) try { sessionStorage.removeItem('cw-paying'); } catch(_) {}
   if (done) history.replaceState(null, '', location.pathname + '#account');
@@ -218,9 +221,10 @@ function cwRenderPicks(){
   }
   if (e.early && dev.length) $('cwPicks').insertAdjacentHTML('beforeend', `<p class="cw-sub" style="grid-column:1/-1">Early access: ${dev.map(a => esc(a.name)).join(', ')} open${dev.length === 1 ? 's' : ''} to you as soon as its first build is playable.</p>`);
 }
-// ── commissioned airports: built first, then a one-off payment, then the player's for good ──
+// ── commissioned airports: card saved on request, charged once on release, then the player's for good ──
 const cwComPrice = () => CW_CFG.currency + (+CW_CFG.commission || 25);
-const CW_CST = { requested: ['Requested', 'soon'], building: ['Being built', 'dev'], ready: ['Ready to pay', 'new'], paid: ['Yours', 'live'], launched: ['Yours', 'live'], declined: ['Not possible', 'soon'] };
+const cwPence = c => CW_CFG.currency + ((c.price_pence || 2500)/100).toFixed(0);
+const CW_CST = { card: ['Card needed', 'dev'], requested: ['Requested', 'soon'], building: ['Being built', 'dev'], ready: ['Payment needed', 'new'], paid: ['Yours', 'live'], launched: ['Yours', 'live'], declined: ['Not possible', 'soon'] };
 function cwSaveEnt(patch){ CW.ent = { ...CW.ent, ...patch }; cwLS.set('cw-ent', { at: Date.now(), email: CW.ses.email, ent: CW.ent }); }
 function cwRenderCommissions(){
   const e = CW.ent, box = $('cwComBox'), list = (e && e.commissions) || [];
@@ -229,26 +233,32 @@ function cwRenderCommissions(){
   const owned = (e.owned || []).filter(i => !list.some(c => c.icao === i && (c.status === 'paid' || c.status === 'launched')));
   const row = c => {
     const [txt, cls] = CW_CST[c.status] || [c.status, 'soon'], mine = c.status === 'paid' || c.status === 'launched';
-    const when = c.status === 'requested' ? `Asked on ${cwDate(c.created_at)}. We will be in touch before building it.`
-      : c.status === 'building' ? 'We are building it now. You pay nothing until it is ready.'
-      : c.status === 'ready' ? `Built and ready. Pay ${CW_CFG.currency}${((c.price_pence || 2500)/100).toFixed(0)} once and it is yours for good.`
+    const when = c.status === 'card' ? 'Add a card to send your request. Nothing is taken until the airport is released to you.'
+      : c.status === 'requested' ? `Asked on ${cwDate(c.created_at)}. Your card is saved; ${cwPence(c)} is taken only when we release it to you.`
+      : c.status === 'building' ? `We are building it now. ${cwPence(c)} is taken from your saved card when we release it to you.`
+      : c.status === 'ready' ? `Built and released, but your bank needs you to confirm the ${cwPence(c)} payment. Pay once and it is yours for good.`
       : c.status === 'paid' ? `Yours for good. Only you can control it until ${cwDate(c.public_from)}, then it opens to everyone.`
       : c.status === 'launched' ? 'Yours for good, whatever plan you are on.' : 'We could not build this one.';
-    const btn = c.status === 'ready' ? `<button class="btn primary" data-cpay="${c.id}" data-icao="${esc(c.icao)}">Pay ${CW_CFG.currency}${((c.price_pence || 2500)/100).toFixed(0)}</button>`
+    const btn = c.status === 'ready' ? `<button class="btn primary" data-cpay="${c.id}" data-icao="${esc(c.icao)}">Pay ${cwPence(c)}</button>`
+      : c.status === 'card' ? `<span class="cw-row"><button class="btn primary" data-ccard="${c.id}">Add card</button><button class="btn" data-cdel="${c.id}">Withdraw</button></span>`
       : mine && SITE[c.icao] ? `<a class="btn" href="${SITE[c.icao]}#sim">Control ${esc(c.icao)}</a>`
       : c.status === 'requested' || c.status === 'building' ? `<button class="btn" data-cdel="${c.id}">Withdraw</button>` : '';
     return `<div class="cw-com"><div><b>${esc(c.icao)}</b> ${esc(c.name || '')} <span class="badge ${cls}">${txt}</span><p class="cw-sub">${when}${c.reply ? ' ' + esc(c.reply) : ''}</p></div>${btn}</div>`;
   };
   $('cwComs').innerHTML = list.map(row).join('') + owned.map(i => row({ icao: i, status: 'launched' })).join('')
-    + (list.length || owned.length ? '' : `<p class="cw-sub">Want an airport we have not built? Commission it: we build it first, then you pay ${cwComPrice()} once and keep it whatever plan you are on.</p>`)
+    + (list.length || owned.length ? '' : `<p class="cw-sub">Want an airport we have not built? Commission it: save a card, we build it, and ${cwComPrice()} is taken once when we release it to you. It is yours whatever plan you are on.</p>`)
     + `<div class="cw-row"><a class="btn" href="#request">Commission an airport</a></div>`;
   $('cwComs').querySelectorAll('[data-cpay]').forEach(b => b.onclick = async () => {
     b.disabled = true; b.textContent = 'Opening secure checkout…';
     try { const { url } = await cwApi('account', { action: 'commission_pay', id: +b.dataset.cpay });
       try { sessionStorage.setItem('cw-paying', b.dataset.icao); } catch(_) {} location.href = url; } catch(err) { b.disabled = false; $('cwComMsg').textContent = err.message; b.textContent = 'Pay'; }
   });
+  $('cwComs').querySelectorAll('[data-ccard]').forEach(b => b.onclick = async () => {
+    b.disabled = true; b.textContent = 'Opening secure checkout…';
+    try { location.href = (await cwApi('account', { action: 'commission_card', id: +b.dataset.ccard })).url; } catch(err) { b.disabled = false; b.textContent = 'Add card'; $('cwComMsg').textContent = err.message; }
+  });
   $('cwComs').querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
-    if (!confirm('Withdraw this commission?')) return;
+    if (!confirm('Withdraw this commission? Nothing is charged and your saved card is removed.')) return;
     b.disabled = true;
     try { cwSaveEnt(await cwApi('account', { action: 'commission_cancel', id: +b.dataset.cdel })); cwRenderCommissions(); } catch(err) { b.disabled = false; $('cwComMsg').textContent = err.message; }
   });
@@ -267,11 +277,44 @@ function cwCommissionForm(){
     ev.preventDefault(); const out = $('cwComOut');
     const icao = $('cwComIcao').value, known = AIRPORTS_NET.find(a => a.icao === icao);
     if (known && known.status === 'live') { out.textContent = `${known.name} is already open: pick it in your plan.`; return; }
-    out.textContent = 'Sending…';
-    try { cwSaveEnt(await cwApi('account', { action: 'commission', icao, name: $('cwComName').value, notes: $('cwComWhy').value }));
-      $('cwComForm').reset(); out.innerHTML = `Thanks! ${esc(icao)} is on your <a href="#account">account</a>. We will check it can be built and tell you when it is ready to pay for.`; }
+    out.textContent = 'Opening secure checkout to save your card…';
+    // Stripe saves the card; nothing is taken until the airport is released
+    try { location.href = (await cwApi('account', { action: 'commission', icao, name: $('cwComName').value, notes: $('cwComWhy').value })).url; }
     catch(e) { out.textContent = e.message; }
   };
+}
+// ── the owner's page (#admin, not linked): commissions to build and release. The API checks ADMIN_EMAILS. ──
+async function cwRenderAdmin(){
+  const box = $('cwAdmin');
+  if (!CW_ON) { box.innerHTML = '<p class="cw-sub">Accounts are switched off in subs.json.</p>'; return; }
+  if (!CW.ses) { box.innerHTML = '<p class="cw-sub"><a href="#account">Sign in</a> with an admin email first.</p>'; return; }
+  box.innerHTML = '<p class="cw-sub">Loading…</p>';
+  try { cwDrawAdmin((await cwApi('admin')).commissions); } catch(e) { box.innerHTML = `<p class="cw-sub">${esc(e.message)}</p>`; }
+}
+function cwDrawAdmin(list){
+  const box = $('cwAdmin'), st = s => (CW_CST[s] || [s])[0];
+  box.innerHTML = list.length ? list.map(c => {
+    const open = ['requested', 'building'].includes(c.status);
+    return `<div class="cw-com"><div><b>${esc(c.icao)}</b> ${esc(c.name || '')} <span class="badge">${esc(st(c.status))}</span>
+      <p class="cw-sub">${esc(c.email || '')} · ${cwDate(c.created_at)} · ${cwPence(c)}${c.paid_at ? ' · paid ' + cwDate(c.paid_at) : ''}${c.public_from ? ' · public from ' + cwDate(c.public_from) : ''}</p>
+      ${c.notes ? `<p class="cw-sub">“${esc(c.notes)}”</p>` : ''}${c.reply ? `<p class="cw-sub">Your note: ${esc(c.reply)}</p>` : ''}</div>
+      <span class="cw-row">${c.status === 'requested' ? `<button class="btn" data-a="building" data-id="${c.id}">Building</button>` : ''}
+      ${open ? `<button class="btn primary" data-a="release" data-id="${c.id}">Release and charge ${cwPence(c)}</button>` : ''}
+      ${['card', 'requested', 'building'].includes(c.status) ? `<button class="btn" data-a="declined" data-id="${c.id}">Decline</button>` : ''}
+      ${c.status === 'paid' ? `<button class="btn" data-a="launched" data-id="${c.id}">Opened to everyone</button>` : ''}</span></div>`;
+  }).join('') : '<p class="cw-sub">No commissions yet.</p>';
+  box.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
+    const a = b.dataset.a, id = +b.dataset.id, msg = $('cwAdminMsg');
+    let reply;
+    if (a === 'release' && !confirm('Release this airport to the player and charge their card?')) return;
+    if (a === 'declined' && (reply = prompt('Why can it not be built? The player sees this.', '')) === null) return;
+    b.disabled = true; msg.textContent = 'Working…';
+    try {
+      const r = await cwApi('admin', a === 'release' ? { action: 'release', id } : { action: 'status', id, status: a, ...(reply != null ? { reply } : {}) });
+      msg.textContent = a !== 'release' ? 'Saved.' : r.paid ? 'Charged and released: it is on their account.' : 'Released, but the card could not be charged without the player. Their account now shows a Pay button; email them to let them know.';
+      cwDrawAdmin(r.commissions);
+    } catch(e) { b.disabled = false; msg.textContent = e.message; }
+  });
 }
 function cwSignInForms(){
   let email = '';
