@@ -29,7 +29,7 @@ const CRS09 = brg(...T09, ...T27), CRS27 = norm(CRS09+180);
 const RU = dirv(CRS09), RN = [-RU[1], RU[0]];           // along (east), normal (north)
 const THR_GAP_M = dist(...T09, ...T27)/M2NM;            // 1528 m LDA
 const W_OFF = 138;
-const RWY_M = 1798;
+const RWY_M = 1757;                                    // paved length to the turning pads as mapped (AD 2.12 declares 1798 m)
 const THR09_M = W_OFF, THR27_M = W_OFF + THR_GAP_M;
 const W_END = [T09[0]-RU[0]*W_OFF*M2NM, T09[1]-RU[1]*W_OFF*M2NM];
 // aerodrome coordinates: metres along the runway from the west end, metres north of the centreline
@@ -40,43 +40,66 @@ const XING_M = 990;                                     // Winston Churchill Ave
 const GBR = xy(dms(36,8,36.63), -dms(5,20,33.50));     // TACAN Ch 83X
 const ARP = xy(dms(36,9,4.21), -dms(5,20,59.10));
 
-// ═════════════════════════ aerodrome layout (D1 to scale, E1, F1; AD 2.8/2.9) ═════════════════════════
-// All taxiways 19 m wide with yellow edge lines; runway guard lights at holding points A, C, D and E.
-// Twy B east of E and the B1 link are marked unserviceable (×) on D1/E1 and are not used.
-const TW = { A: 1120, C: 1043, D: 1186, E: 1597, B: 104 };
-const LANE_N = 152, LANE_S = -140;                      // civil apron taxilane, south apron taxilane
+// ═════════════════════════ aerodrome layout (OpenStreetMap geometry, checked against AD 2 / chart D1) ═════════════════════════
+// Centrelines, aprons and stand lead-ins are OpenStreetMap ways converted to runway metres (m along from the west end,
+// off north of the centreline), so the drawn aerodrome sits on the street map. All taxiways 19 m wide; guard lights at
+// holding points A, C, D and E. Each runway entry splits into two curved fillets, one towards each end.
+const TW = { A: 1155, C: 1057, D: 1190.5, E: 1558, B: 109.5 };
+const LANE_N = 109.5, LANE_S = -120;                     // B doubles as the civil apron taxilane; south apron taxilane
 const GN = {}, GE = [];
 function gn(id, m, off){ GN[id] = { id, m, off, p: rm(m, off), adj: [] }; }
 function ge(a, b, tw){ const e = { a, b, tw, len: dist(...GN[a].p, ...GN[b].p) }; GE.push(e); GN[a].adj.push([b, e]); GN[b].adj.push([a, e]); }
-gn('RA', TW.A, 0); gn('HA', TW.A, 72); gn('BA', TW.A, TW.B); gn('AW', TW.A, LANE_N);
-gn('B1385', 1385, TW.B); gn('AE', 1385, LANE_N); gn('BN', 1440, TW.B); gn('NA', 1446, 132);
-gn('BE', TW.E, TW.B); gn('HE', TW.E, 64); gn('RE', TW.E, 0);
-gn('RC', TW.C, 0); gn('HC', TW.C, -80); gn('SC', TW.C, LANE_S);
-gn('RD', TW.D, 0); gn('HD', TW.D, -72); gn('SD', TW.D, LANE_S);
-const HOLDS = {
-  A: { node: 'HA', rwy: 'RA', m: TW.A, off: 72,  rgl: true },
-  E: { node: 'HE', rwy: 'RE', m: TW.E, off: 64,  rgl: true },
-  C: { node: 'HC', rwy: 'RC', m: TW.C, off: -80, rgl: true },
-  D: { node: 'HD', rwy: 'RD', m: TW.D, off: -72, rgl: true }
+let kN = 0;
+// a chain of points becomes graph nodes joined by edges carrying the taxiway designator
+function chain(a, pts, b, tw){ let prev = a; for (const [m, o] of pts) { const id = 'k' + (kN++); gn(id, m, o); ge(prev, id, tw); prev = id; } ge(prev, b, tw); }
+// runway entries: junction node, holding point, and the fillet points from the runway centreline to the junction
+gn('RA', 1155.6, 45); gn('HA', 1155, 68); gn('JA', 1155, 78);
+gn('RE', 1558.6, 24.6); gn('HE', 1558.1, 82);
+gn('RC', 1057.2, -41.1); gn('HC', 1056.8, -78); gn('SC', 1056.5, LANE_S);
+gn('RD', 1190.8, -45.1); gn('HD', 1190.5, -78); gn('SD', 1190.5, LANE_S);
+const FIL = {
+  A: { W: [[1103.8,0],[1122.7,2.5],[1136.4,9.9],[1145.1,18],[1151.8,28.5]], E: [[1211.5,0],[1189.2,3.6],[1176.6,9.7],[1166.1,19.1],[1159.3,30.2]] },
+  C: { W: [[1001.6,0],[1020.7,-3.6],[1038.3,-12.4],[1050.5,-25.2]], E: [[1103.8,0],[1083.6,-7.9],[1067.8,-21.5]] },
+  D: { W: [[1143.9,0],[1165.6,-8.5],[1180.5,-21.3]], E: [[1240.5,0],[1213.7,-10.1],[1198.1,-25.9]] },
+  E: { W: [[1532.1,0],[1549.8,5.8],[1556.7,15.1]], E: [[1585.9,0],[1565.3,7.7],[1559.2,19]] }
 };
+const HOLDS = {
+  A: { node: 'HA', rwy: 'RA', m: TW.A, off: 68,  rgl: true },
+  E: { node: 'HE', rwy: 'RE', m: TW.E, off: 82,  rgl: true },
+  C: { node: 'HC', rwy: 'RC', m: TW.C, off: -78, rgl: true },
+  D: { node: 'HD', rwy: 'RD', m: TW.D, off: -78, rgl: true }
+};
+// B and the civil apron: B runs along the apron edge and stands 2–5 lead straight off it
+gn('AW', 1140.3, 118); gn('BW', 1191.1, 109.3); gn('BN', 1367.2, 109.1); gn('B1435', 1435.3, 109.2); gn('BE', 1540, 109.6);
+gn('NT', 1407.7, 145.2); gn('NA', 1418.5, 174.6); gn('NB', 1430.3, 207);
 const STANDS = [
-  ...[1,2,3,4,5].map((n,i) => ({ id: String(n), m: 1165 + i*45, off: 200, lane: LANE_N, area: 'civil', hdg: null })),
-  { id: 'N1', m: 1428, off: 165, lane: 132, lm: 1446, area: 'north' }, { id: 'N2', m: 1468, off: 182, lane: 132, lm: 1446, area: 'north' },
-  { id: 'S1', m: 1072, off: -182, lane: LANE_S, area: 'south' }, { id: 'S2', m: 1150, off: -176, lane: LANE_S, area: 'south' }
+  { id: '1', m: 1125.1, off: 184, lead: [1125.1, 150], area: 'civil' },
+  ...[['2', 1165.7], ['3', 1206.2], ['4', 1246.3], ['5', 1293]].map(([id, m]) => ({ id, m, off: 184, lead: [m, LANE_N], area: 'civil' })),
+  { id: 'N1', m: 1382, off: 170, node: 'NA', area: 'north' }, { id: 'N2', m: 1398, off: 214, node: 'NB', area: 'north' },
+  { id: 'S1', m: 1090, off: -165, lead: [1090, LANE_S], area: 'south' }, { id: 'S2', m: 1150, off: -160, lead: [1150, LANE_S], area: 'south' }
 ];
 STANDS.forEach(s => {
   s.p = rm(s.m, s.off); s.occ = null;
-  if (s.area === 'north') { s.node = 'NA'; s.lp = GN.NA.p; }
-  else { s.node = 'L' + s.id; gn(s.node, s.m, s.lane); s.lp = GN[s.node].p; }
+  if (!s.node) { s.node = 'L' + s.id; gn(s.node, ...s.lead); }
+  s.lp = GN[s.node].p;
   s.hdg = brg(...s.lp, ...s.p);                           // parked nose-in, facing away from the lane
 });
 // edges: taxiway designators drive the phraseology
-ge('RA','HA','A'); ge('HA','BA','A'); ge('BA','AW','A');
-{ const civ = STANDS.filter(s => s.area === 'civil').sort((a,b) => a.m-b.m); let prev = 'AW'; for (const s of civ) { ge(prev, s.node, 'APRON'); prev = s.node; } ge(prev, 'AE', 'APRON'); }
-ge('AE','B1385','APRON'); ge('BA','B1385','B'); ge('B1385','BN','B'); ge('BN','BE','B'); ge('BN','NA','APRON');
-ge('BE','HE','E'); ge('HE','RE','E');
+ge('RA','HA','A'); ge('HA','JA','A');
+chain('JA', [[1153.7,92.6],[1151.8,101.6],[1147.2,110.4]], 'AW', 'A');
+chain('JA', [[1157.1,84.3],[1162.4,93.9],[1168.3,99.9],[1176.5,105.3]], 'BW', 'A');
+chain('AW', [[1149.6,112.1]], 'L2', 'APRON'); ge('L2','BW','APRON');
+chain('AW', [[1129.9,131.4]], 'L1', 'APRON');
+ge('BW','L3','B'); ge('L3','L4','B'); ge('L4','L5','B'); ge('L5','BN','B'); ge('BN','B1435','B'); ge('B1435','BE','B');
+chain('BE', [[1552.7,103.3],[1556.8,95]], 'HE', 'E'); ge('HE','RE','E');
+chain('BN', [[1384.1,115.1],[1396.5,124.9],[1404.4,137.1]], 'NT', 'APRON');
+chain('B1435', [[1419.6,114.6],[1410.1,126.3]], 'NT', 'APRON');
+ge('NT','NA','APRON'); ge('NA','NB','APRON');
 ge('RC','HC','C'); ge('HC','SC','C'); ge('RD','HD','D'); ge('HD','SD','D');
-{ const sth = STANDS.filter(s => s.area === 'south').sort((a,b) => a.m-b.m); let prev = 'SC'; for (const s of sth) { ge(prev, s.node, 'APRON'); prev = s.node; } ge(prev, 'SD', 'APRON'); }
+ge('SC','LS1','APRON'); ge('LS1','LS2','APRON'); ge('LS2','SD','APRON');
+// fillet points from the runway to a holding point's junction (side W meets the runway west of the junction)
+const filIn = (hp, side) => FIL[hp][side].map(([m, o]) => rm(m, o));
+const filOut = (hp, side) => filIn(hp, side).reverse();
 const PHON = { A:'Alpha', B:'Bravo', C:'Charlie', D:'Delta', E:'Echo' };
 function route(from, to){
   const dd = { [from]: 0 }, prev = {}, done = new Set();
@@ -435,7 +458,7 @@ function towPath(ac, to){
   const from = ac.stand, pts = [from.lp];
   const add = r => { if (r) for (const id of r.nodes.slice(1)) pts.push(GN[id].p); };
   if (from.area === 'south' && to.area !== 'south') {
-    add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, to.node));
+    add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, ...filOut('C', 'E'), ...filIn('A', 'W'), GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, to.node));
   } else add(route(from.node, to.node));
   pts.push(to.p);
   return pts;
@@ -491,7 +514,9 @@ function taxiOptions(ac, hp){
 // pushback: straight back onto the taxilane, then along it so the nose ends up facing the chosen way
 function pushPath(ac, face){
   const st = ac.stand, lm = mOf(st.lp), lo = offOf(st.lp);
-  const lim = st.area === 'civil' ? [1125, 1380] : st.area === 'south' ? [1050, 1180] : [1405, 1490];
+  if (st.id === '1') return [st.lp, rm(1132, 124)];                       // stand 1 pushes back onto the curve to Alpha
+  if (st.area === 'north') return [st.lp, rm(1411, 155)];                 // north stands push back down the apron taxiway
+  const lim = st.area === 'civil' ? [1150, 1330] : [1060, 1185];
   const tail = face === 'west' ? 1 : -1;                     // facing east means the tail goes west
   return [st.lp, rm(clamp(lm + tail*40, lim[0], lim[1]), lo)];
 }
@@ -499,18 +524,16 @@ const pushRec = ac => (depHold(ac) === 'E' || depHold(ac) === 'D') ? 'east' : 'w
 // turnaround on the turning circles (no 180s on the runway above 17 t MTOM)
 // East pad lies north of the centreline (D1). The aircraft swings left round a 24 m radius circle on the pad
 // and rejoins the centreline facing west. The west pad is the same figure rotated 180° (south side).
-const TURN_PAD = { E: { c: [1764, 30], r: 24 }, W: { c: [RWY_M - 1764, -30], r: 24 } };
-const TURN_E = (() => {
-  const { c: [cm, co], r } = TURN_PAD.E, pts = [[1700,0],[1728,1],[1752,4]];
-  for (let a = -90; a <= 90; a += 20) pts.push([cm + r*Math.cos(a*D2R), co + r*Math.sin(a*D2R)]);
-  return pts.concat([[1748,52],[1734,45],[1724,32],[1714,15],[1704,4],[1690,0]]).map(([m,o]) => [+m.toFixed(1), +o.toFixed(1)]);
-})();
-const TURN_W = TURN_E.map(([m,o]) => [+(RWY_M - m).toFixed(1), -o]);
+const TURN_PAD = { E: { c: [1733, 9], r: 21 }, W: { c: [26, -9], r: 21 } };
+// east pad loop as mapped: in along the south side, round the east end, back west along the north side to the centreline
+const TURN_E = [[1680,0],[1695.6,0.4],[1706.7,-1.5],[1712.2,-4],[1718.2,-9.1],[1726,-12.8],[1731.2,-13.5],[1737,-12.5],[1744,-9.7],[1748.3,-5],[1751.5,0.4],
+  [1753.4,9.6],[1752.7,15.6],[1749,23.2],[1744,27.7],[1738.2,30.7],[1734.5,31],[1703.8,30.9],[1696,28.1],[1652.6,6.2],[1645.6,2.7],[1626.3,0.3]];
+const TURN_W = TURN_E.map(([m,o]) => [+(1759 - m).toFixed(1), -o]);   // the west pad is the same figure turned round
 const TURN_END = { E: TURN_E[TURN_E.length-1][0], W: TURN_W[TURN_W.length-1][0] };
 function lineUpPath(ac, hp){
   const H = HOLDS[hp], pts = [GN[H.rwy].p];
-  if (S.rwy === '27') { for (const [m,o] of TURN_E) if (m > H.m - 5) pts.push(P(m,o)); }
-  else { for (const [m,o] of TURN_W) if (m < H.m + 5) pts.push(P(m,o)); }
+  if (S.rwy === '27') { pts.push(...filOut(hp, 'E')); for (const [m,o] of TURN_E) if (m > H.m + 40) pts.push(P(m,o)); }
+  else { pts.push(...filOut(hp, 'W')); for (const [m,o] of TURN_W) if (m < H.m - 40) pts.push(P(m,o)); }
   return pts;
 }
 function vacatePath(ac){
@@ -519,7 +542,8 @@ function vacatePath(ac){
   const prefs = st && st.area === 'south' ? ['C','D'] : ['A','E'];
   if (ac.reqExit && !prefs.includes(ac.reqExit)) ac.reqExit = null;
   const pts = [];
-  let ex = (ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs).find(e => (HOLDS[e].m - m)*dir > 25);
+  const filM = (e, d) => FIL[e][d > 0 ? 'W' : 'E'][0][0];
+  let ex = (ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs).find(e => (filM(e, dir) - m)*dir > 15);
   ac.backtrack = false;
   if (!ex) { // roll on to the turning circle and backtrack
     let cur;
@@ -529,7 +553,8 @@ function vacatePath(ac){
     ac.backtrack = true;
   }
   const H = HOLDS[ex]; ac.exit = ex;
-  pts.push(GN[H.rwy].p, GN[H.node].p);
+  const moving = ac.backtrack ? -dir : dir;
+  pts.push(...filIn(ex, moving > 0 ? 'W' : 'E'), GN[H.rwy].p, GN[H.node].p);
   let via = [];
   if (st) { const r = route(H.node, st.node); if (r) { for (const id of r.nodes.slice(1)) pts.push(GN[id].p); via = viaOf(r.tws, ex); } pts.push(st.p); }
   ac.taxiVia = via;

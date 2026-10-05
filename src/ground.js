@@ -161,18 +161,18 @@ function drawStandDetail(c, path, mpx){
   const sc = V.scale;
   // airport service vehicle route (E1): white edge lines along the south edge of the civil apron, zebra where lead-ins cross
   cx.strokeStyle = C.gWhite; cx.lineWidth = Math.max(1, 0.25*mpx);
-  for (const o of [116, 126]) { path([[1112, o], [1385, o]], false); cx.stroke(); }
-  cx.setLineDash([3*mpx, 3*mpx]); path([[1112, 121], [1385, 121]], false); cx.stroke(); cx.setLineDash([]);
-  if (sc > 350) { cx.font = `600 ${Math.max(8, 2.6*mpx)}px ${FONT_L}`; cx.fillStyle = C.gWhite; cx.textAlign = 'center'; const q = c(1300, 121); cx.save(); cx.translate(...q); cx.rotate(RWY_ANGLE()*Math.PI/180); cx.fillText('SERVICE ROAD', 0, Math.max(3, 0.9*mpx)); cx.restore(); cx.textAlign = 'left'; }
+  for (const o of [120, 130]) { path([[1108, o], [1313, o]], false); cx.stroke(); }
+  cx.setLineDash([3*mpx, 3*mpx]); path([[1108, 125], [1313, 125]], false); cx.stroke(); cx.setLineDash([]);
+  if (sc > 350) { cx.font = `600 ${Math.max(8, 2.6*mpx)}px ${FONT_L}`; cx.fillStyle = C.gWhite; cx.textAlign = 'center'; const q = c(1270, 125); cx.save(); cx.translate(...q); cx.rotate(RWY_ANGLE()*Math.PI/180); cx.fillText('SERVICE ROAD', 0, Math.max(3, 0.9*mpx)); cx.restore(); cx.textAlign = 'left'; }
   for (const s of STANDS) {
-    const civil = s.area === 'civil', box = civil ? [36, 40] : s.area === 'north' ? [32, 32] : [44, 46];
+    const civil = s.area === 'civil', box = civil ? [33, 38] : s.area === 'north' ? [32, 32] : [44, 46];
     const h = s.hdg*D2R, P = [sx(s.p[0]), sy(s.p[1])];
     cx.save(); cx.translate(...P); cx.rotate(h);
     const bw = box[0]*mpx, bh = box[1]*mpx;
     // red apron safety (clearance) box and equipment restraint line
     cx.strokeStyle = C.gRed; cx.globalAlpha = 0.8; cx.lineWidth = Math.max(1, 0.3*mpx);
     cx.strokeRect(-bw/2, -bh*0.62, bw, bh);
-    cx.setLineDash([2*mpx, 2*mpx]); cx.strokeRect(-bw/2 - 4*mpx, -bh*0.62 - 4*mpx, bw + 8*mpx, bh + 8*mpx); cx.setLineDash([]); cx.globalAlpha = 1;
+    cx.setLineDash([2*mpx, 2*mpx]); cx.strokeRect(-bw/2 - 2.5*mpx, -bh*0.62 - 2.5*mpx, bw + 5*mpx, bh + 5*mpx); cx.setLineDash([]); cx.globalAlpha = 1;
     // stop bar at the nosewheel position with a short perpendicular tick
     cx.strokeStyle = C.yellow; cx.lineWidth = Math.max(1.2, 0.45*mpx);
     cx.beginPath(); cx.moveTo(-3.5*mpx, -bh*0.36); cx.lineTo(3.5*mpx, -bh*0.36); cx.stroke();
