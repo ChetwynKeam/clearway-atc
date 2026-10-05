@@ -1,17 +1,10 @@
 {
- "updated": "2026-10-05T16:07:12Z",
+ "updated": "2026-10-05T16:29:31Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-05": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Bristol",
-     "flight": "LS1825",
-     "sched": "15:10",
-     "status": "Arrived",
-     "expected": "14:41"
-    },
     {
      "place": "Hamburg",
      "flight": "DI6506",
@@ -58,8 +51,8 @@
      "place": "Budapest",
      "flight": "W62397",
      "sched": "16:35",
-     "status": "Estimated",
-     "expected": "17:15"
+     "status": "Arrived",
+     "expected": "17:18"
     },
     {
      "place": "Frankfurt",
@@ -72,7 +65,7 @@
      "place": "Leipzig",
      "flight": "DI6578",
      "sched": "16:55",
-     "status": "Estimated",
+     "status": "Arrived",
      "expected": "17:10"
     },
     {
@@ -80,7 +73,7 @@
      "flight": "LS3833",
      "sched": "17:35",
      "status": "Estimated",
-     "expected": "17:20"
+     "expected": "17:25"
     },
     {
      "place": "Gran Canaria",
@@ -121,8 +114,8 @@
      "place": "Lisboa",
      "flight": "TP1691",
      "sched": "18:35",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:40"
     },
     {
      "place": "Glasgow",
@@ -211,13 +204,6 @@
    ],
    "dep": [
     {
-     "place": "Porto",
-     "flight": "TP1704",
-     "sched": "15:05",
-     "status": "Departed",
-     "expected": "15:10"
-    },
-    {
      "place": "Bristol",
      "flight": "LS1826",
      "sched": "16:00",
@@ -256,8 +242,8 @@
      "place": "Dusseldorf",
      "flight": "EW9601",
      "sched": "17:00",
-     "status": "Estimated",
-     "expected": "17:35"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Budapest",
@@ -270,14 +256,14 @@
      "place": "Dublin",
      "flight": "FR363",
      "sched": "17:30",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Frankfurt",
      "flight": "DE1571",
      "sched": "17:50",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
