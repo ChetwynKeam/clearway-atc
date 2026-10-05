@@ -136,7 +136,7 @@ function emgAck(ac){
 }
 function emgOnGA(ac){
   const I = S.emg && S.emg.incursion;
-  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; S.score.pts += 20; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
+  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; S.score.pts += 20; S.score.good = (S.score.good || 0) + 1; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
 }
 function emgBlockedFinal(ac, why){   // an arrival reaching short final with the runway closed goes around by itself
   const I = S.emg.incursion;

@@ -7,6 +7,7 @@
     <a href="#airports" data-route="airports">Airports</a>
     <a href="#sim" data-route="sim">Simulator</a>
     <a href="#training" data-route="training">Academy</a>
+    <a href="#career" data-route="career">Career</a>
   </nav>
   <div class="status">
     <span class="live clk"><i></i><span id="topClock">--:--Z</span></span>
@@ -118,6 +119,22 @@
     <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span></div>
   </div></footer>
+</section>
+
+<!-- ═════════════════════ CAREER LOG ═════════════════════ -->
+<section class="page" id="page-career" data-page="career" hidden>
+  <div class="pagehead"><div class="wrap">
+    <div class="eyebrow">Career</div>
+    <h1>Your logbook</h1>
+    <p>Every session you work is logged here: time on frequency, movements, your score and the badges you have earned. It is kept in this browser only, so it stays private to you and this device.</p>
+  </div></div>
+  <div class="wrap career">
+    <div class="cr-stats" id="crStats"></div>
+    <div class="cr-box"><div class="cr-h"><h2>Score history</h2><span class="lbl">Last 24 sessions · exercises in grey</span></div><div class="cr-chart" id="crChart"></div></div>
+    <div class="cr-box"><div class="cr-h"><h2>Badges</h2></div><div class="cr-badges" id="crBadges"></div></div>
+    <div class="cr-box"><div class="cr-h"><h2>Recent sessions</h2><span class="grow"></span><button class="btn" id="crReset">Clear logbook</button><span id="crResetConfirm" class="cr-confirm" hidden>Delete every session and badge? <button class="btn" data-a="yes">Delete</button> <button class="btn" data-a="no">Keep</button></span></div><div class="cr-table" id="crTable" style="overflow-x:auto"></div></div>
+    <p style="margin:8px 0 72px"><a class="btn primary" href="#sim">Open a position</a></p>
+  </div>
 </section>
 
 <!-- ═════════════════════ AIRPORTS ═════════════════════ -->

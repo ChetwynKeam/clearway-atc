@@ -744,7 +744,7 @@ let last = performance.now(), uiT = 0;
 function frame(now){
   const dtr = Math.min(0.25, (now - last)/1000); last = now;
   if (S.running && !S.paused) { let t = dtr*S.speed; while (t > 0) { const h = Math.min(0.2, t); step(h); t -= h; } }
-  uiT += dtr;
+  uiT += dtr; if (typeof careerTick === 'function') careerTick(dtr);
   if (document.body.dataset.route === 'sim') {
     if (uiT > 0.5) { uiT = 0; renderStrips(); renderScore(); if (S.sel) { const a = document.activeElement; if (!(a && a.closest && a.closest('#sel'))) renderSel(); } emit('tick'); }
     if (cv.clientWidth && (Math.abs(cv.clientWidth - W) > 1 || Math.abs(cv.clientHeight - H) > 1)) resize();

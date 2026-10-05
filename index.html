@@ -602,6 +602,32 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .atis-card .pop-x { width: 30px; height: 30px; border: 0; background: none; color: var(--dim); font-size: 22px; cursor: pointer; border-radius: 4px; }
 .atis-body { font: 500 14px/1.6 var(--font-data); margin: 0; text-transform: uppercase; letter-spacing: .01em; }
 
+/* career log */
+.career { display: grid; gap: 20px; padding-block: 8px; }
+.cr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.cr-stat { background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px 16px; }
+.cr-stat .v { font: 700 28px/1.1 var(--font-head); margin-top: 6px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.cr-box { background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; padding: 18px 20px; min-width: 0; }
+.cr-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.cr-h h2 { margin: 0; font-size: 18px; }
+.cr-h .grow { flex: 1; }
+.cr-chart svg { width: 100%; height: auto; display: block; }
+.cr-chart text { font: 500 11px var(--font-data); fill: var(--dim); }
+.cr-chart line.grid { stroke: var(--line); } .cr-chart line.zero { stroke: var(--line-2); stroke-width: 1.5; }
+.cr-chart rect.pos { fill: var(--accent); } .cr-chart rect.neg { fill: var(--alert); } .cr-chart rect.ex { fill: var(--faint); }
+.cr-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.cr-badge { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px dashed var(--line-2); border-radius: 10px; color: var(--dim); }
+.cr-badge svg { flex: none; width: 40px; height: 40px; padding: 8px; border-radius: 50%; background: var(--panel-2); fill: none; stroke: var(--faint); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cr-badge > div { min-width: 0; }
+.cr-badge b { color: var(--ink-2); font-size: 14px; } .cr-badge p { margin: 2px 0 6px; font-size: 13px; line-height: 1.4; font-weight: 400; white-space: normal; }
+.cr-badge.got { border-style: solid; border-color: var(--line-2); background: var(--panel); color: var(--ink-2); }
+.cr-badge.got svg { background: var(--amber-soft); stroke: var(--amber); }
+.cr-badge.got b { color: var(--ink); }
+.cr-table table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.cr-table th, .cr-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cr-table .n { text-align: right; font-variant-numeric: tabular-nums; } .cr-table .bad { color: var(--alert); }
+.cr-confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+
 </style>
 </head>
 <body>
@@ -614,6 +640,7 @@ button.atis-letter:hover { background: var(--amber-soft); }
     <a href="#airports" data-route="airports">Airports</a>
     <a href="#sim" data-route="sim">Simulator</a>
     <a href="#training" data-route="training">Academy</a>
+    <a href="#career" data-route="career">Career</a>
   </nav>
   <div class="status">
     <span class="live clk"><i></i><span id="topClock">--:--Z</span></span>
@@ -725,6 +752,22 @@ button.atis-letter:hover { background: var(--amber-soft); }
     <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span></div>
   </div></footer>
+</section>
+
+<!-- ═════════════════════ CAREER LOG ═════════════════════ -->
+<section class="page" id="page-career" data-page="career" hidden>
+  <div class="pagehead"><div class="wrap">
+    <div class="eyebrow">Career</div>
+    <h1>Your logbook</h1>
+    <p>Every session you work is logged here: time on frequency, movements, your score and the badges you have earned. It is kept in this browser only, so it stays private to you and this device.</p>
+  </div></div>
+  <div class="wrap career">
+    <div class="cr-stats" id="crStats"></div>
+    <div class="cr-box"><div class="cr-h"><h2>Score history</h2><span class="lbl">Last 24 sessions · exercises in grey</span></div><div class="cr-chart" id="crChart"></div></div>
+    <div class="cr-box"><div class="cr-h"><h2>Badges</h2></div><div class="cr-badges" id="crBadges"></div></div>
+    <div class="cr-box"><div class="cr-h"><h2>Recent sessions</h2><span class="grow"></span><button class="btn" id="crReset">Clear logbook</button><span id="crResetConfirm" class="cr-confirm" hidden>Delete every session and badge? <button class="btn" data-a="yes">Delete</button> <button class="btn" data-a="no">Keep</button></span></div><div class="cr-table" id="crTable" style="overflow-x:auto"></div></div>
+    <p style="margin:8px 0 72px"><a class="btn primary" href="#sim">Open a position</a></p>
+  </div>
 </section>
 
 <!-- ═════════════════════ AIRPORTS ═════════════════════ -->
@@ -2973,7 +3016,7 @@ let last = performance.now(), uiT = 0;
 function frame(now){
   const dtr = Math.min(0.25, (now - last)/1000); last = now;
   if (S.running && !S.paused) { let t = dtr*S.speed; while (t > 0) { const h = Math.min(0.2, t); step(h); t -= h; } }
-  uiT += dtr;
+  uiT += dtr; if (typeof careerTick === 'function') careerTick(dtr);
   if (document.body.dataset.route === 'sim') {
     if (uiT > 0.5) { uiT = 0; renderStrips(); renderScore(); if (S.sel) { const a = document.activeElement; if (!(a && a.closest && a.closest('#sel'))) renderSel(); } emit('tick'); }
     if (cv.clientWidth && (Math.abs(cv.clientWidth - W) > 1 || Math.abs(cv.clientHeight - H) > 1)) resize();
@@ -3121,7 +3164,7 @@ function emgAck(ac){
 }
 function emgOnGA(ac){
   const I = S.emg && S.emg.incursion;
-  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; S.score.pts += 20; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
+  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; S.score.pts += 20; S.score.good = (S.score.good || 0) + 1; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
 }
 function emgBlockedFinal(ac, why){   // an arrival reaching short final with the runway closed goes around by itself
   const I = S.emg.incursion;
@@ -3155,6 +3198,113 @@ function drawRwyBlock(){
   }
   if (E.incursion) { const p = rm(xingM(4), 4); cx.fillStyle = C.conf; cx.beginPath(); cx.arc(sx(p[0]), sy(p[1]), 6, 0, 7); cx.fill(); }
   cx.restore();
+}
+
+// ═════════════════════════ career log: time on frequency, score history, badges ═════════════════════════
+// Kept in this browser's local storage. Each session is one entry, updated as it runs, so closing the tab keeps it.
+const CAREER_KEY = 'cw-career';
+const BADGES = [
+  { id: 'first',    name: 'First contact',     d: 'Work a position for five minutes.',                          ic: 'M12 3v4M5 8l3 2M19 8l-3 2M7 17a5 5 0 0 1 10 0' },
+  { id: 'wheels',   name: 'Wheels down',       d: 'Land your first arrival.',                                  ic: 'M3 17h18M6 13l4-1 6-6 2 1-4 6 4 1-1 2-6-1-4 1z' },
+  { id: 'clean',    name: 'Clean shift',       d: '30 minutes and 6+ movements with no loss of separation or incident.', ic: 'M5 12l4 4 10-10' },
+  { id: 'busy',     name: 'Busy Rock',         d: '20 movements in one session.',                              ic: 'M3 20l6-12 4 6 3-4 5 10z' },
+  { id: 'levanter', name: 'Levanter tamer',    d: 'Land three aircraft in one session with a strong easterly.', ic: 'M3 8h12a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8' },
+  { id: 'coolhead', name: 'Cool head',         d: 'Bring an emergency aircraft in safely.',                    ic: 'M12 3l9 16H3zM12 10v4M12 17v.5' },
+  { id: 'goodcall', name: 'Good call',         d: 'Send an arrival around for a person on the runway.',        ic: 'M4 18c4-8 8-12 16-12M16 3l4 3-3 4' },
+  { id: 'live',     name: 'Real world',        d: 'Work 15 minutes of Live now with real flights.',            ic: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18' },
+  { id: 'graduate', name: 'Academy graduate',  d: 'Complete all three guided exercises.',                      ic: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5' },
+  { id: 'hour',     name: 'One hour',          d: 'One hour on frequency in total.',                           ic: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z' },
+  { id: 'ten',      name: 'Ten hours',         d: 'Ten hours on frequency in total.',                          ic: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM4 4l2 2M20 4l-2 2' },
+  { id: 'century',  name: 'Century',           d: '100 movements in total.',                                   ic: 'M4 17V7M8 7h4v10H8zM14 7h4v10h-4z' }
+];
+function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
+function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
+let CAR = careerLoad(), carCur = null, carDirty = false;
+const carTotals = c => {
+  const t = { secs: 0, mov: 0, n: c.sessions.length, best: null, land: 0, dep: 0 };
+  for (const s of c.sessions) { t.secs += s.secs; t.mov += s.landed + s.departed; t.land += s.landed; t.dep += s.departed; if (t.best === null || s.pts > t.best) t.best = s.pts; }
+  return t;
+};
+function careerAward(id){
+  if (CAR.badges[id]) return;
+  CAR.badges[id] = Date.now(); const b = BADGES.find(x => x.id === id);
+  if (b && S.running) sys(`Badge earned: ${b.name}. ${b.d}`);
+  carDirty = true;
+}
+function careerCheck(){
+  const s = carCur, T = carTotals(CAR);
+  if (s) {
+    const mov = s.landed + s.departed;
+    if (s.secs >= 300 && !s.ex) careerAward('first');
+    if (s.landed >= 1) careerAward('wheels');
+    if (s.secs >= 1800 && mov >= 6 && !s.los && !s.incidents) careerAward('clean');
+    if (mov >= 20) careerAward('busy');
+    if (s.levanter && s.landed >= 3) careerAward('levanter');
+    if (s.emg >= 1) careerAward('coolhead');
+    if (s.good >= 1) careerAward('goodcall');
+    if (/^live/.test(s.mode) && s.secs >= 900) careerAward('live');
+  }
+  if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
+  if (T.secs >= 3600) careerAward('hour');
+  if (T.secs >= 36000) careerAward('ten');
+  if (T.mov >= 100) careerAward('century');
+}
+// called every frame with the real seconds that passed while the sim ran
+function careerTick(dtr){
+  if (!S.running || S.paused || !carCur) return;
+  carCur.secs += dtr; carDirty = true;
+}
+function careerSync(){
+  if (!carCur) return;
+  const sc = S.score;
+  Object.assign(carCur, { pts: sc.pts, landed: sc.landed, departed: sc.departed, ga: sc.ga, los: sc.los, incidents: sc.incidents + sc.infr, emg: S.emg ? S.emg.handled : 0, good: sc.good || 0 });
+  if (carCur.secs >= 60 && !CAR.sessions.includes(carCur)) CAR.sessions.push(carCur);
+  if (CAR.sessions.length > 200) CAR.sessions.splice(0, CAR.sessions.length - 200);
+  careerCheck();
+  if (carDirty) { careerSave(CAR); carDirty = false; }
+}
+S.listeners.push((ev, d) => {
+  if (ev === 'start') {
+    careerSync();
+    const w = S.wx, lev = w.dir >= 40 && w.dir <= 140 && w.spd >= 18;
+    carCur = { at: Date.now(), mode: S.mode, ex: !!EXERCISES[S.mode], ap: 'LXGB', wx: w.raw.split(' ').slice(2, 3).join(''), rwy: S.rwy, levanter: lev, secs: 0, pts: 0, landed: 0, departed: 0, ga: 0, los: 0, incidents: 0, emg: 0, good: 0 };
+  }
+});
+setInterval(careerSync, 15000);
+addEventListener('pagehide', careerSync);
+function careerExercise(ex){ if (!CAR.ex[ex]) { CAR.ex[ex] = Date.now(); carDirty = true; careerSync(); } }
+
+// ── career page ──
+const fmtHrs = s => s < 3600 ? `${Math.round(s/60)} min` : `${(s/3600).toFixed(s < 36000 ? 1 : 0)} h`;
+const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3' };
+function renderCareer(){
+  careerSync();
+  const T = carTotals(CAR), L = CAR.sessions.slice().reverse();
+  $('crStats').innerHTML = [
+    ['On frequency', fmtHrs(T.secs)], ['Sessions', T.n], ['Movements', T.mov], ['Best score', T.best ?? '–'], ['Badges', `${Object.keys(CAR.badges).length} / ${BADGES.length}`]
+  ].map(([k, v]) => `<div class="cr-stat"><div class="lbl">${k}</div><div class="v">${v}</div></div>`).join('');
+  // score history: last 24 sessions, bars to one scale with a zero line
+  const H = CAR.sessions.slice(-24), W = Math.max(340, $('crChart').clientWidth || 720), Ht = 220, pad = { l: 44, r: 12, t: 14, b: 26 };
+  let svg = '';
+  if (H.length) {
+    const hi = Math.max(50, ...H.map(s => s.pts)), lo = Math.min(0, ...H.map(s => s.pts));
+    const step = (hi - lo) > 400 ? 200 : (hi - lo) > 200 ? 100 : 50;
+    const top = Math.ceil(hi/step)*step, bot = Math.floor(lo/step)*step;
+    const y = v => pad.t + (top - v)/(top - bot)*(Ht - pad.t - pad.b), bw = (W - pad.l - pad.r)/Math.max(H.length, 8);
+    for (let v = bot; v <= top; v += step) svg += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" class="${v === 0 ? 'zero' : 'grid'}"/><text x="${pad.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    H.forEach((s, i) => {
+      const x = pad.l + i*bw + bw*0.18, w = bw*0.64, y0 = y(0), y1 = y(s.pts);
+      svg += `<rect x="${x.toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(1, Math.abs(y1 - y0)).toFixed(1)}" rx="2" class="${s.pts < 0 ? 'neg' : s.ex ? 'ex' : 'pos'}"><title>${new Date(s.at).toLocaleDateString('en-GB')} · ${MODE_NAME[s.mode] || s.mode} · ${s.pts} pts</title></rect>`;
+      if (H.length*46 <= W || i % 2 === 0) svg += `<text x="${(x + w/2).toFixed(1)}" y="${Ht - 8}" text-anchor="middle">${new Date(s.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</text>`;
+    });
+  }
+  $('crChart').innerHTML = H.length ? `<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Score per session">${svg}</svg>` : `<p class="empty">No sessions yet. Work a position for a minute or more and it appears here.</p>`;
+  $('crBadges').innerHTML = BADGES.map(b => { const got = CAR.badges[b.id]; return `<div class="cr-badge ${got ? 'got' : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${b.ic}"/></svg><div><b>${b.name}</b><p>${b.d}</p><span class="lbl">${got ? 'Earned ' + new Date(got).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Locked'}</span></div></div>`; }).join('');
+  $('crTable').innerHTML = L.length ? `<table><tr><th>Date</th><th>Session</th><th>Runway</th><th class="n">Time</th><th class="n">Landed</th><th class="n">Departed</th><th class="n">Go-arounds</th><th class="n">LoS / incidents</th><th class="n">Score</th></tr>${L.slice(0, 30).map(s => `<tr><td>${new Date(s.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td><td>${MODE_NAME[s.mode] || esc(s.mode)}</td><td class="mono">${s.rwy}</td><td class="n">${fmtHrs(s.secs)}</td><td class="n">${s.landed}</td><td class="n">${s.departed}</td><td class="n">${s.ga}</td><td class="n">${s.los} / ${s.incidents}</td><td class="n ${s.pts < 0 ? 'bad' : ''}"><b>${s.pts}</b></td></tr>`).join('')}</table>` : '';
+  const rb = $('crReset'), rc = $('crResetConfirm');
+  rb.onclick = () => { rc.hidden = false; rb.hidden = true; };
+  rc.querySelector('[data-a=no]').onclick = () => { rc.hidden = true; rb.hidden = false; };
+  rc.querySelector('[data-a=yes]').onclick = () => { CAR = { sessions: [], badges: {}, ex: {} }; carCur = null; careerSave(CAR); rc.hidden = true; rb.hidden = false; renderCareer(); };
 }
 
 // ═════════════════════════ ground detail: surfaces, textures, town, stands ═════════════════════════
@@ -4131,7 +4281,7 @@ atisPop.addEventListener('click', e => { if (e.target === atisPop) closeAtis(); 
 addEventListener('keydown', e => { if (e.key === 'Escape' && !atisPop.hidden) closeAtis(); });
 
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'sim', 'training'];
+const ROUTES = ['home', 'airports', 'lxgb', 'sim', 'training', 'career'];
 let curRoute = null;
 function go(r){
   if (!ROUTES.includes(r)) r = 'home';
@@ -4145,6 +4295,7 @@ function go(r){
   if (r !== 'sim' && prev === 'sim' && S.running && !S.paused) { S.paused = true; $('tgPause').textContent = 'Resume'; sys('Simulation paused while you are away from the scope.'); }
   if (r === 'home' || r === 'lxgb') requestAnimationFrame(renderThumbs);
   if (r === 'training') requestAnimationFrame(() => { renderFigure(); spy(); });
+  if (r === 'career') renderCareer();
   window.scrollTo(0, 0);
 }
 function fromHash(){
@@ -4275,7 +4426,7 @@ function heroFrame(now){
   }
   requestAnimationFrame(heroFrame);
 }
-window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === 'lxgb') renderThumbs(); if (curRoute === 'training') renderFigure(); });
+window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === 'lxgb') renderThumbs(); if (curRoute === 'training') renderFigure(); if (curRoute === 'career') renderCareer(); });
 
 // position thumbnails reuse the real renderer
 // sample traffic for the previews: parked, taxiing, on final and climbing out
@@ -4413,6 +4564,7 @@ function renderCoach(){
   const el = $('coach'), L = COACH[coach.ex], n = L.length, done = coach.i >= n, s = L[Math.min(coach.i, n-1)];
   el.dataset.sig = coachSig(); el.hidden = coach.hidden || curRoute !== 'sim';
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
+  if (done) careerExercise(coach.ex);
   el.innerHTML = done
     ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="t-exercises">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;

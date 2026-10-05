@@ -590,3 +590,29 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .atis-card .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .atis-card .pop-x { width: 30px; height: 30px; border: 0; background: none; color: var(--dim); font-size: 22px; cursor: pointer; border-radius: 4px; }
 .atis-body { font: 500 14px/1.6 var(--font-data); margin: 0; text-transform: uppercase; letter-spacing: .01em; }
+
+/* career log */
+.career { display: grid; gap: 20px; padding-block: 8px; }
+.cr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.cr-stat { background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px 16px; }
+.cr-stat .v { font: 700 28px/1.1 var(--font-head); margin-top: 6px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.cr-box { background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; padding: 18px 20px; min-width: 0; }
+.cr-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.cr-h h2 { margin: 0; font-size: 18px; }
+.cr-h .grow { flex: 1; }
+.cr-chart svg { width: 100%; height: auto; display: block; }
+.cr-chart text { font: 500 11px var(--font-data); fill: var(--dim); }
+.cr-chart line.grid { stroke: var(--line); } .cr-chart line.zero { stroke: var(--line-2); stroke-width: 1.5; }
+.cr-chart rect.pos { fill: var(--accent); } .cr-chart rect.neg { fill: var(--alert); } .cr-chart rect.ex { fill: var(--faint); }
+.cr-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.cr-badge { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px dashed var(--line-2); border-radius: 10px; color: var(--dim); }
+.cr-badge svg { flex: none; width: 40px; height: 40px; padding: 8px; border-radius: 50%; background: var(--panel-2); fill: none; stroke: var(--faint); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cr-badge > div { min-width: 0; }
+.cr-badge b { color: var(--ink-2); font-size: 14px; } .cr-badge p { margin: 2px 0 6px; font-size: 13px; line-height: 1.4; font-weight: 400; white-space: normal; }
+.cr-badge.got { border-style: solid; border-color: var(--line-2); background: var(--panel); color: var(--ink-2); }
+.cr-badge.got svg { background: var(--amber-soft); stroke: var(--amber); }
+.cr-badge.got b { color: var(--ink); }
+.cr-table table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.cr-table th, .cr-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cr-table .n { text-align: right; font-variant-numeric: tabular-nums; } .cr-table .bad { color: var(--alert); }
+.cr-confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }

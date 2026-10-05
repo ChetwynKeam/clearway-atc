@@ -24,6 +24,7 @@ const GEO = {r('geo.json').strip()};
 {r('sim.js')}
 {r('ui.js')}
 {r('emerg.js')}
+{r('career.js')}
 {r('ground.js')}
 {r('tiles.js')}
 {r('far.js')}

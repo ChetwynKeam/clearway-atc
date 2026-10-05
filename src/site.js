@@ -1,5 +1,5 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'sim', 'training'];
+const ROUTES = ['home', 'airports', 'lxgb', 'sim', 'training', 'career'];
 let curRoute = null;
 function go(r){
   if (!ROUTES.includes(r)) r = 'home';
@@ -13,6 +13,7 @@ function go(r){
   if (r !== 'sim' && prev === 'sim' && S.running && !S.paused) { S.paused = true; $('tgPause').textContent = 'Resume'; sys('Simulation paused while you are away from the scope.'); }
   if (r === 'home' || r === 'lxgb') requestAnimationFrame(renderThumbs);
   if (r === 'training') requestAnimationFrame(() => { renderFigure(); spy(); });
+  if (r === 'career') renderCareer();
   window.scrollTo(0, 0);
 }
 function fromHash(){
@@ -143,7 +144,7 @@ function heroFrame(now){
   }
   requestAnimationFrame(heroFrame);
 }
-window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === 'lxgb') renderThumbs(); if (curRoute === 'training') renderFigure(); });
+window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'home' || curRoute === 'lxgb') renderThumbs(); if (curRoute === 'training') renderFigure(); if (curRoute === 'career') renderCareer(); });
 
 // position thumbnails reuse the real renderer
 // sample traffic for the previews: parked, taxiing, on final and climbing out
@@ -281,6 +282,7 @@ function renderCoach(){
   const el = $('coach'), L = COACH[coach.ex], n = L.length, done = coach.i >= n, s = L[Math.min(coach.i, n-1)];
   el.dataset.sig = coachSig(); el.hidden = coach.hidden || curRoute !== 'sim';
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
+  if (done) careerExercise(coach.ex);
   el.innerHTML = done
     ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="t-exercises">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;
