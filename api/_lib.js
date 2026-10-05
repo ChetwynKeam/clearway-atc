@@ -16,6 +16,8 @@ export const PLANS = {
   all: { airports: 0,  price: () => env('PRICE_UNLIMITED'), early: true },   // 0 = every airport; early access included
 };
 export const EARLY_PRICE = () => env('PRICE_EARLY');
+// a commissioned airport: one-off, in pence (the player pays only once it is built)
+export const COMMISSION_PENCE = () => +env('COMMISSION_PRICE') || 2500;
 export const planOfPrice = id => Object.keys(PLANS).find(k => PLANS[k].price() && PLANS[k].price() === id) || null;
 
 // Only the Clearway website (and local testing) may call the API with a player's sign-in.
@@ -71,7 +73,8 @@ export function entitlement(a){
   return { active, plan: active ? a.plan : null, status: a ? a.status || null : null, limit, trial, plan_airports: plan ? plan.airports : null,
     airports: active ? (limit === 0 ? '*' : (a.airports || []).slice(0, limit || 0)) : [],
     early: active && !trial && !!(a.early || (plan && plan.early)), trial_end: a && a.trial_end, period_end: a && a.period_end,
-    cancel_at: a && a.cancel_at, trial_used: !!(a && a.trial_used), airports_changed_at: a && a.airports_changed_at };
+    cancel_at: a && a.cancel_at, trial_used: !!(a && a.trial_used), airports_changed_at: a && a.airports_changed_at,
+    owned: (a && a.owned) || [] };   // commissioned airports: theirs whatever the plan, even with none
 }
 
 // ── Stripe (REST, form encoded) ──

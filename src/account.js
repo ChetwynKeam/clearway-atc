@@ -77,7 +77,9 @@ async function cwLoad(force){
 const cwStatusOf = icao => (AIRPORTS_NET.find(a => a.icao === icao) || {}).status || 'live';
 function cwCanPlay(icao){
   if (!CW_ON) return true;
-  const e = CW.ent; if (!e || !e.active) return false;
+  const e = CW.ent; if (!e) return false;
+  if ((e.owned || []).includes(icao)) return true;   // a commissioned airport is the player's whatever their plan
+  if (!e.active) return false;
   if (cwStatusOf(icao) === 'dev') return !!e.early;
   return e.airports === '*' || e.airports.includes(icao);
 }
@@ -119,7 +121,7 @@ function cwOnRoute(){
   if (r === 'sim' && CW_ON && !cwCanPlay(APT.icao) && !S.running) cwPaywall(); else if (pay) pay.hidden = true;
   if (r === 'pricing') cwRenderPricing();
   if (r === 'account') cwRenderAccount();
-  if (r === 'request') cwRenderRequests();
+  if (r === 'request') { cwRenderRequests(); cwRenderCommission(); }
 }
 
 // ── pricing ──
@@ -143,7 +145,7 @@ function cwRenderPricing(){
 async function cwChoose(plan, early, btn){
   if (!CW.ses) { try { sessionStorage.setItem('cw-want', JSON.stringify({ plan, early })); } catch(e) {} location.hash = '#account'; return; }
   if (btn) { btn.disabled = true; btn.textContent = 'Opening secure checkout…'; }
-  try { const { url } = await cwApi('account', { action: 'checkout', plan, early }); location.href = url; }
+  try { const { url } = await cwApi('account', { action: 'checkout', plan, early }); try { sessionStorage.setItem('cw-paying', 'plan'); } catch(_) {} location.href = url; }
   catch(e) { if (btn) { btn.disabled = false; btn.textContent = e.message; } }
 }
 
@@ -162,7 +164,11 @@ async function cwRenderAccount(){
   if (!CW.ent || done) $('cwPlanBox').innerHTML = '<p class="cw-sub">Loading your plan…</p>';
   await cwLoad(done);
   // just back from Stripe: the webhook can take a few seconds to land
-  for (let i = 0; done && i < 6 && !(CW.ent && CW.ent.active); i++) { await new Promise(r => setTimeout(r, 2000)); await cwLoad(true); }
+  // a commission payment is back when that airport is owned; a plan when it is active
+  const paying = (() => { try { return sessionStorage.getItem('cw-paying'); } catch(_) { return null; } })();
+  const landed = () => CW.ent && (paying && paying !== 'plan' ? (CW.ent.owned || []).includes(paying) : CW.ent.active);
+  for (let i = 0; done && i < 6 && !landed(); i++) { await new Promise(r => setTimeout(r, 2000)); await cwLoad(true); }
+  if (done) try { sessionStorage.removeItem('cw-paying'); } catch(_) {}
   if (done) history.replaceState(null, '', location.pathname + '#account');
   const e = CW.ent;
   if (!e) { $('cwPlanBox').innerHTML = '<p class="cw-sub">Your plan could not be loaded. Please try again shortly.</p>'; return; }
@@ -182,7 +188,7 @@ async function cwRenderAccount(){
     if (t) t.onclick = async () => { t.disabled = true; try { CW.ent = await cwApi('account', { action: 'early', on: !e.early }); cwLS.set('cw-ent', null); await cwLoad(true); cwRenderAccount(); } catch(err) { t.textContent = err.message; } };
   }
   $('cwPlanBox').querySelectorAll('[data-portal]').forEach(b => b.onclick = async () => { b.disabled = true; try { location.href = (await cwApi('account', { action: 'portal' })).url; } catch(err) { b.disabled = false; b.textContent = err.message; } });
-  cwRenderPicks();
+  cwRenderPicks(); cwRenderCommissions();
 }
 function cwRenderPicks(){
   const e = CW.ent, box = $('cwPickBox');
@@ -211,6 +217,61 @@ function cwRenderPicks(){
     draw();
   }
   if (e.early && dev.length) $('cwPicks').insertAdjacentHTML('beforeend', `<p class="cw-sub" style="grid-column:1/-1">Early access: ${dev.map(a => esc(a.name)).join(', ')} open${dev.length === 1 ? 's' : ''} to you as soon as its first build is playable.</p>`);
+}
+// ── commissioned airports: built first, then a one-off payment, then the player's for good ──
+const cwComPrice = () => CW_CFG.currency + (+CW_CFG.commission || 25);
+const CW_CST = { requested: ['Requested', 'soon'], building: ['Being built', 'dev'], ready: ['Ready to pay', 'new'], paid: ['Yours', 'live'], launched: ['Yours', 'live'], declined: ['Not possible', 'soon'] };
+function cwSaveEnt(patch){ CW.ent = { ...CW.ent, ...patch }; cwLS.set('cw-ent', { at: Date.now(), email: CW.ses.email, ent: CW.ent }); }
+function cwRenderCommissions(){
+  const e = CW.ent, box = $('cwComBox'), list = (e && e.commissions) || [];
+  box.hidden = !e;
+  if (!e) return;
+  const owned = (e.owned || []).filter(i => !list.some(c => c.icao === i && (c.status === 'paid' || c.status === 'launched')));
+  const row = c => {
+    const [txt, cls] = CW_CST[c.status] || [c.status, 'soon'], mine = c.status === 'paid' || c.status === 'launched';
+    const when = c.status === 'requested' ? `Asked on ${cwDate(c.created_at)}. We will be in touch before building it.`
+      : c.status === 'building' ? 'We are building it now. You pay nothing until it is ready.'
+      : c.status === 'ready' ? `Built and ready. Pay ${CW_CFG.currency}${((c.price_pence || 2500)/100).toFixed(0)} once and it is yours for good.`
+      : c.status === 'paid' ? `Yours for good. Only you can control it until ${cwDate(c.public_from)}, then it opens to everyone.`
+      : c.status === 'launched' ? 'Yours for good, whatever plan you are on.' : 'We could not build this one.';
+    const btn = c.status === 'ready' ? `<button class="btn primary" data-cpay="${c.id}" data-icao="${esc(c.icao)}">Pay ${CW_CFG.currency}${((c.price_pence || 2500)/100).toFixed(0)}</button>`
+      : mine && SITE[c.icao] ? `<a class="btn" href="${SITE[c.icao]}#sim">Control ${esc(c.icao)}</a>`
+      : c.status === 'requested' || c.status === 'building' ? `<button class="btn" data-cdel="${c.id}">Withdraw</button>` : '';
+    return `<div class="cw-com"><div><b>${esc(c.icao)}</b> ${esc(c.name || '')} <span class="badge ${cls}">${txt}</span><p class="cw-sub">${when}${c.reply ? ' ' + esc(c.reply) : ''}</p></div>${btn}</div>`;
+  };
+  $('cwComs').innerHTML = list.map(row).join('') + owned.map(i => row({ icao: i, status: 'launched' })).join('')
+    + (list.length || owned.length ? '' : `<p class="cw-sub">Want an airport we have not built? Commission it: we build it first, then you pay ${cwComPrice()} once and keep it whatever plan you are on.</p>`)
+    + `<div class="cw-row"><a class="btn" href="#request">Commission an airport</a></div>`;
+  $('cwComs').querySelectorAll('[data-cpay]').forEach(b => b.onclick = async () => {
+    b.disabled = true; b.textContent = 'Opening secure checkout…';
+    try { const { url } = await cwApi('account', { action: 'commission_pay', id: +b.dataset.cpay });
+      try { sessionStorage.setItem('cw-paying', b.dataset.icao); } catch(_) {} location.href = url; } catch(err) { b.disabled = false; $('cwComMsg').textContent = err.message; b.textContent = 'Pay'; }
+  });
+  $('cwComs').querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
+    if (!confirm('Withdraw this commission?')) return;
+    b.disabled = true;
+    try { cwSaveEnt(await cwApi('account', { action: 'commission_cancel', id: +b.dataset.cdel })); cwRenderCommissions(); } catch(err) { b.disabled = false; $('cwComMsg').textContent = err.message; }
+  });
+}
+// the commission form on the Request page
+function cwRenderCommission(){
+  const f = $('cwComForm'), go = f.querySelector('button'), note = $('cwComNote');
+  document.querySelectorAll('[data-cw="commission-price"]').forEach(el => el.textContent = cwComPrice());
+  go.disabled = !CW_ON;
+  note.innerHTML = !CW_ON ? 'Commissions open with subscriptions.' : CW.ses ? '' : `<a href="#account">Sign in</a> to commission an airport, so we can tell you when it is ready.`;
+  if (CW_ON && !CW.ses) go.disabled = true;
+}
+function cwCommissionForm(){
+  $('cwComIcao').oninput = e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); };
+  $('cwComForm').onsubmit = async ev => {
+    ev.preventDefault(); const out = $('cwComOut');
+    const icao = $('cwComIcao').value, known = AIRPORTS_NET.find(a => a.icao === icao);
+    if (known && known.status === 'live') { out.textContent = `${known.name} is already open: pick it in your plan.`; return; }
+    out.textContent = 'Sending…';
+    try { cwSaveEnt(await cwApi('account', { action: 'commission', icao, name: $('cwComName').value, notes: $('cwComWhy').value }));
+      $('cwComForm').reset(); out.innerHTML = `Thanks! ${esc(icao)} is on your <a href="#account">account</a>. We will check it can be built and tell you when it is ready to pay for.`; }
+    catch(e) { out.textContent = e.message; }
+  };
 }
 function cwSignInForms(){
   let email = '';
@@ -285,6 +346,7 @@ function cwInit(){
   if (EMBED) return;
   document.querySelectorAll('[data-cw="trial"]').forEach(el => el.textContent = CW_CFG.trial_days);
   document.querySelectorAll('[data-cw="early-price"]').forEach(el => el.textContent = cwPrice('early'));
+  document.querySelectorAll('[data-cw="commission-price"]').forEach(el => el.textContent = cwComPrice());
   document.querySelectorAll('[data-cw="site"]').forEach(el => el.textContent = CW_CFG.site.replace(/^https?:\/\//, '').replace(/\/$/, ''));
   document.querySelectorAll('[data-cw="legal-date"]').forEach(el => el.textContent = CW_CFG.legal_date);
   if (CW_CFG.contact_email) document.querySelectorAll('[data-cw="contact-line"]').forEach(el => el.innerHTML = `Email <a href="mailto:${esc(CW_CFG.contact_email)}">${esc(CW_CFG.contact_email)}</a>, or use the feedback button on any page.`);
@@ -294,7 +356,7 @@ function cwInit(){
   document.querySelectorAll('[data-cw-fb]').forEach(el => el.hidden = !CW_FB);
   $('cwFbBtn').hidden = !CW_FB;
   if (CW_FB) cwFeedback();
-  cwSignInForms(); cwRequestForm();
+  cwSignInForms(); cwRequestForm(); cwCommissionForm();
   new MutationObserver(cwOnRoute).observe(document.body, { attributes: true, attributeFilter: ['data-route'] });
   cwRefreshUI();
   // load the plan, then re-check the console (a player may have arrived on #sim before it loaded)

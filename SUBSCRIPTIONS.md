@@ -74,12 +74,14 @@ PRICE_1 PRICE_3 PRICE_5 PRICE_10 PRICE_UNLIMITED PRICE_EARLY   price_...
 SITE_URL                  https://www.clearway-atc.co.uk/
 TRIAL_DAYS                2
 STRIPE_COUPON             (the launch offer coupon ID, optional)
+COMMISSION_PRICE          2500 (a commissioned airport, in pence; optional, 2500 = £25)
 ```
 
 ### 4. Turn it on (`subs.json`, then `python3 build.py` and copy the pages)
 - `supabase_url`, `supabase_anon_key`: from step 1 (the anon key is meant to be public).
 - `feedback: true` switches on the feedback button and airport requests. This can go live before payments.
 - `enabled: true` switches on sign-in, plans and the paywall. With Stripe in test mode, use card `4242 4242 4242 4242`.
+- `commission`: the commissioned-airport price shown on the site (25). Keep it in step with `COMMISSION_PRICE`.
 - `contact_email`: shown on the Terms and Privacy pages.
 - `analytics_token`: Cloudflare Web Analytics site token, optional.
 
@@ -90,3 +92,17 @@ checked first; they are a reasonable starting draft for a UK sole trader, not le
 
 ## Reading feedback and requests
 Supabase > Table Editor: `feedback` (set `status` to read / planned / done as you go) and `request_tally` (requests, most votes first).
+
+## Commissioned airports (£25 once, yours for good)
+Run `supabase/commissions.sql` once in the SQL Editor (after `schema.sql`). It adds the `commissions` table and an
+`owned` list on each account. No Stripe product is needed: the checkout creates a one-off £25 line itself.
+
+1. A signed-in player sends an airport from the Request page. It appears in Table Editor > `commissions` as `requested`.
+   Nothing is charged.
+2. Set `status` to `building` while you work on it (the player sees "Being built"), or `declined` with a short note in
+   `reply` if it cannot be built. A player can withdraw it until it is ready.
+3. When the airport's simulator is live on the site (it can still show as In development), set `status` to `ready`.
+   The player gets a Pay £25 button on their account.
+4. Stripe takes the payment and the webhook marks it `paid`, sets `public_from` to a month later and adds the airport to
+   the player's `owned` list. Owned airports open whatever plan the player is on, including none.
+5. After `public_from`, mark the airport live in the catalogue for everyone and set the commission to `launched`.

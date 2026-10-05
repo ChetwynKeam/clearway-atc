@@ -44,6 +44,7 @@ def links(icao, absolute):
 def cwcfg(live):
     c = {k: SUBS[k] for k in ('enabled', 'feedback', 'api', 'supabase_url', 'supabase_anon_key', 'currency', 'prices', 'trial_days', 'contact_email', 'analytics_token', 'legal_date')}
     c['offer'] = SUBS.get('offer')
+    c['commission'] = SUBS.get('commission', 25)
     c['site'] = SITE_URL
     if not live: c['enabled'] = False
     return json.dumps(c, ensure_ascii=False)
