@@ -2,7 +2,7 @@
 // POST {kind: 'bug'|'idea'|'praise'|'other', rating 1-5, message, page, airport, email}  -> stored for Chet to read in Supabase
 // GET  ?requests                                -> the most requested airports
 // POST {kind: 'request', icao, name, reason}     -> one vote per player (early access members' votes count double)
-import { json, fail, preflight, body, user, db, configured, anonId, account, entitlement } from './_lib.js';
+import { json, fail, guarded, preflight, body, user, db, configured, anonId, account, entitlement } from './_lib.js';
 
 const cut = (s, n) => String(s == null ? '' : s).trim().slice(0, n);
 async function limited(table, voter, max){
@@ -35,4 +35,5 @@ async function handle(req){
     return json(req, { ok: true });
   } catch (e) { console.error(e); return fail(req, 500, 'Something went wrong. Please try again.'); }
 }
-export const GET = handle, POST = handle, OPTIONS = handle;
+const route = guarded(handle);
+export const GET = route, POST = route, OPTIONS = route;

@@ -2,7 +2,7 @@
 // GET                                  every commission, newest first
 // POST {action: 'status', id, status, reply}   building / declined / launched, with an optional note to the player
 // POST {action: 'release', id}         the airport is built: charge the saved card and unlock it for the player
-import { json, fail, preflight, body, user, configured, db, stripeOn, isAdmin, chargeCommission } from './_lib.js';
+import { json, fail, guarded, preflight, body, user, configured, db, stripeOn, isAdmin, chargeCommission } from './_lib.js';
 
 const list = () => db('commissions?status=neq.cancelled&select=*&order=created_at.desc&limit=200');
 async function handle(req){
@@ -31,4 +31,5 @@ async function handle(req){
     return fail(req, 400, 'Unknown action.');
   } catch (e) { console.error(e); return fail(req, 500, 'Something went wrong. Please try again.'); }
 }
-export const GET = handle, POST = handle, OPTIONS = handle;
+const route = guarded(handle);
+export const GET = route, POST = route, OPTIONS = route;

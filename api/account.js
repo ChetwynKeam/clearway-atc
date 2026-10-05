@@ -9,7 +9,7 @@
 // POST {action: 'commission_card', id}             save the card for a commission that has none yet
 // POST {action: 'commission_pay', id}              pay by hand if the release charge needed the player (Stripe Checkout)
 // POST {action: 'commission_cancel', id}           withdraw a commission before it is released (nothing is charged)
-import { json, fail, preflight, body, user, account, saveAccount, entitlement, configured, stripe, stripeOn, db, customerOf, commissionCardSession,
+import { json, fail, guarded, preflight, body, user, account, saveAccount, entitlement, configured, stripe, stripeOn, db, customerOf, commissionCardSession,
   PLANS, EARLY_PRICE, COMMISSION_PENCE, SITE_URL, TRIAL_DAYS } from './_lib.js';
 
 const ICAO = /^[A-Z]{4}$/, SWAP_DAYS = 30, COUPON = () => (process.env.STRIPE_COUPON || '').trim();
@@ -132,4 +132,5 @@ async function handle(req){
     return fail(req, 400, 'Unknown action.');
   } catch (e) { console.error(e); return fail(req, 500, 'Something went wrong. Please try again.'); }
 }
-export const GET = handle, POST = handle, OPTIONS = handle;
+const route = guarded(handle);
+export const GET = route, POST = route, OPTIONS = route;
