@@ -201,15 +201,45 @@ textarea { background: #fff; border: 1px solid var(--line-2); border-radius: 4px
 
 @media (max-width: 1000px) {
 }
-@media (max-width: 900px) {
-  body[data-route="sim"] { overflow: auto; }
-  .app { grid-template-columns: 1fr; grid-template-rows: 64vh 220px auto; height: auto; }
-  .side { grid-row: 3; grid-column: 1; border-left: 0; border-top: 1px solid var(--line); }
-  .bottom { grid-row: 2; }
-  .strips { max-height: 360px; }
+@media (max-width: 1180px) and (min-width: 901px) {   /* tablets in landscape */
+  .app { grid-template-columns: minmax(0,1fr) 330px; grid-template-rows: minmax(0,1fr) 150px; }
+  .toolbar { right: 12px; }
+}
+.mtabs { display: none; }
+@media (max-width: 900px) {   /* phones and tablets in portrait: scope on top, one panel below, chosen from a tab bar */
+  body[data-route="sim"] { overflow: hidden; }
+  body[data-route="sim"] .topbar { display: none; }
+  .app { grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr) auto auto auto; height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top, 0px); }
+  .scopewrap { grid-row: 1; grid-column: 1; }
+  .side { grid-row: 2; grid-column: 1; border-left: 0; border-top: 1px solid var(--line); height: 44dvh; overflow-y: auto; }
+  .bottom { grid-row: 3; grid-column: 1; grid-template-rows: auto auto; }
+  #log { display: none; height: 44dvh; border-bottom: 1px solid var(--line); }
+  .app[data-mtab="log"] .side, .app[data-mtab="map"] .side { display: none; }
+  .app[data-mtab="log"] #log { display: block; }
+  .app[data-mtab="flight"] .side > :not(#sel), .app[data-mtab="atis"] .side > :not(#atis), .app[data-mtab="strips"] #atis, .app[data-mtab="strips"] #sel { display: none; }
+  .app[data-mtab="strips"] .strips { flex: 1; }
+  .mtabs { grid-row: 4; grid-column: 1; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .app .mtabs button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; border-radius: 0; background: none; padding: 7px 2px 8px; font-size: 11px; letter-spacing: .04em; color: var(--dim); min-height: 52px; }
+  .app .mtabs button.on { color: var(--accent); background: var(--accent-soft); }
+  .mtabs svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .mt-n { position: absolute; top: 4px; left: calc(50% + 8px); min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--alert); color: #fff; font: 700 10.5px/17px var(--font-body); }
+  .toolbar { top: 8px; left: 8px; right: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 6px; padding-bottom: 4px; }
+  .toolbar::-webkit-scrollbar { display: none; }
+  .toolbar > * { flex: none; }
+  .toolbar .theme, #tgFull, .apchip span { display: none; }
+  .app button { padding: 8px 11px; font-size: 13.5px; }
+  .app input, .app select, #cmd { font-size: 16px; }
+  .cmd { padding: 6px 8px; }
+  .app button.strip { font-size: 12.5px; min-height: 48px; }
   .hud-score { display: none; }
-  .hud-clock { bottom: 12px; }
-  .hud-clock .t { font-size: 20px; }
+  .hud-clock { bottom: 10px; right: 10px; }
+  .hud-clock .t { font-size: 18px; }
+  .hud-clock .lbl { display: none; }
+  .overlay { position: fixed; z-index: 30; align-items: flex-start; overflow-y: auto; }
+  .overlay .card { max-height: none; padding: 18px 16px; }
+  .coach { top: auto; bottom: 10px; max-height: 48%; overflow-y: auto; }
+  .fids { top: 56px; max-height: calc(100% - 70px); }
+  #sel .btns { gap: 6px; }
 }
 @media (max-width: 680px) {
   .grid2 { grid-template-columns: 1fr; }
@@ -627,6 +657,23 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .cr-table th, .cr-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .cr-table .n { text-align: right; font-variant-numeric: tabular-nums; } .cr-table .bad { color: var(--alert); }
 .cr-confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+@media (min-width: 600px) and (max-width: 900px) and (min-height: 521px) {   /* tablet portrait: flight and strips side by side */
+  .app[data-mtab="strips"] .side, .app[data-mtab="flight"] .side { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); }
+  .app[data-mtab="strips"] .side > #sel, .app[data-mtab="flight"] .side > #sel { display: block; grid-column: 1; grid-row: 1 / span 2; overflow-y: auto; border-right: 1px solid var(--line); }
+  .app[data-mtab="flight"] .side > .strips-head:not(#x), .app[data-mtab="strips"] .side > .strips-head:not(#x) { display: block; grid-column: 2; grid-row: 1; }
+  .app[data-mtab="flight"] .side > #strips, .app[data-mtab="strips"] .side > #strips { display: flex; grid-column: 2; grid-row: 2; }
+  .app[data-mtab="flight"] .side > #atis, .app[data-mtab="strips"] .side > #atis { display: none; }
+}
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {   /* phone on its side: scope left, panel right */
+  .app { grid-template-columns: minmax(0,1fr) min(340px, 44vw); grid-template-rows: minmax(0,1fr) auto auto; }
+  .scopewrap { grid-row: 1 / span 2; grid-column: 1; }
+  .side { grid-row: 1; grid-column: 2; height: auto; border-top: 0; border-left: 1px solid var(--line); }
+  .bottom { grid-row: 2; grid-column: 2; border-left: 1px solid var(--line); }
+  .app[data-mtab="log"] .bottom, .app[data-mtab="map"] .bottom { grid-row: 1 / span 2; }
+  #log { height: auto; }
+  .mtabs { grid-row: 3; grid-column: 1 / span 2; }
+  .app .mtabs button { min-height: 40px; flex-direction: row; justify-content: center; padding: 6px 2px; }
+}
 
 </style>
 </head>
@@ -964,6 +1011,13 @@ button.atis-letter:hover { background: var(--amber-soft); }
       <button class="go" type="submit">Send</button>
     </form>
   </div>
+  <nav class="mtabs" id="mtabs" aria-label="Console panels">
+    <button data-mtab="map"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3.5"/><path d="M10 10l5-5"/></svg>Scope</button>
+    <button data-mtab="flight"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v15M3 11l7-3 7 3M7 17h6"/></svg>Flight</button>
+    <button data-mtab="strips"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3.5" width="14" height="4" rx="1"/><rect x="3" y="9.5" width="14" height="4" rx="1"/><path d="M3 16.5h14"/></svg>Strips<span class="mt-n" id="mtNeed" hidden></span></button>
+    <button data-mtab="atis"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h9a2.5 2.5 0 1 0-2.5-2.5M3 11h12a2.5 2.5 0 1 1-2.5 2.5M3 15h6"/></svg>ATIS</button>
+    <button data-mtab="log"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 15V8a6 6 0 0 1 12 0v7M7 15v-3M13 15v-3M10 15V6"/></svg>Radio</button>
+  </nav>
 </div>
 </section>
 
@@ -2667,6 +2721,19 @@ function stateLabel(ac){
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
 function select(ac){ S.sel = ac; renderSel(); renderStrips(true); }
+// ── phone and tablet: one panel at a time under the scope, chosen from a tab bar ──
+const phoneMQ = matchMedia('(max-width: 900px)');
+function setMTab(t){
+  const app = document.querySelector('.app'); if (!app) return;
+  app.dataset.mtab = t;
+  document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.classList.toggle('on', b.dataset.mtab === t));
+  if (t === 'log') { const l = $('log'); l.scrollTop = l.scrollHeight; }
+  requestAnimationFrame(resize);
+}
+function tapSelect(ac){ select(ac); if (phoneMQ.matches && document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight'); }
+document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.onclick = () => setMTab(b.dataset.mtab));
+setMTab('strips');
+phoneMQ.addEventListener && phoneMQ.addEventListener('change', () => requestAnimationFrame(resize));
 function renderAtis(){
   const w = S.wx, c = windComp(w, S.rwy === '27' ? CRS27 : CRS09), X = S.xing, tex = turbExcess(w);
   const cloud = w.clouds.length ? w.clouds.join(' ') : (w.raw.includes('CAVOK') ? 'CAVOK' : 'NSC');
@@ -2854,10 +2921,11 @@ function renderStrips(force){
     const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
     d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
     if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = document.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
-    d.onclick = () => select(ac); el.appendChild(d);
+    d.onclick = () => tapSelect(ac); el.appendChild(d);
   }
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
+  { const n = S.acs.filter(a => a.need).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
 }
 function renderScore(){
@@ -2925,7 +2993,7 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) select(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });

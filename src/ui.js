@@ -395,6 +395,19 @@ function stateLabel(ac){
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
 function select(ac){ S.sel = ac; renderSel(); renderStrips(true); }
+// ── phone and tablet: one panel at a time under the scope, chosen from a tab bar ──
+const phoneMQ = matchMedia('(max-width: 900px)');
+function setMTab(t){
+  const app = document.querySelector('.app'); if (!app) return;
+  app.dataset.mtab = t;
+  document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.classList.toggle('on', b.dataset.mtab === t));
+  if (t === 'log') { const l = $('log'); l.scrollTop = l.scrollHeight; }
+  requestAnimationFrame(resize);
+}
+function tapSelect(ac){ select(ac); if (phoneMQ.matches && document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight'); }
+document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.onclick = () => setMTab(b.dataset.mtab));
+setMTab('strips');
+phoneMQ.addEventListener && phoneMQ.addEventListener('change', () => requestAnimationFrame(resize));
 function renderAtis(){
   const w = S.wx, c = windComp(w, S.rwy === '27' ? CRS27 : CRS09), X = S.xing, tex = turbExcess(w);
   const cloud = w.clouds.length ? w.clouds.join(' ') : (w.raw.includes('CAVOK') ? 'CAVOK' : 'NSC');
@@ -582,10 +595,11 @@ function renderStrips(force){
     const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
     d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
     if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = document.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
-    d.onclick = () => select(ac); el.appendChild(d);
+    d.onclick = () => tapSelect(ac); el.appendChild(d);
   }
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
+  { const n = S.acs.filter(a => a.need).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
 }
 function renderScore(){
@@ -653,7 +667,7 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) select(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
