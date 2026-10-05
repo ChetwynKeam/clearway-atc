@@ -914,7 +914,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
-        <a class="pill" href="#lowi"><b>New</b>Innsbruck is open: an Alpine valley, the LOC/DME East and föhn</a>
+        <a class="pill" href="#kjfk"><b>New</b>New York JFK is open: four runways, runway crossings and FAA phraseology</a>
         <h1>Real airports. Real charts. <em>Your frequency.</em></h1>
         <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic is either the real flights in the air right now or a weekly airline timetable, tracked from origin to destination.</p>
         <div class="ctas">
@@ -922,7 +922,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         </div>
       </div>
       <div class="frame">
-        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="ttl" data-only="EGLC">EGLC · Thames Director · 132.700</span><span class="ttl" data-only="LOWI">LOWI · Innsbruck Radar · 128.975</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
+        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="ttl" data-only="EGLC">EGLC · Thames Director · 132.700</span><span class="ttl" data-only="LOWI">LOWI · Innsbruck Radar · 128.975</span><span class="ttl" data-only="KJFK">KJFK · New York Approach · 128.125</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
         <div class="frame-body">
           <canvas id="heroScope" aria-label="Animated radar picture"></canvas>
           <div class="frame-side" aria-hidden="true" data-only="LPMA">
@@ -948,6 +948,14 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
             <div class="fs-strip dep"><b>EWG7943</b><span>LOWI › EDDH</span><em>TAXI A</em></div>
             <div class="fs-strip arr"><b>EZY8341</b><span>EGKK › LOWI</span><em>RTT</em></div>
             <div class="fs-strip dep need"><b>AUA904</b><span>LOWI › LOWW</span><em>◆ Start-up</em></div>
+          </div>
+          <div class="frame-side" aria-hidden="true" data-only="KJFK">
+            <div class="fs-h"><span>ATIS</span><b>N</b><span class="r">LDG 22L · DEP 22R</span></div>
+            <div class="fs-m">KJFK 21012KT 10SM FEW040 SCT250 22/13 A2997</div>
+            <div class="fs-strip arr"><b>JBU702</b><span>KBOS › KJFK</span><em>ILS 22L</em></div>
+            <div class="fs-strip dep"><b>JBU101</b><span>KJFK › KBOS</span><em>RELEASE</em></div>
+            <div class="fs-strip arr"><b>AAL1</b><span>KLAX › KJFK</span><em>HOLD SHORT 22R</em></div>
+            <div class="fs-strip dep need"><b>DAL1103</b><span>KJFK › KATL</span><em>◆ Ready to push</em></div>
           </div>
           <div class="frame-side" aria-hidden="true" data-only="LXGB">
             <div class="fs-h"><span>ATIS</span><b>K</b><span class="r">RWY 27</span></div>
@@ -997,12 +1005,24 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 
   <div class="section live-sec"><div class="wrap">
     <div class="academy">
-      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar, Madeira, London City or Innsbruck. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar, Madeira, London City, Innsbruck or New York JFK. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
       <ol class="steps3">
         <li><b>Today’s real schedule</b><span>Each airport’s own arrivals and departures, refreshed every 15 minutes, with their real expected times and delays. Each arrival turns round into its real return leg.</span></li>
         <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real inbound comes within range, it becomes your flight to bring in.</span></li>
         <li><b>The weather outside</b><span>The live METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
       </ol>
+    </div>
+  </div></div>
+  <div class="section feat-ap" data-apt="KJFK"><div class="wrap">
+    <div class="fa-grid">
+      <div class="fa-shot"><canvas data-thumb="twr" aria-label="New York JFK tower display"></canvas><span class="fa-tag">LIVE · KJFK TOWER</span></div>
+      <div>
+        <div class="eyebrow">New airport</div>
+        <h2>New York JFK, four runways on Jamaica Bay.</h2>
+        <p>Two pairs of parallel runways with the terminals in the middle. In the usual south-west flow arrivals land 22L and departures leave from 22R, so almost every arrival crosses the departure runway on its way to the gate. ILS approaches from the CAMRN, PARCH, PAWLN and PUCKY arrivals, the Kennedy Five departure, calls for release on the busy routes to Boston and Washington, and FAA phraseology throughout.</p>
+        <div class="kv"><span>RWY <b>4L/22R · 4R/22L · 13L/31R · 13R/31L</b></span><span>Longest <b>14,511 ft</b></span><span>Elev <b>13 ft</b></span><span>Approach <b>ILS</b></span></div>
+        <div class="ctas"><a class="btn primary" href="#sim">Open the position</a><a class="btn" href="#kjfk">Airport briefing</a></div>
+      </div>
     </div>
   </div></div>
   <div class="section feat-ap" data-apt="LOWI"><div class="wrap">
@@ -1071,13 +1091,13 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     <div class="ctas"><a class="btn primary" href="#pricing">See plans and pricing</a><a class="btn" href="#request">Request an airport</a></div>
   </div></div>
   <div class="section" style="padding-top:0"><div class="wrap"><div class="cta-band">
-    <div><h2>Take the frequency at Gibraltar, Madeira, London City or Innsbruck.</h2><p>Nothing to download. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
+    <div><h2>Take the frequency at Gibraltar, Madeira, London City, Innsbruck or New York JFK.</h2><p>Nothing to download. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
     <div class="ctas"><a class="btn primary" href="#sim">Launch the simulator</a><a class="btn ghost" href="#training">Start with the Academy</a></div>
   </div></div></div>
   <footer class="footer2"><div class="wrap">
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
     <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a><a href="#pricing">Pricing</a><a href="#request">Request an airport</a></div>
-    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a></div>
+    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a><a href="#kjfk">New York JFK · KJFK</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span><a href="#terms">Terms</a><a href="#privacy">Privacy</a></div>
   </div></footer>
 </section>
@@ -1388,6 +1408,94 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </div></div>
   <footer class="footer"><div class="wrap"><span>Clearway · London City EGLC</span><span>The airport opened in 1987 on the quay between the Royal Albert and King George V Docks.</span></div></footer>
 </section>
+<section class="page" id="page-kjfk" data-page="kjfk" hidden>
+  <div class="aphead">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#airports">Airports</a><span>›</span><span>North America</span><span>›</span><b>New York JFK</b></nav>
+      <div class="ap-grid">
+        <div>
+          <div class="ap-id"><span class="icao">KJFK</span><span class="iata">JFK</span><span class="badge live">Open now</span><span class="badge new">New</span></div>
+          <h1>New York JFK</h1>
+          <p class="lede">John F. Kennedy International, on the shore of Jamaica Bay in Queens. Four runways in two parallel pairs surround the terminals, so arrivals cross a runway in use on their way to the gate. You work New York Approach, Kennedy Tower and Kennedy Ground combined, from the four arrival gates to the gate and back out on the Kennedy Five.</p>
+          <div class="kv"><span>NY Approach <b>128.125</b></span><span>Kennedy Tower <b>119.1 / 123.9</b></span><span>Ground <b>121.9</b></span><span>TA <b>18000 ft</b></span><span>Charts <b>FAA d-TPP</b></span></div>
+          <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
+        </div>
+        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="New York JFK aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+      </div>
+    </div>
+    <div class="wrap"><div class="facts">
+      <div><b>4</b><span>Runways: 4L/22R and 4R/22L, 13L/31R and 13R/31L</span></div>
+      <div><b>14,511 ft</b><span>Runway 13R/31L, one of the longest commercial runways in North America</span></div>
+      <div><b>13 ft</b><span>Aerodrome elevation, at the edge of Jamaica Bay</span></div>
+      <div><b>22L / 22R</b><span>The usual south-west flow: land 22L, depart 22R</span></div>
+      <div><b>18,000 ft</b><span>Transition altitude: flight levels only above it, altimeter in inches</span></div>
+      <div><b>APREQ</b><span>Calls for release only on flow-restricted routes, such as Boston and Washington</span></div>
+    </div></div>
+  </div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">What makes it Kennedy</div><h2>Built from the FAA charts.</h2></div>
+      <p>The runways, arrivals, departures, holds and approaches come from the FAA's terminal procedures for KJFK: the airport diagram, the hot spot page, the Kennedy Five, SKORR and DEEZZ departures, the CAMRN, PARCH, PAWLN and PUCKY arrivals and the ILS plates for every runway. Fix positions come from the FAA's coded instrument flight procedures. The taxiway, gate and building layout follows OpenStreetMap, checked against the airport diagram.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 26L18 4M14 28L26 6"/><path d="M4 12h24"/></svg><h3>Four runways, two pairs</h3><p>4L/22R and 4R/22L run north-east, 13L/31R and 13R/31L run south-east. The wind picks the configuration: land 22L and depart 22R, land 4R and depart 4L, land 31R and depart 31L, or land 13L and depart 13R. The ATIS panel has separate landing and departure runway selectors.</p><div class="src">Airport diagram · ATIS</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 10h26M3 22h26"/><path d="M16 4v24"/><path d="M12 8l4-4 4 4"/></svg><h3>Runway crossings</h3><p>In the south-west and north-east flows the arrival runway, 22L or 4R, lies on the far side of the departure runway from the terminals. Every arrival stops at the hold-short line of 22R or 4L on its way in and waits for you to say "cross runway two two right".</p><div class="src">Hot spots · FAA NE-1</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26l10-10 6 6 8-14"/><path d="M22 8h6v6"/></svg><h3>The Kennedy Five</h3><p>Most departures fly the conventional Kennedy Five: radar vectors from an initial heading by runway, 224 off 22R, 099 off 4L, the Breezy Point climb off 31L, and maintain 5,000 ft. The RNAV SKORR departure takes south-west traffic off 31L, and the DEEZZ departure westbound traffic off 4L, 4R and 31L.</p><div class="src">KENNEDY FIVE · SKORR SIX · DEEZZ SIX</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 24h24"/><path d="M6 8l20 16"/><path d="M6 8l4 0M6 8l0 4"/></svg><h3>Four arrival gates</h3><p>Arrivals come in on the CAMRN Five from the south over the ocean, the PARCH Four along Long Island from Europe and New England, the PAWLN One from the north and the PUCKY One from the west. New York Approach vectors them onto the ILS: 22L joins at ROSLY, 4R at ZETAL, 31R at CATOD.</p><div class="src">CAMRN5 · PARCH4 · PAWLN1 · PUCKY1 · ILS plates</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Calls for release</h3><p>Unlike the European airports, most Kennedy departures go without a release. Flights on the short, busy routes to Boston, Washington, Philadelphia and upstate New York are under an Approval Request: they need New York Center's release before take-off.</p><div class="src">Approval Request (APREQ) routes</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 9h22M5 16h16M5 23h10"/></svg><h3>FAA phraseology</h3><p>"Climb and maintain", "line up and wait", "altimeter two niner niner seven", the wind before the landing clearance, taxi routes that name the runway first, and every hold-short read back. Feet and inches of mercury throughout, and flight levels only above 18,000 ft.</p><div class="src">FAA JO 7110.65</div></div>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Three positions, one console</div><h2>From the arrival gates to the ramp.</h2></div>
+      <p>New York Approach, Kennedy Tower and Kennedy Ground are combined on one position. Scroll out for the New York area, from Newark and LaGuardia to Long Island, and scroll in for the four runways, the taxiways and the gates.</p>
+    </div>
+    <div class="positions">
+      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">NEW YORK APPROACH · 128.125</div><h3>Approach and departure</h3><p>Arrivals check in on their arrival. Descend them, keep three miles between them on final, and clear the ILS. Departures check in with New York Departure on 135.9 climbing to 5,000 ft: climb them and hand them to New York Center.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">KENNEDY TOWER · 119.1 / 123.9</div><h3>Tower</h3><p>Clear arrivals to land on one runway and departures off the other. 119.1 works 4R/22L and 13L/31R, 123.9 works 4L/22R and 13R/31L. Cross arrivals over the departure runway between take-offs.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">KENNEDY GROUND · 121.9</div><h3>Ground</h3><p>Clear each departure with its route and push it off the gate, then taxi it to the departure end of the runway by the taxiways in order. Arrivals turn off on high-speed exits and taxi to their airline's terminal: 1, 4, 5, 7 or 8.</p></div></div>
+    </div>
+  </div></div>
+
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now at New York JFK</div><h2>Work today’s real traffic at KJFK.</h2><p>Pick Live now in the session setup and the position opens at the current time with Kennedy's real flights, live aircraft positions over New York and the current METAR. Kennedy handles well over a thousand movements a day, so Live now thins the real schedule to about twenty an hour; Live now plus extra traffic gives you all of it.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>Kennedy's arrivals and departures for the next few hours, from avionio’s public JFK boards, refreshed every 15 minutes with their expected times.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Kennedy inbound comes within range, it becomes your flight.</span></li>
+        <li><b>The weather outside</b><span>The live KJFK METAR sets the runway configuration, the ATIS and the altimeter.</span></li>
+      </ol>
+    </div>
+  </div></div>
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
+      <p>Each scenario is a METAR the simulation reads for wind, visibility in statute miles, cloud and the altimeter. You can also switch on Live METAR to use the current KJFK report, or paste one yourself.</p>
+    </div>
+    <div class="scen" data-scen></div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="sources">
+      <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
+        <p class="note">Runways, procedures, fixes, holds and the Kennedy and New York Approach frequencies come from the FAA's terminal procedures and coded procedure data for KJFK. New York Approach really vectors almost every arrival onto final; the simulator lays out a downwind and base leg for each runway so that an arrival with no instructions still gets there. Runway 13R has no ILS (its approaches are the VOR and the Parkway Visual), so in the south-east flow the simulator lands 13L and departs 13R. The New York Center frequencies and the release times are representative. Gate numbers follow OpenStreetMap, and airlines use their usual terminals. Kennedy's traffic is thinned to about twenty movements an hour in timetable sessions. In Live now sessions the flights come from avionio’s public JFK arrivals and departures boards and aircraft positions from the adsb.lol and adsb.fi networks; once a flight is yours it follows your instructions, not its real track. This is a training game and is not for real-world navigation. It is not affiliated with the FAA, the Port Authority of New York and New Jersey or any airline.</p></div>
+      <ul>
+        <li><b>Airport diagram, hot spots</b>Runways 4L/22R, 4R/22L, 13L/31R and 13R/31L, the taxiways and hot spot HS 1.</li>
+        <li><b>KENNEDY FIVE</b>Initial headings by runway, the Breezy Point, Canarsie and Idlewild climbs, 5,000 ft.</li>
+        <li><b>SKORR SIX, DEEZZ SIX</b>The RNAV departures to the south-west and west.</li>
+        <li><b>CAMRN FIVE, PARCH FOUR, PAWLN ONE, PUCKY ONE</b>The four arrival gates, their expect altitudes and holds.</li>
+        <li><b>ILS or LOC 4L, 4R, 13L, 22L, 22R, 31L, 31R</b>Intermediate and final approach fixes, glideslope altitudes and missed approaches.</li>
+        <li><b>FAA CIFP</b>Fix and navaid positions.</li>
+        <li><b>OpenStreetMap</b>Taxiway, apron, gate and building geometry, the coastline and the street map under the scope.</li>
+        <li><b>Live now</b>Kennedy flights from avionio.com; live aircraft positions from adsb.lol and adsb.fi.</li>
+      </ul>
+    </div>
+  </div></div>
+  <footer class="footer"><div class="wrap"><span>Clearway · New York JFK KJFK</span><span>Opened in 1948 as New York International Airport, on the Idlewild golf course.</span></div></footer>
+</section>
 <section class="page" id="page-lowi" data-page="lowi" hidden>
   <div class="aphead">
     <div class="wrap">
@@ -1526,6 +1634,12 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <div class="sub">LOWI · RWY 08/26 2000 × 45 m · ELEV 1907 ft · LOC/DME East 3.77° · RTT NDB 303 · TA 10000 · Radar 128.975 · Tower 120.100</div>
         <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Innsbruck flights from the current time with the live METAR. Bring arrivals from RTT down the valley on the LOC/DME East, or round the circling to 08, and work the departures from the apron down the same valley against them, with a release from Wien, München or Padova.</p>
         </div>
+        <div data-only="KJFK">
+        <div class="eyebrow">Position briefing</div>
+        <h1>New York Approach, Kennedy Tower &amp; Ground</h1>
+        <div class="sub">KJFK · RWY 4L/22R 4R/22L 13L/31R 13R/31L · ELEV 13 ft · ILS · TA 18000 · Approach 128.125 · Tower 119.1 / 123.9 · Ground 121.9</div>
+        <p style="margin-top:14px">You hold all three positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Kennedy flights from the current time with the live METAR. Bring arrivals off their arrivals onto the ILS, land them on one runway, cross them over the other, and work the departures from the gate to the Kennedy Five and New York Center.</p>
+        </div>
         <div data-only="LPMA">
         <div class="eyebrow">Position briefing</div>
         <h1>Madeira Approach &amp; Tower</h1>
@@ -1574,13 +1688,18 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <li>Runway 08 departures taxi to Alpha and backtrack to the west turn pad; runway 26 departures use Bravo. Every one needs a release from Wien, München or Padova.</li>
           <li>Type commands in the bar under the scope, for example <code>KLM1993 A95 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
+        <ul data-only="KJFK">
+          <li>Arrivals on 22L or 4R stop short of the departure runway on their way in: cross them with <code>CROSS</code> between departures, never in front of one.</li>
+          <li>Departures taxi to the departure end of the runway. Only flights to Boston, Washington and the other flow-restricted routes need a release (<code>REL</code>).</li>
+          <li>Type commands in the bar under the scope, for example <code>JBU702 A60 APP</code> or <code>AAL1 CROSS</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
+        </ul>
         <ul data-only="LPMA">
           <li>Check the anemometers in the ATIS panel. When the wind is out of limits, hold arrivals at PILIM and expect diversions to Porto Santo.</li>
           <li>Runway 05 departures taxi to Charlie and backtrack to the 05 turn pad; runway 23 departures use Bravo. Every one needs a release from Lisboa.</li>
           <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span><span data-only="KJFK">Data from FAA terminal procedures for KJFK.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>
@@ -1630,7 +1749,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     <section id="t-console" data-track="core"><h2><span class="n">03</span>Reading the console</h2>
       <h3>The scope</h3>
       <p>The scope is one map you scroll or pinch to zoom. Zoomed out it shows the airspace round the airport’s radar reference (the GBR TACAN at Gibraltar, the FUN DVOR at Madeira) with range rings every 5 NM, the bearing scale, restricted airspace and high ground, the arrival routes and holds, and the final approach paths. Zoom in and the runway, finals and the aerodrome appear to scale over the street map. Zoom right out to follow flights across Europe and Africa. Drag to pan.</p>
-      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span><span data-apt="EGLC">JACKO</span><span data-apt="LOWI">RTT</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span><span data-apt="EGLC">The Canary Wharf towers, up to 771 ft: below 1,200 ft over them is an obstacle incident.</span><span data-apt="LOWI">The mountains round the valley, shaded by minimum vectoring altitude: up to 15,500 ft over the Alps.</span></figcaption></figure>
+      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span><span data-apt="EGLC">JACKO</span><span data-apt="LOWI">RTT</span><span data-apt="KJFK">CAMRN</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span><span data-apt="EGLC">The Canary Wharf towers, up to 771 ft: below 1,200 ft over them is an obstacle incident.</span><span data-apt="LOWI">The mountains round the valley, shaded by minimum vectoring altitude: up to 15,500 ft over the Alps.</span><span data-apt="KJFK">The Manhattan skyline: below 2,000 ft over it is an obstacle incident.</span></figcaption></figure>
       <div class="rt"><div><span class="w">Line 1</span><span class="p">EZY8901 ◆ — callsign, ◆ means the crew is waiting on you</span></div><div><span class="w">Line 2</span><span class="p">045↓030 21 — FL/altitude in hundreds, trend, cleared level (or the approach), groundspeed ÷ 10</span></div><div><span class="w">Line 3</span><span class="p">A20N R27 T — type, runway of the approach (or destination), T when on Tower</span></div></div>
       <p>Your traffic is drawn as plane icons in the shape of the real type (airliner, wide-body, business jet, turboprop or military) pointing the way the nose points. Arrivals are amber, departures blue and the selected flight is outlined. Once you transfer a departure to the next unit it turns purple, its strip greys out and you can no longer select it or give it instructions. Anything in conflict, and any aircraft in an emergency, turns red. Grey icons with a short tag are real aircraft from the live feed that are not yours. Beyond radar cover your flights become yellow icons, and inbounds about to call appear as pending tracks. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
       <h3>The side panel</h3>
@@ -2176,7 +2295,97 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       </ul>
     </section>
 
-<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span><span data-apt="LOWI">Innsbruck endorsement based on AIP Austria AD 2 LOWI. Not for real-world navigation.</span></div></footer>
+    <!-- ── New York JFK endorsement ── -->
+    <section id="k-position" data-apt="KJFK" data-track="ap"><h2><span class="n">01</span>Your position at Kennedy</h2>
+      <p>You are <b>New York Approach (128.125)</b>, <b>Kennedy Tower</b> and <b>Kennedy Ground (121.9)</b> combined. Arrivals check in with Approach on their arrival. You hand them to the Tower once they are on the ILS: <b>119.1</b> for 4R/22L and 13L/31R, <b>123.9</b> for 4L/22R and 13R/31L. Departures call Ground ready to push, go to the Tower at the runway, and to <b>New York Departure (135.9)</b> once airborne; you transfer them to <b>New York Center</b> when they are ready. The ATIS is <b>Kennedy information</b> on 128.725.</p>
+      <p>This is the United States, and the simulator follows the FAA's rules rather than ICAO's:</p>
+      <ul>
+        <li>The <b>transition altitude is 18,000 ft</b>: everything below is an altitude on the local altimeter, everything above a flight level. Kennedy's own traffic rarely leaves your airspace above 19,000 ft.</li>
+        <li>The altimeter is in <b>inches of mercury</b> (A2997 in the METAR is 29.97), and visibility is in <b>statute miles</b>.</li>
+        <li>FAA phraseology: "climb and maintain", "line up and wait", the wind before "cleared to land", taxi routes that name the runway first and then every taxiway.</li>
+        <li><b>No routine releases.</b> Only flights under an Approval Request, the short routes to Boston, Washington, Philadelphia and upstate New York, need New York Center's release before take-off.</li>
+      </ul>
+      <div class="callout"><div class="lbl">Four runways, two in use</div><p>Kennedy lands on one runway of a pair and departs from the other. The ATIS panel has two selectors, <b>Land</b> and <b>Dep</b>. Changing the landing runway brings the usual departure runway with it: 22L with 22R, 4R with 4L, 31R with 31L, 13L with 13R.</p></div>
+    </section>
+
+    <section id="k-aerodrome" data-apt="KJFK" data-track="ap"><h2><span class="n">02</span>The aerodrome</h2>
+      <figure class="fig"><canvas data-fig="aerodrome" aria-label="New York JFK aerodrome diagram with runways, taxiways and gates"></canvas><figcaption>The aerodrome as drawn in the simulator: the two pairs of runways round the central terminal area, Terminals 1, 4, 5, 7 and 8 with their gates, and the taxiways from OpenStreetMap, checked against the FAA airport diagram. The circle marks hot spot HS 1, where Kilo meets Juliett near runways 4L and 31L.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Length</th><th>Notes</th></tr>
+        <tr><td>4L/22R</td><td>12,079 ft</td><td>Between 4R/22L and the terminals. The usual departure runway in the south-west and north-east flows</td></tr>
+        <tr><td>4R/22L</td><td>8,400 ft</td><td>The outer runway. The usual arrival runway: its arrivals cross 4L/22R to reach the terminals</td></tr>
+        <tr><td>13L/31R</td><td>10,000 ft</td><td>Arrivals in the north-west and south-east flows</td></tr>
+        <tr><td>13R/31L</td><td>14,511 ft</td><td>Along Jamaica Bay. Departures in those flows</td></tr>
+      </table></div>
+      <h3>Terminals</h3>
+      <p>Delta and its partners use Terminal 4 (gates A and B), JetBlue Terminal 5, American and British Airways Terminal 8, and most European and Asian carriers Terminals 1 and 7. Arrivals taxi to their airline's terminal and turn round there into their next departure.</p>
+    </section>
+
+    <section id="k-ground" data-apt="KJFK" data-track="ap"><h2><span class="n">03</span>Ground, crossings and departures</h2>
+      <h3>Clearance and push</h3>
+      <p>At Kennedy, Clearance Delivery reads the IFR clearance and Ground approves the push. The simulator does both in one call: press <b>Push</b> or type <code>PUSH</code>.</p>
+      <div class="rt">
+        <div><span class="w">GND</span><span class="a">Delta eleven zero three, cleared to Atlanta airport via the Kennedy Five departure, RNGRR transition, then as filed, maintain 5,000, expect flight level three five zero one zero minutes after departure, departure frequency 135.9, squawk 4627. Push back approved, tail east, altimeter 29.97</span></div>
+        <div><span class="w">DAL1103</span><span class="p">Cleared Atlanta via the Kennedy Five, RNGRR transition, maintain 5,000, 135.9, squawk 4627, push approved, Delta eleven zero three</span></div>
+      </div>
+      <h3>Taxi</h3>
+      <p>Departures enter at the departure end of the runway: Foxtrot Bravo or Echo for 22R, Kilo 1 or Kilo 2 for 4L, Papa Foxtrot, Papa Echo or Papa Delta for 13R, Juliett Bravo or Juliett Alpha for 31L. Kennedy has no turning pads: a departure lines up straight onto the runway from the end. <code>TAXI</code> picks the nearest entry; the <b>Taxi…</b> button shows three routings to choose from. The clearance names the runway first and then each taxiway in order: "runway two two right, taxi via Foxtrot, Bravo, Echo, Foxtrot Bravo".</p>
+      <h3>Crossing a runway</h3>
+      <p>In the south-west and north-east flows the arrival runway lies beyond the departure runway, so arrivals on their way in reach the <b>hold-short line</b> of the departure runway. They stop there and call: "holding short of runway two two right". Press <b>Cross runway 22R</b> or type <code>CROSS</code>. A crossing is given on its own, never as part of the taxi clearance, and only when nothing is lined up, rolling or on short final on that runway. Ten crossings in one session with no incidents earn the <b>Crossing guard</b> badge.</p>
+      <div class="rt">
+        <div><span class="w">JBU702</span><span class="p">Kennedy Ground, JetBlue seven zero two, holding short of runway two two right</span></div>
+        <div><span class="w">GND</span><span class="a">JetBlue seven zero two, cross runway two two right</span></div>
+        <div><span class="w">JBU702</span><span class="p">Crossing runway two two right, JetBlue seven zero two</span></div>
+      </div>
+      <h3>The Kennedy Five and the RNAV departures</h3>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Kennedy Five</th><th>RNAV</th></tr>
+        <tr><td>22R, 22L</td><td>Heading 224</td><td>None</td></tr>
+        <tr><td>4L, 4R</td><td>Right turn heading 099</td><td>DEEZZ (west)</td></tr>
+        <tr><td>31L</td><td>Breezy Point climb: left turn, direct Canarsie (CRI)</td><td>SKORR (south-west), DEEZZ (west)</td></tr>
+        <tr><td>13R, 13L</td><td>Heading 134</td><td>None</td></tr>
+      </table></div>
+      <p>All of them climb to <b>5,000 ft</b>. Once a departure checks in with New York Departure, climb it with <code>A190</code> and send it on with <code>HO</code>.</p>
+    </section>
+
+    <section id="k-arrivals" data-apt="KJFK" data-track="ap"><h2><span class="n">04</span>Arrivals and the ILS</h2>
+      <div class="tbl"><table>
+        <tr><th>Arrival</th><th>From</th><th>Ends at</th><th>Hold</th></tr>
+        <tr><td>CAMRN Five</td><td>The south, over the ocean: Florida, the Caribbean, South America</td><td>CAMRN, 11,000 ft</td><td>CAMRN</td></tr>
+        <tr><td>PARCH Four</td><td>The east along Long Island: Europe, Boston</td><td>ROBER, 12,000 ft (CRAIL for 22L)</td><td>ROBER</td></tr>
+        <tr><td>PAWLN One</td><td>The north: New England, Canada</td><td>DPK, 12,000 ft</td><td>DPK</td></tr>
+        <tr><td>PUCKY One</td><td>The west: the Midwest, the West Coast</td><td>PUCKY 10,000 ft, then VADDR</td><td>PUCKY</td></tr>
+      </table></div>
+      <p>Descend the arrivals and clear the approach with <code>APP</code>: they fly a downwind and base and join the localizer at the intermediate fix (ROSLY for 22L at 3,000 ft, ZETAL for 4R at 2,000 ft, CATOD for 31R at 3,000 ft, TELEX for 13L at 2,100 ft). ILS minimums are <b>200 ft and half a mile</b>. Hand them to the Tower with <code>HO</code> and clear them to land with <code>CTL</code>.</p>
+      <p>A go-around flies the published missed approach, climbing to 3,000 or 4,000 ft. Clear it again with <code>APP</code>.</p>
+    </section>
+
+    <section id="k-airspace" data-apt="KJFK" data-track="ap"><h2><span class="n">05</span>Airspace and weather</h2>
+      <p>Kennedy sits in the busiest airspace in the United States, with Newark and LaGuardia within 15 miles. The simulator shows their positions; their own traffic is not simulated. Below 2,000 ft over Manhattan is an obstacle incident: One World Trade Center is 1,776 ft tall.</p>
+      <p>The sea breeze makes the south-west flow (22L and 22R) the most common. North-easters bring 4R and 4L, clear north-westerlies behind a cold front 31R and 31L, and low cloud off the ocean 13L and 13R. Summer afternoons bring thunderstorms and microburst alerts, and winter brings snow and fog below the ILS minimums.</p>
+    </section>
+
+    <section id="k-exercises" data-apt="KJFK" data-track="ap"><h2><span class="n">06</span>Guided exercises</h2>
+      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. Complete all three for the <b>Kennedy endorsement</b> badge.</p>
+      <div class="exgrid">
+        <div class="ex"><div class="nm">1 · Kennedy Five off 22R</div><p>A Delta A321 at gate B31 for Atlanta. Clear and push it, taxi it to 22R, line up and wait, take off on the Kennedy Five and hand it to New York Departure and the Center.</p><button class="btn primary" data-ex="kdep">Start exercise</button></div>
+        <div class="ex"><div class="nm">2 · ILS 22L and a crossing</div><p>A JetBlue A320 from Boston on the PARCH Four. Clear the ILS 22L, land it, and cross it over 22R to Terminal 5.</p><button class="btn primary" data-ex="karr">Start exercise</button></div>
+        <div class="ex"><div class="nm">3 · Crossings and releases</div><p>An American A321 from Los Angeles landing 22L, a JetBlue Embraer for Boston that needs a release, and a Delta departure. Get the release, depart JetBlue, then cross American behind it.</p><button class="btn primary" data-ex="kcross">Start exercise</button></div>
+      </div>
+    </section>
+
+    <section id="k-limits" data-apt="KJFK" data-track="ap"><h2><span class="n">07</span>What is simplified at Kennedy</h2>
+      <ul>
+        <li>Approach, Tower, Ground and Clearance Delivery are one position.</li>
+        <li>New York Approach vectors arrivals in the real world; the simulator gives each runway a downwind and base so that arrivals find their own way to the ILS.</li>
+        <li>Runway 13R has no ILS, so the south-east flow lands 13L and departs 13R. The VOR, RNAV and Parkway Visual approaches are not modelled.</li>
+        <li>One arrival runway and one departure runway at a time: no simultaneous approaches to both runways of a pair.</li>
+        <li>Newark and LaGuardia traffic is not simulated, and the New York Center frequencies and release times are representative.</li>
+        <li>Timetable traffic is thinned to about twenty movements an hour. Live now uses today's real flights and positions.</li>
+      </ul>
+    </section>
+
+<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span><span data-apt="LOWI">Innsbruck endorsement based on AIP Austria AD 2 LOWI. Not for real-world navigation.</span><span data-apt="KJFK">New York JFK endorsement based on the FAA terminal procedures for KJFK. Not for real-world navigation.</span></div></footer>
 </section>
 <!-- ═════════════════════ PRICING ═════════════════════ -->
 <section class="page" id="page-pricing" data-page="pricing" hidden>
@@ -2299,7 +2508,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 
 <script>
 const AIRPORT = 'LOWI';
-const SITE = {"LXGB": "../", "LPMA": "../lpma/", "EGLC": "../eglc/", "LOWI": "../lowi/"};
+const SITE = {"LXGB": "../", "LPMA": "../lpma/", "EGLC": "../eglc/", "LOWI": "../lowi/", "KJFK": "../kjfk/"};
 const SITE_HOST = 'LXGB';
 const CW_CFG = {"enabled": false, "feedback": true, "api": "https://clearway-atc.vercel.app/api", "supabase_url": "https://aqwdnicarvfpclqwljxe.supabase.co", "supabase_anon_key": "sb_publishable_dFOE16aBVYg8FUgElz5SPA_sJD0CuF3", "currency": "£", "prices": {"a1": 4.99, "a3": 9.99, "a5": 14.99, "a10": 24.99, "all": 29.99, "early": 4.99}, "trial_days": 2, "contact_email": "", "analytics_token": "", "legal_date": "5 October 2026", "site": "https://www.clearway-atc.co.uk/"};
 const GEO = {"land":[[[[8.3,45.7],[14.6,45.7],[14.6,48.9],[8.3,48.9],[8.3,45.7]]]],"coast":[],"borders":[[[8.3163,46.4337],[8.3434,46.4439],[8.3859,46.4502],[8.3992,46.4522],[8.4279,46.4487],[8.4416,46.4349],[8.4458,46.4124],[8.4463,46.3822],[8.4429,46.3534],[8.4266,46.3016],[8.4232,46.2758],[8.4272,46.2514],[8.4381,46.2354],[8.4565,46.2248],[8.4827,46.2175],[8.5103,46.2079],[8.5387,46.1876],[8.6018,46.1228],[8.6115,46.1194],[8.6309,46.1147],[8.6775,46.0958],[8.6951,46.0952],[8.7022,46.098],[8.7177,46.1075],[8.7239,46.1095],[8.729,46.1082],[8.7322,46.1074],[8.7395,46.0981],[8.7471,46.0944],[8.7632,46.0929],[8.7939,46.0934],[8.8089,46.0897],[8.8344,46.0664],[8.8196,46.0429],[8.791,46.0187],[8.7734,45.9906],[8.7696,45.9858],[8.7679,45.9831],[8.7851,45.9823],[8.8004,45.9785],[8.8577,45.9571],[8.8645,45.9534],[8.871,45.9471],[8.8808,45.9311],[8.8981,45.9096],[8.9065,45.8965],[8.9121,45.8834],[8.9138,45.8661],[8.9097,45.8537],[8.9037,45.8418],[8.9,45.8264],[8.9396,45.8348],[8.9724,45.8246],[9.0024,45.8207],[9.0344,45.8481],[9.0593,45.882],[9.0631,45.899],[9.0517,45.9155],[9.0423,45.9197],[9.0205,45.9228],[9.0108,45.9267],[9.0017,45.9361],[8.9934,45.9543],[8.9827,45.9618],[8.9805,45.9644],[8.9798,45.9669],[8.9805,45.9695],[8.9827,45.972],[9.0156,45.9931],[8.9978,46.0279],[9.0021,46.0393],[9.0277,46.0531],[9.0497,46.0579],[9.0592,46.0618],[9.0671,46.0711],[9.0703,46.0834],[9.0682,46.106],[9.0721,46.1189],[9.0906,46.1382],[9.1632,46.1723],[9.1638,46.173],[9.1711,46.1826],[9.1758,46.1941],[9.1813,46.2041],[9.1922,46.2096],[9.2042,46.2136],[9.2157,46.2211],[9.2248,46.2312],[9.2397,46.267],[9.269,46.3094],[9.2752,46.3314],[9.2738,46.3443],[9.2604,46.3797],[9.2603,46.394],[9.2629,46.4066],[9.2609,46.4167],[9.2476,46.423],[9.238,46.4365],[9.2458,46.461],[9.2632,46.4851],[9.2823,46.4974],[9.331,46.5015],[9.3508,46.4979],[9.3516,46.4855],[9.3771,46.4687],[9.3846,46.4664],[9.3955,46.4694],[9.4003,46.4754],[9.4038,46.4825],[9.4107,46.4889],[9.4268,46.4971],[9.4346,46.4983],[9.4379,46.492],[9.4438,46.3961],[9.4424,46.3809],[9.4444,46.3753],[9.4516,46.3704],[9.4737,46.3619],[9.4826,46.3568],[9.5026,46.3207],[9.5153,46.3086],[9.5365,46.2986],[9.5597,46.2927],[9.6743,46.2918],[9.6931,46.2971],[9.7084,46.3117],[9.7088,46.3196],[9.7073,46.331],[9.7093,46.3424],[9.7201,46.3509],[9.7309,46.3507],[9.7552,46.3405],[9.7681,46.3386],[9.7888,46.3433],[9.8554,46.367],[9.899,46.3722],[9.9184,46.3712],[9.939,46.3675],[9.964,46.3561],[9.9706,46.3398],[9.971,46.32],[9.9776,46.2981],[9.9922,46.2844],[10.0317,46.2601],[10.0418,46.2431],[10.0427,46.2205],[10.0757,46.22],[10.1179,46.2311],[10.1458,46.2433],[10.1589,46.2624],[10.1461,46.2803],[10.1049,46.3094],[10.0958,46.3205],[10.0918,46.329],[10.0924,46.3381],[10.0975,46.3516],[10.105,46.3614],[10.126,46.3744],[10.1332,46.3811],[10.1408,46.4029],[10.1334,46.414],[10.1162,46.4188],[10.0714,46.4248],[10.0421,46.4327],[10.0263,46.4463],[10.044,46.467],[10.0353,46.4711],[10.0305,46.4767],[10.0281,46.4839],[10.0269,46.4932],[10.0312,46.5038],[10.0314,46.5258],[10.0328,46.533],[10.0413,46.5419],[10.0629,46.5567],[10.0712,46.5644],[10.0835,46.597],[10.0878,46.6044],[10.0975,46.608],[10.1921,46.6268],[10.2179,46.627],[10.2338,46.618],[10.2357,46.6067],[10.2303,46.5862],[10.2347,46.5753],[10.2759,46.5655],[10.2838,46.5607],[10.2891,46.5557],[10.2954,46.5511],[10.3066,46.5475],[10.3195,46.546],[10.3543,46.5483],[10.4259,46.5353],[10.444,46.5377],[10.4518,46.5467],[10.4579,46.5537],[10.4659,46.5785],[10.4666,46.6043],[10.4591,46.6236],[10.4382,46.6357],[10.3956,46.6388],[10.3775,46.6533],[10.3692,46.6724],[10.3739,46.6819],[10.3848,46.689],[10.3944,46.7008],[10.3966,46.715],[10.3956,46.7264],[10.3997,46.7355],[10.4166,46.743],[10.4287,46.7556],[10.4262,46.7694],[10.4191,46.784],[10.4172,46.7989],[10.439,46.8169],[10.4449,46.8232],[10.4485,46.8322],[10.4538,46.8644]],[[9.8606,47.0016],[9.8563,47.0041],[9.858,47.0155],[9.6691,47.0562],[9.6523,47.0579]],[[9.6523,47.0579],[9.5999,47.0535]],[[9.5999,47.0535],[9.5812,47.0569]],[[10.132,46.8466],[10.1252,46.8468],[10.1113,46.8471],[10.0681,46.8566],[10.0456,46.8656],[10.0069,46.8908],[9.8999,46.9144],[9.8751,46.9274],[9.8624,46.9398],[9.8608,46.9492],[9.864,46.9599],[9.8665,46.9834],[9.8706,46.9929],[9.8706,46.9988],[9.8668,47.0019]],[[9.8668,47.0019],[9.8606,47.0016]],[[10.3843,46.9932],[10.379,46.9955],[10.3734,46.9963]],[[10.3734,46.9963],[10.3679,46.9955],[10.3389,46.9841],[10.3137,46.9643],[10.2962,46.9414],[10.2957,46.9227],[10.2708,46.9219]],[[10.4538,46.8644],[10.4514,46.8858],[10.4638,46.9197],[10.4585,46.9366],[10.4496,46.9439],[10.4156,46.9624],[10.3947,46.9854],[10.3844,46.993],[10.3844,46.9932]],[[10.3844,46.9932],[10.3843,46.9932]],[[10.2708,46.9219],[10.2513,46.9254]],[[10.2513,46.9254],[10.2351,46.9233],[10.2199,46.9058],[10.2152,46.8931],[10.2143,46.8847],[10.2117,46.877],[10.2014,46.8668],[10.1578,46.8516],[10.132,46.8466]],[[9.5812,47.0569],[9.6088,47.0808],[9.6157,47.1068],[9.6056,47.1323],[9.5818,47.1549],[9.5521,47.1669],[9.552,47.1756],[9.5619,47.1906],[9.5629,47.1977],[9.5543,47.2116],[9.5448,47.2203],[9.5404,47.2291],[9.5471,47.243],[9.5303,47.2537],[9.5212,47.2628]],[[12.1806,47.0852],[12.2042,47.0797],[12.2039,47.067],[12.2036,47.0533],[12.1823,47.0336],[12.1217,47.0105],[12.1112,46.993],[12.1178,46.9831],[12.1221,46.9717],[12.1282,46.9486],[12.1347,46.9374],[12.1417,46.928],[12.1416,46.9188],[12.1269,46.9089],[12.1374,46.9059],[12.161,46.903],[12.1722,46.8992],[12.1835,46.8912],[12.189,46.8849],[12.1951,46.8801],[12.2087,46.8766],[12.2508,46.8756],[12.2666,46.8681],[12.2758,46.8463],[12.2761,46.834],[12.2733,46.8268],[12.2696,46.8198],[12.2669,46.8083],[12.2667,46.7953],[12.2691,46.7886],[12.2748,46.7846],[12.2844,46.78],[12.3053,46.7745],[12.326,46.7725],[12.3427,46.7651],[12.3515,46.7432],[12.3704,46.7112],[12.405,46.6901],[12.4456,46.6787],[12.4696,46.6758],[12.4999,46.6721],[12.5308,46.6577],[12.5473,46.6522],[12.562,46.6512]],[[11.7349,46.9706],[11.7464,46.9725],[11.7661,46.9834],[11.7771,46.9883],[11.8225,46.9933],[11.857,47.012],[11.8995,47.0277],[11.9436,47.0382],[12.015,47.0405],[12.1162,47.0766],[12.1331,47.0788],[12.1806,47.0852]],[[11.4718,47.0071],[11.4894,47.0042],[11.4959,47.0016],[11.5017,46.9979],[11.507,46.993],[11.5153,46.9895],[11.5244,46.9883]],[[11.4112,46.9705],[11.4452,46.993],[11.4453,46.9931],[11.4529,47.0009],[11.4618,47.0055],[11.4718,47.0071]],[[11.5965,47.0004],[11.6479,46.9933]],[[11.5244,46.9883],[11.5338,46.9895],[11.5433,46.993],[11.5434,46.993],[11.5436,46.9931],[11.5437,46.9931],[11.5727,46.9989],[11.5965,47.0004]],[[11.6648,46.9933],[11.6838,46.9919],[11.7162,46.9755],[11.7349,46.9706]],[[11.6573,46.9925],[11.6648,46.9933]],[[11.6485,46.9933],[11.6497,46.993],[11.6573,46.9925]],[[11.6479,46.9933],[11.6485,46.9933]],[[11.3138,46.9873],[11.3495,46.9819],[11.3806,46.9716],[11.4112,46.9705]],[[10.9827,46.7677],[10.9969,46.7691],[11.0109,46.7792],[11.0333,46.8056],[11.0374,46.8083],[11.0485,46.8117],[11.0528,46.8149],[11.0546,46.8199],[11.0535,46.8303],[11.0543,46.8341],[11.0731,46.865],[11.0836,46.9001],[11.0919,46.9124],[11.1566,46.9565],[11.1745,46.9639],[11.2437,46.9793],[11.3138,46.9873]],[[10.4538,46.8644],[10.4863,46.8464],[10.5277,46.8432]],[[10.6471,46.8638],[10.6625,46.861],[10.739,46.8295],[10.7487,46.8194],[10.7438,46.8125],[10.7216,46.8001],[10.7169,46.7952],[10.7229,46.7864],[10.7337,46.7862]],[[10.5277,46.8432],[10.6294,46.8624],[10.6471,46.8638]],[[10.7548,46.7908],[10.7663,46.7881],[10.7951,46.7769],[10.8049,46.7766]],[[10.7337,46.7862],[10.7548,46.7908]],[[10.8239,46.7803],[10.8341,46.7802],[10.8431,46.777],[10.8602,46.767],[10.8704,46.7641]],[[10.8049,46.7766],[10.8239,46.7803]],[[10.9309,46.774],[10.9657,46.7716],[10.9827,46.7677]],[[10.8704,46.7641],[10.8803,46.7646],[10.9137,46.7723],[10.9309,46.774]],[[12.6202,46.6565],[12.6696,46.653],[12.6714,46.6525],[12.6792,46.65],[12.6974,46.6405],[12.7066,46.6377]],[[12.562,46.6512],[12.6202,46.6565]],[[12.7399,46.643],[12.7485,46.641],[12.7736,46.6352],[12.8304,46.6096],[13.0645,46.598],[13.1465,46.585],[13.21,46.558],[13.2311,46.5522],[13.2714,46.5508]],[[12.7066,46.6377],[12.716,46.638],[12.732,46.6423],[12.7399,46.643]],[[13.3733,46.5658],[13.417,46.5605]],[[13.2714,46.5508],[13.3733,46.5658]],[[13.478,46.5636],[13.4849,46.5617],[13.4991,46.5506],[13.5068,46.5469],[13.5492,46.5458],[13.6703,46.5187],[13.6853,46.5176]],[[13.417,46.5605],[13.478,46.5636]],[[13.6853,46.5176],[13.701,46.5197]],[[13.701,46.5197],[13.7011,46.5119],[13.6992,46.5048],[13.6955,46.4986],[13.6899,46.4933],[13.6884,46.4678],[13.6859,46.464],[13.6775,46.4521],[13.6588,46.4451]],[[13.6588,46.4451],[13.6341,46.4457]],[[13.6341,46.4457],[13.6002,46.4426],[13.5757,46.4267],[13.5544,46.406],[13.53,46.3883],[13.4837,46.3712],[13.4597,46.359],[13.4473,46.3548],[13.4341,46.3539],[13.4232,46.3448],[13.4098,46.3236],[13.3956,46.3067],[13.3913,46.3016],[13.3653,46.2903],[13.373,46.2803],[13.3786,46.2684],[13.3847,46.2433],[13.3848,46.2432],[13.3849,46.2431],[13.3981,46.2305],[13.4016,46.2167],[13.4101,46.208]],[[13.4228,46.2286],[13.4383,46.2249],[13.4683,46.2234],[13.4823,46.2179],[13.5102,46.214],[13.529,46.2048],[13.559,46.1841],[13.5845,46.1813]],[[13.4101,46.208],[13.4374,46.2109],[13.4228,46.2286]],[[13.6139,46.1835],[13.6274,46.1817],[13.6374,46.1804],[13.6411,46.1714],[13.645,46.1617],[13.6164,46.125],[13.5226,46.0753],[13.5051,46.066],[13.4823,46.0448],[13.4903,46.0389],[13.4928,46.0325],[13.49,46.0256],[13.4823,46.0184],[13.4771,46.0161],[13.4618,46.0064],[13.4748,45.9957],[13.4795,45.9931],[13.4804,45.9923],[13.4812,45.9914],[13.4818,45.9904],[13.4823,45.9892],[13.5094,45.9674]],[[13.5845,46.1813],[13.6139,46.1835]],[[9.5475,47.5345],[9.5499,47.5335]],[[9.0166,47.6789],[9.1281,47.6704]],[[8.9062,47.6518],[8.9454,47.6543],[8.9818,47.6622],[8.9977,47.6738],[9.0166,47.6789]],[[9.1834,47.6704],[9.1969,47.6561]],[[9.1281,47.6704],[9.1834,47.6704]],[[9.2344,47.6562],[9.2732,47.6501],[9.5475,47.5345]],[[9.1969,47.6561],[9.2344,47.6562]],[[9.5212,47.2628],[9.5533,47.2999],[9.5874,47.3278],[9.5912,47.3347],[9.5964,47.3523],[9.601,47.3613],[9.6398,47.3945],[9.6495,47.4097],[9.6503,47.4521],[9.6217,47.4692],[9.5845,47.4807],[9.555,47.5109],[9.5531,47.5169],[9.5475,47.5345]],[[9.5606,47.0524],[9.4996,47.0594],[9.477,47.0639],[9.4759,47.0732],[9.4876,47.0839],[9.5029,47.0947],[9.5124,47.108],[9.5119,47.1294],[9.5035,47.1454],[9.4926,47.1598],[9.485,47.1763],[9.4874,47.21],[9.5046,47.2437],[9.5212,47.2628]],[[9.5812,47.0569],[9.5606,47.0524]],[[13.7373,48.5593],[13.7581,48.5615],[13.766,48.5638],[13.7743,48.5692],[13.779,48.5739],[13.7962,48.5986],[13.8024,48.6117],[13.8055,48.6261],[13.8062,48.6429],[13.8009,48.6752],[13.8035,48.6872],[13.8169,48.6956],[13.8044,48.6996],[13.7994,48.7026],[13.7888,48.7165]],[[13.5207,48.5846],[13.6244,48.5654],[13.6418,48.5591],[13.6581,48.5511],[13.6734,48.5355],[13.7143,48.5232],[13.7165,48.5217]],[[12.758,48.1219],[12.7641,48.1238],[12.7783,48.1387],[12.7824,48.142],[12.8221,48.1607],[12.8352,48.1707],[12.8535,48.19],[12.8626,48.1966],[12.8776,48.202],[12.933,48.2093],[12.9317,48.2116],[12.9472,48.22],[12.9794,48.232],[13.0167,48.2559],[13.0328,48.2636],[13.1364,48.2911],[13.2742,48.3071],[13.3078,48.3196],[13.4056,48.3766],[13.4195,48.3922],[13.4252,48.4134],[13.4272,48.4185],[13.4317,48.4237],[13.4362,48.4306],[13.4382,48.441],[13.4364,48.4692],[13.4382,48.4785],[13.443,48.4877],[13.4564,48.5067],[13.4592,48.5164],[13.457,48.5252],[13.4477,48.5348],[13.4437,48.5529],[13.4407,48.5573],[13.4401,48.561],[13.4456,48.5679],[13.4546,48.5734],[13.4872,48.5816],[13.5207,48.5846]],[[13.7339,48.5598],[13.7373,48.5593]],[[13.7165,48.5217],[13.7254,48.5484],[13.7339,48.5598]],[[12.7514,48.1221],[12.758,48.1219]],[[12.964,47.7054],[12.9083,47.7124],[12.892,47.7235],[12.9106,47.7429],[12.9108,47.743],[12.9108,47.7431],[12.9172,47.7502],[12.919,47.7568],[12.9193,47.7632],[12.9213,47.7695],[12.9267,47.7774],[12.9912,47.8471],[12.9866,47.8503],[12.965,47.872],[12.9311,47.9249],[12.9142,47.936],[12.9062,47.9389],[12.886,47.9529],[12.862,47.9626],[12.854,47.9705],[12.8486,47.9809],[12.8482,47.9824],[12.8456,47.9931],[12.8306,48.0155],[12.7602,48.0649],[12.7509,48.0747],[12.742,48.0868],[12.737,48.1],[12.7389,48.1134],[12.745,48.1206],[12.7514,48.1221]],[[12.2422,47.732],[12.2391,47.7274],[12.2365,47.7168],[12.233,47.7089],[12.2266,47.7029],[12.2233,47.6959],[12.2288,47.6849],[12.2387,47.6789]],[[12.1656,47.604],[12.1736,47.6051],[12.2021,47.6298],[12.2057,47.6362],[12.2068,47.6456],[12.2051,47.6723],[12.2023,47.6778],[12.1973,47.6801],[12.1891,47.6856],[12.1818,47.6921],[12.1786,47.6977],[12.1766,47.7058],[12.1924,47.7102],[12.2165,47.7237],[12.2252,47.7274],[12.2397,47.7317],[12.2422,47.732]],[[13.0409,47.5834],[13.0571,47.5977],[13.0577,47.6004],[13.0696,47.6202],[13.072,47.6224],[13.0742,47.6345],[13.0748,47.6467],[13.072,47.6595],[13.0641,47.674],[13.0446,47.6966],[13.0323,47.7066],[13.0199,47.7129],[13.0044,47.7146]],[[13.0044,47.7146],[12.979,47.7071],[12.964,47.7054]],[[12.4077,47.6937],[12.4241,47.6916],[12.4288,47.6858],[12.4392,47.6645],[12.4447,47.6563],[12.4528,47.6498],[12.4825,47.6336],[12.4966,47.6289],[12.5171,47.6285]],[[12.3515,47.6817],[12.3684,47.6836],[12.4077,47.6937]],[[12.2937,47.69],[12.3515,47.6817]],[[12.2387,47.6789],[12.2496,47.68],[12.2719,47.6879],[12.2937,47.69]],[[12.6887,47.6751],[12.7448,47.6654]],[[12.5171,47.6285],[12.5382,47.6313],[12.5538,47.636],[12.5634,47.6418],[12.5984,47.6629],[12.6174,47.6693],[12.6531,47.6751],[12.6887,47.6751]],[[12.762,47.6669],[12.7517,47.6494],[12.7674,47.6364],[12.7933,47.6248],[12.8132,47.6118],[12.7859,47.6027],[12.7737,47.5795],[12.7789,47.5548],[12.8036,47.5413],[12.819,47.5395],[12.8284,47.5373],[12.8369,47.5327],[12.8826,47.4986],[12.9316,47.4735],[12.9425,47.4705]],[[12.7448,47.6654],[12.762,47.6669]],[[11.9359,47.6107],[12.1656,47.604]],[[11.8203,47.5753],[11.8307,47.5776],[11.8407,47.5946],[11.852,47.5992],[11.9359,47.6107]],[[11.6205,47.5897],[11.639,47.5892],[11.6826,47.5834],[11.764,47.5831],[11.8203,47.5753]],[[11.4826,47.5026],[11.5295,47.5079],[11.5512,47.5137],[11.5694,47.5274],[11.5745,47.5366],[11.5823,47.5598],[11.5891,47.5704],[11.617,47.5868],[11.6205,47.5897]],[[9.7821,47.5884],[9.7963,47.585],[9.808,47.5763],[9.8113,47.5645],[9.8093,47.5523],[9.8131,47.5418],[9.8335,47.5346]],[[9.6126,47.5219],[9.6767,47.5226],[9.704,47.5314],[9.7185,47.5467],[9.7309,47.5649],[9.7527,47.5821],[9.7671,47.5873],[9.7821,47.5884]],[[13.0383,47.584],[13.0409,47.5834]],[[13.0391,47.5613],[13.0383,47.584]],[[10.4536,47.5811],[10.4571,47.5792],[10.4616,47.5699],[10.4603,47.566],[10.4555,47.5612],[10.4517,47.5548],[10.4535,47.5462],[10.4588,47.5416],[10.4669,47.5377],[10.4825,47.5329],[10.5251,47.5285]],[[10.1599,47.2711],[10.175,47.2724],[10.2394,47.2777],[10.2612,47.2835],[10.3059,47.3022],[10.3254,47.3143],[10.3434,47.3308],[10.3657,47.3611],[10.3716,47.3674],[10.382,47.3721],[10.4031,47.3771],[10.4116,47.381],[10.4283,47.396],[10.4429,47.4163],[10.452,47.4388],[10.4517,47.4602],[10.4476,47.4726],[10.4422,47.4814],[10.4337,47.4879],[10.4196,47.493],[10.4297,47.5329],[10.431,47.5422],[10.4244,47.5534],[10.4157,47.5644],[10.4142,47.573],[10.4292,47.577],[10.446,47.5791],[10.4536,47.5811]],[[10.5837,47.5625],[10.6079,47.5623],[10.7399,47.5285],[10.7439,47.5253],[10.7472,47.5202],[10.7522,47.5154],[10.7608,47.5136]],[[10.5251,47.5285],[10.5369,47.5299],[10.5496,47.5368],[10.5699,47.5559],[10.5837,47.5625]],[[12.9911,47.4657],[13.0019,47.466],[13.0088,47.4701],[13.0373,47.493],[13.037,47.5014],[13.0344,47.5074],[13.0312,47.5126],[13.029,47.518],[13.0281,47.5242],[13.0281,47.5416],[13.0306,47.5443],[13.0401,47.5605],[13.0412,47.5619]],[[13.0412,47.5619],[13.0391,47.5613]],[[9.8589,47.5413],[9.889,47.5338],[9.9188,47.5322]],[[9.8335,47.5346],[9.8415,47.535],[9.8538,47.5404],[9.8589,47.5413]],[[9.9459,47.5408],[9.9487,47.5242],[9.9592,47.5149],[9.9717,47.5064],[9.9808,47.4929],[9.9808,47.4899],[9.9811,47.4869],[9.9826,47.481],[9.9936,47.4766]],[[9.9188,47.5322],[9.9338,47.5342],[9.9459,47.5408]],[[9.5499,47.5335],[9.5541,47.5327],[9.6126,47.5219]],[[10.8448,47.5313],[10.8586,47.5307],[10.8693,47.5266],[10.8922,47.5149],[10.8839,47.508],[10.8516,47.4931],[10.8584,47.4852],[10.9099,47.469],[10.9598,47.4325],[10.9628,47.428],[10.9631,47.4212],[10.9609,47.4143],[10.9577,47.4097],[10.9553,47.4096],[10.9655,47.3961],[10.9795,47.3905],[11.0837,47.3895]],[[10.7608,47.5136],[10.7903,47.5161],[10.8306,47.5286],[10.8448,47.5313]],[[11.4354,47.5097],[11.46,47.5074],[11.4826,47.5026]],[[11.237,47.394],[11.2588,47.4007],[11.2731,47.4111],[11.2863,47.4232],[11.3056,47.4354],[11.3242,47.4394],[11.3677,47.4401],[11.3839,47.4449],[11.3925,47.4548],[11.3886,47.4622],[11.3778,47.4671],[11.3655,47.4693],[11.4126,47.5061],[11.4354,47.5097]],[[10.0226,47.488],[10.0718,47.4391],[10.0806,47.4274],[10.076,47.4169],[10.0532,47.4049],[10.0642,47.3962],[10.0669,47.3858],[10.0678,47.375],[10.0732,47.3655],[10.0829,47.3591]],[[9.9936,47.4766],[10.0024,47.4792],[10.0113,47.4844],[10.0226,47.488]],[[12.9697,47.4757],[12.9793,47.4722],[12.9849,47.4683],[12.9911,47.4657]],[[12.9425,47.4705],[12.951,47.4725],[12.9593,47.4755],[12.9697,47.4757]],[[11.1938,47.4289],[11.2152,47.423],[11.213,47.3958],[11.237,47.394]],[[11.0837,47.3895],[11.1033,47.3936],[11.1686,47.4243],[11.1938,47.4289]],[[10.1909,47.3792],[10.2093,47.3725],[10.2086,47.3545],[10.1905,47.3175],[10.1927,47.3109],[10.1933,47.3049],[10.1908,47.2983],[10.1859,47.295],[10.1727,47.2923],[10.1687,47.2904],[10.1595,47.2791],[10.1554,47.2729],[10.1599,47.2711]],[[10.1308,47.3627],[10.1351,47.3649],[10.147,47.3738],[10.1909,47.3792]],[[10.1104,47.3674],[10.1153,47.367],[10.1257,47.3627],[10.1308,47.3627]],[[10.0829,47.3591],[10.0896,47.3593],[10.0972,47.3631],[10.1104,47.3674]],[[13.7821,46.5078],[13.7161,46.5189],[13.701,46.5197]],[[13.9988,46.4805],[13.9823,46.4819],[13.8909,46.5118],[13.8607,46.5153]],[[13.8607,46.5153],[13.7958,46.5079],[13.7821,46.5078]],[[14.0325,46.4847],[14.0149,46.4825],[13.9988,46.4805]]],"towns":[["INNSBRUCK",11.3928,47.2692],["HALL",11.5085,47.2833],["WATTENS",11.5917,47.2931],["SCHWAZ",11.7083,47.35],["JENBACH",11.7578,47.3889],["WÖRGL",12.0667,47.4833],["KUFSTEIN",12.1667,47.5833],["TELFS",11.0717,47.3069],["IMST",10.7333,47.2333],["SEEFELD",11.1883,47.33],["GARMISCH",11.0958,47.4917],["MITTENWALD",11.2614,47.4428],["STEINACH",11.4667,47.0833],["BRENNER",11.5078,47.0025],["STERZING",11.4333,46.8967],["BOZEN",11.3536,46.4983],["LANDECK",10.5667,47.1333],["ROSENHEIM",12.1289,47.8561],["SALZBURG",13.055,47.8095],["MÜNCHEN",11.5755,48.1374],["KITZBÜHEL",12.3925,47.4464],["MAYRHOFEN",11.8633,47.1667],["LIENZ",12.7697,46.8297],["MERAN",11.1594,46.6713]],"airports":[["LOWI",11.3439,47.2602],["LOWS",13.0043,47.7933],["EDDM",11.7861,48.3538],["LIPB",11.3264,46.4603],["LOWK",14.3378,46.6425],["EDJA",10.2395,47.9888],["LOWZ",12.7875,47.2928]]};
@@ -2312,7 +2521,7 @@ const GEO = {"land":[[[[8.3,45.7],[14.6,45.7],[14.6,48.9],[8.3,48.9],[8.3,45.7]]
 
 // ═════════════════════════ geometry ═════════════════════════
 const D2R = Math.PI/180, R2D = 180/Math.PI;
-const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553], LOWI: [47.2602, 11.3439] };
+const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553], LOWI: [47.2602, 11.3439], KJFK: [40.639925, -73.778939] };
 const [LAT0, LON0] = AIRPORT_ORIGIN[AIRPORT], COSL = Math.cos(LAT0*D2R);
 const M2NM = 1/1852;
 const dms = (d, m, s=0) => d + m/60 + s/3600;
@@ -2333,20 +2542,21 @@ function ge(a, b, tw){ const e = { a, b, tw, len: dist(...GN[a].p, ...GN[b].p) }
 let kN = 0;
 // a chain of points becomes graph nodes joined by edges carrying the taxiway designator
 function chain(a, pts, b, tw){ let prev = a; for (const [m, o] of pts) { const id = 'k' + (kN++); gn(id, m, o); ge(prev, id, tw); prev = id; } ge(prev, b, tw); }
-const filIn = (hp, side) => FIL[hp][side].map(([m, o]) => rm(m, o));
+const filIn = (hp, side) => FIL[hp][side].map(([m, o]) => holdRwy(hp).rm(m, o));   // in the frame of the hold's runway
 const filOut = (hp, side) => filIn(hp, side).reverse();
-function route(from, to){
+// pen (optional): a cost multiplier per edge, to find alternative routings at big airports
+function route(from, to, pen){
   const dd = { [from]: 0 }, prev = {}, done = new Set();
   while (true) {
     let u = null, best = Infinity; for (const k in dd) if (!done.has(k) && dd[k] < best) { best = dd[k]; u = k; }
     if (u === null) return null; if (u === to) break; done.add(u);
-    for (const [v, e] of GN[u].adj) { if (/^R/.test(v) && v !== to) continue; const nd = dd[u] + e.len; if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; prev[v] = [u, e]; } }
+    for (const [v, e] of GN[u].adj) { if (/^R/.test(v) && v !== to) continue; const nd = dd[u] + e.len*(pen ? pen(e) : 1); if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; prev[v] = [u, e]; } }
   }
   const nodes = [to], tws = []; let c = to;
   while (c !== from) { const [u, e] = prev[c]; nodes.unshift(u); tws.unshift(e.tw); c = u; }
   return { nodes, tws };
 }
-function viaOf(tws, hp){ const v = []; for (const t of tws) if (t !== 'APRON' && t !== hp && v[v.length-1] !== t) v.push(t); return v; }
+function viaOf(tws, hp){ const ref = HOLDS[hp] && HOLDS[hp].ref, v = []; for (const t of tws) if (t !== 'APRON' && t !== hp && t !== ref && v[v.length-1] !== t) v.push(t); return v; }
 function nearestNode(p, filter){ let best = null, bd = Infinity; for (const n of Object.values(GN)) { if (filter && !filter(n)) continue; const d = dist(...p, ...n.p); if (d < bd) { bd = d; best = n; } } return best; }
 
 function inPoly(p, poly){ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const [xi,yi]=poly[i],[xj,yj]=poly[j]; if(((yi>p[1])!==(yj>p[1])) && (p[0] < (xj-xi)*(p[1]-yi)/(yj-yi)+xi)) c=!c; } return c; }
@@ -3173,10 +3383,10 @@ function timetableSession(d, h){
   for (const [cs, t, stand, days] of LONG_STAY) if (days.includes(day)) residents.push({ cs, t, k: 'RES', o: 'LXGB', gate: 'E', m: 0, depM: null, stand, longStay: true });
   return { sched, residents };
 }
-const SESSION_HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 06Z to 21Z, the civil operating day
+const SESSION_HOURS = APT.sessionHours || Array.from({ length: 16 }, (_, i) => i + 6); // 06Z to 21Z, the civil operating day (New York: its own)
 function buildSchedule(mode, day = 0, hour = 17){
   if (EXERCISES[mode]) return EXERCISES[mode].sched.map(x => ({...x}));
-  const LS = /^live/.test(mode) && typeof liveSession === 'function' ? liveSession() : null;   // Real world: today's real flights
+  const LS = /^live/.test(mode) && typeof liveSession === 'function' ? liveSession(Date.now(), mode) : null;   // Real world: today's real flights
   const T = LS || timetableSession(day, Math.floor(hour)), s = [...T.residents, ...T.sched];
   if (mode !== 'real' && mode !== 'live') {
     // busier sessions add charters, positioning flights and business jets on top of the timetable
@@ -3190,21 +3400,24 @@ function buildSchedule(mode, day = 0, hour = 17){
 
 function parseMetar(m){
   m = m.trim().toUpperCase().replace(/\s+/g,' ');
-  const w = { raw: m, dir: 0, spd: 0, gust: 0, vrb: false, vis: 9999, ceil: 9999, qnh: 1013, temp: 15, dew: 10, wx: [], cb: false, clouds: [] };
-  for (const tok of m.split(' ')) {
+  const w = { raw: m, dir: 0, spd: 0, gust: 0, vrb: false, vis: 9999, ceil: 9999, qnh: 1013, inhg: 29.92, temp: 15, dew: 10, wx: [], cb: false, clouds: [] };
+  for (const tok of m.split(' RMK ')[0].split(' ')) {   // remarks (US METARs) are not weather
     let r;
     if ((r = tok.match(/^(\d{3}|VRB)(\d{2,3})(G(\d{2,3}))?(KT|MPS)$/))) { const f = r[5]==='MPS' ? 1.944 : 1; w.vrb = r[1]==='VRB'; w.dir = w.vrb ? 0 : +r[1]; w.spd = Math.round(+r[2]*f); w.gust = r[4] ? Math.round(+r[4]*f) : 0; }
     else if (/^\d{4}$/.test(tok)) w.vis = +tok;
     else if ((r = tok.match(/^(\d{1,2})SM$/))) w.vis = Math.min(9999, +r[1]*1609);
+    else if ((r = tok.match(/^M?(\d)\/(\d{1,2})SM$/))) { w.vis = Math.round(((tok[0] === 'M' ? 0.5 : 1)*+r[1]/+r[2] + (w.whole || 0))*1609); delete w.whole; }   // 1/2SM, M1/4SM (US)
+    else if (/^\d$/.test(tok)) w.whole = +tok;   // the 2 of "2 1/2SM"
     else if (tok === 'CAVOK') { w.vis = 9999; w.ceil = 9999; }
     else if ((r = tok.match(/^(BKN|OVC|VV)(\d{3})(CB|TCU)?$/))) { w.ceil = Math.min(w.ceil, +r[2]*100); if (r[3]) w.cb = true; w.clouds.push(tok); }
     else if ((r = tok.match(/^(FEW|SCT)(\d{3})(CB|TCU)?$/))) { if (r[3]) w.cb = true; w.clouds.push(tok); }
-    else if ((r = tok.match(/^Q(\d{4})$/))) w.qnh = +r[1];
-    else if ((r = tok.match(/^A(\d{4})$/))) w.qnh = Math.round(+r[1]/100*33.8639);
+    else if ((r = tok.match(/^Q(\d{4})$/))) { w.qnh = +r[1]; w.inhg = Math.round(+r[1]/33.8639*100)/100; }
+    else if ((r = tok.match(/^A(\d{4})$/))) { w.qnh = Math.round(+r[1]/100*33.8639); w.inhg = +r[1]/100; }   // the altimeter setting in inches (US)
     else if ((r = tok.match(/^(M?\d{2})\/(M?\d{2})$/))) { w.temp = +r[1].replace('M','-'); w.dew = +r[2].replace('M','-'); }
     else if (/^[-+]?(VC)?(TS|SH|FZ|MI|BC)?(RA|DZ|SN|FG|BR|HZ|GR|GS)+$/.test(tok) || /^[-+]?(VC)?TS$/.test(tok)) w.wx.push(tok);
   }
   if (w.wx.some(x => x.includes('TS'))) w.cb = true;
+  delete w.whole;
   return w;
 }
 function windComp(w, crs){ const d = angDiff(crs, w.dir); const g = w.gust || w.spd; return { head: w.spd*Math.cos(d*D2R), cross: Math.abs(w.spd*Math.sin(d*D2R)), headG: g*Math.cos(d*D2R), crossG: Math.abs(g*Math.sin(d*D2R)) }; }
@@ -3222,6 +3435,38 @@ const S = {
 const emit = (ev, data) => { for (const f of S.listeners) try { f(ev, data); } catch(e) {} };
 // the departure runway: the runway in use, unless the airport departs the other way (Innsbruck lands 26, departs 08)
 const depRw = () => S.depRwy || S.rwy;
+// ── runways. A one-runway airport is described by its profile's globals (rm, mOf, offOf, RU, RW_LO/RW_HI, TURN_W/E);
+// an airport with several runways (New York JFK) lists them in APT.runways, each with its own frame along the runway
+// (metres from its low end, offset to the left), so landing and departing traffic can use different pavements.
+const RWYS = APT.runways || [{ id: 'R', lo: RW_LO, hi: RW_HI, rm, mOf, offOf, RU, TURN_W, TURN_E, TURN_END, roll: APT.roll }];
+const RW_ENDS = RWYS.flatMap(r => [r.lo, r.hi]);
+const rwyOf = rw => RWYS.find(r => r.lo === rw || r.hi === rw) || RWYS[0];
+const rwyById = id => RWYS.find(r => r.id === id) || RWYS[0];
+const holdRwy = hp => rwyById(HOLDS[hp] && HOLDS[hp].on);
+// something on the pavement of the runway that rw names (either direction)
+const onRunway = (o, rw) => o.onRwy && (o.rwyId || RWYS[0].id) === rwyOf(rw).id;
+// runways in use for landing or departure: taxiing traffic holds short of these until cleared to cross
+const activeRwy = id => rwyOf(S.rwy).id === id || rwyOf(depRw()).id === id;
+const rwyName = id => { const R = rwyById(id); return [S.rwy, depRw()].find(r => rwyOf(r) === R) || R.lo + '/' + R.hi; };
+
+// ── phraseology. ICAO (UK and European) wording unless the profile overrides it (APT.phr: New York uses the FAA's).
+const PH = Object.assign({
+  altim: () => `QNH ${S.wx.qnh}`,
+  alt: (a, up) => [`${up ? 'climb' : 'descend'} ${altWords(a)}`, `${up ? 'climb' : 'descend'} ${altShort(a)}`],
+  speed: (s, ac) => [`speed ${s} knots`, `speed ${s}`],
+  taxi: (ac, hp, vw) => [`taxi to holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw()}, ${PH.altim()}`, `holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw()}, ${PH.altim()}`],
+  atHold: (ac, hp) => `holding point ${PHON[hp]}, ready for departure`,
+  lineUp: (ac, hp) => { const lu = APT.lineUpWords ? APT.lineUpWords(hp) : 'line up and backtrack'; return [`via ${PHON[hp]}, ${lu} runway ${depRw()}`, `${lu} runway ${depRw()}`]; },
+  cto: (ac, sid, chg) => [`${chg ? 'amended clearance, ' : ''}${sidSpoken(sid)} departure, runway ${depRw()}, cleared for takeoff, ${windPhrase()}`, `${chg ? 'amended, ' : ''}${sidSpoken(sid)}, cleared for takeoff runway ${depRw()}`],
+  ctl: (ac, rw) => [`runway ${rw}, cleared to land, ${windPhrase()}`, `cleared to land runway ${rw}`],
+  push: (ac, dn, face) => [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${APT.faceWord(face)}, ${PH.altim()}`,
+    `cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${APT.faceWord(face)}, ${PH.altim()}`],
+  startReq: ac => `${APT.tower[0]}, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up and push back`,
+  checkIn: ac => `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, inbound ${ac.route[0]}, information ${phonetic(S.atis)}`,
+  depCall: ac => `${(APT.depRadar || APT.radar)[0]}, passing ${Math.round(ac.alt/100)*100} feet climbing ${altShort(ac.tgtAlt)}, ${ac.onSid && ac.sid ? sidSpoken(ac.sid) + ' departure' : 'heading ' + hdg3(ac.hdg)}`,
+  cross: (ac, rw) => [`cross runway ${rw}`, `crossing runway ${rw}`],
+  holdShort: (ac, rw) => `holding short of runway ${rw}`
+}, APT.phr || {});
 
 // ═════════════════════════ R/T log & speech ═════════════════════════
 const logEl = document.getElementById('log');
@@ -3262,6 +3507,9 @@ function pilot(ac, text, again){
 function sys(text, bad){ log(bad ? 'bad' : 'sys', text); }
 // landline coordination with Sevilla / Casablanca (not on the frequency)
 function coord(text, who){ log('coord', text, who); say(text, 'tel:' + who); }
+// departures need a release from the next unit before take-off, unless the airport only asks for some (APT.needRel:
+// New York calls for release only on flights under a flow restriction)
+const needRel = ac => !APT.needRel || APT.needRel(ac);
 function requestRelease(ac){
   const who = relUnit(ac), sid = sidName(ac.gate, depRw());
   ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
@@ -3300,7 +3548,7 @@ class Aircraft {
 // arrivals show on radar about 35 NM beyond the boundary as pending tracks (not on frequency, no control) and call
 // Gibraltar Radar when they reach the entry point inside the radar rings
 const PRE_NM = 35, PRE_LEAD = 6.5*60;
-const greet = () => { const h = (new Date(S.start + S.t*1000).getUTCHours() + APT.utcOff) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
+const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + APT.utcOff) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
   const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][S.rwy][0]];
@@ -3316,6 +3564,9 @@ function spawnArrival(f){
   const d0 = f.m === 0 ? 0.55 : 0;                     // the first arrival starts part-way in
   ac.x = e[0] + (first.p[0]-e[0])*d0; ac.y = e[1] + (first.p[1]-e[1])*d0;
   ac.alt = d0 ? (APT.firstAlt ? APT.firstAlt(f.gate) : 9000) : ENTRY_ALT[f.gate];
+  // another arrival already starting there (busy hours: New York): this one starts 8 NM further out and 1,000 ft higher
+  { const k = S.acs.filter(o => o.kind === 'ARR' && o.state === 'INBOUND' && o.gate === f.gate && Math.hypot(o.x - ac.x, o.y - ac.y) < 40).length;
+    if (k) { const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L]; ac.x += u[0]*8*k; ac.y += u[1]*8*k; ac.alt += 1000*k; } }
   S.acs.push(ac);
   makeInbound(ac);
   emit('spawn', ac);
@@ -3326,7 +3577,7 @@ function makeInbound(ac){
   ac.tgtAlt = ac.cleared = APT.inboundAlt(ac.gate); ac.freq = 'RAD';
   ac.ias = 260; ac.hdg = brg(ac.x, ac.y, ...first.p); ac.trk = ac.hdg; ac.state = 'INBOUND';
   ac.route = ARR_ROUTE[ac.gate][S.rwy].slice();
-  pilot(ac, `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, inbound ${ac.route[0]}, information ${phonetic(S.atis)}`);
+  pilot(ac, PH.checkIn(ac));
   ac.need = 'Initial call';
 }
 function stepPending(ac, dt){
@@ -3340,7 +3591,7 @@ function stepPending(ac, dt){
 function spawnDeparture(f){
   const ac = new Aircraft(f); ac.kind = 'DEP'; ac.freq = 'TWR';
   const wantSouth = isMil(ac);
-  const st = STANDS.find(s => s.id === f.stand && !s.occ) || STANDS.find(s => !s.occ && (wantSouth ? s.area === 'south' : s.area !== 'south')) || STANDS.find(s => !s.occ);
+  const st = STANDS.find(s => s.id === f.stand && !s.occ) || (APT.standFor && APT.standFor(ac)) || STANDS.find(s => !s.occ && (wantSouth ? s.area === 'south' : s.area !== 'south')) || STANDS.find(s => !s.occ);
   if (!st) return null;
   st.occ = ac; ac.stand = st;
   ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
@@ -3358,7 +3609,8 @@ function spawnResident(f){
   const wait = f.depM == null ? Infinity : f.depM;
   const remote = !isMil(ac) && !isBiz(ac) && wait > 45;
   const order = isMil(ac) ? ['south'] : isBiz(ac) ? ['north', 'civil'] : remote ? ['south', 'north', 'civil'] : ['civil', 'north'];
-  let st = !remote && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
+  let st = (!remote || APT.standFor) && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
+  if (!st && APT.standFor) st = APT.standFor(ac);   // New York: the airline's terminal, no remote stands or tows
   for (const a of order) if (!st) st = STANDS.find(s => !s.occ && s.area === a);
   if (!st) return null;
   st.occ = ac; ac.stand = st; ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
@@ -3374,7 +3626,7 @@ function turnRound(ac){
   const was = ac.cs;
   Object.assign(ac, { cs: tr.cs, kind: 'DEP', d: tr.d, gate: gateFor(tr.d), o: undefined, state: 'PARKED', need: null, freq: 'TWR', turn: null,
     app: null, ctl: false, checked: false, shearChecked: false, warnedCtl: false, warned15: false, warned10: false, pushed: false, leftStand: false,
-    hp: null, cto: false, exit: null, backtrack: false, taxiVia: [], face: null, held: false, handed: false, onRwy: false, path: null });
+    hp: null, cto: false, exit: null, backtrack: false, taxiVia: [], face: null, held: false, handed: false, onRwy: false, path: null, xok: null, xing: null, xcross: null, hsAt: null });
   ac.reqAt = Math.max(S.t + 20*60, (tr.depM - 6)*60);
   sys(`${was} is on stand ${ac.stand ? ac.stand.id : ''} and turns round as ${tr.cs} to ${tr.d}, off-blocks ${tr.at}Z.`);
   emit('turnround', ac);
@@ -3402,6 +3654,7 @@ function stepTows(){
 // parked aircraft with nothing due in the next 15 minutes stay off the strip board
 const dormant = ac => ac.state === 'ONSTAND' || (ac.state === 'PARKED' && !ac.need && ac.reqAt - S.t > 15*60 && !(ac.tow && S.t >= ac.tow.at - 300));
 function freeStand(ac){
+  if (APT.standFor) { const s = APT.standFor(ac); if (s) return s; }
   const area = isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
   for (const a of area) { const s = STANDS.find(s => !s.occ && s.area === a); if (s) return s; }
   return STANDS.find(s => !s.occ);
@@ -3413,15 +3666,26 @@ function nextAtis(alert = true){ S.atis = ATIS_LETTERS[(ATIS_LETTERS.indexOf(S.a
 
 // ═════════════════════════ ground movement ═════════════════════════
 const P = (m, off=0) => rm(m, off);
-function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => [p[0],p[1]]), spd, onDone, ...opts }; }
+// a point marked hs (a holding position before a runway, New York) carries the runway's id: see stepGround
+function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; return q; }), spd, onDone, ...opts }; }
 function taxiFrom(ac){ return ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id; }
 function taxiRoute(ac, hp, via){
-  if (via && via.length) { const o = taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v))); if (o) return o; }
+  if (via && via.length) { const o = taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v))); if (o) return o;
+    if (RWYS.length > 1) { const r = route(taxiFrom(ac), HOLDS[hp].node, e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8); if (r) return r; } }   // big airports: keep to the named taxiways
   return route(taxiFrom(ac), HOLDS[hp].node);
 }
 // every sensible routing to a holding point: simple paths over the taxiway graph, one per distinct "via", shortest first
 function taxiOptions(ac, hp){
   const from = taxiFrom(ac), to = HOLDS[hp].node, out = [], seen = new Set();
+  // a big airport (several runways: New York): the shortest route, then the shortest avoiding each taxiway it uses
+  if (RWYS.length > 1) {
+    const best = route(from, to); if (!best) return [];
+    const res = [], seen = new Set(), L0 = pathLen(best.nodes);
+    const add = r => { if (!r) return; r.len = pathLen(r.nodes); r.via = viaOf(r.tws, hp); const k = r.via.join(''); if (seen.has(k) || r.len > L0*1.8) return; seen.add(k); res.push(r); };
+    add(best);
+    for (const tw of [...new Set(best.tws)].filter(t => t !== 'APRON' && t !== hp)) { if (res.length === 3) break; add(route(from, to, e => e.tw === tw ? 6 : 1)); }
+    return res.sort((a, b) => a.len - b.len);
+  }
   (function dfs(u, nodes, tws, len, vis){
     if (out.length > 40) return;
     if (u === to) { out.push({ nodes: [...nodes], tws: [...tws], len }); return; }
@@ -3432,10 +3696,17 @@ function taxiOptions(ac, hp){
   for (const r of out) { r.via = viaOf(r.tws, hp); const k = r.via.join(''); if (seen.has(k)) continue; seen.add(k); if (r.len > out[0].len*2.2 && res.length) continue; res.push(r); if (res.length === 3) break; }
   return res;
 }
+// a holding position the path goes through onto its runway (the next point is nearer the centreline), not one it only passes
+const hsEnters = (pts, k) => { const p = pts[k], q = pts[k+1]; if (!p.hs || !q) return false; const R = rwyById(p.hs); return Math.abs(R.offOf(q)) < Math.abs(R.offOf(p)) - 3; };
+// the next runway on the path that the aircraft needs a crossing clearance for (index into its path, or -1)
+const xingAhead = ac => ac.path ? ac.path.pts.findIndex((p, i) => p.hs && i < ac.path.pts.length - 1 && p.hs !== ac.xing && hsEnters(ac.path.pts, i) && activeRwy(p.hs) && !(ac.xok || []).includes(p.hs)) : -1;
+const pathLen = nodes => nodes.slice(1).reduce((L, id, i) => L + dist(...GN[nodes[i]].p, ...GN[id].p), 0);
 function lineUpPath(ac, hp){
-  const H = HOLDS[hp], pts = [GN[H.rwy].p];
-  if (depRw() === RW_HI) { pts.push(...filOut(hp, 'E')); for (const [m,o] of TURN_E) if (m > H.m + 40) pts.push(P(m,o)); }
-  else { pts.push(...filOut(hp, 'W')); for (const [m,o] of TURN_W) if (m < H.m - 40) pts.push(P(m,o)); }
+  const H = HOLDS[hp], R = holdRwy(hp), pts = [GN[H.rwy].p];
+  // a runway entered at its end (R.ends: New York) is lined up straight away, pointing down the runway
+  if (R.ends) { const up = depRw() === R.lo; pts.push(...filOut(hp, up ? 'E' : 'W')); const e = pts[pts.length-1]; pts.push(R.rm(R.mOf(e) + (up ? 60 : -60), 0)); return pts; }
+  if (depRw() === R.hi) { pts.push(...filOut(hp, 'E')); for (const [m,o] of R.TURN_E) if (m > H.m + 40) pts.push(R.rm(m,o)); }
+  else { pts.push(...filOut(hp, 'W')); for (const [m,o] of R.TURN_W) if (m < H.m - 40) pts.push(R.rm(m,o)); }
   return pts;
 }
 // Leaving the runway. The crew picks the exit (APT.vacPrefs, for its stand) and keeps rolling; the controller can name
@@ -3443,19 +3714,21 @@ function lineUpPath(ac, hp){
 const VAC_TURN = 16, VAC_RWY = 30, VAC_DEC = 2.5;   // turn-off speed, backtrack speed (kt), braking (kt/s)
 const stopDist = v => Math.max(0, v*v - VAC_TURN*VAC_TURN)/(2*VAC_DEC)*0.5144;   // metres to slow from v to the turn-off
 function vacatePath(ac){
-  const m = mOf([ac.x, ac.y]), dir = Math.sin(ac.hdg*D2R)*RU[0] + Math.cos(ac.hdg*D2R)*RU[1] >= 0 ? 1 : -1;
+  const R = rwyById(ac.rwyId), m = R.mOf([ac.x, ac.y]), dir = Math.sin(ac.hdg*D2R)*R.RU[0] + Math.cos(ac.hdg*D2R)*R.RU[1] >= 0 ? 1 : -1;
   planStand(ac); const st = ac.stand;
-  const prefs = APT.vacPrefs(st);
+  const prefs = APT.vacPrefs(st, ac);
   if (ac.reqExit && !prefs.includes(ac.reqExit) && !(APT.vacExits && APT.vacExits(ac).includes(ac.reqExit))) ac.reqExit = null;
   const pts = [];
   const filM = (e, d) => FIL[e][d > 0 ? 'W' : 'E'][0][0];
   const ahead = 15 + stopDist(ac.gs || 0);
   let ex = (ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs).find(e => (filM(e, dir) - m)*dir > ahead);
   ac.backtrack = false;
+  // no turning circles (New York): too late for the exits it wanted, it takes the last one ahead of it
+  if (!ex && R.ends) ex = prefs.filter(e => (filM(e, dir) - m)*dir > 15).sort((a, b) => (filM(b, dir) - filM(a, dir))*dir)[0];
   if (!ex) { // roll on to the turning circle and backtrack
     let cur;
-    if (dir < 0) { for (const [mm,o] of TURN_W) pts.push(P(mm,o)); cur = TURN_END.W; }
-    else { for (const [mm,o] of TURN_E) pts.push(P(mm,o)); cur = TURN_END.E; }
+    if (dir < 0) { for (const [mm,o] of R.TURN_W) pts.push(R.rm(mm,o)); cur = R.TURN_END.W; }
+    else { for (const [mm,o] of R.TURN_E) pts.push(R.rm(mm,o)); cur = R.TURN_END.E; }
     ex = (ac.reqExit && HOLDS[ac.reqExit] ? ac.reqExit : prefs.slice().sort((a,b) => Math.abs(HOLDS[a].m-cur) - Math.abs(HOLDS[b].m-cur))[0]);
     ac.backtrack = true;
   }
@@ -3492,7 +3765,7 @@ function planStand(ac){
   const st = freeStand(ac); if (st) st.occ = ac; ac.stand = st;
 }
 function startVacate(ac, auto){
-  const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto;
+  const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId;   // leaving the runway it landed on
   setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); turnRound(ac); });
 }
 // on the runway, a vacating aircraft keeps its roll-out speed (or backtracks at VAC_RWY) and brakes in time for the
@@ -3509,7 +3782,7 @@ function vacSpeed(ac, dt){
   return Math.max(Math.min(ac.path.spd, cur), Math.min(v, Math.sqrt(VAC_TURN*VAC_TURN + 2*VAC_DEC*d*3600)));
 }
 function startLineUp(ac){
-  ac.state = 'LINEUP'; ac.onRwy = true; ac.need = null;
+  ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw()).id; ac.need = null;
   const back = true;
   setPath(ac, lineUpPath(ac, ac.hp), 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw()); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; });
   return back;
@@ -3525,7 +3798,7 @@ function findAc(token){
 function windPhrase(){ const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3(w.dir)+' degrees'} ${w.spd} knots${w.gust ? ' gusting '+w.gust : ''}`; }
 const viaWords = v => v.length ? ' via ' + v.map(t => PHON[t] || t).join(', ') : '';
 const SAY_AGAIN = ['say again', 'say again, you were broken', `${APT.coordName}, readability two, say again`, 'say again the last instruction'];
-const garbleable = (ac, toks) => ac.airborne && !ac.emerg && ac.mode !== 'FINAL' && ac.state !== 'PRE' && toks.length && toks.every(t => /^([HLRACDS]\d{1,5}|SN|DCT|APP|HOLD)$/.test(t) || t === RW_LO || t === RW_HI || WP[t]);
+const garbleable = (ac, toks) => ac.airborne && !ac.emerg && ac.mode !== 'FINAL' && ac.state !== 'PRE' && toks.length && toks.every(t => /^([HLRACDS]\d{1,5}|SN|DCT|APP|HOLD)$/.test(t) || RW_ENDS.includes(t) || WP[t]);
 // a heading or a direct-to off an RNP AR approach ends it: the crew needs a new approach clearance
 function rnpCancel(ac){ ac.app = null; ac.appId = null; ac.finI = null; ac.askedApp = false; if (ac.mode === 'HOLD') ac.mode = 'HDG'; sys(`${ac.cs} is off the RNP approach: clear it again when you want it back on.`); }
 function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
@@ -3554,11 +3827,11 @@ function commandRun(str){
     } else if ((r = t.match(/^[ACD](\d{1,5})$/)) && air) {
       let a = +r[1]; if (a < 400) a *= 100; a = clamp(a, 1000, 30000);
       const up = a > ac.alt + 50; ac.tgtAlt = ac.cleared = a; if (up && ac.need === 'Request climb') ac.need = null;
-      const q = a <= APT.ta && ac.alt > APT.ta ? `, QNH ${S.wx.qnh}` : '';
-      said.push(`${up ? 'climb' : 'descend'} ${altWords(a)}${q}`); reads.push(`${up?'climb':'descend'} ${altShort(a)}${q}`);
+      const q = a <= APT.ta && ac.alt > APT.ta ? `, ${PH.altim()}` : '', [sa, ra] = PH.alt(a, up, ac);
+      said.push(sa + q); reads.push(ra + q);
     } else if ((r = t.match(/^S(\d{2,3})$/)) && air && +r[1] > 0) {
       const s = clamp(+r[1], ac.perf.vapp, 330); ac.tgtSpd = s; ac.spdAssigned = true;
-      said.push(`speed ${s} knots`); reads.push(`speed ${s}`);
+      { const [sa, ra] = PH.speed(s, ac); said.push(sa); reads.push(ra); }
     } else if ((t === 'SN' || t === 'S0') && air) { ac.spdAssigned = false; ac.tgtSpd = null; said.push('no speed restriction'); reads.push('no speed restriction'); }
     else if (t === 'DCT' && air) {
       const id = toks[i+1], w = id && WP[id];
@@ -3572,7 +3845,7 @@ function commandRun(str){
       if (ac.diverting && id === ac.diverting) { ac.need = null; ac.state = 'DIVERTING'; }
       said.push(`proceed direct ${id}`); reads.push(`direct ${id}`);
     } else if (t === 'APP' && air) {
-      const rw = toks[i+1] === RW_LO || toks[i+1] === RW_HI ? toks[++i] : S.rwy;
+      const rw = RW_ENDS.includes(toks[i+1]) ? toks[++i] : S.rwy;
       // RNP: "APP RNP", "APP 05 RNPY", "APP RNP Z" (airports with RNP approaches only)
       let v = null; if (APT.rnp && /^RNP[A-Z]?$/.test(toks[i+1] || '')) { v = toks[++i].slice(3) || (/^[A-Z]$/.test(toks[i+1] || '') ? toks[++i] : '*'); }
       if (ac.kind !== 'ARR') { sys(`${ac.cs} is a departure.`); continue; }
@@ -3596,7 +3869,7 @@ function commandRun(str){
         ac.mode = 'NAV'; ac.state = 'VECTORS';
       }
       { const aa = F.alt || APT.appAlt, up = !!F.climbIaf && (ac.cleared ?? 0) < aa;   // climbIaf: the approach starts higher (Innsbruck's ELMEM)
-        if (((ac.cleared ?? 99999) > aa || up) && ac.mode === 'NAV') { ac.tgtAlt = ac.cleared = aa; said.push(`${up ? 'climb' : 'descend'} ${altWords(aa)}` + (!up && ac.alt > APT.ta ? `, QNH ${S.wx.qnh}` : '')); reads.push(`${up ? 'climb' : 'descend'} ${altShort(aa)}`); } }
+        if (((ac.cleared ?? 99999) > aa || up) && ac.mode === 'NAV') { ac.tgtAlt = ac.cleared = aa; const [sa, ra] = PH.alt(aa, up, ac); said.push(sa + (!up && ac.alt > APT.ta ? `, ${PH.altim()}` : '')); reads.push(ra); } }
       said.push(F.phrase ? F.phrase(rw) : `this will be a surveillance radar approach runway ${rw}, terminating at Point ${F.name}, report visual`);
       reads.push(F.read ? F.read(rw) : `SRA runway ${rw}, wilco`);
       if (ac.state === 'MISSED') { ac.state = 'VECTORS'; ac.gaTurn = true; }
@@ -3611,14 +3884,14 @@ function commandRun(str){
       if (ac.kind !== 'ARR' || !air) { sys(`${ac.cs} is not on approach.`); continue; }
       { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): you can't clear ${ac.cs} to land. Hold it or send it around.`, true); continue; } }
       const rw = ac.app || S.rwy; ac.ctl = true; ac.need = null; ac.freq = 'TWR';
-      said.push(`runway ${rw}, cleared to land, ${windPhrase()}`); reads.push(`cleared to land runway ${rw}`);
+      { const [sa, ra] = PH.ctl(ac, rw); said.push(sa); reads.push(ra); }
       if (APT.xing && (S.xing.st === 'OPEN' || S.xing.st === 'OPENING')) sys('Winston Churchill Avenue is still open.');
     } else if (t === 'GA' && air) {
       if (ac.kind !== 'ARR') { sys(`${ac.cs} is a departure.`); continue; }
       emgOnGA(ac); goAround(ac, null); said.push(`go around, I say again go around, climb ${altWords(APT.gaAlt)}`); reads.push(`going around, climbing ${altShort(APT.gaAlt)}`);
     } else if (t === 'HO' || t === 'CONT') {
       if (!air) { sys(`${ac.cs} is on the ground and stays with Tower.`); continue; }
-      const unit = ac.kind === 'DEP' ? (ac.freq === 'TWR' ? APT.radar : NEXT_UNIT[ac.gate]) : APT.tower;
+      const unit = ac.kind === 'DEP' ? (ac.freq === 'TWR' ? APT.depRadar || APT.radar : NEXT_UNIT[ac.gate]) : APT.tower;
       const fq = toks[i+1] && /^1\d\d(\.\d{1,3})?$/.test(toks[i+1]) ? toks[++i] : unit[1];
       if (fq !== unit[1] && +fq !== +unit[1]) {   // wrong frequency: the crew reads it back, finds nobody there and comes back
         ac.lost = { f: fq, until: S.t + rnd(25, 45) };
@@ -3644,11 +3917,11 @@ function commandRun(str){
       const face = dir || pushRec(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw());
       setPath(ac, pushPath(ac, face), 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
       const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
-      said.push(`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${APT.faceWord(face)}, QNH ${S.wx.qnh}`); reads.push(`cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${APT.faceWord(face)}, QNH ${S.wx.qnh}`);
+      { const [sa, ra] = PH.push(ac, dn, face); said.push(sa); reads.push(ra); }
     } else if (t === 'TAXI') {
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
       let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
-      const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
+      const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
       { const why = APT.taxiCheck && APT.taxiCheck(ac, hp); if (why) { sys(why); continue; } }
       const rt = taxiRoute(ac, hp, via); if (!rt) { sys(`No taxi route to holding point ${hp}.`); continue; }
       ac.hp = hp;
@@ -3657,10 +3930,17 @@ function commandRun(str){
       if (ac.pushed && !ac.leftStand && pts.length > 1 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90) pts.shift();
       if (ac.state === 'PARKED') { ac.pushed = false; pts.unshift(ac.stand.lp); }
       ac.state = 'TAXI'; ac.need = null; ac.leftStand = true; ac.held = false;
-      setPath(ac, pts, 15, () => { ac.state = 'HOLDPT'; if (!ac.cto) { ac.need = 'Ready for departure'; pilot(ac, `holding point ${PHON[hp]}, ready for departure`); } else startLineUp(ac); });
+      setPath(ac, pts, 15, () => { ac.state = 'HOLDPT'; if (!ac.cto) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac); });
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       const vw = viaOf(rt.tws, hp);
-      said.push(`taxi to holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw()}, QNH ${S.wx.qnh}`); reads.push(`holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw()}, QNH ${S.wx.qnh}`);
+      { const [sa, ra] = PH.taxi(ac, hp, vw); said.push(sa); reads.push(ra); }
+    } else if (t === 'CROSS' || t === 'X') {
+      if (air || !ac.path) { sys(`${ac.cs} is not taxiing.`); continue; }
+      const want = RW_ENDS.includes(toks[i+1]) ? rwyOf(toks[++i]).id : ac.hsAt || (xingAhead(ac) >= 0 ? ac.path.pts[xingAhead(ac)].hs : null);
+      if (!want) { sys(`${ac.cs} has no runway to cross on its route.`); continue; }
+      (ac.xok ||= []).push(want);
+      const [sa, ra] = PH.cross(ac, rwyName(want)); said.push(sa); reads.push(ra);
+      if (ac.hsAt === want && ac.need && ac.need.startsWith('Holding short')) ac.need = null;
     } else if (t === 'HP' || t === 'STOP') {
       if (air || !ac.path || ac.state === 'TAKEOFF') { sys(`${ac.cs} is not taxiing.`); continue; }
       ac.held = true; said.push('hold position'); reads.push('holding position');
@@ -3669,27 +3949,28 @@ function commandRun(str){
       ac.held = false; said.push('continue taxi'); reads.push('continuing');
     } else if (t === 'LU') {
       if (ac.state !== 'HOLDPT') { sys(`${ac.cs} is not at a holding point.`); continue; }
-      if (S.acs.some(o => o !== ac && o.onRwy)) sys('Careful: the runway is occupied.', true);
+      if (S.acs.some(o => o !== ac && onRunway(o, depRw()))) sys('Careful: the runway is occupied.', true);
       if (APT.xing && S.xing.st !== 'CLOSED' && ((S.rwy === RW_LO && HOLDS[ac.hp].m > XING_M) || (S.rwy === RW_HI && HOLDS[ac.hp].m < XING_M))) sys('The backtrack crosses Winston Churchill Avenue: close the road first.', true);
       startLineUp(ac);
-      { const lu = APT.lineUpWords ? APT.lineUpWords(ac.hp) : 'line up and backtrack'; said.push(`via ${PHON[ac.hp]}, ${lu} runway ${depRw()}`); reads.push(`${lu} runway ${depRw()}`); }
+      { const [sa, ra] = PH.lineUp(ac, ac.hp); said.push(sa); reads.push(ra); }
     } else if (t === 'CTO') {
       if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state)) { sys(`${ac.cs} is not ready for takeoff.`); continue; }
       { const tl = APT.toLimit && APT.toLimit(depRw()); if (tl) { atc(ac, `runway ${depRw()}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
       if (S.wx.vis < 1000) { atc(ac, `runway ${depRw()}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw()}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
-      { const R = ac.rel, who = relUnit(ac);
+      if (needRel(ac)) { const R = ac.rel, who = relUnit(ac);
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
       const sid = sidName(ac.gate, depRw()), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
       ac.cto = true; ac.need = null; ac.depRwy = depRw();
       if (ac.state === 'HOLDPT') startLineUp(ac);
-      said.push(`${chg ? 'amended clearance, ' : ''}${sidSpoken(sid)} departure, runway ${depRw()}, cleared for takeoff, ${windPhrase()}`); reads.push(`${chg ? 'amended, ' : ''}${sidSpoken(sid)}, cleared for takeoff runway ${depRw()}`);
+      { const [sa, ra] = PH.cto(ac, sid, chg); said.push(sa); reads.push(ra); }
       if (ac.state === 'LINEDUP') beginTakeoff(ac);
     } else if (t === 'VAC') {
       if (!(ac.state === 'ROLLED' || ac.state === 'ROLLOUT' || (ac.state === 'VACATING' && ac.onRwy))) { sys(`${ac.cs} is ${ac.state === 'VACATING' ? 'already off the runway' : 'not on the runway'}.`); continue; }
-      if (toks[i+1] && HOLDS[toks[i+1]]) ac.reqExit = toks[++i];
+      if (toks[i+1] && APT.exitFor && /^[A-Z]{1,2}\d{0,2}(~\d)?$/.test(toks[i+1]) && APT.exitFor(ac, toks[i+1])) ac.reqExit = APT.exitFor(ac, toks[++i]);   // "VAC H": that taxiway's exit ahead
+      else if (toks[i+1] && HOLDS[toks[i+1]]) ac.reqExit = toks[++i];
       startVacate(ac, false);
       const stp = ac.stand ? `stand ${ac.stand.id}` : 'as directed';
       said.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}, taxi ${stp}${viaWords(ac.taxiVia || [])}`); reads.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate ${PHON[ac.exit]}, ${stp}`);
@@ -3698,7 +3979,7 @@ function commandRun(str){
     } else if (t === 'WS') {
       const a = emgWS(ac); if (!a) { sys('No windshear has been reported.'); continue; } said.push(a); reads.push('copied the windshear');
     } else if (t === 'REL') {
-      if (ac.kind !== 'DEP' || air) { sys(`${ac.cs} doesn't need a departure release.`); continue; }
+      if (ac.kind !== 'DEP' || air || !needRel(ac)) { sys(`${ac.cs} doesn't need a departure release.`); continue; }
       if (ac.rel && ac.rel.st === 'REQ') { sys(`Release for ${ac.cs} already requested: ${relUnit(ac)} will call back.`); continue; }
       if (ac.rel && ac.rel.st === 'OK') { sys(`${ac.cs} is already released until ${zt(ac.rel.until).slice(0,5)}.`); continue; }
       requestRelease(ac);
@@ -3784,7 +4065,7 @@ function step(dt){
   stepTows(); if (S.emg) stepEmerg(dt);
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
-    if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
+    if (ac.state === 'TOW') { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
     if (ac.kind === 'ARR' && ac.app && !ac.stand && !ac.handed) planStand(ac);
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
     if (ac.rel) stepRelease(ac);
@@ -3907,7 +4188,7 @@ function stepAir(ac, dt){
   if (ac.kind === 'DEP' && (ac.state === 'AIRBORNE' || ac.state === 'CLIMB')) {
     APT.depTurn(ac);
     if (ac.alt > 1000 && !ac.calledAir) { ac.calledAir = true; if (ac.freq === 'TWR') ac.need = 'Airborne, transfer to Radar'; }
-    if (ac.freq === 'RAD' && !ac.calledRad) { ac.calledRad = true; ac.state = 'CLIMB'; pilot(ac, `${APT.radar[0]}, passing ${Math.round(ac.alt/100)*100} feet climbing ${altShort(ac.tgtAlt)}, ${ac.onSid && ac.sid ? sidSpoken(ac.sid) + ' departure' : 'heading ' + hdg3(ac.hdg)}`); }
+    if (ac.freq === 'RAD' && !ac.calledRad) { ac.calledRad = true; ac.state = 'CLIMB'; pilot(ac, PH.depCall(ac)); }
     const clearRock = APT.depClear(ac);
     if (ac.onSid && ac.mode === 'HDG' && clearRock && (ac.alt > 3500 || !crossesRock(ac, WP[EXIT_ROUTE[ac.gate][0]].p))) { ac.onSid = false; ac.reqDct = true; ac.mode = 'NAV'; ac.route = EXIT_ROUTE[ac.gate].slice(); }
     if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && clearRock) { ac.reqDct = true; const fx = EXIT_ROUTE[ac.gate][0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
@@ -3947,16 +4228,16 @@ function stepAir(ac, dt){
     if (fin.togo < 0.9 && !ac.ctl && !ac.warnedCtl) { ac.warnedCtl = true; pilot(ac, `short final runway ${rw}, request landing clearance`); ac.need = 'Short final, no clearance'; }
     { const blk = rwyBlocked(); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
-    if (fin.togo < 0.4 && S.acs.some(o => o !== ac && o.onRwy)) return goAround(ac, 'runway occupied');
+    if (fin.togo < 0.4 && S.acs.some(o => o !== ac && onRunway(o, rw))) return goAround(ac, 'runway occupied');
     if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { S.score.incidents++; S.score.pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
     if (fin.togo < 1.5 && ac.alt > gpAlt(fin.togo, apk(ac)) + 400) return goAround(ac, 'unstable, too high');
     if (fin.togo < 0.7) { // short final: settle onto the extended centreline (the 09 SRA joins it on a curve)
-      const m = mOf([ac.x, ac.y]), off = offOf([ac.x, ac.y]);
-      if (Math.abs(off) < 400) { const k = Math.exp(-dt*0.7); [ac.x, ac.y] = rm(m, off*k); ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, crsOf(rw)), -3*dt, 3*dt)); }
+      const R = rwyOf(rw), m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]);
+      if (Math.abs(off) < 400) { const k = Math.exp(-dt*0.7); [ac.x, ac.y] = R.rm(m, off*k); ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, crsOf(rw)), -3*dt, 3*dt)); }
     }
     if (fin.togo < -0.12 && ac.alt < tdElev(rw) + 70) { // touchdown
-      ac.ground = true; ac.onRwy = true; ac.alt = ELEV; ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
-      ac.rollDir = rw === RW_LO ? 1 : -1; ac.hdg = crsOf(rw); { const m = mOf([ac.x, ac.y]), off = offOf([ac.x, ac.y]); [ac.x, ac.y] = rm(m, clamp(off, -8, 8)); } S.score.landed++; S.score.pts += 25; ac.need = null;
+      const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = ELEV; ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
+      ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } S.score.landed++; S.score.pts += 25; ac.need = null;
       emit('landed', ac);
     }
   }
@@ -3965,13 +4246,20 @@ function stepAir(ac, dt){
 }
 
 function stepGround(ac, dt){
-  if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && !ac.tow && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, `${APT.tower[0]}, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up and push back`); }
+  if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && !ac.tow && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, PH.startReq(ac)); }
   if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt) { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
   if (ac.path) {
     const tgt = ac.path.pts[0], d = dist(ac.x, ac.y, ...tgt);
     let spd = ac.path.reverse ? ac.path.spd : Math.min(ac.path.spd, taxiLimit(ac));
     if (ac.state === 'VACATING' && ac.onRwy) spd = Math.min(vacSpeed(ac, dt), spd < ac.path.spd ? spd : Infinity);
     if (ac.held) spd = 0;
+    // a runway in use ahead: stop at its holding position until cleared to cross (CROSS)
+    { const k = xingAhead(ac);
+      if (k >= 0) {
+        let D = dist(ac.x, ac.y, ...ac.path.pts[0]); for (let i = 1; i <= k; i++) D += dist(...ac.path.pts[i-1], ...ac.path.pts[i]);
+        if (D < 0.25) spd = Math.min(spd, D < 0.004 ? 0 : Math.max(3, Math.sqrt(2*TAXI_DEC*Math.max(0, D - 0.003)*3600)));
+        if (D < 0.006 && ac.hsAt !== ac.path.pts[k].hs) { ac.hsAt = ac.path.pts[k].hs; ac.need = `Holding short ${rwyName(ac.hsAt)}`; pilot(ac, PH.holdShort(ac, rwyName(ac.hsAt))); }
+      } }
     // a tow crossing from Charlie holds short of the runway while anything is at, or taxiing to, holding point Alpha,
     // where the crossing comes off; otherwise the tug and that departure block each other with the runway occupied
     if (ac.state === 'TOW' && ac.towCross && !ac.onRwy && spd > 0) {
@@ -3993,7 +4281,13 @@ function stepGround(ac, dt){
     // speed builds up and drops off gradually; a stop for traffic brakes harder
     const cur = ac.gs || 0, v = spd >= cur ? Math.min(spd, cur + TAXI_ACC*dt) : Math.max(spd, cur - (spd === 0 ? 6 : TAXI_DEC)*dt);
     const mv = v/3600*dt; ac.gs = v; ac.ias = v;
-    const done = () => { ac.path.pts.shift(); if (!ac.path.pts.length) { const cb = ac.path.onDone; ac.path = null; ac.gs = 0; cb && cb(); } };
+    const done = () => {
+      const p = ac.path.pts.shift();
+      // crossing a runway: on it from the holding position on one side to the one on the other
+      if (p.hs && p.hs === ac.xing) { if (ac.xcross) emit('rwyx', ac); ac.xing = null; ac.xcross = null; ac.onRwy = false; ac.xok = (ac.xok || []).filter(r => r !== p.hs); }
+      else if (p.hs && ac.path.pts.length && hsEnters([p, ...ac.path.pts], 0)) { ac.xing = ac.xcross = p.hs; if (activeRwy(p.hs)) { ac.onRwy = true; ac.rwyId = p.hs; } if (ac.hsAt === p.hs) { ac.hsAt = null; if (ac.need && ac.need.startsWith('Holding short')) ac.need = null; } }
+      if (!ac.path.pts.length) { const cb = ac.path.onDone; ac.path = null; ac.gs = 0; cb && cb(); }
+    };
     if (v <= 0) {}
     else if (ac.path.reverse) {   // pushed by the tug: straight back along the push line
       const b = brg(ac.x, ac.y, ...tgt); ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, norm(b+180)), -25*dt, 25*dt));
@@ -4018,23 +4312,24 @@ function stepGround(ac, dt){
       }
     }
   }
-  if (ac.onRwy && ac.state === 'VACATING' && Math.abs(offOf([ac.x, ac.y])) > 45) ac.onRwy = false;
+  if (ac.onRwy && ac.state === 'VACATING' && !ac.xcross && Math.abs(rwyById(ac.rwyId).offOf([ac.x, ac.y])) > 45) ac.onRwy = false;
   if (ac.state === 'ROLLOUT') {
+    const R = rwyById(ac.rwyId);
     ac.ias = Math.max(15, ac.ias - 4.2*dt); ac.gs = ac.ias;
-    const mv = ac.ias/3600*dt; ac.x += RU[0]*ac.rollDir*mv; ac.y += RU[1]*ac.rollDir*mv;
-    const m = mOf([ac.x, ac.y]), off = offOf([ac.x, ac.y]);
-    if (Math.abs(off) > 0.05) [ac.x, ac.y] = rm(m, off*Math.exp(-dt*1.5));   // keep the roll-out on the centreline
+    const mv = ac.ias/3600*dt; ac.x += R.RU[0]*ac.rollDir*mv; ac.y += R.RU[1]*ac.rollDir*mv;
+    const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]);
+    if (Math.abs(off) > 0.05) [ac.x, ac.y] = R.rm(m, off*Math.exp(-dt*1.5));   // keep the roll-out on the centreline
     // below 40 kt the crew picks its exit and vacates by itself, reporting which way it is going
     if (ac.ias <= 40) {
       startVacate(ac, true);
       pilot(ac, `${ac.backtrack ? 'backtracking, ' : ''}vacating via ${PHON[ac.exit]}, ${ac.stand ? 'for stand ' + ac.stand.id : 'as directed'}`);
     }
-    else if (ac.ias <= 15.5 || m < APT.roll[0] || m > APT.roll[1]) { ac.state = 'ROLLED'; ac.gs = 0; ac.need = 'Request vacate'; pilot(ac, `runway ${ac.app}, ${APT.rolledCall || 'request backtrack and taxi'}`); }
+    else if (ac.ias <= 15.5 || m < R.roll[0] || m > R.roll[1]) { ac.state = 'ROLLED'; ac.gs = 0; ac.need = 'Request vacate'; pilot(ac, `runway ${ac.app}, ${APT.rolledCall || 'request backtrack and taxi'}`); }
   }
   if (ac.state === 'TAKEOFF') {
     ac.ias += (ac.perf.wake === 'H' ? 4.0 : 4.2)*dt; ac.gs = ac.ias;
-    const u = ac.depRwy === RW_HI ? -1 : 1, mv = ac.ias/3600*dt;
-    ac.x += RU[0]*u*mv; ac.y += RU[1]*u*mv;
+    const R = rwyOf(ac.depRwy), u = ac.depRwy === R.hi ? -1 : 1, mv = ac.ias/3600*dt;
+    ac.x += R.RU[0]*u*mv; ac.y += R.RU[1]*u*mv;
     if (ac.ias >= ac.perf.vr) {
       ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = ELEV + 10; ac.ias = ac.perf.vr;
       APT.liftoff(ac);
@@ -4174,8 +4469,8 @@ function drawProcedures(){
   cx.lineWidth = 1;
   for (const g of Object.keys(ARR_ROUTE)) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][S.rwy].map(id => WP[id].p), false); cx.stroke(); }
   cx.setLineDash([]);
-  for (const k of [RW_HI, RW_LO]) {
-    const F = FINAL[k]; cx.strokeStyle = k === S.rwy ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = k === S.rwy ? 1.3 : 1;
+  for (const k of RW_ENDS) {
+    const F = FINAL[k]; if (!F) continue; cx.strokeStyle = k === S.rwy ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = k === S.rwy ? 1.3 : 1;
     poly(F.pts, false); cx.stroke();
     if (F.ticks) { const ob = norm(crsOf(k) + 180), nx = Math.cos(ob*D2R), ny = Math.sin(ob*D2R); for (let n = 1; n <= 10; n++) { const p = add(F.pts[F.pts.length-1], ob, n), L = n % 5 === 0 ? 7 : 4; cx.beginPath(); cx.moveTo(sx(p[0]) - nx*L, sy(p[1]) - ny*L); cx.lineTo(sx(p[0]) + nx*L, sy(p[1]) + ny*L); cx.stroke(); } }
   }
@@ -4219,6 +4514,7 @@ const AD = {
   ...AD_SITE
 };
 function drawAirport(){
+  if (APT.drawAirport) return APT.drawAirport();   // several runways (New York) draw themselves
   const sc = V.scale, mpx = sc/1852;
   const c = (m, off) => { const p = rm(m, off); return [sx(p[0]), sy(p[1])]; };
   const path = (pts, close=true) => { cx.beginPath(); pts.forEach(([m,o],i) => cx[i?'lineTo':'moveTo'](...c(m,o))); if (close) cx.closePath(); };
@@ -4472,13 +4768,14 @@ function renderAtis(){
   $('atis').innerHTML = `
     <div class="ph"><span class="lbl">ATIS</span><button id="atisRead" class="atis-letter" title="Read the ATIS broadcast">${S.atis}</button>${APT.splitRwy ? '' : `<span class="lbl dimmer">${phonetic(S.atis)}</span>`}
       <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">${APT.splitRwy ? 'Land' : 'Runway'}</span>
-      <span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span>${APT.splitRwy ? `<span class="lbl">Dep</span><span class="seg sm"><button id="drHi" class="${depRw()===RW_HI?'on':''}">${RW_HI}</button><button id="drLo" class="${depRw()===RW_LO?'on':''}">${RW_LO}</button></span>` : ''}</div>
+      ${RW_ENDS.length > 2 ? `<select id="rwSel" class="rwsel" aria-label="Landing runway">${RW_ENDS.map(r => `<option${r === S.rwy ? ' selected' : ''}>${r}</option>`).join('')}</select><span class="lbl">Dep</span><select id="drSel" class="rwsel" aria-label="Departure runway">${RW_ENDS.map(r => `<option${r === depRw() ? ' selected' : ''}>${r}</option>`).join('')}</select>`
+        : `<span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span>${APT.splitRwy ? `<span class="lbl">Dep</span><span class="seg sm"><button id="drHi" class="${depRw()===RW_HI?'on':''}">${RW_HI}</button><button id="drLo" class="${depRw()===RW_LO?'on':''}">${RW_LO}</button></span>` : ''}`}</div>
     <div class="metar"></div>
     <div class="tiles">
       <div class="tile"><div class="lbl">Wind</div><div class="v">${w.vrb?'VRB':hdg3(w.dir)}°/${w.spd}${w.gust?'<small>G'+w.gust+'</small>':''}</div></div>
       <div class="tile"><div class="lbl">Head / X ${S.rwy}</div><div class="v ${wl ? 'bad':''}" ${wl ? `title="${esc(wl)}"` : ''}>${Math.round(c.head)} / ${Math.round(c.cross)}</div></div>
       <div class="tile"><div class="lbl">Vis · Cloud</div><div class="v ${w.vis < 5000 ? 'bad' : ''}">${w.vis >= 9999 ? '10k+' : w.vis} <small>${esc(cloud.split(' ')[0] || '')}</small></div></div>
-      <div class="tile"><div class="lbl">QNH</div><div class="v">${w.qnh}</div></div>
+      <div class="tile"><div class="lbl">${APT.inHg ? 'Altimeter' : 'QNH'}</div><div class="v">${APT.inHg ? w.inhg.toFixed(2) : w.qnh}</div></div>
       ${APT.rnp ? (() => { const a = APT.minsOk(w, S.rwy), r = APT.rnpMinsOk(w, S.rwy); return `<div class="tile" title="Circling minima / RNP AR minima"><div class="lbl">${APT.appShort} · RNP</div><div class="v ${a ? 'ok' : r ? '' : 'bad'}">${a ? 'OK' : 'BELOW'} · ${r ? 'OK' : 'BELOW'}</div></div>`; })()
         : `<div class="tile"><div class="lbl">${APT.appShort} mins</div><div class="v ${APT.minsOk(w, S.rwy)?'ok':'bad'}">${APT.minsOk(w, S.rwy)?'OK':'BELOW'}</div></div>`}
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
@@ -4494,13 +4791,15 @@ function renderAtis(){
       <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`}`;
   $('atis').querySelector('.metar').textContent = w.raw;
   $('atisRead').onclick = () => openAtis();
-  $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO);
+  if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
+  else { $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO); }
   if ($('drHi')) { $('drHi').onclick = () => setDepRwy(RW_HI); $('drLo').onclick = () => setDepRwy(RW_LO); }
   if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
   if ($('xBtn')) $('xBtn').onclick = toggleXing;
 }
 function setRwy(r){
-  if (S.rwy === r) return; S.rwy = r; nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
+  // New York: the landing runway brings its departure runway
+  if (S.rwy === r) return; S.rwy = r; if (APT.depFor) S.depRwy = APT.depFor(r); nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
   for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][r]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
   renderAtis(); emit('rwy', r);
 }
@@ -4512,6 +4811,8 @@ function toggleXing(){
   else { if (S.acs.some(a => a.onRwy)) { sys('The runway is occupied, the road must stay closed.', true); return; } X.st = 'OPENING'; X.t = S.t + 15; X.queue = 0; emit('xing', 'OPENING'); }
   renderAtis();
 }
+// strips show flight levels above this (the US transition altitude is 18,000 ft)
+const FL_ABOVE = APT.inHg ? APT.ta : 6000;
 const ICON = {
   up: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2l5 6H9v6H7V8H3z" fill="currentColor"/></svg>',
   dn: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14l5-6H9V2H7v6H3z" fill="currentColor"/></svg>'
@@ -4519,7 +4820,7 @@ const ICON = {
 const relCls = ac => { const R = ac.rel; return !R ? 'none' : R.st === 'REQ' ? 'req' : R.st === 'EXP' ? 'exp' : R.nb && S.t < R.nb ? 'req' : 'ok'; };
 function relText(ac){
   const R = ac.rel, who = relUnit(ac), sid = ac.sid || sidName(ac.gate, depRw());
-  const st = !R ? `no release from ${who} yet` : R.st === 'REQ' ? `release requested, ${who} will call back` : R.st === 'EXP' ? 'release expired: request a new one' : R.nb && S.t < R.nb ? `released not before ${zt(R.nb).slice(0,5)}, until ${zt(R.until).slice(0,5)}` : `released until ${zt(R.until).slice(0,5)}`;
+  const st = !needRel(ac) ? 'no release needed' : !R ? `no release from ${who} yet` : R.st === 'REQ' ? `release requested, ${who} will call back` : R.st === 'EXP' ? 'release expired: request a new one' : R.nb && S.t < R.nb ? `released not before ${zt(R.nb).slice(0,5)}, until ${zt(R.until).slice(0,5)}` : `released until ${zt(R.until).slice(0,5)}`;
   return `<b>${esc(sid)}</b> · ${st}`;
 }
 function renderSel(){
@@ -4531,7 +4832,7 @@ function renderSel(){
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
-  if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${relCls(ac)}">${relText(ac)}</div>`;
+  if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
   if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
@@ -4543,8 +4844,8 @@ function renderSel(){
     if (ac.diverting) html += b(`DCT ${ac.diverting} A${(APT.divertAlt || 8000)/100}`, 'Approve diversion', true, 'go');
     if (ac.need === 'Say again' && ac.lastCmd) html += b(ac.lastCmd, 'Say again: ' + esc(ac.lastCmd), true, 'go');
     if (ac.kind === 'ARR' && S.emg && S.emg.ws && !ac.wsTold) html += b('WS', 'Pass windshear', true, 'go');
-    if (ac.kind === 'ARR') html += b('APP '+RW_HI, APT.appShort+' '+RW_HI, true, S.rwy===RW_HI?'on':'') + b('APP '+RW_LO, APT.appShort+' '+RW_LO, true, S.rwy===RW_LO?'on':'') + (APT.rnp ? APT.rnpButtons(S.rwy).map(([c, l]) => b(c, l, true, ac.need === 'Request RNP approach' ? 'go' : '')).join('') : '') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
-    else html += b('HO', ac.freq === 'TWR' ? `To ${APT.radar[0].split(' ').pop()} ${APT.radar[1]}` : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A'+APT.climbFL, 'Climb FL'+APT.climbFL);
+    if (ac.kind === 'ARR') html += (APT.appRwys ? APT.appRwys() : [RW_HI, RW_LO]).map(r => b('APP '+r, APT.appShort+' '+r, true, S.rwy===r?'on':'')).join('') + (APT.rnp ? APT.rnpButtons(S.rwy).map(([c, l]) => b(c, l, true, ac.need === 'Request RNP approach' ? 'go' : '')).join('') : '') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
+    else html += b('HO', ac.freq === 'TWR' ? `To ${(APT.depRadar || APT.radar)[0].split(' ').pop()} ${(APT.depRadar || APT.radar)[1]}` : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A'+APT.climbFL, 'Climb FL'+APT.climbFL);
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).filter(k => !WP[k].hide).map(k => `<option>${k}</option>`).join('')}</select></div>`;
   } else {
     html += `<div class="btns">`;
@@ -4554,16 +4855,17 @@ function renderSel(){
       if (ac.need === 'Request tow') html += b('TOW', `Approve tow to stand ${ac.tow && ac.tow.to ? ac.tow.to.id : ''}`, true, 'go');
       html += b('POP:push','Start &amp; push…', startReq, startReq ? 'go' : '');
       html += b('POP:taxi', ac.state === 'TAXI' ? 'Re-route taxi…' : 'Taxi…', canTaxi && ac.state !== 'HOLDPT', ac.state === 'READY' && ac.need ? 'go' : '');
-      const R = ac.rel, relOk = R && R.st === 'OK' && !(R.nb && S.t < R.nb), canRel = ac.state !== 'TOW';
-      html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
+      const R = ac.rel, relOk = !needRel(ac) || (R && R.st === 'OK' && !(R.nb && S.t < R.nb)), canRel = ac.state !== 'TOW';
+      if (needRel(ac)) html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
       html += b('LU','Line up', ac.state === 'HOLDPT') + b('CTO','Cleared take-off', ['HOLDPT','LINEUP','LINEDUP'].includes(ac.state), relOk ? 'go' : '');
     } else {
       // the runway exits offered come from the airport's profile
       // it vacates by itself; these override the exit until it is off the runway
       const canVac = ['ROLLED','ROLLOUT'].includes(ac.state) || (ac.state === 'VACATING' && ac.onRwy);
-      html += (APT.vacExits ? APT.vacExits(ac) : Object.keys(HOLDS)).map(h => b('VAC '+h, 'Vacate '+h, canVac, ac.state === 'VACATING' && ac.exit === h ? 'on' : '')).join('');
+      html += (APT.vacExits ? APT.vacExits(ac) : Object.keys(HOLDS)).map(h => b('VAC '+h, 'Vacate '+h.replace(/~\d+$/, ''), canVac, ac.state === 'VACATING' && ac.exit === h ? 'on' : '')).join('');
       html += b('VAC','Backtrack &amp; taxi in', ['ROLLED','ROLLOUT'].includes(ac.state), ac.state === 'ROLLED' ? 'go' : '');
     }
+    if (xingAhead(ac) >= 0) { const r = rwyName(ac.path.pts[xingAhead(ac)].hs); html += b('CROSS ' + r, 'Cross runway ' + r, true, ac.hsAt ? 'go' : ''); }
     html += b(ac.held ? 'RES' : 'HP', ac.held ? 'Continue taxi' : 'Hold position', !!ac.path && ac.state !== 'TAKEOFF');
     html += `</div>`;
   }
@@ -4608,7 +4910,7 @@ function openPushPop(ac, anchor){
   showPop(ac, anchor, `<div class="lbl">Start-up and push back</div><h4>${ac.cs} <span>stand ${st.id} · ${ac.t}</span></h4>
     <p class="hint">Choose which way the nose faces after the push. Face the way it will taxi: runway ${depRw()} departures leave from ${PHON[depHold(ac)]}.</p>
     <div class="opts two">${opts.map((o, j) => `<button class="opt${o.rec ? ' rec' : ''}" data-j="${j}">${COMPASS(o.f === 'east' ? CRS_LO : CRS_HI)}<b>Face ${APT.faceWord(o.f)}</b><span>Tail ${APT.faceWord(o.f === 'east' ? 'west' : 'east')} · towards ${PHON[o.hp]}</span>${o.rec ? '<i>Recommended</i>' : ''}</button>`).join('')}</div>
-    <div class="phr">“${spoken(ac.cs)}, start-up and push back approved, facing <em>${rec}</em>, QNH ${S.wx.qnh}”</div>`, () => {
+    <div class="phr">“${spoken(ac.cs)}, start-up and push back approved, facing <em>${rec}</em>, ${PH.altim()}”</div>`, () => {
     pop.querySelectorAll('.opt').forEach(bt => {
       const o = opts[+bt.dataset.j];
       const pv = () => { S.preview = { pts: o.pts, label: 'Push · face ' + APT.faceWord(o.f) }; pop.querySelector('.phr em').textContent = APT.faceWord(o.f); };
@@ -4620,7 +4922,7 @@ function openPushPop(ac, anchor){
 }
 function openTaxiPop(ac, anchor){
   const south = ac.stand && ac.stand.area === 'south' && !ac.leftStand || (ac.leftStand && offOf([ac.x, ac.y]) < 0);
-  const hps = APT.taxiHolds(south), rec = depHold(ac);
+  const hps = APT.taxiHolds(south, ac), rec = depHold(ac);
   hps.sort((a, b) => (b === rec) - (a === rec));
   const groups = hps.map(hp => ({ hp, opts: taxiOptions(ac, hp) })).filter(g => g.opts.length);
   const pre = ac.state === 'PARKED' ? [ac.stand.lp] : [[ac.x, ac.y]];
@@ -4630,9 +4932,10 @@ function openTaxiPop(ac, anchor){
   showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${depRw()}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
     <p class="hint">Pick a holding point and the routing. Hover to preview it on the scope. ${APT.taxiHint(depRw())}</p>
     ${groups.map(g => `<div class="grp"><div class="gh"><b>Holding point ${PHON[g.hp]}</b><span>${HOLDS[g.hp].rgl ? 'Guard lights' : ''}${g.hp === rec ? ' · runway ' + depRw() + ' departure point' : ''}</span></div>
-      ${g.opts.map(o => { const j = all.findIndex(a => a.o === o); const a = all[j]; return `<button class="opt row${a.rec ? ' rec' : ''}" data-j="${j}"><span class="hp">${g.hp}</span><b>via ${(o.via.length ? o.via : [g.hp]).map(t => PHON[t]).join(', ')}</b><span class="ln">${len(o)} m</span>${a.rec ? '<i>Recommended</i>' : ''}</button>`; }).join('')}</div>`).join('')}
-    <div class="phr">“${spoken(ac.cs)}, taxi to holding point <em></em>, runway ${depRw()}, QNH ${S.wx.qnh}”</div>`, () => {
-    const say = a => pop.querySelector('.phr em').textContent = PHON[a.hp] + (a.o.via.length ? ' via ' + a.o.via.map(t => PHON[t]).join(', ') : '');
+      ${g.opts.map(o => { const j = all.findIndex(a => a.o === o); const a = all[j]; return `<button class="opt row${a.rec ? ' rec' : ''}" data-j="${j}"><span class="hp">${g.hp.replace(/~\d+$/, '')}</span><b>via ${(o.via.length ? o.via : [g.hp]).map(t => PHON[t]).join(', ')}</b><span class="ln">${len(o)} m</span>${a.rec ? '<i>Recommended</i>' : ''}</button>`; }).join('')}</div>`).join('')}
+    <div class="phr">“${spoken(ac.cs)}, ${APT.phr && APT.phr.taxiPop ? APT.phr.taxiPop() : `taxi to holding point <em></em>, runway ${depRw()}, ${PH.altim()}`}”</div>`, () => {
+    const say = a => pop.querySelector('.phr em').textContent = APT.phr && APT.phr.taxiPop ? [...a.o.via, HOLDS[a.hp].ref].map(t => PHON[t] || t).join(', ')
+      : PHON[a.hp] + (a.o.via.length ? ' via ' + a.o.via.map(t => PHON[t]).join(', ') : '');
     pop.querySelectorAll('.opt').forEach(bt => {
       const a = all[+bt.dataset.j];
       const pv = () => { S.preview = { pts: H(a.hp, a.o), label: 'Hold ' + a.hp + (a.o.via.length ? ' via ' + a.o.via.join(' ') : '') }; say(a); };
@@ -4658,7 +4961,7 @@ function renderStrips(force){
     d.querySelector('.cs').textContent = ac.cs;
     d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
     d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
-    d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > 6000 ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > 6000 ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp : 'Ground');
+    d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
     // arrivals show the stand they are going to, once it is planned
     if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
     const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
@@ -4755,14 +5058,14 @@ wxSel.value = APT.defWx;
 const daySel = $('daySel'), hourSel = $('hourSel');
 DAYS.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; daySel.appendChild(o); });
 daySel.value = (new Date().getUTCDay() + 6) % 7;
-const lt = h => String((h + APT.utcOff) % 24).padStart(2,'0');
+const lt = h => String(((h + APT.utcOff) % 24 + 24) % 24).padStart(2,'0');   // New York is behind UTC
 function renderSlots(){
   const d = +daySel.value, keep = hourSel.value, ex = !!EXERCISES[$('trafficSel').value];
   if (/^live/.test($('trafficSel').value)) { daySel.disabled = hourSel.disabled = true; if (typeof renderLiveSlots === 'function') renderLiveSlots(); return; }
   hourSel.innerHTML = '';
   for (const h of SESSION_HOURS) {
     const n = timetableFlights(d, h).length, o = document.createElement('option');
-    o.value = h; o.textContent = `${String(h).padStart(2,'0')}00Z · ${lt(h)}:00 local · ${n ? n + ' scheduled' : 'quiet'}`; hourSel.appendChild(o);
+    o.value = h; o.textContent = `${String(h % 24).padStart(2,'0')}00Z · ${lt(h)}:00 local · ${n ? n + ' scheduled' : 'quiet'}`; hourSel.appendChild(o);
   }
   hourSel.value = keep || 18;
   daySel.disabled = hourSel.disabled = ex || S.running;
@@ -4817,7 +5120,7 @@ $('startBtn').onclick = async () => {
   if (liveTraffic || liveWeather) {
     const bt = $('startBtn'), txt = bt.textContent; bt.disabled = true; bt.textContent = liveTraffic ? 'Loading today’s flights…' : 'Fetching the live METAR…';
     try {
-      if (liveTraffic) { await liveLoad(true); LIVE.session = liveSession(); }
+      if (liveTraffic) { await liveLoad(true); LIVE.session = liveSession(Date.now(), mode); }
       if (!liveBox.checked) { liveBox.checked = true; setLive(true); }
       const m = await fetchMetar();
       if (m) { $('wxPaste').value = m; liveLast = m; }
@@ -5038,9 +5341,11 @@ const BADGES = [
   { id: 'steep',    ap: 'EGLC', name: 'Five point five',    d: 'Land five arrivals on the 5.5° glidepath at London City in one session.', ic: 'M3 6l18 12M3 18h18M15 18a6 6 0 0 0-2-4.5' },
   { id: 'docklands', ap: 'EGLC', name: 'Docklands endorsement', d: 'Complete the three London City guided exercises.',    ic: 'M4 21V9h4v12M10 21V4h4v17M16 21v-8h4v8M2 21h20' },
   { id: 'foehn',    ap: 'LOWI', name: 'Föhn tamer',        d: 'Land three arrivals at Innsbruck in föhn conditions in one session.', ic: 'M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8' },
-  { id: 'valley',   ap: 'LOWI', name: 'Valley endorsement', d: 'Complete the three Innsbruck guided exercises.',         ic: 'M2 20l6-11 4 6 3-4 7 9zM8 9l2-4 2 4' }
+  { id: 'valley',   ap: 'LOWI', name: 'Valley endorsement', d: 'Complete the three Innsbruck guided exercises.',         ic: 'M2 20l6-11 4 6 3-4 7 9zM8 9l2-4 2 4' },
+  { id: 'crossing', ap: 'KJFK', name: 'Crossing guard',    d: 'Cross ten aircraft over an active runway at Kennedy in one session, with no incidents.', ic: 'M2 8h20M2 16h20M12 3v18M9 18l3 3 3-3' },
+  { id: 'kennedy',  ap: 'KJFK', name: 'Kennedy endorsement', d: 'Complete the three New York JFK guided exercises.',     ic: 'M4 21V11l8-6 8 6v10M9 21v-6h6v6M2 21h20' }
 ];
-const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck' };
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -5070,11 +5375,13 @@ function careerCheck(){
     if (s.ap === 'LPMA' && (s.l05 || 0) >= 3) careerAward('rosario');
     if (s.ap === 'EGLC' && s.landed >= 5) careerAward('steep');
     if (s.ap === 'LOWI' && (s.lfoehn || 0) >= 3) careerAward('foehn');
+    if (s.ap === 'KJFK' && (s.rwyx || 0) >= 10 && !s.incidents) careerAward('crossing');
   }
   if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
   if (['mdep','marr','mwind'].every(k => CAR.ex[k])) careerAward('island');
   if (['cdep','carr','ceast'].every(k => CAR.ex[k])) careerAward('docklands');
   if (['idep','iarr','ifoehn'].every(k => CAR.ex[k])) careerAward('valley');
+  if (['kdep','karr','kcross'].every(k => CAR.ex[k])) careerAward('kennedy');
   if (T.secs >= 3600) careerAward('hour');
   if (T.secs >= 36000) careerAward('ten');
   if (T.mov >= 100) careerAward('century');
@@ -5096,6 +5403,7 @@ function careerSync(){
 S.listeners.push((ev, d) => {
   if (ev === 'landed' && carCur && d && d.app === '05' && APT.icao === 'LPMA') { carCur.l05 = (carCur.l05 || 0) + 1; carDirty = true; }
   if (ev === 'landed' && carCur && APT.icao === 'LOWI' && LOWI.isFoehn(S.wx)) { carCur.lfoehn = (carCur.lfoehn || 0) + 1; carDirty = true; }
+  if (ev === 'rwyx' && carCur) { carCur.rwyx = (carCur.rwyx || 0) + 1; carDirty = true; }
   if (ev === 'start') {
     careerSync();
     const w = S.wx, lev = w.dir >= 40 && w.dir <= 140 && w.spd >= 18;
@@ -5109,7 +5417,7 @@ function careerExercise(ex){ if (!CAR.ex[ex]) { CAR.ex[ex] = Date.now(); carDirt
 // ── career page ──
 const fmtHrs = s => s < 3600 ? `${Math.round(s/60)} min` : `${(s/3600).toFixed(s < 36000 ? 1 : 0)} h`;
 const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3',
-  mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3', cdep: 'Exercise 1', carr: 'Exercise 2', ceast: 'Exercise 3', idep: 'Exercise 1', iarr: 'Exercise 2', ifoehn: 'Exercise 3' };
+  mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3', cdep: 'Exercise 1', carr: 'Exercise 2', ceast: 'Exercise 3', idep: 'Exercise 1', iarr: 'Exercise 2', ifoehn: 'Exercise 3', kdep: 'Exercise 1', karr: 'Exercise 2', kcross: 'Exercise 3' };
 function renderCareer(){
   careerSync();
   const T = carTotals(CAR), L = CAR.sessions.slice().reverse();
@@ -5695,7 +6003,7 @@ function liveToday(now = Date.now()){
   return { arr: day.arr.map(r => conv(r, 'ARR')).sort((a, b) => a.tm - b.tm), dep: day.dep.map(r => conv(r, 'DEP')).sort((a, b) => a.tm - b.tm), nowUtc, key, off };
 }
 // sched (arrivals with their turnaround) and residents, the same shape as timetableSession, with m relative to now
-function liveSession(now = Date.now()){
+function liveSession(now = Date.now(), mode = 'live'){
   const T = liveToday(now); if (!T) return null;
   const sched = [], residents = [], used = new Set();
   const pairFor = a => T.dep.find(d => !used.has(d) && !d.cancelled && d.ap === a.ap && fnum(d.cs) - fnum(a.cs) === 1 && d.cs.slice(0, 3) === a.cs.slice(0, 3))
@@ -5710,6 +6018,12 @@ function liveSession(now = Date.now()){
   }
   for (const d of T.dep) if (!used.has(d) && !d.cancelled && !d.done && d.rel > 0)   // night-stoppers and positioning flights
     residents.push({ cs: d.cs, t: d.t, k: 'RES', d: d.ap, gate: gateFor(d.ap), m: 0, depM: d.rel, at: zHM(Date.UTC(2026, 0, 1) + d.tm*60e3), real: true });
+  // a very busy airport (New York JFK: APT.liveThin movements an hour) keeps an even share of its real flights in Live now;
+  // Live now plus extra traffic keeps them all
+  if (APT.liveThin && mode !== 'liveplus') {
+    const mov = sched.filter(f => f.m < 180).length*2 + residents.filter(f => f.depM < 180).length, k = Math.max(1, Math.ceil(mov/(3*APT.liveThin)));
+    return { sched: sched.filter((f, i) => i % k === 0), residents: residents.filter((f, i) => i % k === 0), T };
+  }
   return { sched, residents, T };
 }
 // session picker: today's real flights instead of the timetable slot
@@ -5888,6 +6202,12 @@ function fixFrom(word){
   return bd <= 2 ? best : null;
 }
 const sideOf = w => w.includes('east') ? 'E' : w.includes('west') ? 'W' : '';
+// "runway two two left" -> 22L, "runway zero niner" -> 09, matched against the airport's runway ends
+function heardRwy(s, re = / runway (\d{1,2})( left| right| center)? /){
+  const m = s.match(re); if (!m) return null;
+  const r = String(+m[1]) + (m[2] ? m[2].trim()[0].toUpperCase() : '');
+  return RW_ENDS.find(e => e === r || e === r.padStart(2, '0') || e === m[1] + (m[2] ? m[2].trim()[0].toUpperCase() : '')) || null;
+}
 function phraseToCmd(raw){
   let w = normSpeech(raw);
   const hit = heardCallsign(w);
@@ -5902,7 +6222,7 @@ function phraseToCmd(raw){
   if (/ (no speed restriction|resume normal speed) /.test(s)) out.push('SN');
   else if ((m = s.match(/ speed (\d{2,3}) /))) out.push('S' + m[1]);
   if ((m = s.match(/ direct( to)? (\S+) /))) { const f = fixFrom(m[2]); if (f) out.push('DCT ' + f); }
-  if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) out.push('APP' + ((m = s.match(new RegExp(` runway (${RW_LO}|${RW_HI}|${+RW_LO}) `))) ? ' ' + (m[1] === String(+RW_LO) ? RW_LO : m[1]) : ''));
+  if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) { const r = heardRwy(s); out.push('APP' + (r ? ' ' + r : '')); }
   if (APT.rnp && out.length && out[out.length-1].startsWith('APP') && / (rnp|r n p|rmp) /.test(s)) out[out.length-1] += / (yankee|yankees|y) /.test(s) ? ' RNPY' : / (zulu|z) /.test(s) ? ' RNPZ' : ' RNP';
   if (/ cleared to land /.test(s)) out.push('CTL');
   if (/ goaround /.test(s)) out.push('GA');
@@ -5912,14 +6232,17 @@ function phraseToCmd(raw){
   if (/ (pushback|startup)/.test(s)) { const f = sideOf(s); out.push('PUSH' + (f ? ' ' + f : '')); }
   if ((m = s.match(/ taxi .*?holding point (\S+)/)) || (m = s.match(/ taxi (to )?(\S+)/))) {
     const hp = PHONW[m[m.length-1]] || (m[m.length-1].length === 1 ? m[m.length-1].toUpperCase() : null);
-    if (hp && HOLDS[hp]) {
-      let cmd = 'TAXI ' + hp; const v = s.match(/ via (.+?)( hold| holding| cross| $)/);
-      if (v) { const vl = v[1].split(' ').map(x => PHONW[x]).filter(x => x && PHON[x]); if (vl.length) cmd += ' VIA ' + vl.join(' '); }
+    if ((hp && HOLDS[hp]) || (!hp && / runway /.test(s) && RW_ENDS.length > 2)) {
+      let cmd = 'TAXI' + (hp && HOLDS[hp] ? ' ' + hp : ''); const v = s.match(/ via (.+?)( hold| holding| cross| $)/);
+      // two spoken letters make one taxiway where the airport has it (New York: "kilo delta" is KD)
+      if (v) { const vl = []; let solo = false; for (const x of v[1].split(' ')) { const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
+        const vv = vl.filter(x => PHON[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
       out.push(cmd);
     }
   }
   if (/ tow approved /.test(s) || / approved tow /.test(s)) out.push('TOW');
   if (/ lineup /.test(s)) out.push('LU');
+  if (/ cross runway /.test(s)) { const r = heardRwy(s, / cross runway (\d{1,2})( left| right| center)? /); out.push('CROSS' + (r ? ' ' + r : '')); }
   if (/ cleared( for)? takeoff /.test(s)) out.push('CTO');
   if (/ vacate /.test(s)) out.push('VAC');
   if ((m = s.match(/ (contact|monitor) .*?(1\d\d)( decimal | point | )(\d{1,3}) /))) out.push(`HO ${m[2]}.${m[4]}`);
@@ -6413,11 +6736,11 @@ function cwInit(){
 setTimeout(cwInit, 0);
 
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 const IS_HOST = APT.icao === SITE_HOST, EMBED = location.hash.startsWith('#embed');
 const SIM_HASH = /^(sim|ex\/|wx\/|live$)/;
@@ -6465,13 +6788,14 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// LXGB, LPMA, EGLC and LOWI are built. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB, LPMA, EGLC, LOWI and KJFK are built. The rest are the roadmap: real airports and runway designators, no invented performance data.
 // ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
   { icao:'LPMA', ll:[32.698, -16.774], iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
   { icao:'EGLC', ll:[51.505, 0.055], iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'A 5.5° glidepath past the Canary Wharf towers, RNAV-only SIDs under the London TMA, and a short runway between two docks.' },
   { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'An Alpine valley: the offset LOC/DME East, circling to 08, RNP AR approaches, arrivals and departures head-on, and föhn off the Brenner.' },
+  { icao:'KJFK', ll:[40.640, -73.779], iata:'JFK', name:'New York JFK', ctry:'United States', region:'North America', rwys:['04L/22R','04R/22L','13L/31R','13R/31L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'Four runways in two parallel pairs on Jamaica Bay, arrivals crossing the departure runway, the Kennedy Five and FAA phraseology.' },
   { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'dev', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
   { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'plan', pos:['APP','TWR','GND'], diff:5, blurb:'Four holding stacks, runway alternation and a heavy wake mix on two parallel runways.' },
@@ -6896,6 +7220,15 @@ const SCEN_TEXT = { LPMA: {
   fog: 'Thames fog below the ILS minima. Hold arrivals at JACKO and GODLU and plan diversions to Southend while departures wait for the visibility.',
   storm: 'A gusty south-westerly gale across the docks. Expect turbulence on short final and some go-arounds.',
   calm: 'High pressure, light and variable winds and haze. A quiet day to learn the flow.'
+}, KJFK: {
+  sw: 'The summer sea breeze from the south-west. Land 22L, depart 22R, and cross every arrival over 22R on its way to the terminals.',
+  ne: 'A north-easter off the Atlantic. Land 4R, depart 4L: the arrivals cross 4L at the end of their roll-out.',
+  nw: 'A clear, gusty north-westerly behind a cold front. Land 31R over Howard Beach, depart 31L with the Breezy Point climb.',
+  se: 'Low cloud off the ocean. Land the ILS 13L over Jamaica Bay, depart 13R towards the Canarsie VOR.',
+  ifr: 'Rain and a 400 ft ceiling, the ILS 4R close to its minimums. Expect missed approaches and keep the spacing wide.',
+  storm: 'Summer thunderstorms over the field. Gusts and microburst alerts on final: some arrivals will go around.',
+  fog: 'Dense fog below the CAT I minimums. Hold arrivals at the end of their arrivals and plan diversions to Newark and Boston.',
+  snow: 'Snow on a north-easterly gale. Low visibility, a wet runway and a long wait for every departure.'
 }, LOWI: {
   west: 'The usual light westerly. Arrivals land 26 off the LOC/DME East while departures leave on 08 down the valley towards them.',
   calm: 'A still autumn morning with haze in the valley. Land 26, depart 08, and sequence them head-on through the Inn valley.',
@@ -6974,7 +7307,8 @@ const ENDORSE = {
   LXGB: { name: 'Gibraltar', ex: ['dep', 'arr', 'lev'], badge: 'graduate', p: 'The road across the runway, the SRA, the levanter and releases from Sevilla and Casablanca.' },
   LPMA: { name: 'Madeira', ex: ['mdep', 'marr', 'mwind'], badge: 'island', p: 'Wind limits at two anemometers, the Rosário circuit to runway 05, SIDs out to sea and Lisboa releases.' },
   EGLC: { name: 'London City', ex: ['cdep', 'carr', 'ceast'], badge: 'docklands', p: 'The 5.5° ILS past Canary Wharf, RNAV SIDs held at 3,000 ft under the London TMA, and arrivals from the JACKO and GODLU holds.' },
-  LOWI: { name: 'Innsbruck', ex: ['idep', 'iarr', 'ifoehn'], badge: 'valley', p: 'The offset LOC/DME East from RTT, circling to 08, departures down the valley against the arrivals, minimum vectoring altitudes and föhn.' }
+  LOWI: { name: 'Innsbruck', ex: ['idep', 'iarr', 'ifoehn'], badge: 'valley', p: 'The offset LOC/DME East from RTT, circling to 08, departures down the valley against the arrivals, minimum vectoring altitudes and föhn.' },
+  KJFK: { name: 'New York JFK', ex: ['kdep', 'karr', 'kcross'], badge: 'kennedy', p: 'Four runways in two parallel pairs, the Kennedy Five, ILS approaches, runway crossings, calls for release on flow-restricted routes and FAA phraseology.' }
 };
 function renderHub(){
   const h = $('acHub'); if (!h) return;
@@ -7003,7 +7337,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });
@@ -7159,7 +7493,7 @@ function renderCoach(){
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
   if (done) careerExercise(coach.ex);
   el.innerHTML = done
-    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises', LOWI: 'i-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
+    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises', LOWI: 'i-exercises', KJFK: 'k-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;
   el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
     const c = b.dataset.c;

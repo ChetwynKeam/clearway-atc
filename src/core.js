@@ -7,7 +7,7 @@
 
 // ═════════════════════════ geometry ═════════════════════════
 const D2R = Math.PI/180, R2D = 180/Math.PI;
-const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553], LOWI: [47.2602, 11.3439] };
+const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553], LOWI: [47.2602, 11.3439], KJFK: [40.639925, -73.778939] };
 const [LAT0, LON0] = AIRPORT_ORIGIN[AIRPORT], COSL = Math.cos(LAT0*D2R);
 const M2NM = 1/1852;
 const dms = (d, m, s=0) => d + m/60 + s/3600;
@@ -28,20 +28,21 @@ function ge(a, b, tw){ const e = { a, b, tw, len: dist(...GN[a].p, ...GN[b].p) }
 let kN = 0;
 // a chain of points becomes graph nodes joined by edges carrying the taxiway designator
 function chain(a, pts, b, tw){ let prev = a; for (const [m, o] of pts) { const id = 'k' + (kN++); gn(id, m, o); ge(prev, id, tw); prev = id; } ge(prev, b, tw); }
-const filIn = (hp, side) => FIL[hp][side].map(([m, o]) => rm(m, o));
+const filIn = (hp, side) => FIL[hp][side].map(([m, o]) => holdRwy(hp).rm(m, o));   // in the frame of the hold's runway
 const filOut = (hp, side) => filIn(hp, side).reverse();
-function route(from, to){
+// pen (optional): a cost multiplier per edge, to find alternative routings at big airports
+function route(from, to, pen){
   const dd = { [from]: 0 }, prev = {}, done = new Set();
   while (true) {
     let u = null, best = Infinity; for (const k in dd) if (!done.has(k) && dd[k] < best) { best = dd[k]; u = k; }
     if (u === null) return null; if (u === to) break; done.add(u);
-    for (const [v, e] of GN[u].adj) { if (/^R/.test(v) && v !== to) continue; const nd = dd[u] + e.len; if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; prev[v] = [u, e]; } }
+    for (const [v, e] of GN[u].adj) { if (/^R/.test(v) && v !== to) continue; const nd = dd[u] + e.len*(pen ? pen(e) : 1); if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; prev[v] = [u, e]; } }
   }
   const nodes = [to], tws = []; let c = to;
   while (c !== from) { const [u, e] = prev[c]; nodes.unshift(u); tws.unshift(e.tw); c = u; }
   return { nodes, tws };
 }
-function viaOf(tws, hp){ const v = []; for (const t of tws) if (t !== 'APRON' && t !== hp && v[v.length-1] !== t) v.push(t); return v; }
+function viaOf(tws, hp){ const ref = HOLDS[hp] && HOLDS[hp].ref, v = []; for (const t of tws) if (t !== 'APRON' && t !== hp && t !== ref && v[v.length-1] !== t) v.push(t); return v; }
 function nearestNode(p, filter){ let best = null, bd = Infinity; for (const n of Object.values(GN)) { if (filter && !filter(n)) continue; const d = dist(...p, ...n.p); if (d < bd) { bd = d; best = n; } } return best; }
 
 function inPoly(p, poly){ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const [xi,yi]=poly[i],[xj,yj]=poly[j]; if(((yi>p[1])!==(yj>p[1])) && (p[0] < (xj-xi)*(p[1]-yi)/(yj-yi)+xi)) c=!c; } return c; }

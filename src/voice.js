@@ -95,6 +95,12 @@ function fixFrom(word){
   return bd <= 2 ? best : null;
 }
 const sideOf = w => w.includes('east') ? 'E' : w.includes('west') ? 'W' : '';
+// "runway two two left" -> 22L, "runway zero niner" -> 09, matched against the airport's runway ends
+function heardRwy(s, re = / runway (\d{1,2})( left| right| center)? /){
+  const m = s.match(re); if (!m) return null;
+  const r = String(+m[1]) + (m[2] ? m[2].trim()[0].toUpperCase() : '');
+  return RW_ENDS.find(e => e === r || e === r.padStart(2, '0') || e === m[1] + (m[2] ? m[2].trim()[0].toUpperCase() : '')) || null;
+}
 function phraseToCmd(raw){
   let w = normSpeech(raw);
   const hit = heardCallsign(w);
@@ -109,7 +115,7 @@ function phraseToCmd(raw){
   if (/ (no speed restriction|resume normal speed) /.test(s)) out.push('SN');
   else if ((m = s.match(/ speed (\d{2,3}) /))) out.push('S' + m[1]);
   if ((m = s.match(/ direct( to)? (\S+) /))) { const f = fixFrom(m[2]); if (f) out.push('DCT ' + f); }
-  if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) out.push('APP' + ((m = s.match(new RegExp(` runway (${RW_LO}|${RW_HI}|${+RW_LO}) `))) ? ' ' + (m[1] === String(+RW_LO) ? RW_LO : m[1]) : ''));
+  if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) { const r = heardRwy(s); out.push('APP' + (r ? ' ' + r : '')); }
   if (APT.rnp && out.length && out[out.length-1].startsWith('APP') && / (rnp|r n p|rmp) /.test(s)) out[out.length-1] += / (yankee|yankees|y) /.test(s) ? ' RNPY' : / (zulu|z) /.test(s) ? ' RNPZ' : ' RNP';
   if (/ cleared to land /.test(s)) out.push('CTL');
   if (/ goaround /.test(s)) out.push('GA');
@@ -119,14 +125,17 @@ function phraseToCmd(raw){
   if (/ (pushback|startup)/.test(s)) { const f = sideOf(s); out.push('PUSH' + (f ? ' ' + f : '')); }
   if ((m = s.match(/ taxi .*?holding point (\S+)/)) || (m = s.match(/ taxi (to )?(\S+)/))) {
     const hp = PHONW[m[m.length-1]] || (m[m.length-1].length === 1 ? m[m.length-1].toUpperCase() : null);
-    if (hp && HOLDS[hp]) {
-      let cmd = 'TAXI ' + hp; const v = s.match(/ via (.+?)( hold| holding| cross| $)/);
-      if (v) { const vl = v[1].split(' ').map(x => PHONW[x]).filter(x => x && PHON[x]); if (vl.length) cmd += ' VIA ' + vl.join(' '); }
+    if ((hp && HOLDS[hp]) || (!hp && / runway /.test(s) && RW_ENDS.length > 2)) {
+      let cmd = 'TAXI' + (hp && HOLDS[hp] ? ' ' + hp : ''); const v = s.match(/ via (.+?)( hold| holding| cross| $)/);
+      // two spoken letters make one taxiway where the airport has it (New York: "kilo delta" is KD)
+      if (v) { const vl = []; let solo = false; for (const x of v[1].split(' ')) { const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
+        const vv = vl.filter(x => PHON[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
       out.push(cmd);
     }
   }
   if (/ tow approved /.test(s) || / approved tow /.test(s)) out.push('TOW');
   if (/ lineup /.test(s)) out.push('LU');
+  if (/ cross runway /.test(s)) { const r = heardRwy(s, / cross runway (\d{1,2})( left| right| center)? /); out.push('CROSS' + (r ? ' ' + r : '')); }
   if (/ cleared( for)? takeoff /.test(s)) out.push('CTO');
   if (/ vacate /.test(s)) out.push('VAC');
   if ((m = s.match(/ (contact|monitor) .*?(1\d\d)( decimal | point | )(\d{1,3}) /))) out.push(`HO ${m[2]}.${m[4]}`);

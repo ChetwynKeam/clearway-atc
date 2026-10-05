@@ -1,7 +1,7 @@
 """Assemble the single-file Clearway simulator from src/ parts, one page per airport (same engine, site and Academy):
 LXGB: dist/index.html (GitHub Pages) and dist/gibraltar-atc.html (claude.ai artifact body);
 LPMA: dist/lpma/index.html and dist/madeira-atc.html; EGLC: dist/eglc/index.html and dist/london-city-atc.html;
-LOWI: dist/lowi/index.html and dist/innsbruck-atc.html."""
+LOWI: dist/lowi/index.html and dist/innsbruck-atc.html; KJFK: dist/kjfk/index.html and dist/new-york-jfk-atc.html."""
 import pathlib
 root = pathlib.Path(__file__).parent
 src = root/'src'
@@ -15,7 +15,7 @@ import json
 SUBS = json.loads((root/'subs.json').read_text())
 fonts = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap'
 AIRPORTS = {
-    'LXGB': dict(title='Clearway ATC Simulator', desc='Clearway: browser-based air traffic control simulation at real airports: Gibraltar (LXGB), Madeira (LPMA), London City (EGLC) and Innsbruck (LOWI).',
+    'LXGB': dict(title='Clearway ATC Simulator', desc='Clearway: browser-based air traffic control simulation at real airports: Gibraltar (LXGB), Madeira (LPMA), London City (EGLC), Innsbruck (LOWI) and New York JFK (KJFK).',
                  geo='geo.json', profile=['airports/lxgb.js'], artifact='gibraltar-atc.html', page='index.html'),
     'LPMA': dict(title='Madeira · Clearway ATC Simulator', desc='Clearway: air traffic control at Madeira (LPMA), with the real procedures, wind limits and live traffic.',
                  geo='airports/lpma.geo.json', profile=['airports/lpma.js', 'airports/lpma-engine.js'], artifact='madeira-atc.html', page='lpma/index.html',
@@ -26,6 +26,9 @@ AIRPORTS = {
     'LOWI': dict(title='Innsbruck · Clearway ATC Simulator', desc='Clearway: air traffic control at Innsbruck (LOWI), in an Alpine valley: the LOC/DME East, circling to 08, RNP AR approaches, föhn and live traffic.',
                  geo='airports/lowi.geo.json', profile=['airports/lowi.js', 'airports/lowi-ground.js', 'airports/lowi-engine.js'], site=['airports/lowi-site.js'], artifact='innsbruck-atc.html', page='lowi/index.html',
                  data=('LOWI', 'airports/lowi.js')),
+    'KJFK': dict(title='New York JFK · Clearway ATC Simulator', desc='Clearway: air traffic control at New York JFK (KJFK): four runways, parallel ILS approaches, runway crossings, FAA phraseology and live traffic.',
+                 geo='airports/kjfk.geo.json', profile=['airports/kjfk.js', 'airports/kjfk-ground.js', 'airports/kjfk-engine.js'], site=['airports/kjfk-site.js'], artifact='new-york-jfk-atc.html', page='kjfk/index.html',
+                 data=('KJFK', 'airports/kjfk.js')),
 }
 # One website: the airport whose page is index.html hosts every page of the site (home, airports, every briefing, the
 # whole Academy, Career). The other airports' pages only run their simulator (#sim, #ex/<key>, #wx/<preset>, #live)

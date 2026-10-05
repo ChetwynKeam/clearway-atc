@@ -22,7 +22,7 @@
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
-        <a class="pill" href="#lowi"><b>New</b>Innsbruck is open: an Alpine valley, the LOC/DME East and föhn</a>
+        <a class="pill" href="#kjfk"><b>New</b>New York JFK is open: four runways, runway crossings and FAA phraseology</a>
         <h1>Real airports. Real charts. <em>Your frequency.</em></h1>
         <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic is either the real flights in the air right now or a weekly airline timetable, tracked from origin to destination.</p>
         <div class="ctas">
@@ -30,7 +30,7 @@
         </div>
       </div>
       <div class="frame">
-        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="ttl" data-only="EGLC">EGLC · Thames Director · 132.700</span><span class="ttl" data-only="LOWI">LOWI · Innsbruck Radar · 128.975</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
+        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="ttl" data-only="EGLC">EGLC · Thames Director · 132.700</span><span class="ttl" data-only="LOWI">LOWI · Innsbruck Radar · 128.975</span><span class="ttl" data-only="KJFK">KJFK · New York Approach · 128.125</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
         <div class="frame-body">
           <canvas id="heroScope" aria-label="Animated radar picture"></canvas>
           <div class="frame-side" aria-hidden="true" data-only="LPMA">
@@ -56,6 +56,14 @@
             <div class="fs-strip dep"><b>EWG7943</b><span>LOWI › EDDH</span><em>TAXI A</em></div>
             <div class="fs-strip arr"><b>EZY8341</b><span>EGKK › LOWI</span><em>RTT</em></div>
             <div class="fs-strip dep need"><b>AUA904</b><span>LOWI › LOWW</span><em>◆ Start-up</em></div>
+          </div>
+          <div class="frame-side" aria-hidden="true" data-only="KJFK">
+            <div class="fs-h"><span>ATIS</span><b>N</b><span class="r">LDG 22L · DEP 22R</span></div>
+            <div class="fs-m">KJFK 21012KT 10SM FEW040 SCT250 22/13 A2997</div>
+            <div class="fs-strip arr"><b>JBU702</b><span>KBOS › KJFK</span><em>ILS 22L</em></div>
+            <div class="fs-strip dep"><b>JBU101</b><span>KJFK › KBOS</span><em>RELEASE</em></div>
+            <div class="fs-strip arr"><b>AAL1</b><span>KLAX › KJFK</span><em>HOLD SHORT 22R</em></div>
+            <div class="fs-strip dep need"><b>DAL1103</b><span>KJFK › KATL</span><em>◆ Ready to push</em></div>
           </div>
           <div class="frame-side" aria-hidden="true" data-only="LXGB">
             <div class="fs-h"><span>ATIS</span><b>K</b><span class="r">RWY 27</span></div>
@@ -105,12 +113,24 @@
 
   <div class="section live-sec"><div class="wrap">
     <div class="academy">
-      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar, Madeira, London City or Innsbruck. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar, Madeira, London City, Innsbruck or New York JFK. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
       <ol class="steps3">
         <li><b>Today’s real schedule</b><span>Each airport’s own arrivals and departures, refreshed every 15 minutes, with their real expected times and delays. Each arrival turns round into its real return leg.</span></li>
         <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real inbound comes within range, it becomes your flight to bring in.</span></li>
         <li><b>The weather outside</b><span>The live METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
       </ol>
+    </div>
+  </div></div>
+  <div class="section feat-ap" data-apt="KJFK"><div class="wrap">
+    <div class="fa-grid">
+      <div class="fa-shot"><canvas data-thumb="twr" aria-label="New York JFK tower display"></canvas><span class="fa-tag">LIVE · KJFK TOWER</span></div>
+      <div>
+        <div class="eyebrow">New airport</div>
+        <h2>New York JFK, four runways on Jamaica Bay.</h2>
+        <p>Two pairs of parallel runways with the terminals in the middle. In the usual south-west flow arrivals land 22L and departures leave from 22R, so almost every arrival crosses the departure runway on its way to the gate. ILS approaches from the CAMRN, PARCH, PAWLN and PUCKY arrivals, the Kennedy Five departure, calls for release on the busy routes to Boston and Washington, and FAA phraseology throughout.</p>
+        <div class="kv"><span>RWY <b>4L/22R · 4R/22L · 13L/31R · 13R/31L</b></span><span>Longest <b>14,511 ft</b></span><span>Elev <b>13 ft</b></span><span>Approach <b>ILS</b></span></div>
+        <div class="ctas"><a class="btn primary" href="#sim">Open the position</a><a class="btn" href="#kjfk">Airport briefing</a></div>
+      </div>
     </div>
   </div></div>
   <div class="section feat-ap" data-apt="LOWI"><div class="wrap">
@@ -179,13 +199,13 @@
     <div class="ctas"><a class="btn primary" href="#pricing">See plans and pricing</a><a class="btn" href="#request">Request an airport</a></div>
   </div></div>
   <div class="section" style="padding-top:0"><div class="wrap"><div class="cta-band">
-    <div><h2>Take the frequency at Gibraltar, Madeira, London City or Innsbruck.</h2><p>Nothing to download. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
+    <div><h2>Take the frequency at Gibraltar, Madeira, London City, Innsbruck or New York JFK.</h2><p>Nothing to download. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
     <div class="ctas"><a class="btn primary" href="#sim">Launch the simulator</a><a class="btn ghost" href="#training">Start with the Academy</a></div>
   </div></div></div>
   <footer class="footer2"><div class="wrap">
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
     <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a><a href="#pricing">Pricing</a><a href="#request">Request an airport</a></div>
-    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a></div>
+    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a><a href="#kjfk">New York JFK · KJFK</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span><a href="#terms">Terms</a><a href="#privacy">Privacy</a></div>
   </div></footer>
 </section>
@@ -496,6 +516,94 @@
   </div></div>
   <footer class="footer"><div class="wrap"><span>Clearway · London City EGLC</span><span>The airport opened in 1987 on the quay between the Royal Albert and King George V Docks.</span></div></footer>
 </section>
+<section class="page" id="page-kjfk" data-page="kjfk" hidden>
+  <div class="aphead">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#airports">Airports</a><span>›</span><span>North America</span><span>›</span><b>New York JFK</b></nav>
+      <div class="ap-grid">
+        <div>
+          <div class="ap-id"><span class="icao">KJFK</span><span class="iata">JFK</span><span class="badge live">Open now</span><span class="badge new">New</span></div>
+          <h1>New York JFK</h1>
+          <p class="lede">John F. Kennedy International, on the shore of Jamaica Bay in Queens. Four runways in two parallel pairs surround the terminals, so arrivals cross a runway in use on their way to the gate. You work New York Approach, Kennedy Tower and Kennedy Ground combined, from the four arrival gates to the gate and back out on the Kennedy Five.</p>
+          <div class="kv"><span>NY Approach <b>128.125</b></span><span>Kennedy Tower <b>119.1 / 123.9</b></span><span>Ground <b>121.9</b></span><span>TA <b>18000 ft</b></span><span>Charts <b>FAA d-TPP</b></span></div>
+          <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
+        </div>
+        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="New York JFK aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+      </div>
+    </div>
+    <div class="wrap"><div class="facts">
+      <div><b>4</b><span>Runways: 4L/22R and 4R/22L, 13L/31R and 13R/31L</span></div>
+      <div><b>14,511 ft</b><span>Runway 13R/31L, one of the longest commercial runways in North America</span></div>
+      <div><b>13 ft</b><span>Aerodrome elevation, at the edge of Jamaica Bay</span></div>
+      <div><b>22L / 22R</b><span>The usual south-west flow: land 22L, depart 22R</span></div>
+      <div><b>18,000 ft</b><span>Transition altitude: flight levels only above it, altimeter in inches</span></div>
+      <div><b>APREQ</b><span>Calls for release only on flow-restricted routes, such as Boston and Washington</span></div>
+    </div></div>
+  </div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">What makes it Kennedy</div><h2>Built from the FAA charts.</h2></div>
+      <p>The runways, arrivals, departures, holds and approaches come from the FAA's terminal procedures for KJFK: the airport diagram, the hot spot page, the Kennedy Five, SKORR and DEEZZ departures, the CAMRN, PARCH, PAWLN and PUCKY arrivals and the ILS plates for every runway. Fix positions come from the FAA's coded instrument flight procedures. The taxiway, gate and building layout follows OpenStreetMap, checked against the airport diagram.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 26L18 4M14 28L26 6"/><path d="M4 12h24"/></svg><h3>Four runways, two pairs</h3><p>4L/22R and 4R/22L run north-east, 13L/31R and 13R/31L run south-east. The wind picks the configuration: land 22L and depart 22R, land 4R and depart 4L, land 31R and depart 31L, or land 13L and depart 13R. The ATIS panel has separate landing and departure runway selectors.</p><div class="src">Airport diagram · ATIS</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 10h26M3 22h26"/><path d="M16 4v24"/><path d="M12 8l4-4 4 4"/></svg><h3>Runway crossings</h3><p>In the south-west and north-east flows the arrival runway, 22L or 4R, lies on the far side of the departure runway from the terminals. Every arrival stops at the hold-short line of 22R or 4L on its way in and waits for you to say "cross runway two two right".</p><div class="src">Hot spots · FAA NE-1</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26l10-10 6 6 8-14"/><path d="M22 8h6v6"/></svg><h3>The Kennedy Five</h3><p>Most departures fly the conventional Kennedy Five: radar vectors from an initial heading by runway, 224 off 22R, 099 off 4L, the Breezy Point climb off 31L, and maintain 5,000 ft. The RNAV SKORR departure takes south-west traffic off 31L, and the DEEZZ departure westbound traffic off 4L, 4R and 31L.</p><div class="src">KENNEDY FIVE · SKORR SIX · DEEZZ SIX</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 24h24"/><path d="M6 8l20 16"/><path d="M6 8l4 0M6 8l0 4"/></svg><h3>Four arrival gates</h3><p>Arrivals come in on the CAMRN Five from the south over the ocean, the PARCH Four along Long Island from Europe and New England, the PAWLN One from the north and the PUCKY One from the west. New York Approach vectors them onto the ILS: 22L joins at ROSLY, 4R at ZETAL, 31R at CATOD.</p><div class="src">CAMRN5 · PARCH4 · PAWLN1 · PUCKY1 · ILS plates</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Calls for release</h3><p>Unlike the European airports, most Kennedy departures go without a release. Flights on the short, busy routes to Boston, Washington, Philadelphia and upstate New York are under an Approval Request: they need New York Center's release before take-off.</p><div class="src">Approval Request (APREQ) routes</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 9h22M5 16h16M5 23h10"/></svg><h3>FAA phraseology</h3><p>"Climb and maintain", "line up and wait", "altimeter two niner niner seven", the wind before the landing clearance, taxi routes that name the runway first, and every hold-short read back. Feet and inches of mercury throughout, and flight levels only above 18,000 ft.</p><div class="src">FAA JO 7110.65</div></div>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Three positions, one console</div><h2>From the arrival gates to the ramp.</h2></div>
+      <p>New York Approach, Kennedy Tower and Kennedy Ground are combined on one position. Scroll out for the New York area, from Newark and LaGuardia to Long Island, and scroll in for the four runways, the taxiways and the gates.</p>
+    </div>
+    <div class="positions">
+      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">NEW YORK APPROACH · 128.125</div><h3>Approach and departure</h3><p>Arrivals check in on their arrival. Descend them, keep three miles between them on final, and clear the ILS. Departures check in with New York Departure on 135.9 climbing to 5,000 ft: climb them and hand them to New York Center.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">KENNEDY TOWER · 119.1 / 123.9</div><h3>Tower</h3><p>Clear arrivals to land on one runway and departures off the other. 119.1 works 4R/22L and 13L/31R, 123.9 works 4L/22R and 13R/31L. Cross arrivals over the departure runway between take-offs.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">KENNEDY GROUND · 121.9</div><h3>Ground</h3><p>Clear each departure with its route and push it off the gate, then taxi it to the departure end of the runway by the taxiways in order. Arrivals turn off on high-speed exits and taxi to their airline's terminal: 1, 4, 5, 7 or 8.</p></div></div>
+    </div>
+  </div></div>
+
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now at New York JFK</div><h2>Work today’s real traffic at KJFK.</h2><p>Pick Live now in the session setup and the position opens at the current time with Kennedy's real flights, live aircraft positions over New York and the current METAR. Kennedy handles well over a thousand movements a day, so Live now thins the real schedule to about twenty an hour; Live now plus extra traffic gives you all of it.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>Kennedy's arrivals and departures for the next few hours, from avionio’s public JFK boards, refreshed every 15 minutes with their expected times.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Kennedy inbound comes within range, it becomes your flight.</span></li>
+        <li><b>The weather outside</b><span>The live KJFK METAR sets the runway configuration, the ATIS and the altimeter.</span></li>
+      </ol>
+    </div>
+  </div></div>
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
+      <p>Each scenario is a METAR the simulation reads for wind, visibility in statute miles, cloud and the altimeter. You can also switch on Live METAR to use the current KJFK report, or paste one yourself.</p>
+    </div>
+    <div class="scen" data-scen></div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="sources">
+      <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
+        <p class="note">Runways, procedures, fixes, holds and the Kennedy and New York Approach frequencies come from the FAA's terminal procedures and coded procedure data for KJFK. New York Approach really vectors almost every arrival onto final; the simulator lays out a downwind and base leg for each runway so that an arrival with no instructions still gets there. Runway 13R has no ILS (its approaches are the VOR and the Parkway Visual), so in the south-east flow the simulator lands 13L and departs 13R. The New York Center frequencies and the release times are representative. Gate numbers follow OpenStreetMap, and airlines use their usual terminals. Kennedy's traffic is thinned to about twenty movements an hour in timetable sessions. In Live now sessions the flights come from avionio’s public JFK arrivals and departures boards and aircraft positions from the adsb.lol and adsb.fi networks; once a flight is yours it follows your instructions, not its real track. This is a training game and is not for real-world navigation. It is not affiliated with the FAA, the Port Authority of New York and New Jersey or any airline.</p></div>
+      <ul>
+        <li><b>Airport diagram, hot spots</b>Runways 4L/22R, 4R/22L, 13L/31R and 13R/31L, the taxiways and hot spot HS 1.</li>
+        <li><b>KENNEDY FIVE</b>Initial headings by runway, the Breezy Point, Canarsie and Idlewild climbs, 5,000 ft.</li>
+        <li><b>SKORR SIX, DEEZZ SIX</b>The RNAV departures to the south-west and west.</li>
+        <li><b>CAMRN FIVE, PARCH FOUR, PAWLN ONE, PUCKY ONE</b>The four arrival gates, their expect altitudes and holds.</li>
+        <li><b>ILS or LOC 4L, 4R, 13L, 22L, 22R, 31L, 31R</b>Intermediate and final approach fixes, glideslope altitudes and missed approaches.</li>
+        <li><b>FAA CIFP</b>Fix and navaid positions.</li>
+        <li><b>OpenStreetMap</b>Taxiway, apron, gate and building geometry, the coastline and the street map under the scope.</li>
+        <li><b>Live now</b>Kennedy flights from avionio.com; live aircraft positions from adsb.lol and adsb.fi.</li>
+      </ul>
+    </div>
+  </div></div>
+  <footer class="footer"><div class="wrap"><span>Clearway · New York JFK KJFK</span><span>Opened in 1948 as New York International Airport, on the Idlewild golf course.</span></div></footer>
+</section>
 <section class="page" id="page-lowi" data-page="lowi" hidden>
   <div class="aphead">
     <div class="wrap">
@@ -634,6 +742,12 @@
         <div class="sub">LOWI · RWY 08/26 2000 × 45 m · ELEV 1907 ft · LOC/DME East 3.77° · RTT NDB 303 · TA 10000 · Radar 128.975 · Tower 120.100</div>
         <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Innsbruck flights from the current time with the live METAR. Bring arrivals from RTT down the valley on the LOC/DME East, or round the circling to 08, and work the departures from the apron down the same valley against them, with a release from Wien, München or Padova.</p>
         </div>
+        <div data-only="KJFK">
+        <div class="eyebrow">Position briefing</div>
+        <h1>New York Approach, Kennedy Tower &amp; Ground</h1>
+        <div class="sub">KJFK · RWY 4L/22R 4R/22L 13L/31R 13R/31L · ELEV 13 ft · ILS · TA 18000 · Approach 128.125 · Tower 119.1 / 123.9 · Ground 121.9</div>
+        <p style="margin-top:14px">You hold all three positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Kennedy flights from the current time with the live METAR. Bring arrivals off their arrivals onto the ILS, land them on one runway, cross them over the other, and work the departures from the gate to the Kennedy Five and New York Center.</p>
+        </div>
         <div data-only="LPMA">
         <div class="eyebrow">Position briefing</div>
         <h1>Madeira Approach &amp; Tower</h1>
@@ -682,13 +796,18 @@
           <li>Runway 08 departures taxi to Alpha and backtrack to the west turn pad; runway 26 departures use Bravo. Every one needs a release from Wien, München or Padova.</li>
           <li>Type commands in the bar under the scope, for example <code>KLM1993 A95 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
+        <ul data-only="KJFK">
+          <li>Arrivals on 22L or 4R stop short of the departure runway on their way in: cross them with <code>CROSS</code> between departures, never in front of one.</li>
+          <li>Departures taxi to the departure end of the runway. Only flights to Boston, Washington and the other flow-restricted routes need a release (<code>REL</code>).</li>
+          <li>Type commands in the bar under the scope, for example <code>JBU702 A60 APP</code> or <code>AAL1 CROSS</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
+        </ul>
         <ul data-only="LPMA">
           <li>Check the anemometers in the ATIS panel. When the wind is out of limits, hold arrivals at PILIM and expect diversions to Porto Santo.</li>
           <li>Runway 05 departures taxi to Charlie and backtrack to the 05 turn pad; runway 23 departures use Bravo. Every one needs a release from Lisboa.</li>
           <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span><span data-only="KJFK">Data from FAA terminal procedures for KJFK.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>
@@ -738,7 +857,7 @@
     <section id="t-console" data-track="core"><h2><span class="n">03</span>Reading the console</h2>
       <h3>The scope</h3>
       <p>The scope is one map you scroll or pinch to zoom. Zoomed out it shows the airspace round the airport’s radar reference (the GBR TACAN at Gibraltar, the FUN DVOR at Madeira) with range rings every 5 NM, the bearing scale, restricted airspace and high ground, the arrival routes and holds, and the final approach paths. Zoom in and the runway, finals and the aerodrome appear to scale over the street map. Zoom right out to follow flights across Europe and Africa. Drag to pan.</p>
-      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span><span data-apt="EGLC">JACKO</span><span data-apt="LOWI">RTT</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span><span data-apt="EGLC">The Canary Wharf towers, up to 771 ft: below 1,200 ft over them is an obstacle incident.</span><span data-apt="LOWI">The mountains round the valley, shaded by minimum vectoring altitude: up to 15,500 ft over the Alps.</span></figcaption></figure>
+      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span><span data-apt="EGLC">JACKO</span><span data-apt="LOWI">RTT</span><span data-apt="KJFK">CAMRN</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span><span data-apt="EGLC">The Canary Wharf towers, up to 771 ft: below 1,200 ft over them is an obstacle incident.</span><span data-apt="LOWI">The mountains round the valley, shaded by minimum vectoring altitude: up to 15,500 ft over the Alps.</span><span data-apt="KJFK">The Manhattan skyline: below 2,000 ft over it is an obstacle incident.</span></figcaption></figure>
       <div class="rt"><div><span class="w">Line 1</span><span class="p">EZY8901 ◆ — callsign, ◆ means the crew is waiting on you</span></div><div><span class="w">Line 2</span><span class="p">045↓030 21 — FL/altitude in hundreds, trend, cleared level (or the approach), groundspeed ÷ 10</span></div><div><span class="w">Line 3</span><span class="p">A20N R27 T — type, runway of the approach (or destination), T when on Tower</span></div></div>
       <p>Your traffic is drawn as plane icons in the shape of the real type (airliner, wide-body, business jet, turboprop or military) pointing the way the nose points. Arrivals are amber, departures blue and the selected flight is outlined. Once you transfer a departure to the next unit it turns purple, its strip greys out and you can no longer select it or give it instructions. Anything in conflict, and any aircraft in an emergency, turns red. Grey icons with a short tag are real aircraft from the live feed that are not yours. Beyond radar cover your flights become yellow icons, and inbounds about to call appear as pending tracks. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
       <h3>The side panel</h3>
@@ -1284,6 +1403,96 @@
       </ul>
     </section>
 
-<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span><span data-apt="LOWI">Innsbruck endorsement based on AIP Austria AD 2 LOWI. Not for real-world navigation.</span></div></footer>
+    <!-- ── New York JFK endorsement ── -->
+    <section id="k-position" data-apt="KJFK" data-track="ap"><h2><span class="n">01</span>Your position at Kennedy</h2>
+      <p>You are <b>New York Approach (128.125)</b>, <b>Kennedy Tower</b> and <b>Kennedy Ground (121.9)</b> combined. Arrivals check in with Approach on their arrival. You hand them to the Tower once they are on the ILS: <b>119.1</b> for 4R/22L and 13L/31R, <b>123.9</b> for 4L/22R and 13R/31L. Departures call Ground ready to push, go to the Tower at the runway, and to <b>New York Departure (135.9)</b> once airborne; you transfer them to <b>New York Center</b> when they are ready. The ATIS is <b>Kennedy information</b> on 128.725.</p>
+      <p>This is the United States, and the simulator follows the FAA's rules rather than ICAO's:</p>
+      <ul>
+        <li>The <b>transition altitude is 18,000 ft</b>: everything below is an altitude on the local altimeter, everything above a flight level. Kennedy's own traffic rarely leaves your airspace above 19,000 ft.</li>
+        <li>The altimeter is in <b>inches of mercury</b> (A2997 in the METAR is 29.97), and visibility is in <b>statute miles</b>.</li>
+        <li>FAA phraseology: "climb and maintain", "line up and wait", the wind before "cleared to land", taxi routes that name the runway first and then every taxiway.</li>
+        <li><b>No routine releases.</b> Only flights under an Approval Request, the short routes to Boston, Washington, Philadelphia and upstate New York, need New York Center's release before take-off.</li>
+      </ul>
+      <div class="callout"><div class="lbl">Four runways, two in use</div><p>Kennedy lands on one runway of a pair and departs from the other. The ATIS panel has two selectors, <b>Land</b> and <b>Dep</b>. Changing the landing runway brings the usual departure runway with it: 22L with 22R, 4R with 4L, 31R with 31L, 13L with 13R.</p></div>
+    </section>
+
+    <section id="k-aerodrome" data-apt="KJFK" data-track="ap"><h2><span class="n">02</span>The aerodrome</h2>
+      <figure class="fig"><canvas data-fig="aerodrome" aria-label="New York JFK aerodrome diagram with runways, taxiways and gates"></canvas><figcaption>The aerodrome as drawn in the simulator: the two pairs of runways round the central terminal area, Terminals 1, 4, 5, 7 and 8 with their gates, and the taxiways from OpenStreetMap, checked against the FAA airport diagram. The circle marks hot spot HS 1, where Kilo meets Juliett near runways 4L and 31L.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Length</th><th>Notes</th></tr>
+        <tr><td>4L/22R</td><td>12,079 ft</td><td>Between 4R/22L and the terminals. The usual departure runway in the south-west and north-east flows</td></tr>
+        <tr><td>4R/22L</td><td>8,400 ft</td><td>The outer runway. The usual arrival runway: its arrivals cross 4L/22R to reach the terminals</td></tr>
+        <tr><td>13L/31R</td><td>10,000 ft</td><td>Arrivals in the north-west and south-east flows</td></tr>
+        <tr><td>13R/31L</td><td>14,511 ft</td><td>Along Jamaica Bay. Departures in those flows</td></tr>
+      </table></div>
+      <h3>Terminals</h3>
+      <p>Delta and its partners use Terminal 4 (gates A and B), JetBlue Terminal 5, American and British Airways Terminal 8, and most European and Asian carriers Terminals 1 and 7. Arrivals taxi to their airline's terminal and turn round there into their next departure.</p>
+    </section>
+
+    <section id="k-ground" data-apt="KJFK" data-track="ap"><h2><span class="n">03</span>Ground, crossings and departures</h2>
+      <h3>Clearance and push</h3>
+      <p>At Kennedy, Clearance Delivery reads the IFR clearance and Ground approves the push. The simulator does both in one call: press <b>Push</b> or type <code>PUSH</code>.</p>
+      <div class="rt">
+        <div><span class="w">GND</span><span class="a">Delta eleven zero three, cleared to Atlanta airport via the Kennedy Five departure, RNGRR transition, then as filed, maintain 5,000, expect flight level three five zero one zero minutes after departure, departure frequency 135.9, squawk 4627. Push back approved, tail east, altimeter 29.97</span></div>
+        <div><span class="w">DAL1103</span><span class="p">Cleared Atlanta via the Kennedy Five, RNGRR transition, maintain 5,000, 135.9, squawk 4627, push approved, Delta eleven zero three</span></div>
+      </div>
+      <h3>Taxi</h3>
+      <p>Departures enter at the departure end of the runway: Foxtrot Bravo or Echo for 22R, Kilo 1 or Kilo 2 for 4L, Papa Foxtrot, Papa Echo or Papa Delta for 13R, Juliett Bravo or Juliett Alpha for 31L. Kennedy has no turning pads: a departure lines up straight onto the runway from the end. <code>TAXI</code> picks the nearest entry; the <b>Taxi…</b> button shows three routings to choose from. The clearance names the runway first and then each taxiway in order: "runway two two right, taxi via Foxtrot, Bravo, Echo, Foxtrot Bravo".</p>
+      <h3>Crossing a runway</h3>
+      <p>In the south-west and north-east flows the arrival runway lies beyond the departure runway, so arrivals on their way in reach the <b>hold-short line</b> of the departure runway. They stop there and call: "holding short of runway two two right". Press <b>Cross runway 22R</b> or type <code>CROSS</code>. A crossing is given on its own, never as part of the taxi clearance, and only when nothing is lined up, rolling or on short final on that runway. Ten crossings in one session with no incidents earn the <b>Crossing guard</b> badge.</p>
+      <div class="rt">
+        <div><span class="w">JBU702</span><span class="p">Kennedy Ground, JetBlue seven zero two, holding short of runway two two right</span></div>
+        <div><span class="w">GND</span><span class="a">JetBlue seven zero two, cross runway two two right</span></div>
+        <div><span class="w">JBU702</span><span class="p">Crossing runway two two right, JetBlue seven zero two</span></div>
+      </div>
+      <h3>The Kennedy Five and the RNAV departures</h3>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Kennedy Five</th><th>RNAV</th></tr>
+        <tr><td>22R, 22L</td><td>Heading 224</td><td>None</td></tr>
+        <tr><td>4L, 4R</td><td>Right turn heading 099</td><td>DEEZZ (west)</td></tr>
+        <tr><td>31L</td><td>Breezy Point climb: left turn, direct Canarsie (CRI)</td><td>SKORR (south-west), DEEZZ (west)</td></tr>
+        <tr><td>13R, 13L</td><td>Heading 134</td><td>None</td></tr>
+      </table></div>
+      <p>All of them climb to <b>5,000 ft</b>. Once a departure checks in with New York Departure, climb it with <code>A190</code> and send it on with <code>HO</code>.</p>
+    </section>
+
+    <section id="k-arrivals" data-apt="KJFK" data-track="ap"><h2><span class="n">04</span>Arrivals and the ILS</h2>
+      <div class="tbl"><table>
+        <tr><th>Arrival</th><th>From</th><th>Ends at</th><th>Hold</th></tr>
+        <tr><td>CAMRN Five</td><td>The south, over the ocean: Florida, the Caribbean, South America</td><td>CAMRN, 11,000 ft</td><td>CAMRN</td></tr>
+        <tr><td>PARCH Four</td><td>The east along Long Island: Europe, Boston</td><td>ROBER, 12,000 ft (CRAIL for 22L)</td><td>ROBER</td></tr>
+        <tr><td>PAWLN One</td><td>The north: New England, Canada</td><td>DPK, 12,000 ft</td><td>DPK</td></tr>
+        <tr><td>PUCKY One</td><td>The west: the Midwest, the West Coast</td><td>PUCKY 10,000 ft, then VADDR</td><td>PUCKY</td></tr>
+      </table></div>
+      <p>Descend the arrivals and clear the approach with <code>APP</code>: they fly a downwind and base and join the localizer at the intermediate fix (ROSLY for 22L at 3,000 ft, ZETAL for 4R at 2,000 ft, CATOD for 31R at 3,000 ft, TELEX for 13L at 2,100 ft). ILS minimums are <b>200 ft and half a mile</b>. Hand them to the Tower with <code>HO</code> and clear them to land with <code>CTL</code>.</p>
+      <p>A go-around flies the published missed approach, climbing to 3,000 or 4,000 ft. Clear it again with <code>APP</code>.</p>
+    </section>
+
+    <section id="k-airspace" data-apt="KJFK" data-track="ap"><h2><span class="n">05</span>Airspace and weather</h2>
+      <p>Kennedy sits in the busiest airspace in the United States, with Newark and LaGuardia within 15 miles. The simulator shows their positions; their own traffic is not simulated. Below 2,000 ft over Manhattan is an obstacle incident: One World Trade Center is 1,776 ft tall.</p>
+      <p>The sea breeze makes the south-west flow (22L and 22R) the most common. North-easters bring 4R and 4L, clear north-westerlies behind a cold front 31R and 31L, and low cloud off the ocean 13L and 13R. Summer afternoons bring thunderstorms and microburst alerts, and winter brings snow and fog below the ILS minimums.</p>
+    </section>
+
+    <section id="k-exercises" data-apt="KJFK" data-track="ap"><h2><span class="n">06</span>Guided exercises</h2>
+      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. Complete all three for the <b>Kennedy endorsement</b> badge.</p>
+      <div class="exgrid">
+        <div class="ex"><div class="nm">1 · Kennedy Five off 22R</div><p>A Delta A321 at gate B31 for Atlanta. Clear and push it, taxi it to 22R, line up and wait, take off on the Kennedy Five and hand it to New York Departure and the Center.</p><button class="btn primary" data-ex="kdep">Start exercise</button></div>
+        <div class="ex"><div class="nm">2 · ILS 22L and a crossing</div><p>A JetBlue A320 from Boston on the PARCH Four. Clear the ILS 22L, land it, and cross it over 22R to Terminal 5.</p><button class="btn primary" data-ex="karr">Start exercise</button></div>
+        <div class="ex"><div class="nm">3 · Crossings and releases</div><p>An American A321 from Los Angeles landing 22L, a JetBlue Embraer for Boston that needs a release, and a Delta departure. Get the release, depart JetBlue, then cross American behind it.</p><button class="btn primary" data-ex="kcross">Start exercise</button></div>
+      </div>
+    </section>
+
+    <section id="k-limits" data-apt="KJFK" data-track="ap"><h2><span class="n">07</span>What is simplified at Kennedy</h2>
+      <ul>
+        <li>Approach, Tower, Ground and Clearance Delivery are one position.</li>
+        <li>New York Approach vectors arrivals in the real world; the simulator gives each runway a downwind and base so that arrivals find their own way to the ILS.</li>
+        <li>Runway 13R has no ILS, so the south-east flow lands 13L and departs 13R. The VOR, RNAV and Parkway Visual approaches are not modelled.</li>
+        <li>One arrival runway and one departure runway at a time: no simultaneous approaches to both runways of a pair.</li>
+        <li>Newark and LaGuardia traffic is not simulated, and the New York Center frequencies and release times are representative.</li>
+        <li>Timetable traffic is thinned to about twenty movements an hour. Live now uses today's real flights and positions.</li>
+      </ul>
+    </section>
+
+<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span><span data-apt="LOWI">Innsbruck endorsement based on AIP Austria AD 2 LOWI. Not for real-world navigation.</span><span data-apt="KJFK">New York JFK endorsement based on the FAA terminal procedures for KJFK. Not for real-world navigation.</span></div></footer>
 </section>
 </main>
