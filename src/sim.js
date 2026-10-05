@@ -492,7 +492,7 @@ function commandRun(str){
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]; let r;
     if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
-      const h = (+r[2]) % 360 || 360; ac.mode = 'HDG'; ac.tgtHdg = h; ac.turnDir = r[1]==='L' ? -1 : r[1]==='R' ? 1 : 0; ac.route = []; ac.onSid = false;
+      const h = (+r[2]) % 360 || 360; ac.mode = 'HDG'; ac.tgtHdg = h; ac.turnDir = r[1]==='L' ? -1 : r[1]==='R' ? 1 : 0; ac.route = []; ac.onSid = false; ac.divDct = false;
       if (['HOLDING','INBOUND','FINAL'].includes(ac.state)) ac.state = 'VECTORS';
       if (ac.appId) rnpCancel(ac);
       const dif = angDiff(ac.hdg, h);
@@ -757,9 +757,10 @@ function step(dt){
   }
   S.acs = S.acs.filter(ac => {
     if (ac.state === 'ONSTAND' && S.t > ac.doneAt) { if (S.sel === ac) S.sel = null; if (ac.stand) ac.stand.occ = null; return false; }
+    if (ac.divLanded) { S.score.div++; sys(`${ac.cs} has landed at ${ac.divLanded.name}.`); emit('divlanded', ac); if (S.sel === ac) S.sel = null; return false; }
     if (ac.airborne && ac.state !== 'PRE' && Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]) > (ac.kind === 'DEP' ? APT.area.dep : ac.state === 'DIVERTING' ? APT.area.div : APT.area.arr)) {
       if (ac.kind === 'DEP') { if (!ac.handed) { S.score.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else S.score.pts += 20; S.score.departed++; }
-      else { S.score.div++; S.score.pts -= ac.state === 'DIVERTING' ? 0 : 40; sys(`${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); }
+      else { S.score.div++; S.score.pts -= ac.state === 'DIVERTING' ? 0 : 40; { const D = ac.state === 'DIVERTING' && divDest(ac); sys(D ? `${ac.cs} has left the area, flying on to ${D.name}.` : `${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); } }
       emit('exit', ac);
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       if (S.sel === ac) S.sel = null; return false;
@@ -811,7 +812,7 @@ function stepAir(ac, dt){
           if (F.rnp && w.hold && Math.abs(angDiff(ac.hdg, brg(...F.pts[0], ...F.pts[1]))) > 100) { ac.mode = 'HOLD'; ac.hold = { c: w.p, inb: w.hold.inb, left: !!w.hold.left, ph: 'in', name: w.id, t: 0, join: true, laps: 0 }; }
           else { ac.mode = 'FINAL'; ac.finI = null; fin = onFinal(ac, F); }
         }
-        else if (ac.kind === 'ARR' && ac.state === 'DIVERTING') { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
+        else if (ac.kind === 'ARR' && ac.state === 'DIVERTING') { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); ac.divDct = true; }
         else if (ac.kind === 'ARR') {
           // end of the arrival routing without an approach clearance: hold where it is (on the final entry fix), never fly back to UPMUP/ODLUK
           const named = !!w.hold, hf = w.id;
@@ -881,6 +882,12 @@ function stepAir(ac, dt){
   }
 
   if (ac.divertAt && S.t >= ac.divertAt) { ac.divertAt = null; pilot(ac, `we'd like to divert to ${ac.divertTo[0]}, request direct ${ac.divertTo[1]} climbing ${altWords(APT.divertAlt || 8000)}`); ac.need = `Diverting to ${ac.divertTo[0]}`; ac.diverting = ac.divertTo[1]; }
+  // an approved diversion: past its fix it heads for the alternate, descends and lands there. Beyond the radar area
+  // it is shown flying on to it (far.js)
+  if (ac.state === 'DIVERTING' && ac.divDct && ac.mode === 'HDG') { const D = divDest(ac); if (D) {
+    const d = dist(ac.x, ac.y, ...D.p); ac.tgtHdg = Math.round(brg(ac.x, ac.y, ...D.p)) || 360; ac.turnDir = 0;
+    if (d < ac.alt/300 + 4) ac.tgtAlt = ac.cleared = Math.min(ac.tgtAlt ?? ac.alt, Math.max(1500, Math.round((d - 3)*3)*100));
+    if (d < 3) ac.divLanded = D; } }
   // ── missed approach: climb 4000, turn south once clear (left for 27, right for 09)
   if (ac.state === 'MISSED' && ac.missRoute && ac.alt > 400) { ac.mode = 'NAV'; ac.route = ac.missRoute; ac.missRoute = null; ac.gaTurn = true; }   // RNP: fly the published missed approach
   else if (ac.state === 'MISSED' && !ac.missRoute && !ac.gaTurn && !ac.gaTurnDone) APT.gaTurn(ac);

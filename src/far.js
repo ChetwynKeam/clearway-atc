@@ -12,6 +12,15 @@ const AP = {
   LXGB: [36.1512, -5.3494, 'Gibraltar']
 };
 Object.assign(AP, APT.airports || {});
+// diversion airports, by the name each profile's APT.divertTo gives
+const DIVERT_AP = { 'Tangier': ['GMTT'], 'Málaga': ['LEMG'], 'Southend': ['EGMC', 51.5714, 0.6956], 'Stansted': ['EGSS'], 'Luton': ['EGGW'],
+  'Porto Santo': ['LPPS', 33.0734, -16.3500, 'Porto Santo'], 'Salzburg': ['LOWS', 47.7933, 13.0043], 'Munich': ['EDDM', 48.3538, 11.7861],
+  'Newark': ['KEWR', 40.6925, -74.1687], 'La Guardia': ['KLGA', 40.7769, -73.8740], 'Boston': ['KBOS', 42.3656, -71.0096] };
+for (const [nm, [ic, la, lo]] of Object.entries(DIVERT_AP)) if (!AP[ic] && la != null) AP[ic] = [la, lo, nm];
+function divDest(ac){
+  const nm = ac.divertTo && ac.divertTo[0], e = DIVERT_AP[nm], a = e && AP[e[0]]; if (!a) return null;
+  return { icao: e[0], name: nm, ll: [a[0], a[1]], p: xy(a[0], a[1]) };
+}
 // turning points outbound from Gibraltar (inbounds fly them in reverse)
 const VIA_N = [[37.25, -4.55], [40.00, -3.80], [43.30, -2.30], [46.20, -1.30]];          // up through Spain and western France
 const VIA_W = [[36.40, -6.70], [37.40, -9.10], [40.50, -9.80], [43.90, -9.40], [48.00, -6.50]]; // west of Portugal, Biscay, Cornwall
@@ -56,7 +65,7 @@ function addDepGhost(ac, at){
   const via = (VIA[ac.d] || []).filter(p => !nearGib(p) && gcDist(p, p0) > 30 && gcDist(p, AP[ac.d]) < gcDist(p0, AP[ac.d]));
   const leg = makeLeg([p0, ...via, AP[ac.d].slice(0, 2)]), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
-  FAR.list.push({ cs: ac.cs, t: ac.t, from: APT.icao, to: ac.d, kind: 'DEP', leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? APT.initClimb : ac.alt, endAlt: 0 });
+  FAR.list.push({ cs: ac.cs, t: ac.t, from: ac.from || APT.icao, to: ac.d, kind: ac.from ? 'DIV' : 'DEP', leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? APT.initClimb : ac.alt, endAlt: 0 });
 }
 // at the start of a session: inbounds already airborne or due later, and today's earlier departures still en route
 function buildFar(){
@@ -75,12 +84,15 @@ function buildFar(){
 function farState(g){
   if (S.t < g.tStart || S.t > g.tEnd) return null;
   const d = (S.t - g.tStart)/3600*g.spd, { ll, hdg } = legAt(g.leg, d), left = g.leg.D - d;
-  const up = g.kind === 'DEP' ? (g.startAlt || 0) + d*330 : 1500 + d*330, down = g.endAlt + left*300;
+  const up = g.kind !== 'ARR' ? (g.startAlt || 0) + d*330 : 1500 + d*330, down = g.endAlt + left*300;
   return { p: xy(...ll), hdg, alt: Math.max(0, Math.min(g.cruise, up, down)), gs: g.spd };
 }
 S.listeners.push((ev, d) => {
   if (ev === 'start') buildFar();
   if (ev === 'exit' && d && d.kind === 'DEP') addDepGhost(d);
+  // a diversion leaving the radar area flies on to its alternate
+  if (ev === 'exit' && d && d.kind === 'ARR' && d.state === 'DIVERTING') { const D = divDest(d); if (D) { addDepGhost({ cs: d.cs, t: d.t, d: D.icao, from: d.o, x: d.x, y: d.y, alt: d.alt }); FAR.done[d.cs] = 'Diverted to ' + D.name; } }
+  if (ev === 'divlanded') FAR.done[d.cs] = 'Diverted to ' + d.divLanded.name;
 });
 // sim aircraft beyond radar cover are drawn the same way
 const RADAR_NM = 60;
@@ -179,8 +191,8 @@ function fidsStatus(r, kind){
   if (r.real && !ac && !FAR.done[r.cs] && !(g && S.t >= g.tStart && S.t <= g.tEnd)) return [r.real, /cancel/i.test(r.real) ? 'bad' : /landed|departed|arrived/i.test(r.real) ? 'ok' : /estimated|delayed/i.test(r.real) ? 'live' : ''];
   if (kind === 'ARR') {
     if (ac) return ac.ground ? (['ONSTAND', 'PARKED'].includes(ac.state) ? ['On stand', 'ok'] : ['Landed', 'ok']) : ac.state === 'PRE' ? ['Approaching', 'live'] : ac.state === 'DIVERTING' ? ['Diverting', 'bad'] : ['On approach', 'live'];
-    if (FAR.done[r.cs]) return [FAR.done[r.cs], 'ok'];
-    if (g && S.t >= g.tStart && S.t <= g.tEnd) { const eta = zHM(S.start + (g.tEnd + PRE_LEAD + 15*60)*1000); return [`En route · exp ${eta}`, 'live']; }
+    if (FAR.done[r.cs]) return [FAR.done[r.cs], /^Diverted/.test(FAR.done[r.cs]) ? 'bad' : 'ok'];
+    if (g && g.kind === 'ARR' && S.t >= g.tStart && S.t <= g.tEnd) { const eta = zHM(S.start + (g.tEnd + PRE_LEAD + 15*60)*1000); return [`En route · exp ${eta}`, 'live']; }
     if (S.running && r.tm < (S.hour || 0)*60) return ['Landed', 'ok'];
     return late && S.running ? ['Delayed', 'bad'] : ['Scheduled', ''];
   }
