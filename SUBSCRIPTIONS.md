@@ -47,7 +47,7 @@ follow-up once there are paying players.
 2. SQL Editor > New query: paste `supabase/schema.sql` and Run.
 3. Authentication > Sign In / Providers > Email: keep Email on.
 4. Players sign in with the emailed link. Once a custom sender is connected (step 6), Authentication > Emails > Templates > Magic link or OTP can add `Your Clearway code is {{ .Token }}` so they can type a code instead.
-5. Authentication > URL Configuration: Site URL `https://www.clearway-atc.co.uk/`.
+5. Authentication > URL Configuration: Site URL `https://www.clearway-atc.co.uk/`, and under Redirect URLs add `https://www.clearway-atc.co.uk/**` (sign-in links return to the page the player signed in from).
 6. Before launch: Authentication > Emails > SMTP Settings, connect a real sender. The built-in sender only allows a few emails an hour.
 7. Project Settings > API Keys: copy the publishable key (`sb_publishable_...`, goes in subs.json) and the secret key (`sb_secret_...`, Vercel only). The legacy `anon` and `service_role` keys also work. The Project URL is under Project Settings > Data API.
 
