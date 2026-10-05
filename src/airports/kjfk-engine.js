@@ -362,6 +362,7 @@ const APT = {
   airports: KJFK.AIRPORTS, via: {},
   airlineIcao: KJFK.AIRLINE_ICAO, airlineType: KJFK.AIRLINE_TYPE, defType: 'A320',
   placeIcao: KJFK.PLACES,
+  standWord: 'gate',
   // FAA phraseology (JO 7110.65): "climb and maintain", "altimeter 29.92", "line up and wait", wind before the clearance
   phr: {
     altim,
@@ -384,7 +385,10 @@ const APT = {
     checkIn: ac => `${APT.radar[0]}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, ${KJFK.DIR[ac.gate].star.replace(/(\d)$/, ' $1')} arrival, information ${phonetic(S.atis)}`,
     depCall: ac => `${APT.depRadar[0]}, ${altShort(Math.round(ac.alt/100)*100)} climbing ${altShort(ac.tgtAlt)}, ${ac.onSid && ac.sid ? sidSpoken(ac.sid) + ' departure' : 'heading ' + hdg3(ac.hdg)}`,
     cross: (ac, rw) => [`cross runway ${rw}`, `crossing runway ${rw}`],
-    holdShort: (ac, rw) => `holding short of runway ${rw}`
+    holdShort: (ac, rw) => `holding short of runway ${rw}`,
+    vacated: ac => `${KJFK.UNITS.gnd.name}, clear of ${rwyName(ac.rwyId)} at ${PHON[ac.exit] || ac.exit.replace(/~\d+$/, "")}${ac.stand ? ', for gate ' + ac.stand.id : ''}`,
+    taxiIn: (ac, st, vw) => { const k = xingAhead(ac), hs = k >= 0 ? `, hold short runway ${rwyName(ac.path.pts[k].hs)}` : '', via = vw.length ? ' via ' + vw.map(t => PHON[t] || t).join(', ') : '';
+      return [`taxi to gate ${st.id}${via}${hs}`, `gate ${st.id}${via}${hs}`]; }
   },
   atisPanel(w){
     const c = windComp(w, crsOf(S.rwy)), bad = !minsOk(w, S.rwy), r = rwyFor(w);

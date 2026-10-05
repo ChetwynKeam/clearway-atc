@@ -123,7 +123,16 @@ function phraseToCmd(raw){
   else if ((m = s.match(/ hold( at| over)? (\S+) /)) && !/ holding point /.test(s)) { const f = fixFrom(m[2]); out.push(f ? 'HOLD ' + f : 'HOLD'); }
   if (/ (continue taxi|resume taxi|continue taxiing) /.test(s)) out.push('RES');
   if (/ (pushback|startup)/.test(s)) { const f = sideOf(s); out.push('PUSH' + (f ? ' ' + f : '')); }
-  if ((m = s.match(/ taxi .*?holding point (\S+)/)) || (m = s.match(/ taxi (to )?(\S+)/))) {
+  // an arrival clear of the runway: "taxi to stand 5", "taxi to gate bravo two three via kilo"
+  if (ac && ac.kind === 'ARR' && / taxi /.test(s)) {
+    let cmd = 'TAXI'; const g = s.match(/ (?:stand|gate) (.*)/);
+    if (g) { const parts = g[1].split(/ (?:via|hold) /)[0].trim().split(' ').filter(x => !/^(dash|hyphen)$/.test(x)).slice(0, 3).map(x => /^\d+$/.test(x) ? x : PHONW[x] || (x.length === 1 ? x.toUpperCase() : ''));
+      const id = [parts.join(''), parts.join('-')].find(c => STANDS.some(x => x.id.toUpperCase() === c)); if (id) cmd += ' ' + id; }
+    const v = s.match(/ via (.+?)( hold| $)/);
+    if (v) { const vl = []; let solo = false; for (const x of v[1].split(' ')) { const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
+      const vv = vl.filter(x => PHON[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
+    out.push(cmd);
+  } else if ((m = s.match(/ taxi .*?holding point (\S+)/)) || (m = s.match(/ taxi (to )?(\S+)/))) {
     const hp = PHONW[m[m.length-1]] || (m[m.length-1].length === 1 ? m[m.length-1].toUpperCase() : null);
     if ((hp && HOLDS[hp]) || (!hp && / runway /.test(s) && RW_ENDS.length > 2)) {
       let cmd = 'TAXI' + (hp && HOLDS[hp] ? ' ' + hp : ''); const v = s.match(/ via (.+?)( hold| holding| cross| $)/);
