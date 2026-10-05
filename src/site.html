@@ -172,9 +172,19 @@
       <input id="apSearch" type="search" placeholder="Search ICAO, airport or country" aria-label="Search airports">
       <div class="chips" id="apRegions" role="group" aria-label="Region"></div>
       <label class="tog"><input type="checkbox" id="apLiveOnly"> Open now only</label>
+      <div class="viewsw" id="apView" role="radiogroup" aria-label="View"><span class="thumb" aria-hidden="true"></span><button type="button" role="radio" aria-checked="true" data-v="list">List</button><button type="button" role="radio" aria-checked="false" data-v="map">Map</button></div>
     </div>
   </div></div>
-  <div class="wrap"><div class="apgrid" id="apGrid"></div><p class="empty" id="apEmpty" hidden>No airports match those filters.</p></div>
+  <div class="wrap"><div class="apgrid" id="apGrid"></div>
+    <div class="wmap" id="apMap" hidden>
+      <canvas id="apMapCv" aria-hidden="true"></canvas>
+      <div class="wm-pins" id="apMapPins"></div>
+      <div class="wm-pop" id="apMapPop" hidden></div>
+      <div class="wm-zoom"><button type="button" data-z="1" aria-label="Zoom in">+</button><button type="button" data-z="-1" aria-label="Zoom out">−</button><button type="button" data-z="0" aria-label="Show the whole world" title="Whole world"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 8h12M8 2c-2.4 3.4-2.4 8.6 0 12M8 2c2.4 3.4 2.4 8.6 0 12" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+      <div class="wm-key" id="apMapKey"></div>
+      <div class="wm-credit" id="apMapCredit">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</div>
+    </div>
+    <p class="empty" id="apEmpty" hidden>No airports match those filters.</p></div>
   <div style="height:72px"></div>
 </section>
 

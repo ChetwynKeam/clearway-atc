@@ -20,6 +20,7 @@ function go(r){
   if (r === 'home' || r === HOME_RT) requestAnimationFrame(renderThumbs);
   if (r === 'training') requestAnimationFrame(() => { renderFigure(); spy(); });
   if (r === 'career') renderCareer();
+  if (r === 'airports' && apf.view === 'map') requestAnimationFrame(wmRender);
   window.scrollTo(0, 0);
 }
 function fromHash(){
@@ -39,19 +40,20 @@ setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
 // LXGB and LPMA are built. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
-  { icao:'LXGB', iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
-  { icao:'LPMA', iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
-  { icao:'EGLC', iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'dev', pos:['TWR','GND'], diff:3, blurb:'Steep approaches between the Docklands towers, a short runway and a tight apron.' },
-  { icao:'LOWI', iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'plan', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
-  { icao:'LFMN', iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
-  { icao:'LEMG', iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
-  { icao:'EGLL', iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'plan', pos:['APP','TWR','GND'], diff:5, blurb:'Four holding stacks, runway alternation and a heavy wake mix on two parallel runways.' },
-  { icao:'EGKK', iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L','08L/26R'], status:'plan', pos:['TWR','GND'], diff:4, blurb:'One of the busiest single-runway operations in the world. Every gap in the departure flow counts.' },
-  { icao:'TNCM', iata:'SXM', name:'Princess Juliana', ctry:'Sint Maarten', region:'Caribbean', rwys:['10/28'], status:'plan', pos:['APP','TWR'], diff:3, blurb:'Low arrivals over Maho Beach, Caribbean squalls and a single runway between the sea and the lagoon.' },
-  { icao:'VQPR', iata:'PBH', name:'Paro', ctry:'Bhutan', region:'Asia', rwys:['15/33'], status:'plan', pos:['TWR'], diff:5, blurb:'A visual approach through a Himalayan valley, with daylight-only operations.' },
-  { icao:'KSAN', iata:'SAN', name:'San Diego', ctry:'United States', region:'North America', rwys:['09/27'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'A busy single runway, with downtown buildings under the approach to 27.' },
-  { icao:'LGSK', iata:'JSI', name:'Skiathos', ctry:'Greece', region:'Europe', rwys:['02/20'], status:'plan', pos:['TWR'], diff:3, blurb:'A short island runway that ends at the sea, with summer charter waves.' }
+  { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
+  { icao:'LPMA', ll:[32.698, -16.774], iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
+  { icao:'EGLC', ll:[51.505, 0.055], iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'dev', pos:['TWR','GND'], diff:3, blurb:'Steep approaches between the Docklands towers, a short runway and a tight apron.' },
+  { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'plan', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
+  { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
+  { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
+  { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'plan', pos:['APP','TWR','GND'], diff:5, blurb:'Four holding stacks, runway alternation and a heavy wake mix on two parallel runways.' },
+  { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L','08L/26R'], status:'plan', pos:['TWR','GND'], diff:4, blurb:'One of the busiest single-runway operations in the world. Every gap in the departure flow counts.' },
+  { icao:'TNCM', ll:[18.041, -63.109], iata:'SXM', name:'Princess Juliana', ctry:'Sint Maarten', region:'Caribbean', rwys:['10/28'], status:'plan', pos:['APP','TWR'], diff:3, blurb:'Low arrivals over Maho Beach, Caribbean squalls and a single runway between the sea and the lagoon.' },
+  { icao:'VQPR', ll:[27.403, 89.425], iata:'PBH', name:'Paro', ctry:'Bhutan', region:'Asia', rwys:['15/33'], status:'plan', pos:['TWR'], diff:5, blurb:'A visual approach through a Himalayan valley, with daylight-only operations.' },
+  { icao:'KSAN', ll:[32.734, -117.19], iata:'SAN', name:'San Diego', ctry:'United States', region:'North America', rwys:['09/27'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'A busy single runway, with downtown buildings under the approach to 27.' },
+  { icao:'LGSK', ll:[39.177, 23.504], iata:'JSI', name:'Skiathos', ctry:'Greece', region:'Europe', rwys:['02/20'], status:'plan', pos:['TWR'], diff:3, blurb:'A short island runway that ends at the sea, with summer charter waves.' }
 ];
 const STATUS_TXT = { live: 'Open now', dev: 'In development', plan: 'Planned' };
 // runway diagram drawn from the designators: heading = number × 10, parallels offset left/right
@@ -88,19 +90,211 @@ function apCard(ap){
     <div class="ft">${ap.pos.map(p => `<span class="pos">${p}</span>`).join('')}<span>RWY ${ap.rwys.join(' · ')}</span><span class="diff" title="Difficulty ${ap.diff} of 5">${[1,2,3,4,5].map(i => `<i class="${i <= ap.diff ? 'on' : ''}"></i>`).join('')}</span></div></div>
   </${tag}>`;
 }
-const apf = { region: 'All', q: '', live: false };
+const apf = { region: 'All', q: '', live: false, view: 'list' };
 function renderAirports(){
   $('apFeatured').innerHTML = AIRPORTS_NET.slice(0, 8).map(apCard).join('');
   const regions = ['All', ...new Set(AIRPORTS_NET.map(a => a.region))];
   $('apRegions').innerHTML = regions.map(r => `<button type="button" class="${r === apf.region ? 'on' : ''}" data-r="${esc(r)}">${esc(r)}</button>`).join('');
-  $('apRegions').querySelectorAll('button').forEach(b => b.onclick = () => { apf.region = b.dataset.r; renderAirports(); });
+  $('apRegions').querySelectorAll('button').forEach(b => b.onclick = () => { apf.region = b.dataset.r; renderAirports(); if (apf.view === 'map') wmFit(); });
   const q = apf.q.trim().toLowerCase();
   const list = AIRPORTS_NET.filter(a => (apf.region === 'All' || a.region === apf.region) && (!apf.live || a.status === 'live') && (!q || [a.icao, a.iata, a.name, a.ctry].join(' ').toLowerCase().includes(q)));
   $('apGrid').innerHTML = list.map(apCard).join(''); $('apEmpty').hidden = list.length > 0;
+  WM.list = list; if (apf.view === 'map') wmRender();
   $('statAirports').textContent = AIRPORTS_NET.length; $('statLive').textContent = AIRPORTS_NET.filter(a => a.status === 'live').length;
 }
 $('apSearch').addEventListener('input', e => { apf.q = e.target.value; renderAirports(); });
 $('apLiveOnly').addEventListener('change', e => { apf.live = e.target.checked; renderAirports(); });
+
+// ── airports: world map view ──
+// A flat Web Mercator world (OpenStreetMap tiles) with a pin per airport, coloured by status. Pins close together
+// on screen merge into a numbered cluster; clicking one zooms in. Open airports go straight to their page; roadmap
+// airports show a short card. Where tiles can't load (the claude.ai viewer) the map keeps a plain ocean and graticule.
+const WM = { list: AIRPORTS_NET, cx: 0.5, cy: 0.5, z: 1, tiles: new Map(), ok: 0, err: 0, failed: false, w: 0, h: 0, dpr: 1, raf: 0, sel: null };
+const WM_COL = { live: '#12805c', dev: '#c2700a', plan: '#7b8da3' };
+const WM_RANK = { live: 0, dev: 1, plan: 2 };
+const wmX = lon => (lon + 180)/360;
+const wmY = lat => { const r = clamp(lat, -85, 85)*D2R; return (1 - Math.log(Math.tan(r) + 1/Math.cos(r))/Math.PI)/2; };
+const wmLat = y => Math.atan(Math.sinh(Math.PI*(1 - 2*y)))*R2D;
+const wmWorld = () => 256*2**WM.z;
+const wmZmin = () => Math.max(0, Math.log2(Math.max(WM.w, WM.h)/256) - 0.05);
+function wmClamp(){
+  WM.z = clamp(WM.z, wmZmin(), 12);
+  const ws = wmWorld(), hy = WM.h/2/ws;
+  WM.cy = hy >= 0.5 ? 0.5 : clamp(WM.cy, hy, 1 - hy);
+  WM.cx = ((WM.cx % 1) + 1) % 1;
+}
+// screen position of a point, taking the copy of the (wrapping) world nearest the centre
+function wmScreen(nx, ny){
+  const ws = wmWorld(); let dx = nx - WM.cx; dx -= Math.round(dx);
+  return [WM.w/2 + dx*ws, WM.h/2 + (ny - WM.cy)*ws];
+}
+function wmTile(z, x, y){
+  const k = `${z}/${x}/${y}`; let t = WM.tiles.get(k);
+  if (!t) {
+    if (WM.tiles.size > 400) { const old = [...WM.tiles.entries()].sort((a, b) => a[1].use - b[1].use).slice(0, 120); for (const [kk] of old) WM.tiles.delete(kk); }
+    const img = new Image(); t = { img, ok: false, use: 0 };
+    img.onload = () => { t.ok = true; WM.ok++; wmDraw(); };
+    img.onerror = () => { WM.err++; if (!WM.ok && WM.err >= 4 && !WM.failed) { WM.failed = true; wmDraw(); } };
+    img.src = MAP_SRC.street.url(z, x, y); WM.tiles.set(k, t);
+  }
+  t.use = ++TILE.use; return t;
+}
+function wmDraw(){
+  if (WM.raf) return;
+  WM.raf = requestAnimationFrame(() => { WM.raf = 0; wmPaint(); wmPins(); });
+}
+function wmPaint(){
+  const cv = $('apMapCv'), g = cv.getContext('2d'), { w, h, dpr } = WM;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.fillStyle = '#aad3df'; g.fillRect(0, 0, w, h);    // OSM's own sea colour, so the fallback and the tiles match
+  const ws = wmWorld();
+  if (!WM.failed) {
+    const tz = clamp(Math.round(WM.z), 0, 19), n = 2**tz, ts = ws/n;
+    const x0 = Math.floor((WM.cx - w/2/ws)*n), x1 = Math.floor((WM.cx + w/2/ws)*n);
+    const y0 = Math.max(0, Math.floor((WM.cy - h/2/ws)*n)), y1 = Math.min(n - 1, Math.floor((WM.cy + h/2/ws)*n));
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+      const xx = ((x % n) + n) % n, X = Math.floor(w/2 + (x/n - WM.cx)*ws), Y = Math.floor(h/2 + (y/n - WM.cy)*ws), S = Math.ceil(ts) + 1;
+      const t = wmTile(tz, xx, y);
+      if (t.ok) { g.drawImage(t.img, X, Y, S, S); continue; }
+      // not loaded yet: stretch the nearest loaded parent tile so panning never flashes blank
+      for (let up = 1; up <= tz; up++) {
+        const k = 2**up, p = WM.tiles.get(`${tz - up}/${Math.floor(xx/k)}/${Math.floor(y/k)}`);
+        if (p && p.ok) { const s = 256/k; g.drawImage(p.img, (xx % k)*s, (y % k)*s, s, s, X, Y, S, S); break; }
+      }
+    }
+  }
+  if (WM.failed) {
+    // graticule every 30° (15° once zoomed in), with the equator and Greenwich a little stronger
+    const step = WM.z > 3 ? 15 : 30;
+    g.lineWidth = 1; g.font = '11px JetBrains Mono, monospace'; g.fillStyle = 'rgba(11,42,74,.45)';
+    for (let lon = -180; lon < 180; lon += step) {
+      const [X] = wmScreen(wmX(lon), 0); g.strokeStyle = lon === 0 ? 'rgba(11,42,74,.35)' : 'rgba(11,42,74,.16)';
+      g.beginPath(); g.moveTo(X + .5, 0); g.lineTo(X + .5, h); g.stroke();
+      g.fillText((Math.abs(lon)) + '°' + (lon < 0 ? 'W' : lon > 0 ? 'E' : ''), X + 4, h - 26);
+    }
+    for (let lat = -75; lat <= 75; lat += step) {
+      const [, Y] = wmScreen(0, wmY(lat)); if (Y < 0 || Y > h) continue;
+      g.strokeStyle = lat === 0 ? 'rgba(11,42,74,.35)' : 'rgba(11,42,74,.16)';
+      g.beginPath(); g.moveTo(0, Y + .5); g.lineTo(w, Y + .5); g.stroke();
+      g.fillText(Math.abs(lat) + '°' + (lat < 0 ? 'S' : lat > 0 ? 'N' : ''), 6, Y - 4);
+    }
+  }
+  if (WM.failed && !WM.noted) { WM.noted = true; $('apMapCredit').textContent = 'Map imagery can’t load here: showing a plain grid'; }
+}
+// pins: merge ones closer than 26 px into clusters, then lay out as buttons over the canvas
+function wmPins(){
+  const pts = WM.list.map(ap => { const [x, y] = wmScreen(wmX(ap.ll[1]), wmY(ap.ll[0])); return { ap, x, y }; });
+  const groups = [];
+  pts.sort((a, b) => WM_RANK[a.ap.status] - WM_RANK[b.ap.status]).forEach(p => {
+    const g = groups.find(g => Math.hypot(g.x - p.x, g.y - p.y) < 26);
+    if (g) { g.m.push(p); g.x = g.m.reduce((s, q) => s + q.x, 0)/g.m.length; g.y = g.m.reduce((s, q) => s + q.y, 0)/g.m.length; }
+    else groups.push({ x: p.x, y: p.y, m: [p] });
+  });
+  const vis = groups.filter(g => g.x > -30 && g.x < WM.w + 30 && g.y > -30 && g.y < WM.h + 30);
+  $('apMapPins').innerHTML = vis.map((g, i) => {
+    if (g.m.length > 1) {
+      const names = g.m.map(p => p.ap.name).join(', '), st = g.m[0].ap.status;
+      return `<button type="button" class="wm-clu" data-g="${i}" style="left:${g.x.toFixed(1)}px;top:${g.y.toFixed(1)}px;--c:${WM_COL[st]}" aria-label="${g.m.length} airports: ${esc(names)}. Zoom in" title="${esc(names)}">${g.m.length}</button>`;
+    }
+    const ap = g.m[0].ap, live = ap.status === 'live';
+    const lab = `${ap.name}, ${STATUS_TXT[ap.status]}`;
+    return `<button type="button" class="wm-pin${WM.sel === ap.icao ? ' sel' : ''}" data-icao="${ap.icao}" style="left:${g.x.toFixed(1)}px;top:${g.y.toFixed(1)}px;--c:${WM_COL[ap.status]}" aria-label="${esc(lab)}${live ? '. Open its page' : ''}" title="${esc(lab)}"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 31C12 31 2 18.6 2 11.5A10 10 0 0 1 22 11.5C22 18.6 12 31 12 31Z"/><circle cx="12" cy="11.5" r="4"/></svg><span>${ap.icao}</span></button>`;
+  }).join('');
+  $('apMapPins').querySelectorAll('.wm-clu').forEach(b => b.onclick = () => { const g = vis[+b.dataset.g]; wmFitPts(g.m.map(p => p.ap), 2, 11); });
+  $('apMapPins').querySelectorAll('.wm-pin').forEach(b => b.onclick = e => { e.stopPropagation(); wmOpen(b.dataset.icao); });
+  wmPopPlace();
+}
+function wmHref(ap){ const rt = AP_ROUTE[ap.icao]; return ap.icao === APT.icao ? '#' + rt : SITE[ap.icao] + '#' + rt; }
+function wmOpen(icao){
+  const ap = AIRPORTS_NET.find(a => a.icao === icao);
+  if (ap.status === 'live') { location.href = wmHref(ap); return; }
+  // roadmap airports have no page yet: show a short card at the pin
+  WM.sel = icao;
+  $('apMapPop').innerHTML = `<button type="button" class="x" aria-label="Close">×</button>
+    <div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span></div>
+    <h3>${esc(ap.name)}</h3><div class="ctry">${esc(ap.ctry)} · RWY ${ap.rwys.join(' · ')}</div><p>${esc(ap.blurb)}</p>
+    <div class="note">On the roadmap. It can't be controlled yet.</div>`;
+  $('apMapPop').hidden = false; $('apMapPop').querySelector('.x').onclick = wmClose;
+  wmPins();
+}
+function wmClose(){ if (!WM.sel) return; WM.sel = null; $('apMapPop').hidden = true; wmPins(); }
+function wmPopPlace(){
+  const pop = $('apMapPop'); if (!WM.sel || pop.hidden) return;
+  const ap = AIRPORTS_NET.find(a => a.icao === WM.sel), [x, y] = wmScreen(wmX(ap.ll[1]), wmY(ap.ll[0]));
+  if (!WM.list.includes(ap) || x < 0 || x > WM.w || y < 0 || y > WM.h) { WM.sel = null; pop.hidden = true; return; }
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  pop.style.left = clamp(x - pw/2, 8, WM.w - pw - 8) + 'px';
+  pop.style.top = (y - 40 - ph > 8 ? y - 40 - ph : Math.min(y + 14, WM.h - ph - 8)) + 'px';
+}
+// frame a set of airports (or the whole world when empty), zooming in at least minStep and no further than maxZ
+function wmFitPts(aps, minStep, maxZ = 6){
+  if (!aps.length) { WM.cx = 0.5; WM.cy = 0.5; WM.z = 0; wmClamp(); return wmDraw(); }
+  const xs = aps.map(a => wmX(a.ll[1])), ys = aps.map(a => wmY(a.ll[0]));
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const span = Math.max((x1 - x0)/(WM.w - 120), (y1 - y0)/(WM.h - 120), 1e-9);
+  let z = Math.min(Math.log2(1/(256*span)), maxZ);
+  if (minStep) z = Math.min(Math.max(z, WM.z + minStep), 11);
+  WM.cx = (x0 + x1)/2; WM.cy = (y0 + y1)/2; WM.z = z; wmClamp(); wmDraw();
+}
+function wmFit(){ wmFitPts(WM.list); }
+function wmSize(){
+  const box = $('apMap'), r = box.getBoundingClientRect(); if (!r.width) return false;
+  WM.dpr = window.devicePixelRatio || 1; WM.w = r.width; WM.h = r.height;
+  const cv = $('apMapCv'); cv.width = Math.round(r.width*WM.dpr); cv.height = Math.round(r.height*WM.dpr);
+  wmClamp(); return true;
+}
+function wmRender(){ if (wmSize()) wmDraw(); }
+function wmZoomAt(dz, px, py){
+  // keep the point under the cursor fixed
+  const ws0 = wmWorld(), nx = WM.cx + (px - WM.w/2)/ws0, ny = WM.cy + (py - WM.h/2)/ws0;
+  WM.z += dz; wmClamp();
+  const ws = wmWorld(); WM.cx = nx - (px - WM.w/2)/ws; WM.cy = ny - (py - WM.h/2)/ws; wmClamp(); wmDraw();
+}
+function setApView(v){
+  apf.view = v;
+  $('apView').dataset.v = v;
+  $('apView').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.v === v)));
+  $('apGrid').hidden = v !== 'list'; $('apMap').hidden = v !== 'map';
+  if (v === 'map') { const first = !WM.w; wmSize(); if (first) wmFit(); wmDraw(); }
+}
+$('apView').querySelectorAll('button').forEach(b => b.onclick = () => setApView(b.dataset.v));
+$('apView').addEventListener('keydown', e => { if (/^Arrow/.test(e.key)) { e.preventDefault(); const v = apf.view === 'list' ? 'map' : 'list'; setApView(v); $('apView').querySelector(`[data-v="${v}"]`).focus(); } });
+$('apMap').querySelector('.wm-zoom').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; const dz = +b.dataset.z;
+  if (dz) wmZoomAt(dz, WM.w/2, WM.h/2); else { WM.z = 0; WM.cx = 0.5; WM.cy = 0.5; wmClamp(); wmDraw(); }
+});
+$('apMap').addEventListener('wheel', e => {
+  e.preventDefault(); const r = $('apMap').getBoundingClientRect();
+  wmZoomAt(clamp(-e.deltaY*(e.deltaMode ? 0.05 : 0.0025), -1, 1), e.clientX - r.left, e.clientY - r.top);
+}, { passive: false });
+{ // drag to pan, pinch to zoom; a press that doesn't move is a click
+  const ptr = new Map(); let pinch = null, moved = false;
+  const box = $('apMap');
+  box.addEventListener('pointerdown', e => {
+    if (e.target.closest('button, a, .wm-pop')) return;
+    box.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); moved = false;
+    if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: WM.z }; }
+  });
+  box.addEventListener('pointermove', e => {
+    const p = ptr.get(e.pointerId); if (!p) return;
+    const dx = e.clientX - p[0], dy = e.clientY - p[1]; ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (Math.abs(dx) + Math.abs(dy) > 0) moved = true;
+    if (ptr.size === 2 && pinch) {
+      const [a, b] = [...ptr.values()], r = box.getBoundingClientRect();
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]); wmZoomAt(pinch.z + Math.log2(d/pinch.d) - WM.z, (a[0] + b[0])/2 - r.left, (a[1] + b[1])/2 - r.top);
+      return;
+    }
+    if (ptr.size === 1) { const ws = wmWorld(); WM.cx -= dx/ws; WM.cy -= dy/ws; wmClamp(); wmDraw(); box.classList.add('drag'); }
+  });
+  const up = e => {
+    if (!ptr.delete(e.pointerId)) return; if (ptr.size < 2) pinch = null;
+    if (!ptr.size) { box.classList.remove('drag'); if (!moved) wmClose(); }
+  };
+  box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+  box.addEventListener('dblclick', e => { if (e.target.closest('button, .wm-pop')) return; const r = box.getBoundingClientRect(); wmZoomAt(1, e.clientX - r.left, e.clientY - r.top); });
+}
+window.addEventListener('resize', () => { if (apf.view === 'map' && curRoute === 'airports') wmRender(); });
+$('apMapKey').innerHTML = ['live', 'dev', 'plan'].map(s => `<span><i style="background:${WM_COL[s]}"></i>${STATUS_TXT[s]}</span>`).join('');
 
 // ── overview: animated hero scope ──
 const hero = { cv: $('heroScope'), base: null, map: null, ang: 0, blips: [], trail: [] };
