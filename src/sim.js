@@ -306,8 +306,7 @@ const VAC_TURN = 16, VAC_RWY = 30, VAC_DEC = 2.5;   // turn-off speed, backtrack
 const stopDist = v => Math.max(0, v*v - VAC_TURN*VAC_TURN)/(2*VAC_DEC)*0.5144;   // metres to slow from v to the turn-off
 function vacatePath(ac){
   const m = mOf([ac.x, ac.y]), dir = Math.sin(ac.hdg*D2R)*RU[0] + Math.cos(ac.hdg*D2R)*RU[1] >= 0 ? 1 : -1;
-  if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
-  const st = freeStand(ac); if (st) st.occ = ac; ac.stand = st;
+  planStand(ac); const st = ac.stand;
   const prefs = APT.vacPrefs(st);
   if (ac.reqExit && !prefs.includes(ac.reqExit) && !(APT.vacExits && APT.vacExits(ac).includes(ac.reqExit))) ac.reqExit = null;
   const pts = [];
@@ -348,6 +347,11 @@ function taxiLimit(ac){
     from = P[i];
   }
   return lim;
+}
+// an arrival's stand is planned once it is cleared for an approach, so the card and strip show where it is going
+function planStand(ac){
+  if (ac.kind !== 'ARR' || (ac.stand && ac.stand.occ === ac)) return;
+  const st = freeStand(ac); if (st) st.occ = ac; ac.stand = st;
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto;
@@ -643,6 +647,7 @@ function step(dt){
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
+    if (ac.kind === 'ARR' && ac.app && !ac.stand && !ac.handed) planStand(ac);
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
     if (ac.rel) stepRelease(ac);
     if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; S.score.pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
@@ -654,6 +659,7 @@ function step(dt){
       if (ac.kind === 'DEP') { if (!ac.handed) { S.score.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else S.score.pts += 20; S.score.departed++; }
       else { S.score.div++; S.score.pts -= ac.state === 'DIVERTING' ? 0 : 40; sys(`${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); }
       emit('exit', ac);
+      if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       if (S.sel === ac) S.sel = null; return false;
     }
     return true;
