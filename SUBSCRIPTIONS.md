@@ -22,15 +22,15 @@ with Stripe), `api/feedback.js` (feedback and airport requests), `api/_lib.js` (
 
 | Plan | Key | Airports | Suggested price |
 |---|---|---|---|
-| Solo | `a1` | 1 | £4.99 / month |
-| Three | `a3` | 3 | £9.99 / month |
-| Five | `a5` | 5 | £14.99 / month |
-| Ten | `a10` | 10 | £24.99 / month |
-| Unlimited | `all` | every airport, early access included | £29.99 / month |
-| Early access add-on | `early` | airports in development, double-weight airport requests | £4.99 / month |
+| Alpha | `a1` | 1 | £4.99 / month |
+| Bravo | `a3` | 3 | £9.99 / month |
+| Charlie | `a5` | 5 | £14.99 / month |
+| Delta | `a10` | 10 | £24.99 / month |
+| Echo | `all` | every airport, Foxtrot included | £29.99 / month |
+| Foxtrot (early access add-on) | `early` | airports in development, double-weight airport requests | £4.99 / month |
 
 The prices players see come from `subs.json`; the prices they pay come from Stripe. Keep the two the same.
-Every plan starts with a 2-day free trial, once per player, with a card taken at sign-up and cancellable before day 2.
+Every plan starts with a 2-day free trial of one airport of the player's choice (whatever the plan), once per player, with a card taken at sign-up and cancellable before day 2. The rest of the plan's airports unlock when the trial ends.
 Players tick their airports on the Account page. Empty places can be filled any time; swaps are free in the trial and then once every 30 days.
 
 ## How strong the protection is
@@ -60,6 +60,7 @@ follow-up once there are paying players.
    `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
    Copy the signing secret (`whsec_...`).
 5. Developers > API keys: copy the secret key (`sk_test_...`).
+6. Launch offer: Product catalogue > Coupons > New, 30% off, duration "Repeating" for 3 months. Copy its ID into the Vercel variable `STRIPE_COUPON`; Checkout then applies it to every new subscription. The pricing page shows the offer from `subs.json` (`offer`: percent, months, label); set `offer` to `null` and delete `STRIPE_COUPON` to end it.
 
 ### 3. Vercel environment variables
 Vercel > clearway-atc > Settings > Environment Variables (Production), then redeploy:
@@ -72,12 +73,16 @@ STRIPE_WEBHOOK_SECRET     whsec_...
 PRICE_1 PRICE_3 PRICE_5 PRICE_10 PRICE_UNLIMITED PRICE_EARLY   price_...
 SITE_URL                  https://www.clearway-atc.co.uk/
 TRIAL_DAYS                2
+STRIPE_COUPON             (the launch offer coupon ID, optional)
+COMMISSION_PRICE          2500 (a commissioned airport, in pence; optional, 2500 = £25)
+ADMIN_EMAILS              your sign-in email (comma separated for more); opens the #admin page
 ```
 
 ### 4. Turn it on (`subs.json`, then `python3 build.py` and copy the pages)
 - `supabase_url`, `supabase_anon_key`: from step 1 (the anon key is meant to be public).
 - `feedback: true` switches on the feedback button and airport requests. This can go live before payments.
 - `enabled: true` switches on sign-in, plans and the paywall. With Stripe in test mode, use card `4242 4242 4242 4242`.
+- `commission`: the commissioned-airport price shown on the site (25). Keep it in step with `COMMISSION_PRICE`.
 - `contact_email`: shown on the Terms and Privacy pages.
 - `analytics_token`: Cloudflare Web Analytics site token, optional.
 
@@ -88,3 +93,21 @@ checked first; they are a reasonable starting draft for a UK sole trader, not le
 
 ## Reading feedback and requests
 Supabase > Table Editor: `feedback` (set `status` to read / planned / done as you go) and `request_tally` (requests, most votes first).
+
+## Commissioned airports (card saved on request, £25 taken on release)
+Run `supabase/commissions.sql` once in the SQL Editor (after `schema.sql`). It adds the `commissions` table and an
+`owned` list on each account. No Stripe product is needed. Add your sign-in email to `ADMIN_EMAILS` in Vercel.
+
+1. A signed-in player sends an airport from the Request page and saves a card in Stripe Checkout (setup mode).
+   Nothing is taken. The webhook stores the card on the commission and marks it `requested`.
+2. Open www.clearway-atc.co.uk/#admin (signed in with an `ADMIN_EMAILS` address). It lists every commission with the
+   player's email and notes. Mark it **Building** while you work on it, or **Decline** with a note (nothing is charged).
+3. When the airport is playable on the site (it can still show as In development), press **Release and charge £25**.
+   The saved card is charged once (off-session). The airport is added to the player's `owned` list and only they can
+   control it for a month (`public_from`). Owned airports open whatever plan the player is on, including none.
+4. If the bank wants the player to confirm (3D Secure) or the card fails, the commission becomes `ready` and the player
+   gets a Pay £25 button on their account. Email them to say it is waiting. Paying there unlocks it the same way.
+5. After `public_from`, open the airport to everyone in the catalogue and press **Opened to everyone**.
+
+Why not a hold on the card? A bank authorisation hold lapses after about 7 days, which is shorter than a build.
+Saving the card with the player's agreement is how Stripe recommends charging later.

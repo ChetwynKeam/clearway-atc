@@ -1,5 +1,5 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).

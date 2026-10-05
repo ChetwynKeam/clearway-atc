@@ -8,8 +8,15 @@
 .cw-plan > .badge { position: absolute; top: -12px; left: 18px; }
 .cw-plan h3 { font-size: 24px; margin: 0; }
 .cw-plan .price { display: flex; align-items: baseline; gap: 4px; margin-top: 6px; }
-.cw-plan .price b { font-family: var(--font-head); font-size: 34px; letter-spacing: -.03em; color: var(--brand); }
-.cw-plan .price span { color: var(--dim); }
+.cw-plan .price b { font-family: var(--font-head); font-size: clamp(26px, 2.2vw, 34px); letter-spacing: -.03em; color: var(--brand); }
+.cw-plan .price span { color: var(--dim); font-size: 14px; white-space: nowrap; }
+.cw-plan .price s, .cw-tchip s { color: var(--faint); font-weight: 500; margin-right: 4px; }
+.cw-plan .price { flex-wrap: wrap; row-gap: 0; }
+.cw-plan .price s { font-size: 16px; flex-basis: 100%; }
+.cw-off { font-size: 13px; font-weight: 600; color: #0d7a52; }
+.cw-offer { background: #e3f6ee; color: #0d7a52; border-color: #b8e6d2; margin: 0 8px 8px 0; }
+.cw-teaser-off { margin: -24px 0 20px; font-weight: 600; color: #0d7a52; }
+.cw-teaser-off:empty { display: none; }
 .cw-plan .per { font-size: 13px; color: var(--dim); }
 .cw-plan p { color: var(--ink-2); font-size: 14.5px; margin: 8px 0 14px; flex: 1; }
 .cw-plan .btn { width: 100%; }
@@ -69,6 +76,18 @@
 .cw-tchip em { font-style: normal; font-weight: 600; margin-top: 8px; }
 .cw-tchip:hover { border-color: var(--accent); }
 
+/* commissioned airports */
+.cw-own { display: flex; gap: 32px; align-items: center; justify-content: space-between; margin-top: 24px; padding: 32px 36px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line-2); box-shadow: var(--shadow-1); }
+.cw-own h2 { font-size: clamp(22px, 2.4vw, 28px); margin: 8px 0; }
+.cw-own p { color: var(--ink-2); margin: 0; max-width: 680px; }
+.cw-own .btn { flex: none; }
+.cw-coms { display: grid; gap: 4px; }
+.cw-com { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.cw-com b { font-family: var(--font-data); }
+.cw-com .btn { flex: none; white-space: nowrap; }
+.cw-com .badge { margin-left: 6px; }
+.cw-coms > .cw-row { margin-top: 12px; }
+
 /* feedback */
 .cw-fbbtn { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 0; background: var(--brand); color: #fff; font: 600 14px var(--font-body); cursor: pointer; box-shadow: var(--shadow-3); }
 .cw-fbbtn svg { width: 16px; height: 16px; }
@@ -89,6 +108,8 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   .cw-plans, .cw-teaser-row { grid-template-columns: minmax(0, 1fr); }
   .cw-teaser-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cw-early { grid-template-columns: minmax(0, 1fr); padding: 28px 22px; gap: 22px; }
+  .cw-own, .cw-com { flex-direction: column; align-items: flex-start; }
+  .cw-own { padding: 26px 22px; gap: 18px; }
   #cwEmailForm, #cwCodeForm, .cw-two { grid-template-columns: minmax(0, 1fr); }
   .cw-reqrow { grid-template-columns: 52px minmax(0, 1fr) 32px auto; }
   .cw-reqrow i { display: none; }

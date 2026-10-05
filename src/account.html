@@ -2,24 +2,32 @@
 <section class="page" id="page-pricing" data-page="pricing" hidden>
   <div class="pagehead"><div class="wrap">
     <div class="eyebrow">Pricing</div>
-    <h1>Pick your airports. <em>Try any plan free for <span data-cw="trial">2</span> days.</em></h1>
+    <h1>Pick your airports. <em>Try one airport free for <span data-cw="trial">2</span> days.</em></h1>
     <p>Every plan includes the full simulator at the airports you choose: approach, tower and ground, live weather, real-world traffic, the timetable, guided exercises and your career logbook. Briefings and the Academy reading are free for everyone.</p>
+    <div class="cw-note cw-offer" id="cwOfferNote" hidden></div>
     <div class="cw-note" id="cwPreviewNote" hidden>Clearway is in open preview: every airport is free to control while subscriptions are being set up.</div>
   </div></div>
   <div class="wrap">
     <div class="cw-plans" id="cwPlans"></div>
-    <label class="cw-early-pick" id="cwEarlyPick"><input type="checkbox" id="cwEarlyBox"> <span><b>Add early access</b> for <span data-cw="early-price"></span> a month: play airports while they are still being built, and your airport requests count double. Included with Unlimited.</span></label>
+    <label class="cw-early-pick" id="cwEarlyPick"><input type="checkbox" id="cwEarlyBox"> <span><b>Add Foxtrot</b> (early access) for <span data-cw="early-price"></span> a month: play airports while they are still being built, and your airport requests count double. Included with Echo.</span></label>
     <div class="cw-early">
-      <div><div class="eyebrow">Early access scheme</div>
+      <div><div class="eyebrow">Foxtrot · early access</div>
         <h2>Control tomorrow’s airports today.</h2>
-        <p>Early access members open airports marked <b>In development</b> as soon as their first build is playable, see new features before everyone else, and help decide what comes next: their airport requests carry double weight and their feedback goes to the top of the pile.</p></div>
+        <p>Foxtrot members open airports marked <b>In development</b> as soon as their first build is playable, see new features before everyone else, and help decide what comes next: their airport requests carry double weight and their feedback goes to the top of the pile.</p></div>
       <ul class="cw-ticks"><li>Airports in development, from the first playable build</li><li>New features and engine changes first</li><li>Double weight on airport requests</li><li>Priority feedback, read by the developer</li></ul>
+    </div>
+    <div class="cw-own">
+      <div><div class="eyebrow">Your own airport</div>
+        <h2>Want an airport we have not built? Commission it.</h2>
+        <p>Tell us your local airport, or the one you have always wanted to work, and save a card. We build it, and <span data-cw="commission-price">£25</span> is taken once, only when we release it to you. Then it is yours for good, whatever plan you are on, even with none, and you get it a month before anyone else.</p></div>
+      <a class="btn primary" href="#request">Commission an airport</a>
     </div>
     <div class="cw-faq">
       <h2>Questions</h2>
-      <details><summary>How does the free trial work?</summary><p>Choose a plan and start your trial. Nothing is charged for <span data-cw="trial">2</span> days, and you can cancel from your account before then without paying anything. After the trial the plan renews monthly until you cancel. The trial is available once per player.</p></details>
+      <details><summary>How does the free trial work?</summary><p>Choose a plan and start your trial. For <span data-cw="trial">2</span> days you can control one airport of your choice, free. Cancel from your account before the trial ends and you pay nothing. Otherwise your plan starts, the rest of its airports unlock, and it renews monthly until you cancel. The trial is available once per player.</p></details>
       <details><summary>How do I choose my airports?</summary><p>After you subscribe, open <a href="#account">your account</a> and tick the airports your plan includes. You can fill empty places at any time. Swapping an airport out is free during the trial and then once every 30 days. Unlimited includes every airport, including new ones as they open.</p></details>
       <details><summary>Can I change or cancel my plan?</summary><p>Yes. Open <a href="#account">your account</a> and choose Manage billing to move up or down a plan, update your card, download invoices or cancel. A cancelled plan stays active until the end of the month you have paid for.</p></details>
+      <details><summary>How does commissioning an airport work?</summary><p>Sign in, send us the airport from the <a href="#request">Request page</a> and save a card with our payment provider, Stripe. Nothing is taken then. We check it can be built from published charts; if it cannot, we tell you and nothing is ever charged. When it is built we release it to you and take a one-off <span data-cw="commission-price">£25</span> from the saved card, with no subscription needed. It is then yours to control for good, whatever plan you are on, and only you can control it for its first month before it opens to subscribers. You can withdraw any time before release.</p></details>
       <details><summary>What is free?</summary><p>The website, every airport briefing, the Academy reading, the airport map and your career logbook. Opening a position at an airport needs a trial or a plan.</p></details>
       <details><summary>Is this real air traffic control training?</summary><p>No. Clearway is a simulation game built from published charts. It is not approved for real-world training or navigation and is not affiliated with any air navigation service provider, airport or airline.</p></details>
     </div>
@@ -44,6 +52,7 @@
       <div class="cw-box"><div class="cw-row"><div><div class="lbl">Signed in as</div><b id="cwWho"></b></div><span class="grow"></span><button class="btn" id="cwSignOut">Sign out</button></div></div>
       <div class="cw-box"><h2>Your plan</h2><div id="cwPlanBox"></div></div>
       <div class="cw-box" id="cwPickBox" hidden><h2>Your airports</h2><p class="cw-sub" id="cwPickSub"></p><div class="cw-picks" id="cwPicks"></div><p class="cw-msg" id="cwPickMsg"></p></div>
+      <div class="cw-box" id="cwComBox" hidden><h2>Your commissioned airports</h2><div id="cwComs" class="cw-coms"></div><p class="cw-msg" id="cwComMsg"></p></div>
     </div>
   </div>
   <div style="height:72px"></div>
@@ -54,7 +63,7 @@
   <div class="pagehead"><div class="wrap">
     <div class="eyebrow">Roadmap</div>
     <h1>Which airport should we build next?</h1>
-    <p>Tell us the airport you most want to control and why. The most requested airports move up the roadmap, and early access members’ requests count double.</p>
+    <p>Tell us the airport you most want to control and why. The most requested airports move up the roadmap, and early access members’ requests count double. Or commission it and have it built for you.</p>
   </div></div>
   <div class="wrap cw-req">
     <form class="cw-box cw-form" id="cwReqForm">
@@ -63,9 +72,24 @@
       <label>What makes it a good one to control? <span class="lbl">optional</span><textarea id="cwReqWhy" rows="3" maxlength="600" placeholder="A short runway between mountains, summer peaks, a tricky approach…"></textarea></label>
       <div class="cw-row"><button class="btn primary">Send request</button><span class="cw-msg" id="cwReqMsg"></span></div>
     </form>
+    <form class="cw-box cw-form" id="cwComForm">
+      <h2>Or commission it: <span data-cw="commission-price">£25</span> once, yours for good</h2>
+      <p class="cw-sub" style="margin:0">Don’t want to wait for the vote? Save a card and we build the airport for you. Nothing is taken until we release it to you. It then stays on your account whatever plan you are on, and you get it a month before everyone else.</p>
+      <div class="cw-two"><label>ICAO code<input id="cwComIcao" maxlength="4" required placeholder="EGHI" autocapitalize="characters" spellcheck="false"></label><label>Airport<input id="cwComName" maxlength="80" placeholder="Southampton"></label></div>
+      <label>Anything we should know? <span class="lbl">optional</span><textarea id="cwComWhy" rows="3" maxlength="1500" placeholder="Why this airport, the positions you want to work, local procedures you know well…"></textarea></label>
+      <div class="cw-row"><button class="btn primary">Commission and save a card</button><span class="cw-msg" id="cwComNote"></span></div>
+      <p class="cw-msg" id="cwComOut"></p>
+    </form>
     <div class="cw-box"><h2>Most requested</h2><div id="cwReqList" class="cw-reqlist"><p class="cw-sub">Loading…</p></div></div>
     <div class="cw-box"><h2>Already on the roadmap</h2><div id="cwRoadmap" class="cw-reqlist"></div></div>
   </div>
+  <div style="height:72px"></div>
+</section>
+
+<!-- ═════════════════════ OWNER (not linked) ═════════════════════ -->
+<section class="page" id="page-admin" data-page="admin" hidden>
+  <div class="pagehead"><div class="wrap"><div class="eyebrow">Clearway team</div><h1>Commissions</h1><p>Build each airport, then release it: the player’s saved card is charged once and the airport unlocks on their account.</p></div></div>
+  <div class="wrap cw-acc"><div class="cw-box"><div id="cwAdmin" class="cw-coms"></div><p class="cw-msg" id="cwAdminMsg"></p></div></div>
   <div style="height:72px"></div>
 </section>
 
@@ -76,9 +100,10 @@
     <p>These terms cover your use of Clearway (the website at <span data-cw="site"></span> and its simulators). By creating an account or subscribing you agree to them.</p>
     <h2>The service</h2><p>Clearway is an air traffic control simulation game. It is built from published aeronautical information and open map data, simplified for play. It must not be used for real-world navigation, flight planning or controller training, and it is not affiliated with any air navigation service provider, airport or airline.</p>
     <h2>Accounts</h2><p>You sign in with your email address. Keep access to that email secure: anyone who can read it can sign in as you. One account is for one person.</p>
-    <h2>Subscriptions and the free trial</h2><p>Plans are billed monthly in advance through our payment provider, Stripe, and renew automatically until you cancel. New players can try a plan free for <span data-cw="trial">2</span> days once; if you do not cancel before the trial ends, the first monthly payment is taken then. You can change plan, update your card or cancel at any time from your account. Cancelling stops the next renewal and your plan stays active until the end of the period you have paid for. Prices include any VAT that applies and may change with at least 30 days’ notice by email.</p>
+    <h2>Subscriptions and the free trial</h2><p>Plans are billed monthly in advance through our payment provider, Stripe, and renew automatically until you cancel. New players can try one airport of their choice free for <span data-cw="trial">2</span> days, once, on the plan they choose; if you do not cancel before the trial ends, the first monthly payment is taken then and the rest of the plan’s airports unlock. You can change plan, update your card or cancel at any time from your account. Cancelling stops the next renewal and your plan stays active until the end of the period you have paid for. Prices include any VAT that applies and may change with at least 30 days’ notice by email.</p>
     <h2>Your right to cancel</h2><p>If you are a consumer in the UK or EU you normally have 14 days to cancel a new subscription. Because Clearway gives you access to digital content straight away, you agree when subscribing that access starts immediately and that you lose that right once it has started, except where the law says otherwise. The free trial gives you time to decide before paying. If something has gone wrong, contact us and we will look at a refund.</p>
     <h2>Airports and early access</h2><p>Your plan lets you open the number of airports it includes. Airports in development, offered through early access, are unfinished and may change or be withdrawn. We may update, improve or retire features; if we withdraw an airport you have chosen you can pick another.</p>
+    <h2>Commissioned airports</h2><p>You can ask us to build an airport for a one-off price, shown when you ask. When you ask, you save a card with Stripe and authorise us to charge that price to it once, when the airport is built and released to you. Nothing is taken before then, and you can withdraw at any time before release. We may decline a request, for example if there is not enough published information to build it; nothing is charged in that case. If the charge needs your confirmation or fails, the airport waits on your account until you pay. A paid airport is added to your account for as long as Clearway runs it, whatever plan you are on, including none. For its first month only you can control it; after that we may open it to other players. It is built to the same standard as other Clearway airports and may be updated like them. Because it is made to your request and you can play it straight away, the 14-day right to cancel does not apply once you have paid and it is unlocked, except where the law says otherwise.</p>
     <h2>Fair use</h2><p>Do not share your account, copy or resell the simulator, try to get around access controls, or disrupt the service.</p>
     <h2>Feedback</h2><p>Feedback and airport requests you send may be used to improve Clearway without payment to you.</p>
     <h2>Liability</h2><p>Clearway is provided as it is. Nothing in these terms limits liability that cannot be limited by law. Otherwise our total liability to you is limited to what you paid us in the 12 months before the claim.</p>
@@ -93,6 +118,7 @@
       <li><b>Your account:</b> your email address, your plan, the airports you have chosen and when your trial and billing period end.</li>
       <li><b>Payments:</b> handled by Stripe. We never see or store your card number; Stripe tells us your plan’s status.</li>
       <li><b>Feedback and airport requests:</b> what you write, the page you were on, your browser type and, if you give it or are signed in, your email so we can reply. Anonymous senders are recorded only as a one-way hash, to prevent spam.</li>
+      <li><b>Commissioned airports:</b> the airport you asked for, your notes, its progress and when you paid.</li>
       <li><b>Your career logbook and settings</b> stay in your browser and are not sent to us.</li>
     </ul>
     <h2>Who processes it</h2><p>Supabase (accounts and database), Stripe (payments), Vercel (our server functions) and GitHub Pages (the website). Map tiles come from OpenStreetMap, and live traffic and weather from public aviation data feeds; those requests include your IP address, as any web request does.</p>
