@@ -495,8 +495,8 @@ function renderSel(){
       html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
       html += b('LU','Line up', ac.state === 'HOLDPT') + b('CTO','Cleared take-off', ['HOLDPT','LINEUP','LINEDUP'].includes(ac.state), relOk ? 'go' : '');
     } else {
-      const south = isMil(ac);
-      html += (south ? ['C','D'] : ['A','E']).map(h => b('VAC '+h, 'Vacate '+h, ['ROLLED','ROLLOUT'].includes(ac.state))).join('');
+      // the runway exits offered come from the airport's profile
+      html += (APT.vacExits ? APT.vacExits(ac) : Object.keys(HOLDS)).map(h => b('VAC '+h, 'Vacate '+h, ['ROLLED','ROLLOUT'].includes(ac.state))).join('');
       html += b('VAC','Backtrack &amp; taxi in', ['ROLLED','ROLLOUT'].includes(ac.state), 'go');
     }
     html += b(ac.held ? 'RES' : 'HP', ac.held ? 'Continue taxi' : 'Hold position', !!ac.path && ac.state !== 'TAKEOFF');

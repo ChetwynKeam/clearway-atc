@@ -258,6 +258,7 @@ const APT = {
   rnpButtons: rw => rw === '05' ? [['APP 05 RNPY', 'RNP Y 05'], ['APP 05 RNPZ', 'RNP Z 05']] : [['APP 23 RNP', 'RNP 23']],
   inboundAlt: gate => 7000,
   divertTo: ac => ['Porto Santo', 'MARCU'],
+  vacExits: ac => ['C', 'B'],   // Charlie nearer the 05 end, Bravo nearer the 23 end
   vacPrefs: st => ['B', 'C'],
   terrain: { name: 'the island', poly: ISLAND_HIGH, min: 5000, low: 3000, msg: ac => `${ac.cs} is over the high ground of Madeira at ${Math.round(ac.alt)} ft: the minimum vectoring altitude over the island is 9,000 ft${ac.alt < 3000 ? ', TERRAIN' : ''}.` },
   restricted: null,
