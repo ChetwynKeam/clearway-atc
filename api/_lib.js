@@ -24,7 +24,9 @@ export const planOfPrice = id => Object.keys(PLANS).find(k => PLANS[k].price() &
 const ORIGINS = [SITE_URL.replace(/\/$/, ''), 'https://www.clearway-atc.co.uk', 'https://clearway-atc.co.uk', 'https://chetwynkeam.github.io'];
 const cors = req => {
   const o = req.headers.get('origin') || '';
-  const ok = ORIGINS.includes(o) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o) || /\.claudeusercontent\.com$/.test(o);
+  // the site also answers on http:// and without www until GitHub Pages enforces HTTPS, so accept those spellings too
+  const ok = ORIGINS.includes(o) || /^https?:\/\/((www\.)?clearway-atc\.co\.uk|chetwynkeam\.github\.io)$/i.test(o)
+    || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o) || /\.claudeusercontent\.com$/.test(o);
   return { 'access-control-allow-origin': ok ? o : ORIGINS[0], 'access-control-allow-methods': 'GET, POST, OPTIONS',
     'access-control-allow-headers': 'authorization, content-type', vary: 'origin' };
 };

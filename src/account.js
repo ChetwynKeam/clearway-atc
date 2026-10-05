@@ -60,7 +60,11 @@ async function cwApi(path, body){
   let res;
   try { res = await fetch(CW_CFG.api.replace(/\/$/, '') + '/' + path, { method: body ? 'POST' : 'GET',
     headers: { ...(t ? { authorization: 'Bearer ' + t } : {}), ...(body ? { 'content-type': 'text/plain;charset=UTF-8' } : {}) }, body: body ? JSON.stringify(body) : undefined }); }
-  catch(e) { throw new Error('Clearway’s server could not be reached. Check your connection, or allow this site in any ad or tracker blocker, and try again.'); }
+  catch(e) {
+    // a short code tells us why without the browser console: does a plain request get through when this one did not?
+    const plain = await fetch(CW_CFG.api.replace(/\/$/, '') + '/feedback?requests').then(r => 'P' + r.status, x => 'PX').catch(() => 'PX');
+    throw new Error(`Clearway’s server could not be reached. Check your connection, or allow this site in any ad or tracker blocker, and try again. (Code ${t ? 'A' : 'N'}${body ? 'W' : 'R'}-${plain}: ${e && e.message || e})`);
+  }
   const j = await res.json().catch(() => ({}));
   if (!res.ok) { const e = new Error(j.error || 'Something went wrong. Please try again.'); e.status = res.status; throw e; }
   return j;
