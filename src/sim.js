@@ -788,9 +788,13 @@ function stepAir(ac, dt){
     if (fin.togo < 0.4 && S.acs.some(o => o !== ac && o.onRwy)) return goAround(ac, 'runway occupied');
     if (fin.togo < 0.4 && S.xing.st !== 'CLOSED') { S.score.incidents++; S.score.pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
     if (fin.togo < 1.5 && ac.alt > gpAlt(fin.togo) + 400) return goAround(ac, 'unstable, too high');
+    if (fin.togo < 0.7) { // short final: settle onto the extended centreline (the 09 SRA joins it on a curve)
+      const m = mOf([ac.x, ac.y]), off = offOf([ac.x, ac.y]);
+      if (Math.abs(off) < 400) { const k = Math.exp(-dt*0.7); [ac.x, ac.y] = rm(m, off*k); ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, rw === '09' ? CRS09 : CRS27), -3*dt, 3*dt)); }
+    }
     if (fin.togo < -0.12 && ac.alt < ELEV + 70) { // touchdown
       ac.ground = true; ac.onRwy = true; ac.alt = ELEV; ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
-      ac.rollDir = rw === '09' ? 1 : -1; ac.hdg = rw === '09' ? CRS09 : CRS27; S.score.landed++; S.score.pts += 25; ac.need = null;
+      ac.rollDir = rw === '09' ? 1 : -1; ac.hdg = rw === '09' ? CRS09 : CRS27; { const m = mOf([ac.x, ac.y]), off = offOf([ac.x, ac.y]); [ac.x, ac.y] = rm(m, clamp(off, -8, 8)); } S.score.landed++; S.score.pts += 25; ac.need = null;
       emit('landed', ac);
     }
   }
@@ -827,7 +831,8 @@ function stepGround(ac, dt){
   if (ac.state === 'ROLLOUT') {
     ac.ias = Math.max(15, ac.ias - 4.2*dt); ac.gs = ac.ias;
     const mv = ac.ias/3600*dt; ac.x += RU[0]*ac.rollDir*mv; ac.y += RU[1]*ac.rollDir*mv;
-    const m = mOf([ac.x, ac.y]);
+    const m = mOf([ac.x, ac.y]), off = offOf([ac.x, ac.y]);
+    if (Math.abs(off) > 0.05) [ac.x, ac.y] = rm(m, off*Math.exp(-dt*1.5));   // keep the roll-out on the centreline
     if (ac.ias <= 15.5 || m < 110 || m > 1700) { ac.state = 'ROLLED'; ac.gs = 0; ac.need = 'Request vacate'; pilot(ac, `runway ${ac.app}, request backtrack and taxi`); }
   }
   if (ac.state === 'TAKEOFF') {

@@ -52,7 +52,8 @@ function draw(){
   for (const pg of LAND) { cx.beginPath(); for (const r of pg) { r.forEach((p,i) => { const X = sx(p[0]), Y = sy(p[1]); i ? cx.lineTo(X,Y) : cx.moveTo(X,Y); }); cx.closePath(); } cx.fill('evenodd'); }
   if (ground) { drawGroundBase(); drawRoads(); }
   cx.strokeStyle = C.coast; cx.lineWidth = ground ? 1.4 : 1; cx.globalAlpha = ground ? 0.8 : 1;
-  for (const l of COAST) { poly(l, false); cx.stroke(); } cx.globalAlpha = 1;
+  cx.save(); if (ground && typeof AIRSIDE !== 'undefined') { cx.beginPath(); cx.rect(0, 0, W, H); AIRSIDE.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](sx(p[0]), sy(p[1]))); cx.closePath(); cx.clip('evenodd'); }
+  for (const l of COAST) { poly(l, false); cx.stroke(); } cx.restore(); cx.globalAlpha = 1;
   if (!ground) drawRadarMap(); else drawRockRelief();
   if (S.showProc) drawProcedures();
   drawAirport();
@@ -193,19 +194,25 @@ function drawAirport(){
   const st = S.xing.st;
   cx.save(); cx.globalAlpha = 0.55; cx.strokeStyle = C.road; cx.lineWidth = lw(14); cx.lineCap = 'butt'; path([[985,-22],[1000,22]], false); cx.stroke(); cx.restore();
   if (sc > 150) {
-    // runway markings (AD 2.9: non-standard TDZ)
+    // runway markings: AD 2.9 only says the TDZ marks are non-standard, so the set below follows the ICAO Annex 14 layout
     cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
-    cx.lineWidth = lw(0.9); path([[0,21.6],[RWY_M,21.6]], false); cx.stroke(); path([[0,-21.6],[RWY_M,-21.6]], false); cx.stroke();
-    cx.setLineDash([30*mpx, 20*mpx]); path([[THR09_M+70,0],[THR27_M-70,0]], false); cx.stroke(); cx.setLineDash([]);
+    cx.lineWidth = lw(0.9); path([[0,21.6],[RWY_M,21.6]], false); cx.stroke(); path([[0,-21.6],[RWY_M,-21.6]], false); cx.stroke();   // side stripes
+    quad(0.5, -21.6, 1.4, 21.6); cx.fill(); quad(RWY_M - 1.4, -21.6, RWY_M - 0.5, 21.6); cx.fill();                                        // runway ends
+    cx.lineWidth = lw(0.9); cx.setLineDash([30*mpx, 20*mpx]); path([[THR09_M+85,0],[THR27_M-85,0]], false); cx.stroke(); cx.setLineDash([]);
     for (const [m0, dir] of [[THR09_M, 1], [THR27_M, -1]]) {
-      for (let k = -3; k <= 3; k++) { if (!k) continue; quad(m0+dir*2, k*5.4-0.9, m0 + dir*32, k*5.4+0.9); cx.fill(); }
-      quad(m0, 22, m0 + dir*1.8, -22); cx.fill();
-      for (const k of [-1, 1]) quad(m0 + dir*300, k*7, m0 + dir*345, k*12); cx.fill();                       // aiming point
-      for (const d of [150, 450]) for (const k of [-1, 1]) { quad(m0 + dir*d, k*4.5, m0 + dir*(d+22), k*7); cx.fill(); }
-      // displaced-threshold arrows in the pre-threshold area
-      for (let d = 30; d < (dir > 0 ? THR09_M : RWY_M - THR27_M) - 10; d += 45) { const m = m0 - dir*d; path([[m - dir*14, -3],[m, 0],[m - dir*14, 3]], false); cx.lineWidth = lw(0.9); cx.stroke(); }
+      quad(m0, 21.6, m0 + dir*1.8, -21.6); cx.fill();                                                                // threshold bar
+      for (let i = 0; i < 6; i++) for (const k of [-1, 1]) { const o = k*(3 + i*3.4); quad(m0 + dir*6, o - 0.9*k, m0 + dir*36, o + 0.9*k); cx.fill(); }   // 12 threshold stripes
+      for (const k of [-1, 1]) { quad(m0 + dir*300, k*9, m0 + dir*345, k*15); cx.fill(); }                             // aiming point
+      for (const [d, n] of [[150, 3], [450, 2], [600, 1]]) for (const k of [-1, 1]) for (let j = 0; j < n; j++) {       // touchdown zone pairs
+        const o = k*(9 + j*3.3); quad(m0 + dir*d, o, m0 + dir*(d + 22.5), o + k*1.8); cx.fill();
+      }
+      // displaced threshold: centreline arrows and arrowheads in the pre-threshold area
+      const pre = dir > 0 ? THR09_M : RWY_M - THR27_M;
+      cx.lineWidth = lw(0.9);
+      for (let d = 20; d < pre - 12; d += 40) { const m = m0 - dir*d; path([[m - dir*12, 0], [m, 0]], false); cx.stroke(); path([[m - dir*6, -2.5],[m, 0],[m - dir*6, 2.5]], false); cx.stroke(); }
+      for (const k of [-1, 1]) { const m = m0 - dir*6; path([[m - dir*8, k*9],[m, k*12],[m - dir*8, k*15]], false); cx.stroke(); }
     }
-    if (sc > 300) { cx.font = `bold ${Math.max(10, 13*mpx)}px ${FONT_L}`; for (const [m0, lab, h] of [[THR09_M+55,'09',CRS09],[THR27_M-55,'27',CRS27]]) { cx.save(); cx.translate(...c(m0,0)); cx.rotate(h*D2R); cx.textAlign = 'center'; cx.fillText(lab, 0, 4); cx.restore(); } }
+    { cx.font = `700 ${Math.max(9, 14*mpx)}px ${FONT_L}`; for (const [m0, lab, h] of [[THR09_M+58,'09',CRS09],[THR27_M-58,'27',CRS27]]) { cx.save(); cx.translate(...c(m0,0)); cx.rotate(h*D2R); cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(lab, 0, 0); cx.restore(); } cx.textBaseline = 'alphabetic'; }
     // turn-pad guidance lines and edge markings
     cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35); path(TURN_E, false); cx.stroke(); path(TURN_W, false); cx.stroke();
     cx.strokeStyle = C.paint; cx.lineWidth = lw(0.6);
