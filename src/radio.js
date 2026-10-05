@@ -48,7 +48,7 @@ function atisText(){
   const cloud = w.raw.includes('CAVOK') ? 'CAVOK' : w.clouds.length ? 'cloud ' + w.clouds.map(cloudWords).join(', ') : 'no significant cloud';
   if (APT.atisLines) return APT.atisLines({ w, L, E, wind, vis, cloud: cloud[0].toUpperCase() + cloud.slice(1) });
   const out = [
-    `This is Gibraltar information ${L}, time ${zt(S.t).slice(0,5).replace(':', '')}.`,
+    `This is ${APT.name} information ${L}, time ${zt(S.t).slice(0,5).replace(':', '')}.`,
     `Runway in use ${S.rwy}. Expect surveillance radar approach runway ${S.rwy}, terminating at Point ${FINAL[S.rwy].name}.`,
     `Surface wind ${wind}. Visibility ${vis}. ${cloud[0].toUpperCase() + cloud.slice(1)}.`,
     `Temperature ${w.temp}, dew point ${w.dew}. QNH ${w.qnh} hectopascals. Transition level flight level 70.`
