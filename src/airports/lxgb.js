@@ -247,6 +247,7 @@ const APT = {
   minsOk: (w, rw) => sraMinsOk(w),
   inboundAlt: gate => gate === 'E' ? 8000 : 7000,
   divertTo: ac => ac.gate === 'S' ? ['Tangier','TTN'] : ['Málaga','PIMOS'],
+  vacExits: ac => isMil(ac) ? ['C','D'] : ['A','E'],
   vacPrefs: st => st && st.area === 'south' ? ['C','D'] : ['A','E'],
   terrain: { name: 'the Rock', poly: ROCK, min: 3000, low: 1800, msg: (ac) => `${ac.cs} is over the Rock at ${Math.round(ac.alt)} ft: overflight is prohibited${ac.alt < 1800 ? ', TERRAIN' : ''}.` },
   restricted: { poly: R164, top: 30000, label: 'R164  SFC–FL300', short: 'R164', labelAt: xy(36.245,-5.40), msg: ac => `${ac.cs} has entered R164 (Spanish restricted area).` },
