@@ -32,12 +32,12 @@
   <div class="pagehead"><div class="wrap">
     <div class="eyebrow">Account</div>
     <h1 id="cwAccH">Sign in to Clearway</h1>
-    <p id="cwAccP">We email you a six-digit code: no password to remember.</p>
+    <p id="cwAccP">We email you a sign-in link: no password to remember.</p>
   </div></div>
   <div class="wrap cw-acc">
     <div class="cw-box" id="cwSignIn">
-      <form id="cwEmailForm" class="cw-form"><label>Email<input type="email" id="cwEmail" required autocomplete="email" placeholder="you@example.com"></label><button class="btn primary">Email me a code</button></form>
-      <form id="cwCodeForm" class="cw-form" hidden><label>Code from your email<input id="cwCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" required placeholder="123456"></label><button class="btn primary">Sign in</button><button type="button" class="btn" id="cwCodeBack">Use another email</button></form>
+      <form id="cwEmailForm" class="cw-form"><label>Email<input type="email" id="cwEmail" required autocomplete="email" placeholder="you@example.com"></label><button class="btn primary">Email me a sign-in link</button></form>
+      <form id="cwCodeForm" class="cw-form" hidden><label>Or type the code from your email<input id="cwCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" required placeholder="123456"></label><button class="btn primary">Sign in</button><button type="button" class="btn" id="cwCodeBack">Use another email</button></form>
       <p class="cw-msg" id="cwSignMsg"></p>
     </div>
     <div id="cwAccount" hidden>

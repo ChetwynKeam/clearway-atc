@@ -144,7 +144,7 @@ async function cwRenderAccount(){
   const signed = !!CW.ses;
   $('cwSignIn').hidden = signed; $('cwAccount').hidden = !signed;
   $('cwAccH').textContent = signed ? 'Your account' : 'Sign in to Clearway';
-  $('cwAccP').textContent = !CW_ON ? 'Accounts open with subscriptions. Every airport is free during the preview.' : signed ? 'Your plan, your airports and billing.' : 'We email you a sign-in code: no password to remember.';
+  $('cwAccP').textContent = !CW_ON ? 'Accounts open with subscriptions. Every airport is free during the preview.' : signed ? 'Your plan, your airports and billing.' : 'We email you a sign-in link: no password to remember.';
   if (!CW_ON) { $('cwSignIn').hidden = true; return; }
   if (CW.signErr) { $('cwSignMsg').textContent = CW.signErr; CW.signErr = null; }
   if (!signed) return;
@@ -208,7 +208,7 @@ function cwSignInForms(){
   $('cwEmailForm').onsubmit = async ev => {
     ev.preventDefault(); email = $('cwEmail').value.trim(); $('cwSignMsg').textContent = 'Sending…';
     try { await cwAuth('otp', { email, create_user: true }); $('cwEmailForm').hidden = true; $('cwCodeForm').hidden = false; $('cwCode').focus();
-      $('cwSignMsg').textContent = `We have emailed a code to ${email}. It can take a minute; check your spam folder too.`; }
+      $('cwSignMsg').textContent = `We have emailed a sign-in link to ${email}. Open it on this device to sign in, or type the code if your email shows one. It can take a minute; check your spam folder too.`; }
     catch(e) { $('cwSignMsg').textContent = e.message; }
   };
   $('cwCodeForm').onsubmit = async ev => {

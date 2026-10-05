@@ -46,8 +46,7 @@ follow-up once there are paying players.
 1. Create a project at supabase.com (region: London).
 2. SQL Editor > New query: paste `supabase/schema.sql` and Run.
 3. Authentication > Sign In / Providers > Email: keep Email on.
-4. Authentication > Emails > Templates > Magic Link: add a line with the code, for example `Your Clearway code is {{ .Token }}`.
-   (Players type the code; the link also works.)
+4. Players sign in with the emailed link. Once a custom sender is connected (step 6), Authentication > Emails > Templates > Magic link or OTP can add `Your Clearway code is {{ .Token }}` so they can type a code instead.
 5. Authentication > URL Configuration: Site URL `https://www.clearway-atc.co.uk/`.
 6. Before launch: Authentication > Emails > SMTP Settings, connect a real sender. The built-in sender only allows a few emails an hour.
 7. Project Settings > API: copy the Project URL, the `anon` public key and the `service_role` secret key.
