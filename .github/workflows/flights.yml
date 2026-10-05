@@ -1,12 +1,13 @@
-name: Refresh LXGB flights
-# Saves Gibraltar Airport's live arrivals and departures as flights.json for the simulator's Real world mode.
+name: Refresh airport flights
+# Saves each airport's live arrivals and departures for the simulator's Real world mode:
+# Gibraltar (gibraltarairport.gi) as flights.json, Madeira (madeiraairport.pt, ANA's flight feed) as lpma/flights.json.
 on:
   schedule:
     - cron: '2,17,32,47 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['.github/workflows/flights.yml', 'tools/airport_flights.py']
+    paths: ['.github/workflows/flights.yml', 'tools/airport_flights.py', 'tools/ana_flights.py']
 permissions:
   contents: write
 concurrency: flights
@@ -20,9 +21,17 @@ jobs:
           curl -sSL --compressed -m 30 -A "Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)" -o /tmp/live.html https://www.gibraltarairport.gi/airlines-and-destinations/live-flight-information || exit 0
           python3 tools/airport_flights.py /tmp/live.html /tmp/flights.json || exit 0
           python3 -c "import json,sys; d=json.load(open('/tmp/flights.json')); sys.exit(0 if d['days'] else 1)" && cp /tmp/flights.json flights.json || echo "no flights parsed"
+      - name: Fetch Madeira's flight information
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; B="https://www.madeiraairport.pt/en/flights_proxy?day=hoje&IATA=FNC"
+          curl -sS --compressed -m 30 -A "$UA" -H "X-Requested-With: XMLHttpRequest" -o /tmp/fnc_a.json "$B&movtype=A" || exit 0
+          curl -sS --compressed -m 30 -A "$UA" -H "X-Requested-With: XMLHttpRequest" -o /tmp/fnc_d.json "$B&movtype=D" || exit 0
+          python3 tools/ana_flights.py /tmp/fnc_a.json /tmp/fnc_d.json /tmp/lpma.json || exit 0
+          # the feed covers every ANA airport when the IATA filter is ignored; Madeira alone is well under 300 a day each way
+          python3 -c "import json,sys; d=json.load(open('/tmp/lpma.json'))['days']; sys.exit(0 if d and all(len(v['arr'])<300 and len(v['dep'])<300 for v in d.values()) else 1)" && mkdir -p lpma && cp /tmp/lpma.json lpma/flights.json || echo "no Madeira flights parsed"
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add flights.json 2>/dev/null || exit 0
+          git add flights.json lpma/flights.json 2>/dev/null; git add flights.json 2>/dev/null || exit 0
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main

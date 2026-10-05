@@ -1,29 +1,27 @@
 name: Probe Madeira flight feed
-# One-off for the Madeira (LPMA) build: fetches the scripts behind madeiraairport.pt's live flight pages so the
-# flight parser can call the same data source. Results go to the lpma-probe branch.
+# One-off for the Madeira (LPMA) build: runs the Madeira step of flights.yml on this branch and saves what it got
+# to the lpma-probe branch, so the parser can be checked before it reaches main.
 on:
   workflow_dispatch:
   push:
     branches: ['claude/**']
-    paths: ['.github/workflows/lpma-probe.yml']
+    paths: ['.github/workflows/lpma-probe.yml', 'tools/ana_flights.py']
 permissions:
   contents: write
 jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Download
+      - uses: actions/checkout@v4
+      - name: Download and parse
         run: |
-          mkdir out && cd out
-          BUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          B=https://www.madeiraairport.pt
-          for f in themes/custom/ANA/js/page.flights.js themes/custom/ANA/js/app.js; do curl -sS -m 60 -A "$BUA" "$B/$f" -o "$(basename $f)" || echo "FAILED $f" >> failures.txt; done
-          # try the endpoints the scripts mention
-          for u in $(grep -ohE "[\"'](/[a-zA-Z0-9_/.-]*(flight|voo|arriv|depart|chegad|partid)[a-zA-Z0-9_/.?=&-]*)[\"']" *.js | tr -d "\"'" | sort -u | head -20); do
-            n=$(echo "$u" | tr '/?=&' '____' | cut -c1-80); curl -sS -m 60 -A "$BUA" -H "X-Requested-With: XMLHttpRequest" "$B$u" -o "ep_$n.txt" || true
-            for L in en pt; do curl -sS -m 60 -A "$BUA" -H "X-Requested-With: XMLHttpRequest" "$B/$L$u" -o "ep_${L}_$n.txt" || true; done
-          done
-          ls -la
+          mkdir out
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; B="https://www.madeiraairport.pt/en/flights_proxy?day=hoje&IATA=FNC"
+          curl -sS --compressed -m 30 -A "$UA" -H "X-Requested-With: XMLHttpRequest" -o out/fnc_a.json "$B&movtype=A" || true
+          curl -sS --compressed -m 30 -A "$UA" -H "X-Requested-With: XMLHttpRequest" -o out/fnc_d.json "$B&movtype=D" || true
+          python3 tools/ana_flights.py out/fnc_a.json out/fnc_d.json out/lpma_flights.json > out/parse.txt 2>&1 || true
+          curl -sS -m 20 "https://aviationweather.gov/api/data/metar?ids=LPMA&format=raw&hours=3" -o out/metar.txt || true
+          ls -la out; cat out/parse.txt
       - name: Publish to lpma-probe branch
         run: |
           cd out && git init -q && git checkout -q -b lpma-probe
