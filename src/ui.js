@@ -726,6 +726,7 @@ function resetSession(){
   STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
+  if (!S.running && !cwGate()) return;   // opening a position needs a plan that includes this airport (account.js)
   const pasted = $('wxPaste').value.trim();
   const mode = $('trafficSel').value;
   const ex = EXERCISES[mode];

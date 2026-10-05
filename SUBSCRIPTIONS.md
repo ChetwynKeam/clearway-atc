@@ -1,0 +1,91 @@
+# Clearway subscriptions, feedback and airport requests
+
+Everything ships switched off. Until `subs.json` says otherwise, every airport stays free, the pricing page says
+"free during the preview", and the feedback button is hidden. Nothing charges money until you turn it on.
+
+## How it fits together
+
+| Piece | Service | Cost to start |
+|---|---|---|
+| Website | GitHub Pages (as now) | free |
+| Player accounts (email code sign-in) and the database | Supabase | free tier |
+| Payments, 2-day trial, invoices, billing page | Stripe Checkout + Customer Portal | no monthly fee; about 1.5% + 20p per UK card payment |
+| Server code that connects them (`api/`) | Vercel (the existing `clearway-atc` project) | Hobby is free but is for non-commercial use only. Move to Pro (about $20 a month) before you take real payments |
+| Sign-in emails | Supabase's built-in sender for testing; a proper sender (e.g. Resend, free tier) before launch | free |
+| Visitor counts (optional) | Cloudflare Web Analytics, no cookies | free |
+
+Files: `api/account.js` (plan, checkout, billing page, airport choice, early access), `api/stripe-webhook.js` (keeps plans in step
+with Stripe), `api/feedback.js` (feedback and airport requests), `api/_lib.js` (shared), `supabase/schema.sql` (tables),
+`src/account.*` (pricing, account, request and legal pages, feedback form, paywall), `subs.json` (switches and display prices).
+
+## Plans
+
+| Plan | Key | Airports | Suggested price |
+|---|---|---|---|
+| Solo | `a1` | 1 | £4.99 / month |
+| Three | `a3` | 3 | £9.99 / month |
+| Five | `a5` | 5 | £14.99 / month |
+| Ten | `a10` | 10 | £24.99 / month |
+| Unlimited | `all` | every airport, early access included | £29.99 / month |
+| Early access add-on | `early` | airports in development, double-weight airport requests | £4.99 / month |
+
+The prices players see come from `subs.json`; the prices they pay come from Stripe. Keep the two the same.
+Every plan starts with a 2-day free trial, once per player, with a card taken at sign-up and cancellable before day 2.
+Players tick their airports on the Account page. Empty places can be filled any time; swaps are free in the trial and then once every 30 days.
+
+## How strong the protection is
+
+The paywall runs in the player's browser and checks their plan with the server. It stops normal players, but the repository is
+public, so someone technical could read or run the simulator code directly. To make it properly locked: make the repository private,
+serve the site from Vercel instead of GitHub Pages, and have Vercel check the sign-in before sending each airport's page. That is a
+follow-up once there are paying players.
+
+## Setup (in this order)
+
+### 1. Supabase
+1. Create a project at supabase.com (region: London).
+2. SQL Editor > New query: paste `supabase/schema.sql` and Run.
+3. Authentication > Sign In / Providers > Email: keep Email on.
+4. Authentication > Emails > Templates > Magic Link: add a line with the code, for example `Your Clearway code is {{ .Token }}`.
+   (Players type the code; the link also works.)
+5. Authentication > URL Configuration: Site URL `https://www.clearway-atc.co.uk/`.
+6. Before launch: Authentication > Emails > SMTP Settings, connect a real sender. The built-in sender only allows a few emails an hour.
+7. Project Settings > API: copy the Project URL, the `anon` public key and the `service_role` secret key.
+
+### 2. Stripe (test mode first)
+1. Create a Stripe account. Leave it in Test mode.
+2. Product catalogue: create a product "Clearway" with five recurring monthly GBP prices (the plans above), and a product
+   "Clearway early access" with one monthly price. Copy the six price IDs (`price_...`).
+3. Settings > Billing > Customer portal: allow cancelling (at period end), updating the card, and switching plan between the five plan prices.
+4. Developers > Webhooks > Add endpoint: `https://clearway-atc.vercel.app/api/stripe-webhook`, events
+   `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
+   Copy the signing secret (`whsec_...`).
+5. Developers > API keys: copy the secret key (`sk_test_...`).
+
+### 3. Vercel environment variables
+Vercel > clearway-atc > Settings > Environment Variables (Production), then redeploy:
+
+```
+SUPABASE_URL              https://xxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY (service_role key; never put it in subs.json)
+STRIPE_SECRET_KEY         sk_test_...
+STRIPE_WEBHOOK_SECRET     whsec_...
+PRICE_1 PRICE_3 PRICE_5 PRICE_10 PRICE_UNLIMITED PRICE_EARLY   price_...
+SITE_URL                  https://www.clearway-atc.co.uk/
+TRIAL_DAYS                2
+```
+
+### 4. Turn it on (`subs.json`, then `python3 build.py` and copy the pages)
+- `supabase_url`, `supabase_anon_key`: from step 1 (the anon key is meant to be public).
+- `feedback: true` switches on the feedback button and airport requests. This can go live before payments.
+- `enabled: true` switches on sign-in, plans and the paywall. With Stripe in test mode, use card `4242 4242 4242 4242`.
+- `contact_email`: shown on the Terms and Privacy pages.
+- `analytics_token`: Cloudflare Web Analytics site token, optional.
+
+### 5. Going live with real money
+Activate the Stripe account (business details, bank account), recreate the prices in Live mode, swap `STRIPE_SECRET_KEY`,
+`STRIPE_WEBHOOK_SECRET` and the `PRICE_*` variables for the live ones, and move Vercel to Pro. Have the Terms and Privacy pages
+checked first; they are a reasonable starting draft for a UK sole trader, not legal advice.
+
+## Reading feedback and requests
+Supabase > Table Editor: `feedback` (set `status` to read / planned / done as you go) and `request_tally` (requests, most votes first).
