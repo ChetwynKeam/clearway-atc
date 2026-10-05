@@ -1,6 +1,6 @@
 name: Refresh airport METARs
 # Saves the latest METAR for each airport on the site so Live METAR can read it from the same domain:
-# Gibraltar as metar.txt, Madeira as lpma/metar.txt.
+# Gibraltar as metar.txt, Madeira as lpma/metar.txt, London City as eglc/metar.txt.
 on:
   schedule:
     - cron: '7,37 * * * *'
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Fetch METARs
         run: |
-          for A in LXGB:metar.txt LPMA:lpma/metar.txt; do
+          for A in LXGB:metar.txt LPMA:lpma/metar.txt EGLC:eglc/metar.txt; do
             I=${A%%:*}; F=${A#*:}
             M=$(curl -sSf -m 20 "https://aviationweather.gov/api/data/metar?ids=$I&format=raw&hours=3" | grep -m1 -E "^(METAR |SPECI )?$I [0-9]{6}Z" || true)
             [ -z "$M" ] && M=$(curl -sSf -m 20 "https://metar.vatsim.net/$I" | grep -m1 -E "^$I [0-9]{6}Z" || true)
@@ -29,6 +29,6 @@ jobs:
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add metar.txt lpma/metar.txt 2>/dev/null; git add metar.txt
+          for f in metar.txt lpma/metar.txt eglc/metar.txt; do [ -f "$f" ] && git add "$f"; done; true
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "METAR update" && git pull -q --rebase origin main && git push -q origin HEAD:main

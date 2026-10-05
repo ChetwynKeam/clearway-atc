@@ -20,7 +20,7 @@ Object.assign(AIRLINE_ICAO, APT.airlineIcao || {}); Object.assign(AIRLINE_TYPE, 
 Object.assign(AP, { EGBB: [52.4539, -1.7480, 'Birmingham'], EGPH: [55.9500, -3.3725, 'Edinburgh'], GMMX: [31.6069, -8.0363, 'Marrakech'] });
 const csOf = fl => { fl = fl.toUpperCase().replace(/\s/g, ''); let m = fl.match(/^([A-Z]{3})(\d{1,4}[A-Z]{0,2})$/); if (m) return fl; m = fl.match(/^([A-Z0-9]{2})(\d{1,4}[A-Z]?)$/); return m && AIRLINE_ICAO[m[1]] ? AIRLINE_ICAO[m[1]] + m[2] : fl; };
 const placeOf = p => PLACE_ICAO[p.toLowerCase().trim()] || p;
-const typeOf = cs => AIRLINE_TYPE[cs.slice(0, 3)] || 'A320';
+const typeOf = cs => AIRLINE_TYPE[cs.slice(0, 3)] || APT.defType || 'A320';
 const fnum = cs => +((cs.match(/(\d+)/) || [0, 0])[1]);
 
 async function liveLoad(force){

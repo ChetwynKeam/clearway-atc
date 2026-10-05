@@ -138,7 +138,7 @@ function drawRoads(){
 
 function drawRunwayShoulders(path){
   cx.fillStyle = C.gShoulder;
-  const [s0, s1] = AD.shoulder || [0, RWY_M]; for (const sgn of [-1, 1]) { path([[s0, sgn*22], [s1, sgn*22], [s1, sgn*30], [s0, sgn*30]]); cx.fill(); }
+  const [s0, s1] = AD.shoulder || [0, RWY_M]; for (const sgn of [-1, 1]) { path([[s0, sgn*(RHW - 0.5)], [s1, sgn*(RHW - 0.5)], [s1, sgn*(RHW + 7.5)], [s0, sgn*(RHW + 7.5)]]); cx.fill(); }
 }
 // ── detailed paving: shoulders, rubber, slab joints (called inside drawAirport before markings) ──
 function drawPavingDetail(c, path, mpx){

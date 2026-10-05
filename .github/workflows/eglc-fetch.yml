@@ -1,0 +1,75 @@
+name: Fetch EGLC data
+# One-off for the London City (EGLC) airport build: OSM aerodrome, docks and Thames geometry, reference tiles,
+# METAR/TAF, a sample of the airport's live flight pages and live ADS-B, published to the eglc-data branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/workflows/eglc-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          BUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          ovp(){ for R in 1 2 3; do for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do curl -sSf -m 300 -A "$UA" --data-urlencode "data=$1" "$H/api/interpreter" -o "$2" && { echo "$2 from $H"; return 0; }; sleep 15; done; done; echo "FAILED $2" >> failures.txt; return 0; }
+          # aerodrome: runway, taxiways, apron, stands, buildings, roads, DLR, fence and dock water around the field
+          ovp '[out:json][timeout:120];(way[aeroway](51.498,0.020,51.512,0.090);node[aeroway](51.498,0.020,51.512,0.090);relation[aeroway](51.498,0.020,51.512,0.090);way[building](51.499,0.030,51.511,0.085);way[highway](51.497,0.025,51.512,0.090);way[railway](51.497,0.025,51.512,0.090);way[barrier](51.499,0.030,51.511,0.085);way[man_made](51.499,0.030,51.511,0.085);way[natural=water](51.495,0.000,51.515,0.100);relation[natural=water](51.495,0.000,51.515,0.100););out geom;' osm_aerodrome.json
+          # the Thames and the estuary coast, for the approach map
+          ovp '[out:json][timeout:240];(way[natural=coastline](51.20,-0.60,51.90,1.80););out geom;' osm_coast.json
+          ovp '[out:json][timeout:240];(relation[water=river](51.40,-0.45,51.56,0.75);way[water=river](51.40,-0.45,51.56,0.75);way[waterway=riverbank](51.40,-0.45,51.56,0.75);relation[natural=water][name~"Thames"](51.40,-0.45,51.56,0.75););out geom;' osm_thames.json
+          # towns, aerodromes with ICAO codes (the London TMA neighbours), tall structures near the approach
+          ovp '[out:json][timeout:120];(node[place~"city|town"](50.90,-1.20,52.20,1.60);node[aeroway=aerodrome][icao](50.80,-1.30,52.30,1.80);way[aeroway=aerodrome][icao](50.80,-1.30,52.30,1.80);node[man_made~"mast|tower"][height](51.47,-0.05,51.54,0.15);way[building][height](51.495,-0.03,51.515,0.03););out center;' osm_area.json
+          ls -la
+          for S in EGLC EGLL EGKB; do
+            curl -sS -m 20 "https://aviationweather.gov/api/data/metar?ids=$S&format=raw&hours=24" -o metar_$S.txt || true
+            curl -sS -m 20 "https://aviationweather.gov/api/data/taf?ids=$S&format=raw" -o taf_$S.txt || true
+            curl -sS -m 20 "https://metar.vatsim.net/$S" -o vatsim_$S.txt || true
+          done
+          # airport live flight info: pages plus anything that looks like their data API
+          mkdir flights
+          for P in flights/arrivals flights/departures flights; do
+            N=$(echo $P | tr / _)
+            curl -sSL --compressed -m 30 -A "$BUA" -o flights/lcy_$N.html -w "%{http_code} %{url_effective}\n" "https://www.londoncityairport.com/$P" || true
+          done
+          cat flights/*.html | grep -oE '(https?:)?//[^"'"'"' ]*(api|flight|Flight)[^"'"'"' ]*' | sort -u | head -80 > flights/urls.txt || true
+          cat flights/*.html | grep -oE '<script[^>]*src="[^"]*"' | sort -u > flights/scripts.txt || true
+          for J in $(grep -oE 'src="[^"]*\.js[^"]*"' flights/scripts.txt | sed 's/src="//;s/"$//' | head -25); do
+            case "$J" in http*) U="$J";; //*) U="https:$J";; *) U="https://www.londoncityairport.com$J";; esac
+            curl -sSL --compressed -m 30 -A "$BUA" "$U" 2>/dev/null | grep -oE '"[^"]*(api|flight)[^"]*"' | sort -u | head -40 >> flights/js_urls.txt || true
+          done
+          ls -la flights
+          # live ADS-B round the field, straight from the feeds and through the site's relay
+          curl -sS -m 20 -A "$UA" "https://api.adsb.lol/v2/point/51.505/0.055/60" -o adsb_lol.json -w "adsb.lol %{http_code}\n" || true
+          curl -sS -m 25 "https://clearway-atc.vercel.app/api/traffic?lat=51.505&lon=0.055&r=60" -o relay.json -w "relay %{http_code}\n" || true
+          # UK eAIP (NATS Aurora): index, to find the current AIRAC and the EGLC AD 2 text
+          curl -sSL --compressed -m 30 -A "$BUA" -o aip_index.html -w "%{http_code} %{url_effective}\n" "https://www.aurora.nats.co.uk/htmlAIP/Publications/" || true
+          curl -sSL --compressed -m 30 -A "$BUA" -o aip_history.html -w "%{http_code} %{url_effective}\n" "https://www.aurora.nats.co.uk/htmlAIP/Publications/history-en-GB.html" || true
+          mkdir tiles
+          cat > list.py <<'PY'
+          import math, sys
+          z = int(sys.argv[1])
+          def t(lat, lon):
+              n = 2**z; r = math.radians(lat)
+              return int((lon + 180)/360*n), int((1 - math.log(math.tan(r) + 1/math.cos(r))/math.pi)/2*n)
+          box = (52.3, -1.4, 50.8, 1.6) if z <= 10 else (51.62, -0.25, 51.40, 0.35) if z <= 13 else (51.512, 0.020, 51.498, 0.090)
+          x0, y0 = t(box[0], box[1]); x1, y1 = t(box[2], box[3])
+          for x in range(x0, x1 + 1):
+              for y in range(y0, y1 + 1): print(z, x, y)
+          PY
+          for z in 8 9 10 11 12 13 14 15 16 17; do
+            python3 list.py $z | while read Z X Y; do curl -sSf -A "$UA" "https://tile.openstreetmap.org/$Z/$X/$Y.png" -o "tiles/${Z}_${X}_${Y}.png" || true; sleep 0.2; done
+          done
+          rm list.py; ls tiles | wc -l; du -sh .
+      - name: Publish to eglc-data branch
+        run: |
+          cd out
+          git init -q -b eglc-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "EGLC data"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" eglc-data

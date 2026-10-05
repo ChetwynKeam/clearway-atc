@@ -154,8 +154,9 @@ function drawProcedures(){
 }
 
 // ── aerodrome ─────────────────────────────────────────────
+const RHW = APT.rwyHalfWidth || 22.5, RSS = RHW - 0.9;   // runway half-width (45 m at Gibraltar and Madeira) and its side stripes
 const AD = {
-  rwyPoly: [[0,-22.5],[0,22.5],[RWY_M,22.5],[RWY_M,-22.5]],
+  rwyPoly: [[0,-RHW],[0,RHW],[RWY_M,RHW],[RWY_M,-RHW]],
   // taxiway centrelines: every taxi-graph edge, the runway fillets and the north apron taxiway's far end
   twys: Object.fromEntries([
     ...GE.map((e, i) => ['e' + i, [[GN[e.a].m, GN[e.a].off], [GN[e.b].m, GN[e.b].off]]]),
@@ -206,12 +207,12 @@ function drawAirport(){
   if (sc > 150) {
     // runway markings: AD 2.9 only says the TDZ marks are non-standard, so the set below follows the ICAO Annex 14 layout
     cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
-    cx.lineWidth = lw(0.9); path([[0,21.6],[RWY_M,21.6]], false); cx.stroke(); path([[0,-21.6],[RWY_M,-21.6]], false); cx.stroke();   // side stripes
-    quad(0.5, -21.6, 1.4, 21.6); cx.fill(); quad(RWY_M - 1.4, -21.6, RWY_M - 0.5, 21.6); cx.fill();                                        // runway ends
+    cx.lineWidth = lw(0.9); path([[0,RSS],[RWY_M,RSS]], false); cx.stroke(); path([[0,-RSS],[RWY_M,-RSS]], false); cx.stroke();   // side stripes
+    quad(0.5, -RSS, 1.4, RSS); cx.fill(); quad(RWY_M - 1.4, -RSS, RWY_M - 0.5, RSS); cx.fill();                                        // runway ends
     cx.lineWidth = lw(0.9); cx.setLineDash([30*mpx, 20*mpx]); path([[THR_LO_M+85,0],[THR_HI_M-85,0]], false); cx.stroke(); cx.setLineDash([]);
     for (const [m0, dir] of [[THR_LO_M, 1], [THR_HI_M, -1]]) {
-      quad(m0, 21.6, m0 + dir*1.8, -21.6); cx.fill();                                                                // threshold bar
-      for (let i = 0; i < 6; i++) for (const k of [-1, 1]) { const o = k*(3 + i*3.4); quad(m0 + dir*6, o - 0.9*k, m0 + dir*36, o + 0.9*k); cx.fill(); }   // 12 threshold stripes
+      quad(m0, RSS, m0 + dir*1.8, -RSS); cx.fill();                                                                // threshold bar
+      for (let i = 0; i < (RHW > 20 ? 6 : 4); i++) for (const k of [-1, 1]) { const o = k*(3 + i*3.4); quad(m0 + dir*6, o - 0.9*k, m0 + dir*36, o + 0.9*k); cx.fill(); }   // 12 threshold stripes
       for (const k of [-1, 1]) { quad(m0 + dir*300, k*9, m0 + dir*345, k*15); cx.fill(); }                             // aiming point
       for (const [d, n] of [[150, 3], [450, 2], [600, 1]]) for (const k of [-1, 1]) for (let j = 0; j < n; j++) {       // touchdown zone pairs
         const o = k*(9 + j*3.3); quad(m0 + dir*d, o, m0 + dir*(d + 22.5), o + k*1.8); cx.fill();
@@ -272,8 +273,8 @@ function drawAirport(){
   if (sc > 110) {
     cx.save(); cx.globalCompositeOperation = C.glow;
     const r = Math.max(1.1, 0.9*mpx), glow = (m, o, col, rr=r) => { const [X,Y] = c(m,o); cx.fillStyle = col; cx.beginPath(); cx.arc(X, Y, rr, 0, 7); cx.fill(); };
-    for (let m = 0; m <= RWY_M; m += 60) { glow(m, 23, 'rgba(255,244,214,.75)'); glow(m, -23, 'rgba(255,244,214,.75)'); }
-    for (let o = -22; o <= 22; o += 4) { glow(THR_LO_M, o, 'rgba(90,255,140,.9)'); glow(THR_HI_M, o, 'rgba(90,255,140,.9)'); glow(1, o, 'rgba(255,60,60,.85)'); glow(RWY_M-1, o, 'rgba(255,60,60,.85)'); }
+    for (let m = 0; m <= RWY_M; m += 60) { glow(m, RHW + 0.5, 'rgba(255,244,214,.75)'); glow(m, -RHW - 0.5, 'rgba(255,244,214,.75)'); }
+    for (let o = -RHW + 0.5; o <= RHW - 0.5; o += 4) { glow(THR_LO_M, o, 'rgba(90,255,140,.9)'); glow(THR_HI_M, o, 'rgba(90,255,140,.9)'); glow(1, o, 'rgba(255,60,60,.85)'); glow(RWY_M-1, o, 'rgba(255,60,60,.85)'); }
     // SALS 300 m (09) and approach lights 27
     for (let d = 30; d <= 300; d += 30) glow(-d*0.15, 0, 'rgba(255,240,200,.0)');
     for (const k in AD.twys) { const pts = AD.twys[k]; for (let i = 0; i < pts.length-1; i++) { const [m1,o1] = pts[i], [m2,o2] = pts[i+1], L = Math.hypot(m2-m1, o2-o1), n = Math.floor(L/30); for (let j = 1; j < n; j++) { const f = j/n, m = m1+(m2-m1)*f, o = o1+(o2-o1)*f, vx = (m2-m1)/L, vy = (o2-o1)/L; glow(m - vy*10, o + vx*10, 'rgba(70,130,255,.85)'); glow(m + vy*10, o - vx*10, 'rgba(70,130,255,.85)'); } } }
@@ -611,7 +612,7 @@ function renderScore(){
   $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>`;
   const d = new Date(S.start + S.t*1000);
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
-  $('clockz').textContent = 'local ' + new Date(d.getTime() + 2*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
+  $('clockz').textContent = 'local ' + new Date(d.getTime() + APT.utcOff*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
   if (S.xing.st === 'CLOSING' || S.xing.st === 'OPENING') { const el = $('xCount'); if (el) el.textContent = Math.max(0, Math.ceil(S.xing.t - S.t)); const bar = document.querySelector('.xing .bar i'); if (bar) bar.style.width = Math.round((S.xing.st === 'CLOSING' ? clamp(1 - (S.xing.t - S.t)/150, 0, 1) : clamp((S.xing.t - S.t)/15, 0, 1))*100)+'%'; }
 }
 

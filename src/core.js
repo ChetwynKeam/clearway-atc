@@ -7,7 +7,7 @@
 
 // ═════════════════════════ geometry ═════════════════════════
 const D2R = Math.PI/180, R2D = 180/Math.PI;
-const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781] };
+const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553] };
 const [LAT0, LON0] = AIRPORT_ORIGIN[AIRPORT], COSL = Math.cos(LAT0*D2R);
 const M2NM = 1/1852;
 const dms = (d, m, s=0) => d + m/60 + s/3600;

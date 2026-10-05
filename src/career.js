@@ -16,9 +16,11 @@ const BADGES = [
   { id: 'century',  name: 'Century',           d: '100 movements in total.',                                   ic: 'M4 17V7M8 7h4v10H8zM14 7h4v10h-4z' },
   // each new airport adds one or two badges of its own; the logbook and the rest of the set are shared by every airport
   { id: 'rosario',  ap: 'LPMA', name: 'Rosário turn',   d: 'Land three aircraft on runway 05 at Madeira in one session.', ic: 'M4 20c0-8 6-14 16-14M16 3l4 3-4 3M4 20h6' },
-  { id: 'island',   ap: 'LPMA', name: 'Island endorsement', d: 'Complete the three Madeira guided exercises.',           ic: 'M3 17c3-2 5-6 9-6s6 4 9 6M3 21h18M12 3v4' }
+  { id: 'island',   ap: 'LPMA', name: 'Island endorsement', d: 'Complete the three Madeira guided exercises.',           ic: 'M3 17c3-2 5-6 9-6s6 4 9 6M3 21h18M12 3v4' },
+  { id: 'steep',    ap: 'EGLC', name: 'Five point five',    d: 'Land five arrivals on the 5.5° glidepath at London City in one session.', ic: 'M3 6l18 12M3 18h18M15 18a6 6 0 0 0-2-4.5' },
+  { id: 'docklands', ap: 'EGLC', name: 'Docklands endorsement', d: 'Complete the three London City guided exercises.',    ic: 'M4 21V9h4v12M10 21V4h4v17M16 21v-8h4v8M2 21h20' }
 ];
-const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira' };
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -46,9 +48,11 @@ function careerCheck(){
     if (s.good >= 1) careerAward('goodcall');
     if (/^live/.test(s.mode) && s.secs >= 900) careerAward('live');
     if (s.ap === 'LPMA' && (s.l05 || 0) >= 3) careerAward('rosario');
+    if (s.ap === 'EGLC' && s.landed >= 5) careerAward('steep');
   }
   if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
   if (['mdep','marr','mwind'].every(k => CAR.ex[k])) careerAward('island');
+  if (['cdep','carr','ceast'].every(k => CAR.ex[k])) careerAward('docklands');
   if (T.secs >= 3600) careerAward('hour');
   if (T.secs >= 36000) careerAward('ten');
   if (T.mov >= 100) careerAward('century');
@@ -82,7 +86,7 @@ function careerExercise(ex){ if (!CAR.ex[ex]) { CAR.ex[ex] = Date.now(); carDirt
 // ── career page ──
 const fmtHrs = s => s < 3600 ? `${Math.round(s/60)} min` : `${(s/3600).toFixed(s < 36000 ? 1 : 0)} h`;
 const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3',
-  mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3' };
+  mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3', cdep: 'Exercise 1', carr: 'Exercise 2', ceast: 'Exercise 3' };
 function renderCareer(){
   careerSync();
   const T = carTotals(CAR), L = CAR.sessions.slice().reverse();

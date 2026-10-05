@@ -119,9 +119,9 @@ function phraseToCmd(raw){
   if (/ (pushback|startup)/.test(s)) { const f = sideOf(s); out.push('PUSH' + (f ? ' ' + f : '')); }
   if ((m = s.match(/ taxi .*?holding point (\S+)/)) || (m = s.match(/ taxi (to )?(\S+)/))) {
     const hp = PHONW[m[m.length-1]] || (m[m.length-1].length === 1 ? m[m.length-1].toUpperCase() : null);
-    if (hp && 'ACDE'.includes(hp)) {
+    if (hp && HOLDS[hp]) {
       let cmd = 'TAXI ' + hp; const v = s.match(/ via (.+?)( hold| holding| cross| $)/);
-      if (v) { const vl = v[1].split(' ').map(x => PHONW[x]).filter(x => x && 'ABCDE'.includes(x)); if (vl.length) cmd += ' VIA ' + vl.join(' '); }
+      if (v) { const vl = v[1].split(' ').map(x => PHONW[x]).filter(x => x && PHON[x]); if (vl.length) cmd += ' VIA ' + vl.join(' '); }
       out.push(cmd);
     }
   }

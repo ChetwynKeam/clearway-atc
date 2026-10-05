@@ -1,9 +1,9 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'sim', 'training', 'career'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'sim', 'training', 'career'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 const IS_HOST = APT.icao === SITE_HOST, EMBED = location.hash.startsWith('#embed');
 const SIM_HASH = /^(sim|ex\/|wx\/|live$)/;
@@ -51,12 +51,12 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// LXGB and LPMA are built. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB, LPMA and EGLC are built. The rest are the roadmap: real airports and runway designators, no invented performance data.
 // ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
   { icao:'LPMA', ll:[32.698, -16.774], iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
-  { icao:'EGLC', ll:[51.505, 0.055], iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'dev', pos:['TWR','GND'], diff:3, blurb:'Steep approaches between the Docklands towers, a short runway and a tight apron.' },
+  { icao:'EGLC', ll:[51.505, 0.055], iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'A 5.5° glidepath past the Canary Wharf towers, RNAV-only SIDs under the London TMA, and a short runway between two docks.' },
   { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'dev', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
   { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'dev', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
@@ -310,7 +310,7 @@ $('apMapKey').innerHTML = ['live', 'dev', 'plan'].map(s => `<span><i style="back
 
 // ── overview: animated hero scope ──
 const hero = { cv: $('heroScope'), base: null, map: null, ang: 0, blips: [], trail: [] };
-const HERO_TRAFFIC = APT.icao === 'LPMA' ? [
+const HERO_TRAFFIC = APT.site && APT.site.hero ? APT.site.hero() : APT.icao === 'LPMA' ? [
   ['TAP1681', 33.30, -16.15, 225, 280, PAL.light.arr], ['EZY8712', 32.68, -16.62, 87, 220, PAL.light.dep],
   ['EXS1291', 33.35, -16.95, 160, 250, PAL.light.arr], ['IBB3021', 32.25, -16.45, 20, 230, PAL.light.arr],
   ['TOM4407', 32.95, -16.40, 40, 260, PAL.light.dep], ['TAP211', 31.95, -17.45, 30, 450, 'rgba(60,75,95,.7)'],
@@ -371,6 +371,7 @@ window.addEventListener('resize', () => { hero.map = null; if (curRoute === 'hom
 function demoTraffic(){
   const mk = (cs, t, k, set) => { const ac = new Aircraft({ cs, t, k, o: 'EGLL', d: 'EGKK' }); ac.kind = k; Object.assign(ac, set); ac.trk = ac.hdg; return ac; };
   const st = id => STANDS.find(s => s.id === id), park = (id, extra) => ({ ground: true, state: 'PARKED', stand: st(id), x: st(id).p[0], y: st(id).p[1], hdg: st(id).hdg, reqAt: 0, need: 'Start-up', ...extra });
+  if (APT.site && APT.site.demo) return APT.site.demo(mk, park);
   if (APT.icao === 'LPMA') {
     // on the visual circuit to 05, rounding Rosário onto short final
     const FP = FINAL[RW_LO].pts, k0 = FP.length - 3, fin = FP[k0], fhd = Math.round(norm(Math.atan2(FP[k0+1][0] - fin[0], FP[k0+1][1] - fin[1])/D2R)), end = rm(RWY_M, 0), out = [end[0] + Math.sin(100*D2R)*5, end[1] + Math.cos(100*D2R)*5], twy = GN.JC.p;
@@ -410,6 +411,7 @@ function drawThumb(c, acs){
     // Madeira's runway runs diagonally: frame the whole runway (aerodrome) or the 05 end and short final (tower)
     const W = c.getBoundingClientRect().width, mid = lp && rm(RWY_M*0.5, -120), twr = lp && (() => { const FP = FINAL[RW_LO].pts, f = FP[FP.length - 3], t = rm(THR_LO_M, 0); return [(f[0] + t[0])/2, (f[1] + t[1])/2]; })();
     const lpT = k === 'gnd' ? (v => { v.cx = mid[0]; v.cy = mid[1]; v.scale = W/2900*1852; }) : k === 'twr' ? (v => { v.cx = twr[0]; v.cy = twr[1]; v.scale = W/3; }) : null;
+    if (APT.site && APT.site.thumb) return drawTo(c, k, { proc: true, acs, tweak: APT.site.thumb(k, c.dataset.zoom, W) });
     drawTo(c, k, { proc: true, acs, tweak: k === 'app' ? (lp ? (v => { v.scale *= 1.3; }) : (v => { v.scale *= 1.6; v.cx += 2; v.cy += 3; })) : apron ? (v => { v.cx = apron[0]; v.cy = apron[1]; v.scale = 1852*(lp ? 0.8 : 1.05); }) : lp ? lpT : null });
   }
 }
@@ -473,6 +475,13 @@ const SCEN_TEXT = { LPMA: {
   murk: 'Drizzle and cloud at 800 ft. Below the VOR circling minima but above the RNP ones, so every arrival needs an RNP AR approach.',
   calima: 'Saharan dust from the south-east. Visibility down to 3 km and a light easterly.',
   calm: 'Light and variable wind and a clear sky. A good day to learn the circuit.'
+}, EGLC: {
+  sw: 'The usual south-westerly. Runway 27 with the ILS from the LAVNO transition, departures from Mike on RNAV SIDs capped at 3,000 ft.',
+  east: 'An easterly. Runway 09, arrivals round the south of London to ODLEG and a short final past the Canary Wharf towers.',
+  low: 'Drizzle and a 400 ft cloud base. The 5.5° ILS still works, just: watch the four-mile check against the approach ban.',
+  fog: 'Thames fog below the ILS minima. Hold arrivals at JACKO and GODLU and plan diversions to Southend while departures wait for the visibility.',
+  storm: 'A gusty south-westerly gale across the docks. Expect turbulence on short final and some go-arounds.',
+  calm: 'High pressure, light and variable winds and haze. A quiet day to learn the flow.'
 }, LXGB: {
   fair: 'A gentle westerly and good visibility. Learn the flow: road closures, backtracks and the SRA to runway 27.',
   levanter: 'The easterly gale and its banner cloud. Runway 09, approaches through RIPRA, and turbulence curling off the Rock.',
@@ -541,7 +550,8 @@ function buildToc(){
 // Academy hub: the core course and one endorsement card per open airport, with exercise progress from the logbook
 const ENDORSE = {
   LXGB: { name: 'Gibraltar', ex: ['dep', 'arr', 'lev'], badge: 'graduate', p: 'The road across the runway, the SRA, the levanter and releases from Sevilla and Casablanca.' },
-  LPMA: { name: 'Madeira', ex: ['mdep', 'marr', 'mwind'], badge: 'island', p: 'Wind limits at two anemometers, the Rosário circuit to runway 05, SIDs out to sea and Lisboa releases.' }
+  LPMA: { name: 'Madeira', ex: ['mdep', 'marr', 'mwind'], badge: 'island', p: 'Wind limits at two anemometers, the Rosário circuit to runway 05, SIDs out to sea and Lisboa releases.' },
+  EGLC: { name: 'London City', ex: ['cdep', 'carr', 'ceast'], badge: 'docklands', p: 'The 5.5° ILS past Canary Wharf, RNAV SIDs held at 3,000 ft under the London TMA, and arrivals from the JACKO and GODLU holds.' }
 };
 function renderHub(){
   const h = $('acHub'); if (!h) return;
@@ -570,7 +580,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });
@@ -598,9 +608,9 @@ function renderAcademyFigs(){
   if (fc) {
     fc.style.aspectRatio = '1.7 / 1';
     const inbA = acs.find(a => a.kind === 'ARR' && a.state === 'INBOUND'), depA = acs.find(a => a.state === 'CLIMB'), fin = acs.find(a => a.state === 'FINAL');
-    const lp = APT.icao === 'LPMA', zone = lp ? APT.terrain.poly : R164, hold = lp ? WP.PILIM.p : WP.UPMUP.p;
+    const lp = APT.icao !== 'LXGB', zone = lp ? APT.terrain.poly : R164, hold = APT.site && APT.site.figHold ? WP[APT.site.figHold].p : lp ? WP.PILIM.p : WP.UPMUP.p;
     const zc = zone.reduce((a, p) => [a[0] + p[0]/zone.length, a[1] + p[1]/zone.length], [0, 0]);
-    const o = drawTo(fc, 'app', { proc: true, acs, tweak: lp ? (v => { v.scale *= 1.25; v.cx += 2; }) : (v => { v.scale *= 1.7; v.cx += 2.5; v.cy += 3.5; }), pins: [[inbA.x - 1.6, inbA.y - 0.4], [depA.x - 1.6, depA.y - 0.4], [fin.x + 0.6, fin.y - 1.6], [hold[0] - 1.2, hold[1] - 1.2], zc] });
+    const o = drawTo(fc, 'app', { proc: true, acs, tweak: APT.site && APT.site.figConsole ? APT.site.figConsole : lp ? (v => { v.scale *= 1.25; v.cx += 2; }) : (v => { v.scale *= 1.7; v.cx += 2.5; v.cy += 3.5; }), pins: [[inbA.x - 1.6, inbA.y - 0.4], [depA.x - 1.6, depA.y - 0.4], [fin.x + 0.6, fin.y - 1.6], [hold[0] - 1.2, hold[1] - 1.2], zc] });
     if (o) figPins(fc.closest('figure'), o.pins);
   }
   // 2 · departure routes
@@ -625,7 +635,7 @@ function renderAcademyFigs(){
   const fe = $('figEmerg');
   if (fe) {
     fe.style.aspectRatio = '2.2 / 1';
-    const lo = APT.icao === 'LPMA', fin = lo ? rm(THR_LO_M - 0.75*1852, 0) : rm(THR_HI_M + 0.75*1852, 0), hpk = lo ? 'C' : 'A', hp = GN[HOLDS[hpk].node].p, rwF = lo ? RW_LO : RW_HI, crsF = lo ? CRS_LO : CRS_HI;
+    const lo = APT.icao === 'LPMA', fin = lo ? rm(THR_LO_M - 0.75*1852, 0) : rm(THR_HI_M + 0.75*1852, 0), hpk = APT.site && APT.site.emergHp || (lo ? 'C' : 'A'), hp = GN[HOLDS[hpk].node].p, rwF = lo ? RW_LO : RW_HI, crsF = lo ? CRS_LO : CRS_HI;
     const may = new Aircraft({ cs: 'EXS96K', t: 'B738', k: 'ARR', o: 'EGCC' }); Object.assign(may, { kind: 'ARR', state: 'FINAL', mode: 'FINAL', app: rwF, freq: 'TWR', x: fin[0], y: fin[1], hdg: crsF, trk: crsF, alt: 450, gs: 150, vs: -700, emerg: { k: 'MAYDAY', why: 'engine failure', ack: true }, sqk: '7700', need: 'Runway closed' });
     const dep = new Aircraft({ cs: 'EZY8902', t: 'A20N', k: 'DEP', d: 'EGKK' }); Object.assign(dep, { kind: 'DEP', ground: true, state: 'HOLDPT', hp: hpk, x: hp[0], y: hp[1], hdg: 180, trk: 180, rel: { st: 'OK', until: 1e9 } });
     const keep = S.emg; S.emg = { rwyBlock: { why: 'debris', until: 1e12 }, still: true };
@@ -726,7 +736,7 @@ function renderCoach(){
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
   if (done) careerExercise(coach.ex);
   el.innerHTML = done
-    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${APT.icao === 'LPMA' ? 'm-exercises' : 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
+    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;
   el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
     const c = b.dataset.c;
@@ -760,6 +770,7 @@ function airportChrome(){
   $('awcLink').href = `https://aviationweather.gov/data/metar/?id=${APT.icao}&hours=0`;
   $('wxPaste').placeholder = WX_PRESETS[APT.defWx].metar;
   if (APT.icao === 'LPMA') $('cmd').placeholder = 'Command, e.g. TAP1681 A30 APP · EZY8712 TAXI C · / to focus, Tab cycles flights';
+  if (APT.site && APT.site.cmdHint) $('cmd').placeholder = APT.site.cmdHint;
   $('exGroup').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<option value="${k}">Exercise ${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</option>`).join('');
   const others = LIVE_APS.filter(k => k !== APT.icao);
   $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b>${others.map(k => `<a href="${SITE[k]}#sim">Switch to ${ENDORSE[k].name}</a>`).join('')}`;
