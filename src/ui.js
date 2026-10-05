@@ -126,6 +126,12 @@ function drawProcedures(){
     poly(F.pts, false); cx.stroke();
     if (F.ticks) { const ob = norm(crsOf(k) + 180), nx = Math.cos(ob*D2R), ny = Math.sin(ob*D2R); for (let n = 1; n <= 10; n++) { const p = add(F.pts[F.pts.length-1], ob, n), L = n % 5 === 0 ? 7 : 4; cx.beginPath(); cx.moveTo(sx(p[0]) - nx*L, sy(p[1]) - ny*L); cx.lineTo(sx(p[0]) + nx*L, sy(p[1]) + ny*L); cx.stroke(); } }
   }
+  // RNP AR paths to the runway in use (dashed), and the one the selected flight is cleared for (solid)
+  for (const F of Object.values(FINAL)) if (F.rnp && F.rwy === S.rwy) {
+    const mine = S.sel && finOf(S.sel) === F; cx.strokeStyle = rgba('proc', mine ? .8 : .35); cx.lineWidth = mine ? 1.4 : 1; cx.setLineDash(mine ? [] : [6, 4]);
+    poly(F.pts, false); cx.stroke(); if (mine) { cx.setLineDash([2, 4]); poly(F.missPts, false); cx.stroke(); }
+    cx.setLineDash([]);
+  }
   cx.strokeStyle = rgba('proc', .4); cx.lineWidth = 1;
   for (const w of Object.values(WP)) if (w.hold) {
     const inb = w.hold.inb, out = add(w.p, inb+180, 3.2), side = add(w.p, inb+90, 1.6), side2 = add(out, inb+90, 1.6);
@@ -135,9 +141,10 @@ function drawProcedures(){
   }
   cx.font = `10.5px ${FONT_D}`;
   for (const w of Object.values(WP)) {
+    if (w.hide) continue;
     const X = sx(w.p[0]), Y = sy(w.p[1]); if (X < -50 || Y < -50 || X > W+50 || Y > H+50) continue;
     const pt = !!w.decLabel;
-    if (pt && sc < 12) continue;
+    if ((pt && sc < 12) || (w.minor && sc < 9)) continue;
     cx.strokeStyle = pt ? rgba('proc', .9) : rgba('lab', .65);
     cx.beginPath(); cx.moveTo(X, Y-4.5); cx.lineTo(X+4, Y+3); cx.lineTo(X-4, Y+3); cx.closePath(); cx.stroke();
     if (sc > 5) { cx.fillStyle = pt ? rgba('proc', .9) : rgba('lab', .6); cx.fillText(pt ? w.decLabel : w.id, X+6, Y+3); }
@@ -368,7 +375,7 @@ function drawAc(ac){
   if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN'; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
   else {
     const a = String(Math.max(0, Math.round(ac.alt/100))).padStart(3,'0'), tr = ac.vs > 300 ? '↑' : ac.vs < -300 ? '↓' : ' ';
-    const cl = ac.mode === 'FINAL' ? APT.appShort : ac.tgtAlt != null ? String(Math.round(ac.tgtAlt/100)).padStart(3,'0') : '';
+    const cl = ac.mode === 'FINAL' ? (ac.appId ? 'RNP' : APT.appShort) : ac.tgtAlt != null ? String(Math.round(ac.tgtAlt/100)).padStart(3,'0') : '';
     l2 = `${a}${tr}${cl} ${String(Math.round(ac.gs/10)).padStart(2,'0')}`;
     l3 = ac.state === 'PRE' ? `${ac.t} ${ac.o} PENDING` : `${ac.t} ${ac.kind === 'ARR' ? (ac.app ? 'R'+ac.app : ac.o) : ac.d}${ac.freq === 'TWR' ? ' T' : ''}`;
   }
@@ -378,7 +385,7 @@ function drawAc(ac){
 }
 
 function stateLabel(ac){
-  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', READY:'STARTED', TAXI:'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:'SRA '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:'TAXI IN', ONSTAND:'ON STAND' })[ac.state] || ac.state;
+  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', READY:'STARTED', TAXI:'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:'TAXI IN', ONSTAND:'ON STAND' })[ac.state] || ac.state;
 }
 
 // ═════════════════════════ console UI ═════════════════════════
@@ -412,7 +419,8 @@ function renderAtis(){
       <div class="tile"><div class="lbl">Head / X ${S.rwy}</div><div class="v ${wl ? 'bad':''}" ${wl ? `title="${esc(wl)}"` : ''}>${Math.round(c.head)} / ${Math.round(c.cross)}</div></div>
       <div class="tile"><div class="lbl">Vis · Cloud</div><div class="v ${w.vis < 5000 ? 'bad' : ''}">${w.vis >= 9999 ? '10k+' : w.vis} <small>${esc(cloud.split(' ')[0] || '')}</small></div></div>
       <div class="tile"><div class="lbl">QNH</div><div class="v">${w.qnh}</div></div>
-      <div class="tile"><div class="lbl">${APT.appShort} mins</div><div class="v ${APT.minsOk(w, S.rwy)?'ok':'bad'}">${APT.minsOk(w, S.rwy)?'OK':'BELOW'}</div></div>
+      ${APT.rnp ? (() => { const a = APT.minsOk(w, S.rwy), r = APT.rnpMinsOk(w, S.rwy); return `<div class="tile" title="Circling minima / RNP AR minima"><div class="lbl">${APT.appShort} · RNP</div><div class="v ${a ? 'ok' : r ? '' : 'bad'}">${a ? 'OK' : 'BELOW'} · ${r ? 'OK' : 'BELOW'}</div></div>`; })()
+        : `<div class="tile"><div class="lbl">${APT.appShort} mins</div><div class="v ${APT.minsOk(w, S.rwy)?'ok':'bad'}">${APT.minsOk(w, S.rwy)?'OK':'BELOW'}</div></div>`}
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${S.rwy} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
@@ -465,15 +473,15 @@ function renderSel(){
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
   if (air) {
-    html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? APT.appShort + ' profile' : (ac.tgtAlt ?? '–')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
-    ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
+    html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
+    ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.filter(k => !WP[k].hide).join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
     <div class="ctl"><label><span class="lbl">Heading</span><input id="iH" placeholder="270" inputmode="numeric"></label><label><span class="lbl">Altitude ×100</span><input id="iA" placeholder="40" inputmode="numeric"></label><label><span class="lbl">Speed</span><input id="iS" placeholder="180" inputmode="numeric"></label></div><div class="btns">`;
     if (ac.diverting) html += b(`DCT ${ac.diverting} A80`, 'Approve diversion', true, 'go');
     if (ac.need === 'Say again' && ac.lastCmd) html += b(ac.lastCmd, 'Say again: ' + esc(ac.lastCmd), true, 'go');
     if (ac.kind === 'ARR' && S.emg && S.emg.ws && !ac.wsTold) html += b('WS', 'Pass windshear', true, 'go');
-    if (ac.kind === 'ARR') html += b('APP '+RW_HI, APT.appShort+' '+RW_HI, true, S.rwy===RW_HI?'on':'') + b('APP '+RW_LO, APT.appShort+' '+RW_LO, true, S.rwy===RW_LO?'on':'') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
+    if (ac.kind === 'ARR') html += b('APP '+RW_HI, APT.appShort+' '+RW_HI, true, S.rwy===RW_HI?'on':'') + b('APP '+RW_LO, APT.appShort+' '+RW_LO, true, S.rwy===RW_LO?'on':'') + (APT.rnp ? APT.rnpButtons(S.rwy).map(([c, l]) => b(c, l, true, ac.need === 'Request RNP approach' ? 'go' : '')).join('') : '') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
     else html += b('HO', ac.freq === 'TWR' ? `To ${APT.radar[0].split(' ').pop()} ${APT.radar[1]}` : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A'+APT.climbFL, 'Climb FL'+APT.climbFL);
-    html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).map(k => `<option>${k}</option>`).join('')}</select></div>`;
+    html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).filter(k => !WP[k].hide).map(k => `<option>${k}</option>`).join('')}</select></div>`;
   } else {
     html += `<div class="btns">`;
     if (ac.kind === 'DEP') {
@@ -720,7 +728,7 @@ function start(){
     else if (live) sys('Real world: today’s flight information could not be loaded here, so the session uses the timetable for this hour.', true);
     else if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys(`Wind exceeds the ${APT.turbName || 'Special Procedures'} turbulence limit: expect windshear on final and go-arounds.`);
-    if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong.replace(/\.$/, '') + ': arrivals will not be able to land.');
+    if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong.replace(/\.$/, '') + (APT.rnp && APT.rnpMinsOk(S.wx, S.rwy) ? ': arrivals will ask for an RNP approach.' : ': arrivals will not be able to land.'));
     if (APT.windLimit && windLimit({ perf: { wake: 'M' } }, S.rwy)) sys(`Wind is outside the ${APT.name} limits for runway ${S.rwy}: landings and take-offs are not allowed until it eases.`, true);
     emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
     if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);

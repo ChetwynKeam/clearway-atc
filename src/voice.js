@@ -91,7 +91,7 @@ function fixFrom(word){
   if (!word) return null; const u = word.toUpperCase();
   if (WP[u]) return u;
   let best = null, bd = 9;
-  for (const id of Object.keys(WP)) { const d = editDist(id, u); if (d < bd) { bd = d; best = id; } }
+  for (const id of Object.keys(WP)) { if (WP[id].hide) continue; const d = editDist(id, u); if (d < bd) { bd = d; best = id; } }
   return bd <= 2 ? best : null;
 }
 const sideOf = w => w.includes('east') ? 'E' : w.includes('west') ? 'W' : '';
@@ -110,6 +110,7 @@ function phraseToCmd(raw){
   else if ((m = s.match(/ speed (\d{2,3}) /))) out.push('S' + m[1]);
   if ((m = s.match(/ direct( to)? (\S+) /))) { const f = fixFrom(m[2]); if (f) out.push('DCT ' + f); }
   if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) out.push('APP' + ((m = s.match(new RegExp(` runway (${RW_LO}|${RW_HI}|${+RW_LO}) `))) ? ' ' + (m[1] === String(+RW_LO) ? RW_LO : m[1]) : ''));
+  if (APT.rnp && out.length && out[out.length-1].startsWith('APP') && / (rnp|r n p|rmp) /.test(s)) out[out.length-1] += / (yankee|yankees|y) /.test(s) ? ' RNPY' : / (zulu|z) /.test(s) ? ' RNPZ' : ' RNP';
   if (/ cleared to land /.test(s)) out.push('CTL');
   if (/ goaround /.test(s)) out.push('GA');
   if (/ hold position /.test(s) || / stop immediately /.test(s)) out.push('HP');
@@ -210,7 +211,7 @@ function applyLiveMetar(raw){
   const cHi = windComp(S.wx, CRS_HI), cLo = windComp(S.wx, CRS_LO), fav = cLo.head > cHi.head + 2 ? RW_LO : RW_HI;
   nextAtis(); sys(`Live METAR: ${S.wx.raw}. Information ${phonetic(S.atis)} is now current.`);
   if (fav !== S.rwy) sys(`Wind now favours runway ${fav}.`);
-  if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong, true);
+  if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong + (APT.rnp && APT.rnpMinsOk(S.wx, S.rwy) ? ' The RNP approach is still available.' : ''), true);
   renderAtis();
 }
 async function pollLive(){

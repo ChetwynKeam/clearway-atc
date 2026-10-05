@@ -338,6 +338,8 @@ function windPhrase(){ const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3(
 const viaWords = v => v.length ? ' via ' + v.map(t => PHON[t] || t).join(', ') : '';
 const SAY_AGAIN = ['say again', 'say again, you were broken', `${APT.coordName}, readability two, say again`, 'say again the last instruction'];
 const garbleable = (ac, toks) => ac.airborne && !ac.emerg && ac.mode !== 'FINAL' && ac.state !== 'PRE' && toks.length && toks.every(t => /^([HLRACDS]\d{1,5}|SN|DCT|APP|HOLD)$/.test(t) || t === RW_LO || t === RW_HI || WP[t]);
+// a heading or a direct-to off an RNP AR approach ends it: the crew needs a new approach clearance
+function rnpCancel(ac){ ac.app = null; ac.appId = null; ac.finI = null; ac.askedApp = false; if (ac.mode === 'HOLD') ac.mode = 'HDG'; sys(`${ac.cs} is off the RNP approach: clear it again when you want it back on.`); }
 function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
 function commandRun(str){
   const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
@@ -356,6 +358,7 @@ function commandRun(str){
     if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
       const h = (+r[2]) % 360 || 360; ac.mode = 'HDG'; ac.tgtHdg = h; ac.turnDir = r[1]==='L' ? -1 : r[1]==='R' ? 1 : 0; ac.route = []; ac.onSid = false;
       if (['HOLDING','INBOUND','FINAL'].includes(ac.state)) ac.state = 'VECTORS';
+      if (ac.appId) rnpCancel(ac);
       const dif = angDiff(ac.hdg, h);
       const ts = r[1]==='L' ? 'turn left' : r[1]==='R' ? 'turn right' : (Math.abs(dif) < 4 ? 'fly' : dif < 0 ? 'turn left' : 'turn right');
       said.push(`${ts} heading ${hdg3(h)}`); reads.push(`${ts.replace('turn ','').replace('fly','')} heading ${hdg3(h)}`.trim());
@@ -370,8 +373,9 @@ function commandRun(str){
     } else if ((t === 'SN' || t === 'S0') && air) { ac.spdAssigned = false; ac.tgtSpd = null; said.push('no speed restriction'); reads.push('no speed restriction'); }
     else if (t === 'DCT' && air) {
       const id = toks[i+1], w = id && WP[id];
-      if (!w) { sys(`Unknown fix ${id||''}. Fixes: ${Object.keys(WP).join(' ')}`); return; }
+      if (!w) { sys(`Unknown fix ${id||''}. Fixes: ${Object.keys(WP).filter(k => !WP[k].hide).join(' ')}`); return; }
       i++; const idx = ac.route.indexOf(id); ac.onSid = false;
+      if (ac.appId && id !== finOf(ac).entry) rnpCancel(ac);
       ac.route = idx >= 0 ? ac.route.slice(idx) : (ac.kind === 'DEP' && EXIT_ROUTE[ac.gate].includes(id) ? EXIT_ROUTE[ac.gate].slice(EXIT_ROUTE[ac.gate].indexOf(id)) : [id]); ac.mode = 'NAV';
       if (ac.alt < 3500 && crossesRock(ac, w.p)) sys(`Caution: ${ac.cs} direct ${id} tracks over ${APT.terrain.name}.`, true);
       if (ac.state === 'HOLDING') ac.state = 'VECTORS';
@@ -380,23 +384,33 @@ function commandRun(str){
       said.push(`proceed direct ${id}`); reads.push(`direct ${id}`);
     } else if (t === 'APP' && air) {
       const rw = toks[i+1] === RW_LO || toks[i+1] === RW_HI ? toks[++i] : S.rwy;
+      // RNP: "APP RNP", "APP 05 RNPY", "APP RNP Z" (airports with RNP approaches only)
+      let v = null; if (APT.rnp && /^RNP[YZ]?$/.test(toks[i+1] || '')) { v = toks[++i].slice(3) || (/^[YZ]$/.test(toks[i+1] || '') ? toks[++i] : '*'); }
       if (ac.kind !== 'ARR') { sys(`${ac.cs} is a departure.`); continue; }
-      const lim = windLimit(ac, rw) || (APT.minsOk(S.wx, rw) ? null : APT.minsText);
-      if (lim) { atc(ac, `this will be a ${APT.appName} runway ${rw}`); pilot(ac, `unable, ${lim} for runway ${rw}, we'll hold and see if it improves`); ac.need = 'Unable approach'; if (!ac.divertAt && !ac.diverting) { ac.divertAt = S.t + 120; ac.divertTo = APT.divertTo(ac); } return; }
-      ac.app = rw; ac.gatesDone = null; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.diverting = null; ac.divertAt = null; ac.gaTurnDone = false;
-      const F = FINAL[rw];
+      const key = v ? APT.rnp(ac, rw, v) : null;
+      if (v && !key) { sys(`There is no RNP ${v} approach to runway ${rw}.`); return; }
+      const F = FINAL[key || rw];
+      const lim = windLimit(ac, rw) || (appMinsOk(F, rw, S.wx) ? null : (F.rnp ? 'weather below the RNP minima' : APT.minsText));
+      if (lim) {
+        atc(ac, `this will be ${F.rnp ? 'the ' + F.spoken : 'a ' + APT.appName + ' runway ' + rw}`);
+        // below the circling minima but good enough for RNP: the crew asks for it instead of holding
+        if (!key && APT.rnp && !windLimit(ac, rw) && APT.rnpMinsOk(S.wx, rw)) { pilot(ac, `unable, ${lim} for runway ${rw}, request RNP approach`); ac.need = 'Request RNP approach'; return; }
+        pilot(ac, `unable, ${lim} for runway ${rw}, we'll hold and see if it improves`); ac.need = 'Unable approach'; if (!ac.divertAt && !ac.diverting) { ac.divertAt = S.t + 120; ac.divertTo = APT.divertTo(ac); } return;
+      }
+      ac.app = rw; ac.appId = key; ac.finI = null; ac.missRoute = null; ac.gatesDone = null; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.diverting = null; ac.divertAt = null; ac.gaTurnDone = false;
+      if (F.rnp && ac.mode !== 'NAV' && ac.mode !== 'HOLD') { ac.mode = 'NAV'; ac.route = []; }   // RNP AR is flown from the IAF, never joined from vectors
       if (ac.mode === 'HDG' && !willIntercept(ac, F)) { ac.mode = 'NAV'; ac.route = []; sys(`${ac.cs} is not on an intercept heading: it will route own navigation to ${F.entryName}.`); }
       if (ac.mode === 'NAV' || ac.mode === 'HOLD') {
         const entry = F.entry;
-        const i2 = ac.route.indexOf(entry);
-        ac.route = i2 >= 0 ? ac.route.slice(0, i2+1) : [entry];
+        const i2 = ac.route.indexOf(entry), iv = (F.via || []).map(x => ac.route.indexOf(x)).find(j => j >= 0);
+        ac.route = i2 >= 0 ? ac.route.slice(0, i2+1) : iv != null ? [...ac.route.slice(0, iv+1), entry] : [entry];
         ac.mode = 'NAV'; ac.state = 'VECTORS';
       }
       { const aa = F.alt || APT.appAlt; if ((ac.cleared ?? 99999) > aa && ac.mode === 'NAV') { ac.tgtAlt = ac.cleared = aa; said.push(`descend ${altWords(aa)}` + (ac.alt > APT.ta ? `, QNH ${S.wx.qnh}` : '')); reads.push(`descend ${altShort(aa)}`); } }
       said.push(F.phrase ? F.phrase(rw) : `this will be a surveillance radar approach runway ${rw}, terminating at Point ${F.name}, report visual`);
       reads.push(F.read ? F.read(rw) : `SRA runway ${rw}, wilco`);
       if (ac.state === 'MISSED') { ac.state = 'VECTORS'; ac.gaTurn = true; }
-      if (ac.need && /Initial|Holding|Missed|Request approach/.test(ac.need)) ac.need = null;
+      if (ac.need && /Initial|Holding|Missed|Request (RNP )?approach|Unable approach/.test(ac.need)) ac.need = null;
     } else if (t === 'HOLD' && air) {
       const fix = toks[i+1] && WP[toks[i+1]] ? toks[++i] : null;
       ac.mode = 'HOLD'; ac.state = 'HOLDING';
@@ -531,6 +545,7 @@ function goAround(ac, why){
   const rw = ac.app || S.rwy;
   ac.state = 'MISSED'; ac.mode = 'HDG'; ac.tgtHdg = Math.round(crsOf(rw)); ac.turnDir = 0; ac.gaT = S.t;
   APT.gaEarly(ac, rw);
+  { const F = finOf(ac); ac.missRoute = F && F.missed ? F.missed.slice() : null; ac.appId = null; ac.finI = null; }
   ac.tgtAlt = ac.cleared = APT.gaAlt; ac.ctl = false; ac.app = null; ac.gaTurn = false; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.spdAssigned = false; ac.route = []; ac.freq = 'RAD';
   ac.gaRwy = rw; S.score.ga++; ac.gaCount = (ac.gaCount||0) + 1;
   if (why) pilot(ac, `going around, ${why}`);
@@ -546,19 +561,25 @@ function windAt(alt){ const w = S.wx; const k = alt < 1500 ? 1 : 1.3; const g = 
 // position relative to a final path: nearest segment, track miles to go, cross-track (+ right), segment course
 function onFinal(ac, F){
   let best = null;
-  for (let i = 0; i < F.pts.length-1; i++) {
+  // an RNP path doubles back on itself, so only look forward from the leg the aircraft was last on
+  const i0 = F.rnp && ac.finI != null ? Math.max(0, ac.finI - 1) : 0;
+  for (let i = i0; i < F.pts.length-1; i++) {
     const a = F.pts[i], b = F.pts[i+1], L = dist(...a, ...b), ux = (b[0]-a[0])/L, uy = (b[1]-a[1])/L;
     const t = clamp((ac.x-a[0])*ux + (ac.y-a[1])*uy, i === 0 ? -30 : 0, i === F.pts.length-2 ? L + 2 : L);
     const px = a[0]+ux*t, py = a[1]+uy*t, d = dist(ac.x, ac.y, px, py);
     if (!best || d < best.d - 1e-9) best = { d, i, togo: F.cum[i] - t, xte: (ac.x-a[0])*uy - (ac.y-a[1])*ux, crs: brg(...a, ...b), t, L };
   }
+  if (F.rnp && best) ac.finI = best.i;
   return best;
 }
 // approach profile: Gibraltar's 2.8° SRA (920 ft at 3 NM) unless the final carries its own (threshold elevation, ft per NM)
 // or a published profile F.prof: [track miles to go, altitude] pairs from the threshold outwards
+// the approach an arrival is flying: its RNP procedure if it has one, else the runway's own final
+const apk = ac => ac.appId || ac.app, finOf = ac => FINAL[apk(ac)];
+const appMinsOk = (F, rw, w) => F && F.mins ? w.vis >= F.mins.vis && w.ceil >= F.mins.ceil : APT.minsOk(w, rw);
 function profAt(P, t){ t = Math.max(0, t); for (let i = 1; i < P.length; i++) if (t <= P[i][0]) { const [a, A] = P[i-1], [b, B] = P[i]; return A + (B - A)*(t - a)/((b - a) || 1); } return P[P.length-1][1]; }
 const gpAlt = (togo, rw) => { const F = rw && FINAL[rw]; return F && F.prof ? profAt(F.prof, togo) : ELEV + 40 + Math.max(0, togo)*297; };
-const gpRate = (rw, togo) => { const F = rw && FINAL[rw]; return F && F.prof ? Math.max(150, (profAt(F.prof, togo + 0.3) - profAt(F.prof, Math.max(0, togo - 0.3)))/0.6) : 297; };
+const gpRate = (rw, togo) => { const F = rw && FINAL[rw]; return F && F.prof ? Math.max(F.minRate ?? 150, (profAt(F.prof, togo + 0.3) - profAt(F.prof, Math.max(0, togo - 0.3)))/0.6) : 297; };
 const tdElev = rw => { const F = rw && FINAL[rw]; return F && F.elev != null ? F.elev : ELEV; };
 
 function step(dt){
@@ -607,7 +628,7 @@ function step(dt){
 function stepAir(ac, dt){
   const Pf = ac.perf, Wv = windAt(ac.alt);
   const dGBR = Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]);
-  let fin = ac.mode === 'FINAL' ? onFinal(ac, FINAL[ac.app]) : null;
+  let fin = ac.mode === 'FINAL' ? onFinal(ac, finOf(ac)) : null;
   // ── speed
   let tgtS = ac.tgtSpd;
   if (!ac.spdAssigned) {
@@ -624,12 +645,17 @@ function stepAir(ac, dt){
   let tgtH = ac.hdg, track = false;
   if (ac.mode === 'NAV' && ac.route.length) {
     const w = WP[ac.route[0]], d = dist(ac.x, ac.y, ...w.p);
-    if (ac.kind === 'ARR' && !ac.app && !ac.askedApp && ac.state !== 'DIVERTING' && ac.route.length === 1 && d < 8) { ac.askedApp = true; if (!ac.need) { ac.need = 'Request approach'; pilot(ac, `approaching ${/final/.test(w.note||'') ? w.note : w.id}, request ${APT.appName} runway ${S.rwy}`); } }
+    if (ac.kind === 'ARR' && !ac.app && !ac.askedApp && ac.state !== 'DIVERTING' && ac.route.length === 1 && d < 8) { ac.askedApp = true; if (!ac.need) { ac.need = 'Request approach'; pilot(ac, `approaching ${/final/.test(w.note||'') ? w.note : w.id}, request ${APT.reqApp ? APT.reqApp(S.rwy) : APT.appName} runway ${S.rwy}`); } }
     tgtH = brg(ac.x, ac.y, ...w.p); track = true;
     if (d < Math.max(0.7, ac.gs/3600*22)) {
       ac.route.shift();
       if (!ac.route.length) {
-        if (ac.kind === 'ARR' && ac.app) { ac.mode = 'FINAL'; fin = onFinal(ac, FINAL[ac.app]); }
+        if (ac.kind === 'ARR' && ac.app) {
+          // an RNP start fix reached heading the wrong way (MONEC from the north): one lap of its hold reverses the course
+          const F = finOf(ac);
+          if (F.rnp && w.hold && Math.abs(angDiff(ac.hdg, brg(...F.pts[0], ...F.pts[1]))) > 100) { ac.mode = 'HOLD'; ac.hold = { c: w.p, inb: w.hold.inb, left: !!w.hold.left, ph: 'in', name: w.id, t: 0, join: true, laps: 0 }; }
+          else { ac.mode = 'FINAL'; ac.finI = null; fin = onFinal(ac, F); }
+        }
         else if (ac.kind === 'ARR' && ac.state === 'DIVERTING') { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
         else if (ac.kind === 'ARR') {
           // end of the arrival routing without an approach clearance: hold where it is (on the final entry fix), never fly back to UPMUP/ODLUK
@@ -644,18 +670,18 @@ function stepAir(ac, dt){
   if (ac.mode === 'HDG') tgtH = ac.tgtHdg;
   if (ac.mode === 'HOLD') {
     const h = ac.hold; h.t = (h.t||0) + dt;
-    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (dist(ac.x, ac.y, ...h.c) < 0.5) { h.ph = 'turn1'; h.t = 0; } }
+    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < 1) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) { h.ph = 'turn1'; h.t = 0; } }
     else if (h.ph === 'turn1') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb+180)) < 8) { h.ph = 'out'; h.t = 0; } }
     else if (h.ph === 'out') { tgtH = norm(h.inb + 180); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'turn2'; h.t = 0; } }
-    else if (h.ph === 'turn2') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 25) h.ph = 'in'; }
+    else if (h.ph === 'turn2') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 25) { h.ph = 'in'; h.laps = (h.laps || 0) + 1; } }
   }
   // capture the SRA final from vectors
-  if (ac.kind === 'ARR' && ac.app && ac.mode === 'HDG') {
-    const q = onFinal(ac, FINAL[ac.app]);
+  if (ac.kind === 'ARR' && ac.app && ac.mode === 'HDG' && !finOf(ac).rnp) {
+    const q = onFinal(ac, finOf(ac));
     if (q.togo > 3.2 && q.togo < 25 && Math.abs(q.xte) < 0.45 && Math.abs(angDiff(ac.hdg, q.crs)) < 70 && (q.i > 0 || q.t > -12)) { ac.mode = 'FINAL'; fin = q; }
   }
   if (ac.mode === 'FINAL' && fin) {
-    const F = FINAL[ac.app]; let crs = fin.crs;
+    const F = finOf(ac); let crs = fin.crs;
     if (fin.i < F.pts.length-2 && fin.L - fin.t < 0.2) crs = brg(...F.pts[fin.i+1], ...F.pts[fin.i+2]);
     tgtH = norm(crs + clamp(-fin.xte*70, -35, 35)); track = true; ac.state = 'FINAL'; ac.turnDir = 0;
   }
@@ -670,12 +696,12 @@ function stepAir(ac, dt){
 
   // ── vertical
   let tgtA = ac.tgtAlt ?? ac.alt;
-  if (fin) { const gp = gpAlt(fin.togo, ac.app); tgtA = Math.min(ac.alt, gp, ac.cleared ?? 1e9); if (ac.alt > gp + 40) tgtA = gp; }
-  const vmax = tgtA > ac.alt ? Pf.climb*(ac.alt > 10000 ? 0.7 : 1) : (fin ? (ac.alt > gpAlt(fin.togo, ac.app) + 150 ? 2000 : 1100) : Pf.desc);
-  if (fin && ac.alt <= gpAlt(fin.togo, ac.app) + 150) {
+  if (fin) { const gp = gpAlt(fin.togo, apk(ac)); tgtA = Math.min(ac.alt, gp, ac.cleared ?? 1e9); if (ac.alt > gp + 40) tgtA = gp; }
+  const vmax = tgtA > ac.alt ? Pf.climb*(ac.alt > 10000 ? 0.7 : 1) : (fin ? (ac.alt > gpAlt(fin.togo, apk(ac)) + 150 ? 2000 : 1100) : Pf.desc);
+  if (fin && ac.alt <= gpAlt(fin.togo, apk(ac)) + 150) {
     // on the glidepath: feed-forward the 2.8° descent rate, correct the error, flare onto the runway
-    const te = tdElev(ac.app), gp = fin.togo > 0.05 ? gpAlt(fin.togo, ac.app) : te;
-    ac.vs = clamp(-ac.gs*gpRate(ac.app, fin.togo)/60 + (gp - ac.alt)*4, -2000, 300);
+    const te = tdElev(apk(ac)), gp = fin.togo > 0.05 ? gpAlt(fin.togo, apk(ac)) : te;
+    ac.vs = clamp(-ac.gs*gpRate(apk(ac), fin.togo)/60 + (gp - ac.alt)*4, -2000, 300);
     if (ac.alt + ac.vs/60*dt < te) ac.vs = (te - ac.alt)*60/dt;
   } else ac.vs = clamp((tgtA - ac.alt)*3, -vmax, vmax);
   ac.alt += ac.vs/60*dt;
@@ -701,16 +727,17 @@ function stepAir(ac, dt){
 
   if (ac.divertAt && S.t >= ac.divertAt) { ac.divertAt = null; pilot(ac, `we'd like to divert to ${ac.divertTo[0]}, request direct ${ac.divertTo[1]} climbing flight level 80`); ac.need = `Diverting to ${ac.divertTo[0]}`; ac.diverting = ac.divertTo[1]; }
   // ── missed approach: climb 4000, turn south once clear (left for 27, right for 09)
-  if (ac.state === 'MISSED' && !ac.gaTurn && !ac.gaTurnDone) APT.gaTurn(ac);
+  if (ac.state === 'MISSED' && ac.missRoute && ac.alt > 400) { ac.mode = 'NAV'; ac.route = ac.missRoute; ac.missRoute = null; ac.gaTurn = true; }   // RNP: fly the published missed approach
+  else if (ac.state === 'MISSED' && !ac.missRoute && !ac.gaTurn && !ac.gaTurnDone) APT.gaTurn(ac);
 
   // ── approach checks
   if (fin && ac.state !== 'MISSED') {
-    const rw = ac.app, w = S.wx, F = FINAL[rw];
+    const rw = ac.app, w = S.wx, F = finOf(ac);
     if (APT.xing && !ac.warned15 && fin.togo < 15 && S.xing.st === 'OPEN') { ac.warned15 = true; sys(`${ac.cs} is inside 15 NM: close Winston Churchill Avenue to pedestrians now.`); }
     if (APT.xing && !ac.warned10 && fin.togo < 10) { ac.warned10 = true; if (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') { S.score.pts -= 15; sys(`${ac.cs} at 10 NM with the road still open (late closure).`, true); } }
     if (!ac.checked && fin.togo < (F.decNM || 3.05) && fin.togo > (F.decMin || 1.5)) { // decision point (Gibraltar: Point X-Ray / Yankee)
       ac.checked = true; const dn = F.decName || `Point ${F.name}`;
-      if (!APT.minsOk(w, rw)) return goAround(ac, `not visual at ${dn}`);
+      if (!appMinsOk(F, rw, w)) return goAround(ac, F.rnp ? 'not visual at minimums' : `not visual at ${dn}`);
       if (ac.alt < (F.minAlt || 880)) { S.score.incidents++; S.score.pts -= 40; sys(`${ac.cs} crossed ${dn} below ${F.minText || '920 ft'}.`, true); }
       pilot(ac, `${dn}, visual`); ac.freq = 'TWR';
       if (!ac.ctl) ac.need = 'Visual, needs landing clearance';
@@ -731,7 +758,7 @@ function stepAir(ac, dt){
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && S.acs.some(o => o !== ac && o.onRwy)) return goAround(ac, 'runway occupied');
     if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { S.score.incidents++; S.score.pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
-    if (fin.togo < 1.5 && ac.alt > gpAlt(fin.togo, ac.app) + 400) return goAround(ac, 'unstable, too high');
+    if (fin.togo < 1.5 && ac.alt > gpAlt(fin.togo, apk(ac)) + 400) return goAround(ac, 'unstable, too high');
     if (fin.togo < 0.7) { // short final: settle onto the extended centreline (the 09 SRA joins it on a curve)
       const m = mOf([ac.x, ac.y]), off = offOf([ac.x, ac.y]);
       if (Math.abs(off) < 400) { const k = Math.exp(-dt*0.7); [ac.x, ac.y] = rm(m, off*k); ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, crsOf(rw)), -3*dt, 3*dt)); }

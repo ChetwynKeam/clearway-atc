@@ -17,7 +17,7 @@ function emgInit(level){
 }
 const rwyBlocked = () => S.emg && (S.emg.rwyBlock ? S.emg.rwyBlock.why : S.emg.incursion ? 'a pedestrian on the runway at the crossing' : null);
 const onFinalNear = (ac, nm) => ac.airborne && ac.kind === 'ARR' && ac.mode === 'FINAL' && ac.app && ac.state !== 'MISSED' && finalDist(ac) < nm;
-function finalDist(ac){ const F = FINAL[ac.app]; return F ? onFinal(ac, F).togo : 99; }
+function finalDist(ac){ const F = finOf(ac); return F ? onFinal(ac, F).togo : 99; }
 
 function declare(ac, k, why, extra){
   ac.emerg = { k, why, t: S.t, ack: false };
