@@ -22,7 +22,7 @@ function tileImg(src, z, x, y){
   if (!t) {
     if (TILE.cache.size > 700) { const old = [...TILE.cache.entries()].sort((a, b) => a[1].use - b[1].use).slice(0, 200); for (const [k] of old) TILE.cache.delete(k); }
     const img = new Image(); t = { img, ok: false, bad: false, use: 0 };
-    img.onload = () => { t.ok = true; TILE.ok++; };
+    img.onload = () => { t.ok = true; TILE.ok++; if (cv && cv.id !== 'scope') tilesForPreviews(); };
     img.onerror = () => { t.bad = true; TILE.err++; if (TILE.ok === 0 && TILE.err >= 6) TILE.failed = true; };
     img.src = MAP_SRC[src].url(z, x, y); TILE.cache.set(key, t);
   }
@@ -32,7 +32,7 @@ const peekTile = (src, z, x, y) => TILE.cache.get(`${src}/${z}/${x}/${y}`);
 
 // true when the scope should show imagery instead of the drawn ground
 function mapImagery(){
-  return !TILE.failed && cv && cv.id === 'scope';
+  return !TILE.failed && cv && (cv.id === 'scope' || cv.id === 'heroScope' || !!(cv.dataset && cv.dataset.thumb));
 }
 function drawImagery(){
   const src = MAP_LAYER, S0 = MAP_SRC[src];
@@ -64,3 +64,7 @@ function drawImageryCredit(){
   cx.fillStyle = 'rgba(255,255,255,.72)'; cx.fillRect(W - 12 - w, H - 19, w, 15); cx.fillStyle = '#334'; cx.fillText(txt, W - 7 - w, H - 8);
 }
 // stand numbers only (the photo already shows the painted stand markings)
+
+// website previews are drawn once; redraw them (debounced) as their map tiles arrive
+let tilePrevT = null;
+function tilesForPreviews(){ clearTimeout(tilePrevT); tilePrevT = setTimeout(() => { if (typeof refreshPreviews === 'function') refreshPreviews(); }, 250); }

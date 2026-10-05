@@ -4,9 +4,14 @@ import pathlib
 root = pathlib.Path(__file__).parent
 src = root/'src'
 r = lambda n: (src/n).read_text()
+import re, urllib.parse
+# favicon: the header logo, as an inline SVG data URI
+_logo = re.search(r'<svg class="logo".*?</svg>', r('site.html')).group(0).replace(' class="logo"', '').replace(' aria-hidden="true"', '').replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ', 1).replace('"', "'")
+fav = 'data:image/svg+xml,' + urllib.parse.quote(_logo, safe=" =:/'.,-")
 fonts = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap'
 out = f'''<meta charset="utf-8">
 <title>Clearway ATC Simulator</title>
+<link rel="icon" type="image/svg+xml" href="{fav}">
 <meta name="description" content="Clearway: browser-based air traffic control simulation at real airports, starting with Gibraltar (LXGB).">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="{fonts}">
