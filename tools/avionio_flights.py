@@ -1,5 +1,5 @@
 """Turn avionio.com's live arrivals and departures boards for an airport into flights.json for Real world mode.
-Used for London City, whose own site refuses automated requests. Codeshare rows are skipped; times are local.
+Used for London City and Innsbruck, whose own sites refuse automated requests. Codeshare rows are skipped; times are local.
 Usage: avionio_flights.py arrivals.html departures.html out.json [Europe/London]"""
 import datetime, html, json, re, sys
 from zoneinfo import ZoneInfo

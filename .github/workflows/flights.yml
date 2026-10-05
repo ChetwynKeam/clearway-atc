@@ -1,7 +1,8 @@
 name: Refresh airport flights
 # Saves each airport's live arrivals and departures for the simulator's Real world mode:
 # Gibraltar (gibraltarairport.gi) as flights.json, Madeira (madeiraairport.pt, ANA's flight feed) as lpma/flights.json,
-# London City (avionio.com's LCY boards: londoncityairport.com refuses automated requests) as eglc/flights.json.
+# London City (avionio.com's LCY boards: londoncityairport.com refuses automated requests) as eglc/flights.json,
+# Innsbruck (avionio.com's INN boards: innsbruck-airport.com refuses automated requests) as lowi/flights.json.
 on:
   schedule:
     - cron: '2,17,32,47 * * * *'
@@ -37,9 +38,16 @@ jobs:
           curl -sSL --compressed -m 30 -A "$UA" -o /tmp/lcy_d.html https://www.avionio.com/en/airport/lcy/departures || exit 0
           python3 tools/avionio_flights.py /tmp/lcy_a.html /tmp/lcy_d.html /tmp/eglc.json || exit 0
           python3 -c "import json,sys; d=json.load(open('/tmp/eglc.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p eglc && cp /tmp/eglc.json eglc/flights.json || echo "no London City flights parsed"
+      - name: Fetch Innsbruck's flight information
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"
+          curl -sSL --compressed -m 30 -A "$UA" -o /tmp/inn_a.html https://www.avionio.com/en/airport/inn/arrivals || exit 0
+          curl -sSL --compressed -m 30 -A "$UA" -o /tmp/inn_d.html https://www.avionio.com/en/airport/inn/departures || exit 0
+          python3 tools/avionio_flights.py /tmp/inn_a.html /tmp/inn_d.html /tmp/lowi.json Europe/Vienna || exit 0
+          python3 -c "import json,sys; d=json.load(open('/tmp/lowi.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p lowi && cp /tmp/lowi.json lowi/flights.json || echo "no Innsbruck flights parsed"
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for f in flights.json lpma/flights.json eglc/flights.json; do [ -f "$f" ] && git add "$f"; done; true
+          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json; do [ -f "$f" ] && git add "$f"; done; true
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main

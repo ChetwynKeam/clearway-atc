@@ -20,7 +20,7 @@
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
-        <a class="pill" href="#eglc"><b>New</b>London City is open: the 5.5° ILS, the Thames and live traffic</a>
+        <a class="pill" href="#lowi"><b>New</b>Innsbruck is open: an Alpine valley, the LOC/DME East and föhn</a>
         <h1>Real airports. Real charts. <em>Your frequency.</em></h1>
         <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic is either the real flights in the air right now or a weekly airline timetable, tracked from origin to destination.</p>
         <div class="ctas">
@@ -28,10 +28,11 @@
           <a class="btn" href="#lxgb">Gibraltar · LXGB</a>
           <a class="btn" href="#lpma">Madeira · LPMA</a>
           <a class="btn" href="#eglc">London City · EGLC</a>
+          <a class="btn" href="#lowi">Innsbruck · LOWI</a>
         </div>
       </div>
       <div class="frame">
-        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="ttl" data-only="EGLC">EGLC · Thames Director · 132.700</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
+        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="ttl" data-only="EGLC">EGLC · Thames Director · 132.700</span><span class="ttl" data-only="LOWI">LOWI · Innsbruck Radar · 128.975</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
         <div class="frame-body">
           <canvas id="heroScope" aria-label="Animated radar picture"></canvas>
           <div class="frame-side" aria-hidden="true" data-only="LPMA">
@@ -49,6 +50,14 @@
             <div class="fs-strip dep"><b>CFE8711</b><span>EGLC › EGPH</span><em>HOLD M</em></div>
             <div class="fs-strip arr"><b>DLH926</b><span>EDDF › EGLC</span><em>JACKO</em></div>
             <div class="fs-strip dep need"><b>SWR459</b><span>EGLC › LSZH</span><em>◆ Start-up</em></div>
+          </div>
+          <div class="frame-side" aria-hidden="true" data-only="LOWI">
+            <div class="fs-h"><span>ATIS</span><b>M</b><span class="r">RWY 26 · DEP 08</span></div>
+            <div class="fs-m">LOWI 25006KT 9999 FEW060 17/07 Q1018</div>
+            <div class="fs-strip arr"><b>AUA903</b><span>LOWW › LOWI</span><em>LOC E 26</em></div>
+            <div class="fs-strip dep"><b>EWG7943</b><span>LOWI › EDDH</span><em>TAXI A</em></div>
+            <div class="fs-strip arr"><b>EZY8341</b><span>EGKK › LOWI</span><em>RTT</em></div>
+            <div class="fs-strip dep need"><b>AUA904</b><span>LOWI › LOWW</span><em>◆ Start-up</em></div>
           </div>
           <div class="frame-side" aria-hidden="true" data-only="LXGB">
             <div class="fs-h"><span>ATIS</span><b>K</b><span class="r">RWY 27</span></div>
@@ -98,12 +107,24 @@
 
   <div class="section live-sec"><div class="wrap">
     <div class="academy">
-      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar, Madeira or London City. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar, Madeira, London City or Innsbruck. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
       <ol class="steps3">
         <li><b>Today’s real schedule</b><span>Each airport’s own arrivals and departures, refreshed every 15 minutes, with their real expected times and delays. Each arrival turns round into its real return leg.</span></li>
         <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real inbound comes within range, it becomes your flight to bring in.</span></li>
         <li><b>The weather outside</b><span>The live METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
       </ol>
+    </div>
+  </div></div>
+  <div class="section feat-ap" data-apt="LOWI"><div class="wrap">
+    <div class="fa-grid">
+      <div class="fa-shot"><canvas data-thumb="twr" aria-label="Innsbruck tower display"></canvas><span class="fa-tag">LIVE · LOWI TOWER</span></div>
+      <div>
+        <div class="eyebrow">New airport</div>
+        <h2>Innsbruck, at the bottom of an Alpine valley.</h2>
+        <p>A 2,000 m runway in the Inn valley with peaks over 2,000 m on both sides. Arrivals come down the valley from the east on the offset LOC/DME East, with no glidepath. Departures leave the other way, towards them. Föhn gales over the Brenner bring turbulence and go-arounds, and with an easterly wind the approach ends in a circling to runway 08.</p>
+        <div class="kv"><span>RWY <b>08/26</b></span><span>Length <b>2,000 m</b></span><span>Elev <b>1,907 ft</b></span><span>Approach <b>LOC/DME East</b></span></div>
+        <div class="ctas"><a class="btn primary" href="#sim">Open the position</a><a class="btn" href="#lowi">Airport briefing</a></div>
+      </div>
     </div>
   </div></div>
   <div class="section feat-ap" data-apt="EGLC"><div class="wrap">
@@ -154,13 +175,13 @@
     </div>
   </div></div>
   <div class="section" style="padding-top:0"><div class="wrap"><div class="cta-band">
-    <div><h2>Take the frequency at Gibraltar, Madeira or London City.</h2><p>No download and no account. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
+    <div><h2>Take the frequency at Gibraltar, Madeira, London City or Innsbruck.</h2><p>No download and no account. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
     <div class="ctas"><a class="btn primary" href="#sim">Launch the simulator</a><a class="btn ghost" href="#training">Start with the Academy</a></div>
   </div></div></div>
   <footer class="footer2"><div class="wrap">
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
     <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a></div>
-    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a></div>
+    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span></div>
   </div></footer>
 </section>
@@ -471,6 +492,94 @@
   </div></div>
   <footer class="footer"><div class="wrap"><span>Clearway · London City EGLC</span><span>The airport opened in 1987 on the quay between the Royal Albert and King George V Docks.</span></div></footer>
 </section>
+<section class="page" id="page-lowi" data-page="lowi" hidden>
+  <div class="aphead">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#airports">Airports</a><span>›</span><span>Europe</span><span>›</span><b>Innsbruck</b></nav>
+      <div class="ap-grid">
+        <div>
+          <div class="ap-id"><span class="icao">LOWI</span><span class="iata">INN</span><span class="badge live">Open now</span><span class="badge new">New</span></div>
+          <h1>Innsbruck</h1>
+          <p class="lede">A runway on the floor of the Inn valley, with the Nordkette rising 5,700 ft above it to the north and the Patscherkofel to the south. You work Innsbruck Radar and Tower combined, from the hold at Rattenberg down the valley to the stand, with arrivals and departures meeting head-on in the same corridor.</p>
+          <div class="kv"><span>Innsbruck Radar <b>128.975</b></span><span>Innsbruck Tower <b>120.100</b></span><span>LOC/DME East <b>3.77°</b></span><span>TA <b>10000 ft</b></span><span>AIRAC <b>AIP Austria AD 2 LOWI</b></span></div>
+          <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
+        </div>
+        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="Innsbruck aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+      </div>
+    </div>
+    <div class="wrap"><div class="facts">
+      <div><b>2,000 m</b><span>Runway 08/26 × 45 m, turn pads at both ends</span></div>
+      <div><b>1,907 ft</b><span>Aerodrome elevation, in the Inn valley</span></div>
+      <div><b>3.77°</b><span>LOC/DME East descent, no glidepath, offset 3.5° from the runway</span></div>
+      <div><b>26 / 08</b><span>Land on 26, depart on 08: both ends face the same valley exit</span></div>
+      <div><b>9,500 ft</b><span>Minimum at RTT, where every approach from the east starts</span></div>
+      <div><b>Föhn</b><span>Southerly gales over the Brenner, 30 to 50 kt gusts</span></div>
+    </div></div>
+  </div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">What makes it Innsbruck</div><h2>Built from the Austrian AIP charts.</h2></div>
+      <p>The aerodrome, SIDs, STARs, holds, approaches and minimum vectoring altitudes come from AIP Austria AD 2 LOWI: the aerodrome text, the aerodrome chart, the SID and STAR charts, the surveillance minimum altitude chart, the LOC/DME East, the four RNP approaches and the visual approach chart. The taxiway, apron and building layout follows OpenStreetMap, checked against the aerodrome chart.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 26l8-14 5 7 4-5 9 12z"/><path d="M8 8l16 10"/></svg><h3>The LOC/DME East</h3><p>The main approach has no glidepath. From RTT the crews join the OEV localiser at ADWIG, 21 miles out, and come down the valley at 3.77° against check altitudes at each DME fix: 9,500 ft at D19, 5,900 ft at D10, 4,700 ft at D7. At the D4.5 missed approach point at 3,700 ft they land visually.</p><div class="src">LOC/DME East · AD 2-LOWI-13-1-2-1</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 22h24"/><path d="M6 22c2-8 18-8 20 0"/><path d="M22 14l4 0 0 4"/></svg><h3>Circling to runway 08</h3><p>With an easterly wind there is still no straight-in approach from the west for most crews. They fly the LOC/DME East, break off at D4.2, fly a right-hand circuit south of the field at 3,700 ft and turn in over the city to land on 08.</p><div class="src">Visual approach chart · AD 2-LOWI-14-1</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 22h24"/><path d="M8 22l6-10h10"/><path d="M24 12l-3-3M24 12l-3 3"/></svg><h3>Departures down the valley</h3><p>Every conventional SID heads east down the Inn valley on the OEJ localiser to Rattenberg before turning off towards Vienna, Salzburg, Munich or the Brenner. Off runway 26 they climb west, turn back visually and fly over the field. Minimum climb gradients are up to 10%.</p><div class="src">SIDs · AD 2-LOWI-9-1, 9-2-1, 9-2-2</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M16 4v6M16 22v6M4 16h6M22 16h6"/><circle cx="16" cy="16" r="6"/></svg><h3>RNP AR approaches</h3><p>Four RNP approaches: RNP E 26 for any LPV-equipped crew, the curved RNP Z to 08 and 26 that need special authorisation, and the RNP Visual V to 08 along the valley from the west. In the simulator every crew is treated as authorised.</p><div class="src">RNP · AD 2-LOWI-13-2-1 to 13-3-2</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 20c4-6 8-6 10-2s6 4 10-2"/><path d="M6 12c4-6 8-6 10-2s6 4 10-2"/></svg><h3>Föhn</h3><p>When a southerly gale pours over the Brenner the valley fills with severe turbulence, windshear and downdraughts, worst on final over the city. Some crews go around, and the ATIS warns everyone. One of the Academy exercises is a föhn afternoon.</p><div class="src">AD 2.22 · föhn procedures</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Releases from three neighbours</h3><p>Each departure needs a release on the landline from the unit that takes it next: Wien Radar to the east and west, München Radar to the north, Padova over the Brenner to Italy. Vectored flights must stay above the minimum vectoring altitude, up to 15,500 ft over the mountains.</p><div class="src">AD 2.18 · surveillance minimum altitudes 12-1</div></div>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Two positions, one console</div><h2>From Rattenberg to the main apron.</h2></div>
+      <p>Innsbruck Radar and Tower are combined on one position. Scroll out for the valley, the mountains and the minimum vectoring altitudes, and scroll in for the runway, taxiway Alpha and the stands.</p>
+    </div>
+    <div class="positions">
+      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">INNSBRUCK RADAR · 128.975</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards RTT. Descend them to 9,500 ft, hold them when the weather is below minima, and clear the approach. Keep departures clear of the arrivals coming the other way, then hand them to Wien, München or Padova.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">INNSBRUCK TOWER · 120.100</div><h3>Tower</h3><p>Clear arrivals to land on 26, get each departure's release, and backtrack departures to the turn pad for a full-length take-off on 08, between arrivals.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">INNSBRUCK TOWER · 120.100</div><h3>Ground</h3><p>Approve start-up and push onto taxiway Alpha, then taxi departures to holding point Alpha for runway 08 or Bravo for 26. Arrivals vacate at Alpha or Bravo and taxi to the main apron.</p></div></div>
+    </div>
+  </div></div>
+
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now at Innsbruck</div><h2>Work today’s real traffic at LOWI.</h2><p>Pick Live now in the session setup and the position opens at the current time with Innsbruck’s real flights, live aircraft positions over the Alps and the current METAR. The timetable sessions are still there when you want to choose your own day and hour.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>Innsbruck’s arrivals and departures for the next few hours, from avionio’s public INN boards, refreshed every 15 minutes with their expected times.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Innsbruck inbound comes within range, it becomes your flight.</span></li>
+        <li><b>The weather outside</b><span>The live LOWI METAR sets the landing and departure runways, the ATIS and the föhn warning.</span></li>
+      </ol>
+    </div>
+  </div></div>
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
+      <p>Each scenario is a METAR the simulation reads for wind, visibility, cloud and QNH. You can also switch on Live METAR to use the current LOWI report, or paste one yourself.</p>
+    </div>
+    <div class="scen" data-scen></div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="sources">
+      <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
+        <p class="note">Procedures, fixes, holds, frequencies, runway data and minimum vectoring altitudes come from AIP Austria AD 2 LOWI. The AIP publishes no transition altitude for Innsbruck, so the simulation uses 10,000 ft. It also has no stand numbers, so stands 1 to 10 on the main apron and 51 to 53 on the hangar apron are representative. The KPT beacon position is approximate, and the Wien, München and Padova frequencies are representative. The airline timetable is a representative winter and summer week. In Live now sessions the flights come from avionio’s public Innsbruck arrivals and departures boards (the airport’s own site refuses automated requests) and aircraft positions from the adsb.lol and adsb.fi networks; once a flight is yours it follows your instructions, not its real track. The aerodrome layout follows OpenStreetMap, and the terrain shading follows the published minimum altitudes. This is a training game and is not for real-world navigation. It is not affiliated with Austro Control, Innsbruck Airport or any airline.</p></div>
+      <ul>
+        <li><b>AD 2 LOWI</b>Aerodrome text: runway and declared distances, föhn procedures, noise abatement, units and frequencies.</li>
+        <li><b>AD 2-LOWI-1-1, 4-1</b>Aerodrome chart and obstacles: runway 08/26, taxiways A, B, L, Y and Z, the turn pads.</li>
+        <li><b>AD 2-LOWI-9-1 to 9-2-2</b>SIDs off runways 08 and 26, and the RNAV MOGTI departure to the west.</li>
+        <li><b>AD 2-LOWI-11-1, 12-1</b>RNAV STARs to RTT and ELMEM, the holds, and the surveillance minimum altitudes.</li>
+        <li><b>AD 2-LOWI-13-1-2-1 to 13-3-2</b>LOC/DME East, RNP E 26, RNP Z 08 and 26 (AR) and RNP Visual V 08.</li>
+        <li><b>AD 2-LOWI-14-1, 14-2</b>Visual approach chart: the circling to runway 08.</li>
+        <li><b>OpenStreetMap</b>Taxiway, apron and building geometry, the Inn and the street map under the scope.</li>
+        <li><b>Live now</b>Innsbruck flights from avionio.com; live aircraft positions from adsb.lol and adsb.fi.</li>
+      </ul>
+    </div>
+  </div></div>
+  <footer class="footer"><div class="wrap"><span>Clearway · Innsbruck LOWI</span><span>Innsbruck hosted the Winter Olympics in 1964 and 1976.</span></div></footer>
+</section>
 
 <!-- ═════════════════════ SIMULATOR ═════════════════════ -->
 <section class="page" id="page-sim" data-page="sim" hidden>
@@ -515,6 +624,12 @@
         <div class="sub">EGLC · RWY 09/27 1508 × 30 m · ELEV 20 ft · ILS 5.5° · LCY NDB 322 · TA 6000 · Thames 132.700 · Tower 118.080</div>
         <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real London City flights from the current time with the live METAR. Bring arrivals off the JACKO and GODLU holds along their transitions to the 5.5° ILS, and work the departures from the stands to their SIDs, a release from London Control and the hand-off.</p>
         </div>
+        <div data-only="LOWI">
+        <div class="eyebrow">Position briefing</div>
+        <h1>Innsbruck Radar &amp; Tower</h1>
+        <div class="sub">LOWI · RWY 08/26 2000 × 45 m · ELEV 1907 ft · LOC/DME East 3.77° · RTT NDB 303 · TA 10000 · Radar 128.975 · Tower 120.100</div>
+        <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Innsbruck flights from the current time with the live METAR. Bring arrivals from RTT down the valley on the LOC/DME East, or round the circling to 08, and work the departures from the apron down the same valley against them, with a release from Wien, München or Padova.</p>
+        </div>
         <div data-only="LPMA">
         <div class="eyebrow">Position briefing</div>
         <h1>Madeira Approach &amp; Tower</h1>
@@ -558,13 +673,18 @@
           <li>Runway 27 departures taxi along T to Mike, runway 09 departures to Alpha: both are full length. Arrivals vacate at the first exit ahead.</li>
           <li>Type commands in the bar under the scope, for example <code>KLC983 A50 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
+        <ul data-only="LOWI">
+          <li>Arrivals land on 26 and departures leave from 08, towards them: keep each departure under or over the arrivals coming up the valley until they have passed.</li>
+          <li>Runway 08 departures taxi to Alpha and backtrack to the west turn pad; runway 26 departures use Bravo. Every one needs a release from Wien, München or Padova.</li>
+          <li>Type commands in the bar under the scope, for example <code>KLM1993 A95 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
+        </ul>
         <ul data-only="LPMA">
           <li>Check the anemometers in the ATIS panel. When the wind is out of limits, hold arrivals at PILIM and expect diversions to Porto Santo.</li>
           <li>Runway 05 departures taxi to Charlie and backtrack to the 05 turn pad; runway 23 departures use Bravo. Every one needs a release from Lisboa.</li>
           <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>
@@ -614,7 +734,7 @@
     <section id="t-console" data-track="core"><h2><span class="n">03</span>Reading the console</h2>
       <h3>The scope</h3>
       <p>The scope is one map you scroll or pinch to zoom. Zoomed out it shows the airspace round the airport’s radar reference (the GBR TACAN at Gibraltar, the FUN DVOR at Madeira) with range rings every 5 NM, the bearing scale, restricted airspace and high ground, the arrival routes and holds, and the final approach paths. Zoom in and the runway, finals and the aerodrome appear to scale over the street map. Zoom right out to follow flights across Europe and Africa. Drag to pan.</p>
-      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span><span data-apt="EGLC">JACKO</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span><span data-apt="EGLC">The Canary Wharf towers, up to 771 ft: below 1,200 ft over them is an obstacle incident.</span></figcaption></figure>
+      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span><span data-apt="EGLC">JACKO</span><span data-apt="LOWI">RTT</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span><span data-apt="EGLC">The Canary Wharf towers, up to 771 ft: below 1,200 ft over them is an obstacle incident.</span><span data-apt="LOWI">The mountains round the valley, shaded by minimum vectoring altitude: up to 15,500 ft over the Alps.</span></figcaption></figure>
       <div class="rt"><div><span class="w">Line 1</span><span class="p">EZY8901 ◆ — callsign, ◆ means the crew is waiting on you</span></div><div><span class="w">Line 2</span><span class="p">045↓030 21 — FL/altitude in hundreds, trend, cleared level (or the approach), groundspeed ÷ 10</span></div><div><span class="w">Line 3</span><span class="p">A20N R27 T — type, runway of the approach (or destination), T when on Tower</span></div></div>
       <p>Your traffic is drawn as plane icons in the shape of the real type (airliner, wide-body, business jet, turboprop or military) pointing the way the nose points. Arrivals are amber, departures blue and the selected flight is outlined. Once you transfer a departure to the next unit it turns purple, its strip greys out and you can no longer select it or give it instructions. Anything in conflict, and any aircraft in an emergency, turns red. Grey icons with a short tag are real aircraft from the live feed that are not yours. Beyond radar cover your flights become yellow icons, and inbounds about to call appear as pending tracks. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
       <h3>The side panel</h3>
@@ -1069,6 +1189,97 @@
     </section>
   </article>
 </div>
-<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span></div></footer>
+    <!-- ── Innsbruck endorsement ── -->
+    <section id="i-position" data-apt="LOWI" data-track="ap"><h2><span class="n">01</span>Your position at Innsbruck</h2>
+      <p>You are <b>Innsbruck Radar (128.975)</b> and <b>Innsbruck Tower (120.100)</b> combined, with ground movement on the Tower frequency. Arrivals call Radar on their STAR, heading for <b>RTT</b>, the Rattenberg beacon 25 NM down the valley to the east. You hand them to the Tower once they are on the approach. Departures start with the Tower, go to Radar once airborne, and you transfer them to <b>Wien Radar</b>, <b>München Radar</b> or <b>Padova Control</b> when they are ready. The ATIS is <b>Innsbruck Information</b> on 126.030.</p>
+      <p>The AIP publishes no transition altitude for Innsbruck, so the simulator uses <b>10,000 ft</b>. Most of the work happens below it, inside a valley about two miles wide with mountains of 7,000 to 9,000 ft on both sides.</p>
+      <div class="callout"><div class="lbl">Two runways in one</div><p>Innsbruck normally lands on <b>26</b> and departs on <b>08</b>. Both procedures use the only way in and out with low ground, the valley to the east, so arrivals and departures meet head-on. The ATIS panel shows the landing and departure runways separately, and the <b>Dep</b> switch beside the runway selector changes the departure runway on its own.</p></div>
+    </section>
+
+    <section id="i-aerodrome" data-apt="LOWI" data-track="ap"><h2><span class="n">02</span>The aerodrome</h2>
+      <figure class="fig"><canvas data-fig="aerodrome" aria-label="Innsbruck aerodrome diagram with taxiways and stands"></canvas><figcaption>The aerodrome as drawn in the simulator: runway 08/26 on the valley floor with turn pads at both ends, taxiway Alpha along the main apron and the terminal to the south, Lima to the hangar apron, and Y and Z to the general aviation area north of the runway, from OpenStreetMap and checked against the AIP aerodrome chart.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Item</th><th>Value</th><th>Source</th></tr>
+        <tr><td>Runway</td><td>08/26, 2,000 m × 45 m, asphalt. Threshold 08 displaced 60 m. Turn pads south of both ends</td><td class="mono">AD 2.12</td></tr>
+        <tr><td>Elevation</td><td>1,907 ft. THR 08 at 1,907 ft, THR 26 at 1,894 ft</td><td class="mono">AD 2.12</td></tr>
+        <tr><td>Taxiways</td><td>A from the west part of the runway to the main apron, B near the 26 end, L to the hangar apron. Y and Z serve the north side</td><td class="mono">1-1</td></tr>
+        <tr><td>Stands</td><td>Main apron 1–10 and hangar apron 51–53. The AIP publishes no stand numbers: these are representative</td><td class="mono">OSM</td></tr>
+      </table></div>
+      <h3>Where departures go</h3>
+      <p>Runway 08 departures taxi to <b>Alpha</b> and backtrack to the west turn pad for the full length. Runway 26 departures taxi to <b>Bravo</b> and backtrack to the east pad. Arrivals on 26 roll out and turn off at Alpha; arrivals on 08 take Bravo.</p>
+    </section>
+
+    <section id="i-ground" data-apt="LOWI" data-track="ap"><h2><span class="n">03</span>Ground and departures</h2>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Holding point</th><th>Push</th><th>Command</th></tr>
+        <tr><td>08</td><td>Alpha, backtrack to the west pad</td><td>Facing west</td><td class="mono">PUSH · TAXI A · LU</td></tr>
+        <tr><td>26</td><td>Bravo, backtrack to the east pad</td><td>Facing east</td><td class="mono">PUSH E · TAXI B · LU</td></tr>
+      </table></div>
+      <h3>SIDs</h3>
+      <p>The conventional SIDs off runway 08 (the <b>J</b> routes) climb on runway track to join the <b>OEJ localiser</b> east down the valley, past Rum and on to <b>RTT</b>, before turning towards <b>OBEDI</b> (Vienna and the east), <b>UNKEN</b> (Salzburg, Berlin, Hamburg), <b>KOGOL</b> (Munich and the north) or back over the field to <b>BRENO</b> (Italy) and <b>ADILO</b> (the west). Off runway 26 the <b>H</b> routes climb west, turn back visually at 3,200 ft and follow the same valley east. The RNAV <b>MOGTI 3H</b> climbs west up the valley instead. Climb gradients are steep: 6.5 to 11%.</p>
+      <div class="rt">
+        <div><span class="w">TWR</span><span class="a">Austrian niner zero four, cleared to Vienna via OBEDI three Juliett departure, climb altitude 10,000 feet, squawk 4610, start-up and push back approved, facing west, QNH 1018</span></div>
+        <div><span class="w">AUA904</span><span class="p">Cleared Vienna, OBEDI three Juliett, 10,000 feet, squawk 4610, start and push approved facing west, QNH 1018, Austrian niner zero four</span></div>
+      </div>
+      <h3>Releases</h3>
+      <p>Every departure needs a <b>release</b> on the landline before take-off, from the unit that takes it next: <b>Wien Radar</b> for the east and the west, <b>München Radar</b> for the north and north-east, <b>Padova Control</b> over the Brenner. Press <b>Request release</b> or type <code>REL</code> once it is taxiing. A release can come with a not-before time and is valid for about ten minutes; <code>CTO</code> is refused without one.</p>
+    </section>
+
+    <section id="i-arrivals" data-apt="LOWI" data-track="ap"><h2><span class="n">04</span>Arrivals: LOC/DME East, circling and RNP</h2>
+      <h3>STARs and the RTT hold</h3>
+      <p>Every RNAV STAR from the east, north and south ends at <b>RTT</b>, where the minimum is <b>9,500 ft</b> and the hold is right-hand. Arrivals from the west for runway 08 RNP approaches go to <b>ELMEM</b> at 13,000 ft instead. Descend inbounds to 9,500 ft with <code>A95</code> and clear the approach with <code>APP</code>.</p>
+      <h3>The LOC/DME East to runway 26</h3>
+      <p>There is no ILS. From RTT the crew joins the <b>OEV localiser</b> at ADWIG, 21 NM out, and descends at <b>3.77°</b> (400 ft per mile) against check altitudes at each DME fix. The localiser is offset <b>3.5°</b> from the runway, so the last few miles are flown visually.</p>
+      <div class="tbl"><table>
+        <tr><th>DME OEV</th><th>D19 (FAF)</th><th>D16</th><th>D14</th><th>D10</th><th>D7</th><th>D4.5 (MAPt)</th></tr>
+        <tr><td>Altitude</td><td>9,500</td><td>8,300</td><td>7,500</td><td>5,900</td><td>4,700</td><td>3,700</td></tr>
+      </table></div>
+      <p>The approach needs <b>5 km</b> visibility and an <b>1,800 ft</b> ceiling. Missed approach: straight ahead to D1.0 OEV, left turn back east onto 060° to Rum, out along the OEJ localiser, and at D14 left to RTT at 9,500 ft.</p>
+      <h3>Circling to runway 08</h3>
+      <p>When the wind favours 08, arrivals still fly the LOC/DME East, break off at <b>D4.2</b>, turn left onto 230°, fly a downwind on 264° south of the city at no less than <b>3,700 ft</b>, and turn in over the western suburbs onto a short final for 08. Clear it with <code>APP 08</code>.</p>
+      <h3>RNP approaches</h3>
+      <div class="tbl"><table>
+        <tr><th>Approach</th><th>Runway</th><th>From</th><th>Command</th></tr>
+        <tr><td>RNP E (LPV)</td><td>26</td><td>WI610, straight in</td><td class="mono">APP 26 RNPE</td></tr>
+        <tr><td>RNP Z (AR)</td><td>26</td><td>RTT, curved down the valley</td><td class="mono">APP 26 RNPZ</td></tr>
+        <tr><td>RNP Z (AR)</td><td>08</td><td>ELMEM, curved arcs from the west</td><td class="mono">APP 08 RNPZ</td></tr>
+        <tr><td>RNP Visual V</td><td>08</td><td>ELMEM, visual from WI814</td><td class="mono">APP 08 RNPV</td></tr>
+      </table></div>
+      <p>The AR approaches need special authorisation in the real world; in the simulator every crew is treated as authorised. When the weather is below the LOC/DME East minima but good enough for an RNP approach, the crew asks for one.</p>
+    </section>
+
+    <section id="i-foehn" data-apt="LOWI" data-track="ap"><h2><span class="n">05</span>Föhn</h2>
+      <p>Föhn is a warm, dry southerly gale that pours over the Alps and down the Wipptal into Innsbruck. The AIP describes a surface wind from <b>100° to 180°</b>, mean 15 to 25 kt with gusts of <b>30 to 50 kt</b>, and severe turbulence, horizontal windshear and downdraughts at all levels, worst over the city below 5,000 ft and on final for 08.</p>
+      <p>When the METAR shows föhn the ATIS panel says so. Expect go-arounds on short final, windshear reports (pass them on with <code>WS</code>), and crews refusing the approach when the gusts are too strong. A go-around flies the missed approach back to RTT: clear it again with <code>APP</code>. Land three arrivals in föhn in one session for the <b>Föhn tamer</b> badge.</p>
+      <div class="callout"><div class="lbl">Opposite direction</div><p>With arrivals coming up the valley and departures going down it, keep the two apart vertically: stop the departure under the arrival (8,000 ft under a hold at 11,000 ft) until they have passed, then climb it.</p></div>
+    </section>
+
+    <section id="i-airspace" data-apt="LOWI" data-track="ap"><h2><span class="n">06</span>Airspace and terrain</h2>
+      <p>The Innsbruck CTR follows the Inn valley from Telfs to beyond Schwaz. Around it the radar map shows the <b>minimum vectoring altitudes</b> from the AIP surveillance chart: 9,000 to 10,000 ft over the valley to the east, 10,600 to 11,500 ft round the city and up to 15,500 ft over the Ötztal Alps. They apply to aircraft you vector. Aircraft on a published STAR, SID or approach fly much lower down the valley, and that is fine.</p>
+      <p>An aircraft you vector below the minimum vectoring altitude is a terrain incident, and more than 2,500 ft below it a serious one. Use direct-to fixes and the published procedures rather than headings wherever you can.</p>
+    </section>
+
+    <section id="i-exercises" data-apt="LOWI" data-track="ap"><h2><span class="n">07</span>Guided exercises</h2>
+      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. Complete all three for the <b>Valley endorsement</b> badge.</p>
+      <div class="exgrid">
+        <div class="ex"><div class="nm">1 · Down the valley</div><p>An Austrian Embraer 195 on stand 1 for Vienna. Push with its OBEDI 3J SID, taxi to Alpha, get Wien's release, backtrack, take off on 08 and hand it to Radar and then Wien.</p><button class="btn primary" data-ex="idep">Start exercise</button></div>
+        <div class="ex"><div class="nm">2 · The LOC/DME East</div><p>A KLM Embraer 195 from Amsterdam via TULSI and RTT. Clear the LOC/DME East, watch it come down the valley past the DME checks, land it on 26 and taxi it in.</p><button class="btn primary" data-ex="iarr">Start exercise</button></div>
+        <div class="ex"><div class="nm">3 · Föhn</div><p>A southerly gale over the Brenner. Land an easyJet A319 through the turbulence, get a Eurowings departure away between arrivals, and keep it under an Austrian holding at RTT until they have passed.</p><button class="btn primary" data-ex="ifoehn">Start exercise</button></div>
+      </div>
+    </section>
+
+    <section id="i-limits" data-apt="LOWI" data-track="ap"><h2><span class="n">08</span>What is simplified at Innsbruck</h2>
+      <ul>
+        <li>Innsbruck Radar and Tower are one position, and ground movement is worked on the Tower frequency.</li>
+        <li>The AIP publishes no transition altitude; the simulator uses 10,000 ft.</li>
+        <li>Wien, München and Padova frequencies are representative, and the release times are modelled.</li>
+        <li>Every crew is treated as authorised for the RNP AR approaches.</li>
+        <li>Stand numbers are representative, and the north side (taxiways Y and Z) is drawn but not used by traffic.</li>
+        <li>The terrain is shown as the published minimum vectoring altitudes rather than a full terrain model.</li>
+        <li>The timetable is representative. Live now uses today's real flights and positions.</li>
+      </ul>
+    </section>
+
+<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span><span data-apt="LOWI">Innsbruck endorsement based on AIP Austria AD 2 LOWI. Not for real-world navigation.</span></div></footer>
 </section>
 </main>

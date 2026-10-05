@@ -1,9 +1,9 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'sim', 'training', 'career'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'sim', 'training', 'career'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 const IS_HOST = APT.icao === SITE_HOST, EMBED = location.hash.startsWith('#embed');
 const SIM_HASH = /^(sim|ex\/|wx\/|live$)/;
@@ -51,13 +51,13 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// LXGB, LPMA and EGLC are built. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB, LPMA, EGLC and LOWI are built. The rest are the roadmap: real airports and runway designators, no invented performance data.
 // ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
   { icao:'LPMA', ll:[32.698, -16.774], iata:'FNC', name:'Madeira', ctry:'Portugal', region:'Europe', rwys:['05/23'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'A runway extended over the sea on columns, strict wind limits, and a visual turn onto 05 past the cliffs.' },
   { icao:'EGLC', ll:[51.505, 0.055], iata:'LCY', name:'London City', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'A 5.5° glidepath past the Canary Wharf towers, RNAV-only SIDs under the London TMA, and a short runway between two docks.' },
-  { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'dev', pos:['APP','TWR'], diff:5, blurb:'Approaches down the Inn valley with terrain on every side and foehn winds off the Alps.' },
+  { icao:'LOWI', ll:[47.26, 11.344], iata:'INN', name:'Innsbruck', ctry:'Austria', region:'Europe', rwys:['08/26'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'An Alpine valley: the offset LOC/DME East, circling to 08, RNP AR approaches, arrivals and departures head-on, and föhn off the Brenner.' },
   { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'dev', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
   { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'plan', pos:['APP','TWR','GND'], diff:5, blurb:'Four holding stacks, runway alternation and a heavy wake mix on two parallel runways.' },
@@ -482,6 +482,14 @@ const SCEN_TEXT = { LPMA: {
   fog: 'Thames fog below the ILS minima. Hold arrivals at JACKO and GODLU and plan diversions to Southend while departures wait for the visibility.',
   storm: 'A gusty south-westerly gale across the docks. Expect turbulence on short final and some go-arounds.',
   calm: 'High pressure, light and variable winds and haze. A quiet day to learn the flow.'
+}, LOWI: {
+  west: 'The usual light westerly. Arrivals land 26 off the LOC/DME East while departures leave on 08 down the valley towards them.',
+  calm: 'A still autumn morning with haze in the valley. Land 26, depart 08, and sequence them head-on through the Inn valley.',
+  foehn: 'A föhn gale off the Brenner. Severe turbulence and downdraughts on final: expect go-arounds and diversions to Munich.',
+  east: 'An easterly. Arrivals fly the LOC/DME East and circle south of the city to land on 08, or the RNP approaches from the west.',
+  stratus: 'Low stratus fills the valley, below the LOC/DME East minima and the RNP ones. Hold at RTT and plan the diversions.',
+  snow: 'Winter snow showers and a 2,000 ft ceiling, just above the LOC/DME East minima. Watch every approach.',
+  storm: 'Afternoon thunderstorms over the Nordkette, gusty and wet. Some arrivals will go around.'
 }, LXGB: {
   fair: 'A gentle westerly and good visibility. Learn the flow: road closures, backtracks and the SRA to runway 27.',
   levanter: 'The easterly gale and its banner cloud. Runway 09, approaches through RIPRA, and turbulence curling off the Rock.',
@@ -551,7 +559,8 @@ function buildToc(){
 const ENDORSE = {
   LXGB: { name: 'Gibraltar', ex: ['dep', 'arr', 'lev'], badge: 'graduate', p: 'The road across the runway, the SRA, the levanter and releases from Sevilla and Casablanca.' },
   LPMA: { name: 'Madeira', ex: ['mdep', 'marr', 'mwind'], badge: 'island', p: 'Wind limits at two anemometers, the Rosário circuit to runway 05, SIDs out to sea and Lisboa releases.' },
-  EGLC: { name: 'London City', ex: ['cdep', 'carr', 'ceast'], badge: 'docklands', p: 'The 5.5° ILS past Canary Wharf, RNAV SIDs held at 3,000 ft under the London TMA, and arrivals from the JACKO and GODLU holds.' }
+  EGLC: { name: 'London City', ex: ['cdep', 'carr', 'ceast'], badge: 'docklands', p: 'The 5.5° ILS past Canary Wharf, RNAV SIDs held at 3,000 ft under the London TMA, and arrivals from the JACKO and GODLU holds.' },
+  LOWI: { name: 'Innsbruck', ex: ['idep', 'iarr', 'ifoehn'], badge: 'valley', p: 'The offset LOC/DME East from RTT, circling to 08, departures down the valley against the arrivals, minimum vectoring altitudes and föhn.' }
 };
 function renderHub(){
   const h = $('acHub'); if (!h) return;
@@ -580,7 +589,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });
@@ -736,7 +745,7 @@ function renderCoach(){
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
   if (done) careerExercise(coach.ex);
   el.innerHTML = done
-    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
+    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises', LOWI: 'i-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;
   el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
     const c = b.dataset.c;

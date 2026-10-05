@@ -208,7 +208,7 @@ function applyLiveMetar(raw){
   $('wxPaste').value = raw;
   if (!S.running) return;
   S.wx = parseMetar(raw);
-  const cHi = windComp(S.wx, CRS_HI), cLo = windComp(S.wx, CRS_LO), fav = cLo.head > cHi.head + 2 ? RW_LO : RW_HI;
+  const cHi = windComp(S.wx, CRS_HI), cLo = windComp(S.wx, CRS_LO), fav = APT.rwyFor ? APT.rwyFor(S.wx).land : cLo.head > cHi.head + 2 ? RW_LO : RW_HI;
   nextAtis(); sys(`Live METAR: ${S.wx.raw}. Information ${phonetic(S.atis)} is now current.`);
   if (fav !== S.rwy) sys(`Wind now favours runway ${fav}.`);
   if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong + (APT.rnp && APT.rnpMinsOk(S.wx, S.rwy) ? ' The RNP approach is still available.' : ''), true);
