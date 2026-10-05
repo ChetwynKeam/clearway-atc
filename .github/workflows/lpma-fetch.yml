@@ -17,7 +17,7 @@ jobs:
           mkdir out && cd out
           UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
           BUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          ovp(){ for H in https://overpass-api.de https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do curl -sSf -m 200 -A "$UA" --data-urlencode "data=$1" "$H/api/interpreter" -o "$2" && return 0; sleep 10; done; return 1; }
+          ovp(){ for R in 1 2 3; do for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do curl -sSf -m 240 -A "$UA" --data-urlencode "data=$1" "$H/api/interpreter" -o "$2" && { echo "$2 from $H"; return 0; }; sleep 15; done; done; echo "FAILED $2" >> failures.txt; return 0; }
           # aerodrome: runway, taxiways, aprons, stands, buildings, roads and fence around the field
           ovp '[out:json][timeout:120];(way[aeroway](32.670,-16.800,32.712,-16.740);node[aeroway](32.670,-16.800,32.712,-16.740);relation[aeroway](32.670,-16.800,32.712,-16.740);way[building](32.680,-16.790,32.705,-16.755);way[highway](32.672,-16.800,32.712,-16.745);way[barrier](32.680,-16.790,32.705,-16.755);way[man_made](32.675,-16.795,32.708,-16.750););out geom;' osm_aerodrome.json
           # Madeira, Porto Santo, Desertas, Selvagens coastline; peaks and spot heights; towns; navaids
