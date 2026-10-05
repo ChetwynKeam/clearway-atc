@@ -23,7 +23,7 @@ const FONT_L = '"Inter Tight", "Inter", system-ui, sans-serif', FONT_D = '"JetBr
 const PAL = {
   light: {
     sea: '#cfe2ee', land: '#f3f0e7', landHi: '#ebe6d8', coast: '#86a3b6', border: 'rgba(90,70,110,.55)',
-    ring: 'rgba(11,42,74,.13)', ringTxt: 'rgba(11,42,74,.5)', arr: '#b75f00', dep: '#1452d9', sel: '#0c1b2e', conf: '#d62d2d',
+    ring: 'rgba(11,42,74,.13)', ringTxt: 'rgba(11,42,74,.5)', arr: '#b75f00', dep: '#1452d9', sel: '#0c1b2e', conf: '#d62d2d', off: '#8a4fc4',
     ground: '#e4e9d6', grass: '#dde5cc', asphalt: '#9ba4ad', rwy: '#5d656e', concrete: '#c4cad1', apronLine: '#8a949e',
     bld: '#d9dde3', bldEdge: '#8b96a3', road: '#d3c9b8', paint: 'rgba(255,255,255,.95)', yellow: '#f5c400', closed: '#b9c0c7',
     acArr: '#fff1d6', acDep: '#ffffff', pre: 'rgba(80,92,108,.7)', tagBg: 'rgba(255,255,255,.9)', tagEdge: 'rgba(12,27,46,.18)',
@@ -34,7 +34,7 @@ const PAL = {
   },
   dark: {
     sea: '#04121a', land: '#0d2427', landHi: '#13302f', coast: '#3b7a7e', border: 'rgba(170,200,200,.45)',
-    ring: 'rgba(125,255,176,.09)', ringTxt: 'rgba(125,255,176,.35)', arr: '#ffc164', dep: '#7cc7ff', sel: '#ffffff', conf: '#ff5a5a',
+    ring: 'rgba(125,255,176,.09)', ringTxt: 'rgba(125,255,176,.35)', arr: '#ffc164', dep: '#7cc7ff', sel: '#ffffff', conf: '#ff5a5a', off: '#c39bff',
     ground: '#162523', grass: '#14231f', asphalt: '#262e31', rwy: '#20272a', concrete: '#353f42', apronLine: '#4b585c',
     bld: '#0b1214', bldEdge: '#3c4a4c', road: '#2e2a26', paint: 'rgba(236,240,232,.86)', yellow: '#e7c23a', closed: '#1f2628',
     acArr: '#e9d7b0', acDep: '#d6e8f5', pre: 'rgba(160,190,190,.55)', tagBg: 'rgba(4,14,18,.72)', tagEdge: 'rgba(0,0,0,0)',
@@ -349,7 +349,7 @@ function drawAc(ac){
   const sc = V.scale, X = sx(ac.x), Y = sy(ac.y);
   if (X < -200 || Y < -200 || X > W+200 || Y > H+200) return;
   const sel = S.sel === ac, conf = S.conflictSet.has(ac.cs);
-  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : conf || (ac.emerg && !ac.emerg.done) ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
+  const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : outOfCtl(ac) ? (conf ? C.conf : C.off) : conf || (ac.emerg && !ac.emerg.done) ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
   cx.fillStyle = col; cx.globalAlpha = 0.45;
   if (!ac.ground && sc < 400) for (const [hx,hy] of ac.hist) cx.fillRect(sx(hx)-1, sy(hy)-1, 2, 2);
   cx.globalAlpha = 1;
@@ -377,7 +377,7 @@ function drawAc(ac){
     const a = String(Math.max(0, Math.round(ac.alt/100))).padStart(3,'0'), tr = ac.vs > 300 ? '↑' : ac.vs < -300 ? '↓' : ' ';
     const cl = ac.mode === 'FINAL' ? (ac.appId ? 'RNP' : APT.appShort) : ac.tgtAlt != null ? String(Math.round(ac.tgtAlt/100)).padStart(3,'0') : '';
     l2 = `${a}${tr}${cl} ${String(Math.round(ac.gs/10)).padStart(2,'0')}`;
-    l3 = ac.state === 'PRE' ? `${ac.t} ${ac.o} PENDING` : `${ac.t} ${ac.kind === 'ARR' ? (ac.app ? 'R'+ac.app : ac.o) : ac.d}${ac.freq === 'TWR' ? ' T' : ''}`;
+    l3 = ac.state === 'PRE' ? `${ac.t} ${ac.o} PENDING` : `${ac.t} ${ac.kind === 'ARR' ? (ac.app ? 'R'+ac.app : ac.o) : ac.d}${outOfCtl(ac) ? ' XFR' : ac.freq === 'TWR' ? ' T' : ''}`;
   }
   const w = Math.max(cx.measureText(l1).width, cx.measureText(l2).width, l3 ? cx.measureText(l3).width : 0);
   { cx.fillStyle = C.tagBg; cx.fillRect(lx-3, ly-11, w+6, (l3 ? 3 : 2)*13 + 3); cx.strokeStyle = C.tagEdge; cx.lineWidth = 1; cx.strokeRect(lx-3.5, ly-11.5, w+7, (l3 ? 3 : 2)*13 + 4); }
@@ -391,7 +391,7 @@ function stateLabel(ac){
 // ═════════════════════════ console UI ═════════════════════════
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
-function select(ac){ S.sel = ac; renderSel(); renderStrips(true); }
+function select(ac){ if (ac && outOfCtl(ac)) return; S.sel = ac; renderSel(); renderStrips(true); }
 // ── phone and tablet: one panel at a time under the scope, chosen from a tab bar ──
 const phoneMQ = matchMedia('(max-width: 900px)');
 function setMTab(t){
@@ -460,6 +460,7 @@ function relText(ac){
   return `<b>${esc(sid)}</b> · ${st}`;
 }
 function renderSel(){
+  if (S.sel && outOfCtl(S.sel)) S.sel = null;   // transferred to the next unit: no longer yours to select
   const ac = S.sel, el = $('sel');
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → ${APT.icao}` : `${APT.icao} → ${ac.d}`;
@@ -583,11 +584,11 @@ document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains
 let stripSig = '';
 function renderStrips(force){
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
-  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '')).join(',');
+  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '')).join(',');
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
   for (const ac of list) {
-    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}`;
+    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}`;
     d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
     d.querySelector('.cs').textContent = ac.cs;
     d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
@@ -596,7 +597,9 @@ function renderStrips(force){
     const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
     d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
     if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = document.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
-    d.onclick = () => tapSelect(ac); el.appendChild(d);
+    if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
+    else d.onclick = () => tapSelect(ac);
+    el.appendChild(d);
   }
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
@@ -668,13 +671,13 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac)) continue; const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
 
 $('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; if (v.trim()) command(v); $('cmd').value = ''; };
-$('cmd').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const L = S.acs; if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
+$('cmd').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const L = S.acs.filter(a => !outOfCtl(a)); if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
 document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim') return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === ' ') { e.preventDefault(); $('tgPause').click(); } if (e.key === '/') { e.preventDefault(); $('cmd').focus(); } });
 
 const wxSel = $('wxPreset'); { const o = document.createElement('option'); o.value = 'live'; o.textContent = `Live weather · current ${APT.icao} METAR`; wxSel.appendChild(o); }

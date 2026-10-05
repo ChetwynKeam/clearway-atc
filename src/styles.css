@@ -149,6 +149,9 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 700; letter-spacing
 .strip .stt { font-family: var(--font-label); font-weight: 600; font-size: 13px; letter-spacing: .03em; }
 .app button.strip.sel { outline: 2px solid var(--phos); outline-offset: 1px; }
 .app button.strip.need .stt { color: #a14a00; }
+.app button.strip.off { opacity: .62; cursor: default; }
+.strip.off .bar { background: #8a4fc4; }
+.app button.strip.off .stt { color: #6a3fa0; }
 .app button.strip.need { box-shadow: inset 0 0 0 2px rgba(255,140,0,.6); }
 .bottom { grid-column: 1; background: var(--panel); border-top: 1px solid var(--line); display: grid; grid-template-rows: minmax(0,1fr) auto; min-height: 0; }
 #log { overflow-y: auto; padding: 6px 12px; font-size: 12.5px; min-height: 0; }

@@ -330,6 +330,8 @@ function startLineUp(ac){
 }
 
 // ═════════════════════════ commands ═════════════════════════
+// a flight handed to the next unit is shown in its own colour and can't be selected or instructed
+const outOfCtl = ac => !!ac.handed;
 function findAc(token){
   if (!token) return null; token = token.toUpperCase();
   return S.acs.find(a => a.cs === token) || (token.length >= 3 && /\d/.test(token) ? S.acs.find(a => a.cs.endsWith(token)) : null) || null;
@@ -347,6 +349,7 @@ function commandRun(str){
   let ac = findAc(toks[0]);
   if (ac) toks.shift(); else ac = S.sel;
   if (!ac || !S.acs.includes(ac)) { sys('Select a flight first, or start the command with its callsign.'); return; }
+  if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
   if (ac.state === 'PRE') { select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
   select(ac);
   const said = [], reads = [];
