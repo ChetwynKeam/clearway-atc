@@ -47,7 +47,7 @@ function liveToday(now = Date.now()){
   return { arr: day.arr.map(r => conv(r, 'ARR')).sort((a, b) => a.tm - b.tm), dep: day.dep.map(r => conv(r, 'DEP')).sort((a, b) => a.tm - b.tm), nowUtc, key, off };
 }
 // sched (arrivals with their turnaround) and residents, the same shape as timetableSession, with m relative to now
-function liveSession(now = Date.now()){
+function liveSession(now = Date.now(), mode = 'live'){
   const T = liveToday(now); if (!T) return null;
   const sched = [], residents = [], used = new Set();
   const pairFor = a => T.dep.find(d => !used.has(d) && !d.cancelled && d.ap === a.ap && fnum(d.cs) - fnum(a.cs) === 1 && d.cs.slice(0, 3) === a.cs.slice(0, 3))
@@ -62,6 +62,12 @@ function liveSession(now = Date.now()){
   }
   for (const d of T.dep) if (!used.has(d) && !d.cancelled && !d.done && d.rel > 0)   // night-stoppers and positioning flights
     residents.push({ cs: d.cs, t: d.t, k: 'RES', d: d.ap, gate: gateFor(d.ap), m: 0, depM: d.rel, at: zHM(Date.UTC(2026, 0, 1) + d.tm*60e3), real: true });
+  // a very busy airport (New York JFK: APT.liveThin movements an hour) keeps an even share of its real flights in Live now;
+  // Live now plus extra traffic keeps them all
+  if (APT.liveThin && mode !== 'liveplus') {
+    const mov = sched.filter(f => f.m < 180).length*2 + residents.filter(f => f.depM < 180).length, k = Math.max(1, Math.ceil(mov/(3*APT.liveThin)));
+    return { sched: sched.filter((f, i) => i % k === 0), residents: residents.filter((f, i) => i % k === 0), T };
+  }
   return { sched, residents, T };
 }
 // session picker: today's real flights instead of the timetable slot

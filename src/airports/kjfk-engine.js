@@ -1,0 +1,438 @@
+// ═════════════════════════ New York JFK (KJFK) airport profile for the engine ═════════════════════════
+// Builds every global the engine reads from the chart data in kjfk.js (KJFK) and the OpenStreetMap aerodrome in
+// kjfk-ground.js (metres east and north of the ARP). Kennedy has four runways in two parallel pairs, so it is the
+// engine's multi-runway airport: APT.runways lists each with its own frame (metres from its low end, offset to the
+// left), S.rwy is the landing runway and S.depRwy the departure runway (normally land 22L, depart 22R). The single-
+// runway globals (rm, mOf, offOf, RW_LO/RW_HI, THR_*) describe 4R/22L, the runway the website figures show.
+// Arrivals on 4R/22L reach the terminals only by crossing 4L/22R: taxiing traffic holds short of every runway in use
+// until cleared to cross (CROSS).
+Object.assign(TYPES, KJFK.TYPES);
+const LL = p => xy(p[0], p[1]);
+const G = KJFK_GROUND;
+const EN = (e, n) => [e*M2NM, n*M2NM];                     // metres east and north of the ARP (the map origin) → NM
+
+// ═════════════════════════ runways ═════════════════════════
+// a frame along each runway: m from the pavement end a (the low-numbered end), off to the left
+function rwyFrame(r){
+  const a = EN(...r.a), b = EN(...r.b), L = dist(...a, ...b), RU = [(b[0]-a[0])/L, (b[1]-a[1])/L], RN = [-RU[1], RU[0]];
+  const rm = (m, off=0) => [a[0] + (RU[0]*m + RN[0]*off)*M2NM, a[1] + (RU[1]*m + RN[1]*off)*M2NM];
+  const mOf = p => ((p[0]-a[0])*RU[0] + (p[1]-a[1])*RU[1])/M2NM, offOf = p => ((p[0]-a[0])*RN[0] + (p[1]-a[1])*RN[1])/M2NM;
+  const len = r.len;
+  // no turning pads: every entry used for departure is at a runway end, and arrivals always have an exit ahead
+  const TURN_W = [[30, 0]], TURN_E = [[len - 30, 0]];
+  return { id: r.id, lo: r.lo, hi: r.hi, len, thr: r.thr, elev: r.elev, rm, mOf, offOf, RU, TURN_W, TURN_E, TURN_END: { W: 30, E: len - 30 },
+    roll: [70, len - 70], ends: true, width: { '4L22R': 61, '13R31L': 61 }[r.id] || 46 };
+}
+const RWY_LIST = ['4R22L', '4L22R', '13L31R', '13R31L'].map(id => rwyFrame(G.runways.find(r => r.id === id)));
+const R0 = RWY_LIST[0];
+const rm = R0.rm, mOf = R0.mOf, offOf = R0.offOf, RU = R0.RU;
+const RWY_M = R0.len, THR_LO_M = R0.thr['4R'], THR_HI_M = R0.thr['22L'];
+const RW_LO = '4R', RW_HI = '22L';
+const THR = {}, CRS = {}, THR_ELEV = {};
+for (const R of RWY_LIST) {
+  THR[R.lo] = R.rm(R.thr[R.lo], 0); THR[R.hi] = R.rm(R.thr[R.hi], 0);
+  CRS[R.lo] = brg(...R.rm(0), ...R.rm(R.len)); CRS[R.hi] = norm(CRS[R.lo] + 180);
+  THR_ELEV[R.lo] = R.elev[R.lo]; THR_ELEV[R.hi] = R.elev[R.hi];
+}
+const T_LO = THR[RW_LO], T_HI = THR[RW_HI], CRS_LO = CRS[RW_LO], CRS_HI = CRS[RW_HI];
+const crsOf = rw => CRS[rw] ?? CRS_HI;
+const ELEV = KJFK.elev;
+const ARP = LL(KJFK.arp);
+const parallelOf = rw => ({ '4L': '4R', '4R': '4L', '22L': '22R', '22R': '22L', '13L': '13R', '13R': '13L', '31L': '31R', '31R': '31L' })[rw];
+// no road crossing, no border fence, no rock
+const XING_M = -1e9, XING_SKEW = 0, XING_HW = 0, xingM = o => XING_M;
+const FRONTIER = [], R164 = [], ROCK = [], ROCK_TOP = [0, 0];
+const TURN_W = R0.TURN_W, TURN_E = R0.TURN_E, TURN_END = R0.TURN_END, TURN_PAD = {};
+
+// ═════════════════════════ taxiways, holding points, gates (kjfk-ground.js) ═════════════════════════
+// the taxi graph keeps the engine's frame (4R/22L) for its m/off; positions are exact
+const inF0 = (e, n) => { const p = EN(e, n); return [mOf(p), offOf(p)]; };
+for (const [id, e, n] of G.nodes) gn(id, ...inF0(e, n));
+for (const [id, e, n] of G.rnodes) gn(id, ...inF0(e, n));
+for (const [a, b, tw, mid] of G.edges) chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw);
+const HOLDS = {}, FIL = {};
+for (const [k, [node, rwy, on, m, off, dirs, end]] of Object.entries(G.holds)) {
+  HOLDS[k] = { node, rwy, on, m, off, dirs: dirs.split(','), end: end || null, ref: k.replace(/~\d+$/, '') };
+  ge(rwy, node, HOLDS[k].ref);
+  FIL[k] = { W: G.fil[k], E: G.fil[k] };                  // the mapped centreline-to-taxiway curve, used either way
+}
+// the holding position on each side of a runway: a path point there stops the aircraft until cleared to cross
+for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
+// gates: Terminal 4 keeps its own A and B numbers; the others are terminal-gate (5-12, 8-33, 1-6)
+const TERMINAL_OF = { DAL: '4', EDV: '4', VIR: '4', KLM: '4', UAE: '4', ETD: '4', SIA: '4', AIC: '4', ELY: '4', AMX: '4', CMP: '4', AVA: '4', CAY: '4',
+  JBU: '5', EIN: '5', AAL: '8', RPA: '8', BAW: '8', IBE: '8', QTR: '8', JAL: '8', CPA: '8', ASA: '8', FFT: '8',
+  AFR: '1', DLH: '1', SWR: '1', THY: '1', KAL: '1', ANA: '1', CES: '1', TAP: '1', ASL: '1', MSR: '1', CFG: '1', UAL: '1' };
+const STANDS = G.gates.map(([id, term, [e, n], node]) => { const p = EN(e, n); return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null }; });
+STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = brg(...s.lp, ...s.p); });
+const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
+// which side of each runway the terminals are on (all of them sit inside the four runways' central area)
+{ const c = STANDS.reduce((a, s) => [a[0] + s.p[0]/STANDS.length, a[1] + s.p[1]/STANDS.length], [0, 0]); for (const R of RWY_LIST) R.side = Math.sign(R.offOf(c)); }
+
+// taxiway names: letters spoken one by one (KE "Kilo Echo"), digits as numbers; holding points without the ~n suffix
+const NATO = { A: 'Alpha', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike',
+  N: 'November', P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango', U: 'Uniform', V: 'Victor', W: 'Whiskey', Y: 'Yankee', Z: 'Zulu' };
+const twyWords = t => t.replace(/~\d+$/, '').match(/[A-Z]|\d+/g).map(x => NATO[x] || x).join(' ');
+const PHON = {};
+for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
+for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);
+PHON.APRON = 'the ramp';
+
+// departure entries: the holding points at the departure end of a runway, nearest first from where the aircraft is
+const endHolds = rw => Object.keys(HOLDS).filter(k => HOLDS[k].end === rw);
+const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
+function depHold(ac){
+  const rw = depRw(), from = ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id;
+  const ks = endHolds(rw); let best = ks[0], bl = Infinity;
+  for (const k of ks) { const L = routeLen(from, HOLDS[k].node); if (L < bl) { bl = L; best = k; } }
+  return best;
+}
+// nose-in gates: the tug pushes the tail back onto the taxilane, then 40 m along it the way the tail points
+function laneDir(st, face){
+  const tail = face === 'east' ? 270 : 90, lp = st.lp;
+  let best = null, bd = 999;
+  for (const [v] of GN[st.node].adj) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
+  return best ? brg(...lp, ...GN[best].p) : tail;
+}
+function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
+// face the way the route to the runway starts
+function pushRec(ac){
+  const st = ac.stand, r = route(st.node, HOLDS[depHold(ac)].node);
+  if (!r || r.nodes.length < 2) return 'east';
+  return Math.sin(brg(...st.lp, ...GN[r.nodes[1]].p)*D2R) >= 0 ? 'east' : 'west';
+}
+// exits for a landing runway: those the roll-out direction can turn into, on the terminal side, in the order met
+function exitsFor(rw){
+  const R = RWYS_BY_END(rw), up = rw === R.lo, thr = R.thr[rw];
+  const ks = Object.keys(HOLDS).filter(k => { const H = HOLDS[k]; return H.on === R.id && H.dirs.includes(rw) && (up ? H.m > thr + 700 : H.m < thr - 700); });
+  const near = ks.filter(k => Math.sign(HOLDS[k].off) === R.side), far = ks.filter(k => Math.sign(HOLDS[k].off) !== R.side);
+  const order = a => a.sort((x, y) => (HOLDS[x].m - HOLDS[y].m)*(up ? 1 : -1));
+  return [...order(near), ...order(far)];
+}
+const RWYS_BY_END = rw => RWY_LIST.find(R => R.lo === rw || R.hi === rw) || R0;
+// a name the controller says ("VAC H") to the exit of that taxiway on the aircraft's runway, ahead of it
+function exitFor(ac, name){
+  if (HOLDS[name] && HOLDS[name].on === (ac.rwyId || RWYS_BY_END(ac.app || S.rwy).id)) return name;
+  const rw = ac.app || S.rwy, R = RWYS_BY_END(rw), m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1;
+  const ks = Object.keys(HOLDS).filter(k => HOLDS[k].ref === name && HOLDS[k].on === R.id && (HOLDS[k].m - m)*dir > 20);
+  return ks.sort((a, b) => (Math.sign(HOLDS[b].off) === R.side) - (Math.sign(HOLDS[a].off) === R.side) || (HOLDS[a].m - HOLDS[b].m)*dir)[0] || null;
+}
+
+// ═════════════════════════ aerodrome drawing ═════════════════════════
+const AD_SITE = { aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
+// hot spot HS 1 (FAA NE hot spots): the Kilo and Juliett junction near runway 4L and 31L
+const HS1 = (() => { const n = Object.values(GN).find(n => n.adj.some(([, e]) => e.tw === 'K') && n.adj.some(([, e]) => e.tw === 'J')); return n ? n.p : null; })();
+const TERM_LABELS = (() => { const by = {}; for (const s of STANDS) (by[s.term] ||= []).push(s.p); return Object.entries(by).map(([t, ps]) => [`TERMINAL ${t}`, ps.reduce((a, p) => [a[0] + p[0]/ps.length, a[1] + p[1]/ps.length], [0, 0])]); })();
+function drawKjfk(){
+  const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
+  const P2 = p => [sx(p[0]), sy(p[1])];
+  const pathP = (pts, close = true) => { cx.beginPath(); pts.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](...P2(p))); if (close) cx.closePath(); };
+  const lw = m => Math.max(1, m*mpx);
+  const rwyPoly = (R, w) => [R.rm(0, -w/2), R.rm(R.len, -w/2), R.rm(R.len, w/2), R.rm(0, w/2)];
+  if (sc <= 70) { cx.fillStyle = rgba('rwyOut', .9); for (const R of RWY_LIST) { pathP(rwyPoly(R, Math.max(R.width, 2.2/mpx))); cx.fill(); } return; }
+  cx.lineJoin = 'round'; cx.lineCap = 'round';
+  // aprons, then taxiways (every graph edge), then the runways on top
+  cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
+  cx.strokeStyle = C.asphalt; cx.lineWidth = lw(23);
+  for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+  for (const k in FIL) { const R = rwyById(HOLDS[k].on); pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  cx.fillStyle = C.rwy;
+  for (const R of RWY_LIST) { pathP(rwyPoly(R, R.width)); cx.fill(); }
+  if (!IMG) { cx.fillStyle = C.bld; cx.strokeStyle = C.bldEdge; cx.lineWidth = 1; for (const b of G.buildings) { pathP(b.pts.map(([e, n]) => EN(e, n))); cx.fill(); cx.stroke(); } }
+  if (sc > 150) {
+    cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
+    for (const R of RWY_LIST) {
+      const hw = R.width/2 - 1.5, quad = (m1, o1, m2, o2) => { pathP([R.rm(m1, o1), R.rm(m2, o1), R.rm(m2, o2), R.rm(m1, o2)]); cx.fill(); };
+      cx.lineWidth = lw(0.9); pathP([R.rm(0, hw), R.rm(R.len, hw)], false); cx.stroke(); pathP([R.rm(0, -hw), R.rm(R.len, -hw)], false); cx.stroke();
+      cx.setLineDash([36*mpx, 24*mpx]); pathP([R.rm(R.thr[R.lo] + 120, 0), R.rm(R.thr[R.hi] - 120, 0)], false); cx.stroke(); cx.setLineDash([]);
+      for (const [m0, dir] of [[R.thr[R.lo], 1], [R.thr[R.hi], -1]]) {
+        quad(m0, -hw, m0 + dir*3, hw);
+        for (let i = 0; i < 8; i++) for (const k of [-1, 1]) { const o = k*(4 + i*(hw - 4)/8); quad(m0 + dir*6, o - 0.9*k, m0 + dir*46, o + 0.9*k); }
+        for (const k of [-1, 1]) quad(m0 + dir*305, k*6, m0 + dir*350, k*16);
+      }
+      cx.font = `700 ${Math.max(9, 16*mpx)}px ${FONT_L}`; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+      for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 70], [R.hi, R.thr[R.hi] - 70]]) { cx.save(); cx.translate(...P2(R.rm(m0, 0))); cx.rotate(crsOf(rw)*D2R); cx.fillText(rw, 0, 0); cx.restore(); }
+      cx.textAlign = 'left'; cx.textBaseline = 'alphabetic';
+    }
+    // taxiway centrelines, stopping at the runway edges
+    cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35);
+    for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    // runway holding positions: two solid and two dashed lines across the taxiway, parallel to the runway
+    for (const [id, rid] of Object.entries(G.hs)) {
+      const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
+      for (const [d, dash] of [[0.9, false], [0.3, false], [-0.3, true], [-0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([R.rm(m - 11, o + s*d), R.rm(m + 11, o + s*d)], false); cx.stroke(); }
+      cx.setLineDash([]);
+    }
+    // gate lead-in lines and numbers
+    cx.lineWidth = lw(0.3);
+    for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
+    if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
+    // taxiway designators at the middle of each named edge
+    if (sc > 400) {
+      const fs = Math.max(9, 3.4*mpx); cx.font = `700 ${fs}px ${FONT_L}`; const done = new Set();
+      for (const e of GE) {
+        if (e.tw === 'APRON' || e.len < 0.06) continue; const key = e.tw + Math.round(GN[e.a].p[0]*8) + ',' + Math.round(GN[e.a].p[1]*8); if (done.has(key)) continue; done.add(key);
+        const q = P2([(GN[e.a].p[0] + GN[e.b].p[0])/2, (GN[e.a].p[1] + GN[e.b].p[1])/2]), tw = cx.measureText(e.tw).width;
+        cx.fillStyle = '#111'; cx.fillRect(q[0] - tw/2 - 3, q[1] - fs*0.85, tw + 6, fs*1.2); cx.fillStyle = C.yellow; cx.fillText(e.tw, q[0] - tw/2, q[1] + fs*0.15);
+      }
+    }
+    if (HS1) { const [X, Y] = P2(HS1); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 60*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.font = `600 11px ${FONT_L}`; cx.fillText('HS 1', X + 60*mpx + 8, Y + 4); }
+  }
+  // lights: runway edges and thresholds, taxiway edge blue (dark theme glow)
+  if (sc > 110) {
+    cx.save(); cx.globalCompositeOperation = C.glow;
+    const r = Math.max(1.1, 0.9*mpx), glow = (p, col) => { const [X, Y] = P2(p); cx.fillStyle = col; cx.beginPath(); cx.arc(X, Y, r, 0, 7); cx.fill(); };
+    for (const R of RWY_LIST) {
+      const hw = R.width/2 + 0.5;
+      for (let m = 0; m <= R.len; m += 60) { glow(R.rm(m, hw), 'rgba(255,244,214,.75)'); glow(R.rm(m, -hw), 'rgba(255,244,214,.75)'); }
+      for (let o = -hw + 1; o <= hw - 1; o += 4) { glow(R.rm(R.thr[R.lo], o), 'rgba(90,255,140,.9)'); glow(R.rm(R.thr[R.hi], o), 'rgba(90,255,140,.9)'); }
+    }
+    cx.restore();
+  }
+  if (sc > 180 && sc < 2400) {
+    cx.font = `600 12px ${FONT_L}`;
+    if (IMG) { cx.fillStyle = C.name === 'dark' ? 'rgba(235,242,245,.92)' : '#fff'; cx.strokeStyle = 'rgba(0,0,0,.6)'; cx.lineWidth = 3; cx.lineJoin = 'round'; } else cx.fillStyle = rgba('lab', .72);
+    for (const [t, p] of TERM_LABELS) { const [X, Y] = P2(p); if (IMG) cx.strokeText(t, X, Y); cx.fillText(t, X, Y); }
+  }
+}
+
+// ═════════════════════════ fixes, STARs, SIDs ═════════════════════════
+const STAR_FIXES = new Set(Object.values(KJFK.STARS).flatMap(s => s.pts.map(p => p[0])));
+for (const [id, p] of Object.entries(KJFK.FIX)) wp(id, p[0], p[1], STAR_FIXES.has(id) || /^(DEEZZ|SKORR|GAYEL|COATE|MERIT|GREKI|BETTE|WAVEY|RNGRR|CRAIL)$/.test(id) ? {} : { minor: true });
+for (const [id, n] of Object.entries(KJFK.NAV)) wp(id, ...n.p, { note: `${n.name} ${n.freq}` });
+const RADAR_REF = WP.JFK.p;
+const GATES = Object.keys(KJFK.DIR);
+const STAR_OF = g => KJFK.STARS[KJFK.DIR[g].star];
+const starFrom = g => { const pts = STAR_OF(g).pts.map(p => p[0]); return pts.slice(pts.indexOf(KJFK.DIR[g].entry)); };
+// holds at the end of each STAR, inbound along its last leg
+for (const s of Object.values(KJFK.STARS)) { const n = s.pts.length, a = WP[s.pts[n-2][0]].p, b = WP[s.pts[n-1][0]].p; WP[s.pts[n-1][0]].hold = { inb: Math.round(brg(...a, ...b)), min: 6000, left: false }; }
+const ENTRY = Object.fromEntries(GATES.map(g => [g, WP[KJFK.DIR[g].entry].p]));
+const ENTRY_ALT = { N: 13000, NE: 14000, E: 14000, S: 12000, SW: 12000, W: 13000, NW: 13000 };
+const PRE_ALT = { N: 27000, NE: 29000, E: 33000, S: 27000, SW: 25000, W: 29000, NW: 29000 };
+
+// ── ILS approaches: the localiser from 3 NM outside the intermediate fix, the 3° glideslope from the platform altitude
+const FINAL = {};
+for (const [rw, I] of Object.entries(KJFK.ILS)) {
+  const thr = THR[rw], out = norm(crsOf(rw) + 180), dIF = dist(...thr, ...WP[I.ifx].p), dFAF = dist(...thr, ...WP[I.faf].p), elev = THR_ELEV[rw];
+  const F = { pts: [add(thr, out, dIF + 3), add(thr, out, dIF), thr], alts: [I.ifAlt, I.ifAlt, elev + 50], elev, entry: I.ifx, entryName: I.ifx, name: 'ILS ' + rw, alt: I.ifAlt,
+    decName: I.faf, decNM: dFAF + 0.2, decMin: Math.max(1.6, dFAF - 1.6), minAlt: I.fafAlt - 300, minText: `${I.fafAlt.toLocaleString('en-US')} ft`,
+    mins: { vis: 800, ceil: 200 }, minRate: 300, missed: [I.missed[0]], missAlt: I.missed[1],
+    phrase: r => `maintain ${altWords(I.ifAlt)} until established on the localizer, cleared ILS runway ${r} approach`, read: r => `cleared ILS ${r}`,
+    decCall: r => `${APT.tower[0]}, ${I.faf}, ILS runway ${r}`, decNeed: `Inbound past ${I.faf}, needs landing clearance`, decFail: 'not visual at minimums' };
+  F.cum = new Array(F.pts.length).fill(0); for (let i = F.pts.length - 2; i >= 0; i--) F.cum[i] = F.cum[i+1] + dist(...F.pts[i], ...F.pts[i+1]);
+  const meet = (I.ifAlt - elev - 50)/318;                    // 3° = 318 ft per NM
+  F.prof = [[0, elev + 50], [meet, I.ifAlt], [F.cum[0] + 1, I.ifAlt]];
+  FINAL[rw] = F;
+}
+// 13R has no ILS: in the south-east flow it is the departure runway. Its arrivals would fly the VOR/DME or Parkway Visual.
+
+// ── from the end of each STAR to the intermediate fix: a downwind and base laid out beside the final (hidden points,
+// the radar vectors a New York Approach controller would give), so an arrival with no instructions still gets there
+function feeder(rw, from){
+  const I = KJFK.ILS[rw], thr = THR[rw], out = norm(crsOf(rw) + 180), dIF = dist(...thr, ...WP[I.ifx].p);
+  const f = WP[from].p, dx = f[0] - thr[0], dy = f[1] - thr[1], ux = Math.sin(out*D2R), uy = Math.cos(out*D2R);
+  const along = dx*ux + dy*uy, right = dx*uy - dy*ux, s = right >= 0 ? 1 : -1;
+  const pt = (a, l) => add(add(thr, out, a), out + 90, l);
+  const tag = `${rw}${s > 0 ? 'R' : 'L'}`, mk = (k, p, note) => { WP[tag + k] = { id: tag + k, p, hide: true, note }; return tag + k; };
+  if (along > dIF + 3 && Math.abs(right) < 2.5) return [I.ifx];                    // already on the extended centreline
+  const base = mk('B', pt(dIF + 4, s*2.5), `base for ${rw}`);
+  if (along > dIF + 3) return [base, I.ifx];
+  const dw2 = mk('D', pt(dIF + 3, s*6), `downwind for ${rw}`);
+  if (along > 1) return [dw2, base, I.ifx];
+  return [mk('A', pt(1, s*6), `downwind for ${rw}`), dw2, base, I.ifx];
+}
+const LAND_RWYS = Object.keys(KJFK.ILS);
+const ARR_ROUTE = Object.fromEntries(GATES.map(g => [g, Object.fromEntries(LAND_RWYS.map(rw => {
+  const star = [...starFrom(g), ...(/^22/.test(rw) && STAR_OF(g).rw22 ? STAR_OF(g).rw22 : [])];
+  return [rw, [...star, ...feeder(rw, star[star.length - 1])]];
+}))]));
+// the departure runway may be 13R (no ILS): an arrival's route for it is the 13L one
+for (const g of GATES) ARR_ROUTE[g]['13R'] = ARR_ROUTE[g]['13L'];
+const HOLD_AT = Object.fromEntries(GATES.map(g => [g, STAR_OF(g).pts[STAR_OF(g).pts.length - 1][0]]));
+
+// ── departures: the Kennedy Five (radar vectors) or an RNAV SID where one serves the runway and the direction
+const rnavSid = (gate, rwy) => { const n = KJFK.DIR[gate].rnav; return n && KJFK.SIDS[n].rwys.includes(rwy) ? n : null; };
+const sidName = (gate, rwy) => rnavSid(gate, rwy) || 'JFK5';
+const sidSpoken = n => (KJFK.SIDS[n] || {}).spoken || n;
+const exitRoute = (g, rwy) => { const n = rnavSid(g, rwy); return n ? KJFK.SIDS[n].pts.slice() : KJFK.DIR[g].route.slice(); };
+const EXIT_ROUTE = {}, EXIT_FIX = {};
+for (const g of GATES) {
+  Object.defineProperty(EXIT_ROUTE, g, { enumerable: true, get: () => exitRoute(g, depRw()) });
+  Object.defineProperty(EXIT_FIX, g, { enumerable: true, get: () => { const r = exitRoute(g, depRw()); return r[r.length - 1]; } });
+}
+const NEXT_UNIT = Object.fromEntries(GATES.map(g => [g, KJFK.CTR[KJFK.DIR[g].ctr]]));
+const relUnit = ac => 'New York Center';
+const TEL = KJFK.TEL;
+const isMil = ac => false;
+const gateFor = ap => ap === 'KJFK' ? 'W' : (KJFK.PLACE_DIR[ap] || 'W');
+
+// ═════════════════════════ schedule ═════════════════════════
+const withGate = x => ({ ...x, gate: x.gate || gateFor(x.k === 'ARR' ? x.o : x.d) });
+const TIMETABLE = KJFK.TIMETABLE;
+const REGS = { C56X: 'N622QS', PC12: 'N280BC' };
+const LONG_STAY = KJFK.LONG_STAY;
+const EXTRA = KJFK.EXTRA.map(withGate);
+const EXERCISES = Object.fromEntries(Object.entries(KJFK.EXERCISES).map(([k, e]) => ['k' + k, { ...e, sched: e.sched.map(withGate) }]));
+const WX_PRESETS = KJFK.WX_PRESETS;
+
+// ═════════════════════════ weather rules ═════════════════════════
+// gusty north-westerlies behind a cold front and summer thunderstorms bring windshear on short final
+const TURB_TABLE = {};
+function turbExcess(w){
+  if (w.vrb || w.spd < 14) return 0;
+  return Math.max(0, Math.max(w.spd, (w.gust || 0)*0.85) - 26);
+}
+// ILS CAT I: 200 ft and 1/2 SM (RVR 1800)
+const minsOk = (w, rw) => w.vis >= 800 && w.ceil >= 200;
+const sraMinsOk = w => minsOk(w, '22L');
+// runway configuration by wind: the pair with the most headwind (calm: the south-west flow, 22L and 22R)
+const CONFIGS = [['22L', '22R'], ['4R', '4L'], ['31R', '31L'], ['13L', '13R']];
+function rwyFor(w){
+  if (w.vrb || w.spd < 5) return { land: '22L', dep: '22R' };
+  let best = null; for (const [l, d] of CONFIGS) { const h = windComp(w, crsOf(l)).head; if (!best || h > best.h + 0.5) best = { land: l, dep: d, h }; }
+  return { land: best.land, dep: best.dep };
+}
+const depFor = rw => (CONFIGS.find(([l]) => l === rw) || [])[1] || parallelOf(rw) || rw;
+
+// Manhattan: below 2,000 ft over the towers (One World Trade Center is 1,776 ft) counts as an obstacle incident
+const MANHATTAN = [[40.700, -74.020], [40.708, -73.976], [40.745, -73.966], [40.800, -73.927], [40.873, -73.908], [40.880, -73.928], [40.760, -74.012], [40.705, -74.022]].map(LL);
+
+// ═════════════════════════ engine hooks ═════════════════════════
+const windFAA = () => { const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3(w.dir)} at ${w.spd}${w.gust ? ' gust ' + w.gust : ''}`; };
+const altim = () => `altimeter ${S.wx.inhg.toFixed(2)}`;
+const visSM = v => v >= 9999 ? '10' : v >= 4800 ? String(Math.round(v/1609)) : String(Math.round(v/1609*4)/4).replace(/\.25$/, ' 1/4').replace(/\.5$/, ' 1/2').replace(/\.75$/, ' 3/4').replace(/^0 /, '');
+const APT = {
+  icao: 'KJFK', name: 'New York JFK', coordName: 'Kennedy', radarName: 'JFK', utcOff: -4,
+  radar: [KJFK.UNITS.app.name, KJFK.UNITS.app.freq], depRadar: [KJFK.UNITS.dep.name, KJFK.UNITS.dep.freq],
+  // two tower frequencies: 119.1 for 4R/22L and 13L/31R, 123.9 for 4L/22R and 13R/31L. Arrivals call the one for their runway.
+  get tower(){ return [KJFK.UNITS.twr.name, KJFK.UNITS.twr.freq[RWYS_BY_END(S.rwy).id]]; },
+  gnd: [KJFK.UNITS.gnd.name, KJFK.UNITS.gnd.freq],
+  runways: RWY_LIST, inHg: true, rwyHalfWidth: 23,
+  xing: false, drawnTown: false, ta: KJFK.TA, initClimb: 5000, gaAlt: 3000, appAlt: 3000, handoffNM: 18, climbFL: 190, divertAlt: 9000,
+  area: { dep: 45, arr: 100, div: 45 }, roll: [70, RWY_M - 70], defRwy: '22L', defWx: 'sw',
+  appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minimums', reqApp: rw => 'ILS approach',
+  minsLong: 'Weather is below the ILS CAT I minimums (200 ft and 1/2 statute mile).',
+  liveName: 'JFK Airport', liveThin: 20, atisFreq: KJFK.UNITS.atis.freq, turbName: 'New York',
+  sessionHours: Array.from({ length: 17 }, (_, i) => i + 10),   // 1000Z to 0200Z next day: 06:00 to 22:00 in New York
+  view: { app: [0, 0, 75], twr: [ARP[0] - (R0.rm(RWY_M/2)[0]), ARP[1] - (R0.rm(RWY_M/2)[1]), 3.4], gnd: [mOf(ARP), offOf(ARP), 4600, 3800] },
+  minsOk,
+  splitRwy: true, rwyFor, depFor,
+  appRwys: () => FINAL[parallelOf(S.rwy)] ? [S.rwy, parallelOf(S.rwy)] : [S.rwy],
+  // departures need a release only on flow-restricted routes: Boston and the Washington corridor (Approval Request)
+  needRel: ac => KJFK.APREQ.includes(ac.d),
+  standFor: ac => { const t = TERMINAL_OF[ac.cs.slice(0, 3)] || '4'; const free = STANDS.filter(s => !s.occ && s.term === t); return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null; },
+  inboundAlt: gate => gate === 'S' || gate === 'SW' ? 8000 : 9000,
+  divertTo: ac => ac.gate === 'S' || ac.gate === 'SW' || ac.gate === 'W' || ac.gate === 'NW' ? ['Newark', 'PUCKY'] : ['Boston', 'MERIT'],
+  firstAlt: g => ENTRY_ALT[g] - 2000,
+  rolledCall: 'request taxi',
+  vacExits: ac => { const R = RWYS_BY_END(ac.app || S.rwy), m = R.mOf([ac.x, ac.y]), dir = (ac.app || S.rwy) === R.lo ? 1 : -1;
+    return exitsFor(ac.app || S.rwy).filter(k => (HOLDS[k].m - m)*dir > 30 && Math.sign(HOLDS[k].off) === R.side).slice(0, 4); },
+  vacPrefs: (st, ac) => exitsFor(ac && ac.app || S.rwy),
+  exitFor,
+  lineUpWords: hp => 'line up and wait',
+  terrain: { name: 'the Manhattan skyline', poly: MANHATTAN, min: 2000, low: 1500, msg: ac => `${ac.cs} is over Manhattan at ${Math.round(ac.alt)} ft (One World Trade Center is 1,776 ft)${ac.alt < 1500 ? ', OBSTACLE' : ''}.` },
+  restricted: null,
+  drawAirport: drawKjfk,
+  gaEarly(ac, rw){},
+  // missed approach: climb on the runway heading to the published altitude, then direct the missed approach fix and hold
+  gaTurn(ac){ const rw = ac.gaRwy, F = FINAL[rw] || FINAL['22L']; if (dist(ac.x, ac.y, ...THR[rw]) > 1.2 || ac.alt > ELEV + 1200) { ac.gaTurn = true; ac.mode = 'NAV'; ac.route = F.missed.slice(); } },
+  // Kennedy Five: the initial heading by runway after 400 ft (31L/R: the Breezy Point climb, left turn direct Canarsie);
+  // RNAV SIDs turn for their first fix at 520 ft
+  liftoff(ac){ ac.tgtHdg = Math.round(crsOf(ac.depRwy)); ac.turnDir = 0; },
+  depTurn(ac){
+    if (ac.turned || ac.alt < ELEV + 400) return;
+    ac.turned = true;
+    if (rnavSid(ac.gate, ac.depRwy)) return;
+    const init = KJFK.SIDS.JFK5.init[ac.depRwy], h = typeof init === 'string' ? Math.round(brg(ac.x, ac.y, ...WP[init].p)) : init;
+    if (h == null) return;
+    ac.turnDir = Math.sign(angDiff(ac.hdg, h)) || 0; if (/^31/.test(ac.depRwy)) ac.turnDir = -1;
+    ac.tgtHdg = h;
+  },
+  depClear: ac => !!ac.turned && (rnavSid(ac.gate, ac.depRwy) ? ac.alt > ELEV + 520 : ac.alt > ELEV + 1800),
+  shear(ac, rw, w){ return w.cb && Math.random() < 0.15 ? 'windshear from the thunderstorm on final' : null; },
+  shearWhy: rw => S.wx.cb ? 'microburst alert on final' : 'windshear on short final',
+  faceHold: (st, f) => depHold({ stand: st, leftStand: false, x: st.p[0], y: st.p[1] }),
+  faceWord: f => f,
+  // the three departure-end entries nearest the aircraft
+  taxiHolds: (south, ac) => { const ks = endHolds(depRw()), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
+    const rec = ac && depHold(ac); return [...new Set([rec, ...ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p))].filter(Boolean))].slice(0, 3); },
+  taxiHint: rw => `Runway ${rw} departures enter at the runway end. Kennedy has no turning pads: the crew lines up straight onto the runway.${Object.keys(HOLDS).some(k => HOLDS[k].end === rw) ? '' : ''}`,
+  // medical diversions: flights crossing the New York area at cruise
+  diverts: [{ cs: 'UAL917', t: 'B772', o: 'KIAD', gate: 'SW', to: 'London' }, { cs: 'ACA871', t: 'B789', o: 'CYYZ', gate: 'NW', to: 'Paris' },
+    { cs: 'AAL1281', t: 'A321', o: 'KMIA', gate: 'S', to: 'Boston' }, { cs: 'DAL1955', t: 'B739', o: 'KATL', gate: 'SW', to: 'Hartford' }],
+  airports: KJFK.AIRPORTS, via: {},
+  airlineIcao: KJFK.AIRLINE_ICAO, airlineType: KJFK.AIRLINE_TYPE, defType: 'A320',
+  placeIcao: KJFK.PLACES,
+  // FAA phraseology (JO 7110.65): "climb and maintain", "altimeter 29.92", "line up and wait", wind before the clearance
+  phr: {
+    altim,
+    alt: (a, up) => [`${up ? 'climb' : 'descend'} and maintain ${altWords(a)}`, `${up ? 'climb' : 'descend'} and maintain ${altShort(a)}`],
+    speed: s => [`maintain ${s} knots`, `${s} knots`],
+    taxi: (ac, hp, vw) => { const via = [...vw, HOLDS[hp].ref].map(t => PHON[t] || t).join(', ');
+      return [`runway ${depRw()}, taxi via ${via}, ${altim()}`, `runway ${depRw()}, taxi via ${via}`]; },
+    taxiPop: () => `runway ${depRw()}, taxi via <em></em>, ${altim()}`,
+    atHold: (ac, hp) => `holding short runway ${depRw()} at ${PHON[hp]}, ready for departure`,
+    lineUp: (ac, hp) => [`runway ${depRw()}, line up and wait`, `line up and wait runway ${depRw()}`],
+    cto: (ac, sid, chg) => { const init = KJFK.SIDS.JFK5.init[depRw()], rnav = KJFK.SIDS[sid] && KJFK.SIDS[sid].rnav;
+      const how = rnav ? `RNAV to ${KJFK.SIDS[sid].pts[0]}` : typeof init === 'string' ? 'Breezy Point climb' : `fly heading ${hdg3(norm(init - KJFK.RWY.var))}`;
+      return [`${chg ? 'amended departure, ' : ''}${windFAA()}, runway ${depRw()}, ${how}, cleared for takeoff`, `${how}, cleared for takeoff runway ${depRw()}`]; },
+    ctl: (ac, rw) => [`${windFAA()}, runway ${rw}, cleared to land`, `cleared to land runway ${rw}`],
+    push: (ac, dn, face) => {
+      const fix = EXIT_FIX[ac.gate], f = KJFK.UNITS.dep.freq.replace(/0+$/, '');
+      return [`cleared to ${dn} airport via the ${sidSpoken(ac.sid)} departure, ${fix} transition, then as filed, maintain ${altWords(APT.initClimb)}, expect flight level three five zero one zero minutes after departure, departure frequency ${f}, squawk ${ac.sqk}. Push back approved, tail ${face === 'east' ? 'west' : 'east'}, ${altim()}`,
+        `cleared ${dn} via the ${sidSpoken(ac.sid)}, ${fix} transition, maintain ${altShort(APT.initClimb)}, ${f}, squawk ${ac.sqk}, push approved`]; },
+    startReq: ac => `${KJFK.UNITS.gnd.name}, gate ${ac.stand.id}, ${ac.perf.name} to ${AP[ac.d] ? AP[ac.d][2] : ac.d}, with information ${phonetic(S.atis)}, ready to push`,
+    checkIn: ac => `${APT.radar[0]}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, ${KJFK.DIR[ac.gate].star.replace(/(\d)$/, ' $1')} arrival, information ${phonetic(S.atis)}`,
+    depCall: ac => `${APT.depRadar[0]}, ${altShort(Math.round(ac.alt/100)*100)} climbing ${altShort(ac.tgtAlt)}, ${ac.onSid && ac.sid ? sidSpoken(ac.sid) + ' departure' : 'heading ' + hdg3(ac.hdg)}`,
+    cross: (ac, rw) => [`cross runway ${rw}`, `crossing runway ${rw}`],
+    holdShort: (ac, rw) => `holding short of runway ${rw}`
+  },
+  atisPanel(w){
+    const c = windComp(w, crsOf(S.rwy)), bad = !minsOk(w, S.rwy), r = rwyFor(w);
+    return `<div class="warnline${bad ? ' bad' : ''}">Landing ${S.rwy} · departing ${depRw()}${r.land !== S.rwy || r.dep !== depRw() ? ` (wind favours ${r.land} / ${r.dep})` : ''} · ${bad ? 'below the ILS minimums' : 'ILS approaches'} · crosswind ${Math.round(Math.abs(c.crossG))} kt. Arrivals on 4R/22L cross 4L/22R to reach the terminals.</div>`;
+  },
+  atisLines({ w, L, E }){
+    const cl = w.clouds.length ? w.clouds.map(c => { const m = c.match(/^(FEW|SCT|BKN|OVC|VV)(\d{3})/); return m ? `${{ FEW: 'few clouds', SCT: 'scattered', BKN: 'ceiling broken', OVC: 'ceiling overcast', VV: 'indefinite ceiling, vertical visibility' }[m[1]]} at ${(+m[2]*100).toLocaleString('en-US')}` : c; }).join(', ') : 'sky clear';
+    const out = [
+      `Kennedy airport information ${phonetic(L)}, ${zt(S.t).slice(0,5).replace(':', '')} Zulu.`,
+      `Wind ${w.vrb ? 'variable' : hdg3(w.dir)} at ${w.spd}${w.gust ? ', gust ' + w.gust : ''}. Visibility ${visSM(w.vis)}${w.wx.length ? ', ' + w.wx.join(' ') : ''}. ${cl[0].toUpperCase() + cl.slice(1)}.`,
+      `Temperature ${w.temp}, dew point ${w.dew}. Altimeter ${w.inhg.toFixed(2)}.`,
+      `ILS runway ${S.rwy} approach in use. Departing runway ${depRw()}.`
+    ];
+    if (turbExcess(w) > 0) out.push('Low level windshear advisories in effect.');
+    if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
+    if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+    if (!minsOk(w, S.rwy)) out.push('Visibility below ILS minimums. Expect holding.');
+    out.push('Readback all runway hold short instructions. Departures to Boston and the Washington area: expect a call for release.');
+    out.push(`Advise on initial contact you have information ${phonetic(L)}.`);
+    return out;
+  },
+  // the website: home hero, previews, scenario cards and Academy figures
+  site: {
+    hero: () => [
+      ['JBU702', 40.83, -73.55, 210, 210, PAL.light.arr], ['DAL401', 40.45, -73.90, 20, 230, PAL.light.arr], ['BAW115', 40.95, -73.20, 230, 250, PAL.light.arr],
+      ['AAL1', 40.58, -73.86, 210, 200, PAL.light.dep], ['UAE202', 40.50, -73.95, 225, 250, PAL.light.dep],
+      ['UAL23', 40.90, -74.30, 120, 430, 'rgba(60,75,95,.7)'], ['ACA41', 41.10, -73.60, 180, 420, 'rgba(60,75,95,.7)'], ['SWA1771', 40.30, -73.40, 40, 430, 'rgba(60,75,95,.7)']
+    ],
+    demo(mk, park){
+      const F = FINAL['22L'], fin = add(THR['22L'], norm(CRS['22L'] + 180), 2.6), out = add(THR['22R'], CRS['22R'], 4), inb = add(WP.CAMRN.p, 20, 6);
+      const hp = GN[HOLDS[endHolds('22R')[0]].node].p, ids = ['B31', 'B33', '5-12', '8-4'];
+      return [
+        mk('DAL1103', 'A321', 'DEP', park(ids[0], { need: null, reqAt: 99999 })), mk('DAL264', 'A333', 'DEP', park(ids[1], { need: null, reqAt: 99999 })),
+        mk('JBU603', 'A320', 'DEP', park(ids[2], { need: null, reqAt: 99999 })), mk('AAL101', 'B77W', 'DEP', park(ids[3], { need: null, reqAt: 99999 })),
+        mk('JBU101', 'E190', 'DEP', { ground: true, state: 'HOLDPT', hp: endHolds('22R')[0], x: hp[0], y: hp[1], hdg: CRS['22R'], gs: 0 }),
+        mk('JBU702', 'A320', 'ARR', { state: 'FINAL', mode: 'FINAL', app: '22L', freq: 'TWR', x: fin[0], y: fin[1], hdg: CRS['22L'], alt: 850, gs: 140, vs: -750, o: 'KFLL' }),
+        mk('AAL1', 'A321', 'DEP', { state: 'CLIMB', x: out[0], y: out[1], hdg: 211, alt: 3200, gs: 210, vs: 2000, tgtAlt: 5000, d: 'KLAX' }),
+        mk('DAL1111', 'A321', 'ARR', { state: 'INBOUND', x: inb[0], y: inb[1], hdg: 20, alt: 9000, gs: 250, vs: -1000, tgtAlt: 8000, o: 'KATL' })
+      ];
+    },
+    thumb(k, zoom, W){
+      if (k === 'app') return v => { v.scale *= 1.3; };
+      if (k === 'twr') { const c = ARP; return v => { v.cx = c[0] + 0.3; v.cy = c[1] - 0.2; v.scale = W/3.2; }; }
+      const c = zoom === 'apron' ? STANDS.find(s => s.id === 'B31').p : ARP;
+      return v => { v.cx = c[0]; v.cy = c[1]; v.scale = W/((zoom === 'apron' ? 700 : 3200)*M2NM); };
+    },
+    figHold: 'CAMRN', emergHp: 'FB~2',
+    figConsole: v => { v.scale *= 1.2; },
+    cmdHint: 'Command, e.g. JBU702 A30 APP · DAL1103 TAXI · AAL1 CROSS · / to focus, Tab cycles flights'
+  }
+};
