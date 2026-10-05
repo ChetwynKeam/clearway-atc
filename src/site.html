@@ -20,17 +20,18 @@
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
-        <a class="pill" href="#lpma"><b>New</b>Madeira is open: wind limits, the Rosário turn and live traffic</a>
+        <a class="pill" href="#eglc"><b>New</b>London City is open: the 5.5° ILS, the Thames and live traffic</a>
         <h1>Real airports. Real charts. <em>Your frequency.</em></h1>
         <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic is either the real flights in the air right now or a weekly airline timetable, tracked from origin to destination.</p>
         <div class="ctas">
           <a class="btn primary" href="#airports"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h12M9 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Browse airports</a>
           <a class="btn" href="#lxgb">Gibraltar · LXGB</a>
           <a class="btn" href="#lpma">Madeira · LPMA</a>
+          <a class="btn" href="#eglc">London City · EGLC</a>
         </div>
       </div>
       <div class="frame">
-        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
+        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="ttl" data-only="EGLC">EGLC · Thames Director · 132.700</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
         <div class="frame-body">
           <canvas id="heroScope" aria-label="Animated radar picture"></canvas>
           <div class="frame-side" aria-hidden="true" data-only="LPMA">
@@ -40,6 +41,14 @@
             <div class="fs-strip dep"><b>EZY8712</b><span>LPMA › EGKK</span><em>TAXI C</em></div>
             <div class="fs-strip arr"><b>EXS1291</b><span>EGCC › LPMA</span><em>PILIM</em></div>
             <div class="fs-strip dep need"><b>TOM4407</b><span>LPMA › EGBB</span><em>◆ Start-up</em></div>
+          </div>
+          <div class="frame-side" aria-hidden="true" data-only="EGLC">
+            <div class="fs-h"><span>ATIS</span><b>H</b><span class="r">RWY 27</span></div>
+            <div class="fs-m">EGLC 23011KT 9999 FEW030 SCT045 17/10 Q1014</div>
+            <div class="fs-strip arr"><b>KLC983</b><span>EHAM › EGLC</span><em>ILS 27</em></div>
+            <div class="fs-strip dep"><b>CFE8711</b><span>EGLC › EGPH</span><em>HOLD M</em></div>
+            <div class="fs-strip arr"><b>DLH926</b><span>EDDF › EGLC</span><em>JACKO</em></div>
+            <div class="fs-strip dep need"><b>SWR459</b><span>EGLC › LSZH</span><em>◆ Start-up</em></div>
           </div>
           <div class="frame-side" aria-hidden="true" data-only="LXGB">
             <div class="fs-h"><span>ATIS</span><b>K</b><span class="r">RWY 27</span></div>
@@ -82,19 +91,31 @@
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="6" width="22" height="20" rx="2"/><path d="M5 12h22M11 6v20"/></svg><h3>Flight progress strips</h3><p>Paper-style strips sort the flights waiting on you to the top. Click a strip for push-back and taxi pop-outs that preview the route on the map before you clear it. A Flights board lists the day's arrivals and departures.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6h14l6 6v14H6z"/><path d="M20 6v6h6M10 17h12M10 21h8"/></svg><h3>Academy and scoring</h3><p>A written guide for each airport, step-by-step exercises with an on-scope coach, and a score that counts separation, late road closures and airspace infringements.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M16 4l13 23H3z"/><path d="M16 13v6M16 23v.5"/></svg><h3>Emergencies and surprises</h3><p>MAYDAYs, medical diversions, bird strikes, debris closing the runway, a pedestrian over the barrier on short final and windshear reports in the levanter. Choose how often things go wrong.</p></div>
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Coordination with the next unit</h3><p>Departures fly named routes and need a release on the landline before take-off: from Sevilla or Casablanca at Gibraltar, from Lisboa at Madeira. Releases take time and expire, and each flight is handed on to the right frequency.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Coordination with the next unit</h3><p>Departures fly named routes and need a release on the landline before take-off: from Sevilla or Casablanca at Gibraltar, from Lisboa at Madeira, from London Control at London City. Releases take time and expire, and each flight is handed on to the right frequency.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 26V6M6 26h20"/><path d="M10 21l5-6 4 3 6-8"/></svg><h3>Career logbook, anywhere</h3><p>One logbook for every airport: your hours on frequency, score history and badges, with new ones to earn at each airport. The console reshapes itself for phones and tablets, with the scope on top and a tab bar for the panels.</p></div>
     </div>
   </div></div>
 
   <div class="section live-sec"><div class="wrap">
     <div class="academy">
-      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar or Madeira. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now</div><h2>Control the flights that are really in the air.</h2><p>Open the position and you are working the real day at Gibraltar, Madeira or London City. The flights on your strips are the ones on the airport’s departures board, the targets on your radar are where the aircraft really are, and the wind is the wind outside.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
       <ol class="steps3">
         <li><b>Today’s real schedule</b><span>Each airport’s own arrivals and departures, refreshed every 15 minutes, with their real expected times and delays. Each arrival turns round into its real return leg.</span></li>
         <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real inbound comes within range, it becomes your flight to bring in.</span></li>
         <li><b>The weather outside</b><span>The live METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
       </ol>
+    </div>
+  </div></div>
+  <div class="section feat-ap" data-apt="EGLC"><div class="wrap">
+    <div class="fa-grid">
+      <div class="fa-shot"><canvas data-thumb="twr" aria-label="London City tower display"></canvas><span class="fa-tag">LIVE · EGLC TOWER</span></div>
+      <div>
+        <div class="eyebrow">New airport</div>
+        <h2>London City, where everything comes down steep.</h2>
+        <p>A single 1,508 m runway between two docks, six miles from the Bank of England. The ILS glidepath is 5.5°, almost twice the usual angle, so only steep-approach approved types come in. Every departure squeezes under the Heathrow and Stansted traffic at 3,000 ft and needs a release from London Control before it rolls.</p>
+        <div class="kv"><span>RWY <b>09/27</b></span><span>Length <b>1,508 m</b></span><span>Elev <b>20 ft</b></span><span>Approach <b>ILS 5.5°</b></span></div>
+        <div class="ctas"><a class="btn primary" href="#sim">Open the position</a><a class="btn" href="#eglc">Airport briefing</a></div>
+      </div>
     </div>
   </div></div>
   <div class="section feat-ap" data-apt="LPMA"><div class="wrap">
@@ -133,13 +154,13 @@
     </div>
   </div></div>
   <div class="section" style="padding-top:0"><div class="wrap"><div class="cta-band">
-    <div><h2>Take the frequency at Gibraltar or Madeira.</h2><p>No download and no account. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
+    <div><h2>Take the frequency at Gibraltar, Madeira or London City.</h2><p>No download and no account. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
     <div class="ctas"><a class="btn primary" href="#sim">Launch the simulator</a><a class="btn ghost" href="#training">Start with the Academy</a></div>
   </div></div></div>
   <footer class="footer2"><div class="wrap">
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
     <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a></div>
-    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a></div>
+    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span></div>
   </div></footer>
 </section>
@@ -363,6 +384,93 @@
   </div></div>
   <footer class="footer"><div class="wrap"><span>Clearway · Madeira LPMA</span><span>Funchal’s runway was extended over the sea on columns in 2000.</span></div></footer>
 </section>
+<section class="page" id="page-eglc" data-page="eglc" hidden>
+  <div class="aphead">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#airports">Airports</a><span>›</span><span>Europe</span><span>›</span><b>London City</b></nav>
+      <div class="ap-grid">
+        <div>
+          <div class="ap-id"><span class="icao">EGLC</span><span class="iata">LCY</span><span class="badge live">Open now</span><span class="badge new">New</span></div>
+          <h1>London City</h1>
+          <p class="lede">A single runway on the old Royal Docks, with water on both sides and Canary Wharf two miles off the end. You work Thames Director and City Tower combined, from the holds over Essex and Kent to the stand, under the busiest airspace in Europe.</p>
+          <div class="kv"><span>Thames Director <b>132.700</b></span><span>City Tower <b>118.080</b></span><span>ILS <b>5.5°</b></span><span>TA <b>6000 ft</b></span><span>AIRAC <b>UK AIP AD 2 EGLC</b></span></div>
+          <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
+        </div>
+        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="London City aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+      </div>
+    </div>
+    <div class="wrap"><div class="facts">
+      <div><b>1,508 m</b><span>Runway 09/27 × 30 m, arrestor beds at both ends</span></div>
+      <div><b>5.5°</b><span>ILS glidepath, both runways: steep-approach types only</span></div>
+      <div><b>20 ft</b><span>Aerodrome elevation, between two docks</span></div>
+      <div><b>3,000 ft</b><span>Every SID stops here, under the Heathrow and Stansted flows</span></div>
+      <div><b>771 ft</b><span>One Canada Square, 2.4 NM west of the runway</span></div>
+      <div><b>Sat pm</b><span>Closed from Saturday 12:30 to Sunday 12:30 local</span></div>
+    </div></div>
+  </div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">What makes it London City</div><h2>Built from the UK AIP charts.</h2></div>
+      <p>The aerodrome, SIDs, STARs, transitions, holds and ILS approaches come from the 36 London City charts in UK AIP AD 2 EGLC: the aerodrome and parking charts, the airspace chart, the RNAV SID and STAR charts, the transition and holding charts and the ILS/DME and RNP approach charts. The taxiway, apron and stand layout follows OpenStreetMap, checked against the aerodrome and parking charts.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 8l24 16"/><path d="M4 24h24"/><path d="M8 24a12 12 0 0 1 3-6"/></svg><h3>The 5.5° approach</h3><p>Both ILS glidepaths are 5.5°, nearly twice the usual angle. Aircraft join the localiser at 3,000 ft for 27 or 2,000 ft for 09 and come down at about 1,200 ft a minute. Clear them to land before the four-mile check, where the crew looks at the weather against the approach ban.</p><div class="src">ILS/DME RWY 09 and 27 · AD 2-EGLC-8-1 to 8-6</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 26V12l4-2v16M12 26V6h5v20M19 26V10l4 2v14"/><path d="M3 26h26"/></svg><h3>Canary Wharf off the end</h3><p>The towers of the Isle of Dogs rise to 771 ft just west of the runway. Runway 09 arrivals pass them on a short final from the ODLEG transition, and below 1,200 ft over them is an obstacle incident. Central London's R160 sits beyond.</p><div class="src">AD 2-EGLC-5-1 airspace chart · obstacles</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 22h24"/><path d="M8 22l6-10h10"/><path d="M24 12l-3-3M24 12l-3 3"/></svg><h3>RNAV SIDs capped at 3,000 ft</h3><p>BPK, SAXBI, SOQQA and ODUKU, 1A off runway 27 and 1H off 09. Every one climbs straight ahead (no turn below 1,102 ft off 27, 570 ft off 09) and levels at 3,000 ft, tucked under the Heathrow and Stansted traffic until London Control climbs it.</p><div class="src">AD 2-EGLC-6-1 to 6-8</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><ellipse cx="16" cy="16" rx="11" ry="6"/><path d="M5 16h22"/></svg><h3>JACKO, GODLU and the transitions</h3><p>London Control brings arrivals down their STARs to the JACKO hold over Essex or GODLU over Kent. From there Thames takes them along the LAVNO transition up the estuary to the runway 27 final, or the ODLEG transition round the south of the city to runway 09.</p><div class="src">STARs 7-1 to 7-14 · transitions 7-15 to 7-18 · holds 7-19</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 12h24M4 20h24"/><path d="M8 12v8M14 12v8M20 12v8M26 12v8"/></svg><h3>Taxiway T and nine links</h3><p>Taxiway T runs the length of the airport between the runway and the aprons. Links A to F and K, L and M join it to the runway, most as a pair of curved exits, one for each direction. Departures use Alpha or Mike at the ends, so nobody backtracks. Stands 3 to 15 and 21 to 28 are all nose-in.</p><div class="src">AD 2-EGLC-2-1 · 2-2 · OpenStreetMap</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Releases from London Control</h3><p>Every departure needs a release from London Control on the landline before it rolls, and you hand it on once it is on its SID. City Tower is a remote digital tower: the controllers sit at Swanwick and watch the runway through cameras on a mast by the King George V Dock.</p><div class="src">Simulator procedure · UK AIP ENR</div></div>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Two positions, one console</div><h2>From the JACKO hold to stand 28.</h2></div>
+      <p>Thames Director and City Tower are combined on one position. Scroll out for the London TMA, the holds and the estuary, and scroll in for the runway between the docks, taxiway T and the stands.</p>
+    </div>
+    <div class="positions">
+      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">THAMES DIRECTOR · 132.700</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards JACKO or GODLU. Descend them, hold them when the weather is below the ILS minima, and clear the approach. Keep departures at 3,000 ft on their SIDs and hand them to London Control.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">CITY TOWER · 118.080</div><h3>Tower</h3><p>Clear arrivals to land before four miles, get each departure's release from London, and line them up at Alpha or Mike for a full-length take-off.</p></div></div>
+      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">CITY GROUND · 121.830</div><h3>Ground</h3><p>Approve start-up and push onto taxiway T, then taxi departures to Mike for runway 27 or Alpha for 09. Arrivals vacate at the first exit ahead and taxi along T to their stand.</p></div></div>
+    </div>
+  </div></div>
+
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now at London City</div><h2>Work today’s real traffic at EGLC.</h2><p>Pick Live now in the session setup and the position opens at the current time with London City’s real flights, live aircraft positions round London and the current METAR. The timetable sessions are still there when you want to choose your own day and hour.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>London City’s arrivals and departures for the next few hours, from avionio’s public LCY boards, refreshed every 15 minutes with their expected times.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real London City inbound comes within range, it becomes your flight.</span></li>
+        <li><b>The weather outside</b><span>The live EGLC METAR sets the runway, the ATIS and whether the approach ban applies.</span></li>
+      </ol>
+    </div>
+  </div></div>
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
+      <p>Each scenario is a METAR the simulation reads for wind, visibility, cloud and QNH. You can also switch on Live METAR to use the current EGLC report, or paste one yourself.</p>
+    </div>
+    <div class="scen" data-scen></div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="sources">
+      <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
+        <p class="note">Procedures, fixes, holds, frequencies, runway data and stands come from UK AIP AD 2 EGLC. The SID coding page AD 2-EGLC-6-6 was not in the chart set, so the SID tracks follow the SID charts themselves. London Control frequencies are representative. The airline timetable is a representative summer week that respects the weekend closure. In Live now sessions the flights come from avionio’s public London City arrivals and departures boards (the airport’s own site refuses automated requests) and aircraft positions from the adsb.lol and adsb.fi networks; once a flight is yours it follows your instructions, not its real track. The aerodrome layout follows OpenStreetMap, and the coast and the Thames follow Natural Earth and OpenStreetMap. Every crew is approved for the steep approach. This is a training game and is not for real-world navigation. It is not affiliated with NATS, London City Airport or any airline.</p></div>
+      <ul>
+        <li><b>AD 2-EGLC-2-1, 2-2</b>Aerodrome and parking charts: runway 09/27, taxiway T and links A–M, stands 3–15 and 21–28, hot spot HS1.</li>
+        <li><b>AD 2-EGLC-5-1</b>Airspace: the London CTR and TMA, R157–R160 over central London.</li>
+        <li><b>AD 2-EGLC-6-1 to 6-8</b>RNAV SIDs BPK, SAXBI, SOQQA and ODUKU 1A and 1H.</li>
+        <li><b>AD 2-EGLC-7-1 to 7-19</b>RNAV STARs to JACKO and GODLU, the LAVNO and ODLEG transitions and the holds.</li>
+        <li><b>AD 2-EGLC-8-1 to 8-6</b>ILS/DME and RNP approaches to runways 09 and 27, 5.5° glidepath, and the missed approaches to the LCY NDB.</li>
+        <li><b>OpenStreetMap</b>Taxiway, apron and stand geometry, the docks, the Thames and the street map under the scope.</li>
+        <li><b>Live now</b>London City flights from avionio.com; live aircraft positions from adsb.lol and adsb.fi.</li>
+      </ul>
+    </div>
+  </div></div>
+  <footer class="footer"><div class="wrap"><span>Clearway · London City EGLC</span><span>The airport opened in 1987 on the quay between the Royal Albert and King George V Docks.</span></div></footer>
+</section>
 
 <!-- ═════════════════════ SIMULATOR ═════════════════════ -->
 <section class="page" id="page-sim" data-page="sim" hidden>
@@ -400,6 +508,12 @@
         <h1>Gibraltar Radar &amp; Tower</h1>
         <div class="sub">LXGB · RWY 09/27 1798 × 45 m · ELEV 12 ft · GBR TACAN Ch 83X · TA 6000 · Radar 122.8 · Tower 131.2</div>
         <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Gibraltar flights from the current time with the live METAR. Bring arrivals in on surveillance radar approaches, keep them out of R164 and off the Rock, work the departures from stand to Sevilla, and keep Winston Churchill Avenue shut whenever anything uses the runway.</p>
+        </div>
+        <div data-only="EGLC">
+        <div class="eyebrow">Position briefing</div>
+        <h1>Thames Director &amp; City Tower</h1>
+        <div class="sub">EGLC · RWY 09/27 1508 × 30 m · ELEV 20 ft · ILS 5.5° · LCY NDB 322 · TA 6000 · Thames 132.700 · Tower 118.080</div>
+        <p style="margin-top:14px">You hold both positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real London City flights from the current time with the live METAR. Bring arrivals off the JACKO and GODLU holds along their transitions to the 5.5° ILS, and work the departures from the stands to their SIDs, a release from London Control and the hand-off.</p>
         </div>
         <div data-only="LPMA">
         <div class="eyebrow">Position briefing</div>
@@ -439,13 +553,18 @@
           <li>Departures for 27 taxi to Echo and backtrack to the east turning circle. For 09 they taxi to Alpha and backtrack across the road to the west circle.</li>
           <li>Type commands in the bar under the scope, for example <code>BAW492 H250 A40</code>, or use the buttons on the selected flight. The training guide has the full list.</li>
         </ul>
+        <ul data-only="EGLC">
+          <li>Every SID stops at 3,000 ft. Hand departures to London Control when they ask, and get each one's release before you clear it for take-off.</li>
+          <li>Runway 27 departures taxi along T to Mike, runway 09 departures to Alpha: both are full length. Arrivals vacate at the first exit ahead.</li>
+          <li>Type commands in the bar under the scope, for example <code>KLC983 A50 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
+        </ul>
         <ul data-only="LPMA">
           <li>Check the anemometers in the ATIS panel. When the wind is out of limits, hold arrivals at PILIM and expect diversions to Porto Santo.</li>
           <li>Runway 05 departures taxi to Charlie and backtrack to the 05 turn pad; runway 23 departures use Bravo. Every one needs a release from Lisboa.</li>
           <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>
@@ -495,7 +614,7 @@
     <section id="t-console" data-track="core"><h2><span class="n">03</span>Reading the console</h2>
       <h3>The scope</h3>
       <p>The scope is one map you scroll or pinch to zoom. Zoomed out it shows the airspace round the airport’s radar reference (the GBR TACAN at Gibraltar, the FUN DVOR at Madeira) with range rings every 5 NM, the bearing scale, restricted airspace and high ground, the arrival routes and holds, and the final approach paths. Zoom in and the runway, finals and the aerodrome appear to scale over the street map. Zoom right out to follow flights across Europe and Africa. Drag to pan.</p>
-      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span></figcaption></figure>
+      <figure class="fig"><div class="figwrap"><canvas id="figConsole" aria-label="The radar scope with numbered callouts"></canvas></div><figcaption><b>1</b> An inbound with its data tag: callsign, level and trend, cleared level, groundspeed, type and origin. <b>2</b> A departure climbing out on its route. <b>3</b> An arrival on final, label in Tower colours. <b>4</b> The arrival hold (<span data-apt="LXGB">UPMUP</span><span data-apt="LPMA">PILIM</span><span data-apt="EGLC">JACKO</span>). <b>5</b> <span data-apt="LXGB">R164, Spanish restricted airspace from the surface to FL300.</span><span data-apt="LPMA">The high ground of the island, where the minimum vectoring altitude is 9,000 ft.</span><span data-apt="EGLC">The Canary Wharf towers, up to 771 ft: below 1,200 ft over them is an obstacle incident.</span></figcaption></figure>
       <div class="rt"><div><span class="w">Line 1</span><span class="p">EZY8901 ◆ — callsign, ◆ means the crew is waiting on you</span></div><div><span class="w">Line 2</span><span class="p">045↓030 21 — FL/altitude in hundreds, trend, cleared level (or the approach), groundspeed ÷ 10</span></div><div><span class="w">Line 3</span><span class="p">A20N R27 T — type, runway of the approach (or destination), T when on Tower</span></div></div>
       <p>Your traffic is drawn as plane icons in the shape of the real type (airliner, wide-body, business jet, turboprop or military) pointing the way the nose points. Arrivals are amber, departures blue and the selected flight is outlined. Once you transfer a departure to the next unit it turns purple, its strip greys out and you can no longer select it or give it instructions. Anything in conflict, and any aircraft in an emergency, turns red. Grey icons with a short tag are real aircraft from the live feed that are not yours. Beyond radar cover your flights become yellow icons, and inbounds about to call appear as pending tracks. On the ground, aircraft are drawn to scale as silhouettes, with nav lights and a beacon once started.</p>
       <h3>The side panel</h3>
@@ -747,6 +866,86 @@
       </ul>
     </section>
     <!-- ── Madeira endorsement ── -->
+    <section id="c-position" data-apt="EGLC" data-track="ap"><h2><span class="n">01</span>Your position at London City</h2>
+      <p>You are <b>Thames Director (132.700)</b> and <b>City Tower (118.080)</b> combined, with ground movement on the Tower frequency. Arrivals call Thames off their STAR, heading for the <b>JACKO</b> hold over Essex or the <b>GODLU</b> hold over Kent. You hand them to the Tower once they are on the ILS. Departures start with the Tower, go to Thames once airborne, and you transfer them to <b>London Control</b> when they ask for more than 3,000 ft. The ATIS is <b>City Information</b> on 136.355.</p>
+      <p>The transition altitude is <b>6,000 ft</b>. London City sits under the London TMA, with Heathrow's traffic to the west, Stansted's to the north and Gatwick's to the south: that is why every SID stops at 3,000 ft and every arrival is fed in low along the river.</p>
+      <div class="callout"><div class="lbl">A remote tower</div><p>City Tower has no tower. Since 2021 the controllers have sat at the NATS centre in Swanwick, Hampshire, 80 miles away, watching a wall of screens fed by cameras on a 50 m mast beside the King George V Dock.</p></div>
+    </section>
+
+    <section id="c-aerodrome" data-apt="EGLC" data-track="ap"><h2><span class="n">02</span>The aerodrome</h2>
+      <figure class="fig"><canvas data-fig="aerodrome" aria-label="London City aerodrome diagram with taxiways and stands"></canvas><figcaption>The aerodrome as drawn in the simulator: runway 09/27 on the quay between the Royal Albert Dock (north) and the King George V Dock (south), taxiway T and its links, and the main, west and east aprons, from OpenStreetMap and checked against the AIP aerodrome and parking charts.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Item</th><th>Value</th><th>Source</th></tr>
+        <tr><td>Runway</td><td>09/27, 1,508 m × 30 m, grooved asphalt, magnetic 091°/271°. Arrestor beds beyond both ends</td><td class="mono">2-1</td></tr>
+        <tr><td>Thresholds</td><td>THR 09 at 19 ft, THR 27 at 20 ft, at the runway ends. PAPI 5.5° on both</td><td class="mono">2-1</td></tr>
+        <tr><td>Taxiways</td><td>T, parallel to the runway on the south side. Links A, B, C, D, E, F, K, L and M join it to the runway</td><td class="mono">2-1</td></tr>
+        <tr><td>Stands</td><td>Main apron 3–10, west apron 12–14, GA apron 15, east apron 21–28. All nose-in, pushed back onto T</td><td class="mono">2-2</td></tr>
+        <tr><td>Hot spot</td><td>HS1 at Alpha and T2: the GA apron, stand 10 and the holding point sit close together</td><td class="mono">2-1</td></tr>
+      </table></div>
+      <h3>Where departures go</h3>
+      <p>Runway 27 departures taxi east along T to <b>Mike</b>; runway 09 departures west to <b>Alpha</b>. Both join the runway at its end, so there is no backtrack. Lima, Kilo, Bravo and Charlie are intersections: a departure from one of them backtracks to the turning area first. Arrivals take the first exit ahead of them: Echo, Delta or Charlie rolling west on 27, Foxtrot, Kilo, Lima or Mike rolling east on 09.</p>
+    </section>
+
+    <section id="c-ground" data-apt="EGLC" data-track="ap"><h2><span class="n">03</span>Ground and departures</h2>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Holding point</th><th>Push</th><th>Command</th></tr>
+        <tr><td>27</td><td>Mike (full length)</td><td>Facing east</td><td class="mono">PUSH · TAXI M</td></tr>
+        <tr><td>09</td><td>Alpha (full length)</td><td>Facing west</td><td class="mono">PUSH W · TAXI A</td></tr>
+      </table></div>
+      <h3>SIDs</h3>
+      <p>Four RNAV SIDs, named for their exit fix: <b>BPK</b> for Scotland and the north, <b>SAXBI</b> for Ireland, the west and the Channel Islands, <b>SOQQA</b> for the Netherlands and Scandinavia, and <b>ODUKU</b> for France, Germany, Switzerland, Italy and Iberia. Off runway 27 they are the <b>1A</b> routes, off 09 the <b>1H</b>. All climb straight ahead first, with no turn below <b>1,102 ft</b> off 27 or <b>570 ft</b> off 09, and all stop at <b>3,000 ft</b>.</p>
+      <div class="rt">
+        <div><span class="w">TWR</span><span class="a">Flyer eight seven zero three, cleared to Edinburgh via BPK one Alpha departure, climb altitude 3,000 feet, squawk 4613, start-up and push back approved, facing east, QNH 1014</span></div>
+        <div><span class="w">CFE8703</span><span class="p">Cleared Edinburgh, BPK one Alpha, 3,000 feet, squawk 4613, start and push approved facing east, QNH 1014, Flyer eight seven zero three</span></div>
+      </div>
+      <h3>The release from London Control</h3>
+      <p>Every departure needs a <b>release from London Control</b> on the landline before take-off. Press <b>Request release</b> or type <code>REL</code> once it is taxiing. The release is valid for about ten minutes, and <code>CTO</code> is refused without one. Once airborne, hand it to Thames with <code>HO</code>; when it asks for more, climb it and transfer it to London Control with <code>HO</code> again.</p>
+    </section>
+
+    <section id="c-arrivals" data-apt="EGLC" data-track="ap"><h2><span class="n">04</span>Arrivals and the steep ILS</h2>
+      <h3>STARs, holds and transitions</h3>
+      <p>London Control brings arrivals down their RNAV STARs to <b>JACKO</b> (FL090, from the north, west and east) or <b>GODLU</b> (FL100, from the south and south-west). From the hold, Thames takes them along a transition: <b>LAVNO 1J/1G</b> west up the estuary to the runway 27 localiser at 3,000 ft, or <b>ODLEG 1J/1G</b> round the south of the city to the runway 09 localiser at 2,000 ft. You can shorten either with a direct-to, or vector off it.</p>
+      <h3>The 5.5° ILS</h3>
+      <p>Clear the approach with <code>APP</code>. The glidepath is <b>5.5°</b>, nearly twice the usual 3°: about 585 ft per mile, or 1,200 ft a minute at City approach speeds. Only aircraft certified for steep approaches come here: the Embraer 190 and 195-E2, the A220-100, the Dash 8-400, the ATR and a handful of business jets.</p>
+      <div class="tbl"><table>
+        <tr><th></th><th>Runway 27</th><th>Runway 09</th></tr>
+        <tr><td>Transition</td><td>LAVNO 1J/1G up the estuary</td><td>ODLEG 1J/1G round the south</td></tr>
+        <tr><td>Glidepath</td><td>5.5° from 3,000 ft, about 5 NM out</td><td>5.5° from 2,000 ft, about 3.4 NM out</td></tr>
+        <tr><td>Approach ban</td><td colspan="2">1,000 m visibility and a 300 ft cloud base, checked at four miles</td></tr>
+        <tr><td>Missed approach</td><td colspan="2">Straight ahead to 2,000 ft, at 5.6 DME turn back (27 right, 09 left) to the LCY NDB and hold</td></tr>
+      </table></div>
+      <div class="rt">
+        <div><span class="w">APP</span><span class="a">KLM City nine eight three, descend altitude 3,000 feet, QNH 1014, cleared ILS approach runway 27, glidepath five decimal five degrees</span></div>
+        <div><span class="w">KLC983</span><span class="p">Descend 3,000 feet, QNH 1014, cleared ILS runway 27, KLM City nine eight three</span></div>
+      </div>
+      <p>Hand the arrival to the Tower with <code>HO</code> and clear it to land with <code>CTL</code> before four miles. At four miles the crew calls the Tower and checks the weather; below the approach ban, they go around.</p>
+    </section>
+
+    <section id="c-airspace" data-apt="EGLC" data-track="ap"><h2><span class="n">05</span>Airspace and obstacles</h2>
+      <p>London City is inside the London CTR, under the TMA. Central London's restricted areas R157 to R160 begin a few miles west. The runway 09 final crosses <b>R160</b>, which is fine on the published procedures under your clearance; vectoring an aircraft through it below 3,000 ft, off the procedures, counts as an infringement.</p>
+      <p>The towers of <b>Canary Wharf</b> rise to 771 ft about 2.4 NM west of the runway. Any aircraft over them below 1,200 ft is an obstacle incident, and below 900 ft a serious one.</p>
+      <div class="callout"><div class="lbl">Weekend closure</div><p>London City closes from 12:30 on Saturday to 12:30 on Sunday local time, and overnight from 22:30. The timetable respects those hours, so a Saturday evening session is quiet.</p></div>
+    </section>
+
+    <section id="c-exercises" data-apt="EGLC" data-track="ap"><h2><span class="n">06</span>Guided exercises</h2>
+      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. Complete all three for the <b>Docklands endorsement</b> badge.</p>
+      <div class="exgrid">
+        <div class="ex"><div class="nm">1 · First departure</div><p>A BA CityFlyer Embraer 190 on stand 5 for Edinburgh, runway 27. Push with its BPK 1A SID, taxi to Mike, get London's release, take off, and hand it to Thames and then London Control.</p><button class="btn primary" data-ex="cdep">Start exercise</button></div>
+        <div class="ex"><div class="nm">2 · The steep approach</div><p>A KLM Cityhopper 195-E2 from Amsterdam via JACKO. Clear the ILS 27 from the LAVNO transition, watch it come down the 5.5° glidepath, land it and taxi it in.</p><button class="btn primary" data-ex="carr">Start exercise</button></div>
+        <div class="ex"><div class="nm">3 · Easterly: runway 09</div><p>Runway 09 in use. Get a departure away from Alpha, then bring a Swiss A220 round the south of London on the ODLEG transition, past Canary Wharf to land.</p><button class="btn primary" data-ex="ceast">Start exercise</button></div>
+      </div>
+    </section>
+
+    <section id="c-limits" data-apt="EGLC" data-track="ap"><h2><span class="n">07</span>What is simplified at London City</h2>
+      <ul>
+        <li>Thames Director and City Tower are one position, and Ground is worked on the Tower frequency.</li>
+        <li>London Control frequencies are representative, and the release times are modelled.</li>
+        <li>The SID coding page was not in the chart set, so SIDs follow the tracks drawn on the SID charts.</li>
+        <li>Every crew is approved for the steep approach, and the four-mile check stands in for the real decision altitude, which is much closer in.</li>
+        <li>The timetable is a representative summer week. Live now uses today's real flights and positions.</li>
+      </ul>
+    </section>
+
     <section id="m-position" data-apt="LPMA" data-track="ap"><h2><span class="n">01</span>Your position at Madeira</h2>
       <p>You are <b>Madeira Approach (119.605)</b> and <b>Madeira Tower (124.660)</b> combined, with ground movement on the Tower frequency. Arrivals call Approach on their STAR, inbound to the <b>PILIM</b> hold. You hand them to Tower once they are on the approach. Departures start with Tower, go to Approach once airborne, and you transfer them to <b>Lisboa Control 132.255</b> once they are established on their SID. The ATIS is <b>Madeira Information</b> on 130.355.</p>
       <p>The transition altitude is <b>5,000 ft</b>, so levels above it are flight levels. The minimum sector altitude is 3,500 ft over the sea to the east and 8,200 ft everywhere else, because of the island.</p>
@@ -870,6 +1069,6 @@
     </section>
   </article>
 </div>
-<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span></div></footer>
+<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span></div></footer>
 </section>
 </main>

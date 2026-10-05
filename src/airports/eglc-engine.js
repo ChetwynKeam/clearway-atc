@@ -303,14 +303,6 @@ const APT = {
       ['CFE8721', 51.53, -0.20, 275, 220, PAL.light.dep], ['DLH9RT', 51.60, 0.35, 75, 230, PAL.light.dep],
       ['BAW23K', 51.40, -0.75, 85, 420, 'rgba(60,75,95,.7)'], ['EZY81TP', 51.95, 0.40, 210, 410, 'rgba(60,75,95,.7)'], ['RYR4LG', 51.15, -0.30, 20, 430, 'rgba(60,75,95,.7)']
     ],
-    scen: {
-      sw: 'The usual south-westerly. Runway 27 with the ILS from the LAVNO transition, departures from Mike on RNAV SIDs capped at 3,000 ft.',
-      east: 'An easterly. Runway 09, arrivals round the south of London to ODLEG and a short final past the Canary Wharf towers.',
-      low: 'Drizzle and a 400 ft cloud base. The 5.5° ILS still works, just: watch the four-mile check against the approach ban.',
-      fog: 'Thames fog below the ILS minima. Hold arrivals at JACKO and GODLU and plan diversions to Southend while departures wait for the visibility.',
-      storm: 'A gusty south-westerly gale across the docks. Expect turbulence on short final and some go-arounds.',
-      calm: 'High pressure, light and variable winds and haze. A quiet day to learn the flow.'
-    },
     demo(mk, park){
       const F = FINAL['27'], fin = add(T_HI, CRS_LO, 2.4), out = add(T_LO, CRS_HI, 4.5), inb = add(WP.JACKO.p, 200, 4), twy = GN[HOLDS.M.node].p;
       return [
@@ -328,7 +320,7 @@ const APT = {
       const c = zoom === 'apron' ? rm(330, -100) : rm(640, -50);
       return v => { v.cx = c[0]; v.cy = c[1]; v.scale = W/((zoom === 'apron' ? 700 : 1900)*M2NM); };
     },
-    figAspect: '3.6 / 1', figHold: 'JACKO', emergHp: 'M',
+    figHold: 'JACKO', emergHp: 'M',
     figConsole: v => { v.scale *= 1.6; v.cx += 2; v.cy += 2; },
     cmdHint: 'Command, e.g. KLC983 H090 A50 · CFE8703 TAXI M · / to focus, Tab cycles flights'
   },

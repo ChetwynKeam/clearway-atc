@@ -1,6 +1,6 @@
 """Assemble the single-file Clearway simulator from src/ parts, one page per airport (same engine, site and Academy):
 LXGB: dist/index.html (GitHub Pages) and dist/gibraltar-atc.html (claude.ai artifact body);
-LPMA: dist/lpma/index.html and dist/madeira-atc.html."""
+LPMA: dist/lpma/index.html and dist/madeira-atc.html; EGLC: dist/eglc/index.html and dist/london-city-atc.html."""
 import pathlib
 root = pathlib.Path(__file__).parent
 src = root/'src'
@@ -11,11 +11,14 @@ _logo = re.search(r'<svg class="logo".*?</svg>', r('site.html')).group(0).replac
 fav = 'data:image/svg+xml,' + urllib.parse.quote(_logo, safe=" =:/'.,-")
 fonts = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap'
 AIRPORTS = {
-    'LXGB': dict(title='Clearway ATC Simulator', desc='Clearway: browser-based air traffic control simulation at real airports: Gibraltar (LXGB) and Madeira (LPMA).',
+    'LXGB': dict(title='Clearway ATC Simulator', desc='Clearway: browser-based air traffic control simulation at real airports: Gibraltar (LXGB), Madeira (LPMA) and London City (EGLC).',
                  geo='geo.json', profile=['airports/lxgb.js'], artifact='gibraltar-atc.html', page='index.html'),
     'LPMA': dict(title='Madeira · Clearway ATC Simulator', desc='Clearway: air traffic control at Madeira (LPMA), with the real procedures, wind limits and live traffic.',
                  geo='airports/lpma.geo.json', profile=['airports/lpma.js', 'airports/lpma-engine.js'], artifact='madeira-atc.html', page='lpma/index.html',
                  data=('LPMA', 'airports/lpma.js')),
+    'EGLC': dict(title='London City · Clearway ATC Simulator', desc='Clearway: air traffic control at London City (EGLC), with the 5.5° steep approaches, RNAV SIDs and STARs, and live traffic.',
+                 geo='airports/eglc.geo.json', profile=['airports/eglc.js', 'airports/eglc-engine.js'], site=['airports/eglc-site.js'], artifact='london-city-atc.html', page='eglc/index.html',
+                 data=('EGLC', 'airports/eglc.js')),
 }
 # One website: the airport whose page is index.html hosts every page of the site (home, airports, every briefing, the
 # whole Academy, Career). The other airports' pages only run their simulator (#sim, #ex/<key>, #wx/<preset>, #live)
@@ -33,6 +36,7 @@ def page(icao, A):
     others = [(k, B['data']) for k, B in AIRPORTS.items() if k != icao and B.get('data')] if icao == HOST else []
     prof += ''.join('\n' + r(f) for k, (g, f) in others)
     ap_data = '{' + ', '.join(f'{k}: {g}' for k, (g, f) in others) + '}'
+    site = '\n'.join(r(n) for n in A.get('site', []))   # the airport's own Academy coach steps, after site.js
     out = f'''<meta charset="utf-8">
 <title>{A['title']}</title>
 <link rel="icon" type="image/svg+xml" href="{fav}">
@@ -63,6 +67,7 @@ const AP_DATA = {ap_data};
 {r('voice.js')}
 {r('radio.js')}
 {r('site.js')}
+{site}
 </script>
 '''
     import json
