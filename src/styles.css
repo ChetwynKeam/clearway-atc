@@ -400,6 +400,46 @@ a.ap:hover { border-color: var(--line-2); box-shadow: var(--shadow-2); transform
 .chips button.on { color: #fff; background: var(--brand); border-color: var(--brand); }
 .tog { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 14.5px; }
 .tog input { accent-color: var(--accent); width: 16px; height: 16px; }
+.viewsw { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; margin-left: auto; padding: 3px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--panel-2); }
+.viewsw button { position: relative; z-index: 1; min-width: 68px; padding: 6px 14px; border: 0; background: none; border-radius: 999px; font: 600 14px var(--font-body); color: var(--dim); cursor: pointer; transition: color .2s; }
+.viewsw button[aria-checked="true"] { color: #fff; }
+.viewsw .thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px; background: var(--brand); box-shadow: var(--shadow-1); transition: transform .22s ease; }
+.viewsw[data-v="map"] .thumb { transform: translateX(100%); }
+.wmap { position: relative; height: min(600px, 68vh); min-height: 360px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #aad3df; box-shadow: var(--shadow-1); touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.wmap.drag { cursor: grabbing; }
+.wmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.wm-pins { position: absolute; inset: 0; pointer-events: none; }
+.wm-pins button { pointer-events: auto; position: absolute; cursor: pointer; }
+.wm-pin { width: 24px; height: 32px; padding: 0; margin: -31px 0 0 -12px; border: 0; background: none; filter: drop-shadow(0 2px 2px rgba(12,27,46,.35)); }
+.wm-pin svg { display: block; width: 24px; height: 32px; transition: transform .15s; transform-origin: 50% 100%; }
+.wm-pin path { fill: var(--c); stroke: #fff; stroke-width: 1.6; }
+.wm-pin circle { fill: #fff; }
+.wm-pin span { position: absolute; left: 25px; top: 4px; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,.92); color: var(--ink); font: 500 11px var(--font-data); letter-spacing: .02em; white-space: nowrap; box-shadow: 0 1px 2px rgba(12,27,46,.18); }
+.wm-pin:hover svg, .wm-pin:focus-visible svg, .wm-pin.sel svg { transform: scale(1.18); }
+.wm-pin:hover, .wm-pin:focus-visible, .wm-pin.sel { z-index: 2; }
+.wm-clu { width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; border: 2px solid #fff; background: var(--c); color: #fff; font: 700 13px var(--font-body); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent), 0 2px 4px rgba(12,27,46,.3); }
+.wm-clu:hover { transform: scale(1.08); }
+.wm-pop { position: absolute; z-index: 3; width: 280px; max-width: calc(100% - 16px); padding: 14px 16px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow-2); cursor: default; }
+.wm-pop .id { display: flex; align-items: center; gap: 8px; padding-right: 22px; }
+.wm-pop .icao { font-family: var(--font-data); font-weight: 500; font-size: 13px; color: var(--accent-2); }
+.wm-pop .badge { margin-left: auto; }
+.wm-pop h3 { font-size: 19px; margin: 6px 0 0; }
+.wm-pop .ctry { color: var(--dim); font-size: 13px; }
+.wm-pop p { margin: 8px 0 0; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+.wm-pop .note { margin-top: 10px; font-size: 12.5px; color: var(--dim); }
+.wm-pop .x { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 6px; background: none; color: var(--dim); font-size: 20px; line-height: 1; cursor: pointer; }
+.wm-pop .x:hover { background: var(--panel-2); color: var(--ink); }
+.wm-zoom { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; background: var(--panel); box-shadow: var(--shadow-1); }
+.wm-zoom button { width: 34px; height: 34px; border: 0; border-top: 1px solid var(--line); background: none; color: var(--ink); font: 500 19px var(--font-body); cursor: pointer; display: grid; place-items: center; }
+.wm-zoom button:first-child { border-top: 0; }
+.wm-zoom button:hover { background: var(--panel-2); }
+.wm-zoom svg { width: 16px; height: 16px; }
+.wm-key { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 14px; flex-wrap: wrap; padding: 7px 12px; border-radius: 8px; background: rgba(255,255,255,.94); box-shadow: var(--shadow-1); font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.wm-key span { display: inline-flex; align-items: center; gap: 6px; }
+.wm-key i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(12,27,46,.2); }
+.wm-credit { position: absolute; right: 0; bottom: 0; padding: 2px 6px; background: rgba(255,255,255,.8); font-size: 11px; color: var(--ink-2); border-top-left-radius: 6px; }
+.wm-credit a { color: inherit; }
+@media (max-width: 680px) { .viewsw { margin-left: 0; } .wm-key { right: 12px; bottom: 26px; gap: 10px; font-size: 12px; } .wmap { height: 62vh; } }
 .empty { color: var(--dim); }
 
 /* airport page */
