@@ -95,6 +95,16 @@ const RW_ENDS = RWYS.flatMap(r => [r.lo, r.hi]);
 const rwyOf = rw => RWYS.find(r => r.lo === rw || r.hi === rw) || RWYS[0];
 const rwyById = id => RWYS.find(r => r.id === id) || RWYS[0];
 const holdRwy = hp => rwyById(HOLDS[hp] && HOLDS[hp].on);
+// intermediate holding points along the taxiways (APT.ihps, from the aerodrome chart): { id, node } or { id, tw, at }
+const IHPS = {};
+for (const h of APT.ihps || []) {
+  const node = h.node || splitAt('IHP_' + h.id, h.at, h.tw); if (!node || !GN[node]) continue;
+  const tw = h.tw || (GN[node].adj[0] && GN[node].adj[0][1].tw), nb = GN[node].adj.filter(([, e]) => e.tw === tw).map(([v]) => GN[v].p);
+  const dir = nb.length > 1 ? brg(...nb[0], ...nb[1]) : nb.length ? brg(...GN[node].p, ...nb[0]) : 0;
+  IHPS[h.id] = { id: h.id, node, tw, dir };
+}
+// any named holding point: a runway holding point or an intermediate one
+const holdPt = id => HOLDS[id] ? { id, node: HOLDS[id].node, rwy: true } : IHPS[id] ? { id, node: IHPS[id].node, rwy: false } : null;
 // something on the pavement of the runway that rw names (either direction)
 const onRunway = (o, rw) => o.onRwy && (o.rwyId || RWYS[0].id) === rwyOf(rw).id;
 // runways in use for landing or departure: taxiing traffic holds short of these until cleared to cross
@@ -102,6 +112,8 @@ const activeRwy = id => rwyOf(S.rwy).id === id || rwyOf(depRw()).id === id;
 const rwyName = id => { const R = rwyById(id); return [S.rwy, depRw()].find(r => rwyOf(r) === R) || R.lo + '/' + R.hi; };
 
 // ── phraseology. ICAO (UK and European) wording unless the profile overrides it (APT.phr: New York uses the FAA's).
+// a holding point's spoken name: "T3" is Tango 3
+const hpWords = id => { id = id.replace(/~\d+$/, ''); return PHON[id] || id.replace(/^([A-Z]+)(\d+)$/, (m, l, d) => (PHON[l] || l) + ' ' + d); };
 const PH = Object.assign({
   altim: () => `QNH ${S.wx.qnh}`,
   alt: (a, up) => [`${up ? 'climb' : 'descend'} ${altWords(a)}`, `${up ? 'climb' : 'descend'} ${altShort(a)}`],
@@ -119,6 +131,8 @@ const PH = Object.assign({
   cross: (ac, rw) => [`cross runway ${rw}`, `crossing runway ${rw}`],
   vacated: ac => `runway vacated via ${PHON[ac.exit] || ac.exit.replace(/~\d+$/, "")}, request taxi${ac.stand ? ' to stand ' + ac.stand.id : ''}`,
   taxiIn: (ac, st, vw) => [`taxi to stand ${st.id}${viaWords(vw)}`, `stand ${st.id}${viaWords(vw)}`],
+  taxiHold: (ac, h, vw) => [`taxi to holding point ${hpWords(h.id)}${viaWords(vw)}`, `holding point ${hpWords(h.id)}${viaWords(vw)}`],
+  atHoldPt: (ac, h) => `holding at ${hpWords(h.id)}`,
   holdShort: (ac, rw) => `holding short of runway ${rw}`
 }, APT.phr || {});
 
@@ -428,19 +442,24 @@ function startVacate(ac, auto){
   setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; if (!ac.taxiIn) { ac.need = 'Request taxi'; pilot(ac, PH.vacated(ac)); } emit('vacated', ac); });
 }
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
-function taxiIn(ac, st, via){
+function taxiIn(ac, st, via, hold){
   // still rolling off (or re-routed while taxiing in): carry on to the vacate stop point, then on from there
   const rolling = ac.path && !ac.taxiIn && !ac.vacated, from = rolling || !ac.path ? ac.vacNode || nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id;
-  const r = route(from, st.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined); if (!r) return null;
-  if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null;
-  st.occ = ac; ac.stand = st;
+  const r = route(from, hold ? hold.node : st.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined); if (!r) return null;
+  if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
   const pts = r.nodes.map(id => GN[id].p);
   if (rolling) pts.splice(0, 1, ...ac.path.pts);
   else if (pts.length > 1 && (dist(ac.x, ac.y, ...pts[0]) < 0.01 || (ac.path && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90))) pts.shift();   // already there, or passed it
+  ac.taxiIn = true; ac.need = null; ac.held = false; ac.holdAt = null; ac.taxiVia = viaOf(r.tws, ac.exit);
+  // to a holding point: it stops there and waits for the next taxi instruction
+  if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, () => atHoldIn(ac, hold)); else atHoldIn(ac, hold, true); return ac.taxiVia; }
   pts.push(st.p);
-  ac.taxiIn = true; ac.need = null; ac.held = false; ac.taxiVia = viaOf(r.tws, ac.exit);
   setPath(ac, pts, 15, () => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; emit('onstand', ac); turnRound(ac); });
   return ac.taxiVia;
+}
+function atHoldIn(ac, hold, quiet){
+  ac.taxiIn = false; ac.vacated = true; ac.vacNode = hold.node; ac.holdAt = hold.id; ac.path = null; ac.gs = 0;
+  ac.need = `Holding at ${hold.id.replace(/~\d+$/, '')}`; if (!quiet) pilot(ac, PH.atHoldPt(ac, hold));
 }
 // on the runway, a vacating aircraft keeps its roll-out speed (or backtracks at VAC_RWY) and brakes in time for the
 // first real turn on its path: the turn-off, or the turning circle
@@ -595,29 +614,33 @@ function commandRun(str){
     } else if (t === 'TAXI' && ac.kind === 'ARR') {
       if (ac.state !== 'VACATING') { sys(`${ac.cs} ${['ROLLED','ROLLOUT'].includes(ac.state) ? 'has not vacated the runway yet' : 'is not on the ground'}.`); continue; }
       if (ac.onRwy) { sys(`${ac.cs} is still on the runway: let it vacate first.`); continue; }
-      let st = ac.stand; if (toks[i+1] === 'STAND' || toks[i+1] === 'GATE') i++;
-      if (toks[i+1] && toks[i+1] !== 'VIA') { const want = STANDS.find(x => x.id.toUpperCase() === toks[i+1]); if (!want) { sys(`There is no stand ${toks[i+1]}.`); continue; } i++;
+      let st = ac.stand, hold = null; if (toks[i+1] === 'STAND' || toks[i+1] === 'GATE') i++;
+      else if (toks[i+1] && holdPt(toks[i+1])) hold = holdPt(toks[++i]);
+      if (!hold && toks[i+1] && toks[i+1] !== 'VIA') { const want = STANDS.find(x => x.id.toUpperCase() === toks[i+1]); if (!want) { sys(`There is no stand ${toks[i+1]}.`); continue; } i++;
         if (want.occ && want.occ !== ac) { sys(`Stand ${want.id} is occupied (${want.occ.cs}).`); continue; } st = want; }
       if (!st) { st = freeStand(ac); if (!st) { sys(`No free stand for ${ac.cs}.`); continue; } }
       const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
-      const vw = taxiIn(ac, st, via); if (!vw) { sys(`No taxi route to stand ${st.id}.`); continue; }
-      { const [sa, ra] = PH.taxiIn(ac, st, vw); said.push(sa); reads.push(ra); }
+      const vw = taxiIn(ac, st, via, hold); if (!vw) { sys(`No taxi route to ${hold ? 'holding point ' + hold.id : 'stand ' + st.id}.`); continue; }
+      { const [sa, ra] = hold ? PH.taxiHold(ac, hold, vw) : PH.taxiIn(ac, st, vw); said.push(sa); reads.push(ra); }
     } else if (t === 'TAXI') {
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
+      const ihp = toks[i+1] && IHPS[toks[i+1]] && !HOLDS[toks[i+1]] ? IHPS[toks[++i]] : null;   // an intermediate holding point on the way
       let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
       const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
       { const why = APT.taxiCheck && APT.taxiCheck(ac, hp); if (why) { sys(why); continue; } }
-      const rt = taxiRoute(ac, hp, via); if (!rt) { sys(`No taxi route to holding point ${hp}.`); continue; }
+      const rt = ihp ? route(taxiFrom(ac), ihp.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined) : taxiRoute(ac, hp, via);
+      if (!rt) { sys(`No taxi route to holding point ${ihp ? ihp.id : hp}.`); continue; }
       ac.hp = hp;
       const pts = rt.nodes.map(id => GN[id].p);
       // pushed onto the lane already: don't taxi back to the stand's lead-in point if the next node is ahead
       if (ac.pushed && !ac.leftStand && pts.length > 1 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90) pts.shift();
       if (ac.state === 'PARKED') { ac.pushed = false; pts.unshift(ac.stand.lp); }
-      ac.state = 'TAXI'; ac.need = null; ac.leftStand = true; ac.held = false;
-      setPath(ac, pts, 15, () => { ac.state = 'HOLDPT'; if (!ac.cto) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac); });
+      ac.state = 'TAXI'; ac.need = null; ac.leftStand = true; ac.held = false; ac.holdAt = null;
+      if (ihp) setPath(ac, pts, 15, () => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); });
+      else setPath(ac, pts, 15, () => { ac.state = 'HOLDPT'; if (!ac.cto) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac); });
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       const vw = viaOf(rt.tws, hp);
-      { const [sa, ra] = PH.taxi(ac, hp, vw); said.push(sa); reads.push(ra); }
+      { const [sa, ra] = ihp ? PH.taxiHold(ac, ihp, vw) : PH.taxi(ac, hp, vw); said.push(sa); reads.push(ra); }
     } else if (t === 'CROSS' || t === 'X') {
       if (air || !ac.path) { sys(`${ac.cs} is not taxiing.`); continue; }
       const want = RW_ENDS.includes(toks[i+1]) ? rwyOf(toks[++i]).id : ac.hsAt || (xingAhead(ac) >= 0 ? ac.path.pts[xingAhead(ac)].hs : null);
