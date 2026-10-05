@@ -1,13 +1,14 @@
 name: Refresh airport flights
 # Saves each airport's live arrivals and departures for the simulator's Real world mode:
-# Gibraltar (gibraltarairport.gi) as flights.json, Madeira (madeiraairport.pt, ANA's flight feed) as lpma/flights.json.
+# Gibraltar (gibraltarairport.gi) as flights.json, Madeira (madeiraairport.pt, ANA's flight feed) as lpma/flights.json,
+# London City (avionio.com's LCY boards: londoncityairport.com refuses automated requests) as eglc/flights.json.
 on:
   schedule:
     - cron: '2,17,32,47 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['.github/workflows/flights.yml', 'tools/airport_flights.py', 'tools/ana_flights.py']
+    paths: ['.github/workflows/flights.yml', 'tools/airport_flights.py', 'tools/ana_flights.py', 'tools/avionio_flights.py']
 permissions:
   contents: write
 concurrency: flights
@@ -29,9 +30,16 @@ jobs:
           python3 tools/ana_flights.py /tmp/fnc_a.json /tmp/fnc_d.json /tmp/lpma.json || exit 0
           # the feed covers every ANA airport when the IATA filter is ignored; Madeira alone is well under 300 a day each way
           python3 -c "import json,sys; d=json.load(open('/tmp/lpma.json'))['days']; sys.exit(0 if d and all(len(v['arr'])<300 and len(v['dep'])<300 for v in d.values()) else 1)" && mkdir -p lpma && cp /tmp/lpma.json lpma/flights.json || echo "no Madeira flights parsed"
+      - name: Fetch London City's flight information
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"
+          curl -sSL --compressed -m 30 -A "$UA" -o /tmp/lcy_a.html https://www.avionio.com/en/airport/lcy/arrivals || exit 0
+          curl -sSL --compressed -m 30 -A "$UA" -o /tmp/lcy_d.html https://www.avionio.com/en/airport/lcy/departures || exit 0
+          python3 tools/avionio_flights.py /tmp/lcy_a.html /tmp/lcy_d.html /tmp/eglc.json || exit 0
+          python3 -c "import json,sys; d=json.load(open('/tmp/eglc.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p eglc && cp /tmp/eglc.json eglc/flights.json || echo "no London City flights parsed"
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add flights.json lpma/flights.json 2>/dev/null; git add flights.json 2>/dev/null || exit 0
+          for f in flights.json lpma/flights.json eglc/flights.json; do [ -f "$f" ] && git add "$f"; done; true
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main
