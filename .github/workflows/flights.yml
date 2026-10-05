@@ -1,0 +1,28 @@
+name: Refresh LXGB flights
+# Saves Gibraltar Airport's live arrivals and departures as flights.json for the simulator's Real world mode.
+on:
+  schedule:
+    - cron: '2,17,32,47 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/flights.yml', 'tools/airport_flights.py']
+permissions:
+  contents: write
+concurrency: flights
+jobs:
+  flights:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the airport's flight information
+        run: |
+          curl -sSL --compressed -m 30 -A "Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)" -o /tmp/live.html https://www.gibraltarairport.gi/airlines-and-destinations/live-flight-information || exit 0
+          python3 tools/airport_flights.py /tmp/live.html /tmp/flights.json || exit 0
+          python3 -c "import json,sys; d=json.load(open('/tmp/flights.json')); sys.exit(0 if d['days'] else 1)" && cp /tmp/flights.json flights.json || echo "no flights parsed"
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add flights.json 2>/dev/null || exit 0
+          git diff --cached --quiet && { echo "unchanged"; exit 0; }
+          git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main
