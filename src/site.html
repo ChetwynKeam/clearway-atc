@@ -216,9 +216,16 @@
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
       <button id="tgTalk" class="talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Hold to talk</button>
       <button id="tgSetup">Session</button>
+      <button id="tgFids" title="Today's arrivals and departures">Flights</button>
       
       <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
       <button id="tgFull" title="Full screen">Full screen</button>
+    </div>
+    <div class="fids" id="fids" hidden role="dialog" aria-label="Flight information">
+      <div class="fids-hd"><div><b>Gibraltar · flight information</b><span id="fidsClock"></span></div>
+        <div class="seg" role="tablist"><button data-fids="ARR" class="on">Arrivals</button><button data-fids="DEP">Departures</button></div>
+        <button class="x" id="fidsClose" aria-label="Close">×</button></div>
+      <div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th id="fidsAp">From</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fidsBody"></tbody></table></div>
     </div>
     <div class="heard" id="heard" hidden></div>
     <div class="hud-score" id="score"></div>

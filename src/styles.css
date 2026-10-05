@@ -528,3 +528,33 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 .livewx input { margin-top: 3px; accent-color: var(--accent); }
 #liveWxSt { margin-top: 4px; font-family: var(--font-data); }
 #liveWxSt.ok { color: var(--ok); } #liveWxSt.bad { color: var(--alert); }
+
+/* flight information board */
+.fids { position: absolute; top: 108px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100% - 32px)); max-height: calc(100% - 140px); display: flex; flex-direction: column;
+  background: #0b1a2c; color: #e9eef5; border-radius: 10px; box-shadow: 0 18px 50px rgba(5,15,30,.45); z-index: 30; overflow: hidden; }
+.fids-hd { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.fids-hd > div:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fids-hd b { font: 600 14px "Inter Tight", Inter, system-ui, sans-serif; letter-spacing: .02em; }
+.fids-hd span { font: 12px "JetBrains Mono", ui-monospace, monospace; color: #9fb3c8; }
+.fids .seg { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.12); box-shadow: none; }
+.fids .seg button { color: #cfdae6; background: transparent; border: 0; padding: 5px 12px; border-radius: 4px; font: 500 13px Inter, system-ui, sans-serif; cursor: pointer; }
+.fids .seg button.on { background: #f7c600; color: #1b1500; }
+.fids .x { background: transparent; border: 0; color: #cfdae6; font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 6px; }
+.fids-wrap { overflow: auto; }
+.fids table { width: 100%; border-collapse: collapse; font: 13px "JetBrains Mono", ui-monospace, monospace; }
+.fids th { position: sticky; top: 0; background: #0b1a2c; text-align: left; font: 600 11px Inter, system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: #8aa0b8; padding: 8px 10px; }
+.fids td { padding: 8px 10px; border-top: 1px solid rgba(255,255,255,.06); color: #f3d36b; white-space: nowrap; }
+.fids td.fl { color: #fff; font-weight: 500; }
+.fids td .ic { margin-left: 8px; color: #7f93a8; font-size: 11px; }
+.fids td.ty, .fids td.sd { color: #b9c7d6; }
+.fids td.st { color: #cfdae6; }
+.fids td.st.live { color: #6fe3a3; }
+.fids td.st.ok { color: #9fb3c8; }
+.fids td.st.bad { color: #ff8a7a; }
+.fids tr.past td { opacity: .5; }
+.fids td.none { color: #9fb3c8; text-align: center; padding: 22px; }
+
+/* ATIS changed: flashing until acknowledged */
+.atis-warn { margin-right: 8px; padding: 3px 8px; border: 2px solid #d62d2d; border-radius: 4px; background: #d62d2d; color: #fff; font: 700 12px "Inter Tight", Inter, system-ui, sans-serif; letter-spacing: .08em; cursor: pointer; animation: atisFlash 1s steps(2, jump-none) infinite; }
+@keyframes atisFlash { 0% { background: #d62d2d; color: #fff; } 100% { background: transparent; color: #d62d2d; } }
+@media (prefers-reduced-motion: reduce) { .atis-warn { animation: none; } }

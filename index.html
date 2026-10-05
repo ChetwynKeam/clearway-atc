@@ -539,6 +539,36 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 #liveWxSt { margin-top: 4px; font-family: var(--font-data); }
 #liveWxSt.ok { color: var(--ok); } #liveWxSt.bad { color: var(--alert); }
 
+/* flight information board */
+.fids { position: absolute; top: 108px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100% - 32px)); max-height: calc(100% - 140px); display: flex; flex-direction: column;
+  background: #0b1a2c; color: #e9eef5; border-radius: 10px; box-shadow: 0 18px 50px rgba(5,15,30,.45); z-index: 30; overflow: hidden; }
+.fids-hd { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.fids-hd > div:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fids-hd b { font: 600 14px "Inter Tight", Inter, system-ui, sans-serif; letter-spacing: .02em; }
+.fids-hd span { font: 12px "JetBrains Mono", ui-monospace, monospace; color: #9fb3c8; }
+.fids .seg { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.12); box-shadow: none; }
+.fids .seg button { color: #cfdae6; background: transparent; border: 0; padding: 5px 12px; border-radius: 4px; font: 500 13px Inter, system-ui, sans-serif; cursor: pointer; }
+.fids .seg button.on { background: #f7c600; color: #1b1500; }
+.fids .x { background: transparent; border: 0; color: #cfdae6; font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 6px; }
+.fids-wrap { overflow: auto; }
+.fids table { width: 100%; border-collapse: collapse; font: 13px "JetBrains Mono", ui-monospace, monospace; }
+.fids th { position: sticky; top: 0; background: #0b1a2c; text-align: left; font: 600 11px Inter, system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: #8aa0b8; padding: 8px 10px; }
+.fids td { padding: 8px 10px; border-top: 1px solid rgba(255,255,255,.06); color: #f3d36b; white-space: nowrap; }
+.fids td.fl { color: #fff; font-weight: 500; }
+.fids td .ic { margin-left: 8px; color: #7f93a8; font-size: 11px; }
+.fids td.ty, .fids td.sd { color: #b9c7d6; }
+.fids td.st { color: #cfdae6; }
+.fids td.st.live { color: #6fe3a3; }
+.fids td.st.ok { color: #9fb3c8; }
+.fids td.st.bad { color: #ff8a7a; }
+.fids tr.past td { opacity: .5; }
+.fids td.none { color: #9fb3c8; text-align: center; padding: 22px; }
+
+/* ATIS changed: flashing until acknowledged */
+.atis-warn { margin-right: 8px; padding: 3px 8px; border: 2px solid #d62d2d; border-radius: 4px; background: #d62d2d; color: #fff; font: 700 12px "Inter Tight", Inter, system-ui, sans-serif; letter-spacing: .08em; cursor: pointer; animation: atisFlash 1s steps(2, jump-none) infinite; }
+@keyframes atisFlash { 0% { background: #d62d2d; color: #fff; } 100% { background: transparent; color: #d62d2d; } }
+@media (prefers-reduced-motion: reduce) { .atis-warn { animation: none; } }
+
 </style>
 </head>
 <body>
@@ -760,9 +790,16 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
       <button id="tgTalk" class="talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Hold to talk</button>
       <button id="tgSetup">Session</button>
+      <button id="tgFids" title="Today's arrivals and departures">Flights</button>
       
       <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
       <button id="tgFull" title="Full screen">Full screen</button>
+    </div>
+    <div class="fids" id="fids" hidden role="dialog" aria-label="Flight information">
+      <div class="fids-hd"><div><b>Gibraltar · flight information</b><span id="fidsClock"></span></div>
+        <div class="seg" role="tablist"><button data-fids="ARR" class="on">Arrivals</button><button data-fids="DEP">Departures</button></div>
+        <button class="x" id="fidsClose" aria-label="Close">×</button></div>
+      <div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th id="fidsAp">From</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fidsBody"></tbody></table></div>
     </div>
     <div class="heard" id="heard" hidden></div>
     <div class="hud-score" id="score"></div>
@@ -1283,7 +1320,7 @@ function timetableSession(d, h){
   for (const [ac, o, ta, dc, dd, td, t, days, stand] of TIMETABLE) {
     if (!days.includes(day)) continue;
     const reg = REGS[t] ? { reg: REGS[t] } : {}, arrM = ac ? hm(ta) - t0 : null, depM = dc ? hm(td) - t0 : null;
-    if (ac && arrM - 15 >= -10 && arrM - 15 <= 62) {
+    if (ac && arrM - 15 >= -10) {                                                     // the rest of the day's arrivals
       sched.push({ cs: ac, t, k: 'ARR', o, gate: gateFor(o), m: Math.max(0, arrM - 15), at: ta, ...reg, turn: dc ? { cs: dc, d: dd, depM, at: td, stand } : null });
     } else if ((!ac || arrM - 15 < -10) && dc && depM > 0) {
       residents.push({ cs: dc, t, k: 'RES', d: dd, gate: gateFor(dd), m: 0, depM, at: td, stand, ...reg });
@@ -1532,7 +1569,7 @@ function freeStand(ac){
 const ATIS_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const PHON_ALPHA = ['Alfa','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India','Juliett','Kilo','Lima','Mike','November','Oscar','Papa','Quebec','Romeo','Sierra','Tango','Uniform','Victor','Whiskey','X-ray','Yankee','Zulu'];
 const phonetic = l => PHON_ALPHA[ATIS_LETTERS.indexOf(l)] || l;
-function nextAtis(){ S.atis = ATIS_LETTERS[(ATIS_LETTERS.indexOf(S.atis)+1) % 26]; }
+function nextAtis(alert = true){ S.atis = ATIS_LETTERS[(ATIS_LETTERS.indexOf(S.atis)+1) % 26]; if (alert) S.atisAlert = true; }   // the warning stays until the controller acknowledges it
 
 // ═════════════════════════ ground movement ═════════════════════════
 const P = (m, off=0) => rm(m, off);
@@ -2042,8 +2079,13 @@ let W = 0, H = 0, DPR = 1;
 function resize(){ const r = cv.getBoundingClientRect(); DPR = window.devicePixelRatio || 1; W = r.width; H = r.height; cv.width = Math.max(1, W*DPR); cv.height = Math.max(1, H*DPR); }
 window.addEventListener('resize', () => { resize(); });
 const V = S.view;
-const sx = x => W/2 + (x - V.cx)*V.scale, sy = y => H/2 - (y - V.cy)*V.scale;
-const wx2 = px => (px - W/2)/V.scale + V.cx, wy2 = py => -(py - H/2)/V.scale + V.cy;
+// Web Mercator display (like FlightRadar24): x stays linear in longitude, y is stretched by latitude so the map keeps
+// its shape at any zoom. MY maps sim y (NM north of LAT0) to Mercator NM at Gibraltar's scale; IMY inverts it.
+const MK = R2D*60*COSL, MY0 = Math.log(Math.tan(Math.PI/4 + LAT0*D2R/2));
+const MY = y => (Math.log(Math.tan(Math.PI/4 + (LAT0 + y/60)*D2R/2)) - MY0)*MK;
+const IMY = Y => ((2*Math.atan(Math.exp(Y/MK + MY0)) - Math.PI/2)*R2D - LAT0)*60;
+const sx = x => W/2 + (x - V.cx)*V.scale, sy = y => H/2 - (MY(y) - MY(V.cy))*V.scale;
+const wx2 = px => (px - W/2)/V.scale + V.cx, wy2 = py => IMY(MY(V.cy) - (py - H/2)/V.scale);
 function poly(pts, close=true){ cx.beginPath(); pts.forEach((p,i) => { const X = sx(p[0]), Y = sy(p[1]); i ? cx.lineTo(X,Y) : cx.moveTo(X,Y); }); if (close) cx.closePath(); }
 const ll2xy = ([lo,la]) => xy(la,lo);
 const LAND = GEO ? GEO.land.map(pg => pg.map(r => r.map(ll2xy))) : [];
@@ -2096,10 +2138,11 @@ function draw(){
   for (const l of COAST) { poly(l, false); cx.stroke(); } cx.restore(); }
   cx.globalAlpha = 1;
   if (!ground) drawRadarMap(); else if (!img) drawRockRelief();
-  if (S.showProc) drawProcedures();
+  if (S.showProc && sc >= 3) drawProcedures();
   drawAirport();
   if (S.preview) drawPreview(S.preview);
-  for (const ac of S.acs) if (!ac.ground) drawAc(ac);
+  if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
+  for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
   if (img) drawImageryCredit();
   else if (MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
@@ -2120,6 +2163,7 @@ function drawRadarMap(){
   cx.strokeStyle = rgba('r164', .10); cx.lineWidth = 1; for (let k = -W; k < W+H; k += 9) { cx.beginPath(); cx.moveTo(k, 0); cx.lineTo(k - H, H); cx.stroke(); }
   cx.restore();
   cx.save(); cx.strokeStyle = rgba('r164', .65); cx.setLineDash([6,4]); cx.lineWidth = 1.2; poly(R164); cx.stroke(); cx.restore();
+  if (sc < 3) return;                                   // zoomed out to the wider map: no radar furniture
   if (sc < 160) { cx.fillStyle = rgba('r164', .9); cx.font = `600 12px ${FONT_L}`; const p = xy(36.245,-5.40); cx.fillText('R164  SFC–FL300', sx(p[0]), sy(p[1])); }
   const IMGON = mapImagery();
   if (!IMGON) { cx.strokeStyle = C.border; cx.setLineDash([2,3]); for (const l of BORDERS) { poly(l,false); cx.stroke(); } cx.setLineDash([]);
@@ -2419,7 +2463,7 @@ function renderAtis(){
   const pct = X.st === 'CLOSING' ? clamp(1 - (X.t - S.t)/150, 0, 1) : X.st === 'CLOSED' ? 1 : X.st === 'OPENING' ? clamp((X.t - S.t)/15, 0, 1) : 0;
   $('atis').innerHTML = `
     <div class="ph"><span class="lbl">ATIS</span><span class="atis-letter">${S.atis}</span><span class="lbl dimmer">${phonetic(S.atis)}</span>
-      <span class="grow"></span><span class="lbl">Runway</span>
+      <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">Runway</span>
       <span class="seg sm"><button id="rw27" class="${S.rwy==='27'?'on':''}">27</button><button id="rw09" class="${S.rwy==='09'?'on':''}">09</button></span></div>
     <div class="metar"></div>
     <div class="tiles">
@@ -2438,10 +2482,11 @@ function renderAtis(){
       <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`;
   $('atis').querySelector('.metar').textContent = w.raw;
   $('rw27').onclick = () => setRwy('27'); $('rw09').onclick = () => setRwy('09');
+  if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
   $('xBtn').onclick = toggleXing;
 }
 function setRwy(r){
-  if (S.rwy === r) return; S.rwy = r; nextAtis(); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
+  if (S.rwy === r) return; S.rwy = r; nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
   for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][r]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
   renderAtis(); emit('rwy', r);
 }
@@ -2645,16 +2690,16 @@ let drag = null; const pointers = new Map();
 cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [e.offsetX, e.offsetY]); drag = { x: e.offsetX, y: e.offsetY, cx: V.cx, cy: V.cy, moved: false, d0: null, s0: V.scale }; });
 cv.addEventListener('pointermove', e => {
   if (!drag) return; pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
-  if (pointers.size === 2) { const [a,b] = [...pointers.values()]; const d = Math.hypot(a[0]-b[0], a[1]-b[1]); if (!drag.d0) drag.d0 = d; V.scale = clamp(drag.s0*d/drag.d0, 3, 12000); drag.moved = true; return; }
+  if (pointers.size === 2) { const [a,b] = [...pointers.values()]; const d = Math.hypot(a[0]-b[0], a[1]-b[1]); if (!drag.d0) drag.d0 = d; V.scale = clamp(drag.s0*d/drag.d0, 0.2, 12000); drag.moved = true; return; }
   const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y; if (Math.hypot(dx,dy) > 4) drag.moved = true;
-  if (drag.moved) { V.cx = drag.cx - dx/V.scale; V.cy = drag.cy + dy/V.scale; }
+  if (drag.moved) { V.cx = drag.cx - dx/V.scale; V.cy = IMY(MY(drag.cy) + dy/V.scale); }
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
   if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) select(best); }
   if (!pointers.size) drag = null;
 });
-cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 3, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = wyp + (e.offsetY - H/2)/V.scale; }, { passive: false });
+cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
 
 $('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; if (v.trim()) command(v); $('cmd').value = ''; };
 $('cmd').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const L = S.acs; if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
@@ -2684,7 +2729,7 @@ function renderSlots(){
 daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListener('change', renderSlots);
 renderSlots();
 function resetSession(){
-  S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
+  S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
   S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
@@ -2699,12 +2744,12 @@ function start(){
   if (!S.running) {
     resetSession();
     S.running = true; S.rwy = newRwy; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
-    const day = +daySel.value, hour = +hourSel.value;
+    const day = +daySel.value, hour = +hourSel.value; S.day = day; S.hour = hour;
     if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
     S.wx = parseMetar(S.wx.raw.replace(/^(LXGB )\d{6}Z/, (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
     S.sched = buildSchedule(mode, day, hour);
     sys(`Position open: Gibraltar Radar 122.8 and Tower 131.2 combined. ${S.wx.raw}. Runway ${S.rwy}, information ${phonetic(S.atis)}.`);
-    if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected this session.`);
+    if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys('Wind exceeds the Special Procedures turbulence limit: expect windshear on final and go-arounds.');
     if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft): arrivals will not be able to land.');
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');
@@ -2985,11 +3030,11 @@ function drawImagery(){
   const src = MAP_LAYER, S0 = MAP_SRC[src];
   const [la1, lo1] = xy2ll(wx2(0), wy2(0)), [la2, lo2] = xy2ll(wx2(W), wy2(H));
   const mpp = 1852/V.scale/DPR, res0 = 156543.034*Math.cos(LAT0*D2R);
-  let z = clamp(Math.round(Math.log2(res0/mpp) + 0.6), 5, S0.max);
+  let z = clamp(Math.round(Math.log2(res0/mpp) + 0.6), 2, S0.max);
   let x0, x1, y0, y1;
   for (;;) {
     x0 = Math.floor(lon2tx(lo1, z)); x1 = Math.floor(lon2tx(lo2, z)); y0 = Math.floor(lat2ty(la1, z)); y1 = Math.floor(lat2ty(la2, z));
-    if ((x1 - x0 + 1)*(y1 - y0 + 1) <= 160 || z <= 5) break; z--;
+    if ((x1 - x0 + 1)*(y1 - y0 + 1) <= 160 || z <= 2) break; z--;
   }
   cx.save(); cx.imageSmoothingQuality = 'high';
   const rect = (zz, x, y) => { const a = xy(ty2lat(y, zz), tx2lon(x, zz)), b = xy(ty2lat(y + 1, zz), tx2lon(x + 1, zz)); return [sx(a[0]), sy(a[1]), sx(b[0]), sy(b[1])]; };
@@ -3011,6 +3056,188 @@ function drawImageryCredit(){
   cx.fillStyle = 'rgba(255,255,255,.72)'; cx.fillRect(W - 12 - w, H - 19, w, 15); cx.fillStyle = '#334'; cx.fillText(txt, W - 7 - w, H - 8);
 }
 // stand numbers only (the photo already shows the painted stand markings)
+
+// ═════════════════════════ the wider picture: flights en route to and from Gibraltar ═════════════════════════
+// Every timetabled flight is shown for its whole journey. Inbounds leave their origin at the right time and fly a
+// rough airway route (great circles between turning points) to the point where they appear as pending tracks;
+// departures carry on to their destination after they leave the radar area. Outside radar cover they are drawn as
+// plane icons with a data tag, like a flight-tracking map. Positions are worked out from the clock, so nothing drifts.
+const AP = {
+  EGLL: [51.4700, -0.4543, 'London Heathrow'], EGKK: [51.1481, -0.1903, 'London Gatwick'], EGGW: [51.8747, -0.3683, 'London Luton'],
+  EGSS: [51.8850, 0.2350, 'London Stansted'], EGCC: [53.3537, -2.2750, 'Manchester'], EGGD: [51.3827, -2.7191, 'Bristol'],
+  EGVN: [51.7500, -1.5836, 'RAF Brize Norton'], EGLF: [51.2758, -0.7763, 'Farnborough'], LFPG: [49.0097, 2.5479, 'Paris CDG'],
+  LFMN: [43.6584, 7.2159, 'Nice'], LEMD: [40.4719, -3.5626, 'Madrid'], LEZL: [37.4180, -5.8931, 'Seville'],
+  LEMG: [36.6749, -4.4991, 'Málaga'], GMTT: [35.7269, -5.9169, 'Tangier'], GMMN: [33.3675, -7.5899, 'Casablanca'],
+  LXGB: [36.1512, -5.3494, 'Gibraltar']
+};
+// turning points outbound from Gibraltar (inbounds fly them in reverse)
+const VIA_N = [[37.25, -4.55], [40.00, -3.80], [43.30, -2.30], [46.20, -1.30]];          // up through Spain and western France
+const VIA_W = [[36.40, -6.70], [37.40, -9.10], [40.50, -9.80], [43.90, -9.40], [48.00, -6.50]]; // west of Portugal, Biscay, Cornwall
+const VIA = {
+  EGLL: VIA_N, EGKK: VIA_N, EGSS: VIA_N, EGLF: VIA_N, LFPG: [[37.25, -4.55], [40.00, -3.80], [43.30, -1.00]],
+  EGCC: VIA_W, EGGD: VIA_W, EGVN: VIA_W, EGGW: VIA_W,
+  LFMN: [[36.85, -3.00], [38.60, 0.40], [41.50, 4.00]], LEMD: [[37.25, -4.55]], GMMN: [[35.40, -6.40]]
+};
+const CRUISE = { AT76: [270, 21000], PC12: [260, 26000], A400: [340, 31000], C56X: [430, 41000], GLF6: [480, 45000] };
+const FAR = { list: [] };
+const toLL = p => [LAT0 + p[1]/60, LON0 + p[0]/(60*COSL)];
+const gcDist = ([a1, o1], [a2, o2]) => { const p1 = a1*D2R, p2 = a2*D2R, dp = p2 - p1, dl = (o2 - o1)*D2R; const h = Math.sin(dp/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2; return 2*3440.065*Math.asin(Math.min(1, Math.sqrt(h))); };
+const gcBrg = ([a1, o1], [a2, o2]) => { const p1 = a1*D2R, p2 = a2*D2R, dl = (o2 - o1)*D2R; return norm(Math.atan2(Math.sin(dl)*Math.cos(p2), Math.cos(p1)*Math.sin(p2) - Math.sin(p1)*Math.cos(p2)*Math.cos(dl))*R2D); };
+function gcAt([a1, o1], [a2, o2], f){
+  const d = gcDist([a1, o1], [a2, o2])/3440.065; if (d < 1e-9) return [a1, o1];
+  const A = Math.sin((1 - f)*d)/Math.sin(d), B = Math.sin(f*d)/Math.sin(d), p1 = a1*D2R, l1 = o1*D2R, p2 = a2*D2R, l2 = o2*D2R;
+  const x = A*Math.cos(p1)*Math.cos(l1) + B*Math.cos(p2)*Math.cos(l2), y = A*Math.cos(p1)*Math.sin(l1) + B*Math.cos(p2)*Math.sin(l2), z = A*Math.sin(p1) + B*Math.sin(p2);
+  return [Math.atan2(z, Math.hypot(x, y))*R2D, Math.atan2(y, x)*R2D];
+}
+const nearGib = ll => gcDist(ll, AP.LXGB) < 70;
+function makeLeg(pts){ const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i-1] + gcDist(pts[i-1], pts[i])); return { pts, cum, D: cum[cum.length-1] }; }
+function legAt(L, d){
+  d = clamp(d, 0, L.D); let i = 1; while (i < L.cum.length - 1 && L.cum[i] < d) i++;
+  const seg = L.cum[i] - L.cum[i-1] || 1, f = (d - L.cum[i-1])/seg;
+  return { ll: gcAt(L.pts[i-1], L.pts[i], f), hdg: gcBrg(gcAt(L.pts[i-1], L.pts[i], Math.max(0, f - 0.01)), gcAt(L.pts[i-1], L.pts[i], Math.min(1, f + 0.01))) };
+}
+// inbound: origin to the pending-track position, arriving there exactly when the sim takes over
+function addArrGhost(f){
+  if (!AP[f.o] || !(f.m > 0)) return;
+  const tEnd = f.m*60 - PRE_LEAD; if (tEnd <= 0) return;
+  const e = ENTRY[f.gate], L0 = Math.hypot(e[0] - GBR[0], e[1] - GBR[1]), u = [(e[0] - GBR[0])/L0, (e[1] - GBR[1])/L0];
+  const endLL = toLL([e[0] + u[0]*PRE_NM, e[1] + u[1]*PRE_NM]);
+  const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
+  const leg = makeLeg([AP[f.o].slice(0, 2), ...via, endLL]), [spd, fl] = CRUISE[f.t] || [450, 37000];
+  const cruise = Math.min(fl, 9000 + leg.D*75), tStart = tEnd - leg.D/spd*3600;
+  FAR.list.push({ cs: f.cs, t: f.t, from: f.o, to: 'LXGB', kind: 'ARR', leg, tStart, tEnd, spd, cruise, endAlt: PRE_ALT[f.gate], f });
+}
+// outbound: from wherever it left the radar area on to the destination
+function addDepGhost(ac, at){
+  if (!AP[ac.d]) return;
+  const p0 = at || toLL([ac.x, ac.y]);
+  const via = (VIA[ac.d] || []).filter(p => !nearGib(p) && gcDist(p, p0) > 30 && gcDist(p, AP[ac.d]) < gcDist(p0, AP[ac.d]));
+  const leg = makeLeg([p0, ...via, AP[ac.d].slice(0, 2)]), [spd, fl] = CRUISE[ac.t] || [450, 37000];
+  const t0 = S.t + (at ? ac.dt0 || 0 : 0);
+  FAR.list.push({ cs: ac.cs, t: ac.t, from: 'LXGB', to: ac.d, kind: 'DEP', leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? 6000 : ac.alt, endAlt: 0 });
+}
+// at the start of a session: inbounds already airborne or due later, and today's earlier departures still en route
+function buildFar(){
+  FAR.list = [];
+  if (EXERCISES[S.mode]) return;
+  for (const f of S.sched) if (f.k === 'ARR') addArrGhost(f);
+  const day = String((S.day || 0) + 1), t0 = (S.hour || 0)*60;
+  for (const [, , , dc, dd, td, t, days] of TIMETABLE) {
+    if (!dc || !days.includes(day)) continue;
+    const off = (hm(td) + 8 - t0)*60;                 // airborne about eight minutes after off-blocks
+    if (off >= -5*3600 && off < -600) addDepGhost({ cs: dc, t, d: dd, dt0: off - S.t }, toLL(rm(THR27_M - 1500, 0)));
+  }
+}
+function farState(g){
+  if (S.t < g.tStart || S.t > g.tEnd) return null;
+  const d = (S.t - g.tStart)/3600*g.spd, { ll, hdg } = legAt(g.leg, d), left = g.leg.D - d;
+  const up = g.kind === 'DEP' ? (g.startAlt || 0) + d*330 : 1500 + d*330, down = g.endAlt + left*300;
+  return { p: xy(...ll), hdg, alt: Math.max(0, Math.min(g.cruise, up, down)), gs: g.spd };
+}
+S.listeners.push((ev, d) => {
+  if (ev === 'start') buildFar();
+  if (ev === 'exit' && d && d.kind === 'DEP') addDepGhost(d);
+});
+// sim aircraft beyond radar cover are drawn the same way
+const RADAR_NM = 60;
+const outsideRadar = ac => ac.state === 'PRE' || Math.hypot(ac.x - GBR[0], ac.y - GBR[1]) > RADAR_NM;
+
+// ── drawing ──
+function planeIcon(X, Y, hdg, col, sel){
+  cx.save(); cx.translate(X, Y); cx.rotate(hdg*D2R); const k = 0.9;
+  cx.beginPath();
+  cx.moveTo(0, -9*k); cx.quadraticCurveTo(1.6*k, -8*k, 1.6*k, -5*k); cx.lineTo(1.6*k, -2*k); cx.lineTo(9*k, 2*k); cx.lineTo(9*k, 3.6*k); cx.lineTo(1.6*k, 1.6*k);
+  cx.lineTo(1.4*k, 6*k); cx.lineTo(4*k, 8*k); cx.lineTo(4*k, 9.2*k); cx.lineTo(0, 8.2*k); cx.lineTo(-4*k, 9.2*k); cx.lineTo(-4*k, 8*k); cx.lineTo(-1.4*k, 6*k);
+  cx.lineTo(-1.6*k, 1.6*k); cx.lineTo(-9*k, 3.6*k); cx.lineTo(-9*k, 2*k); cx.lineTo(-1.6*k, -2*k); cx.lineTo(-1.6*k, -5*k); cx.quadraticCurveTo(-1.6*k, -8*k, 0, -9*k); cx.closePath();
+  cx.fillStyle = col; cx.strokeStyle = sel ? '#0c1b2e' : 'rgba(40,30,0,.85)'; cx.lineWidth = sel ? 1.8 : 1; cx.fill(); cx.stroke();
+  cx.restore();
+}
+function farTag(X, Y, l1, l2, l3, col){
+  const lx = X + 14, ly = Y - 18; cx.font = `500 11px ${FONT_D}`;
+  const w = Math.max(cx.measureText(l1).width, cx.measureText(l2).width, cx.measureText(l3).width);
+  cx.fillStyle = C.tagBg; cx.fillRect(lx - 3, ly - 11, w + 6, 3*13 + 3); cx.strokeStyle = C.tagEdge; cx.lineWidth = 1; cx.strokeRect(lx - 3.5, ly - 11.5, w + 7, 3*13 + 4);
+  cx.fillStyle = col; cx.fillText(l1, lx, ly); cx.fillText(l2, lx, ly + 13); cx.fillText(l3, lx, ly + 26);
+}
+const FL = a => String(Math.max(0, Math.round(a/100))).padStart(3, '0');
+function drawFar(){
+  const tags = V.scale > 0.6;
+  for (const g of FAR.list) {
+    const st = farState(g); if (!st) continue;
+    const X = sx(st.p[0]), Y = sy(st.p[1]); if (X < -60 || Y < -60 || X > W + 60 || Y > H + 60) continue;
+    planeIcon(X, Y, st.hdg, '#f7c600');
+    if (tags) farTag(X, Y, g.cs, `${FL(st.alt)} ${String(Math.round(st.gs/10)).padStart(2, '0')}`, `${g.t} ${g.from}-${g.to}`, C.name === 'dark' ? '#f7d34a' : '#5b4a00');
+  }
+}
+function drawFarAc(ac){   // a sim aircraft outside radar cover: plane icon plus its normal tag lines
+  const X = sx(ac.x), Y = sy(ac.y); if (X < -60 || Y < -60 || X > W + 60 || Y > H + 60) return;
+  const sel = S.sel === ac;
+  planeIcon(X, Y, ac.trk || ac.hdg, sel ? '#ffe066' : '#f7c600', sel);
+  if (V.scale > 0.6 || sel) farTag(X, Y, ac.cs + (ac.need ? ' ◆' : ''), `${FL(ac.alt)} ${String(Math.round(ac.gs/10)).padStart(2, '0')}`, ac.state === 'PRE' ? `${ac.t} ${ac.o} PENDING` : `${ac.t} ${ac.kind === 'ARR' ? ac.o : ac.d}`, C.name === 'dark' ? '#f7d34a' : '#5b4a00');
+}
+
+// ═════════════════════════ flight information board (today's arrivals and departures) ═════════════════════════
+FAR.done = {};
+S.listeners.push((ev, d) => {
+  if (!d || !d.cs) return;
+  if (ev === 'landed') FAR.done[d.cs] = 'Landed';
+  if (ev === 'onstand') FAR.done[d.cs] = 'On stand';
+  if (ev === 'takeoff' || ev === 'airborne') FAR.done[d.cs] = 'Departed';
+  if (ev === 'start') FAR.done = {};
+});
+const zHM = ms => new Date(ms).toISOString().substr(11, 5);
+const nowMin = () => (S.hour || 0)*60 + S.t/60;
+function fidsRows(kind){
+  const day = String((S.day || 0) + 1), rows = [];
+  for (const [ac, o, ta, dc, dd, td, t, days, stand] of TIMETABLE) {
+    if (!days.includes(day)) continue;
+    if (kind === 'ARR' && ac) rows.push({ cs: ac, t, ap: o, tm: hm(ta), stand: dc ? stand : '' });
+    if (kind === 'DEP' && dc) rows.push({ cs: dc, t, ap: dd, tm: hm(td), stand: stand || '' });
+  }
+  for (const f of S.sched) if (f.k === kind && !rows.some(r => r.cs === f.cs)) rows.push({ cs: f.cs, t: f.t, ap: kind === 'ARR' ? f.o : f.d, tm: Math.round((S.hour || 0)*60 + f.m + (kind === 'ARR' ? 15 : 6)), stand: f.stand || '', extra: true });
+  return rows.sort((a, b) => a.tm - b.tm);
+}
+function fidsStatus(r, kind){
+  const ac = S.acs.find(a => a.cs === r.cs), g = FAR.list.find(x => x.cs === r.cs);
+  const late = nowMin() > r.tm + 5;
+  if (kind === 'ARR') {
+    if (ac) return ac.ground ? (['ONSTAND', 'PARKED'].includes(ac.state) ? ['On stand', 'ok'] : ['Landed', 'ok']) : ac.state === 'PRE' ? ['Approaching', 'live'] : ac.state === 'DIVERTING' ? ['Diverting', 'bad'] : ['On approach', 'live'];
+    if (FAR.done[r.cs]) return [FAR.done[r.cs], 'ok'];
+    if (g && S.t >= g.tStart && S.t <= g.tEnd) { const eta = zHM(S.start + (g.tEnd + PRE_LEAD + 15*60)*1000); return [`En route · exp ${eta}`, 'live']; }
+    if (S.running && r.tm < (S.hour || 0)*60) return ['Landed', 'ok'];
+    return late && S.running ? ['Delayed', 'bad'] : ['Scheduled', ''];
+  }
+  if (ac) {
+    if (ac.airborne) return ['Departed', 'ok'];
+    return ({ PARKED: ac.need ? ['Boarding', 'live'] : ['At stand', ''], PUSH: ['Pushing back', 'live'], READY: ['Taxiing', 'live'], TAXI: ['Taxiing', 'live'], TOW: ['Under tow', ''],
+              HOLDPT: ['Ready', 'live'], LINEUP: ['Lining up', 'live'], LINEDUP: ['Lined up', 'live'], TAKEOFF: ['Taking off', 'live'] })[ac.state] || ['At stand', ''];
+  }
+  if (g && S.t <= g.tEnd) return [S.t >= g.tStart ? `Departed · arr ${zHM(S.start + g.tEnd*1000)}` : 'Departed', 'ok'];
+  if (FAR.done[r.cs]) return [FAR.done[r.cs], 'ok'];
+  if (S.running && r.tm < (S.hour || 0)*60) return ['Departed', 'ok'];
+  const arr = TIMETABLE.find(x => x[3] === r.cs); if (arr && arr[0] && !S.acs.some(a => a.cs === arr[0]) && !FAR.done[arr[0]] && hm(arr[2]) > nowMin() - 5 && S.running && r.tm > nowMin()) return ['Aircraft inbound', ''];
+  return late && S.running ? ['Delayed', 'bad'] : ['Scheduled', ''];
+}
+let fidsTab = 'ARR';
+function renderFids(){
+  const el = document.getElementById('fidsBody'); if (!el || document.getElementById('fids').hidden) return;
+  const rows = fidsRows(fidsTab), nm = nowMin();
+  document.getElementById('fidsClock').textContent = S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
+  el.innerHTML = rows.length ? rows.map(r => {
+    const [st, cls] = fidsStatus(r, fidsTab), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
+    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.ap}<span class="ic">${r.ap}</span></td><td class="ty">${r.t}</td><td class="sd">${r.stand || ''}</td><td class="st ${cls}">${st}</td></tr>`;
+  }).join('') : `<tr><td colspan="6" class="none">No ${fidsTab === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
+  document.getElementById('fidsAp').textContent = fidsTab === 'ARR' ? 'From' : 'To';
+  document.querySelectorAll('[data-fids]').forEach(b => b.classList.toggle('on', b.dataset.fids === fidsTab));
+}
+{
+  const bt = document.getElementById('tgFids'), box = document.getElementById('fids');
+  if (bt && box) {
+    bt.onclick = () => { box.hidden = !box.hidden; renderFids(); };
+    document.getElementById('fidsClose').onclick = () => { box.hidden = true; };
+    document.querySelectorAll('[data-fids]').forEach(b => b.onclick = () => { fidsTab = b.dataset.fids; renderFids(); });
+    S.listeners.push(ev => { if (ev === 'tick' || ev === 'start') renderFids(); });
+  }
+}
 
 // ═════════════════════════ voice: spoken commands and accented pilots ═════════════════════════
 // Speech in: the browser's speech recogniser hears standard phraseology ("Speedbird four niner two, turn left heading

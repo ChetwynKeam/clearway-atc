@@ -4,8 +4,13 @@ let W = 0, H = 0, DPR = 1;
 function resize(){ const r = cv.getBoundingClientRect(); DPR = window.devicePixelRatio || 1; W = r.width; H = r.height; cv.width = Math.max(1, W*DPR); cv.height = Math.max(1, H*DPR); }
 window.addEventListener('resize', () => { resize(); });
 const V = S.view;
-const sx = x => W/2 + (x - V.cx)*V.scale, sy = y => H/2 - (y - V.cy)*V.scale;
-const wx2 = px => (px - W/2)/V.scale + V.cx, wy2 = py => -(py - H/2)/V.scale + V.cy;
+// Web Mercator display (like FlightRadar24): x stays linear in longitude, y is stretched by latitude so the map keeps
+// its shape at any zoom. MY maps sim y (NM north of LAT0) to Mercator NM at Gibraltar's scale; IMY inverts it.
+const MK = R2D*60*COSL, MY0 = Math.log(Math.tan(Math.PI/4 + LAT0*D2R/2));
+const MY = y => (Math.log(Math.tan(Math.PI/4 + (LAT0 + y/60)*D2R/2)) - MY0)*MK;
+const IMY = Y => ((2*Math.atan(Math.exp(Y/MK + MY0)) - Math.PI/2)*R2D - LAT0)*60;
+const sx = x => W/2 + (x - V.cx)*V.scale, sy = y => H/2 - (MY(y) - MY(V.cy))*V.scale;
+const wx2 = px => (px - W/2)/V.scale + V.cx, wy2 = py => IMY(MY(V.cy) - (py - H/2)/V.scale);
 function poly(pts, close=true){ cx.beginPath(); pts.forEach((p,i) => { const X = sx(p[0]), Y = sy(p[1]); i ? cx.lineTo(X,Y) : cx.moveTo(X,Y); }); if (close) cx.closePath(); }
 const ll2xy = ([lo,la]) => xy(la,lo);
 const LAND = GEO ? GEO.land.map(pg => pg.map(r => r.map(ll2xy))) : [];
@@ -58,10 +63,11 @@ function draw(){
   for (const l of COAST) { poly(l, false); cx.stroke(); } cx.restore(); }
   cx.globalAlpha = 1;
   if (!ground) drawRadarMap(); else if (!img) drawRockRelief();
-  if (S.showProc) drawProcedures();
+  if (S.showProc && sc >= 3) drawProcedures();
   drawAirport();
   if (S.preview) drawPreview(S.preview);
-  for (const ac of S.acs) if (!ac.ground) drawAc(ac);
+  if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
+  for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   for (const ac of S.acs) if (ac.ground) drawAc(ac);
   if (img) drawImageryCredit();
   else if (MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
@@ -82,6 +88,7 @@ function drawRadarMap(){
   cx.strokeStyle = rgba('r164', .10); cx.lineWidth = 1; for (let k = -W; k < W+H; k += 9) { cx.beginPath(); cx.moveTo(k, 0); cx.lineTo(k - H, H); cx.stroke(); }
   cx.restore();
   cx.save(); cx.strokeStyle = rgba('r164', .65); cx.setLineDash([6,4]); cx.lineWidth = 1.2; poly(R164); cx.stroke(); cx.restore();
+  if (sc < 3) return;                                   // zoomed out to the wider map: no radar furniture
   if (sc < 160) { cx.fillStyle = rgba('r164', .9); cx.font = `600 12px ${FONT_L}`; const p = xy(36.245,-5.40); cx.fillText('R164  SFC–FL300', sx(p[0]), sy(p[1])); }
   const IMGON = mapImagery();
   if (!IMGON) { cx.strokeStyle = C.border; cx.setLineDash([2,3]); for (const l of BORDERS) { poly(l,false); cx.stroke(); } cx.setLineDash([]);
@@ -381,7 +388,7 @@ function renderAtis(){
   const pct = X.st === 'CLOSING' ? clamp(1 - (X.t - S.t)/150, 0, 1) : X.st === 'CLOSED' ? 1 : X.st === 'OPENING' ? clamp((X.t - S.t)/15, 0, 1) : 0;
   $('atis').innerHTML = `
     <div class="ph"><span class="lbl">ATIS</span><span class="atis-letter">${S.atis}</span><span class="lbl dimmer">${phonetic(S.atis)}</span>
-      <span class="grow"></span><span class="lbl">Runway</span>
+      <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">Runway</span>
       <span class="seg sm"><button id="rw27" class="${S.rwy==='27'?'on':''}">27</button><button id="rw09" class="${S.rwy==='09'?'on':''}">09</button></span></div>
     <div class="metar"></div>
     <div class="tiles">
@@ -400,10 +407,11 @@ function renderAtis(){
       <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`;
   $('atis').querySelector('.metar').textContent = w.raw;
   $('rw27').onclick = () => setRwy('27'); $('rw09').onclick = () => setRwy('09');
+  if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
   $('xBtn').onclick = toggleXing;
 }
 function setRwy(r){
-  if (S.rwy === r) return; S.rwy = r; nextAtis(); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
+  if (S.rwy === r) return; S.rwy = r; nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
   for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][r]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
   renderAtis(); emit('rwy', r);
 }
@@ -607,16 +615,16 @@ let drag = null; const pointers = new Map();
 cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [e.offsetX, e.offsetY]); drag = { x: e.offsetX, y: e.offsetY, cx: V.cx, cy: V.cy, moved: false, d0: null, s0: V.scale }; });
 cv.addEventListener('pointermove', e => {
   if (!drag) return; pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
-  if (pointers.size === 2) { const [a,b] = [...pointers.values()]; const d = Math.hypot(a[0]-b[0], a[1]-b[1]); if (!drag.d0) drag.d0 = d; V.scale = clamp(drag.s0*d/drag.d0, 3, 12000); drag.moved = true; return; }
+  if (pointers.size === 2) { const [a,b] = [...pointers.values()]; const d = Math.hypot(a[0]-b[0], a[1]-b[1]); if (!drag.d0) drag.d0 = d; V.scale = clamp(drag.s0*d/drag.d0, 0.2, 12000); drag.moved = true; return; }
   const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y; if (Math.hypot(dx,dy) > 4) drag.moved = true;
-  if (drag.moved) { V.cx = drag.cx - dx/V.scale; V.cy = drag.cy + dy/V.scale; }
+  if (drag.moved) { V.cx = drag.cx - dx/V.scale; V.cy = IMY(MY(drag.cy) + dy/V.scale); }
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
   if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) select(best); }
   if (!pointers.size) drag = null;
 });
-cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 3, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = wyp + (e.offsetY - H/2)/V.scale; }, { passive: false });
+cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
 
 $('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; if (v.trim()) command(v); $('cmd').value = ''; };
 $('cmd').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const L = S.acs; if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
@@ -646,7 +654,7 @@ function renderSlots(){
 daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListener('change', renderSlots);
 renderSlots();
 function resetSession(){
-  S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
+  S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
   S.xing = { st: 'OPEN', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
@@ -661,12 +669,12 @@ function start(){
   if (!S.running) {
     resetSession();
     S.running = true; S.rwy = newRwy; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
-    const day = +daySel.value, hour = +hourSel.value;
+    const day = +daySel.value, hour = +hourSel.value; S.day = day; S.hour = hour;
     if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
     S.wx = parseMetar(S.wx.raw.replace(/^(LXGB )\d{6}Z/, (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
     S.sched = buildSchedule(mode, day, hour);
     sys(`Position open: Gibraltar Radar 122.8 and Tower 131.2 combined. ${S.wx.raw}. Runway ${S.rwy}, information ${phonetic(S.atis)}.`);
-    if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected this session.`);
+    if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys('Wind exceeds the Special Procedures turbulence limit: expect windshear on final and go-arounds.');
     if (!sraMinsOk(S.wx)) sys('Weather is below SRA minima (5 km, 1000 ft): arrivals will not be able to land.');
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');

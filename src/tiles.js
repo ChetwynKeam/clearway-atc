@@ -38,11 +38,11 @@ function drawImagery(){
   const src = MAP_LAYER, S0 = MAP_SRC[src];
   const [la1, lo1] = xy2ll(wx2(0), wy2(0)), [la2, lo2] = xy2ll(wx2(W), wy2(H));
   const mpp = 1852/V.scale/DPR, res0 = 156543.034*Math.cos(LAT0*D2R);
-  let z = clamp(Math.round(Math.log2(res0/mpp) + 0.6), 5, S0.max);
+  let z = clamp(Math.round(Math.log2(res0/mpp) + 0.6), 2, S0.max);
   let x0, x1, y0, y1;
   for (;;) {
     x0 = Math.floor(lon2tx(lo1, z)); x1 = Math.floor(lon2tx(lo2, z)); y0 = Math.floor(lat2ty(la1, z)); y1 = Math.floor(lat2ty(la2, z));
-    if ((x1 - x0 + 1)*(y1 - y0 + 1) <= 160 || z <= 5) break; z--;
+    if ((x1 - x0 + 1)*(y1 - y0 + 1) <= 160 || z <= 2) break; z--;
   }
   cx.save(); cx.imageSmoothingQuality = 'high';
   const rect = (zz, x, y) => { const a = xy(ty2lat(y, zz), tx2lon(x, zz)), b = xy(ty2lat(y + 1, zz), tx2lon(x + 1, zz)); return [sx(a[0]), sy(a[1]), sx(b[0]), sy(b[1])]; };

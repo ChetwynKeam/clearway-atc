@@ -235,7 +235,7 @@ function timetableSession(d, h){
   for (const [ac, o, ta, dc, dd, td, t, days, stand] of TIMETABLE) {
     if (!days.includes(day)) continue;
     const reg = REGS[t] ? { reg: REGS[t] } : {}, arrM = ac ? hm(ta) - t0 : null, depM = dc ? hm(td) - t0 : null;
-    if (ac && arrM - 15 >= -10 && arrM - 15 <= 62) {
+    if (ac && arrM - 15 >= -10) {                                                     // the rest of the day's arrivals
       sched.push({ cs: ac, t, k: 'ARR', o, gate: gateFor(o), m: Math.max(0, arrM - 15), at: ta, ...reg, turn: dc ? { cs: dc, d: dd, depM, at: td, stand } : null });
     } else if ((!ac || arrM - 15 < -10) && dc && depM > 0) {
       residents.push({ cs: dc, t, k: 'RES', d: dd, gate: gateFor(dd), m: 0, depM, at: td, stand, ...reg });
@@ -484,7 +484,7 @@ function freeStand(ac){
 const ATIS_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const PHON_ALPHA = ['Alfa','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India','Juliett','Kilo','Lima','Mike','November','Oscar','Papa','Quebec','Romeo','Sierra','Tango','Uniform','Victor','Whiskey','X-ray','Yankee','Zulu'];
 const phonetic = l => PHON_ALPHA[ATIS_LETTERS.indexOf(l)] || l;
-function nextAtis(){ S.atis = ATIS_LETTERS[(ATIS_LETTERS.indexOf(S.atis)+1) % 26]; }
+function nextAtis(alert = true){ S.atis = ATIS_LETTERS[(ATIS_LETTERS.indexOf(S.atis)+1) % 26]; if (alert) S.atisAlert = true; }   // the warning stays until the controller acknowledges it
 
 // ═════════════════════════ ground movement ═════════════════════════
 const P = (m, off=0) => rm(m, off);
