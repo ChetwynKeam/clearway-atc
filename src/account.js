@@ -196,7 +196,7 @@ async function cwRenderAccount(){
     if (t) t.onclick = async () => { t.disabled = true; try { CW.ent = await cwApi('account', { action: 'early', on: !e.early }); cwLS.set('cw-ent', null); await cwLoad(true); cwRenderAccount(); } catch(err) { t.textContent = err.message; } };
   }
   $('cwPlanBox').querySelectorAll('[data-portal]').forEach(b => b.onclick = async () => { b.disabled = true; try { location.href = (await cwApi('account', { action: 'portal' })).url; } catch(err) { b.disabled = false; b.textContent = err.message; } });
-  cwRenderPicks(); cwRenderCommissions();
+  cwRenderPicks(); cwRenderNew(); cwRenderCommissions();
 }
 function cwRenderPicks(){
   const e = CW.ent, box = $('cwPickBox');
@@ -226,6 +226,33 @@ function cwRenderPicks(){
   }
   if (e.early && dev.length) $('cwPicks').insertAdjacentHTML('beforeend', `<p class="cw-sub" style="grid-column:1/-1">Early access: ${dev.map(a => esc(a.name)).join(', ')} open${dev.length === 1 ? 's' : ''} to you as soon as its first build is playable.</p>`);
 }
+// ── a new airport is out: swap it in (once a month) or move up a plan with its code (subs.json releases + upgrade_offer) ──
+const CW_UP = CW_CFG.upgrade_offer || { percent: 50, months: 3, days: 30 };
+const cwNewAirports = () => (CW_CFG.releases || []).filter(r => Date.now() - Date.parse(r.date) < (CW_UP.days || 30)*864e5 && AIRPORTS_NET.some(a => a.icao === r.icao && a.status === 'live'));
+function cwRenderNew(){
+  const e = CW.ent, box = $('cwNewBox'), news = e && e.active && e.limit !== 0 ? cwNewAirports() : [];
+  box.hidden = !news.length;
+  if (box.hidden) return;
+  const cur = CW_PLANS.findIndex(p => p.k === e.plan), bigger = CW_PLANS.slice(cur + 1);
+  const last = e.airports_changed_at ? Date.parse(e.airports_changed_at) : 0, next = last + 30*864e5;
+  box.innerHTML = news.map(r => {
+    const ap = AIRPORTS_NET.find(a => a.icao === r.icao), mine = e.airports.includes(r.icao);
+    const swap = mine ? `<p class="cw-sub">${esc(ap.name)} is already one of your airports.</p>`
+      : `<p class="cw-sub"><b>Swap it in:</b> replace one of your airports with ${esc(ap.name)} in <a href="#account" data-swap>Your airports</a> below.${!e.trial && Date.now() < next ? ` Your next swap is free from ${cwDate(new Date(next))} (one swap a month).` : ' You can swap one airport a month.'}</p>`;
+    const up = bigger.length ? `<p class="cw-sub"><b>Or add it by moving up a plan:</b> ${CW_UP.percent}% off for ${CW_UP.months} months with code <code>${esc(r.code)}</code>.</p>
+      <div class="cw-row">${bigger.map(p => `<button class="btn${p === bigger[0] ? ' primary' : ''}" data-up="${p.k}" data-code="${esc(r.code)}">${p.name} (${p.n || 'all'} airports): <s>${cwPrice(p.k)}</s> ${CW_CFG.currency}${(CW_CFG.prices[p.k]*(100 - CW_UP.percent)/100).toFixed(2)}</button>`).join('')}</div>` : '';
+    return `<div class="cw-new"><span class="badge new">New airport</span><h3>${esc(ap.name)} (${r.icao}) is open</h3>${swap}${up}</div>`;
+  }).join('') + '<p class="cw-msg" id="cwNewMsg"></p>';
+  box.querySelectorAll('[data-up]').forEach(b => b.onclick = async () => {
+    const p = CW_PLANS.find(x => x.k === b.dataset.up);
+    if (!confirm(`Move up to ${p.name} with code ${b.dataset.code}? You get ${CW_UP.percent}% off for ${CW_UP.months} months and the difference for the rest of this month is added to your next bill.`)) return;
+    b.disabled = true; $('cwNewMsg').textContent = 'Updating your plan…';
+    try { CW.ent = { ...CW.ent, ...await cwApi('account', { action: 'upgrade', plan: p.k, code: b.dataset.code }) }; cwLS.set('cw-ent', null); await cwLoad(true); cwRenderAccount(); }
+    catch(err) { b.disabled = false; $('cwNewMsg').textContent = err.message; }
+  });
+  const sw = box.querySelector('[data-swap]'); if (sw) sw.onclick = ev => { ev.preventDefault(); $('cwPickBox').scrollIntoView({ behavior: 'smooth' }); };
+}
+
 // ── commissioned airports: card saved on request, charged once on release, then the player's for good ──
 const cwComPrice = () => CW_CFG.currency + (+CW_CFG.commission || 25);
 const cwPence = c => CW_CFG.currency + ((c.price_pence || 2500)/100).toFixed(0);
