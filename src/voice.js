@@ -123,8 +123,12 @@ function phraseToCmd(raw){
   else if ((m = s.match(/ hold( at| over)? (\S+) /)) && !/ holding point /.test(s)) { const f = fixFrom(m[2]); out.push(f ? 'HOLD ' + f : 'HOLD'); }
   if (/ (continue taxi|resume taxi|continue taxiing) /.test(s)) out.push('RES');
   if (/ (pushback|startup)/.test(s)) { const f = sideOf(s); out.push('PUSH' + (f ? ' ' + f : '')); }
+  // "taxi to holding point tango 3": an intermediate holding point (or, for an arrival, any holding point)
+  const hpm = s.match(/ taxi .*?holding point (\S+)(?: (\d{1,2}))? /), hpId = hpm && ((PHONW[hpm[1]] || (hpm[1].length === 1 ? hpm[1].toUpperCase() : '')) + (hpm[2] || ''));
+  const toHold = hpId && (IHPS[hpId] && !HOLDS[hpId] || (ac && ac.kind === 'ARR' && holdPt(hpId))) ? hpId : null;
+  if (toHold) out.push('TAXI ' + toHold);
   // an arrival clear of the runway: "taxi to stand 5", "taxi to gate bravo two three via kilo"
-  if (ac && ac.kind === 'ARR' && / taxi /.test(s)) {
+  else if (ac && ac.kind === 'ARR' && / taxi /.test(s)) {
     let cmd = 'TAXI'; const g = s.match(/ (?:stand|gate) (.*)/);
     if (g) { const parts = g[1].split(/ (?:via|hold) /)[0].trim().split(' ').filter(x => !/^(dash|hyphen)$/.test(x)).slice(0, 3).map(x => /^\d+$/.test(x) ? x : PHONW[x] || (x.length === 1 ? x.toUpperCase() : ''));
       const id = [parts.join(''), parts.join('-')].find(c => STANDS.some(x => x.id.toUpperCase() === c)); if (id) cmd += ' ' + id; }

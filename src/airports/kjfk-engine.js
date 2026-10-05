@@ -166,15 +166,7 @@ function drawKjfk(){
     cx.lineWidth = lw(0.3);
     for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
     if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
-    // taxiway designators at the middle of each named edge
-    if (sc > 400) {
-      const fs = Math.max(9, 3.4*mpx); cx.font = `700 ${fs}px ${FONT_L}`; const done = new Set();
-      for (const e of GE) {
-        if (e.tw === 'APRON' || e.len < 0.06) continue; const key = e.tw + Math.round(GN[e.a].p[0]*8) + ',' + Math.round(GN[e.a].p[1]*8); if (done.has(key)) continue; done.add(key);
-        const q = P2([(GN[e.a].p[0] + GN[e.b].p[0])/2, (GN[e.a].p[1] + GN[e.b].p[1])/2]), tw = cx.measureText(e.tw).width;
-        cx.fillStyle = '#111'; cx.fillRect(q[0] - tw/2 - 3, q[1] - fs*0.85, tw + 6, fs*1.2); cx.fillStyle = C.yellow; cx.fillText(e.tw, q[0] - tw/2, q[1] + fs*0.15);
-      }
-    }
+    drawGroundSigns();
     if (HS1) { const [X, Y] = P2(HS1); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 60*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.font = `600 11px ${FONT_L}`; cx.fillText('HS 1', X + 60*mpx + 8, Y + 4); }
   }
   // lights: runway edges and thresholds, taxiway edge blue (dark theme glow)
@@ -387,6 +379,9 @@ const APT = {
     cross: (ac, rw) => [`cross runway ${rw}`, `crossing runway ${rw}`],
     holdShort: (ac, rw) => `holding short of runway ${rw}`,
     vacated: ac => `${KJFK.UNITS.gnd.name}, clear of ${rwyName(ac.rwyId)} at ${PHON[ac.exit] || ac.exit.replace(/~\d+$/, "")}${ac.stand ? ', for gate ' + ac.stand.id : ''}`,
+    taxiHold: (ac, h, vw) => { const via = vw.length ? 'via ' + vw.map(t => PHON[t] || t).join(', ') + ', ' : '', r = h.rwy ? rwyName(HOLDS[h.id].on) : null, at = PHON[HOLDS[h.id] ? HOLDS[h.id].ref : h.id] || h.id;
+      return r ? [`taxi ${via}hold short of runway ${r} at ${at}`, `${via}hold short runway ${r} at ${at}`] : [`taxi ${via}hold at ${at}`, `${via}hold at ${at}`]; },
+    atHoldPt: (ac, h) => h.rwy ? `holding short of runway ${rwyName(HOLDS[h.id].on)} at ${PHON[HOLDS[h.id].ref] || HOLDS[h.id].ref}` : `holding at ${h.id}`,
     taxiIn: (ac, st, vw) => { const k = xingAhead(ac), hs = k >= 0 ? `, hold short runway ${rwyName(ac.path.pts[k].hs)}` : '', via = vw.length ? ' via ' + vw.map(t => PHON[t] || t).join(', ') : '';
       return [`taxi to gate ${st.id}${via}${hs}`, `gate ${st.id}${via}${hs}`]; }
   },

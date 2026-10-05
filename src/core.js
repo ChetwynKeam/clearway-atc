@@ -42,6 +42,21 @@ function route(from, to, pen){
   while (c !== from) { const [u, e] = prev[c]; nodes.unshift(u); tws.unshift(e.tw); c = u; }
   return { nodes, tws };
 }
+// a new graph node on taxiway tw at the point nearest p, splitting the edge it falls on (intermediate holding points)
+function splitAt(id, p, tw){
+  let best = null;
+  for (const e of GE) { if (e.tw !== tw) continue; const a = GN[e.a].p, b = GN[e.b].p, dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx*dx + dy*dy || 1e-12;
+    const f = Math.max(0, Math.min(1, ((p[0] - a[0])*dx + (p[1] - a[1])*dy)/L2)), q = [a[0] + dx*f, a[1] + dy*f], d = dist(...p, ...q);
+    if (!best || d < best.d) best = { e, f, q, d }; }
+  if (!best) return null;
+  const { e, f, q } = best;
+  if (f < 0.02) return e.a; if (f > 0.98) return e.b;
+  GN[id] = { id, m: typeof mOf === 'function' ? mOf(q) : 0, off: typeof offOf === 'function' ? offOf(q) : 0, p: q, adj: [] };
+  GE.splice(GE.indexOf(e), 1);
+  GN[e.a].adj = GN[e.a].adj.filter(([v, x]) => x !== e); GN[e.b].adj = GN[e.b].adj.filter(([v, x]) => x !== e);
+  ge(e.a, id, tw); ge(id, e.b, tw);
+  return id;
+}
 function viaOf(tws, hp){ const ref = HOLDS[hp] && HOLDS[hp].ref, v = []; for (const t of tws) if (t !== 'APRON' && t !== hp && t !== ref && v[v.length-1] !== t) v.push(t); return v; }
 function nearestNode(p, filter){ let best = null, bd = Infinity; for (const n of Object.values(GN)) { if (filter && !filter(n)) continue; const d = dist(...p, ...n.p); if (d < bd) { bd = d; best = n; } } return best; }
 

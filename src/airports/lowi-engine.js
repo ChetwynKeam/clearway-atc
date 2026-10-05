@@ -238,6 +238,8 @@ function lowiGaTurn(ac){
   if (Math.abs(angDiff(ac.hdg, norm(60 + VAR))) < 30) { ac.lowiMa = 0; ac.mode = 'NAV'; ac.route = MA.slice(); ac.gaTurn = true; }
 }
 const APT = {
+  // intermediate holding points (AD 2 MAP 1-1): L1 on Lima at the main taxiway, B1 on Bravo north of the apron
+  ihps: [{ id: 'L1', node: 'L1', tw: 'L' }, { id: 'B1', tw: 'B', at: rm(1645, -188) }],
   icao: 'LOWI', name: 'Innsbruck', coordName: 'Innsbruck', radarName: 'INN', utcOff: 2,
   radar: [LOWI.UNITS.app.name, LOWI.UNITS.app.freq], tower: [LOWI.UNITS.twr.name, LOWI.UNITS.twr.freq],
   xing: false, drawnTown: false, ta: LOWI.TA, initClimb: 10000, gaAlt: 9500, appAlt: 9500, handoffNM: 25, climbFL: 150, divertAlt: 15000,

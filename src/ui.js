@@ -165,6 +165,69 @@ const AD = {
   ]),
   ...AD_SITE
 };
+// ── taxiway designators and intermediate holding points, shared by every airport ──
+// Designators come from the taxi graph: one sign at the middle of each stretch of a named taxiway and more along long
+// ones, drawn as yellow-on-black location signs. Where they would overlap, the more important one (the longer
+// taxiway) wins, so the map stays readable at any zoom.
+let TWY_ANCH = null;
+function twyAnchors(){
+  if (TWY_ANCH) return TWY_ANCH;
+  const out = [], SP = 380*M2NM;
+  const byTw = {}; for (const e of GE) if (e.tw && e.tw !== 'APRON' && !/~/.test(e.tw)) (byTw[e.tw] ||= []).push(e);
+  for (const [tw, es] of Object.entries(byTw)) {
+    // connected stretches of this taxiway
+    const seen = new Set();
+    for (const e0 of es) {
+      if (seen.has(e0)) continue;
+      const comp = [], q = [e0]; seen.add(e0);
+      while (q.length) { const e = q.shift(); comp.push(e); for (const n of [e.a, e.b]) for (const [, x] of GN[n].adj) if (x.tw === tw && !seen.has(x)) { seen.add(x); q.push(x); } }
+      const L = comp.reduce((s, e) => s + e.len, 0); if (L < 25*M2NM) continue;
+      let acc = 0, next = Math.min(L/2, SP/2);
+      for (const e of comp) {
+        while (acc + e.len >= next) { const f = (next - acc)/(e.len || 1), a = GN[e.a].p, b = GN[e.b].p; out.push({ tw, p: [a[0] + (b[0] - a[0])*f, a[1] + (b[1] - a[1])*f], pri: L, k: Math.round((next - Math.min(L/2, SP/2))/SP) }); next += SP; }
+        acc += e.len;
+      }
+    }
+  }
+  // drawn-only taxiways (no traffic) named by the profile
+  const tws = new Set(Object.keys(byTw));
+  if (typeof rm === 'function') for (const [k, m, o] of AD.twyLabels || []) if (!tws.has(k)) out.push({ tw: k, p: rm(m, o), pri: 0, k: 0 });
+  out.sort((a, b) => b.pri - a.pri);
+  return TWY_ANCH = out;
+}
+function drawGroundSigns(){
+  const sc = V.scale, mpx = sc/1852; if (sc < 140) return;
+  const P2 = p => [sx(p[0]), sy(p[1])], boxes = [];
+  const free = (x, y, w, h) => { if (x + w < 0 || y + h < 0 || x > W || y > H) return false; for (const b of boxes) if (x < b[0] + b[2] + 4 && b[0] < x + w + 4 && y < b[1] + b[3] + 3 && b[1] < y + h + 3) return false; boxes.push([x, y, w, h]); return true; };
+  const off = (p, d, m) => [p[0] + Math.sin(d*D2R)*m*M2NM, p[1] + Math.cos(d*D2R)*m*M2NM];
+  // intermediate holding positions: a single dashed yellow line across the taxiway, and a sign with its name
+  const fsH = clamp(3.4*mpx, 10, 16);
+  for (const h of Object.values(IHPS)) {
+    const p = GN[h.node].p, a = P2(off(p, h.dir + 90, 13)), b = P2(off(p, h.dir - 90, 13));
+    cx.save(); cx.lineCap = 'butt';
+    cx.strokeStyle = 'rgba(20,23,26,.75)'; cx.lineWidth = Math.max(4, 1.3*mpx); cx.beginPath(); cx.moveTo(...a); cx.lineTo(...b); cx.stroke();
+    cx.strokeStyle = '#f5c518'; cx.lineWidth = Math.max(2.4, 0.8*mpx); cx.setLineDash([Math.max(4, 1.6*mpx), Math.max(3, 1.1*mpx)]);
+    cx.beginPath(); cx.moveTo(...a); cx.lineTo(...b); cx.stroke(); cx.restore();
+    // the sign stands on the runway side of the taxiway, clear of the stands
+    const side = typeof offOf === 'function' && !APT.runways && Math.abs(offOf(off(p, h.dir - 90, 20))) < Math.abs(offOf(off(p, h.dir + 90, 20))) ? -90 : 90;
+    cx.font = `700 ${fsH}px ${FONT_L}`; const tw = cx.measureText(h.id).width + 8, q = P2(off(p, h.dir + side, 22));
+    const x = q[0] - tw/2, y = q[1] - fsH*0.6;
+    if (free(x, y, tw, fsH*1.25)) { cx.fillStyle = '#f5c518'; cx.fillRect(x, y, tw, fsH*1.25); cx.strokeStyle = '#111'; cx.lineWidth = 1; cx.strokeRect(x + 0.5, y + 0.5, tw - 1, fsH*1.25 - 1); cx.fillStyle = '#111'; cx.fillText(h.id, x + 4, y + fsH*0.98); }
+  }
+  // several runways (New York): a red mandatory sign with the runway at each holding position
+  if (APT.runways && sc > 800) { const fr = clamp(3*mpx, 9.5, 14); cx.font = `700 ${fr}px ${FONT_L}`;
+    for (const n of Object.values(GN)) { if (!n.p.hs) continue; const R = rwyById(n.p.hs), t = `${R.lo}-${R.hi}`, w = cx.measureText(t).width + 8, [X, Y] = P2(n.p), x = X + 6, y = Y - fr*1.5;
+      if (!free(x, y, w, fr*1.25)) continue; cx.fillStyle = '#c8202a'; cx.fillRect(x, y, w, fr*1.25); cx.fillStyle = '#fff'; cx.fillText(t, x + 4, y + fr*0.98); } }
+  // taxiway designators
+  const fs = clamp(3.6*mpx, 10.5, 17); cx.font = `700 ${fs}px ${FONT_L}`;
+  for (const a of twyAnchors()) {
+    if (a.k && sc < 600) continue;   // zoomed out: one sign per stretch
+    const [X, Y] = P2(a.p), w = cx.measureText(a.tw).width + 8, h = fs*1.25, x = X - w/2, y = Y - h/2;
+    if (!free(x, y, w, h)) continue;
+    cx.fillStyle = '#14171a'; cx.fillRect(x, y, w, h); cx.strokeStyle = '#f5c518'; cx.lineWidth = 1; cx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    cx.fillStyle = '#f5c518'; cx.fillText(a.tw, x + 4, y + fs*0.98);
+  }
+}
 function drawAirport(){
   if (APT.drawAirport) return APT.drawAirport();   // several runways (New York) draw themselves
   const sc = V.scale, mpx = sc/1852;
@@ -263,10 +326,7 @@ function drawAirport(){
         cx.fillStyle = '#111'; cx.fillRect(q[0], q[1]-fs*0.85, fs*0.95+4, fs*1.2); cx.fillStyle = C.yellow; cx.fillText(k, q[0]+4, q[1]+fs*0.15);
       }
     }
-    // taxiway designators along B
-    if (sc > 220) for (const [k, m, o] of AD.twyLabels || []) {
-      const fs = Math.max(9, 3.2*mpx), q = c(m + 12, o - 12); cx.font = `700 ${fs}px ${FONT_L}`; cx.fillStyle = '#111'; cx.fillRect(q[0], q[1]-fs*0.85, fs*0.95+4, fs*1.2); cx.fillStyle = C.yellow; cx.fillText(k, q[0]+4, q[1]+fs*0.15);
-    }
+    drawGroundSigns();
     // hot spots
     for (const [hn, hm, ho] of AD.hotspots || []) { const [X,Y] = c(hm, ho); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 26*mpx+6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.font = `600 11px ${FONT_L}`; cx.fillText(hn, X - 26*mpx - 30, Y + 4); }
   }
@@ -393,7 +453,7 @@ function drawAc(ac){
 }
 
 function stateLabel(ac){
-  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', READY:'STARTED', TAXI:'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
+  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', READY:'STARTED', TAXI:ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
 }
 
 // ═════════════════════════ console UI ═════════════════════════
@@ -520,13 +580,14 @@ function renderSel(){
       const canIn = ac.state === 'VACATING' && !ac.onRwy;
       const sw = APT.standWord || 'stand', sid = ac.stand ? sw + ' ' + ac.stand.id : 'a ' + sw;
       html += b('TAXI', (ac.taxiIn ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn, ac.taxiIn ? 'on' : ac.vacated ? 'go' : '');
+      html += b('POP:holdin', 'Taxi to holding point…', canIn);
     }
     if (xingAhead(ac) >= 0) { const r = rwyName(ac.path.pts[xingAhead(ac)].hs); html += b('CROSS ' + r, 'Cross runway ' + r, true, ac.hsAt ? 'go' : ''); }
     html += b(ac.held ? 'RES' : 'HP', ac.held ? 'Continue taxi' : 'Hold position', !!ac.path && ac.state !== 'TAKEOFF');
     html += `</div>`;
   }
   el.innerHTML = html;
-  el.querySelectorAll('button[data-c]').forEach(bt => bt.onclick = () => { const c = bt.dataset.c; if (c === 'POP:push') openPushPop(ac, bt); else if (c === 'POP:taxi') openTaxiPop(ac, bt); else command(ac.cs+' '+c); });
+  el.querySelectorAll('button[data-c]').forEach(bt => bt.onclick = () => { const c = bt.dataset.c; if (c === 'POP:push') openPushPop(ac, bt); else if (c === 'POP:taxi') openTaxiPop(ac, bt); else if (c === 'POP:holdin') openHoldInPop(ac, bt); else command(ac.cs+' '+c); });
   const keyCmd = (id, pre) => { const i = $(id); if (i) i.onkeydown = e => { if (e.key === 'Enter' && i.value.trim()) command(`${ac.cs} ${pre}${i.value.trim()}`); }; };
   keyCmd('iH','H'); keyCmd('iA','A'); keyCmd('iS','S');
   const d = $('iD'); if (d) d.onchange = () => d.value && command(`${ac.cs} DCT ${d.value}`);
@@ -583,22 +644,57 @@ function openTaxiPop(ac, anchor){
   const groups = hps.map(hp => ({ hp, opts: taxiOptions(ac, hp) })).filter(g => g.opts.length);
   const pre = ac.state === 'PARKED' ? [ac.stand.lp] : [[ac.x, ac.y]];
   const all = []; groups.forEach(g => g.opts.forEach((o, k) => all.push({ hp: g.hp, o, rec: g.hp === rec && k === 0 })));
+  // intermediate holding points along the taxiways (London City T1-T9, Innsbruck L1/B1): taxi there and wait
+  const ihp = ihpOptions(taxiFrom(ac)); ihp.forEach(a => all.push(a));
   const H = (hp, o) => { const pts = [...pre, ...o.nodes.map(id => GN[id].p)]; if (ac.pushed && !ac.leftStand && pts.length > 2 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[2]))) < 90) pts.splice(1, 1); return pts; };
   const len = o => Math.round(o.len / M2NM / 10) * 10;
   showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${depRw()}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
     <p class="hint">Pick a holding point and the routing. Hover to preview it on the scope. ${APT.taxiHint(depRw())}</p>
     ${groups.map(g => `<div class="grp"><div class="gh"><b>Holding point ${PHON[g.hp]}</b><span>${HOLDS[g.hp].rgl ? 'Guard lights' : ''}${g.hp === rec ? ' · runway ' + depRw() + ' departure point' : ''}</span></div>
       ${g.opts.map(o => { const j = all.findIndex(a => a.o === o); const a = all[j]; return `<button class="opt row${a.rec ? ' rec' : ''}" data-j="${j}"><span class="hp">${g.hp.replace(/~\d+$/, '')}</span><b>via ${(o.via.length ? o.via : [g.hp]).map(t => PHON[t]).join(', ')}</b><span class="ln">${len(o)} m</span>${a.rec ? '<i>Recommended</i>' : ''}</button>`; }).join('')}</div>`).join('')}
+    ${ihpGroup(all, ihp)}
     <div class="phr">“${spoken(ac.cs)}, ${APT.phr && APT.phr.taxiPop ? APT.phr.taxiPop() : `taxi to holding point <em></em>, runway ${depRw()}, ${PH.altim()}`}”</div>`, () => {
-    const say = a => pop.querySelector('.phr em').textContent = APT.phr && APT.phr.taxiPop ? [...a.o.via, HOLDS[a.hp].ref].map(t => PHON[t] || t).join(', ')
+    const say = a => pop.querySelector('.phr em').textContent = a.ihp ? hpWords(a.hp) + (a.o.via.length ? ' via ' + a.o.via.map(t => PHON[t] || t).join(', ') : '') : APT.phr && APT.phr.taxiPop ? [...a.o.via, HOLDS[a.hp].ref].map(t => PHON[t] || t).join(', ')
       : PHON[a.hp] + (a.o.via.length ? ' via ' + a.o.via.map(t => PHON[t]).join(', ') : '');
     pop.querySelectorAll('.opt').forEach(bt => {
       const a = all[+bt.dataset.j];
       const pv = () => { S.preview = { pts: H(a.hp, a.o), label: 'Hold ' + a.hp + (a.o.via.length ? ' via ' + a.o.via.join(' ') : '') }; say(a); };
       bt.onmouseenter = pv; bt.onfocus = pv;
-      bt.onclick = () => { command(`${ac.cs} TAXI ${a.hp}${a.o.via.length ? ' VIA ' + a.o.via.join(' ') : ''}`); closePop(); };
+      bt.onclick = () => { command(`${ac.cs} TAXI ${a.hp}${!a.ihp && a.o.via.length ? ' VIA ' + a.o.via.join(' ') : ''}`); closePop(); };
     });
     const r0 = all.find(a => a.rec) || all[0]; if (r0) { S.preview = { pts: H(r0.hp, r0.o), label: 'Hold ' + r0.hp }; say(r0); }
+  });
+  if (V.name !== 'gnd' && V.scale < 70) setView('gnd');
+}
+// shortest route from a node to each intermediate holding point (and, for arrivals, the runway holding points too)
+function ihpOptions(from, rwyHolds){
+  const ids = [...Object.keys(IHPS), ...(rwyHolds ? Object.keys(HOLDS).filter(id => !/~\d+$/.test(id) || !HOLDS[id.replace(/~\d+$/, '')]) : [])];
+  const all = ids.map(id => { const h = holdPt(id), r = h && h.node !== from && route(from, h.node); return r && { hp: id, ihp: true, rwy: h.rwy, o: { nodes: r.nodes, via: viaOf(r.tws, id).filter(t => t !== 'APRON'), len: pathLen(r.nodes) } }; })
+    .filter(Boolean).sort((a, b) => a.o.len - b.o.len);
+  return [...all.filter(a => !a.rwy), ...all.filter(a => a.rwy).slice(0, 8)];
+}
+function ihpGroup(all, opts){
+  const row = a => `<button class="opt row" data-j="${all.indexOf(a)}"><span class="hp">${a.hp.replace(/~\d+$/, '')}</span><b>${hpWords(a.hp)}</b><span class="ln">${a.o.via.length ? 'via ' + a.o.via.join(' ') + ' · ' : ''}${Math.round(a.o.len / M2NM / 10) * 10} m</span></button>`;
+  const grp = (list, h, sub) => list.length ? `<div class="grp"><div class="gh"><b>${h}</b><span>${sub}</span></div>${list.map(row).join('')}</div>` : '';
+  return grp(opts.filter(a => !a.rwy), 'Intermediate holding points', 'stop there and wait for the next instruction') + grp(opts.filter(a => a.rwy), 'Runway holding points', 'hold short of the runway');
+}
+// an arrival clear of the runway: taxi to a holding point instead of straight to the stand
+function openHoldInPop(ac, anchor){
+  const from = ac.vacNode || nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id, all = ihpOptions(from, true);
+  if (!all.length) { sys(`There are no holding points to taxi ${ac.cs} to.`); return; }
+  const H = o => [[ac.x, ac.y], ...o.nodes.map(id => GN[id].p)];
+  showPop(ac, anchor, `<div class="lbl">Taxi to a holding point</div><h4>${ac.cs} <span>${ac.taxiIn ? 'taxiing in' : 'clear of the runway'} · ${ac.t}</span></h4>
+    <p class="hint">It taxis to the holding point by the shortest route and waits there. Give it its stand afterwards. Hover to preview the route.</p>
+    ${ihpGroup(all, all)}
+    <div class="phr">“${spoken(ac.cs)}, taxi to holding point <em></em>”</div>`, () => {
+    const say = a => pop.querySelector('.phr em').textContent = hpWords(a.hp) + (a.o.via.length ? ' via ' + a.o.via.map(t => PHON[t] || t).join(', ') : '');
+    pop.querySelectorAll('.opt').forEach(bt => {
+      const a = all[+bt.dataset.j];
+      const pv = () => { S.preview = { pts: H(a.o), label: 'Hold ' + a.hp.replace(/~\d+$/, '') }; say(a); };
+      bt.onmouseenter = pv; bt.onfocus = pv;
+      bt.onclick = () => { command(`${ac.cs} TAXI ${a.hp}`); closePop(); };
+    });
+    S.preview = { pts: H(all[0].o), label: 'Hold ' + all[0].hp.replace(/~\d+$/, '') }; say(all[0]);
   });
   if (V.name !== 'gnd' && V.scale < 70) setView('gnd');
 }
