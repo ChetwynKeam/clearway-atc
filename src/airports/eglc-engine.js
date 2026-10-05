@@ -317,8 +317,8 @@ const APT = {
     thumb(k, zoom, W){
       if (k === 'app') return v => { v.scale *= 1.5; v.cx -= 3; v.cy += 1; };
       if (k === 'twr') { const c = rm(RWY_M*0.8, -40); return v => { v.cx = c[0]; v.cy = c[1]; v.scale = W/0.7; }; }
-      const c = zoom === 'apron' ? rm(330, -100) : rm(640, -50);
-      return v => { v.cx = c[0]; v.cy = c[1]; v.scale = W/((zoom === 'apron' ? 700 : 1900)*M2NM); };
+      const c = zoom === 'apron' ? rm(330, -100) : rm(560, -60);
+      return v => { v.cx = c[0]; v.cy = c[1]; v.scale = W/((zoom === 'apron' ? 650 : 1250)*M2NM); };
     },
     figHold: 'JACKO', emergHp: 'M',
     figConsole: v => { v.scale *= 1.6; v.cx += 2; v.cy += 2; },
