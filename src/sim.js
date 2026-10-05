@@ -300,14 +300,19 @@ function lineUpPath(ac, hp){
   else { pts.push(...filOut(hp, 'W')); for (const [m,o] of TURN_W) if (m < H.m - 40) pts.push(P(m,o)); }
   return pts;
 }
+// Leaving the runway. The crew picks the exit (APT.vacPrefs, for its stand) and keeps rolling; the controller can name
+// another exit (VAC <exit>) at any time until it is off the runway. dir: the way it is moving along the runway.
+const VAC_TURN = 16, VAC_RWY = 30, VAC_DEC = 2.5;   // turn-off speed, backtrack speed (kt), braking (kt/s)
+const stopDist = v => Math.max(0, v*v - VAC_TURN*VAC_TURN)/(2*VAC_DEC)*0.5144;   // metres to slow from v to the turn-off
 function vacatePath(ac){
-  const m = mOf([ac.x, ac.y]), dir = ac.rollDir;
-  const st = freeStand(ac); if (st) st.occ = ac; ac.stand = st;
+  const m = mOf([ac.x, ac.y]), dir = Math.sin(ac.hdg*D2R)*RU[0] + Math.cos(ac.hdg*D2R)*RU[1] >= 0 ? 1 : -1;
+  planStand(ac); const st = ac.stand;
   const prefs = APT.vacPrefs(st);
-  if (ac.reqExit && !prefs.includes(ac.reqExit)) ac.reqExit = null;
+  if (ac.reqExit && !prefs.includes(ac.reqExit) && !(APT.vacExits && APT.vacExits(ac).includes(ac.reqExit))) ac.reqExit = null;
   const pts = [];
   const filM = (e, d) => FIL[e][d > 0 ? 'W' : 'E'][0][0];
-  let ex = (ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs).find(e => (filM(e, dir) - m)*dir > 15);
+  const ahead = 15 + stopDist(ac.gs || 0);
+  let ex = (ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs).find(e => (filM(e, dir) - m)*dir > ahead);
   ac.backtrack = false;
   if (!ex) { // roll on to the turning circle and backtrack
     let cur;
@@ -323,6 +328,47 @@ function vacatePath(ac){
   if (st) { const r = route(H.node, st.node); if (r) { for (const id of r.nodes.slice(1)) pts.push(GN[id].p); via = viaOf(r.tws, ex); } pts.push(st.p); }
   ac.taxiVia = via;
   return pts;
+}
+// ── taxiing ──
+// Speeds change at TAXI_ACC/TAXI_DEC (kt/s); turns are arcs of radius taxiR, sized to the aircraft; the aircraft slows
+// before each corner (the sharper, the slower) and before the end of its route.
+const TAXI_ACC = 1.2, TAXI_DEC = 2;
+const taxiR = ac => ac.perf.wake === 'H' ? 45 : ac.perf.wake === 'L' ? 18 : 30;   // metres
+function taxiLimit(ac){
+  const P = ac.path.pts; let D = 0, from = [ac.x, ac.y], lim = Infinity;
+  for (let i = 0; i < P.length && D < 0.25; i++) {
+    D += dist(...from, ...P[i]);
+    if (i === P.length - 1) { lim = Math.min(lim, Math.max(3, Math.sqrt(2*TAXI_DEC*D*3600))); break; }   // stop at the end
+    // the turn at this point, measured over the next 40 m so a curve drawn as many short legs counts as one turn
+    let j = i + 1; while (j < P.length - 1 && dist(...P[i], ...P[j]) < 0.022) j++;
+    const th = Math.abs(angDiff(brg(...from, ...P[i]), brg(...P[i], ...P[j])));
+    if (th > 12) { const vc = Math.max(7, ac.path.spd - th*0.12), lead = taxiR(ac)/1852*Math.tan(Math.min(th, 150)*D2R/2);
+      lim = Math.min(lim, Math.sqrt(vc*vc + 2*TAXI_DEC*Math.max(0, D - lead)*3600)); }
+    from = P[i];
+  }
+  return lim;
+}
+// an arrival's stand is planned once it is cleared for an approach, so the card and strip show where it is going
+function planStand(ac){
+  if (ac.kind !== 'ARR' || (ac.stand && ac.stand.occ === ac)) return;
+  const st = freeStand(ac); if (st) st.occ = ac; ac.stand = st;
+}
+function startVacate(ac, auto){
+  const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto;
+  setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); turnRound(ac); });
+}
+// on the runway, a vacating aircraft keeps its roll-out speed (or backtracks at VAC_RWY) and brakes in time for the
+// first real turn on its path: the turn-off, or the turning circle
+function vacSpeed(ac, dt){
+  const P = ac.path.pts, cur = ac.gs || 0;
+  let v = cur > VAC_RWY ? Math.max(VAC_RWY, cur - 4.2*dt) : Math.min(VAC_RWY, cur + 2*dt);
+  let d = 0, from = [ac.x, ac.y];
+  for (const p of P) {
+    const seg = dist(...from, ...p); if (seg < 1e-6) continue;
+    if (Math.abs(angDiff(ac.hdg, brg(...from, ...p))) > 25) break;
+    d += seg; from = p;
+  }
+  return Math.max(Math.min(ac.path.spd, cur), Math.min(v, Math.sqrt(VAC_TURN*VAC_TURN + 2*VAC_DEC*d*3600)));
 }
 function startLineUp(ac){
   ac.state = 'LINEUP'; ac.onRwy = true; ac.need = null;
@@ -504,10 +550,9 @@ function commandRun(str){
       said.push(`${chg ? 'amended clearance, ' : ''}${sidSpoken(sid)} departure, runway ${depRw()}, cleared for takeoff, ${windPhrase()}`); reads.push(`${chg ? 'amended, ' : ''}${sidSpoken(sid)}, cleared for takeoff runway ${depRw()}`);
       if (ac.state === 'LINEDUP') beginTakeoff(ac);
     } else if (t === 'VAC') {
-      if (ac.state !== 'ROLLED' && ac.state !== 'ROLLOUT') { sys(`${ac.cs} is not on the runway.`); continue; }
+      if (!(ac.state === 'ROLLED' || ac.state === 'ROLLOUT' || (ac.state === 'VACATING' && ac.onRwy))) { sys(`${ac.cs} is ${ac.state === 'VACATING' ? 'already off the runway' : 'not on the runway'}.`); continue; }
       if (toks[i+1] && HOLDS[toks[i+1]]) ac.reqExit = toks[++i];
-      const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null;
-      setPath(ac, pts, 16, () => { ac.state = 'ONSTAND'; ac.hdg = ac.stand ? ac.stand.hdg : ac.hdg; emit('onstand', ac); turnRound(ac); });
+      startVacate(ac, false);
       const stp = ac.stand ? `stand ${ac.stand.id}` : 'as directed';
       said.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}, taxi ${stp}${viaWords(ac.taxiVia || [])}`); reads.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate ${PHON[ac.exit]}, ${stp}`);
     } else if (t === 'ROG') {
@@ -602,6 +647,7 @@ function step(dt){
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35;
+    if (ac.kind === 'ARR' && ac.app && !ac.stand && !ac.handed) planStand(ac);
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
     if (ac.rel) stepRelease(ac);
     if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; S.score.pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
@@ -613,6 +659,7 @@ function step(dt){
       if (ac.kind === 'DEP') { if (!ac.handed) { S.score.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else S.score.pts += 20; S.score.departed++; }
       else { S.score.div++; S.score.pts -= ac.state === 'DIVERTING' ? 0 : 40; sys(`${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); }
       emit('exit', ac);
+      if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       if (S.sel === ac) S.sel = null; return false;
     }
     return true;
@@ -784,11 +831,8 @@ function stepGround(ac, dt){
   if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt) { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
   if (ac.path) {
     const tgt = ac.path.pts[0], d = dist(ac.x, ac.y, ...tgt);
-    let spd = ac.path.spd;
-    if (ac.path.pts.length > 1) { // slow for corners
-      const nxt = ac.path.pts[1], turn = Math.abs(angDiff(brg(ac.x, ac.y, ...tgt), brg(...tgt, ...nxt)));
-      if (d < 0.025 && turn > 35) spd = Math.min(spd, 8);
-    }
+    let spd = ac.path.reverse ? ac.path.spd : Math.min(ac.path.spd, taxiLimit(ac));
+    if (ac.state === 'VACATING' && ac.onRwy) spd = Math.min(vacSpeed(ac, dt), spd < ac.path.spd ? spd : Infinity);
     if (ac.held) spd = 0;
     // a tow crossing from Charlie holds short of the runway while anything is at, or taxiing to, holding point Alpha,
     // where the crossing comes off; otherwise the tug and that departure block each other with the runway occupied
@@ -808,11 +852,33 @@ function stepGround(ac, dt){
       if (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40 && !(o.state === 'PARKED' || o.state === 'ONSTAND')) { spd = 0; ac.waiting = o.cs; break; }
     }
     if (spd > 0) ac.waiting = null;
-    const mv = spd/3600*dt; ac.gs = spd; ac.ias = spd;
-    if (d > 1e-6 && spd > 0) { const b = brg(ac.x, ac.y, ...tgt); const want = ac.path.reverse ? norm(b+180) : b; ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, want), -25*dt, 25*dt)); }
-    if (spd === 0) {}
-    else if (d <= mv) { ac.x = tgt[0]; ac.y = tgt[1]; ac.path.pts.shift(); if (!ac.path.pts.length) { const cb = ac.path.onDone; ac.path = null; ac.gs = 0; cb && cb(); } }
-    else { ac.x += (tgt[0]-ac.x)/d*mv; ac.y += (tgt[1]-ac.y)/d*mv; }
+    // speed builds up and drops off gradually; a stop for traffic brakes harder
+    const cur = ac.gs || 0, v = spd >= cur ? Math.min(spd, cur + TAXI_ACC*dt) : Math.max(spd, cur - (spd === 0 ? 6 : TAXI_DEC)*dt);
+    const mv = v/3600*dt; ac.gs = v; ac.ias = v;
+    const done = () => { ac.path.pts.shift(); if (!ac.path.pts.length) { const cb = ac.path.onDone; ac.path = null; ac.gs = 0; cb && cb(); } };
+    if (v <= 0) {}
+    else if (ac.path.reverse) {   // pushed by the tug: straight back along the push line
+      const b = brg(ac.x, ac.y, ...tgt); ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, norm(b+180)), -25*dt, 25*dt));
+      if (d <= mv) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } else { ac.x += (tgt[0]-ac.x)/d*mv; ac.y += (tgt[1]-ac.y)/d*mv; }
+    } else {
+      // steered like a nosewheel: it rolls along its heading, turning no tighter than its radius allows, and starts each
+      // turn early so it rounds the corner on an arc instead of pivoting on the point
+      const R = taxiR(ac), want = brg(ac.x, ac.y, ...tgt), err = angDiff(ac.hdg, want);
+      const rate = Math.max(v*0.5144/R*R2D, 4);
+      ac.hdg = norm(ac.hdg + clamp(err, -rate*dt, rate*dt));
+      const last = ac.path.pts.length === 1;
+      if (last && d <= mv) { ac.x = tgt[0]; ac.y = tgt[1]; done(); }
+      else {
+        ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv;
+        const d2 = dist(ac.x, ac.y, ...tgt);
+        if (last) { if (d2 < 0.0015 || (Math.abs(err) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
+        else {
+          const nxt = ac.path.pts[1], th = Math.abs(angDiff(want, brg(...tgt, ...nxt)));
+          const lead = Math.min(R/1852*Math.tan(Math.min(th, 150)*D2R/2), dist(...tgt, ...nxt)/2);
+          if (d2 <= Math.max(lead, mv, 0.0008) || (Math.abs(err) > 100 && d2 < 2*R/1852)) done();
+        }
+      }
+    }
   }
   if (ac.onRwy && ac.state === 'VACATING' && Math.abs(offOf([ac.x, ac.y])) > 45) ac.onRwy = false;
   if (ac.state === 'ROLLOUT') {
@@ -820,7 +886,12 @@ function stepGround(ac, dt){
     const mv = ac.ias/3600*dt; ac.x += RU[0]*ac.rollDir*mv; ac.y += RU[1]*ac.rollDir*mv;
     const m = mOf([ac.x, ac.y]), off = offOf([ac.x, ac.y]);
     if (Math.abs(off) > 0.05) [ac.x, ac.y] = rm(m, off*Math.exp(-dt*1.5));   // keep the roll-out on the centreline
-    if (ac.ias <= 15.5 || m < APT.roll[0] || m > APT.roll[1]) { ac.state = 'ROLLED'; ac.gs = 0; ac.need = 'Request vacate'; pilot(ac, `runway ${ac.app}, ${APT.rolledCall || 'request backtrack and taxi'}`); }
+    // below 40 kt the crew picks its exit and vacates by itself, reporting which way it is going
+    if (ac.ias <= 40) {
+      startVacate(ac, true);
+      pilot(ac, `${ac.backtrack ? 'backtracking, ' : ''}vacating via ${PHON[ac.exit]}, ${ac.stand ? 'for stand ' + ac.stand.id : 'as directed'}`);
+    }
+    else if (ac.ias <= 15.5 || m < APT.roll[0] || m > APT.roll[1]) { ac.state = 'ROLLED'; ac.gs = 0; ac.need = 'Request vacate'; pilot(ac, `runway ${ac.app}, ${APT.rolledCall || 'request backtrack and taxi'}`); }
   }
   if (ac.state === 'TAKEOFF') {
     ac.ias += (ac.perf.wake === 'H' ? 4.0 : 4.2)*dt; ac.gs = ac.ias;

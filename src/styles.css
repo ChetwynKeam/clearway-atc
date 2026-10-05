@@ -150,6 +150,11 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 700; letter-spacing
 .app button.strip.sel { outline: 2px solid var(--phos); outline-offset: 1px; }
 .app button.strip.need .stt { color: #a14a00; }
 .app button.strip.off { opacity: .62; cursor: default; }
+/* a landing or take-off clearance that still stands: green edge and a tick (purple stays for transferred flights) */
+.app button.strip.clr { box-shadow: inset 0 0 0 2px rgba(18,128,92,.75); }
+.strip.clr .bar { background: #12805c; }
+.strip .clrk { display: inline-block; padding: 0 5px; border-radius: 4px; background: #12805c; color: #fff; font-family: var(--font-label); font-weight: 700; font-size: 11px; letter-spacing: .03em; }
+body.theme-dark .strip .clrk { background: #5fe39a; color: #062014; }
 .strip.off .bar { background: #8a4fc4; }
 .app button.strip.off .stt { color: #6a3fa0; }
 .app button.strip.need { box-shadow: inset 0 0 0 2px rgba(255,140,0,.6); }
