@@ -657,6 +657,12 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 .slotlist { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-family: var(--font-data); font-size: 12px; }
 .slot { display: inline-flex; gap: 6px; align-items: baseline; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-2); }
 .slot b { color: var(--ink); font-weight: 500; } .slot i { font-style: normal; color: var(--dim); }
+.custombox { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 10px; align-items: end; }
+.custombox[hidden] { display: none; }
+.app .card .custombox input { width: 100%; padding: 8px 10px; font-size: 13.5px; }
+.custombox .btn { padding: 8px 14px; }
+@media (max-width: 640px) { .custombox { grid-template-columns: repeat(3, minmax(0, 1fr)); } .custombox .btn { grid-column: 1 / -1; } }
+.slot.ga b { font-style: italic; }
 .slot.ARR { border-left: 3px solid var(--arr); } .slot.DEP { border-left: 3px solid var(--dep); }
 
 /* push-to-talk and the speech transcript */

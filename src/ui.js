@@ -945,6 +945,7 @@ function renderSlots(){
   }
   hourSel.value = keep || 18;
   daySel.disabled = hourSel.disabled = ex || S.running;
+  if ($('trafficSel').value === 'custom' && typeof renderCustomSlots === 'function') return renderCustomSlots();
   const fl = timetableFlights(d, +hourSel.value);
   $('slotList').innerHTML = ex ? '<span class="dimmer">Guided exercises use their own traffic.</span>'
     : fl.length ? fl.map(f => `<span class="slot ${f.k}"><b>${f.cs}</b> ${f.k === 'ARR' ? f.o + ' › ' + APT.icao : APT.icao + ' › ' + f.d} <i>${f.at}Z</i></span>`).join('')
@@ -977,6 +978,7 @@ function start(){
     sys(`Position open: ${APT.radar[0]} ${APT.radar[1]} and ${APT.tower[0].split(' ').pop()} ${APT.tower[1]} combined. ${S.wx.raw}. Runway ${S.rwy}${S.depRwy && S.depRwy !== S.rwy ? ` for landing, ${S.depRwy} for departure` : ''}, information ${phonetic(S.atis)}.`);
     if (live && LIVE.session) sys(`Real world, ${DAYS[day]} ${zHM(S.start)}Z: ${S.sched.length} real flight${S.sched.length === 1 ? '' : 's'} still to come today, from ${APT.liveName}’s live flight information${LIVE.data.updated ? ` (updated ${LIVE.data.updated.substr(11, 5)}Z)` : ''}.`);
     else if (live) sys('Real world: today’s flight information could not be loaded here, so the session uses the timetable for this hour.', true);
+    else if (mode === 'custom') sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z, custom traffic: ${S.sched.filter(f => f.k === 'ARR').length} arrivals and ${S.sched.filter(f => f.k !== 'ARR').length} departures over the next hour, from ${CUSTOM.src}.`);
     else if (!ex) sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z: ${S.sched.length} flight${S.sched.length === 1 ? '' : 's'} expected for the rest of the day.`);
     if (turbExcess(S.wx) > 0) sys(`Wind exceeds the ${APT.turbName || 'Special Procedures'} turbulence limit: expect windshear on final and go-arounds.`);
     if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong.replace(/\.$/, '') + (APT.rnp && APT.rnpMinsOk(S.wx, S.rwy) ? ': arrivals will ask for an RNP approach.' : ': arrivals will not be able to land.'));

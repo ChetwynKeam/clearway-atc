@@ -38,6 +38,7 @@ function timetableSession(d, h){
 const SESSION_HOURS = APT.sessionHours || Array.from({ length: 16 }, (_, i) => i + 6); // 06Z to 21Z, the civil operating day (New York: its own)
 function buildSchedule(mode, day = 0, hour = 17){
   if (EXERCISES[mode]) return EXERCISES[mode].sched.map(x => ({...x}));
+  if (mode === 'custom') return customSchedule(day, hour);   // you chose the numbers (custom.js)
   const LS = /^live/.test(mode) && typeof liveSession === 'function' ? liveSession(Date.now(), mode) : null;   // Real world: today's real flights
   const T = LS || timetableSession(day, Math.floor(hour)), s = [...T.residents, ...T.sched];
   if (mode !== 'real' && mode !== 'live') {
@@ -927,7 +928,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
-  for (const f of S.sched) if (!f.spawned && !f.hold && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else spawnDeparture(f); }
+  for (const f of S.sched) if (!f.spawned && !f.hold && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
   if (APT.xing) {
   if (X.st === 'CLOSING' && S.t >= X.t) { X.st = 'CLOSED'; sys('Winston Churchill Avenue closed: barriers down, crossing clear, FOD check complete.'); renderAtis(); emit('xing', 'CLOSED'); }

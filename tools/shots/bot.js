@@ -11,10 +11,12 @@ window.__bot = function botTick(){
     if (ac.need === 'Say again' && ac.lastCmd) { command(ac.cs + ' ' + ac.lastCmd); continue; }
     if (ac.diverting) { go(ac, `DCT ${ac.diverting} A${(APT.divertAlt || 8000)/100}`); continue; }
     if (ac.kind === 'ARR') {
+      // arrivals get no stand by themselves: give the first free one in the airline's usual area
+      if (!ac.stand && (ac.app || ac.mode === 'FINAL' || !ac.airborne) && !ac.standAsked) { ac.standAsked = true; go(ac, 'STAND'); }
       if (ac.airborne) {
         const togo = Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]);
-        // space the approaches: wait while another cleared arrival is within 7 NM of the same distance out
-        const tooClose = S.acs.some(o => o !== ac && o.kind === 'ARR' && o.airborne && !outOfCtl(o) && (o.app || o.mode === 'FINAL') && Math.abs(Math.hypot(o.x - RADAR_REF[0], o.y - RADAR_REF[1]) - togo) < 7);
+        // space the approaches: wait while another cleared arrival is within 9 NM of the same distance out, or 8 NM of it
+        const tooClose = S.acs.some(o => o !== ac && o.kind === 'ARR' && o.airborne && !outOfCtl(o) && (o.app || o.mode === 'FINAL') && (Math.abs(Math.hypot(o.x - RADAR_REF[0], o.y - RADAR_REF[1]) - togo) < 9 || Math.hypot(o.x - ac.x, o.y - ac.y) < 8));
         if (ac.freq === 'RAD' && ac.mode !== 'FINAL' && !ac.app && ac.need && !tooClose) go(ac, /RNP/.test(ac.need) && APT.rnp ? APT.rnpButtons(S.rwy)[0][0] : 'APP');
         else if (ac.freq === 'RAD' && (ac.mode === 'FINAL' || ac.app) && togo < 14) go(ac, 'HO');
         else if (ac.freq === 'TWR' && !ac.ctl) go(ac, 'CTL');

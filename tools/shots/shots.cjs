@@ -70,8 +70,19 @@ async function view(pg, k, zoom = 1, theme = 'light', pick){
       await sw.screenshot(jpg(`${A.k}-strips.jpg`)); await sw.close(); await pg.waitForTimeout(800);
       await pg.click('#tgFids'); await pg.waitForTimeout(300);
       const [fw] = await Promise.all([ctx.waitForEvent('page'), pg.click('#fidsPop')]);
-      await fw.setViewportSize({ width: 1300, height: 720 }); await fw.waitForTimeout(2000);
-      await fw.screenshot(jpg(`${A.k}-flights.jpg`)); await fw.close();
+      await fw.setViewportSize({ width: 1560, height: 720 }); await fw.waitForTimeout(2000);
+      await fw.screenshot(jpg(`${A.k}-flights.jpg`));
+      // the slot editor (landed and departed rows hidden so the picture shows the live part of the day): a few edits like a flow manager would make, then one departure left open in the editor
+      const hm = m => String(Math.floor(m/60) % 24).padStart(2, '0') + ':' + String(Math.round(m) % 60).padStart(2, '0');
+      const dep = fw.locator('#fbDEP tr.can'), arr = fw.locator('#fbARR tr.can'), bar = fw.locator('#fbSlot');
+      const edit = async (row, fn) => { if (await row.count()) { await row.click(); await fw.waitForTimeout(300); await fn(); await fw.waitForTimeout(300); } };
+      await edit(dep.nth(2), async () => { await bar.locator('select[data-i="why"]').selectOption('technical'); await bar.locator('button[data-a="d20"]').click(); });
+      await edit(dep.nth(4), async () => { const tm = +(await dep.nth(4).getAttribute('data-tm')); await bar.locator('input[data-i="ctot"]').fill(hm(tm + 25)); await bar.locator('input[data-i="ctot"]').press('Enter'); });
+      await edit(arr.nth(3), async () => { await bar.locator('button[data-a="hold"]').click(); });
+      await edit(dep.nth(1), async () => {});
+      await fw.setViewportSize({ width: 1560, height: 900 }); await fw.addStyleTag({ content: 'tr.past{display:none}' }); await fw.evaluate(() => { scrollTo(0, 0); document.querySelectorAll('*').forEach(e => { if (e.scrollTop) e.scrollTop = 0; }); }); await fw.waitForTimeout(1200);
+      await fw.screenshot(jpg(`${A.k}-slots.jpg`));
+      await fw.screenshot({ ...jpg(`${A.k}-slots-close.jpg`), clip: { x: 0, y: 56, width: 780, height: 488 } }); await fw.close();
       await pg.evaluate(() => { S.paused = true; const f = document.getElementById('tgFids'); if (document.querySelector('.fids:not([hidden])')) f.click(); });
     }
     // tower picture: wait (up to 10 sim minutes) for something on or near the runway

@@ -102,7 +102,7 @@ function careerExercise(ex){ if (!CAR.ex[ex]) { CAR.ex[ex] = Date.now(); carDirt
 
 // ── career page ──
 const fmtHrs = s => s < 3600 ? `${Math.round(s/60)} min` : `${(s/3600).toFixed(s < 36000 ? 1 : 0)} h`;
-const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3',
+const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', custom: 'Custom', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3',
   mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3', cdep: 'Exercise 1', carr: 'Exercise 2', ceast: 'Exercise 3', idep: 'Exercise 1', iarr: 'Exercise 2', ifoehn: 'Exercise 3', kdep: 'Exercise 1', karr: 'Exercise 2', kcross: 'Exercise 3',
   gdep: 'Exercise 1', garr: 'Exercise 2', gmix: 'Exercise 3' };
 function renderCareer(){

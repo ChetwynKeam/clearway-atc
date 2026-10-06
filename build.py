@@ -105,6 +105,7 @@ const AP_DATA = {ap_data};
 {r('tiles.js')}
 {r('far.js')}
 {r('live.js')}
+{r('custom.js')}
 {r('slots.js')}
 {r('voice.js')}
 {r('radio.js')}
