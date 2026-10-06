@@ -733,6 +733,10 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
 
 /* departure release (Sevilla / Casablanca) */
+.standline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 6px 0 2px; padding: 5px 8px; border-radius: 6px; background: var(--panel-2); font: 500 12px/1.4 var(--font-data); color: var(--ink-2); }
+.standline b { color: var(--ink); } .standline.none b { color: var(--warn); } .standline .pref { flex: 1; color: var(--ink-3, var(--ink-2)); }
+.standline select { font: inherit; max-width: 160px; }
+.strip .rte.nostand { color: var(--warn); }
 .relline { font: 500 12px/1.4 var(--font-data); padding: 5px 8px; border-radius: 6px; margin: 6px 0 2px; background: var(--panel-2); color: var(--ink-2); }
 .relline.ok { color: var(--ok); } .relline.req { color: var(--warn); } .relline.exp { color: var(--alert); }
 .strip .rel { font-weight: 700; } .strip .rel.ok { color: var(--ok); } .strip .rel.req { color: var(--warn); } .strip .rel.exp { color: var(--alert); }
@@ -3337,6 +3341,7 @@ const R160 = EGLC.R160.map(p => xy(...p)), R159 = EGLC.R159.map(p => xy(...p));
 // intermediate holding points T1-T9 along taxiway T (AD 2-EGLC-2-1), metres along the runway frame
 const IHP_T = [['T1', -164], ['T2', -47], ['T3', 143], ['T4', 298], ['T5', 380], ['T6', 518], ['T7', 1001], ['T8', 1146], ['T9', 1281]];
 const APT = {
+  areaNames: { civil: 'main apron', north: 'GA apron' },   // what the stand areas are called (the preferred area shown for an arrival)
   arrAlt: arrAltOf([...Object.values(EGLC.TRANS), ...GATES.map(STAR_OF)]),   // transitions (7-15..7-18) then STARs
   ihps: IHP_T.map(([id, m]) => ({ id, tw: 'T', at: rm(m, offT(m)) })),
   icao: 'EGLC', name: 'London City', coordName: 'Thames', radarName: 'LCY', utcOff: 1,
@@ -3809,6 +3814,22 @@ function stepTows(){
 }
 // parked aircraft with nothing due in the next 15 minutes stay off the strip board
 const dormant = ac => ac.state === 'ONSTAND' || (ac.state === 'PARKED' && !ac.need && ac.reqAt - S.t > 15*60 && !(ac.tow && S.t >= ac.tow.at - 300));
+// arrivals don't get a stand by themselves: the controller assigns one (STAND), guided by the airline's usual area
+const AREA_NAMES = { civil: 'terminal apron', north: 'GA apron', south: 'south apron' };
+const standAreas = ac => isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
+function prefArea(ac){
+  if (APT.prefArea) return APT.prefArea(ac);   // New York: the airline's terminal
+  const k = standAreas(ac).find(a => STANDS.some(s => s.area === a)) || 'civil';
+  return { key: k, name: (APT.areaNames || AREA_NAMES)[k] || k, has: s => s.area === k };
+}
+// free stands for an arrival, its preferred area first
+const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => !s.occ || s.occ === ac).sort((a, b) => pa.has(b) - pa.has(a)); };
+function assignStand(ac, st){
+  if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null;
+  st.occ = ac; ac.stand = st;
+  // waiting clear of the runway or at a holding point: now it can ask to taxi in
+  if (ac.ground && ac.vacated && !ac.path && !ac.taxiIn) ac.need = 'Request taxi';
+}
 function freeStand(ac){
   if (APT.standFor) { const s = APT.standFor(ac); if (s) return s; }
   const area = isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
@@ -3875,7 +3896,8 @@ const VAC_TURN = 16, VAC_RWY = 30, VAC_DEC = 2.5, VAC_CLEAR = 0.03;   // turn-of
 const stopDist = v => Math.max(0, v*v - VAC_TURN*VAC_TURN)/(2*VAC_DEC)*0.5144;   // metres to slow from v to the turn-off
 function vacatePath(ac){
   const R = rwyById(ac.rwyId), m = R.mOf([ac.x, ac.y]), dir = Math.sin(ac.hdg*D2R)*R.RU[0] + Math.cos(ac.hdg*D2R)*R.RU[1] >= 0 ? 1 : -1;
-  planStand(ac); const st = ac.stand;
+  // no stand yet: the crew heads for the exit and side of the airport it usually parks on
+  planStand(ac); const st = ac.stand || freeStand(ac);
   const prefs = APT.vacPrefs(st, ac);
   if (ac.reqExit && !prefs.includes(ac.reqExit) && !(APT.vacExits && APT.vacExits(ac).includes(ac.reqExit))) ac.reqExit = null;
   const pts = [];
@@ -3944,11 +3966,12 @@ function taxiLimit(ac){
 // an arrival's stand is planned once it is cleared for an approach, so the card and strip show where it is going
 function planStand(ac){
   if (ac.kind !== 'ARR' || (ac.stand && ac.stand.occ === ac)) return;
-  const st = (ac.standPref && STANDS.find(s => s.id === ac.standPref && !s.occ)) || freeStand(ac); if (st) st.occ = ac; ac.stand = st;   // standPref: given on the Flights board
+  // standPref: given on the Flights board. Otherwise it waits for the controller, unless it has been transferred away
+  const st = (ac.standPref && STANDS.find(s => s.id === ac.standPref && !s.occ)) || (ac.handed ? freeStand(ac) : null); if (st) { st.occ = ac; ac.stand = st; }
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
-  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; if (!ac.taxiIn) { ac.need = 'Request taxi'; pilot(ac, PH.vacated(ac)); } emit('vacated', ac); });
+  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; if (!ac.taxiIn) { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } emit('vacated', ac); });
 }
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
@@ -4148,6 +4171,16 @@ function commandRun(str){
       ac.state = 'PULL'; ac.need = null; ac.pushed = false; ac.held = false;
       setPath(ac, [...pp.slice(0, got).reverse(), st.p], 4, () => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); }, { tug: true });
       { const [sa, ra] = PH.pull(ac, st); said.push(sa); reads.push(ra); }
+    } else if ((t === 'STAND' || t === 'GATE') && ac.kind === 'ARR') {
+      // assign the stand (gate) an arrival is to park on; on its own, the first free one in its airline's usual area
+      if (['ONSTAND', 'DIVERTING'].includes(ac.state)) { sys(`${ac.cs} ${ac.state === 'ONSTAND' ? 'is already parked' : 'is diverting'}.`); continue; }
+      const sw = APT.standWord || 'stand', id = toks[i+1] && !/^(TAXI|VIA)$/.test(toks[i+1]) ? toks[++i] : null;
+      let st = id ? STANDS.find(x => x.id.toUpperCase() === id) : ac.stand || standChoices(ac).find(x => !x.occ && prefArea(ac).has(x)) || freeStand(ac);
+      if (!st) { sys(id ? `There is no ${sw} ${id}.` : `No free ${sw} for ${ac.cs}.`); continue; }
+      if (st.occ && st.occ !== ac) { sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is occupied (${st.occ.cs}).`); continue; }
+      if (ac.taxiIn && ac.stand !== st) { sys(`${ac.cs} is taxiing to ${sw} ${ac.stand.id}: re-route it with TAXI ${st.id}.`); continue; }
+      assignStand(ac, st); ac.standPref = st.id;
+      said.push(`${sw} ${st.id}`); reads.push(`${sw} ${st.id}`);
     } else if (t === 'TAXI' && ac.kind === 'ARR') {
       if (ac.state !== 'VACATING') { sys(`${ac.cs} ${['ROLLED','ROLLOUT'].includes(ac.state) ? 'has not vacated the runway yet' : 'is not on the ground'}.`); continue; }
       if (ac.onRwy) { sys(`${ac.cs} is still on the runway: let it vacate first.`); continue; }
@@ -4155,7 +4188,7 @@ function commandRun(str){
       else if (toks[i+1] && holdPt(toks[i+1])) hold = holdPt(toks[++i]);
       if (!hold && toks[i+1] && toks[i+1] !== 'VIA') { const want = STANDS.find(x => x.id.toUpperCase() === toks[i+1]); if (!want) { sys(`There is no stand ${toks[i+1]}.`); continue; } i++;
         if (want.occ && want.occ !== ac) { sys(`Stand ${want.id} is occupied (${want.occ.cs}).`); continue; } st = want; }
-      if (!st) { st = freeStand(ac); if (!st) { sys(`No free stand for ${ac.cs}.`); continue; } }
+      if (!st && !hold) { const sw = APT.standWord || 'stand'; sys(`${ac.cs} has no ${sw} yet. Assign one first (${ac.cs} STAND takes the first free one in its usual area; ${ac.cs} STAND ${(standChoices(ac)[0] || STANDS[0]).id} picks one), or taxi it to a holding point out of the way to wait.`); continue; }
       const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
       const vw = taxiIn(ac, st, via, hold); if (!vw) { sys(`No taxi route to ${hold ? 'holding point ' + hold.id : 'stand ' + st.id}.`); continue; }
       { const [sa, ra] = hold ? PH.taxiHold(ac, hold, vw) : PH.taxiIn(ac, st, vw); said.push(sa); reads.push(ra); }
@@ -5279,6 +5312,7 @@ function renderSel(){
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
+  if (ac.kind === 'ARR' && !['PRE', 'ONSTAND', 'DIVERTING'].includes(ac.state)) html += standLine(ac);
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
   if (ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) { const c = SLOT[ac.cs].ctot; html += `<div class="meta">Slot (CTOT) <b>${hhmm(c)}Z</b>: take-off between ${hhmm(c - 5)} and ${hhmm(c + 10)}Z.</div>`; }
@@ -5318,7 +5352,7 @@ function renderSel(){
       // clear of the runway it stops and waits for this
       const canIn = ac.state === 'VACATING' && !ac.onRwy;
       const sw = APT.standWord || 'stand', sid = ac.stand ? sw + ' ' + ac.stand.id : 'a ' + sw;
-      html += b('TAXI', (ac.taxiIn ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn, ac.taxiIn ? 'on' : ac.vacated ? 'go' : '');
+      html += b('TAXI', (ac.taxiIn ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn && !!ac.stand, ac.taxiIn ? 'on' : ac.vacated && ac.stand ? 'go' : '');
       html += b('POP:holdin', 'Taxi to holding point…', canIn);
     }
     if (xingAhead(ac) >= 0) { const r = rwyName(ac.path.pts[xingAhead(ac)].hs); html += b('CROSS ' + r, 'Cross runway ' + r, true, ac.hsAt ? 'go' : ''); }
@@ -5326,10 +5360,20 @@ function renderSel(){
     html += `</div>`;
   }
   el.innerHTML = html;
+  { const sp = $('iStand'); if (sp) sp.onchange = () => sp.value && command(`${ac.cs} STAND ${sp.value}`); }
   el.querySelectorAll('button[data-c]').forEach(bt => bt.onclick = () => { const c = bt.dataset.c; if (c === 'POP:push') openPushPop(ac, bt); else if (c === 'POP:taxi') openTaxiPop(ac, bt); else if (c === 'POP:holdin') openHoldInPop(ac, bt); else command(ac.cs+' '+c); });
   const keyCmd = (id, pre) => { const i = $(id); if (i) i.onkeydown = e => { if (e.key === 'Enter' && i.value.trim()) command(`${ac.cs} ${pre}${i.value.trim()}`); }; };
   keyCmd('iH','H'); keyCmd('iA','A'); keyCmd('iS','S');
   const d = $('iD'); if (d) d.onchange = () => d.value && command(`${ac.cs} DCT ${d.value}`);
+}
+// an arrival's stand: the one assigned, the airline's usual area, and a picker of the free stands (that area first)
+function standLine(ac){
+  const sw = APT.standWord || 'stand', Sw = sw[0].toUpperCase() + sw.slice(1), pa = prefArea(ac), ch = standChoices(ac);
+  const grp = s => s.term ? 'Terminal ' + s.term : (APT.areaNames || AREA_NAMES)[s.area] || s.area;
+  const opt = s => `<option value="${s.id}"${ac.stand === s ? ' selected' : ''}>${s.id}${pa.has(s) ? '' : ' · ' + grp(s)}</option>`;
+  const mine = ch.filter(s => pa.has(s)), rest = ch.filter(s => !pa.has(s)), locked = ac.taxiIn;
+  return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b><span class="pref">prefers ${esc(pa.name)}</span>
+    <select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}</select></div>`;
 }
 // ── clearance pop-outs (push direction, taxi routing) ──
 function drawPreview(pv){
@@ -5451,6 +5495,7 @@ function makeStrip(ac, doc = document){
   d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? (ac.stand.area === 'hangar' ? 'Hangar ' : 'Stand ')+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
   // arrivals show the stand they are going to, once it is planned
   if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
+  else if (ac.kind === 'ARR' && !outOfCtl(ac) && (ac.ground || ac.app) && ac.state !== 'DIVERTING') { const r = d.querySelector('.rte'); r.title = `${r.textContent}, no stand assigned (prefers ${prefArea(ac).name})`; r.textContent = 'Stand ?'; r.classList.add('nostand'); }
   const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
   d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
   if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = doc.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
@@ -6955,7 +7000,7 @@ function slotStand(cs, kind, base, id){
     if (busy) { sys(`${W[0].toUpperCase() + W.slice(1)} ${id} is occupied (${st.occ.cs}).`, true); return; }
     ac.standPref = id;
     if (ac.taxiIn && ac.state === 'VACATING') command(`${ac.cs} TAXI ${id}`);
-    else { if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; if (ac.ground && ac.vacated) atc(ac, `${W} ${id}`); }
+    else { assignStand(ac, st); if (ac.ground && ac.vacated) atc(ac, `${W} ${id}`); }
     sys(`${W[0].toUpperCase() + W.slice(1)} change: ${ac.cs} now goes to ${W} ${id}.`);
   } else if (c.f) { c.f.standPref = id; sys(`${W[0].toUpperCase() + W.slice(1)} change: ${c.f.cs} will go to ${W} ${id}${busy ? ' if it is free by then' : ''}.`); }
   else if (c.fd) { c.fd.stand = id; sys(`${W[0].toUpperCase() + W.slice(1)} change: ${cs} will be on ${W} ${id}.`); }
@@ -7211,6 +7256,11 @@ function heardRwy(s, re = / runway (\d{1,2})( left| right| center)? /){
   const r = String(+m[1]) + (m[2] ? m[2].trim()[0].toUpperCase() : '');
   return RW_ENDS.find(e => e === r || e === r.padStart(2, '0') || e === m[1] + (m[2] ? m[2].trim()[0].toUpperCase() : '')) || null;
 }
+// a spoken stand or gate ("five", "bravo two three", "five dash one four"): its id, if the airport has it
+function heardStand(t){
+  const parts = t.split(/ (?:via|hold) /)[0].trim().split(' ').filter(x => !/^(dash|hyphen)$/.test(x)).slice(0, 3).map(x => /^\d+$/.test(x) ? x : PHONW[x] || (x.length === 1 ? x.toUpperCase() : ''));
+  return [parts.join(''), parts.join('-')].find(c => STANDS.some(x => x.id.toUpperCase() === c)) || null;
+}
 function phraseToCmd(raw){
   let w = normSpeech(raw);
   const hit = heardCallsign(w);
@@ -7237,12 +7287,13 @@ function phraseToCmd(raw){
   // "taxi to holding point tango 3": an intermediate holding point (or, for an arrival, any holding point)
   const hpm = s.match(/ taxi .*?holding point (\S+)(?: (\d{1,2}))? /), hpId = hpm && ((PHONW[hpm[1]] || (hpm[1].length === 1 ? hpm[1].toUpperCase() : '')) + (hpm[2] || ''));
   const toHold = hpId && (IHPS[hpId] && !HOLDS[hpId] || (ac && ac.kind === 'ARR' && holdPt(hpId))) ? hpId : null;
+  // an arrival given its stand without a taxi clearance: "stand 5", "gate bravo two three"
+  if (ac && ac.kind === 'ARR' && !/ taxi /.test(s) && (m = s.match(/ (?:stand|gate) (.*)/))) { const id = heardStand(m[1]); if (id) out.push('STAND ' + id); }
   if (toHold) out.push('TAXI ' + toHold);
   // an arrival clear of the runway: "taxi to stand 5", "taxi to gate bravo two three via kilo"
   else if (ac && ac.kind === 'ARR' && / taxi /.test(s)) {
     let cmd = 'TAXI'; const g = s.match(/ (?:stand|gate) (.*)/);
-    if (g) { const parts = g[1].split(/ (?:via|hold) /)[0].trim().split(' ').filter(x => !/^(dash|hyphen)$/.test(x)).slice(0, 3).map(x => /^\d+$/.test(x) ? x : PHONW[x] || (x.length === 1 ? x.toUpperCase() : ''));
-      const id = [parts.join(''), parts.join('-')].find(c => STANDS.some(x => x.id.toUpperCase() === c)); if (id) cmd += ' ' + id; }
+    if (g) { const id = heardStand(g[1]); if (id) cmd += ' ' + id; }
     const v = s.match(/ via (.+?)( hold| $)/);
     if (v) { const vl = []; let solo = false; for (const x of v[1].split(' ')) { const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
       const vv = vl.filter(x => PHON[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
@@ -8602,8 +8653,9 @@ S.listeners.push((ev, d) => {
 const st = (cs, ...l) => { const a = A(cs); return !!a && l.includes(a.state); };
 const sn = cs => seen[cs] || {};
 // an arrival stops once it is clear of the runway and asks for taxi
-const taxiInStep = (cs, p, h = 'Taxi it to its stand') => ({ h, p: p || `Once it is clear of the runway it stops and asks for taxi. Press <b>Taxi to stand</b> or type <code>${cs} TAXI</code>. To send it to another stand, add the stand (<code>${cs} TAXI 4</code>); to choose the route, add <code>VIA</code> and the taxiways.`,
-  cmd: `${cs} TAXI`, ok: () => { const a = A(cs); return !!a && (!!a.taxiIn || a.kind === 'DEP') || !!sn(cs).onstand; }, wait: () => { const a = A(cs); return !!a && !a.vacated; } });
+const standFirst = cs => `Arrivals don't get a ${APT.standWord || 'stand'} by themselves: pick one in the <b>${(APT.standWord || 'stand').replace(/^./, c => c.toUpperCase())}</b> list on its panel (its airline's usual area is listed first), or type <code>${cs} STAND</code> for the first free one there. `;
+const taxiInStep = (cs, p, h = 'Taxi it to its stand') => ({ h, p: standFirst(cs) + (p || `Once it is clear of the runway it stops and asks for taxi. Press <b>Taxi to stand</b> or type <code>${cs} TAXI</code>. To send it to another stand, add the stand (<code>${cs} TAXI 4</code>); to choose the route, add <code>VIA</code> and the taxiways.`),
+  cmd: [`${cs} STAND`, `${cs} TAXI`], ok: () => { const a = A(cs); return !!a && (!!a.taxiIn || a.kind === 'DEP') || !!sn(cs).onstand; }, wait: () => { const a = A(cs); return !!a && !a.vacated; } });
 const roadShut = () => S.xing.st === 'CLOSING' || S.xing.st === 'CLOSED';
 const COACH = {
   dep: [

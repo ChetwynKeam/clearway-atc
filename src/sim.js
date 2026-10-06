@@ -371,6 +371,22 @@ function stepTows(){
 }
 // parked aircraft with nothing due in the next 15 minutes stay off the strip board
 const dormant = ac => ac.state === 'ONSTAND' || (ac.state === 'PARKED' && !ac.need && ac.reqAt - S.t > 15*60 && !(ac.tow && S.t >= ac.tow.at - 300));
+// arrivals don't get a stand by themselves: the controller assigns one (STAND), guided by the airline's usual area
+const AREA_NAMES = { civil: 'terminal apron', north: 'GA apron', south: 'south apron' };
+const standAreas = ac => isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
+function prefArea(ac){
+  if (APT.prefArea) return APT.prefArea(ac);   // New York: the airline's terminal
+  const k = standAreas(ac).find(a => STANDS.some(s => s.area === a)) || 'civil';
+  return { key: k, name: (APT.areaNames || AREA_NAMES)[k] || k, has: s => s.area === k };
+}
+// free stands for an arrival, its preferred area first
+const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => !s.occ || s.occ === ac).sort((a, b) => pa.has(b) - pa.has(a)); };
+function assignStand(ac, st){
+  if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null;
+  st.occ = ac; ac.stand = st;
+  // waiting clear of the runway or at a holding point: now it can ask to taxi in
+  if (ac.ground && ac.vacated && !ac.path && !ac.taxiIn) ac.need = 'Request taxi';
+}
 function freeStand(ac){
   if (APT.standFor) { const s = APT.standFor(ac); if (s) return s; }
   const area = isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
@@ -437,7 +453,8 @@ const VAC_TURN = 16, VAC_RWY = 30, VAC_DEC = 2.5, VAC_CLEAR = 0.03;   // turn-of
 const stopDist = v => Math.max(0, v*v - VAC_TURN*VAC_TURN)/(2*VAC_DEC)*0.5144;   // metres to slow from v to the turn-off
 function vacatePath(ac){
   const R = rwyById(ac.rwyId), m = R.mOf([ac.x, ac.y]), dir = Math.sin(ac.hdg*D2R)*R.RU[0] + Math.cos(ac.hdg*D2R)*R.RU[1] >= 0 ? 1 : -1;
-  planStand(ac); const st = ac.stand;
+  // no stand yet: the crew heads for the exit and side of the airport it usually parks on
+  planStand(ac); const st = ac.stand || freeStand(ac);
   const prefs = APT.vacPrefs(st, ac);
   if (ac.reqExit && !prefs.includes(ac.reqExit) && !(APT.vacExits && APT.vacExits(ac).includes(ac.reqExit))) ac.reqExit = null;
   const pts = [];
@@ -506,11 +523,12 @@ function taxiLimit(ac){
 // an arrival's stand is planned once it is cleared for an approach, so the card and strip show where it is going
 function planStand(ac){
   if (ac.kind !== 'ARR' || (ac.stand && ac.stand.occ === ac)) return;
-  const st = (ac.standPref && STANDS.find(s => s.id === ac.standPref && !s.occ)) || freeStand(ac); if (st) st.occ = ac; ac.stand = st;   // standPref: given on the Flights board
+  // standPref: given on the Flights board. Otherwise it waits for the controller, unless it has been transferred away
+  const st = (ac.standPref && STANDS.find(s => s.id === ac.standPref && !s.occ)) || (ac.handed ? freeStand(ac) : null); if (st) { st.occ = ac; ac.stand = st; }
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
-  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; if (!ac.taxiIn) { ac.need = 'Request taxi'; pilot(ac, PH.vacated(ac)); } emit('vacated', ac); });
+  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; if (!ac.taxiIn) { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } emit('vacated', ac); });
 }
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
@@ -710,6 +728,16 @@ function commandRun(str){
       ac.state = 'PULL'; ac.need = null; ac.pushed = false; ac.held = false;
       setPath(ac, [...pp.slice(0, got).reverse(), st.p], 4, () => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); }, { tug: true });
       { const [sa, ra] = PH.pull(ac, st); said.push(sa); reads.push(ra); }
+    } else if ((t === 'STAND' || t === 'GATE') && ac.kind === 'ARR') {
+      // assign the stand (gate) an arrival is to park on; on its own, the first free one in its airline's usual area
+      if (['ONSTAND', 'DIVERTING'].includes(ac.state)) { sys(`${ac.cs} ${ac.state === 'ONSTAND' ? 'is already parked' : 'is diverting'}.`); continue; }
+      const sw = APT.standWord || 'stand', id = toks[i+1] && !/^(TAXI|VIA)$/.test(toks[i+1]) ? toks[++i] : null;
+      let st = id ? STANDS.find(x => x.id.toUpperCase() === id) : ac.stand || standChoices(ac).find(x => !x.occ && prefArea(ac).has(x)) || freeStand(ac);
+      if (!st) { sys(id ? `There is no ${sw} ${id}.` : `No free ${sw} for ${ac.cs}.`); continue; }
+      if (st.occ && st.occ !== ac) { sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is occupied (${st.occ.cs}).`); continue; }
+      if (ac.taxiIn && ac.stand !== st) { sys(`${ac.cs} is taxiing to ${sw} ${ac.stand.id}: re-route it with TAXI ${st.id}.`); continue; }
+      assignStand(ac, st); ac.standPref = st.id;
+      said.push(`${sw} ${st.id}`); reads.push(`${sw} ${st.id}`);
     } else if (t === 'TAXI' && ac.kind === 'ARR') {
       if (ac.state !== 'VACATING') { sys(`${ac.cs} ${['ROLLED','ROLLOUT'].includes(ac.state) ? 'has not vacated the runway yet' : 'is not on the ground'}.`); continue; }
       if (ac.onRwy) { sys(`${ac.cs} is still on the runway: let it vacate first.`); continue; }
@@ -717,7 +745,7 @@ function commandRun(str){
       else if (toks[i+1] && holdPt(toks[i+1])) hold = holdPt(toks[++i]);
       if (!hold && toks[i+1] && toks[i+1] !== 'VIA') { const want = STANDS.find(x => x.id.toUpperCase() === toks[i+1]); if (!want) { sys(`There is no stand ${toks[i+1]}.`); continue; } i++;
         if (want.occ && want.occ !== ac) { sys(`Stand ${want.id} is occupied (${want.occ.cs}).`); continue; } st = want; }
-      if (!st) { st = freeStand(ac); if (!st) { sys(`No free stand for ${ac.cs}.`); continue; } }
+      if (!st && !hold) { const sw = APT.standWord || 'stand'; sys(`${ac.cs} has no ${sw} yet. Assign one first (${ac.cs} STAND takes the first free one in its usual area; ${ac.cs} STAND ${(standChoices(ac)[0] || STANDS[0]).id} picks one), or taxi it to a holding point out of the way to wait.`); continue; }
       const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
       const vw = taxiIn(ac, st, via, hold); if (!vw) { sys(`No taxi route to ${hold ? 'holding point ' + hold.id : 'stand ' + st.id}.`); continue; }
       { const [sa, ra] = hold ? PH.taxiHold(ac, hold, vw) : PH.taxiIn(ac, st, vw); said.push(sa); reads.push(ra); }

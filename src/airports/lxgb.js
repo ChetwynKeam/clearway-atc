@@ -228,6 +228,7 @@ const RW_LO = '09', RW_HI = '27', T_LO = T09, T_HI = T27, CRS_LO = CRS09, CRS_HI
 const RADAR_REF = GBR;
 const crsOf = rw => rw === RW_LO ? CRS_LO : CRS_HI;
 const APT = {
+  areaNames: { civil: 'civil apron', north: 'north apron', south: 'south apron (RAF)' },   // what the stand areas are called (the preferred area shown for an arrival)
   // published arrival altitudes (chart H2): UPMUP 3000, ODLUK 4000; the 2.8° SRA profile takes over on final
   arrAlt: { UPMUP: 3000, ODLUK: 4000 },
   icao: 'LXGB', name: 'Gibraltar', radarName: 'GBR', coordName: 'Gibraltar', utcOff: 2,

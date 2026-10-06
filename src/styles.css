@@ -708,6 +708,10 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
 
 /* departure release (Sevilla / Casablanca) */
+.standline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 6px 0 2px; padding: 5px 8px; border-radius: 6px; background: var(--panel-2); font: 500 12px/1.4 var(--font-data); color: var(--ink-2); }
+.standline b { color: var(--ink); } .standline.none b { color: var(--warn); } .standline .pref { flex: 1; color: var(--ink-3, var(--ink-2)); }
+.standline select { font: inherit; max-width: 160px; }
+.strip .rte.nostand { color: var(--warn); }
 .relline { font: 500 12px/1.4 var(--font-data); padding: 5px 8px; border-radius: 6px; margin: 6px 0 2px; background: var(--panel-2); color: var(--ink-2); }
 .relline.ok { color: var(--ok); } .relline.req { color: var(--warn); } .relline.exp { color: var(--alert); }
 .strip .rel { font-weight: 700; } .strip .rel.ok { color: var(--ok); } .strip .rel.req { color: var(--warn); } .strip .rel.exp { color: var(--alert); }

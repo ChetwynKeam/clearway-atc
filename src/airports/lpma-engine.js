@@ -243,6 +243,7 @@ const AD_SITE = {
 
 // ═════════════════════════ engine hooks ═════════════════════════
 const APT = {
+  areaNames: { civil: 'main apron' },   // what the stand areas are called (the preferred area shown for an arrival)
   arrAlt: arrAltOf(GATES.map(STAR_OF)),   // STARs (AD 2.24.10): MA534 4000, PILIM 3000
   icao: 'LPMA', name: 'Madeira', coordName: 'Madeira', radarName: 'FUN', utcOff: 1,
   radar: ['Madeira Approach', '119.605'], tower: ['Madeira Tower', '124.660'],

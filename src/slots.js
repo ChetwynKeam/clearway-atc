@@ -227,7 +227,7 @@ function slotStand(cs, kind, base, id){
     if (busy) { sys(`${W[0].toUpperCase() + W.slice(1)} ${id} is occupied (${st.occ.cs}).`, true); return; }
     ac.standPref = id;
     if (ac.taxiIn && ac.state === 'VACATING') command(`${ac.cs} TAXI ${id}`);
-    else { if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; if (ac.ground && ac.vacated) atc(ac, `${W} ${id}`); }
+    else { assignStand(ac, st); if (ac.ground && ac.vacated) atc(ac, `${W} ${id}`); }
     sys(`${W[0].toUpperCase() + W.slice(1)} change: ${ac.cs} now goes to ${W} ${id}.`);
   } else if (c.f) { c.f.standPref = id; sys(`${W[0].toUpperCase() + W.slice(1)} change: ${c.f.cs} will go to ${W} ${id}${busy ? ' if it is free by then' : ''}.`); }
   else if (c.fd) { c.fd.stand = id; sys(`${W[0].toUpperCase() + W.slice(1)} change: ${cs} will be on ${W} ${id}.`); }
