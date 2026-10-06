@@ -258,6 +258,7 @@ const R160 = EGLC.R160.map(p => xy(...p)), R159 = EGLC.R159.map(p => xy(...p));
 // intermediate holding points T1-T9 along taxiway T (AD 2-EGLC-2-1), metres along the runway frame
 const IHP_T = [['T1', -164], ['T2', -47], ['T3', 143], ['T4', 298], ['T5', 380], ['T6', 518], ['T7', 1001], ['T8', 1146], ['T9', 1281]];
 const APT = {
+  arrAlt: arrAltOf([...Object.values(EGLC.TRANS), ...GATES.map(STAR_OF)]),   // transitions (7-15..7-18) then STARs
   ihps: IHP_T.map(([id, m]) => ({ id, tw: 'T', at: rm(m, offT(m)) })),
   icao: 'EGLC', name: 'London City', coordName: 'Thames', radarName: 'LCY', utcOff: 1,
   radar: ['Thames Director', '132.700'], tower: ['City Tower', '118.080'],

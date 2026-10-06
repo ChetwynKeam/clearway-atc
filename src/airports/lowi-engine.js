@@ -238,6 +238,7 @@ function lowiGaTurn(ac){
   if (Math.abs(angDiff(ac.hdg, norm(60 + VAR))) < 30) { ac.lowiMa = 0; ac.mode = 'NAV'; ac.route = MA.slice(); ac.gaTurn = true; }
 }
 const APT = {
+  arrAlt: arrAltOf(GATES.map(STAR_OF)),   // STARs (11-1): RTT 9500 and the valley entry altitudes
   // intermediate holding points (AD 2 MAP 1-1): L1 on Lima at the main taxiway, B1 on Bravo north of the apron
   ihps: [{ id: 'L1', node: 'L1', tw: 'L' }, { id: 'B1', tw: 'B', at: rm(1645, -188) }],
   icao: 'LOWI', name: 'Innsbruck', coordName: 'Innsbruck', radarName: 'INN', utcOff: 2,

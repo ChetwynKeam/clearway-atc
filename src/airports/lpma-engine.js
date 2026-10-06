@@ -243,6 +243,7 @@ const AD_SITE = {
 
 // ═════════════════════════ engine hooks ═════════════════════════
 const APT = {
+  arrAlt: arrAltOf(GATES.map(STAR_OF)),   // STARs (AD 2.24.10): MA534 4000, PILIM 3000
   icao: 'LPMA', name: 'Madeira', coordName: 'Madeira', radarName: 'FUN', utcOff: 1,
   radar: ['Madeira Approach', '119.605'], tower: ['Madeira Tower', '124.660'],
   xing: false, drawnTown: false, ta: 5000, initClimb: 6000, gaAlt: 3000, appAlt: 3000, handoffNM: 20, climbFL: 100,
