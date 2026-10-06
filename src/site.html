@@ -715,7 +715,7 @@
     <div class="fids" id="fids" hidden role="dialog" aria-label="Flight information">
       <div class="fids-hd"><div><b id="fidsTitle">Flight information</b><span id="fidsClock"></span></div>
         <div class="seg" role="tablist"><button data-fids="ARR" class="on">Arrivals</button><button data-fids="DEP">Departures</button></div>
-        <button class="x" id="fidsClose" aria-label="Close">×</button></div>
+        <button class="popbtn dark" id="fidsPop" title="Open the flights board in its own window">Pop out ↗</button><button class="x" id="fidsClose" aria-label="Close">×</button></div>
       <div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th id="fidsAp">From</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fidsBody"></tbody></table></div>
     </div>
     <div class="heard" id="heard" hidden></div>
@@ -815,7 +815,7 @@
   <aside class="side">
     <div class="sec" id="atis"></div>
     <div class="sec" id="sel"></div>
-    <div class="sec strips-head"><div class="ph"><span class="lbl">Flight progress strips</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span></div></div>
+    <div class="sec strips-head"><div class="ph"><span class="lbl">Flight progress strips</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span><button type="button" class="popbtn" id="popStrips" title="Open the strip board in its own window, for a second screen">Pop out ↗</button></div><p class="strips-away">The strips are in their own window. <button type="button" class="popbtn" id="backStrips">Bring them back</button></p></div>
     <div class="strips" id="strips"></div>
   </aside>
   <div class="bottom">

@@ -208,22 +208,46 @@ function fidsStatus(r, kind){
   return late && S.running ? ['Delayed', 'bad'] : ['Scheduled', ''];
 }
 let fidsTab = 'ARR';
+// the stand: the timetable's, else the one the flight has been given in the session
+function fidsStand(r){
+  if (r.stand) return r.stand;
+  const ac = S.acs.find(a => a.cs === r.cs); return ac && ac.stand ? ac.stand.id : '';
+}
+function fidsBodyHTML(kind){
+  const rows = fidsRows(kind), nm = nowMin();
+  return rows.length ? rows.map(r => {
+    const [st, cls] = fidsStatus(r, kind), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
+    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${fidsStand(r)}</td><td class="st ${cls}">${st}</td></tr>`;
+  }).join('') : `<tr><td colspan="6" class="none">No ${kind === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
+}
+const fidsClockText = () => S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
+let fidsWin = null;
 function renderFids(){
+  if (fidsWin && !fidsWin.closed) {   // the pop-out board: arrivals and departures side by side
+    const d = fidsWin.document;
+    for (const k of ['ARR', 'DEP']) { const b = d.getElementById('fb' + k); if (b) b.innerHTML = fidsBodyHTML(k); }
+    const c = d.getElementById('fbClock'); if (c) c.textContent = fidsClockText();
+  }
   const el = document.getElementById('fidsBody'); if (!el || document.getElementById('fids').hidden) return;
-  const rows = fidsRows(fidsTab), nm = nowMin();
-  document.getElementById('fidsClock').textContent = S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
-  el.innerHTML = rows.length ? rows.map(r => {
-    const [st, cls] = fidsStatus(r, fidsTab), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
-    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${r.stand || ''}</td><td class="st ${cls}">${st}</td></tr>`;
-  }).join('') : `<tr><td colspan="6" class="none">No ${fidsTab === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
+  document.getElementById('fidsClock').textContent = fidsClockText();
+  el.innerHTML = fidsBodyHTML(fidsTab);
   document.getElementById('fidsAp').textContent = fidsTab === 'ARR' ? 'From' : 'To';
   document.querySelectorAll('[data-fids]').forEach(b => b.classList.toggle('on', b.dataset.fids === fidsTab));
+}
+function openFidsBoard(){
+  if (fidsWin && !fidsWin.closed) { fidsWin.focus(); return; }
+  fidsWin = popWin('cwFlights', `${APT.icao} flights`, 1200, 700); if (!fidsWin) return;
+  const tbl = k => `<section><h2>${k === 'ARR' ? 'Arrivals' : 'Departures'}</h2><div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th>${k === 'ARR' ? 'From' : 'To'}</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fb${k}"></tbody></table></div></section>`;
+  fidsWin.document.body.innerHTML = `<div class="fids fboard"><div class="fids-hd"><div><b>${esc(APT.name)} · flight information</b><span id="fbClock"></span></div></div><div class="fb-cols">${tbl('ARR')}${tbl('DEP')}</div></div>`;
+  document.getElementById('fids').hidden = true;
+  renderFids();
 }
 {
   const bt = document.getElementById('tgFids'), box = document.getElementById('fids');
   if (bt && box) {
-    bt.onclick = () => { box.hidden = !box.hidden; renderFids(); };
+    bt.onclick = () => { if (fidsWin && !fidsWin.closed) { fidsWin.focus(); return; } box.hidden = !box.hidden; renderFids(); };
     document.getElementById('fidsClose').onclick = () => { box.hidden = true; };
+    document.getElementById('fidsPop').onclick = openFidsBoard;
     document.querySelectorAll('[data-fids]').forEach(b => b.onclick = () => { fidsTab = b.dataset.fids; renderFids(); });
     S.listeners.push(ev => { if (ev === 'tick' || ev === 'start') renderFids(); });
   }
