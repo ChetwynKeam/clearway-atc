@@ -3756,7 +3756,7 @@ const P = (m, off=0) => rm(m, off);
 // a point marked hs (a holding position before a runway, New York) carries the runway's id: see stepGround
 // turn radius that fits the lead-in from the taxiway onto a stand: about 70% of the lead-in's length, no tighter than 8 m
 const standInR = (pts, st) => pts.length > 1 ? Math.max(8, dist(...pts[pts.length-2], ...st.p)*1852*0.7) : 8;
-function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; if (p.tight) q.tight = true; return q; }), spd, onDone, ...opts }; }
+function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; if (p.tight) q.tight = true; if (p.ext) q.ext = true; return q; }), spd, onDone, ...opts }; }
 function taxiFrom(ac){ return ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id; }
 function taxiRoute(ac, hp, via){
   if (via && via.length) { const o = taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v))); if (o) return o;
@@ -3829,10 +3829,25 @@ function vacatePath(ac){
   // it stops once its tail is clear of the holding point, a little way along its likely route to the stand, and
   // waits there for the controller's taxi instruction (TAXI)
   let via = [], stop = H.node;
+  // never past a point where the route doubles back (the stand is behind): it would have to stop mid U-turn
+  const sharp = p => pts.length > 1 && Math.abs(angDiff(brg(...pts[pts.length-2], ...pts[pts.length-1]), brg(...pts[pts.length-1], ...p))) > 100;
   if (st) { const r = route(H.node, st.node); if (r) { via = viaOf(r.tws, ex); let D = 0;
     for (let i = 1; i < r.nodes.length - 1 && D < VAC_CLEAR; i++) { const n = GN[r.nodes[i]];
-      if (n.p.hs || /^R/.test(n.id) || n.id === st.node || (D += dist(...GN[r.nodes[i-1]].p, ...n.p)) > VAC_CLEAR*3) break;
-      pts.push(n.p); stop = n.id; } } }
+      if (n.p.hs || /^R/.test(n.id) || n.id === st.node || sharp(n.p) || (D += dist(...GN[r.nodes[i-1]].p, ...n.p)) > VAC_CLEAR*3) break;
+      pts.push(n.p); stop = n.id; }
+    // and it stops lined up: the last stretch must be straight for the whole aircraft, so a stop just after the turn
+    // onto the parallel taxiway (London City K onto T, past T9) carries on along it rather than leaving the tail on the
+    // grass. Short of the next junction it stops part way along the leg (an .ext point; vacNode stays the node behind).
+    const need = (ac.perf.len + 15)/1852, straight = () => { const k = pts.length - 1, b = brg(...pts[k-1], ...pts[k]); let s = 0;
+      for (let i = k; i > 0 && Math.abs(angDiff(brg(...pts[i-1], ...pts[i]), b)) < 15; i--) s += dist(...pts[i-1], ...pts[i]); return s; };
+    for (let i = r.nodes.indexOf(stop) + 1; i > 0 && i < r.nodes.length - 1 && pts.length > 1; i++) {
+      const s = straight(); if (s >= need) break;
+      const n = GN[r.nodes[i]], last = pts[pts.length-1], L = dist(...last, ...n.p);
+      if (n.p.hs || /^R/.test(n.id) || n.id === st.node || sharp(n.p)) break;
+      if (L > need - s && Math.abs(angDiff(brg(...pts[pts.length-2], ...last), brg(...last, ...n.p))) < 15) {
+        const k = (need - s)/L, q = [last[0] + (n.p[0]-last[0])*k, last[1] + (n.p[1]-last[1])*k]; q.ext = true; pts.push(q); break; }
+      pts.push(n.p); stop = n.id;
+    } } }
   ac.taxiVia = via; ac.vacNode = stop;
   return pts;
 }
@@ -3873,8 +3888,8 @@ function taxiIn(ac, st, via, hold){
   const r = route(from, hold ? hold.node : st.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined); if (!r) return null;
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
   const pts = r.nodes.map(id => GN[id].p);
-  if (rolling) pts.splice(0, 1, ...ac.path.pts);
-  else if (pts.length > 1 && (dist(ac.x, ac.y, ...pts[0]) < 0.01 || (ac.path && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90))) pts.shift();   // already there, or passed it
+  if (rolling) pts.splice(0, 1, ...ac.path.pts.filter(p => !p.ext));
+  else if (pts.length > 1 && (dist(ac.x, ac.y, ...pts[0]) < 0.01 || (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90))) pts.shift();   // already there, or passed it
   ac.taxiIn = true; ac.need = null; ac.held = false; ac.holdAt = null; ac.taxiVia = viaOf(r.tws, ac.exit);
   // to a holding point: it stops there and waits for the next taxi instruction
   if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, () => atHoldIn(ac, hold)); else atHoldIn(ac, hold, true); return ac.taxiVia; }
