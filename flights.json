@@ -1,29 +1,29 @@
 {
- "updated": "2026-10-06T06:32:37Z",
+ "updated": "2026-10-06T06:58:47Z",
  "source": "gibraltarairport.gi",
  "days": {
   "2026-10-06": {
    "utcOffsetMin": 120,
    "arr": [
     {
-     "place": "London Gatwick",
-     "flight": "EZY8791",
-     "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "London Heathrow",
      "flight": "BA490",
      "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:58"
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "EZY8791",
+     "sched": "10:55",
+     "status": "Estimated",
+     "expected": "11:02"
     },
     {
      "place": "London Heathrow",
      "flight": "BA492",
      "sched": "14:05",
-     "status": "Scheduled",
+     "status": "Cancelled",
      "expected": ""
     }
    ],
@@ -32,21 +32,21 @@
      "place": "London Gatwick",
      "flight": "EZY8792",
      "sched": "11:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:42"
     },
     {
      "place": "London Heathrow",
      "flight": "BA491",
      "sched": "12:00",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     },
     {
      "place": "London Heathrow",
      "flight": "BA493",
      "sched": "14:55",
-     "status": "Scheduled",
+     "status": "Cancelled",
      "expected": ""
     }
    ]
