@@ -2708,6 +2708,9 @@ function spoken(cs){ const p = cs.slice(0,3); if (TEL[p]) return TEL[p]+' '+cs.s
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const hm = t => +t.slice(0,2)*60 + +t.slice(3);
+// published altitudes at the arrival fixes of a set of procedures ({ pts: [[fix, alt], ...] }; the first to name a fix
+// wins). Profiles pass them as APT.arrAlt: cleared arrivals descend with them (viaAlt in sim.js)
+function arrAltOf(procs){ const m = {}; for (const P of procs) for (const [id, a] of P.pts) if (a && m[id] == null) m[id] = a; return m; }
 
 // ═════════════════════════ London City (EGLC) airport profile ═════════════════════════
 // Everything the Clearway engine needs to know that is true only of London City. Sources: UK AIP AD 2 EGLC charts
@@ -3298,6 +3301,7 @@ const R160 = EGLC.R160.map(p => xy(...p)), R159 = EGLC.R159.map(p => xy(...p));
 // intermediate holding points T1-T9 along taxiway T (AD 2-EGLC-2-1), metres along the runway frame
 const IHP_T = [['T1', -164], ['T2', -47], ['T3', 143], ['T4', 298], ['T5', 380], ['T6', 518], ['T7', 1001], ['T8', 1146], ['T9', 1281]];
 const APT = {
+  arrAlt: arrAltOf([...Object.values(EGLC.TRANS), ...GATES.map(STAR_OF)]),   // transitions (7-15..7-18) then STARs
   ihps: IHP_T.map(([id, m]) => ({ id, tw: 'T', at: rm(m, offT(m)) })),
   icao: 'EGLC', name: 'London City', coordName: 'Thames', radarName: 'LCY', utcOff: 1,
   radar: ['Thames Director', '132.700'], tower: ['City Tower', '118.080'],
@@ -3511,6 +3515,7 @@ const hpWords = id => { id = id.replace(/~\d+$/, ''); return PHON[id] || id.repl
 const PH = Object.assign({
   altim: () => `QNH ${S.wx.qnh}`,
   alt: (a, up) => [`${up ? 'climb' : 'descend'} ${altWords(a)}`, `${up ? 'climb' : 'descend'} ${altShort(a)}`],
+  via: a => [`descend via the procedure to ${altWords(a)}`, `descending via the procedure, ${altShort(a)}`],
   speed: (s, ac) => [`speed ${s} knots`, `speed ${s}`],
   taxi: (ac, hp, vw) => [`taxi to holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw()}, ${PH.altim()}`, `holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw()}, ${PH.altim()}`],
   atHold: (ac, hp) => `holding point ${PHON[hp]}, ready for departure`,
@@ -3906,6 +3911,12 @@ const viaWords = v => v.length ? ' via ' + v.map(t => PHON[t] || t).join(', ') :
 const SAY_AGAIN = ['say again', 'say again, you were broken', `${APT.coordName}, readability two, say again`, 'say again the last instruction'];
 const garbleable = (ac, toks) => ac.airborne && !ac.emerg && ac.mode !== 'FINAL' && ac.state !== 'PRE' && toks.length && toks.every(t => /^([HLRACDS]\d{1,5}|SN|DCT|APP|HOLD)$/.test(t) || RW_ENDS.includes(t) || WP[t]);
 // a heading or a direct-to off an RNP AR approach ends it: the crew needs a new approach clearance
+// taken off its own navigation mid-descent (a heading, a hold): the crew stops descending at the next hundred feet,
+// never below the approach altitude, and says so
+function viaStop(ac, said, reads){
+  ac.via = false; const a = Math.max(ac.cleared ?? 0, Math.round((ac.alt + Math.min(0, ac.vs)/6)/100)*100);
+  if (a > (ac.cleared ?? 0) + 50) { ac.tgtAlt = ac.cleared = a; said.push(`maintain ${altWords(a)}`); reads.push(`maintaining ${altShort(a)}`); }
+}
 function rnpCancel(ac){ ac.app = null; ac.appId = null; ac.finI = null; ac.askedApp = false; if (ac.mode === 'HOLD') ac.mode = 'HDG'; sys(`${ac.cs} is off the RNP approach: clear it again when you want it back on.`); }
 function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
 function commandRun(str){
@@ -3927,12 +3938,13 @@ function commandRun(str){
       const h = (+r[2]) % 360 || 360; ac.mode = 'HDG'; ac.tgtHdg = h; ac.turnDir = r[1]==='L' ? -1 : r[1]==='R' ? 1 : 0; ac.route = []; ac.onSid = false; ac.divDct = false;
       if (['HOLDING','INBOUND','FINAL'].includes(ac.state)) ac.state = 'VECTORS';
       if (ac.appId) rnpCancel(ac);
+      if (ac.via) viaStop(ac, said, reads);
       const dif = angDiff(ac.hdg, h);
       const ts = r[1]==='L' ? 'turn left' : r[1]==='R' ? 'turn right' : (Math.abs(dif) < 4 ? 'fly' : dif < 0 ? 'turn left' : 'turn right');
       said.push(`${ts} heading ${hdg3(h)}`); reads.push(`${ts.replace('turn ','').replace('fly','')} heading ${hdg3(h)}`.trim());
     } else if ((r = t.match(/^[ACD](\d{1,5})$/)) && air) {
       let a = +r[1]; if (a < 400) a *= 100; a = clamp(a, 1000, 30000);
-      const up = a > ac.alt + 50; ac.tgtAlt = ac.cleared = a; if (up && ac.need === 'Request climb') ac.need = null;
+      const up = a > ac.alt + 50; ac.tgtAlt = ac.cleared = a; ac.via = false; if (up && ac.need === 'Request climb') ac.need = null;
       const q = a <= APT.ta && ac.alt > APT.ta ? `, ${PH.altim()}` : '', [sa, ra] = PH.alt(a, up, ac);
       said.push(sa + q); reads.push(ra + q);
     } else if ((r = t.match(/^S(\d{2,3})$/)) && air && +r[1] > 0) {
@@ -3974,14 +3986,19 @@ function commandRun(str){
         ac.route = i2 >= 0 ? ac.route.slice(0, i2+1) : iv != null ? [...ac.route.slice(0, iv+1), entry] : [entry];
         ac.mode = 'NAV'; ac.state = 'VECTORS';
       }
+      // from own navigation the descent follows the published altitudes (viaAlt) down to the approach altitude;
+      // joining from vectors it keeps its assigned altitude until established
       { const aa = F.alt || APT.appAlt, up = !!F.climbIaf && (ac.cleared ?? 0) < aa;   // climbIaf: the approach starts higher (Innsbruck's ELMEM)
-        if (((ac.cleared ?? 99999) > aa || up) && ac.mode === 'NAV') { ac.tgtAlt = ac.cleared = aa; const [sa, ra] = PH.alt(aa, up, ac); said.push(sa + (!up && ac.alt > APT.ta ? `, ${PH.altim()}` : '')); reads.push(ra); } }
+        ac.via = ac.mode === 'NAV';
+        if (up && ac.mode === 'NAV') { ac.tgtAlt = ac.cleared = aa; const [sa, ra] = PH.alt(aa, up, ac); said.push(sa); reads.push(ra); }
+        else if ((ac.cleared ?? 99999) > aa && ac.mode === 'NAV') { ac.tgtAlt = ac.cleared = aa; const [sa, ra] = PH.via(aa, ac); said.push(sa + (ac.alt > APT.ta ? `, ${PH.altim()}` : '')); reads.push(ra); } }
       said.push(F.phrase ? F.phrase(rw) : `this will be a surveillance radar approach runway ${rw}, terminating at Point ${F.name}, report visual`);
       reads.push(F.read ? F.read(rw) : `SRA runway ${rw}, wilco`);
       if (ac.state === 'MISSED') { ac.state = 'VECTORS'; ac.gaTurn = true; }
       if (ac.need && /Initial|Holding|Missed|Request (RNP )?approach|Unable approach/.test(ac.need)) ac.need = null;
     } else if (t === 'HOLD' && air) {
       const fix = toks[i+1] && WP[toks[i+1]] ? toks[++i] : null;
+      if (ac.via) viaStop(ac, said, reads);
       ac.mode = 'HOLD'; ac.state = 'HOLDING';
       ac.hold = fix ? { c: WP[fix].p, inb: (WP[fix].hold||{}).inb ?? brg(ac.x, ac.y, ...WP[fix].p), ph: 'in', name: fix, left: !!(WP[fix].hold||{}).left } : { c: [ac.x, ac.y], inb: ac.hdg, ph: 'turn1', name: 'present position', t: 0 };
       said.push(`hold at ${ac.hold.name}, ${ac.hold.left ? 'left' : 'right'} hand pattern${fix ? ', inbound track '+hdg3(ac.hold.inb) : ''}, expect further clearance in one zero minutes`);
@@ -4144,7 +4161,7 @@ function goAround(ac, why){
   ac.state = 'MISSED'; ac.mode = 'HDG'; ac.tgtHdg = Math.round(crsOf(rw)); ac.turnDir = 0; ac.gaT = S.t;
   APT.gaEarly(ac, rw);
   { const F = finOf(ac); ac.missRoute = F && F.missed ? F.missed.slice() : null; ac.appId = null; ac.finI = null; }
-  ac.tgtAlt = ac.cleared = APT.gaAlt; ac.ctl = false; ac.app = null; ac.gaTurn = false; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.spdAssigned = false; ac.route = []; ac.freq = 'RAD';
+  ac.tgtAlt = ac.cleared = APT.gaAlt; ac.via = false; ac.ctl = false; ac.app = null; ac.gaTurn = false; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.spdAssigned = false; ac.route = []; ac.freq = 'RAD';
   ac.gaRwy = rw; S.score.ga++; ac.gaCount = (ac.gaCount||0) + 1;
   if (why) pilot(ac, `going around, ${why}`);
   ac.need = 'Missed approach';
@@ -4188,8 +4205,31 @@ const apk = ac => ac.appId || ac.app, finOf = ac => FINAL[apk(ac)];
 const appMinsOk = (F, rw, w) => F && F.mins ? w.vis >= F.mins.vis && w.ceil >= F.mins.ceil : APT.minsOk(w, rw);
 function profAt(P, t){ t = Math.max(0, t); for (let i = 1; i < P.length; i++) if (t <= P[i][0]) { const [a, A] = P[i-1], [b, B] = P[i]; return A + (B - A)*(t - a)/((b - a) || 1); } return P[P.length-1][1]; }
 const gpAlt = (togo, rw) => { const F = rw && FINAL[rw]; return F && F.prof ? profAt(F.prof, togo) : ELEV + 40 + Math.max(0, togo)*297; };
-const gpRate = (rw, togo) => { const F = rw && FINAL[rw]; return F && F.prof ? Math.max(F.minRate ?? 150, (profAt(F.prof, togo + 0.3) - profAt(F.prof, Math.max(0, togo - 0.3)))/0.6) : 297; };
+const gpRate = (rw, togo) => { const F = rw && FINAL[rw]; if (!F || !F.prof) return 297; const r = (profAt(F.prof, togo + 0.6) - profAt(F.prof, togo))/0.6; return r > 1 ? Math.max(F.minRate ?? 150, r) : r; };   // the segment being flown: level on a platform, never early down a step
 const tdElev = rw => { const F = rw && FINAL[rw]; return F && F.elev != null ? F.elev : ELEV; };
+// above the published profile (joined high from vectors, beyond its start): a 3° (318 ft/NM) slope back up from the far
+// end of its highest altitude, so a high aircraft comes down to it on a normal descent path instead of diving for it
+function gpCeil(togo, rw){
+  const F = rw && FINAL[rw]; if (!F || !F.prof) return gpAlt(togo, rw);
+  const top = F._top ||= F.prof.reduce((m, p) => p[1] >= m[1] ? p : m, F.prof[0]);
+  return togo > top[0] ? top[1] + (togo - top[0])*318 : gpAlt(togo, rw);
+}
+// "cleared approach" from own navigation (a STAR, a transition, the downwind and base): the crew descends with the
+// published altitudes, not straight to the approach altitude. Each published altitude ahead (APT.arrAlt for the
+// arrival fixes, then the approach profile from where the route joins it) allows a 3° descent path back from its fix;
+// the aircraft keeps above the lowest of those paths and never goes below a published altitude before its fix.
+function viaAlt(ac){
+  const F = finOf(ac), R = ac.route; if (!F || !R.length) return null;
+  const lead = (ac.gs || ac.ias)/3600*30, pub = APT.arrAlt || {};   // aim about 30 s ahead so the descent starts on time
+  let d = 0, floor = -Infinity, ceil = Infinity, prev = [ac.x, ac.y];
+  const con = (dd, a) => { if (a == null) return; floor = Math.max(floor, a); ceil = Math.min(ceil, a + Math.max(0, dd - lead)*318); };
+  for (const id of R) { const p = WP[id].p; d += dist(...prev, ...p); prev = p; if (id !== F.entry) con(d, pub[id]); }
+  const last = R[R.length - 1], k = apk(ac), J = F._join ||= {};
+  const T0 = J[last] ??= (onFinal({ x: prev[0], y: prev[1] }, F) || { togo: 0 }).togo;
+  con(d, gpAlt(T0, k));
+  for (const [t, a] of F.prof || []) if (t < T0) con(d + T0 - t, a);
+  return ceil === Infinity ? null : Math.max(floor === -Infinity ? 0 : Math.min(floor, ac.alt), ceil);
+}
 
 function step(dt){
   S.t += dt;
@@ -4320,7 +4360,8 @@ function stepAir(ac, dt){
 
   // ── vertical
   let tgtA = ac.tgtAlt ?? ac.alt;
-  if (fin) { const gp = gpAlt(fin.togo, apk(ac)); tgtA = Math.min(ac.alt, gp, ac.cleared ?? 1e9); if (ac.alt > gp + 40) tgtA = gp; }
+  if (ac.via && ac.app && ac.mode === 'NAV') { const p = viaAlt(ac); if (p != null && p > tgtA) tgtA = Math.min(p, Math.max(ac.alt, tgtA)); }
+  if (fin) { const gp = gpAlt(fin.togo, apk(ac)); tgtA = Math.min(ac.alt, gp, ac.cleared ?? 1e9); if (ac.alt > gp + 40) tgtA = Math.min(ac.alt, Math.max(gp, gpCeil(fin.togo, apk(ac)))); }
   const vmax = tgtA > ac.alt ? Pf.climb*(ac.alt > 10000 ? 0.7 : 1) : (fin ? (ac.alt > gpAlt(fin.togo, apk(ac)) + 150 ? 2000 : 1100) : Pf.desc);
   if (fin && ac.alt <= gpAlt(fin.togo, apk(ac)) + 150) {
     // on the glidepath: feed-forward the 2.8° descent rate, correct the error, flare onto the runway
@@ -5066,7 +5107,7 @@ function renderSel(){
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
   if (air) {
-    html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
+    html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–') + (ac.via && ac.app ? ' via procedure' : '')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
     ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.filter(k => !WP[k].hide).join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
     <div class="ctl"><label><span class="lbl">Heading</span><input id="iH" placeholder="270" inputmode="numeric"></label><label><span class="lbl">Altitude ×100</span><input id="iA" placeholder="40" inputmode="numeric"></label><label><span class="lbl">Speed</span><input id="iS" placeholder="180" inputmode="numeric"></label></div><div class="btns">`;
     if (ac.diverting && ac.state !== 'DIVERTING') html += b(`DCT ${ac.diverting} A${(APT.divertAlt || 8000)/100}`, 'Approve diversion', true, 'go');
