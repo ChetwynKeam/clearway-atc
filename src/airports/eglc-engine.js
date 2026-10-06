@@ -153,16 +153,21 @@ const TURN_END = { E: TURN_E[TURN_E.length-1][0], W: TURN_W[TURN_W.length-1][0] 
 const PHON = { A: 'Alpha', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', K: 'Kilo', L: 'Lima', M: 'Mike', T: 'Tango' };
 const T_LIM = [T_M[0], T_M[T_M.length-1]];
 function depHold(ac){ return S.rwy === RW_LO ? 'A' : 'M'; }
-// every stand is nose-in off T: the tug pushes the tail back onto T, then 40 m along it
+// every stand is nose-in off T: the tug pushes the tail back onto T, then 40 m along it. Stand 15 sits at the west end
+// of T, so a tail-west push goes out onto the GA apron beyond the end of T (it reaches m -290) instead of stopping dead
+// on the stand's own lead-in point.
+const PUSH_W_MIN = -260;
 function pushPath(ac, face){
-  const st = ac.stand, lm = mOf(st.lp), tail = face === 'west' ? 1 : -1, m = clamp(lm + tail*40, T_LIM[0], T_LIM[1]);
+  const st = ac.stand, lm = mOf(st.lp), tail = face === 'west' ? 1 : -1, m = clamp(lm + tail*40, PUSH_W_MIN, T_LIM[1]);
   return [st.lp, rm(m, offT(m))];
 }
-const pushRec = ac => depHold(ac) === 'M' ? 'east' : 'west';
+// face the way the aircraft will taxi: Alpha joins T at about m 0, so stands 12-15, west of it, face east for Alpha too
+const A_JOIN = mOf(GN.HA.p);
+const pushRec = ac => depHold(ac) === 'M' || mOf(ac.stand.lp) < A_JOIN ? 'east' : 'west';
 // exits in the order an arrival meets them: 27 arrivals roll west and take the angled exits E, D or C; 09 arrivals
 // roll east to F, K, L or M
 const VAC_PREFS = st => S.rwy === RW_HI ? ['E', 'D', 'C', 'B', 'A'] : ['F', 'K', 'L', 'M'];
-const FACE_HOLD = (st, f) => f === 'east' ? 'M' : 'A';
+const FACE_HOLD = (st, f) => f === 'east' ? (mOf(st.lp) < A_JOIN && S.rwy === RW_LO ? 'A' : 'M') : 'A';
 const TAXI_HINT = {
   '27': 'Runway 27 departures normally go from Mike, the full length. Lima and Kilo are intersections: the crew backtracks to the turning area.',
   '09': 'Runway 09 departures normally go from Alpha, the full length. Bravo and Charlie are intersections: the crew backtracks to the turning area.'
