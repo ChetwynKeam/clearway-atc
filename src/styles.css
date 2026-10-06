@@ -195,6 +195,11 @@ body.theme-dark .sb-bay { background: #0e1519; }
 .strip.clr .bar { background: #12805c; }
 .strip .clrk { display: inline-block; padding: 0 5px; border-radius: 4px; background: #12805c; color: #fff; font-family: var(--font-label); font-weight: 700; font-size: 11px; letter-spacing: .03em; }
 body.theme-dark .strip .clrk { background: #5fe39a; color: #062014; }
+/* an approved diversion: magenta, like its icon on the scope (orange is arrivals, purple transferred, green cleared) */
+.strip.div .bar { background: #c2187a; }
+.app button.strip.div .stt { color: #c2187a; }
+body.theme-dark .strip.div .bar { background: #ff6fbf; }
+body.theme-dark .app button.strip.div .stt { color: #ff6fbf; }
 .strip.off .bar { background: #8a4fc4; }
 .app button.strip.off .stt { color: #6a3fa0; }
 .app button.strip.need { box-shadow: inset 0 0 0 2px rgba(255,140,0,.6); }
