@@ -132,6 +132,11 @@ function drawKjfk(){
   cx.lineJoin = 'round'; cx.lineCap = 'round';
   // aprons, then taxiways (every graph edge), then the runways on top
   cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
+  // the mapped apron outlines did not survive conversion, so the ramp is paved along its taxilanes and gate lead-ins:
+  // the yellow ramp lines then sit on concrete instead of on the grass
+  cx.strokeStyle = C.concrete; cx.lineWidth = lw(70);
+  for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+  cx.lineWidth = lw(48); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
   cx.strokeStyle = C.asphalt; cx.lineWidth = lw(23);
   for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
   for (const k in FIL) { const R = rwyById(HOLDS[k].on); pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
