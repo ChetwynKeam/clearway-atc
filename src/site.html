@@ -883,6 +883,7 @@
         <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
         <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
         <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west (north-east or south-west at Madeira)</td><td class="mono">BAW493 PUSH E</td></tr>
+        <tr><td class="mono">PULL</td><td>Pushed the wrong way: the tug pulls it forward back onto its stand, nose-in, and the crew calls again for push back. Works while pushing or pushed, before taxi</td><td class="mono">BAW493 PULL</td></tr>
         <tr><td class="mono">TAXI [hp] [VIA …]</td><td>Taxi to a holding point (A, C, D or E at Gibraltar, B or C at Madeira), by the shortest route or the one you name. <b>Taxi…</b> on the selected flight opens the route picker</td><td class="mono">TAXI E VIA A B</td></tr>
         <tr><td class="mono">HP / RES</td><td>Hold position / continue taxi</td><td class="mono">HP</td></tr>
         <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
@@ -964,7 +965,7 @@
 
     <section id="t-ground" data-apt="LXGB" data-track="ap"><h2><span class="n">04</span>Ground and departures</h2>
       <h3>Start-up and push</h3>
-      <p>Departures call from the stand with the ATIS letter. Select the flight and press <b>Start &amp; push…</b>: a pop-out asks which way the nose should face after the push, previews the push on the map and recommends the side that leads to the departure holding point (east for runway 27, west for 09). Typed, it is <code>PUSH E</code> or <code>PUSH W</code>. A few seconds after the push the crew reports ready to taxi.</p>
+      <p>Departures call from the stand with the ATIS letter. Select the flight and press <b>Start &amp; push…</b>: a pop-out asks which way the nose should face after the push, previews the push on the map and recommends the side that leads to the departure holding point (east for runway 27, west for 09). Typed, it is <code>PUSH E</code> or <code>PUSH W</code>. A few seconds after the push the crew reports ready to taxi. Pushed it the wrong way? Press <b>Pull back to stand</b> (or type <code>PULL</code>, or say “pull forward onto stand”) before you clear it to taxi: the tug tows it back onto the stand nose-in and the crew asks for push back again.</p>
       <h3>Taxi</h3>
       <div class="tbl"><table>
         <tr><th>From</th><th>Runway</th><th>Holding point</th><th>Clearance</th><th>Command</th></tr>
