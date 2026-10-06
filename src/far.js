@@ -198,7 +198,7 @@ function fidsStatus(r, kind){
   }
   if (ac) {
     if (ac.airborne) return ['Departed', 'ok'];
-    return ({ PARKED: ac.need ? ['Boarding', 'live'] : ['At stand', ''], PUSH: ['Pushing back', 'live'], READY: ['Taxiing', 'live'], TAXI: ['Taxiing', 'live'], TOW: ['Under tow', ''],
+    return ({ PARKED: ac.need ? ['Boarding', 'live'] : ['At stand', ''], PUSH: ['Pushing back', 'live'], PULL: ['Returning to stand', 'live'], READY: ['Taxiing', 'live'], TAXI: ['Taxiing', 'live'], TOW: ['Under tow', ''],
               HOLDPT: ['Ready', 'live'], LINEUP: ['Lining up', 'live'], LINEDUP: ['Lined up', 'live'], TAKEOFF: ['Taking off', 'live'] })[ac.state] || ['At stand', ''];
   }
   if (g && S.t <= g.tEnd) return [S.t >= g.tStart ? `Departed · arr ${zHM(S.start + g.tEnd*1000)}` : 'Departed', 'ok'];

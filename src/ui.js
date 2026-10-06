@@ -453,7 +453,7 @@ function drawAc(ac){
 }
 
 function stateLabel(ac){
-  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', READY:'STARTED', TAXI:ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
+  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', PULL:'PULL FORWARD', READY:'STARTED', TAXI:ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
 }
 
 // ═════════════════════════ console UI ═════════════════════════
@@ -566,6 +566,7 @@ function renderSel(){
       const startReq = ac.state === 'PARKED' && !!ac.need && ac.need !== 'Request tow';
       if (ac.need === 'Request tow') html += b('TOW', `Approve tow to stand ${ac.tow && ac.tow.to ? ac.tow.to.id : ''}`, true, 'go');
       html += b('POP:push','Start &amp; push…', startReq, startReq ? 'go' : '');
+      if (ac.state === 'PUSH' || ac.state === 'READY') html += b('PULL', `Pull back to ${APT.standWord || 'stand'} ${ac.stand ? ac.stand.id : ''}`, !ac.leftStand);
       html += b('POP:taxi', ac.state === 'TAXI' ? 'Re-route taxi…' : 'Taxi…', canTaxi && ac.state !== 'HOLDPT', ac.state === 'READY' && ac.need ? 'go' : '');
       const R = ac.rel, relOk = !needRel(ac) || (R && R.st === 'OK' && !(R.nb && S.t < R.nb)), canRel = ac.state !== 'TOW';
       if (needRel(ac)) html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
@@ -779,7 +780,7 @@ function bayOf(ac){
   if (['PARKED', 'TOW', 'ONSTAND'].includes(st)) return 'del';
   if (st === 'HOLDPT' || (st === 'TAXI' && ac.holdAt && !ac.path && ac.kind === 'DEP')) return 'hold';
   if (['FINAL', 'LINEUP', 'LINEDUP', 'TAKEOFF', 'ROLLOUT', 'ROLLED'].includes(st) || (st === 'VACATING' && !ac.taxiIn && !ac.vacated)) return 'rwy';
-  if (['PUSH', 'READY', 'TAXI', 'VACATING'].includes(st)) return 'gnd';
+  if (['PUSH', 'PULL', 'READY', 'TAXI', 'VACATING'].includes(st)) return 'gnd';
   return 'air';
 }
 let stripWin = null;

@@ -1864,6 +1864,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
         <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
         <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west (north-east or south-west at Madeira)</td><td class="mono">BAW493 PUSH E</td></tr>
+        <tr><td class="mono">PULL</td><td>Pushed the wrong way: the tug pulls it forward back onto its stand, nose-in, and the crew calls again for push back. Works while pushing or pushed, before taxi</td><td class="mono">BAW493 PULL</td></tr>
         <tr><td class="mono">TAXI [hp] [VIA …]</td><td>Taxi to a holding point (A, C, D or E at Gibraltar, B or C at Madeira), by the shortest route or the one you name. <b>Taxi…</b> on the selected flight opens the route picker</td><td class="mono">TAXI E VIA A B</td></tr>
         <tr><td class="mono">HP / RES</td><td>Hold position / continue taxi</td><td class="mono">HP</td></tr>
         <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
@@ -1945,7 +1946,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 
     <section id="t-ground" data-apt="LXGB" data-track="ap"><h2><span class="n">04</span>Ground and departures</h2>
       <h3>Start-up and push</h3>
-      <p>Departures call from the stand with the ATIS letter. Select the flight and press <b>Start &amp; push…</b>: a pop-out asks which way the nose should face after the push, previews the push on the map and recommends the side that leads to the departure holding point (east for runway 27, west for 09). Typed, it is <code>PUSH E</code> or <code>PUSH W</code>. A few seconds after the push the crew reports ready to taxi.</p>
+      <p>Departures call from the stand with the ATIS letter. Select the flight and press <b>Start &amp; push…</b>: a pop-out asks which way the nose should face after the push, previews the push on the map and recommends the side that leads to the departure holding point (east for runway 27, west for 09). Typed, it is <code>PUSH E</code> or <code>PUSH W</code>. A few seconds after the push the crew reports ready to taxi. Pushed it the wrong way? Press <b>Pull back to stand</b> (or type <code>PULL</code>, or say “pull forward onto stand”) before you clear it to taxi: the tug tows it back onto the stand nose-in and the crew asks for push back again.</p>
       <h3>Taxi</h3>
       <div class="tbl"><table>
         <tr><th>From</th><th>Runway</th><th>Holding point</th><th>Clearance</th><th>Command</th></tr>
@@ -3595,6 +3596,7 @@ const PH = Object.assign({
   ctl: (ac, rw) => [`runway ${rw}, cleared to land, ${windPhrase()}`, `cleared to land runway ${rw}`],
   push: (ac, dn, face) => [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${APT.faceWord(face)}, ${PH.altim()}`,
     `cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${APT.faceWord(face)}, ${PH.altim()}`],
+  pull: (ac, st) => [`pull forward onto ${APT.standWord || 'stand'} ${st.id}, call me for push back`, `pulling forward onto ${APT.standWord || 'stand'} ${st.id}`],
   startReq: ac => `${APT.tower[0]}, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up and push back`,
   checkIn: ac => `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, inbound ${ac.route[0]}, information ${phonetic(S.atis)}`,
   depCall: ac => `${(APT.depRadar || APT.radar)[0]}, passing ${Math.round(ac.alt/100)*100} feet climbing ${altShort(ac.tgtAlt)}, ${ac.onSid && ac.sid ? sidSpoken(ac.sid) + ' departure' : 'heading ' + hdg3(ac.hdg)}`,
@@ -3961,7 +3963,11 @@ function vacSpeed(ac, dt){
 function startLineUp(ac){
   ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw()).id; ac.need = null;
   const back = true;
-  setPath(ac, lineUpPath(ac, ac.hp), 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw()); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; });
+  // finish on a straight stretch of centreline, so the turn onto the runway rounds out into line instead of snapping onto it
+  const pts = lineUpPath(ac, ac.hp), R = holdRwy(ac.hp), c = crsOf(depRw()), e = pts[pts.length-1];
+  const dir = Math.sin(c*D2R)*R.RU[0] + Math.cos(c*D2R)*R.RU[1] >= 0 ? 1 : -1;
+  pts.push(R.rm(R.mOf(e) + dir*Math.max(35, taxiR(ac)*1.5), 0));
+  setPath(ac, pts, 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw()); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; }, { fine: true });
   return back;
 }
 
@@ -4092,9 +4098,18 @@ function commandRun(str){
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
       const dir = { E:'east', EAST:'east', W:'west', WEST:'west' }[toks[i+1]]; if (dir) i++;
       const face = dir || pushRec(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw());
-      setPath(ac, pushPath(ac, face), 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
+      ac.pushPts = pushPath(ac, face);
+      setPath(ac, ac.pushPts, 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
       const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
       { const [sa, ra] = PH.push(ac, dn, face); said.push(sa); reads.push(ra); }
+    } else if (t === 'PULL' || t === 'PULLBACK') {
+      // pushed (or pushing) the wrong way: the tug tows it forward, back along the push line and onto its stand nose-in, to push again
+      if (!['PUSH', 'READY'].includes(ac.state) || ac.leftStand || !ac.stand) { sys(`${ac.cs} ${ac.state === 'PARKED' ? 'is already on its ' + (APT.standWord || 'stand') : 'is not on push back'}: only an aircraft pushing or pushed back, and not yet taxiing, can be pulled forward.`); continue; }
+      const st = ac.stand, pp = ac.pushPts || pushPath(ac, ac.face || pushRec(ac));
+      const got = ac.state === 'READY' || !ac.path ? pp.length : Math.max(0, pp.length - ac.path.pts.length);   // push points already reached
+      ac.state = 'PULL'; ac.need = null; ac.pushed = false; ac.held = false;
+      setPath(ac, [...pp.slice(0, got).reverse(), st.p], 4, () => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); }, { tug: true });
+      { const [sa, ra] = PH.pull(ac, st); said.push(sa); reads.push(ra); }
     } else if (t === 'TAXI' && ac.kind === 'ARR') {
       if (ac.state !== 'VACATING') { sys(`${ac.cs} ${['ROLLED','ROLLOUT'].includes(ac.state) ? 'has not vacated the runway yet' : 'is not on the ground'}.`); continue; }
       if (ac.onRwy) { sys(`${ac.cs} is still on the runway: let it vacate first.`); continue; }
@@ -4468,7 +4483,7 @@ function stepAir(ac, dt){
 // A taxiing aircraft's position (x, y) is its nose: it stops with the nose at a holding point line and turns where
 // the nose meets the turn, the body trailing behind. Parked, pushing or taking off, it is the middle of the aircraft.
 // ac.nose (metres) is how far the middle sits behind (x, y); it eases between the two so the icon never jumps.
-const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'ROLLOUT']);
+const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'ROLLOUT', 'LINEUP', 'LINEDUP']);
 function stepNose(ac, dt){
   const want = ac.ground && NOSE_STATES.has(ac.state) ? ac.perf.len/2 : 0, cur = ac.nose || 0;
   if (cur !== want) ac.nose = want > cur ? Math.min(want, cur + 4*dt) : Math.max(want, cur - 4*dt);
@@ -4499,8 +4514,8 @@ function stepGround(ac, dt){
         if (blk) { spd = 0; if (ac.waiting !== blk.cs) { ac.waiting = blk.cs; log('plt', `tug with ${ac.cs}, holding short of the runway at Charlie, traffic for Alpha`, 'TUG'); } }
       }
     }
-    // give way: stop if another aircraft on the ground is close ahead
-    if (!ac.path.reverse && spd > 0) for (const o of S.acs) {
+    // give way: stop if another aircraft on the ground is close ahead (not under a tug on its push line: that space is its own)
+    if (!ac.path.reverse && !ac.path.tug && spd > 0) for (const o of S.acs) {
       if (o === ac || !o.ground) continue;
       const dd = dist(ac.x, ac.y, o.x, o.y)/M2NM; if (dd > 80 || dd < 1) continue;
       if (o.waiting === ac.cs && (ac.state === 'VACATING' || (o.state !== 'VACATING' && ac.cs < o.cs))) continue; // break a head-on stand-off: the aircraft leaving the runway goes first
@@ -4533,7 +4548,7 @@ function stepGround(ac, dt){
       else {
         ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv;
         const d2 = dist(ac.x, ac.y, ...tgt);
-        if (last) { if (d2 < 0.0015 || (Math.abs(err) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
+        if (last) { if (d2 < (ac.path.fine ? mv : 0.0015) || (Math.abs(err) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
         else {
           const nxt = ac.path.pts[1], th = Math.abs(angDiff(want, brg(...tgt, ...nxt)));
           const lead = Math.min(R/1852*Math.tan(Math.min(th, 150)*D2R/2), dist(...tgt, ...nxt)/2);
@@ -5031,7 +5046,7 @@ function drawAc(ac){
 }
 
 function stateLabel(ac){
-  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', READY:'STARTED', TAXI:ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
+  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', PULL:'PULL FORWARD', READY:'STARTED', TAXI:ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
 }
 
 // ═════════════════════════ console UI ═════════════════════════
@@ -5144,6 +5159,7 @@ function renderSel(){
       const startReq = ac.state === 'PARKED' && !!ac.need && ac.need !== 'Request tow';
       if (ac.need === 'Request tow') html += b('TOW', `Approve tow to stand ${ac.tow && ac.tow.to ? ac.tow.to.id : ''}`, true, 'go');
       html += b('POP:push','Start &amp; push…', startReq, startReq ? 'go' : '');
+      if (ac.state === 'PUSH' || ac.state === 'READY') html += b('PULL', `Pull back to ${APT.standWord || 'stand'} ${ac.stand ? ac.stand.id : ''}`, !ac.leftStand);
       html += b('POP:taxi', ac.state === 'TAXI' ? 'Re-route taxi…' : 'Taxi…', canTaxi && ac.state !== 'HOLDPT', ac.state === 'READY' && ac.need ? 'go' : '');
       const R = ac.rel, relOk = !needRel(ac) || (R && R.st === 'OK' && !(R.nb && S.t < R.nb)), canRel = ac.state !== 'TOW';
       if (needRel(ac)) html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
@@ -5357,7 +5373,7 @@ function bayOf(ac){
   if (['PARKED', 'TOW', 'ONSTAND'].includes(st)) return 'del';
   if (st === 'HOLDPT' || (st === 'TAXI' && ac.holdAt && !ac.path && ac.kind === 'DEP')) return 'hold';
   if (['FINAL', 'LINEUP', 'LINEDUP', 'TAKEOFF', 'ROLLOUT', 'ROLLED'].includes(st) || (st === 'VACATING' && !ac.taxiIn && !ac.vacated)) return 'rwy';
-  if (['PUSH', 'READY', 'TAXI', 'VACATING'].includes(st)) return 'gnd';
+  if (['PUSH', 'PULL', 'READY', 'TAXI', 'VACATING'].includes(st)) return 'gnd';
   return 'air';
 }
 let stripWin = null;
@@ -6344,7 +6360,7 @@ function fidsStatus(r, kind){
   }
   if (ac) {
     if (ac.airborne) return ['Departed', 'ok'];
-    return ({ PARKED: ac.need ? ['Boarding', 'live'] : ['At stand', ''], PUSH: ['Pushing back', 'live'], READY: ['Taxiing', 'live'], TAXI: ['Taxiing', 'live'], TOW: ['Under tow', ''],
+    return ({ PARKED: ac.need ? ['Boarding', 'live'] : ['At stand', ''], PUSH: ['Pushing back', 'live'], PULL: ['Returning to stand', 'live'], READY: ['Taxiing', 'live'], TAXI: ['Taxiing', 'live'], TOW: ['Under tow', ''],
               HOLDPT: ['Ready', 'live'], LINEUP: ['Lining up', 'live'], LINEDUP: ['Lined up', 'live'], TAKEOFF: ['Taking off', 'live'] })[ac.state] || ['At stand', ''];
   }
   if (g && S.t <= g.tEnd) return [S.t >= g.tStart ? `Departed · arr ${zHM(S.start + g.tEnd*1000)}` : 'Departed', 'ok'];
@@ -6676,7 +6692,8 @@ function phraseToCmd(raw){
   if (/ hold position /.test(s) || / stop immediately /.test(s)) out.push('HP');
   else if ((m = s.match(/ hold( at| over)? (\S+) /)) && !/ holding point /.test(s)) { const f = fixFrom(m[2]); out.push(f ? 'HOLD ' + f : 'HOLD'); }
   if (/ (continue taxi|resume taxi|continue taxiing) /.test(s)) out.push('RES');
-  if (/ (pushback|startup)/.test(s)) { const f = sideOf(s); out.push('PUSH' + (f ? ' ' + f : '')); }
+  if (/ (pull (forward|back)|tow (it )?back) /.test(s)) out.push('PULL');
+  else if (/ (pushback|startup)/.test(s)) { const f = sideOf(s); out.push('PUSH' + (f ? ' ' + f : '')); }
   // "taxi to holding point tango 3": an intermediate holding point (or, for an arrival, any holding point)
   const hpm = s.match(/ taxi .*?holding point (\S+)(?: (\d{1,2}))? /), hpId = hpm && ((PHONW[hpm[1]] || (hpm[1].length === 1 ? hpm[1].toUpperCase() : '')) + (hpm[2] || ''));
   const toHold = hpId && (IHPS[hpId] && !HOLDS[hpId] || (ac && ac.kind === 'ARR' && holdPt(hpId))) ? hpId : null;
