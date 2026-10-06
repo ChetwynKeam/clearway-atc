@@ -68,7 +68,8 @@ export async function account(u){
 export const saveAccount = (id, patch) => db(`accounts?user_id=eq.${id}`, { method: 'PATCH', body: { ...patch, updated_at: new Date().toISOString() }, prefer: 'return=representation' }).then(r => r[0]);
 
 // What a player may open. status: Stripe subscription status. A failed renewal keeps access for 3 days while Stripe retries.
-export function entitlement(a){
+// owner: the site owner (ADMIN_EMAILS) may open every airport, including those in development, without a plan
+export function entitlement(a, owner){
   const now = Date.now(), end = a && a.period_end ? Date.parse(a.period_end) : 0;
   const active = !!a && (a.status === 'trialing' || a.status === 'active' || (a.status === 'past_due' && now < end + 3*864e5));
   const plan = active ? PLANS[a.plan] : null;
@@ -78,7 +79,7 @@ export function entitlement(a){
     airports: active ? (limit === 0 ? '*' : (a.airports || []).slice(0, limit || 0)) : [],
     early: active && !trial && !!(a.early || (plan && plan.early)), trial_end: a && a.trial_end, period_end: a && a.period_end,
     cancel_at: a && a.cancel_at, trial_used: !!(a && a.trial_used), airports_changed_at: a && a.airports_changed_at,
-    owned: (a && a.owned) || [] };   // commissioned airports: theirs whatever the plan, even with none
+    owned: (a && a.owned) || [], ...(owner ? { owner: true } : {}) };   // commissioned airports: theirs whatever the plan, even with none
 }
 
 // ── Stripe (REST, form encoded) ──

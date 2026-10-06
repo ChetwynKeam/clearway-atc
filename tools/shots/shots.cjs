@@ -8,7 +8,7 @@ const fs = require('fs'), path = require('path');
 const BASE = process.env.BASE || 'http://localhost:8080', OUT = process.env.OUT || 'shots', ONLY = process.env.ONLY;
 const BOT = fs.readFileSync(path.join(__dirname, 'bot.js'), 'utf8');
 const AIRPORTS = [
-  { k: 'kjfk', file: 'new-york-jfk-atc.html', mins: 45, hour: '16', full: true, twr: 1.2 },
+  { k: 'kjfk', file: 'new-york-jfk-atc.html', mins: 45, hour: '16', full: true, twr: 1.2, gnd: 1.6 },
   { k: 'eglc', twr: 2.2, file: 'london-city-atc.html', mins: 35, hour: '16' },
   { k: 'lxgb', twr: 2.8, file: 'gibraltar-atc.html', mins: 35, hour: '12' },
   { k: 'lpma', twr: 2.2, file: 'madeira-atc.html', mins: 35, hour: '12' },
@@ -62,12 +62,10 @@ async function view(pg, k, zoom = 1, theme = 'light', pick){
       console.log(' console dark', JSON.stringify(await view(pg, 'app', 1.5, 'dark')));
       await pg.screenshot(jpg(`${A.k}-console-dark.jpg`));
       await pg.addStyleTag({ content: '.scopewrap .toolbar{visibility:hidden}' });
-      console.log(' ground', JSON.stringify(await view(pg, 'gnd', 1.6, 'light', 'gnd')));
-      await scope.screenshot(jpg(`${A.k}-ground.jpg`));
       await pg.addStyleTag({ content: '.scopewrap .toolbar{visibility:visible}' });
       await pg.evaluate(() => { S.paused = false; });
       const [sw] = await Promise.all([ctx.waitForEvent('page'), pg.click('#popStrips')]);
-      await sw.setViewportSize({ width: 1840, height: 760 }); await sw.waitForTimeout(2000);
+      await sw.setViewportSize({ width: 1960, height: 540 }); await sw.waitForTimeout(2000);
       await sw.screenshot(jpg(`${A.k}-strips.jpg`)); await sw.close(); await pg.waitForTimeout(800);
       await pg.click('#tgFids'); await pg.waitForTimeout(300);
       const [fw] = await Promise.all([ctx.waitForEvent('page'), pg.click('#fidsPop')]);
@@ -80,6 +78,10 @@ async function view(pg, k, zoom = 1, theme = 'light', pick){
     await pg.addStyleTag({ content: '.scopewrap .toolbar,#score{display:none!important}' });
     console.log(' tower', JSON.stringify(await view(pg, 'twr', A.twr, 'light')));
     await scope.screenshot(jpg(`${A.k}-tower.jpg`));
+    console.log(' runway', JSON.stringify(await view(pg, 'twr', A.twr*2.2, 'light')));
+    await scope.screenshot(jpg(`${A.k}-runway.jpg`));
+    console.log(' ground', JSON.stringify(await view(pg, 'gnd', A.gnd || 1, 'light', 'gnd')));
+    await scope.screenshot(jpg(`${A.k}-ground.jpg`));
     console.log(' radar', JSON.stringify(await view(pg, 'app', 1.3, 'light')));
     await scope.screenshot(jpg(`${A.k}-radar.jpg`));
     if (errs.length) console.log(' page errors:', errs);

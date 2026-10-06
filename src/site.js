@@ -94,11 +94,13 @@ function rwyDiagram(ap){
   out.push('</svg>'); return out.join('');
 }
 function apCard(ap){
-  const live = ap.status === 'live', tag = live ? 'a' : 'div', rt = AP_ROUTE[ap.icao];
+  // an airport in development that is already built opens as a preview for the owner and early access members
+  const rt = AP_ROUTE[ap.icao], pv = ap.status === 'dev' && !!rt && typeof cwPreview === 'function' && cwPreview();
+  const live = ap.status === 'live' || pv, tag = live ? 'a' : 'div';
   const href = live ? '#' + rt : '';
   return `<${tag} class="ap${live ? '' : ' off'}"${live ? ` href="${href}"` : ''}>
     <div class="dia">${rwyDiagram(ap)}</div>
-    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
+    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${pv ? '<span class="badge new">Preview</span>' : ''}${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
     <h3>${esc(ap.name)}</h3><div class="ctry">${esc(ap.ctry)} · ${esc(ap.region)}</div><p>${esc(ap.blurb)}</p>
     <div class="ft">${ap.pos.map(p => `<span class="pos">${p}</span>`).join('')}<span>RWY ${ap.rwys.join(' · ')}</span><span class="diff" title="Difficulty ${ap.diff} of 5">${[1,2,3,4,5].map(i => `<i class="${i <= ap.diff ? 'on' : ''}"></i>`).join('')}</span></div></div>
   </${tag}>`;

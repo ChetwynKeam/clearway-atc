@@ -10,7 +10,7 @@
 // POST {action: 'commission_pay', id}              pay by hand if the release charge needed the player (Stripe Checkout)
 // POST {action: 'commission_cancel', id}           withdraw a commission before it is released (nothing is charged)
 import { json, fail, guarded, preflight, body, user, account, saveAccount, entitlement, configured, stripe, stripeOn, db, customerOf, commissionCardSession,
-  PLANS, EARLY_PRICE, COMMISSION_PENCE, SITE_URL, TRIAL_DAYS } from './_lib.js';
+  isAdmin, PLANS, EARLY_PRICE, COMMISSION_PENCE, SITE_URL, TRIAL_DAYS } from './_lib.js';
 
 const ICAO = /^[A-Z]{4}$/, SWAP_DAYS = 30, COUPON = () => (process.env.STRIPE_COUPON || '').trim();
 const UPGRADE_COUPON = () => (process.env.STRIPE_UPGRADE_COUPON || '').trim();   // 50% off 3 months, behind each new airport's code
@@ -21,9 +21,10 @@ async function handle(req){
   const u = await user(req);
   if (!u) return fail(req, 401, 'Please sign in.');
   let a = await account(u);
+  const own = isAdmin(u);
   const mine = () => db(`commissions?user_id=eq.${u.id}&status=neq.cancelled&select=id,created_at,icao,name,notes,status,price_pence,reply,ready_at,paid_at,public_from&order=created_at.desc`).catch(() => []);
   const cardFor = async c => json(req, { url: (await commissionCardSession(c, await customerOf(u, a))).url });
-  if (req.method === 'GET') return json(req, { email: u.email, ...entitlement(a), billing: !!a.stripe_customer, payments: stripeOn(), commissions: await mine() });
+  if (req.method === 'GET') return json(req, { email: u.email, ...entitlement(a, own), billing: !!a.stripe_customer, payments: stripeOn(), commissions: await mine() });
   const b = await body(req), ent = entitlement(a);
   try {
     if (b.action === 'commission') {
@@ -55,7 +56,7 @@ async function handle(req){
     if (b.action === 'airports') {
       const list = [...new Set((b.airports || []).map(s => String(s).toUpperCase()))].filter(s => ICAO.test(s));
       if (!ent.active) return fail(req, 402, 'Start a trial or a plan first.');
-      if (ent.limit === 0) return json(req, entitlement(a));   // Unlimited: nothing to choose
+      if (ent.limit === 0) return json(req, entitlement(a, own));   // Unlimited: nothing to choose
       if (list.length > ent.limit) return fail(req, 400, `Your plan includes ${ent.limit} airport${ent.limit > 1 ? 's' : ''}.`);
       // Fill empty slots any time; swapping one out is free during the trial, then once every 30 days
       const old = a.airports || [], adding = old.every(x => list.includes(x));
@@ -65,7 +66,7 @@ async function handle(req){
         return fail(req, 409, `You can swap airports again on ${next}.`);
       }
       a = await saveAccount(u.id, { airports: list, ...(adding ? {} : { airports_changed_at: new Date().toISOString() }) });
-      return json(req, entitlement(a));
+      return json(req, entitlement(a, own));
     }
     if (!stripeOn()) return fail(req, 503, 'Payments are not switched on yet.');
     if (b.action === 'portal' || (b.action === 'checkout' && ent.active && a.subscription_id)) {
@@ -118,7 +119,7 @@ async function handle(req){
       await stripe(`subscriptions/${sub.id}`, { items: [{ id: item.id, price: plan.price() }], proration_behavior: 'create_prorations',
         discounts: [{ promotion_code: promo.id }], metadata: { user_id: u.id, upgrade_code: code } });
       a = await saveAccount(u.id, { plan: b.plan });   // the webhook confirms it from Stripe moments later
-      return json(req, entitlement(a));
+      return json(req, entitlement(a, own));
     }
     if (b.action === 'early') {
       if (!a.subscription_id || !EARLY_PRICE()) return fail(req, 400, 'Start a plan first.');
@@ -127,7 +128,7 @@ async function handle(req){
       if (b.on && !item) await stripe('subscription_items', { subscription: sub.id, price: EARLY_PRICE(), quantity: 1, proration_behavior: 'create_prorations' });
       if (!b.on && item) await stripe(`subscription_items/${item.id}`, { proration_behavior: 'create_prorations' }, 'DELETE');
       a = await saveAccount(u.id, { early: !!b.on });   // the webhook confirms it from Stripe moments later
-      return json(req, entitlement(a));
+      return json(req, entitlement(a, own));
     }
     return fail(req, 400, 'Unknown action.');
   } catch (e) { console.error(e); return fail(req, 500, 'Something went wrong. Please try again.'); }
