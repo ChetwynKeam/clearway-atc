@@ -137,7 +137,7 @@ function slotApplyDep(cs){
     }
     ac.slotHold = false;
     ac.reqAt = Math.max(S.t + 15, ac.slotMin || 0, callM*60);
-    if (towing) ac.tow.at = Math.max(S.t + 20, (depM - 35)*60);
+    if (towing) ac.tow.at = Math.max(S.t + 20, (depM - towLead(ac))*60);
     if (asking && ac.reqAt > S.t + 90) { ac.need = null; atc(ac, `start-up delayed, expect start-up at ${zt(ac.reqAt).slice(0, 5)}`); pilot(ac, `expect start-up at ${zt(ac.reqAt).slice(0, 5)}`); }
     return;
   }
@@ -199,7 +199,7 @@ function slotNote(cs, kind){
   if (ac) {
     if (ac.slotHold) return 'Held on stand: the crew won’t call for start-up until you release it.';
     if (ac.need) return `On stand, ${ac.need.toLowerCase()} now.`;
-    const tow = ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? ` Tow to a terminal stand at about ${zt(ac.tow.at).slice(0, 5)}Z.` : '';
+    const tow = ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? ` ${ac.stand && ac.stand.area === 'hangar' ? 'In ' + ac.stand.name + ': tow out' : 'Tow to a terminal stand'} at about ${zt(ac.tow.at).slice(0, 5)}Z.` : '';
     return `On stand: calls for start-up at about ${zt(ac.reqAt).slice(0, 5)}Z.${tow}`;
   }
   if (tr) return `Turnround of the inbound ${slotFind(cs, kind).owner.cs}: calls for start-up about ${hhmm((e ? e.tm : tr.depM + slotH0()) - 6)}Z, at least 20 minutes after it is on stand.${e && e.hold ? ' Held: it will stay on stand when it turns round.' : ''}`;

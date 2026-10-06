@@ -3030,6 +3030,15 @@ const AD_SITE = {
 };
 AD_SITE.aprons = [AD_SITE.civil, AD_SITE.north, AD_SITE.south]; AD_SITE.shoulder = [196, 1690]; AD_SITE.serviceRoad = true;
 AD_SITE.buildings = [{ pts: AD_SITE.terminal, h: 14, roof: 'terminal' }, { pts: AD_SITE.atc, h: 18, roof: 'atc' }, ...AD_SITE.hangars.map(p => ({ pts: p, h: 12, roof: 'hangar' }))]; AD_SITE.roads = [AD_SITE.roadN, AD_SITE.roadS];
+// RAF hangars on the south apron (AD_SITE.hangars 1 and 2, traced from chart D1): aircraft stored or in maintenance at the
+// start of a session, towed out to a south stand an hour before departure. RAF aircraft (not the Voyager, too big), and
+// visiting light aircraft staying for the day. [in, door] are (m, off): a point inside, and the
+// apron outside the door; node is the apron taxilane node the tug joins. The third hangar has no apron access and isn't used.
+const hangarFits = ac => (isMil(ac) && ac.t !== 'A332') || (ac.depM == null && isBiz(ac));
+APT.hangars = [
+  { id: 'H1', name: 'hangar 1', in: [988, -158], door: [1030, -150], node: 'SC', to: ['south'], fits: hangarFits },
+  { id: 'H2', name: 'hangar 2', in: [1132, -228], door: [1142, -190], node: 'LS2', to: ['south'], fits: hangarFits }
+];
 
 // ═════════════════════════ Madeira (LPMA) airport profile ═════════════════════════
 // Everything the Clearway engine needs to know that is true only of Madeira. Sources: AIP Portugal LPMA AD 2.24
@@ -4676,6 +4685,14 @@ const isBiz = ac => ac.perf.wake === 'L' || ac.t === 'GLF6' || ac.t === 'C56X';
 function spawnResident(f){
   const ac = new Aircraft(f); ac.freq = 'TWR'; ac.ground = true; ac.alt = ELEV;
   const wait = f.depM == null ? Infinity : f.depM;
+  const hg = hangarFor(ac, f);
+  if (hg) {   // stored in a hangar: towed out to a stand before it leaves
+    hg.occ = ac; ac.stand = hg; ac.x = hg.p[0]; ac.y = hg.p[1]; ac.hdg = hg.hdg;
+    if (f.depM == null) { ac.kind = 'ARR'; ac.state = 'ONSTAND'; ac.doneAt = Infinity; }
+    else { ac.kind = 'DEP'; ac.state = 'PARKED'; ac.reqAt = Math.max(8, (f.depM - 6)*60); ac.tow = { at: Math.max(20, (f.depM - 60)*60), pref: f.stand }; }
+    S.acs.push(ac); emit('spawn', ac);
+    return ac;
+  }
   const remote = !isMil(ac) && !isBiz(ac) && wait > 45;
   const order = isMil(ac) ? ['south'] : isBiz(ac) ? ['north', 'civil'] : remote ? ['south', 'north', 'civil'] : ['civil', 'north'];
   let st = (!remote || APT.standFor) && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
@@ -4687,6 +4704,16 @@ function spawnResident(f){
   else { ac.kind = 'DEP'; ac.state = 'PARKED'; ac.reqAt = Math.max(8, (f.depM - 6)*60); if (remote && st.area !== 'civil') ac.tow = { at: Math.max(20, (f.depM - 35)*60), pref: f.stand }; }
   S.acs.push(ac); emit('spawn', ac);
   return ac;
+}
+// hangars (APT.hangars, where the airport has them): stand-like places an aircraft can be stored in at the start of a
+// session. It is out of sight until the tug calls to tow it out, an hour before off-blocks (remote stands: 35 minutes).
+const HANGARS = (APT.hangars || []).map(h => { const p = rm(...h.in), lp = rm(...h.door); return { id: h.id, name: h.name, p, lp, node: h.node, hdg: brg(...p, ...lp), area: 'hangar', occ: null, hg: h }; });   // parked facing the doors
+const inHangar = ac => !!(ac.stand && ac.stand.area === 'hangar' && (ac.state === 'PARKED' || ac.state === 'ONSTAND'));
+const towLead = ac => ac.stand && ac.stand.area === 'hangar' ? 60 : 35;
+function hangarFor(ac, f){
+  const wait = f.depM == null ? Infinity : f.depM;   // staying for the day, or leaving 75 minutes or more from now
+  if (wait < 75) return null;
+  return HANGARS.find(h => !h.occ && h.hg.fits(ac)) || null;
 }
 // after an arrival is on stand it becomes its own turnaround departure (new callsign), or stays parked
 function turnRound(ac){
@@ -4707,17 +4734,22 @@ function towPath(ac, to){
     add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, ...filOut('C', 'E'), ...filIn('A', 'W'), GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, to.node));
   } else add(route(from.node, to.node));
   pts.push(to.p);
+  // out of a hangar: the tug walks it round the apron corners (tight turns), by way of the lane node outside the doors
+  if (from.area === 'hangar') return [from.lp, GN[from.node].p, ...pts.slice(1)].map((p, i, a) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; });
   return pts;
 }
 function stepTows(){
   for (const ac of S.acs) {
     if (!ac.tow || ac.state !== 'PARKED' || ac.tow.asked || S.t < ac.tow.at) continue;
-    const to = (ac.tow.pref && STANDS.find(s => s.id === ac.tow.pref && !s.occ && s.area === 'civil')) || STANDS.find(s => !s.occ && s.area === 'civil');
+    // from a hangar: the stand areas that hangar serves, in order; from a remote stand: the civil apron
+    const H = ac.stand.area === 'hangar' && ac.stand.hg, areas = H ? (typeof H.to === 'function' ? H.to(ac) : H.to) : ['civil'];
+    let to = ac.tow.pref && STANDS.find(s => s.id === ac.tow.pref && !s.occ && areas.includes(s.area));
+    for (const a of areas) if (!to) to = STANDS.find(s => !s.occ && s.area === a);
     if (!to) { ac.tow.at = S.t + 120; continue; }
     to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
-    const cross = ac.stand.area === 'south';
-    log('plt', `${APT.tower[0]}, tug with ${ac.cs} on stand ${ac.stand.id}, request tow to stand ${to.id}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
-    say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} on stand ${ac.stand.id}, request tow to stand ${to.id}`, 'tug');
+    const cross = ac.stand.area === 'south', at = H ? `in ${H.name}` : `on stand ${ac.stand.id}`;
+    log('plt', `${APT.tower[0]}, tug with ${ac.cs} ${at}, request tow to stand ${to.id}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
+    say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} ${at}, request tow to stand ${to.id}`, 'tug');
   }
 }
 // parked aircraft with nothing due in the next 15 minutes stay off the strip board
@@ -5039,6 +5071,7 @@ function commandRun(str){
     } else if (t === 'TOW') {
       if (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to) { sys(`${ac.cs} has no tow request.`); continue; }
       const to = ac.tow.to, from = ac.stand, cross = from.area === 'south';
+      if (from.area === 'hangar') { ac.x = from.lp[0]; ac.y = from.lp[1]; ac.hdg = from.hdg; ac.mg = ac.bh = null; }   // the doors open: it comes out onto the apron
       setPath(ac, towPath(ac, to), 5, () => { ac.state = 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is on stand ${to.id}.`); });
       if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null; ac.towCross = cross;
       log('atc', `Tug with ${ac.cs}, tow approved to stand ${to.id}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
@@ -5688,7 +5721,7 @@ function draw(){
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
-  for (const ac of S.acs) if (ac.ground) drawAc(ac);
+  for (const ac of S.acs) if (ac.ground && !inHangar(ac)) drawAc(ac);   // stored in a hangar: out of sight until it is towed out
   if (img) drawImageryCredit();
   else if (MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
   // scale bar
@@ -6194,6 +6227,7 @@ function renderSel(){
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
   if (ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) { const c = SLOT[ac.cs].ctot; html += `<div class="meta">Slot (CTOT) <b>${hhmm(c)}Z</b>: take-off between ${hhmm(c - 5)} and ${hhmm(c + 10)}Z.</div>`; }
+  if (inHangar(ac)) html += `<div class="meta">In ${ac.stand.name}${ac.kind === 'DEP' ? (ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? `: the tug calls to tow it out to a stand at about ${zt(ac.tow.at).slice(0,5)}Z, an hour before off-blocks.` : '.') : ', stored for the day.'}</div>`;
   if (ac.kind === 'DEP' && ac.state === 'PARKED' && ac.slotHold) html += `<div class="meta">Held on stand from the Flights board: the crew won’t call for start-up until you release it there.</div>`;
   else if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
@@ -6359,7 +6393,7 @@ function makeStrip(ac, doc = document){
   d.querySelector('.cs').textContent = ac.cs;
   d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
   d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
-  d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
+  d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? (ac.stand.area === 'hangar' ? 'Hangar ' : 'Stand ')+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
   // arrivals show the stand they are going to, once it is planned
   if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
   const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
@@ -6523,7 +6557,7 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac)) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac) || inHangar(ac)) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
@@ -6560,7 +6594,7 @@ renderSlots();
 function resetSession(){
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
   S.emg = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
-  STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
+  STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
   if (!S.running && !cwGate()) return;   // opening a position needs a plan that includes this airport (account.js)
@@ -7775,7 +7809,7 @@ function slotApplyDep(cs){
     }
     ac.slotHold = false;
     ac.reqAt = Math.max(S.t + 15, ac.slotMin || 0, callM*60);
-    if (towing) ac.tow.at = Math.max(S.t + 20, (depM - 35)*60);
+    if (towing) ac.tow.at = Math.max(S.t + 20, (depM - towLead(ac))*60);
     if (asking && ac.reqAt > S.t + 90) { ac.need = null; atc(ac, `start-up delayed, expect start-up at ${zt(ac.reqAt).slice(0, 5)}`); pilot(ac, `expect start-up at ${zt(ac.reqAt).slice(0, 5)}`); }
     return;
   }
@@ -7837,7 +7871,7 @@ function slotNote(cs, kind){
   if (ac) {
     if (ac.slotHold) return 'Held on stand: the crew won’t call for start-up until you release it.';
     if (ac.need) return `On stand, ${ac.need.toLowerCase()} now.`;
-    const tow = ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? ` Tow to a terminal stand at about ${zt(ac.tow.at).slice(0, 5)}Z.` : '';
+    const tow = ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? ` ${ac.stand && ac.stand.area === 'hangar' ? 'In ' + ac.stand.name + ': tow out' : 'Tow to a terminal stand'} at about ${zt(ac.tow.at).slice(0, 5)}Z.` : '';
     return `On stand: calls for start-up at about ${zt(ac.reqAt).slice(0, 5)}Z.${tow}`;
   }
   if (tr) return `Turnround of the inbound ${slotFind(cs, kind).owner.cs}: calls for start-up about ${hhmm((e ? e.tm : tr.depM + slotH0()) - 6)}Z, at least 20 minutes after it is on stand.${e && e.hold ? ' Held: it will stay on stand when it turns round.' : ''}`;

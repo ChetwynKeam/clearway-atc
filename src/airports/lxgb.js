@@ -289,3 +289,12 @@ const AD_SITE = {
 };
 AD_SITE.aprons = [AD_SITE.civil, AD_SITE.north, AD_SITE.south]; AD_SITE.shoulder = [196, 1690]; AD_SITE.serviceRoad = true;
 AD_SITE.buildings = [{ pts: AD_SITE.terminal, h: 14, roof: 'terminal' }, { pts: AD_SITE.atc, h: 18, roof: 'atc' }, ...AD_SITE.hangars.map(p => ({ pts: p, h: 12, roof: 'hangar' }))]; AD_SITE.roads = [AD_SITE.roadN, AD_SITE.roadS];
+// RAF hangars on the south apron (AD_SITE.hangars 1 and 2, traced from chart D1): aircraft stored or in maintenance at the
+// start of a session, towed out to a south stand an hour before departure. RAF aircraft (not the Voyager, too big), and
+// visiting light aircraft staying for the day. [in, door] are (m, off): a point inside, and the
+// apron outside the door; node is the apron taxilane node the tug joins. The third hangar has no apron access and isn't used.
+const hangarFits = ac => (isMil(ac) && ac.t !== 'A332') || (ac.depM == null && isBiz(ac));
+APT.hangars = [
+  { id: 'H1', name: 'hangar 1', in: [988, -158], door: [1030, -150], node: 'SC', to: ['south'], fits: hangarFits },
+  { id: 'H2', name: 'hangar 2', in: [1132, -228], door: [1142, -190], node: 'LS2', to: ['south'], fits: hangarFits }
+];

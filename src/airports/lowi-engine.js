@@ -342,3 +342,9 @@ const APT = {
   }
   }
 };
+// the hangars on the hangar apron, south of the GA stands: aircraft stored or in maintenance at the start of a session,
+// towed out an hour before departure (business and GA to stands 51-53 if free, airliners to the main apron)
+APT.hangars = [[956, 'Q2'], [1070, 'LH'], [1145, 'LH'], [1218, 'LH']].map(([m, node], i) => ({
+  id: 'H' + (i + 1), name: 'hangar ' + (i + 1), in: [m, -372], door: [m, -334], node, fits: ac => ac.perf.wake !== 'H',
+  to: ac => ac.perf.wake === 'L' || /^(C56X|C68A|GLF|GL[57]|CL|LJ|E55|FA|C25|PC)/.test(ac.t) ? ['north', 'civil'] : ['civil']
+}));
