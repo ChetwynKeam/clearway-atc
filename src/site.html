@@ -767,12 +767,19 @@
                 <option value="real" selected>Timetable only</option>
                 <option value="summer">Timetable plus charters and bizjets</option>
                 <option value="event">VATSIM-style event (busy)</option>
+                <option value="custom">Custom · choose how many flights</option>
               </optgroup>
               <optgroup label="Guided training" id="exGroup"></optgroup>
             </select></label>
           <label><span class="lbl">Weather</span><select id="wxPreset"></select></label>
           <label><span class="lbl">Day</span><select id="daySel"></select></label>
           <label><span class="lbl">Start time</span><select id="hourSel"></select></label>
+          <div class="custombox" id="customBox" hidden>
+            <label><span class="lbl">Arrivals</span><input type="number" id="cn_arr" min="0" max="60" step="1" inputmode="numeric"></label>
+            <label><span class="lbl">Departures</span><input type="number" id="cn_dep" min="0" max="60" step="1" inputmode="numeric"></label>
+            <label><span class="lbl">GA</span><input type="number" id="cn_ga" min="0" max="60" step="1" inputmode="numeric"></label>
+            <button type="button" class="btn ghost" id="cnShuffle" title="Make a new set of callsigns, types and times">Shuffle</button>
+          </div>
           <label><span class="lbl">Emergencies</span><select id="emgSel"><option value="off">Off · routine flights only</option><option value="some" selected>Occasional · about every 20 minutes</option><option value="often">Frequent · about every 10 minutes</option></select></label>
         </div>
         <div class="slotlist" id="slotList" aria-live="polite"></div>
