@@ -172,7 +172,7 @@ async function cwRenderAccount(){
   $('cwWho').textContent = CW.ses.email;
   const done = /(checkout|card)=done/.test(location.search);
   if (!CW.ent || done) $('cwPlanBox').innerHTML = '<p class="cw-sub">Loading your plan…</p>';
-  await cwLoad(done);
+  await cwLoad(true);   // the account page always asks the server, so releases and plan changes show at once
   // just back from Stripe: the webhook can take a few seconds to land
   // a commission payment is back when that airport is owned; a plan when it is active
   const paying = (() => { try { return sessionStorage.getItem('cw-paying'); } catch(_) { return null; } })();
@@ -346,6 +346,7 @@ function cwDrawAdmin(list){
     if (a === 'declined' && (reply = prompt('Why can it not be built? The player sees this.', '')) === null) return;
     b.disabled = true; msg.textContent = 'Working…';
     try {
+      cwLS.set('cw-ent', null);   // the owner may also be the player: forget the cached account
       const r = await cwApi('admin', a === 'release' ? { action: 'release', id } : { action: 'status', id, status: a, ...(reply != null ? { reply } : {}) });
       msg.textContent = a !== 'release' ? 'Saved.' : r.paid ? 'Charged and released: it is on their account.' : 'Released, but the card could not be charged without the player. Their account now shows a Pay button; email them to let them know.';
       cwDrawAdmin(r.commissions);
