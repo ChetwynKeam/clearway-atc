@@ -1,0 +1,35 @@
+name: Website screenshots
+# Plays a short session at each airport in a headless browser, with the OpenStreetMap background loaded,
+# and publishes the pictures to the shots branch for the website to use (tools/shots/shots.cjs).
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['tools/shots/**', '.github/workflows/shots.yml']
+permissions:
+  contents: write
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Install Playwright
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null && npm i playwright@1.48.2 >/dev/null
+          npx playwright install --with-deps chromium
+      - name: Build and serve the site
+        run: |
+          python3 build.py
+          cd dist && (python3 -m http.server 8080 >/dev/null 2>&1 &) && sleep 2
+      - name: Take the screenshots
+        run: NODE_PATH=/tmp/pw/node_modules BASE=http://localhost:8080 OUT=out node tools/shots/shots.cjs
+      - name: Publish to the shots branch
+        run: |
+          cd out && ls -la
+          git init -q -b shots
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "Website screenshots from ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" shots
