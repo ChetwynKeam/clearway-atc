@@ -219,12 +219,14 @@ for (const [rw, I] of Object.entries(KJFK.ILS)) {
 
 // ── from the end of each STAR to the intermediate fix: a downwind and base laid out beside the final (hidden points,
 // the radar vectors a New York Approach controller would give), so an arrival with no instructions still gets there
+const FEED_ALT = {};
 function feeder(rw, from){
   const I = KJFK.ILS[rw], thr = THR[rw], out = norm(crsOf(rw) + 180), dIF = dist(...thr, ...WP[I.ifx].p);
   const f = WP[from].p, dx = f[0] - thr[0], dy = f[1] - thr[1], ux = Math.sin(out*D2R), uy = Math.cos(out*D2R);
   const along = dx*ux + dy*uy, right = dx*uy - dy*ux, s = right >= 0 ? 1 : -1;
   const pt = (a, l) => add(add(thr, out, a), out + 90, l);
-  const tag = `${rw}${s > 0 ? 'R' : 'L'}`, mk = (k, p, note) => { WP[tag + k] = { id: tag + k, p, hide: true, note }; return tag + k; };
+  // the altitudes New York Approach gives on them: the downwind 1,000 ft above the intermediate fix, the base at its altitude
+  const tag = `${rw}${s > 0 ? 'R' : 'L'}`, mk = (k, p, note) => { WP[tag + k] = { id: tag + k, p, hide: true, note }; FEED_ALT[tag + k] = I.ifAlt + (k === 'B' ? 0 : 1000); return tag + k; };
   if (along > dIF + 3 && Math.abs(right) < 2.5) return [I.ifx];                    // already on the extended centreline
   const base = mk('B', pt(dIF + 4, s*2.5), `base for ${rw}`);
   if (along > dIF + 3) return [base, I.ifx];
@@ -293,6 +295,7 @@ const windFAA = () => { const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3
 const altim = () => `altimeter ${S.wx.inhg.toFixed(2)}`;
 const visSM = v => v >= 9999 ? '10' : v >= 4800 ? String(Math.round(v/1609)) : String(Math.round(v/1609*4)/4).replace(/\.25$/, ' 1/4').replace(/\.5$/, ' 1/2').replace(/\.75$/, ' 3/4').replace(/^0 /, '');
 const APT = {
+  arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT },   // STAR expect-altitudes, then the downwind and base
   icao: 'KJFK', name: 'New York JFK', coordName: 'Kennedy', radarName: 'JFK', utcOff: -4,
   radar: [KJFK.UNITS.app.name, KJFK.UNITS.app.freq], depRadar: [KJFK.UNITS.dep.name, KJFK.UNITS.dep.freq],
   // two tower frequencies: 119.1 for 4R/22L and 13L/31R, 123.9 for 4L/22R and 13R/31L. Arrivals call the one for their runway.
