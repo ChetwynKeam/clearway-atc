@@ -371,6 +371,8 @@ textarea { background: #fff; border: 1px solid var(--line-2); border-radius: 4px
 .frame-bar .tabs { display: flex; gap: 2px; font-family: var(--font-label); font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .frame-bar .tabs > * { padding: 3px 10px; border-radius: 5px; }
 .frame-bar .tabs b { background: var(--accent-soft); color: var(--accent-2); }
+.frame-shot { display: block; background: #e9eef3; }
+.frame-shot img { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; }
 .frame-body { display: grid; grid-template-columns: minmax(0, 1fr) 280px; height: clamp(320px, 44vw, 560px); }
 .frame-body canvas { width: 100%; height: 100%; display: block; min-width: 0; }
 .frame-side { border-left: 1px solid var(--line); background: var(--bg-2); padding: 14px; display: flex; flex-direction: column; gap: 8px; font-family: var(--font-data); font-size: 11.5px; min-width: 0; }
@@ -436,6 +438,22 @@ a.ap:hover { border-color: var(--line-2); box-shadow: var(--shadow-2); transform
 .kv b { font-family: var(--font-data); font-weight: 500; color: var(--ink); margin-left: 5px; font-size: 12.5px; }
 
 /* academy teaser */
+.how { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 20px; counter-reset: h; }
+.how li { counter-increment: h; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px 22px 26px; box-shadow: var(--shadow-1); min-width: 0; }
+.how li::before { content: counter(h); width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: var(--brand); color: #fff; font-family: var(--font-head); font-weight: 700; margin-bottom: 16px; }
+.how b { display: block; font-family: var(--font-head); font-size: 18px; letter-spacing: -.01em; margin-bottom: 6px; }
+.how span { color: var(--ink-2); font-size: 15px; }
+.how span b { display: inline; font-size: inherit; margin: 0; }
+.shots { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; }
+.shots figure { margin: 0; min-width: 0; }
+.shots .wide { grid-column: 1 / -1; }
+.shots a { display: block; border-radius: 14px; overflow: hidden; border: 1px solid var(--line-2); box-shadow: var(--shadow-3); background: #e9eef3; }
+.shots img { display: block; width: 100%; height: auto; }
+.shots figcaption { margin-top: 12px; color: var(--ink-2); font-size: 15px; }
+.shots figcaption b { font-family: var(--font-head); color: var(--ink); margin-right: 8px; }
+.fa-shot img, .ap-shot img, .positions .pos .shot img { width: 100%; height: 100%; display: block; object-fit: cover; }
+@media (max-width: 1000px) { .how { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 640px) { .how, .shots { grid-template-columns: minmax(0,1fr); } }
 .academy { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 56px; align-items: start; }
 .academy h2 { font-size: clamp(32px, 3.8vw, 46px); margin: 12px 0 16px; }
 .academy p { color: var(--ink-2); margin: 0 0 24px; font-size: 17px; }
@@ -994,50 +1012,8 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         </div>
       </div>
       <div class="frame">
-        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl" data-only="LXGB">LXGB · Gibraltar Radar · 122.800</span><span class="ttl" data-only="LPMA">LPMA · Madeira Approach · 119.605</span><span class="ttl" data-only="EGLC">EGLC · Thames Director · 132.700</span><span class="ttl" data-only="LOWI">LOWI · Innsbruck Radar · 128.975</span><span class="ttl" data-only="KJFK">KJFK · New York Approach · 128.125</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
-        <div class="frame-body">
-          <canvas id="heroScope" aria-label="Animated radar picture"></canvas>
-          <div class="frame-side" aria-hidden="true" data-only="LPMA">
-            <div class="fs-h"><span>ATIS</span><b>D</b><span class="r">RWY 05</span></div>
-            <div class="fs-m">LPMA 04012KT 9999 FEW025 22/16 Q1019</div>
-            <div class="fs-strip arr"><b>TAP1681</b><span>LPPT › LPMA</span><em>VOR 05</em></div>
-            <div class="fs-strip dep"><b>EZY8712</b><span>LPMA › EGKK</span><em>TAXI C</em></div>
-            <div class="fs-strip arr"><b>EXS1291</b><span>EGCC › LPMA</span><em>PILIM</em></div>
-            <div class="fs-strip dep need"><b>TOM4407</b><span>LPMA › EGBB</span><em>◆ Start-up</em></div>
-          </div>
-          <div class="frame-side" aria-hidden="true" data-only="EGLC">
-            <div class="fs-h"><span>ATIS</span><b>H</b><span class="r">RWY 27</span></div>
-            <div class="fs-m">EGLC 23011KT 9999 FEW030 SCT045 17/10 Q1014</div>
-            <div class="fs-strip arr"><b>KLC983</b><span>EHAM › EGLC</span><em>ILS 27</em></div>
-            <div class="fs-strip dep"><b>CFE8711</b><span>EGLC › EGPH</span><em>HOLD M</em></div>
-            <div class="fs-strip arr"><b>DLH926</b><span>EDDF › EGLC</span><em>JACKO</em></div>
-            <div class="fs-strip dep need"><b>SWR459</b><span>EGLC › LSZH</span><em>◆ Start-up</em></div>
-          </div>
-          <div class="frame-side" aria-hidden="true" data-only="LOWI">
-            <div class="fs-h"><span>ATIS</span><b>M</b><span class="r">RWY 26 · DEP 08</span></div>
-            <div class="fs-m">LOWI 25006KT 9999 FEW060 17/07 Q1018</div>
-            <div class="fs-strip arr"><b>AUA903</b><span>LOWW › LOWI</span><em>LOC E 26</em></div>
-            <div class="fs-strip dep"><b>EWG7943</b><span>LOWI › EDDH</span><em>TAXI A</em></div>
-            <div class="fs-strip arr"><b>EZY8341</b><span>EGKK › LOWI</span><em>RTT</em></div>
-            <div class="fs-strip dep need"><b>AUA904</b><span>LOWI › LOWW</span><em>◆ Start-up</em></div>
-          </div>
-          <div class="frame-side" aria-hidden="true" data-only="KJFK">
-            <div class="fs-h"><span>ATIS</span><b>N</b><span class="r">LDG 22L · DEP 22R</span></div>
-            <div class="fs-m">KJFK 21012KT 10SM FEW040 SCT250 22/13 A2997</div>
-            <div class="fs-strip arr"><b>JBU702</b><span>KBOS › KJFK</span><em>ILS 22L</em></div>
-            <div class="fs-strip dep"><b>JBU101</b><span>KJFK › KBOS</span><em>RELEASE</em></div>
-            <div class="fs-strip arr"><b>AAL1</b><span>KLAX › KJFK</span><em>HOLD SHORT 22R</em></div>
-            <div class="fs-strip dep need"><b>DAL1103</b><span>KJFK › KATL</span><em>◆ Ready to push</em></div>
-          </div>
-          <div class="frame-side" aria-hidden="true" data-only="LXGB">
-            <div class="fs-h"><span>ATIS</span><b>K</b><span class="r">RWY 27</span></div>
-            <div class="fs-m">LXGB 26008KT 9999 FEW030 22/15 Q1018</div>
-            <div class="fs-strip arr"><b>BAW492</b><span>EGLL › LXGB</span><em>SRA 27</em></div>
-            <div class="fs-strip dep"><b>EZY8902</b><span>LXGB › EGKK</span><em>TAXI E</em></div>
-            <div class="fs-strip arr"><b>RAM1472</b><span>GMTT › LXGB</span><em>FL080</em></div>
-            <div class="fs-strip dep need"><b>EXS97K</b><span>LXGB › EGCC</span><em>◆ Start-up</em></div>
-          </div>
-        </div>
+        <div class="frame-bar"><span class="dots"><i></i><i></i><i></i></span><span class="ttl">KJFK · New York Approach and Kennedy Tower</span><span class="tabs"><b>Live</b><span>Street map</span></span></div>
+        <a class="frame-shot" href="shots/kjfk-console.jpg" target="_blank" rel="noopener"><img src="shots/kjfk-console.jpg" width="1600" height="960" alt="The Clearway console during a session at New York JFK: the approach radar over the OpenStreetMap street map of New York, the selected arrival cleared to land on 22L, and the flight progress strips"></a>
       </div>
     </div>
     <div class="wrap"><div class="stats">
@@ -1050,8 +1026,35 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 
   <div class="section"><div class="wrap">
     <div class="section-head">
+      <div><div class="eyebrow">How it works</div><h2>Open a position and work the traffic.</h2></div>
+      <p>You are the approach, tower and ground controller at once. The crews fly what you clear, and they call you when they need something.</p>
+    </div>
+    <ol class="how">
+      <li><b>Pick an airport and an hour</b><span>Choose any day and hour from the airline timetable, or Live now to work the flights that are really in the air. Add charters for a busier session, and choose how often emergencies happen.</span></li>
+      <li><b>Set the weather</b><span>Use the live METAR, paste your own or pick a scenario. The wind sets the runway in use, and low cloud, crosswind and turbulence change what the crews can accept.</span></li>
+      <li><b>Give the clearances</b><span>Click the buttons on a flight, type short commands like <code>JBU702 APP</code>, or hold to talk and say them. Descend, sequence, clear to land, push, taxi, get the release, clear for take-off and hand off. Flights waiting on you are marked <b class="need-dot">◆</b>.</span></li>
+      <li><b>Keep it safe and get scored</b><span>Keep aircraft 3 NM or 1,000 ft apart, keep the runway clear and answer every call. Separation losses, go-arounds and late clearances cost points, and every session goes into your logbook.</span></li>
+    </ol>
+  </div></div>
+
+  <div class="section alt"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Inside the console</div><h2>A busy hour at New York JFK.</h2></div>
+      <p>Every picture here is taken straight from the simulator during a timetable session at JFK, on the OpenStreetMap street map that sits under every view.</p>
+    </div>
+    <div class="shots">
+      <figure><a href="shots/kjfk-tower.jpg" target="_blank" rel="noopener"><img loading="lazy" src="shots/kjfk-tower.jpg" width="1216" height="772" alt="JFK's four runways and taxiways drawn over the street map, with departures pushing back and an arrival taxiing in"></a><figcaption><b>Tower</b>Four runways over Jamaica Bay. Arrivals on 22L cross 22R only when you clear them.</figcaption></figure>
+      <figure><a href="shots/kjfk-ground.jpg" target="_blank" rel="noopener"><img loading="lazy" src="shots/kjfk-ground.jpg" width="1216" height="772" alt="Close-up of the JFK terminals with every stand, taxiway and holding point labelled"></a><figcaption><b>Ground</b>Every stand, taxiway and holding point, with taxi routes over the real taxiway network.</figcaption></figure>
+      <figure class="wide"><a href="shots/kjfk-strips.jpg" target="_blank" rel="noopener"><img loading="lazy" src="shots/kjfk-strips.jpg" width="1960" height="540" alt="The pop-out strip board with bays for pending, approach and radar, runway, holding points, ground movement, stands and transferred flights"></a><figcaption><b>Strip board</b>Pop the flight progress strips out to a second window, sorted into bays like a real tower: pending, approach, runway, holding points, ground, stands and transferred.</figcaption></figure>
+      <figure><a href="shots/kjfk-flights.jpg" target="_blank" rel="noopener"><img loading="lazy" src="shots/kjfk-flights.jpg" width="1300" height="720" alt="The pop-out flights board listing arrivals and departures with times, stands and status"></a><figcaption><b>Flights board</b>The day's arrivals and departures with their stands, in a window of its own.</figcaption></figure>
+      <figure><a href="shots/kjfk-console-dark.jpg" target="_blank" rel="noopener"><img loading="lazy" src="shots/kjfk-console-dark.jpg" width="1600" height="960" alt="The console in the dark theme, with the approach radar over a dimmed street map"></a><figcaption><b>Night mode</b>Switch the whole console to dark for a radar-room look.</figcaption></figure>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
       <div><div class="eyebrow">The network</div><h2>Choose your airport.</h2></div>
-      <p>Each airport is built separately from its own aerodrome charts, procedures and local rules. Gibraltar and Madeira are open now. The others are on the roadmap, starting with the airports that are hardest to work.</p>
+      <p>Each airport is built separately from its own aerodrome charts, procedures and local rules. Gibraltar, Madeira, London City, Innsbruck and New York JFK are open now. The rest are on the roadmap, and you can vote for the next one or commission it.</p>
     </div>
     <div class="apgrid" id="apFeatured"></div>
     <div class="more"><a class="btn" href="#airports">View all airports</a></div>
@@ -1063,14 +1066,14 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <p>One console covers the whole job, from start-up to the handoff to the next unit, with the same tools at every airport.</p>
     </div>
     <div class="features">
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26h24M8 26V10h16v16"/><path d="M12 14h3M17 14h3M12 19h3M17 19h3"/></svg><h3>Chart-accurate aerodromes</h3><p>Runways, taxiways, holding points, stands, guard lights and hot spots are mapped to scale from OpenStreetMap and checked against the aerodrome chart, over a live street map. Taxi routing runs over the real taxiway network.</p></div>
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="16" cy="16" r="12"/><circle cx="16" cy="16" r="6"/><path d="M16 16l8-8"/></svg><h3>One map, radar to stand</h3><p>Scroll from the approach radar down to a single stand on one zoomable map. Zoom out and every flight is still there, flying its route from origin to destination.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26h24M8 26V10h16v16"/><path d="M12 14h3M17 14h3M12 19h3M17 19h3"/></svg><h3>Chart-accurate aerodromes</h3><p>Runways, taxiways, holding points, stands, guard lights and hot spots are mapped to scale from OpenStreetMap and checked against the aerodrome chart, over a live street map. Taxi routing runs over the real taxiway network. Arrivals vacate at the real exits and stop at the holding point until you give them a taxi clearance.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="16" cy="16" r="12"/><circle cx="16" cy="16" r="6"/><path d="M16 16l8-8"/></svg><h3>One map, radar to stand</h3><p>Scroll from the approach radar down to a single stand on one zoomable map. Aircraft bank into their turns at realistic rates, fly curved RNP approaches along the arcs, and keep flying their route from origin to destination when they leave you.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 22c4-3 8-3 12 0s8 3 12 0M4 15c4-3 8-3 12 0s8 3 12 0"/><path d="M8 8h16" stroke-dasharray="2 3"/></svg><h3>Weather that matters</h3><p>Use the live METAR, refreshed every 30 minutes, paste your own or pick a scenario. A flashing ATIS warning tells you when it changes. Wind sets the runway, crosswind and turbulence limits make crews refuse approaches, and low cloud forces holds and diversions.</p></div>
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 9h22M5 16h16M5 23h19"/><circle cx="26" cy="16" r="2"/></svg><h3>A radio that sounds real</h3><p>Every clearance is spoken in standard phraseology with airline telephony, and crews read it back with squelch and static. Crews ask you to say again, two stations block each other, and the full ATIS is there to read. Hold to talk to give clearances by voice.</p></div>
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="6" width="22" height="20" rx="2"/><path d="M5 12h22M11 6v20"/></svg><h3>Flight progress strips</h3><p>Paper-style strips sort the flights waiting on you to the top. Click a strip for push-back and taxi pop-outs that preview the route on the map before you clear it. A Flights board lists the day's arrivals and departures.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 9h22M5 16h16M5 23h19"/><circle cx="26" cy="16" r="2"/></svg><h3>A radio that sounds real</h3><p>Every clearance is spoken in standard phraseology with airline telephony, and crews read it back with squelch and static. Crews ask you to say again, two stations block each other, and the full ATIS is there to read. Hold to talk to give clearances by voice: the command box shows what it hears as you speak, and only the pilot’s reply is played back.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="6" width="22" height="20" rx="2"/><path d="M5 12h22M11 6v20"/></svg><h3>Flight progress strips</h3><p>Paper-style strips sort the flights waiting on you to the top. Click a strip for push-back and taxi pop-outs that preview the route on the map before you clear it. Pop the strips out into a strip board on a second screen, and the Flights board too, with every stand.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6h14l6 6v14H6z"/><path d="M20 6v6h6M10 17h12M10 21h8"/></svg><h3>Academy and scoring</h3><p>A written guide for each airport, step-by-step exercises with an on-scope coach, and a score that counts separation, late road closures and airspace infringements.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M16 4l13 23H3z"/><path d="M16 13v6M16 23v.5"/></svg><h3>Emergencies and surprises</h3><p>MAYDAYs, medical diversions, bird strikes, debris closing the runway, a pedestrian over the barrier on short final and windshear reports in the levanter. Choose how often things go wrong.</p></div>
-      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Coordination with the next unit</h3><p>Departures fly named routes and need a release on the landline before take-off: from Sevilla or Casablanca at Gibraltar, from Lisboa at Madeira, from London Control at London City. Releases take time and expire, and each flight is handed on to the right frequency.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h5l2 6-3 2a15 15 0 0 0 8 8l2-3 6 2v5a2 2 0 0 1-2 2A21 21 0 0 1 5 7a2 2 0 0 1 2-2z"/></svg><h3>Coordination with the next unit</h3><p>Departures fly named routes and need a release on the landline before take-off: from Sevilla or Casablanca at Gibraltar, Lisboa at Madeira, London Control at London City, and New York Center for JFK’s busy routes. Releases take time and expire, and each flight is handed on to the right frequency.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 26V6M6 26h20"/><path d="M10 21l5-6 4 3 6-8"/></svg><h3>Career logbook, anywhere</h3><p>One logbook for every airport: your hours on frequency, score history and badges, with new ones to earn at each airport. The console reshapes itself for phones and tablets, with the scope on top and a tab bar for the panels.</p></div>
     </div>
   </div></div>
@@ -1087,7 +1090,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </div></div>
   <div class="section feat-ap" data-apt="KJFK"><div class="wrap">
     <div class="fa-grid">
-      <div class="fa-shot"><canvas data-thumb="twr" aria-label="New York JFK tower display"></canvas><span class="fa-tag">LIVE · KJFK TOWER</span></div>
+      <div class="fa-shot"><img loading="lazy" src="shots/kjfk-tower.jpg" width="1216" height="772" alt="New York JFK in the simulator, over the street map"><span class="fa-tag">LIVE · KJFK TOWER</span></div>
       <div>
         <div class="eyebrow">New airport</div>
         <h2>New York JFK, four runways on Jamaica Bay.</h2>
@@ -1099,7 +1102,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </div></div>
   <div class="section feat-ap" data-apt="LOWI"><div class="wrap">
     <div class="fa-grid">
-      <div class="fa-shot"><canvas data-thumb="twr" aria-label="Innsbruck tower display"></canvas><span class="fa-tag">LIVE · LOWI TOWER</span></div>
+      <div class="fa-shot"><img loading="lazy" src="shots/lowi-tower.jpg" width="1216" height="772" alt="Innsbruck in the simulator, over the street map"><span class="fa-tag">LIVE · LOWI TOWER</span></div>
       <div>
         <div class="eyebrow">New airport</div>
         <h2>Innsbruck, at the bottom of an Alpine valley.</h2>
@@ -1111,7 +1114,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </div></div>
   <div class="section feat-ap" data-apt="EGLC"><div class="wrap">
     <div class="fa-grid">
-      <div class="fa-shot"><canvas data-thumb="twr" aria-label="London City tower display"></canvas><span class="fa-tag">LIVE · EGLC TOWER</span></div>
+      <div class="fa-shot"><img loading="lazy" src="shots/eglc-tower.jpg" width="1216" height="772" alt="London City in the simulator, over the street map"><span class="fa-tag">LIVE · EGLC TOWER</span></div>
       <div>
         <div class="eyebrow">New airport</div>
         <h2>London City, where everything comes down steep.</h2>
@@ -1123,7 +1126,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </div></div>
   <div class="section feat-ap" data-apt="LPMA"><div class="wrap">
     <div class="fa-grid">
-      <div class="fa-shot"><canvas data-thumb="twr" aria-label="Madeira tower display"></canvas><span class="fa-tag">LIVE · LPMA TOWER</span></div>
+      <div class="fa-shot"><img loading="lazy" src="shots/lpma-tower.jpg" width="1216" height="772" alt="Madeira in the simulator, over the street map"><span class="fa-tag">LIVE · LPMA TOWER</span></div>
       <div>
         <div class="eyebrow">New airport</div>
         <h2>Madeira, where the wind decides.</h2>
@@ -1135,7 +1138,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </div></div>
   <div class="section feat-ap" data-apt="LXGB"><div class="wrap">
     <div class="fa-grid">
-      <div class="fa-shot"><canvas data-thumb="twr" aria-label="Gibraltar tower display"></canvas><span class="fa-tag">LIVE · LXGB TOWER</span></div>
+      <div class="fa-shot"><img loading="lazy" src="shots/lxgb-tower.jpg" width="1216" height="772" alt="Gibraltar in the simulator, over the street map"><span class="fa-tag">LIVE · LXGB TOWER</span></div>
       <div>
         <div class="eyebrow">Featured airport</div>
         <h2>Gibraltar, where a road crosses the runway.</h2>
@@ -1230,7 +1233,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <div class="kv"><span>Radar <b>122.800</b></span><span>Tower <b>131.200</b></span><span>TACAN <b>GBR 83X</b></span><span>TA <b>6000 ft</b></span><span>AIRAC <b>UK Mil AIP AD 2</b></span></div>
           <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
         </div>
-        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="Gibraltar aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+        <div class="ap-shot"><img loading="lazy" src="shots/lxgb-tower.jpg" width="1216" height="772" alt="Gibraltar aerodrome in the simulator, over the street map"><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
       </div>
     </div>
     <div class="wrap"><div class="facts">
@@ -1264,9 +1267,9 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <p>Gibraltar Radar and Gibraltar Tower are combined on one position. One map does it all: scroll out for the approach radar picture, scroll in for the runway and the stands. Every aircraft is the same object at every zoom.</p>
     </div>
     <div class="positions">
-      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Radar display"></canvas></div><div class="body"><div class="freq">GIBRALTAR RADAR · 122.8</div><h3>Approach and departure</h3><p>Arrivals call at 50 NM via PIMOS, LINTO or Tetouan. Descend them, hold them at UPMUP or ODLUK, vector them into the SRA and keep them 3 NM or 1,000 ft apart. Route departures out and hand them to Sevilla or Casablanca.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">GIBRALTAR TOWER · 131.2</div><h3>Tower</h3><p>Clear arrivals to land once the road is shut. Line departures up and backtrack them along the runway to the turning circles, since nothing over 17 tonnes may turn on the runway itself. Then clear them for take-off.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">GROUND MOVEMENT · ON TOWER</div><h3>Ground</h3><p>Approve start-up and push, taxi to the holding points with real routings, hold aircraft in position and sequence them around the HS1 hot spot. At night the edge lights, guard lights and floodlit apron are all drawn.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lxgb-radar.jpg" width="1216" height="772" alt="Gibraltar approach radar in the simulator"></div><div class="body"><div class="freq">GIBRALTAR RADAR · 122.8</div><h3>Approach and departure</h3><p>Arrivals call at 50 NM via PIMOS, LINTO or Tetouan. Descend them, hold them at UPMUP or ODLUK, vector them into the SRA and keep them 3 NM or 1,000 ft apart. Route departures out and hand them to Sevilla or Casablanca.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lxgb-runway.jpg" width="1216" height="772" alt="Gibraltar runway in the simulator"></div><div class="body"><div class="freq">GIBRALTAR TOWER · 131.2</div><h3>Tower</h3><p>Clear arrivals to land once the road is shut. Line departures up and backtrack them along the runway to the turning circles, since nothing over 17 tonnes may turn on the runway itself. Then clear them for take-off.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lxgb-ground.jpg" width="1216" height="772" alt="Gibraltar apron and stands in the simulator"></div><div class="body"><div class="freq">GROUND MOVEMENT · ON TOWER</div><h3>Ground</h3><p>Approve start-up and push, taxi to the holding points with real routings, hold aircraft in position and sequence them around the HS1 hot spot. At night the edge lights, guard lights and floodlit apron are all drawn.</p></div></div>
     </div>
   </div></div>
 
@@ -1319,7 +1322,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <div class="kv"><span>Approach <b>119.605</b></span><span>Tower <b>124.660</b></span><span>DVOR <b>FUN 112.2</b></span><span>TA <b>5000 ft</b></span><span>AIRAC <b>AIP Portugal AD 2</b></span></div>
           <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
         </div>
-        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="Madeira aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+        <div class="ap-shot"><img loading="lazy" src="shots/lpma-tower.jpg" width="1216" height="772" alt="Madeira aerodrome in the simulator, over the street map"><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
       </div>
     </div>
     <div class="wrap"><div class="facts">
@@ -1353,9 +1356,9 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <p>Madeira Approach and Madeira Tower are combined on one position. Scroll out for the TMA and Porto Santo, and scroll in for the runway on its columns, the apron and the stands.</p>
     </div>
     <div class="positions">
-      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">MADEIRA APPROACH · 119.605</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards PILIM. Descend them, hold them when the wind is over the limits, and clear the VOR approach. Keep departures on their SIDs, away from the island, and hand them to Lisboa.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">MADEIRA TOWER · 124.660</div><h3>Tower</h3><p>Check the anemometers before every clearance. Clear arrivals to land as they come round Rosário, and backtrack departures to the turn pad before you clear them for take-off.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">GROUND MOVEMENT · ON TOWER</div><h3>Ground</h3><p>Approve start-up and push onto taxilane Alpha, then taxi departures to Charlie for runway 05 or Bravo for 23. Arrivals vacate at the same two taxiways and taxi to their stand on apron A.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lpma-radar.jpg" width="1216" height="772" alt="Madeira approach radar in the simulator"></div><div class="body"><div class="freq">MADEIRA APPROACH · 119.605</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards PILIM. Descend them, hold them when the wind is over the limits, and clear the VOR approach. Keep departures on their SIDs, away from the island, and hand them to Lisboa.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lpma-runway.jpg" width="1216" height="772" alt="Madeira runway in the simulator"></div><div class="body"><div class="freq">MADEIRA TOWER · 124.660</div><h3>Tower</h3><p>Check the anemometers before every clearance. Clear arrivals to land as they come round Rosário, and backtrack departures to the turn pad before you clear them for take-off.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lpma-ground.jpg" width="1216" height="772" alt="Madeira apron and stands in the simulator"></div><div class="body"><div class="freq">GROUND MOVEMENT · ON TOWER</div><h3>Ground</h3><p>Approve start-up and push onto taxilane Alpha, then taxi departures to Charlie for runway 05 or Bravo for 23. Arrivals vacate at the same two taxiways and taxi to their stand on apron A.</p></div></div>
     </div>
   </div></div>
 
@@ -1406,7 +1409,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <div class="kv"><span>Thames Director <b>132.700</b></span><span>City Tower <b>118.080</b></span><span>ILS <b>5.5°</b></span><span>TA <b>6000 ft</b></span><span>AIRAC <b>UK AIP AD 2 EGLC</b></span></div>
           <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
         </div>
-        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="London City aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+        <div class="ap-shot"><img loading="lazy" src="shots/eglc-tower.jpg" width="1216" height="772" alt="London City aerodrome in the simulator, over the street map"><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
       </div>
     </div>
     <div class="wrap"><div class="facts">
@@ -1440,9 +1443,9 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <p>Thames Director and City Tower are combined on one position. Scroll out for the London TMA, the holds and the estuary, and scroll in for the runway between the docks, taxiway T and the stands.</p>
     </div>
     <div class="positions">
-      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">THAMES DIRECTOR · 132.700</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards JACKO or GODLU. Descend them, hold them when the weather is below the ILS minima, and clear the approach. Keep departures at 3,000 ft on their SIDs and hand them to London Control.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">CITY TOWER · 118.080</div><h3>Tower</h3><p>Clear arrivals to land before four miles, get each departure's release from London, and line them up at Alpha or Mike for a full-length take-off.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">CITY GROUND · 121.830</div><h3>Ground</h3><p>Approve start-up and push onto taxiway T, then taxi departures to Mike for runway 27 or Alpha for 09. Arrivals vacate at the first exit ahead and taxi along T to their stand.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/eglc-radar.jpg" width="1216" height="772" alt="London City approach radar in the simulator"></div><div class="body"><div class="freq">THAMES DIRECTOR · 132.700</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards JACKO or GODLU. Descend them, hold them when the weather is below the ILS minima, and clear the approach. Keep departures at 3,000 ft on their SIDs and hand them to London Control.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/eglc-runway.jpg" width="1216" height="772" alt="London City runway in the simulator"></div><div class="body"><div class="freq">CITY TOWER · 118.080</div><h3>Tower</h3><p>Clear arrivals to land before four miles, get each departure's release from London, and line them up at Alpha or Mike for a full-length take-off.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/eglc-ground.jpg" width="1216" height="772" alt="London City apron and stands in the simulator"></div><div class="body"><div class="freq">CITY GROUND · 121.830</div><h3>Ground</h3><p>Approve start-up and push onto taxiway T, then taxi departures to Mike for runway 27 or Alpha for 09. Arrivals vacate at the first exit ahead and taxi along T to their stand.</p></div></div>
     </div>
   </div></div>
 
@@ -1493,7 +1496,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <div class="kv"><span>NY Approach <b>128.125</b></span><span>Kennedy Tower <b>119.1 / 123.9</b></span><span>Ground <b>121.9</b></span><span>TA <b>18000 ft</b></span><span>Charts <b>FAA d-TPP</b></span></div>
           <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
         </div>
-        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="New York JFK aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+        <div class="ap-shot"><img loading="lazy" src="shots/kjfk-tower.jpg" width="1216" height="772" alt="New York JFK aerodrome in the simulator, over the street map"><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
       </div>
     </div>
     <div class="wrap"><div class="facts">
@@ -1527,9 +1530,9 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <p>New York Approach, Kennedy Tower and Kennedy Ground are combined on one position. Scroll out for the New York area, from Newark and LaGuardia to Long Island, and scroll in for the four runways, the taxiways and the gates.</p>
     </div>
     <div class="positions">
-      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">NEW YORK APPROACH · 128.125</div><h3>Approach and departure</h3><p>Arrivals check in on their arrival. Descend them, keep three miles between them on final, and clear the ILS. Departures check in with New York Departure on 135.9 climbing to 5,000 ft: climb them and hand them to New York Center.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">KENNEDY TOWER · 119.1 / 123.9</div><h3>Tower</h3><p>Clear arrivals to land on one runway and departures off the other. 119.1 works 4R/22L and 13L/31R, 123.9 works 4L/22R and 13R/31L. Cross arrivals over the departure runway between take-offs.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">KENNEDY GROUND · 121.9</div><h3>Ground</h3><p>Clear each departure with its route and push it off the gate, then taxi it to the departure end of the runway by the taxiways in order. Arrivals turn off on high-speed exits and taxi to their airline's terminal: 1, 4, 5, 7 or 8.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/kjfk-radar.jpg" width="1216" height="772" alt="New York JFK approach radar in the simulator"></div><div class="body"><div class="freq">NEW YORK APPROACH · 128.125</div><h3>Approach and departure</h3><p>Arrivals check in on their arrival. Descend them, keep three miles between them on final, and clear the ILS. Departures check in with New York Departure on 135.9 climbing to 5,000 ft: climb them and hand them to New York Center.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/kjfk-runway.jpg" width="1216" height="772" alt="New York JFK runway in the simulator"></div><div class="body"><div class="freq">KENNEDY TOWER · 119.1 / 123.9</div><h3>Tower</h3><p>Clear arrivals to land on one runway and departures off the other. 119.1 works 4R/22L and 13L/31R, 123.9 works 4L/22R and 13R/31L. Cross arrivals over the departure runway between take-offs.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/kjfk-ground.jpg" width="1216" height="772" alt="New York JFK apron and stands in the simulator"></div><div class="body"><div class="freq">KENNEDY GROUND · 121.9</div><h3>Ground</h3><p>Clear each departure with its route and push it off the gate, then taxi it to the departure end of the runway by the taxiways in order. Arrivals turn off on high-speed exits and taxi to their airline's terminal: 1, 4, 5, 7 or 8.</p></div></div>
     </div>
   </div></div>
 
@@ -1581,7 +1584,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <div class="kv"><span>Innsbruck Radar <b>128.975</b></span><span>Innsbruck Tower <b>120.100</b></span><span>LOC/DME East <b>3.77°</b></span><span>TA <b>10000 ft</b></span><span>AIRAC <b>AIP Austria AD 2 LOWI</b></span></div>
           <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
         </div>
-        <div class="ap-shot"><canvas data-thumb="gnd" aria-label="Innsbruck aerodrome"></canvas><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+        <div class="ap-shot"><img loading="lazy" src="shots/lowi-tower.jpg" width="1216" height="772" alt="Innsbruck aerodrome in the simulator, over the street map"><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
       </div>
     </div>
     <div class="wrap"><div class="facts">
@@ -1615,9 +1618,9 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <p>Innsbruck Radar and Tower are combined on one position. Scroll out for the valley, the mountains and the minimum vectoring altitudes, and scroll in for the runway, taxiway Alpha and the stands.</p>
     </div>
     <div class="positions">
-      <div class="pos"><div class="shot"><canvas data-thumb="app" aria-label="Approach radar display"></canvas></div><div class="body"><div class="freq">INNSBRUCK RADAR · 128.975</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards RTT. Descend them to 9,500 ft, hold them when the weather is below minima, and clear the approach. Keep departures clear of the arrivals coming the other way, then hand them to Wien, München or Padova.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="twr" aria-label="Tower display"></canvas></div><div class="body"><div class="freq">INNSBRUCK TOWER · 120.100</div><h3>Tower</h3><p>Clear arrivals to land on 26, get each departure's release, and backtrack departures to the turn pad for a full-length take-off on 08, between arrivals.</p></div></div>
-      <div class="pos"><div class="shot"><canvas data-thumb="gnd" data-zoom="apron" aria-label="Ground movement display"></canvas></div><div class="body"><div class="freq">INNSBRUCK TOWER · 120.100</div><h3>Ground</h3><p>Approve start-up and push onto taxiway Alpha, then taxi departures to holding point Alpha for runway 08 or Bravo for 26. Arrivals vacate at Alpha or Bravo and taxi to the main apron.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lowi-radar.jpg" width="1216" height="772" alt="Innsbruck approach radar in the simulator"></div><div class="body"><div class="freq">INNSBRUCK RADAR · 128.975</div><h3>Approach and departure</h3><p>Arrivals call on their STAR towards RTT. Descend them to 9,500 ft, hold them when the weather is below minima, and clear the approach. Keep departures clear of the arrivals coming the other way, then hand them to Wien, München or Padova.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lowi-runway.jpg" width="1216" height="772" alt="Innsbruck runway in the simulator"></div><div class="body"><div class="freq">INNSBRUCK TOWER · 120.100</div><h3>Tower</h3><p>Clear arrivals to land on 26, get each departure's release, and backtrack departures to the turn pad for a full-length take-off on 08, between arrivals.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lowi-ground.jpg" width="1216" height="772" alt="Innsbruck apron and stands in the simulator"></div><div class="body"><div class="freq">INNSBRUCK TOWER · 120.100</div><h3>Ground</h3><p>Approve start-up and push onto taxiway Alpha, then taxi departures to holding point Alpha for runway 08 or Bravo for 26. Arrivals vacate at Alpha or Bravo and taxi to the main apron.</p></div></div>
     </div>
   </div></div>
 
@@ -7863,11 +7866,14 @@ const cwStatusOf = icao => (AIRPORTS_NET.find(a => a.icao === icao) || {}).statu
 function cwCanPlay(icao){
   if (!CW_ON) return true;
   const e = CW.ent; if (!e) return false;
+  if (e.owner) return true;   // the site owner opens every airport, in development too
   if ((e.owned || []).includes(icao)) return true;   // a commissioned airport is the player's whatever their plan
   if (!e.active) return false;
   if (cwStatusOf(icao) === 'dev') return !!e.early;
   return e.airports === '*' || e.airports.includes(icao);
 }
+// airports in development that this player may preview: the owner, and Foxtrot (early access) members
+const cwPreview = () => !!(CW_ON && CW.ent && (CW.ent.owner || (CW.ent.active && CW.ent.early)));
 // called by start(): opening a position needs a plan that includes this airport
 function cwGate(){ if (cwCanPlay(APT.icao)) return true; cwPaywall(); return false; }
 const cwHost = h => (IS_HOST ? '' : SITE[SITE_HOST]) + '#' + h;
@@ -7903,6 +7909,7 @@ function cwPaywall(){
 }
 function cwOnRoute(){
   const r = document.body.dataset.route, pay = $('cwPay');
+  if (r === 'airports' && cwPreview()) renderAirports();   // previews unlock once the plan has loaded
   if (r === 'sim' && CW_ON && !cwCanPlay(APT.icao) && !S.running) cwPaywall(); else if (pay) pay.hidden = true;
   if (r === 'pricing') cwRenderPricing();
   if (r === 'account') cwRenderAccount();
@@ -7963,7 +7970,10 @@ async function cwRenderAccount(){
   const want = (() => { try { const w = JSON.parse(sessionStorage.getItem('cw-want')); sessionStorage.removeItem('cw-want'); return w; } catch(_) { return null; } })();
   if (want && !e.active) return cwChoose(want.plan, want.early);
   const plan = CW_PLANS.find(p => p.k === e.plan);
-  if (!e.active) {
+  if (e.owner && !e.active) {
+    $('cwPlanBox').innerHTML = `<div class="cw-planrow"><div><span class="badge live">Owner</span><h3>Every airport</h3><p class="cw-sub">As the site owner you can open every airport without a plan, including airports still in development.</p></div>
+      <div class="cw-row"><a class="btn primary" href="#airports">Airports</a><a class="btn" href="#admin">Commissions</a></div></div>`;
+  } else if (!e.active) {
     $('cwPlanBox').innerHTML = `<p>${e.status === 'canceled' ? 'Your plan has ended.' : 'You have no plan yet.'} ${e.trial_used ? '' : `Every plan starts with a free ${CW_CFG.trial_days}-day trial of one airport of your choice.`}</p><div class="cw-row"><a class="btn primary" href="#pricing">See plans</a>${e.billing ? '<button class="btn" data-portal>Billing history</button>' : ''}</div>`;
   } else {
     const when = e.status === 'trialing' ? `Free trial until ${cwDate(e.trial_end)}${e.cancel_at ? ', then ends' : CW_OFF ? `, then ${cwOffer(e.plan)} a month ${cwOfferTerm().replace('your ', 'the ')} and ${cwPrice(e.plan)} after that` : ', then ' + cwPrice(e.plan) + ' a month'}`
@@ -7980,12 +7990,13 @@ async function cwRenderAccount(){
 }
 function cwRenderPicks(){
   const e = CW.ent, box = $('cwPickBox');
-  box.hidden = !(e && e.active);
+  box.hidden = !(e && (e.active || e.owner));
   if (box.hidden) return;
   const live = AIRPORTS_NET.filter(a => a.status === 'live'), dev = AIRPORTS_NET.filter(a => a.status === 'dev');
-  if (e.airports === '*') {
-    $('cwPickSub').textContent = 'Every airport is included in your plan.';
-    $('cwPicks').innerHTML = live.map(a => `<a class="cw-pick on" href="${SITE[a.icao] || '#'}#sim"><b>${a.icao}</b><span>${esc(a.name)}</span></a>`).join('');
+  if (e.airports === '*' || e.owner) {
+    const prev = cwPreview() ? dev.filter(a => SITE[a.icao]) : [];
+    $('cwPickSub').textContent = e.owner ? 'Every airport is open to you.' + (prev.length ? ' Airports in development are marked Preview.' : '') : 'Every airport is included in your plan.';
+    $('cwPicks').innerHTML = [...live, ...prev].map(a => `<a class="cw-pick on" href="${SITE[a.icao] || '#'}#sim"><b>${a.icao}</b><span>${esc(a.name)}${a.status === 'dev' ? ' · Preview' : ''}</span></a>`).join('');
   } else {
     let sel = [...e.airports];
     const draw = () => {
@@ -8151,6 +8162,7 @@ function cwRefreshUI(){
   const a = $('cwAccLink');
   if (a) { a.hidden = !CW_ON; a.textContent = CW.ses ? 'Account' : 'Sign in'; }
   if (document.body.dataset.route) cwOnRoute();
+  if (typeof renderAirports === 'function' && $('apGrid')) renderAirports();   // previews of airports in development
 }
 
 // ── feedback ──
@@ -8219,7 +8231,7 @@ function cwInit(){
   new MutationObserver(cwOnRoute).observe(document.body, { attributes: true, attributeFilter: ['data-route'] });
   cwRefreshUI();
   // load the plan, then re-check the console (a player may have arrived on #sim before it loaded)
-  if (CW_ON && CW.ses) cwLoad().then(() => { if (document.body.dataset.route === 'sim' || document.body.dataset.route === 'pricing') cwOnRoute(); });
+  if (CW_ON && CW.ses) cwLoad().then(() => { if (CW.ent && CW.ent.early || CW.ent && CW.ent.owner) renderAirports(); if (document.body.dataset.route === 'sim' || document.body.dataset.route === 'pricing') cwOnRoute(); });
 }
 setTimeout(cwInit, 0);
 
@@ -8319,11 +8331,13 @@ function rwyDiagram(ap){
   out.push('</svg>'); return out.join('');
 }
 function apCard(ap){
-  const live = ap.status === 'live', tag = live ? 'a' : 'div', rt = AP_ROUTE[ap.icao];
+  // an airport in development that is already built opens as a preview for the owner and early access members
+  const rt = AP_ROUTE[ap.icao], pv = ap.status === 'dev' && !!rt && typeof cwPreview === 'function' && cwPreview();
+  const live = ap.status === 'live' || pv, tag = live ? 'a' : 'div';
   const href = live ? '#' + rt : '';
   return `<${tag} class="ap${live ? '' : ' off'}"${live ? ` href="${href}"` : ''}>
     <div class="dia">${rwyDiagram(ap)}</div>
-    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
+    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${pv ? '<span class="badge new">Preview</span>' : ''}${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
     <h3>${esc(ap.name)}</h3><div class="ctry">${esc(ap.ctry)} · ${esc(ap.region)}</div><p>${esc(ap.blurb)}</p>
     <div class="ft">${ap.pos.map(p => `<span class="pos">${p}</span>`).join('')}<span>RWY ${ap.rwys.join(' · ')}</span><span class="diff" title="Difficulty ${ap.diff} of 5">${[1,2,3,4,5].map(i => `<i class="${i <= ap.diff ? 'on' : ''}"></i>`).join('')}</span></div></div>
   </${tag}>`;
@@ -8549,6 +8563,7 @@ const HERO_TRAFFIC = APT.site && APT.site.hero ? APT.site.hero() : APT.icao === 
   ['RYR8RK',  36.75, -5.95, 140, 420, 'rgba(60,75,95,.7)'], ['VLG41AM', 35.95, -6.20, 60, 430, 'rgba(60,75,95,.7)']
 ];
 function heroInit(){
+  if (!hero.cv) return false;   // the home page now shows a screenshot instead of the animated radar
   const r = hero.cv.getBoundingClientRect(); if (!r.width) return false;
   hero.base = document.createElement('canvas'); hero.base.style.width = r.width + 'px'; hero.base.style.height = r.height + 'px';
   // drawTo sizes from getBoundingClientRect, which a detached canvas lacks: borrow the hero canvas for the static map

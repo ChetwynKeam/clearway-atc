@@ -87,11 +87,14 @@ const cwStatusOf = icao => (AIRPORTS_NET.find(a => a.icao === icao) || {}).statu
 function cwCanPlay(icao){
   if (!CW_ON) return true;
   const e = CW.ent; if (!e) return false;
+  if (e.owner) return true;   // the site owner opens every airport, in development too
   if ((e.owned || []).includes(icao)) return true;   // a commissioned airport is the player's whatever their plan
   if (!e.active) return false;
   if (cwStatusOf(icao) === 'dev') return !!e.early;
   return e.airports === '*' || e.airports.includes(icao);
 }
+// airports in development that this player may preview: the owner, and Foxtrot (early access) members
+const cwPreview = () => !!(CW_ON && CW.ent && (CW.ent.owner || (CW.ent.active && CW.ent.early)));
 // called by start(): opening a position needs a plan that includes this airport
 function cwGate(){ if (cwCanPlay(APT.icao)) return true; cwPaywall(); return false; }
 const cwHost = h => (IS_HOST ? '' : SITE[SITE_HOST]) + '#' + h;
@@ -127,6 +130,7 @@ function cwPaywall(){
 }
 function cwOnRoute(){
   const r = document.body.dataset.route, pay = $('cwPay');
+  if (r === 'airports' && cwPreview()) renderAirports();   // previews unlock once the plan has loaded
   if (r === 'sim' && CW_ON && !cwCanPlay(APT.icao) && !S.running) cwPaywall(); else if (pay) pay.hidden = true;
   if (r === 'pricing') cwRenderPricing();
   if (r === 'account') cwRenderAccount();
@@ -187,7 +191,10 @@ async function cwRenderAccount(){
   const want = (() => { try { const w = JSON.parse(sessionStorage.getItem('cw-want')); sessionStorage.removeItem('cw-want'); return w; } catch(_) { return null; } })();
   if (want && !e.active) return cwChoose(want.plan, want.early);
   const plan = CW_PLANS.find(p => p.k === e.plan);
-  if (!e.active) {
+  if (e.owner && !e.active) {
+    $('cwPlanBox').innerHTML = `<div class="cw-planrow"><div><span class="badge live">Owner</span><h3>Every airport</h3><p class="cw-sub">As the site owner you can open every airport without a plan, including airports still in development.</p></div>
+      <div class="cw-row"><a class="btn primary" href="#airports">Airports</a><a class="btn" href="#admin">Commissions</a></div></div>`;
+  } else if (!e.active) {
     $('cwPlanBox').innerHTML = `<p>${e.status === 'canceled' ? 'Your plan has ended.' : 'You have no plan yet.'} ${e.trial_used ? '' : `Every plan starts with a free ${CW_CFG.trial_days}-day trial of one airport of your choice.`}</p><div class="cw-row"><a class="btn primary" href="#pricing">See plans</a>${e.billing ? '<button class="btn" data-portal>Billing history</button>' : ''}</div>`;
   } else {
     const when = e.status === 'trialing' ? `Free trial until ${cwDate(e.trial_end)}${e.cancel_at ? ', then ends' : CW_OFF ? `, then ${cwOffer(e.plan)} a month ${cwOfferTerm().replace('your ', 'the ')} and ${cwPrice(e.plan)} after that` : ', then ' + cwPrice(e.plan) + ' a month'}`
@@ -204,12 +211,13 @@ async function cwRenderAccount(){
 }
 function cwRenderPicks(){
   const e = CW.ent, box = $('cwPickBox');
-  box.hidden = !(e && e.active);
+  box.hidden = !(e && (e.active || e.owner));
   if (box.hidden) return;
   const live = AIRPORTS_NET.filter(a => a.status === 'live'), dev = AIRPORTS_NET.filter(a => a.status === 'dev');
-  if (e.airports === '*') {
-    $('cwPickSub').textContent = 'Every airport is included in your plan.';
-    $('cwPicks').innerHTML = live.map(a => `<a class="cw-pick on" href="${SITE[a.icao] || '#'}#sim"><b>${a.icao}</b><span>${esc(a.name)}</span></a>`).join('');
+  if (e.airports === '*' || e.owner) {
+    const prev = cwPreview() ? dev.filter(a => SITE[a.icao]) : [];
+    $('cwPickSub').textContent = e.owner ? 'Every airport is open to you.' + (prev.length ? ' Airports in development are marked Preview.' : '') : 'Every airport is included in your plan.';
+    $('cwPicks').innerHTML = [...live, ...prev].map(a => `<a class="cw-pick on" href="${SITE[a.icao] || '#'}#sim"><b>${a.icao}</b><span>${esc(a.name)}${a.status === 'dev' ? ' · Preview' : ''}</span></a>`).join('');
   } else {
     let sel = [...e.airports];
     const draw = () => {
@@ -375,6 +383,7 @@ function cwRefreshUI(){
   const a = $('cwAccLink');
   if (a) { a.hidden = !CW_ON; a.textContent = CW.ses ? 'Account' : 'Sign in'; }
   if (document.body.dataset.route) cwOnRoute();
+  if (typeof renderAirports === 'function' && $('apGrid')) renderAirports();   // previews of airports in development
 }
 
 // ── feedback ──
@@ -443,6 +452,6 @@ function cwInit(){
   new MutationObserver(cwOnRoute).observe(document.body, { attributes: true, attributeFilter: ['data-route'] });
   cwRefreshUI();
   // load the plan, then re-check the console (a player may have arrived on #sim before it loaded)
-  if (CW_ON && CW.ses) cwLoad().then(() => { if (document.body.dataset.route === 'sim' || document.body.dataset.route === 'pricing') cwOnRoute(); });
+  if (CW_ON && CW.ses) cwLoad().then(() => { if (CW.ent && CW.ent.early || CW.ent && CW.ent.owner) renderAirports(); if (document.body.dataset.route === 'sim' || document.body.dataset.route === 'pricing') cwOnRoute(); });
 }
 setTimeout(cwInit, 0);
