@@ -3831,7 +3831,9 @@ function nextAtis(alert = true){ S.atis = ATIS_LETTERS[(ATIS_LETTERS.indexOf(S.a
 // ═════════════════════════ ground movement ═════════════════════════
 const P = (m, off=0) => rm(m, off);
 // a point marked hs (a holding position before a runway, New York) carries the runway's id: see stepGround
-function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; return q; }), spd, onDone, ...opts }; }
+// turn radius that fits the lead-in from the taxiway onto a stand: about 70% of the lead-in's length, no tighter than 8 m
+const standInR = (pts, st) => pts.length > 1 ? Math.max(8, dist(...pts[pts.length-2], ...st.p)*1852*0.7) : 8;
+function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; if (p.tight) q.tight = true; return q; }), spd, onDone, ...opts }; }
 function taxiFrom(ac){ return ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id; }
 function taxiRoute(ac, hp, via){
   if (via && via.length) { const o = taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v))); if (o) return o;
@@ -3865,12 +3867,14 @@ const hsEnters = (pts, k) => { const p = pts[k], q = pts[k+1]; if (!p.hs || !q) 
 // the next runway on the path that the aircraft needs a crossing clearance for (index into its path, or -1)
 const xingAhead = ac => ac.path ? ac.path.pts.findIndex((p, i) => p.hs && i < ac.path.pts.length - 1 && p.hs !== ac.xing && hsEnters(ac.path.pts, i) && activeRwy(p.hs) && !(ac.xok || []).includes(p.hs)) : -1;
 const pathLen = nodes => nodes.slice(1).reduce((L, id, i) => L + dist(...GN[nodes[i]].p, ...GN[id].p), 0);
+// a point on a runway-end turning pad: the aircraft goes round it slowly and tight, staying on the pad
+const padPt = (R, m, o) => { const q = R.rm(m, o); q.tight = true; return q; };
 function lineUpPath(ac, hp){
   const H = HOLDS[hp], R = holdRwy(hp), pts = [GN[H.rwy].p];
   // a runway entered at its end (R.ends: New York) is lined up straight away, pointing down the runway
   if (R.ends) { const up = depRw() === R.lo; pts.push(...filOut(hp, up ? 'E' : 'W')); const e = pts[pts.length-1]; pts.push(R.rm(R.mOf(e) + (up ? 60 : -60), 0)); return pts; }
-  if (depRw() === R.hi) { pts.push(...filOut(hp, 'E')); for (const [m,o] of R.TURN_E) if (m > H.m + 40) pts.push(R.rm(m,o)); }
-  else { pts.push(...filOut(hp, 'W')); for (const [m,o] of R.TURN_W) if (m < H.m - 40) pts.push(R.rm(m,o)); }
+  if (depRw() === R.hi) { pts.push(...filOut(hp, 'E')); for (const [m,o] of R.TURN_E) if (m > H.m + 40) pts.push(padPt(R, m, o)); }
+  else { pts.push(...filOut(hp, 'W')); for (const [m,o] of R.TURN_W) if (m < H.m - 40) pts.push(padPt(R, m, o)); }
   return pts;
 }
 // Leaving the runway. The crew picks the exit (APT.vacPrefs, for its stand) and keeps rolling; the controller can name
@@ -3891,8 +3895,8 @@ function vacatePath(ac){
   if (!ex && R.ends) ex = prefs.filter(e => (filM(e, dir) - m)*dir > 15).sort((a, b) => (filM(b, dir) - filM(a, dir))*dir)[0];
   if (!ex) { // roll on to the turning circle and backtrack
     let cur;
-    if (dir < 0) { for (const [mm,o] of R.TURN_W) pts.push(R.rm(mm,o)); cur = R.TURN_END.W; }
-    else { for (const [mm,o] of R.TURN_E) pts.push(R.rm(mm,o)); cur = R.TURN_END.E; }
+    if (dir < 0) { for (const [mm,o] of R.TURN_W) pts.push(padPt(R, mm, o)); cur = R.TURN_END.W; }
+    else { for (const [mm,o] of R.TURN_E) pts.push(padPt(R, mm, o)); cur = R.TURN_END.E; }
     ex = (ac.reqExit && HOLDS[ac.reqExit] ? ac.reqExit : prefs.slice().sort((a,b) => Math.abs(HOLDS[a].m-cur) - Math.abs(HOLDS[b].m-cur))[0]);
     ac.backtrack = true;
   }
@@ -3912,17 +3916,19 @@ function vacatePath(ac){
 // ── taxiing ──
 // Speeds change at TAXI_ACC/TAXI_DEC (kt/s); turns are arcs of radius taxiR, sized to the aircraft; the aircraft slows
 // before each corner (the sharper, the slower) and before the end of its route.
-const TAXI_ACC = 1.2, TAXI_DEC = 2;
+const TAXI_ACC = 1.2, TAXI_DEC = 2, PAD_V = 6;
 const taxiR = ac => ac.perf.wake === 'H' ? 45 : ac.perf.wake === 'L' ? 18 : 30;   // metres
 function taxiLimit(ac){
   const P = ac.path.pts; let D = 0, from = [ac.x, ac.y], lim = Infinity;
   for (let i = 0; i < P.length && D < 0.25; i++) {
     D += dist(...from, ...P[i]);
     if (i === P.length - 1) { lim = Math.min(lim, Math.max(3, Math.sqrt(2*TAXI_DEC*D*3600))); break; }   // stop at the end
+    if (P[i].tight) lim = Math.min(lim, Math.sqrt(PAD_V*PAD_V + 2*TAXI_DEC*D*3600));   // round a turning pad at walking pace
     // the turn at this point, measured over the next 40 m so a curve drawn as many short legs counts as one turn
     let j = i + 1; while (j < P.length - 1 && dist(...P[i], ...P[j]) < 0.022) j++;
     const th = Math.abs(angDiff(brg(...from, ...P[i]), brg(...P[i], ...P[j])));
-    if (th > 12) { const vc = Math.max(7, ac.path.spd - th*0.12), lead = taxiR(ac)/1852*Math.tan(Math.min(th, 150)*D2R/2);
+    const onto = ac.path.inR && i === P.length - 2;   // the tight turn onto a stand's lead-in: at walking pace
+    if (th > 12) { const vc = onto ? 4 : Math.max(7, ac.path.spd - th*0.12), lead = (onto ? Math.min(taxiR(ac), ac.path.inR) : taxiR(ac))/1852*Math.tan(Math.min(th, 150)*D2R/2);
       lim = Math.min(lim, Math.sqrt(vc*vc + 2*TAXI_DEC*Math.max(0, D - lead)*3600)); }
     from = P[i];
   }
@@ -3950,7 +3956,7 @@ function taxiIn(ac, st, via, hold){
   // to a holding point: it stops there and waits for the next taxi instruction
   if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, () => atHoldIn(ac, hold)); else atHoldIn(ac, hold, true); return ac.taxiVia; }
   pts.push(st.p);
-  setPath(ac, pts, 15, () => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; emit('onstand', ac); turnRound(ac); });
+  setPath(ac, pts, 15, () => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; emit('onstand', ac); turnRound(ac); }, { inR: standInR(pts, st) });
   return ac.taxiVia;
 }
 function atHoldIn(ac, hold, quiet){
@@ -3963,12 +3969,14 @@ function vacSpeed(ac, dt){
   const P = ac.path.pts, cur = ac.gs || 0;
   let v = cur > VAC_RWY ? Math.max(VAC_RWY, cur - 4.2*dt) : Math.min(VAC_RWY, cur + 2*dt);
   let d = 0, from = [ac.x, ac.y];
+  let turnV = VAC_TURN;
   for (const p of P) {
     const seg = dist(...from, ...p); if (seg < 1e-6) continue;
+    if (p.tight) { d += seg; turnV = PAD_V; break; }   // the turning pad: down to walking pace before it
     if (Math.abs(angDiff(ac.hdg, brg(...from, ...p))) > 25) break;
     d += seg; from = p;
   }
-  return Math.max(Math.min(ac.path.spd, cur), Math.min(v, Math.sqrt(VAC_TURN*VAC_TURN + 2*VAC_DEC*d*3600)));
+  return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, Math.sqrt(turnV*turnV + 2*VAC_DEC*d*3600)));
 }
 function startLineUp(ac){
   ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw()).id; ac.need = null;
@@ -3976,7 +3984,7 @@ function startLineUp(ac){
   // finish on a straight stretch of centreline, so the turn onto the runway rounds out into line instead of snapping onto it
   const pts = lineUpPath(ac, ac.hp), R = holdRwy(ac.hp), c = crsOf(depRw()), e = pts[pts.length-1];
   const dir = Math.sin(c*D2R)*R.RU[0] + Math.cos(c*D2R)*R.RU[1] >= 0 ? 1 : -1;
-  pts.push(R.rm(R.mOf(e) + dir*Math.max(35, taxiR(ac)*1.5), 0));
+  pts.push(R.rm(R.mOf(e) + dir*10, 0), R.rm(R.mOf(e) + dir*Math.max(35, taxiR(ac)*2), 0));
   setPath(ac, pts, 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw()); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; }, { fine: true });
   return back;
 }
@@ -4450,7 +4458,12 @@ function stepAir(ac, dt){
     const te = tdElev(apk(ac)), gp = fin.togo > 0.05 ? gpAlt(fin.togo, apk(ac)) : te;
     ac.vs = clamp(-ac.gs*gpRate(apk(ac), fin.togo)/60 + (gp - ac.alt)*4, -2000, 300);
     if (ac.alt + ac.vs/60*dt < te) ac.vs = (te - ac.alt)*60/dt;
-  } else ac.vs = clamp((tgtA - ac.alt)*3, -vmax, vmax);
+  } else {
+    // above the glidepath on final: descend at the glidepath's own rate plus the correction, so it gets back down onto it
+    // (the correction alone settles a steady few hundred feet high, and the aircraft lands long)
+    const ff = fin && tgtA < ac.alt ? ac.gs*gpRate(apk(ac), fin.togo)/60 : 0;
+    ac.vs = clamp((tgtA - ac.alt)*3 - ff, -vmax, vmax);
+  }
   ac.alt += ac.vs/60*dt;
 
   // ── motion
@@ -4526,6 +4539,19 @@ function stepAir(ac, dt){
   { const T = APT.terrain, hit = T && (T.check ? T.check(ac) : ac.alt < T.min && inPoly([ac.x, ac.y], T.poly)); if (hit) { if (!ac.terr) { ac.terr = true; S.score.incidents++; S.score.pts -= (ac.alt < (T.lowAt ? T.lowAt(hit) : T.low) ? 80 : 30); sys(T.msg(ac, hit), true); } } else ac.terr = false; }
 }
 
+// aircraft giving way in a ring (A waits for B, B for C, C for A) would wait for ever: the one with right of way in
+// the ring carries on. Right of way: on the runway first, then leaving it, then the lower callsign.
+const wayRank = a => [a.onRwy ? 0 : 1, a.state === 'VACATING' ? 0 : 1, a.cs];
+const rankLess = (a, b) => { const A = wayRank(a), B = wayRank(b); for (let i = 0; i < 3; i++) if (A[i] !== B[i]) return A[i] < B[i]; return false; };
+function waitLoopWinner(ac, o){
+  const ring = [ac]; let w = o;
+  for (let n = 0; n < 8 && w; n++) {
+    if (w === ac) return ring.every(x => x === ac || rankLess(ac, x));
+    if (ring.includes(w)) return false;
+    ring.push(w); w = w.waiting ? S.acs.find(x => x.cs === w.waiting) : null;
+  }
+  return false;
+}
 // A taxiing aircraft's position (x, y) is its nose: it stops with the nose at a holding point line and turns where
 // the nose meets the turn, the body trailing behind. Parked, pushing or taking off, it is the middle of the aircraft.
 // ac.nose (metres) is how far the middle sits behind (x, y); it eases between the two so the icon never jumps.
@@ -4533,9 +4559,26 @@ const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'RO
 function stepNose(ac, dt){
   const want = ac.ground && NOSE_STATES.has(ac.state) ? ac.perf.len/2 : 0, cur = ac.nose || 0;
   if (cur !== want) ac.nose = want > cur ? Math.min(want, cur + 4*dt) : Math.max(want, cur - 4*dt);
+  stepBody(ac, dt);
 }
+// The body pivots on its main gear, a little behind the middle: the nose leads round the line and the main gear is
+// dragged after it, cutting slightly inside the turn, so the tail never swings out. ac.mg is the main gear point and
+// ac.bh the body heading (main gear to nose) the icon is drawn along; ac.hdg stays the nosewheel's direction of travel.
+function stepBody(ac, dt){
+  if (!ac.nose) { ac.mg = null; ac.bh = ac.hdg; return; }
+  const L = ac.nose*1.1*M2NM, along = () => [ac.x - Math.sin(ac.hdg*D2R)*L, ac.y - Math.cos(ac.hdg*D2R)*L];
+  if (!ac.mg || Math.abs(angDiff(ac.bh ?? ac.hdg, ac.hdg)) > 150) ac.mg = along();
+  let vx = ac.mg[0] - ac.x, vy = ac.mg[1] - ac.y;
+  // standing still, settle gently onto the heading (a heading set outright, e.g. lined up on the centreline)
+  if (ac.gs < 1) { const a = along(), k = Math.min(1, dt*0.5); vx += (a[0] - ac.mg[0])*k; vy += (a[1] - ac.mg[1])*k; }
+  let bh = brg(0, 0, -vx, -vy);
+  // the nosewheel can't steer more than about 60 degrees off the body: past that the body swings round with it
+  const lag = angDiff(ac.hdg, bh); if (Math.abs(lag) > 60) bh = norm(ac.hdg + Math.sign(lag)*60);
+  ac.bh = bh; ac.mg = [ac.x - Math.sin(bh*D2R)*L, ac.y - Math.cos(bh*D2R)*L];
+}
+const bodyHdg = ac => ac.nose && ac.bh != null ? ac.bh : ac.hdg;
 // where the middle of the aircraft is (draw the icon there, and hit-test clicks there)
-const acMid = ac => ac.nose ? [ac.x - Math.sin(ac.hdg*D2R)*ac.nose*M2NM, ac.y - Math.cos(ac.hdg*D2R)*ac.nose*M2NM] : [ac.x, ac.y];
+const acMid = ac => { if (!ac.nose) return [ac.x, ac.y]; const h = bodyHdg(ac)*D2R; return [ac.x - Math.sin(h)*ac.nose*M2NM, ac.y - Math.cos(h)*ac.nose*M2NM]; };
 function stepGround(ac, dt){
   if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && !ac.tow && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, PH.startReq(ac)); }
   if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt) { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
@@ -4565,15 +4608,16 @@ function stepGround(ac, dt){
       if (o === ac || !o.ground) continue;
       const dd = dist(ac.x, ac.y, o.x, o.y)/M2NM; if (dd > 80 || dd < 1) continue;
       if (o.waiting === ac.cs && (ac.state === 'VACATING' || (o.state !== 'VACATING' && ac.cs < o.cs))) continue; // break a head-on stand-off: the aircraft leaving the runway goes first
+      if (waitLoopWinner(ac, o)) continue;   // three or more waiting on each other in a ring: one of them goes first
       if (ac.onRwy && !o.onRwy && o.state === 'HOLDPT') continue;   // never stop on the runway for traffic waiting at a holding point
       if (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40 && !(o.state === 'PARKED' || o.state === 'ONSTAND')) { spd = 0; ac.waiting = o.cs; break; }
     }
     if (spd > 0) ac.waiting = null;
     // speed builds up and drops off gradually; a stop for traffic brakes harder
-    const cur = ac.gs || 0, v = spd >= cur ? Math.min(spd, cur + TAXI_ACC*dt) : Math.max(spd, cur - (spd === 0 ? 6 : TAXI_DEC)*dt);
+    const cur = ac.gs || 0, v = spd >= cur ? Math.min(spd, cur + TAXI_ACC*dt) : Math.max(spd, cur - (spd === 0 || cur > spd + 8 ? 6 : TAXI_DEC)*dt);   // well over the limit for the turn ahead (off a runway at speed): firm braking
     const mv = v/3600*dt; ac.gs = v; ac.ias = v;
     const done = () => {
-      const p = ac.path.pts.shift();
+      const p = ac.path.pts.shift(); ac.path.prev = p;
       // crossing a runway: on it from the holding position on one side to the one on the other
       if (p.hs && p.hs === ac.xing) { if (ac.xcross) emit('rwyx', ac); ac.xing = null; ac.xcross = null; ac.onRwy = false; ac.xok = (ac.xok || []).filter(r => r !== p.hs); }
       else if (p.hs && ac.path.pts.length && hsEnters([p, ...ac.path.pts], 0)) { ac.xing = ac.xcross = p.hs; if (activeRwy(p.hs)) { ac.onRwy = true; ac.rwyId = p.hs; } if (ac.hsAt === p.hs) { ac.hsAt = null; if (ac.need && ac.need.startsWith('Holding short')) ac.need = null; } }
@@ -4586,7 +4630,17 @@ function stepGround(ac, dt){
     } else {
       // steered like a nosewheel: it rolls along its heading, turning no tighter than its radius allows, and starts each
       // turn early so it rounds the corner on an arc instead of pivoting on the point
-      const R = taxiR(ac), want = brg(ac.x, ac.y, ...tgt), err = angDiff(ac.hdg, want);
+      // the last turn, off the taxiway onto a short stand lead-in line, is made slowly and tight (path.inR, metres), so the
+      // aircraft lines up on the lead-in instead of sailing past the stand and coming back round
+      const R = ac.path.inR && ac.path.pts.length <= 2 ? Math.min(taxiR(ac), ac.path.inR) : tgt.tight || (ac.path.pts[1] && ac.path.pts[1].tight && d < 0.008) ? clamp(v*1.4, 12, taxiR(ac)) : taxiR(ac), want = brg(ac.x, ac.y, ...tgt);
+      // steer for a point a little way ahead along the route (about two thirds of a turn radius), not the next point
+      // itself: on a curve drawn as many short legs it then follows the curve instead of weaving across it
+      // past the end it looks on along the last leg, so the aircraft finishes lined up with it
+      const aim = (() => { let rem = Math.max(6, R*0.65)/1852, from = [ac.x, ac.y], back = ac.path.prev || from;
+        for (const p of ac.path.pts) { const sg = dist(...from, ...p); if (sg >= rem) return [from[0] + (p[0]-from[0])*rem/sg, from[1] + (p[1]-from[1])*rem/sg]; rem -= sg; from = p; }
+        const P = ac.path.pts, a = P.length > 1 ? P[P.length-2] : back, L = dist(...a, ...from);
+        return L > 1e-6 ? [from[0] + (from[0]-a[0])/L*rem, from[1] + (from[1]-a[1])/L*rem] : from; })();
+      const err = angDiff(ac.hdg, d > 0.0005 ? brg(ac.x, ac.y, ...aim) : want), errT = angDiff(ac.hdg, want);
       const rate = Math.max(v*0.5144/R*R2D, 4);
       ac.hdg = norm(ac.hdg + clamp(err, -rate*dt, rate*dt));
       const last = ac.path.pts.length === 1;
@@ -4594,11 +4648,11 @@ function stepGround(ac, dt){
       else {
         ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv;
         const d2 = dist(ac.x, ac.y, ...tgt);
-        if (last) { if (d2 < (ac.path.fine ? mv : 0.0015) || (Math.abs(err) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
+        if (last) { if (d2 < (ac.path.fine ? mv : 0.0015) || (Math.abs(errT) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
         else {
           const nxt = ac.path.pts[1], th = Math.abs(angDiff(want, brg(...tgt, ...nxt)));
           const lead = Math.min(R/1852*Math.tan(Math.min(th, 150)*D2R/2), dist(...tgt, ...nxt)/2);
-          if (d2 <= Math.max(lead, mv, 0.0008) || (Math.abs(err) > 100 && d2 < 2*R/1852)) done();
+          if (d2 <= Math.max(lead, mv, 0.0008) || (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...tgt))) > 90 && d2 < 2*R/1852)) done();   // reached, or already passed
         }
       }
     }
@@ -4610,12 +4664,13 @@ function stepGround(ac, dt){
     const mv = ac.ias/3600*dt; ac.x += R.RU[0]*ac.rollDir*mv; ac.y += R.RU[1]*ac.rollDir*mv;
     const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]);
     if (Math.abs(off) > 0.05) [ac.x, ac.y] = R.rm(m, off*Math.exp(-dt*1.5));   // keep the roll-out on the centreline
-    // below 40 kt the crew picks its exit and vacates by itself, reporting which way it is going
+    // below 40 kt the crew picks its exit and vacates by itself, reporting which way it is going. Landed long and
+    // running out of runway, it brakes hard first: it never stops on the runway waiting to be told to vacate.
+    if (ac.ias > 40 && (m < R.roll[0] || m > R.roll[1])) { ac.ias = Math.max(40, ac.ias - 12*dt); ac.gs = ac.ias; }
     if (ac.ias <= 40) {
       startVacate(ac, true);
       pilot(ac, `${ac.backtrack ? 'backtracking, ' : ''}vacating via ${PHON[ac.exit]}, ${ac.stand ? 'for stand ' + ac.stand.id : 'as directed'}`);
     }
-    else if (ac.ias <= 15.5 || m < R.roll[0] || m > R.roll[1]) { ac.state = 'ROLLED'; ac.gs = 0; ac.need = 'Request vacate'; pilot(ac, `runway ${ac.app}, ${APT.rolledCall || 'request backtrack and taxi'}`); }
   }
   if (ac.state === 'TAKEOFF') {
     ac.ias += (ac.perf.wake === 'H' ? 4.0 : 4.2)*dt; ac.gs = ac.ias;
@@ -5066,7 +5121,7 @@ function drawAc(ac){
     cx.strokeStyle = col; cx.lineWidth = sel ? 2 : 1.3;
     if (ac.ground) { cx.beginPath(); cx.arc(X, Y, 3, 0, 7); cx.stroke(); }
     else {
-      planeIcon(X, Y, ac.hdg, col, sel, ac.t);   // type-shaped icon pointing along the heading
+      planeIcon(X, Y, bodyHdg(ac), col, sel, ac.t);   // type-shaped icon pointing along the heading
     }
   }
   if (ac.ground && sc < 70) return;
