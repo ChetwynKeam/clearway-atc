@@ -80,7 +80,8 @@ async function view(pg, k, zoom = 1, theme = 'light', pick){
       await edit(arr.nth(3), async () => { await bar.locator('button[data-a="hold"]').click(); });
       await edit(dep.nth(1), async () => {});
       await fw.setViewportSize({ width: 1560, height: 900 }); await fw.addStyleTag({ content: 'tr.past{display:none}' }); await fw.evaluate(() => { scrollTo(0, 0); document.querySelectorAll('*').forEach(e => { if (e.scrollTop) e.scrollTop = 0; }); }); await fw.waitForTimeout(1200);
-      await fw.screenshot(jpg(`${A.k}-slots.jpg`)); await fw.close();
+      await fw.screenshot(jpg(`${A.k}-slots.jpg`));
+      await fw.screenshot({ ...jpg(`${A.k}-slots-close.jpg`), clip: { x: 0, y: 56, width: 780, height: 488 } }); await fw.close();
       await pg.evaluate(() => { S.paused = true; const f = document.getElementById('tgFids'); if (document.querySelector('.fids:not([hidden])')) f.click(); });
     }
     // tower picture: wait (up to 10 sim minutes) for something on or near the runway
