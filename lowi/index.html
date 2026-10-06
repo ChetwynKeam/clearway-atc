@@ -4558,7 +4558,11 @@ function waitLoopWinner(ac, o){
 const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'ROLLOUT', 'LINEUP', 'LINEDUP']);
 function stepNose(ac, dt){
   const want = ac.ground && NOSE_STATES.has(ac.state) ? ac.perf.len/2 : 0, cur = ac.nose || 0;
-  if (cur !== want) ac.nose = want > cur ? Math.min(want, cur + 4*dt) : Math.max(want, cur - 4*dt);
+  if (cur !== want) {
+    ac.nose = want > cur ? Math.min(want, cur + 4*dt) : Math.max(want, cur - 4*dt);
+    // moving off (after a push, or touching down), (x, y) runs forward to the nose so the icon doesn't roll backwards
+    if (want > cur) { const dn = (ac.nose - cur)*M2NM; ac.x += Math.sin(ac.hdg*D2R)*dn; ac.y += Math.cos(ac.hdg*D2R)*dn; }
+  }
   stepBody(ac, dt);
 }
 // The body pivots on its main gear, a little behind the middle: the nose leads round the line and the main gear is
