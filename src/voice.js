@@ -33,7 +33,9 @@ function voiceFor(who){
 // replaces the plain speaker: accent by airline, steadier controller, slight per-crew pitch and pace
 say = function(text, who){
   if (!S.voice) return;
-  if (who === 'atc' && S.fromVoice) return;   // you said it yourself
+  // you said it yourself: when you are talking on the radio, only the pilots' replies are played, including
+  // instructions you finish from a pop-up after speaking (taxi routes, push direction)
+  if (who === 'atc' && (S.fromVoice || (inCmd && Date.now() - (S.voiceAt || 0) < 120e3))) return;
   try {
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
     const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; }
@@ -164,6 +166,9 @@ function phraseToCmd(raw){
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const ptt = $('tgTalk'), heard = $('heard');
 let rec = null, talking = false, finalText = '';
+// what you are saying appears in the command box as it is recognised
+const cmdBox = $('cmd');
+function liveCmd(t){ if (!cmdBox) return; cmdBox.classList.toggle('listening', !!t); cmdBox.value = t || ''; }
 function setHeard(t, cls){ if (!heard) return; heard.textContent = t; heard.className = 'heard' + (cls ? ' ' + cls : ''); heard.hidden = !t; }
 function micBlocked(msg){
   sys(msg); ptt.disabled = true; ptt.title = msg; ptt.classList.remove('on');
@@ -172,14 +177,15 @@ function startTalk(){
   if (!SR || talking || ptt.disabled) return;
   try { speechSynthesis.cancel(); } catch(_) {}
   rec = new SR(); rec.lang = 'en-GB'; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 3;
-  finalText = ''; talking = true; ptt.classList.add('on'); setHeard('Listening…');
+  finalText = ''; talking = true; ptt.classList.add('on'); setHeard('Listening…'); liveCmd('Listening…'); S.voiceAt = Date.now();
   rec.onresult = e => {
     let interim = ''; finalText = '';
     for (const r of e.results) { if (r.isFinal) finalText += r[0].transcript + ' '; else interim += r[0].transcript; }
     setHeard((finalText + interim).trim() || 'Listening…');
+    liveCmd((finalText + interim).trim() || 'Listening…');
   };
   rec.onerror = e => {
-    talking = false; ptt.classList.remove('on');
+    talking = false; ptt.classList.remove('on'); liveCmd('');
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') micBlocked('The microphone is blocked here. Spoken commands work when the simulator is opened in its own browser tab with microphone access; typed commands and pilot voices still work.');
     else if (e.error !== 'no-speech' && e.error !== 'aborted') sys(`Speech recognition: ${e.error}.`);
   };
@@ -188,12 +194,15 @@ function startTalk(){
 }
 function stopTalk(){ if (rec && talking) try { rec.stop(); } catch(_) {} }
 function handleHeard(text){
+  liveCmd('');
   if (!text) { setHeard(''); return; }
+  S.voiceAt = Date.now();
   const { ac, cmd } = phraseToCmd(text);
   const target = ac || S.sel;
   if (!cmd) { setHeard(`“${text}” · not understood`, 'bad'); log('sys', `Heard “${text}” but found no instruction in it. Say again using standard phraseology.`); return; }
   if (!target) { setHeard(`“${text}” · no callsign`, 'bad'); sys('Start with the callsign, or select a flight first.'); return; }
   setHeard(`“${text}” → ${target.cs} ${cmd}`, 'ok');
+  liveCmd(`${target.cs} ${cmd}`); setTimeout(() => { if (cmdBox && cmdBox.classList.contains('listening') && !talking) liveCmd(''); }, 3000);
   S.fromVoice = true; try { command(`${target.cs} ${cmd}`); } finally { S.fromVoice = false; }
   setTimeout(() => setHeard(''), 6000);
 }

@@ -702,33 +702,96 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidde
 document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !(e.target.closest && e.target.closest('#sel'))) closePop(); });
 
 let stripSig = '';
+// one flight progress strip; doc is the document it goes in (the console, or the pop-out strip board)
+function makeStrip(ac, doc = document){
+  const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}`;
+  d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
+  d.querySelector('.cs').textContent = ac.cs;
+  d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
+  d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
+  d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
+  // arrivals show the stand they are going to, once it is planned
+  if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
+  const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
+  d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
+  if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = doc.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
+  if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
+  if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
+  else d.onclick = () => tapSelect(ac);
+  return d;
+}
 function renderStrips(force){
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
   const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '')).join(',');
+  if (stripWin && stripWin.closed) closeStripBoard();
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
-  for (const ac of list) {
-    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}`;
-    d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
-    d.querySelector('.cs').textContent = ac.cs;
-    d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
-    d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
-    d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
-    // arrivals show the stand they are going to, once it is planned
-    if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
-    const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
-    d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
-    if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = document.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
-    if (clrOf(ac)) { const k = document.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
-    if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
-    else d.onclick = () => tapSelect(ac);
-    el.appendChild(d);
-  }
+  for (const ac of list) el.appendChild(makeStrip(ac));
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
   { const n = S.acs.filter(a => a.need).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
+  renderStripBoard(list);
 }
+
+// ── pop-out windows: the strip board and the flights board in their own browser windows (a second screen) ──
+// The window is drawn from here, so clicks in it act on the simulator directly.
+function popWin(name, title, w, h){
+  const win = window.open('', name, `popup,width=${w},height=${h}`);
+  if (!win) { sys('Your browser blocked the new window. Allow pop-ups for this site and try again.', true); return null; }
+  const doc = win.document;
+  doc.open(); doc.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title></head><body class="popwin"></body></html>`); doc.close();
+  for (const n of document.querySelectorAll('style, link[rel="stylesheet"]')) doc.head.appendChild(doc.importNode(n, true));
+  doc.body.className = 'popwin ' + document.body.className;
+  addEventListener('pagehide', () => { try { win.close(); } catch(_) {} });
+  return win;
+}
+// where a strip sits on the board, left to right as a flight moves through the unit (UK-style bays)
+const BAYS = [
+  ['pend', 'Pending', 'Inbounds not yet with you'],
+  ['air', 'Approach and radar', 'Airborne: arrivals, holds, departures climbing out'],
+  ['rwy', 'Runway', 'Final, lined up, rolling and landing'],
+  ['hold', 'Holding points', 'Waiting to enter the runway'],
+  ['gnd', 'Ground movement', 'Pushing, taxiing out and in'],
+  ['del', 'Stands and delivery', 'On stand: clearances, start-up and tows'],
+  ['done', 'Transferred', 'Handed to the next unit'],
+];
+function bayOf(ac){
+  if (outOfCtl(ac)) return 'done';
+  const st = ac.state;
+  if (st === 'PRE') return 'pend';
+  if (['PARKED', 'TOW', 'ONSTAND'].includes(st)) return 'del';
+  if (st === 'HOLDPT' || (st === 'TAXI' && ac.holdAt && !ac.path && ac.kind === 'DEP')) return 'hold';
+  if (['FINAL', 'LINEUP', 'LINEDUP', 'TAKEOFF', 'ROLLOUT', 'ROLLED'].includes(st) || (st === 'VACATING' && !ac.taxiIn && !ac.vacated)) return 'rwy';
+  if (['PUSH', 'READY', 'TAXI', 'VACATING'].includes(st)) return 'gnd';
+  return 'air';
+}
+let stripWin = null;
+function openStripBoard(){
+  if (stripWin && !stripWin.closed) { stripWin.focus(); return; }
+  stripWin = popWin('cwStrips', `${APT.icao} strip board`, 1840, 760); if (!stripWin) return;
+  const d = stripWin.document;
+  d.body.innerHTML = `<div class="app sboard"><div class="sb-hd"><b>${esc(APT.name)} · flight progress strips</b><span class="lbl" id="sbCount"></span><span class="grow"></span><span class="lbl">Click a strip to select the flight in the simulator</span></div>
+    <div class="sb-bays">${BAYS.map(([k, n, t]) => `<section class="sb-bay" data-bay="${k}"><div class="sb-bh"><span class="lbl">${n}</span><span class="sb-n"></span></div><p class="sb-t">${t}</p><div class="sb-list"></div></section>`).join('')}</div></div>`;
+  document.querySelector('.app').classList.add('strips-out');
+  stripWin.addEventListener('pagehide', () => setTimeout(() => { if (stripWin && stripWin.closed) closeStripBoard(); }, 50));
+  renderStrips(true);
+}
+function closeStripBoard(){ stripWin = null; const a = document.querySelector('.app'); if (a) a.classList.remove('strips-out'); }
+function renderStripBoard(list){
+  if (!stripWin || stripWin.closed) return;
+  const d = stripWin.document; d.body.className = 'popwin ' + document.body.className;
+  const by = {}; for (const ac of list) (by[bayOf(ac)] ||= []).push(ac);
+  for (const [k] of BAYS) {
+    const sec = d.querySelector(`[data-bay="${k}"]`); if (!sec) continue;
+    const box = sec.querySelector('.sb-list'), L = by[k] || []; box.innerHTML = '';
+    for (const ac of L) box.appendChild(makeStrip(ac, d));
+    sec.querySelector('.sb-n').textContent = L.length || '';
+  }
+  const c = d.getElementById('sbCount'); if (c) c.textContent = $('stripCount').textContent;
+}
+$('popStrips').onclick = openStripBoard;
+$('backStrips').onclick = () => { if (stripWin && !stripWin.closed) stripWin.close(); closeStripBoard(); };
 function renderScore(){
   const s = S.score;
   $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>`;

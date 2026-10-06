@@ -146,6 +146,42 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 700; letter-spacing
 .xing.st-OPEN { color: var(--warn); } .xing.st-CLOSED { color: var(--ok); border-color: rgba(18,128,92,.35); } .xing.st-CLOSING, .xing.st-OPENING { color: var(--arr); }
 .xing .lbl { color: var(--dim); }
 #sel { min-height: 170px; }
+/* a long flight panel scrolls in its own space, so the strips below always keep room */
+@media (min-width: 901px) {
+  .side > #atis { flex: none; }
+  .side > #sel { flex: 0 1 auto; max-height: 44%; overflow-y: auto; }
+  .side > .strips { min-height: 200px; }
+}
+.popbtn { margin-left: 8px; padding: 2px 8px; border: 1px solid var(--line-2); border-radius: 4px; background: var(--panel-2); color: var(--ink); font: 600 11.5px var(--font-label); letter-spacing: .03em; cursor: pointer; white-space: nowrap; }
+.popbtn:hover { border-color: var(--accent); }
+.popbtn.dark { background: transparent; border-color: rgba(255,255,255,.25); color: #cfdae6; }
+.strips-away { display: none; margin: 8px 0 0; color: var(--dim); font-size: 12px; }
+.app.strips-out .strips-away { display: block; }
+.app.strips-out .side > .strips { display: none; }
+.app.strips-out .side > #sel { max-height: none; flex: 1 1 auto; }
+@media (max-width: 900px) { .popbtn, .strips-away { display: none !important; } }
+/* pop-out windows */
+body.popwin { overflow: auto; background: var(--bg); }
+.app.sboard { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.sb-hd { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.sb-hd b { font: 600 15px var(--font-label); letter-spacing: .02em; }
+.sb-bays { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(7, minmax(262px, 1fr)); gap: 8px; padding: 10px; overflow-x: auto; background: #5c4a36; }
+body.theme-dark .sb-bays { background: #1b2228; }
+.sb-bay { display: flex; flex-direction: column; min-height: 0; background: #3f3226; border-radius: 4px; padding: 6px; box-shadow: inset 0 2px 6px rgba(0,0,0,.35); }
+body.theme-dark .sb-bay { background: #0e1519; }
+.sb-bh { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; }
+.sb-bh .lbl { color: #f4ead6; }
+.sb-n { font: 700 12px var(--font-data); color: #f4ead6; }
+.sb-t { margin: 0 4px 6px; font-size: 11px; line-height: 1.3; color: #cdbfa6; }
+.sb-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.sb-list .strip { flex: none; font-size: 12.5px; }
+.sb-list .strip .ty, .sb-list .strip .lv, .sb-list .strip .fq, .sb-list .strip .rte, .sb-list .strip .stt { white-space: normal; overflow: visible; text-overflow: clip; hyphens: none; }
+.fids.fboard { position: static; transform: none; width: auto; max-height: none; min-height: 100vh; border-radius: 0; box-shadow: none; }
+.fb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0; flex: 1; min-height: 0; }
+.fb-cols section { min-width: 0; border-right: 1px solid rgba(255,255,255,.08); }
+.fb-cols h2 { margin: 0; padding: 12px 14px 8px; font: 700 15px "Inter Tight", Inter, system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #f7c600; }
+@media (max-width: 800px) { .fb-cols { grid-template-columns: 1fr; } }
+#cmd.listening { border-color: var(--alert); color: var(--dim); font-style: italic; }
 .sel-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sel-head .cs { font-family: var(--font-label); font-size: 26px; font-weight: 700; letter-spacing: .03em; line-height: 1; }
 .sel-head .cs.ARR { color: var(--arr); } .sel-head .cs.DEP { color: var(--dep); }
@@ -1639,7 +1675,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     <div class="fids" id="fids" hidden role="dialog" aria-label="Flight information">
       <div class="fids-hd"><div><b id="fidsTitle">Flight information</b><span id="fidsClock"></span></div>
         <div class="seg" role="tablist"><button data-fids="ARR" class="on">Arrivals</button><button data-fids="DEP">Departures</button></div>
-        <button class="x" id="fidsClose" aria-label="Close">×</button></div>
+        <button class="popbtn dark" id="fidsPop" title="Open the flights board in its own window">Pop out ↗</button><button class="x" id="fidsClose" aria-label="Close">×</button></div>
       <div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th id="fidsAp">From</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fidsBody"></tbody></table></div>
     </div>
     <div class="heard" id="heard" hidden></div>
@@ -1739,7 +1775,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   <aside class="side">
     <div class="sec" id="atis"></div>
     <div class="sec" id="sel"></div>
-    <div class="sec strips-head"><div class="ph"><span class="lbl">Flight progress strips</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span></div></div>
+    <div class="sec strips-head"><div class="ph"><span class="lbl">Flight progress strips</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span><button type="button" class="popbtn" id="popStrips" title="Open the strip board in its own window, for a second screen">Pop out ↗</button></div><p class="strips-away">The strips are in their own window. <button type="button" class="popbtn" id="backStrips">Bring them back</button></p></div>
     <div class="strips" id="strips"></div>
   </aside>
   <div class="bottom">
@@ -6073,33 +6109,96 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidde
 document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !(e.target.closest && e.target.closest('#sel'))) closePop(); });
 
 let stripSig = '';
+// one flight progress strip; doc is the document it goes in (the console, or the pop-out strip board)
+function makeStrip(ac, doc = document){
+  const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}`;
+  d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
+  d.querySelector('.cs').textContent = ac.cs;
+  d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
+  d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
+  d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
+  // arrivals show the stand they are going to, once it is planned
+  if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
+  const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
+  d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
+  if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = doc.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
+  if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
+  if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
+  else d.onclick = () => tapSelect(ac);
+  return d;
+}
 function renderStrips(force){
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
   const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '')).join(',');
+  if (stripWin && stripWin.closed) closeStripBoard();
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
-  for (const ac of list) {
-    const d = document.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}`;
-    d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
-    d.querySelector('.cs').textContent = ac.cs;
-    d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
-    d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
-    d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
-    // arrivals show the stand they are going to, once it is planned
-    if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
-    const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
-    d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
-    if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = document.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
-    if (clrOf(ac)) { const k = document.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
-    if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
-    else d.onclick = () => tapSelect(ac);
-    el.appendChild(d);
-  }
+  for (const ac of list) el.appendChild(makeStrip(ac));
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
   { const n = S.acs.filter(a => a.need).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
+  renderStripBoard(list);
 }
+
+// ── pop-out windows: the strip board and the flights board in their own browser windows (a second screen) ──
+// The window is drawn from here, so clicks in it act on the simulator directly.
+function popWin(name, title, w, h){
+  const win = window.open('', name, `popup,width=${w},height=${h}`);
+  if (!win) { sys('Your browser blocked the new window. Allow pop-ups for this site and try again.', true); return null; }
+  const doc = win.document;
+  doc.open(); doc.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title></head><body class="popwin"></body></html>`); doc.close();
+  for (const n of document.querySelectorAll('style, link[rel="stylesheet"]')) doc.head.appendChild(doc.importNode(n, true));
+  doc.body.className = 'popwin ' + document.body.className;
+  addEventListener('pagehide', () => { try { win.close(); } catch(_) {} });
+  return win;
+}
+// where a strip sits on the board, left to right as a flight moves through the unit (UK-style bays)
+const BAYS = [
+  ['pend', 'Pending', 'Inbounds not yet with you'],
+  ['air', 'Approach and radar', 'Airborne: arrivals, holds, departures climbing out'],
+  ['rwy', 'Runway', 'Final, lined up, rolling and landing'],
+  ['hold', 'Holding points', 'Waiting to enter the runway'],
+  ['gnd', 'Ground movement', 'Pushing, taxiing out and in'],
+  ['del', 'Stands and delivery', 'On stand: clearances, start-up and tows'],
+  ['done', 'Transferred', 'Handed to the next unit'],
+];
+function bayOf(ac){
+  if (outOfCtl(ac)) return 'done';
+  const st = ac.state;
+  if (st === 'PRE') return 'pend';
+  if (['PARKED', 'TOW', 'ONSTAND'].includes(st)) return 'del';
+  if (st === 'HOLDPT' || (st === 'TAXI' && ac.holdAt && !ac.path && ac.kind === 'DEP')) return 'hold';
+  if (['FINAL', 'LINEUP', 'LINEDUP', 'TAKEOFF', 'ROLLOUT', 'ROLLED'].includes(st) || (st === 'VACATING' && !ac.taxiIn && !ac.vacated)) return 'rwy';
+  if (['PUSH', 'READY', 'TAXI', 'VACATING'].includes(st)) return 'gnd';
+  return 'air';
+}
+let stripWin = null;
+function openStripBoard(){
+  if (stripWin && !stripWin.closed) { stripWin.focus(); return; }
+  stripWin = popWin('cwStrips', `${APT.icao} strip board`, 1840, 760); if (!stripWin) return;
+  const d = stripWin.document;
+  d.body.innerHTML = `<div class="app sboard"><div class="sb-hd"><b>${esc(APT.name)} · flight progress strips</b><span class="lbl" id="sbCount"></span><span class="grow"></span><span class="lbl">Click a strip to select the flight in the simulator</span></div>
+    <div class="sb-bays">${BAYS.map(([k, n, t]) => `<section class="sb-bay" data-bay="${k}"><div class="sb-bh"><span class="lbl">${n}</span><span class="sb-n"></span></div><p class="sb-t">${t}</p><div class="sb-list"></div></section>`).join('')}</div></div>`;
+  document.querySelector('.app').classList.add('strips-out');
+  stripWin.addEventListener('pagehide', () => setTimeout(() => { if (stripWin && stripWin.closed) closeStripBoard(); }, 50));
+  renderStrips(true);
+}
+function closeStripBoard(){ stripWin = null; const a = document.querySelector('.app'); if (a) a.classList.remove('strips-out'); }
+function renderStripBoard(list){
+  if (!stripWin || stripWin.closed) return;
+  const d = stripWin.document; d.body.className = 'popwin ' + document.body.className;
+  const by = {}; for (const ac of list) (by[bayOf(ac)] ||= []).push(ac);
+  for (const [k] of BAYS) {
+    const sec = d.querySelector(`[data-bay="${k}"]`); if (!sec) continue;
+    const box = sec.querySelector('.sb-list'), L = by[k] || []; box.innerHTML = '';
+    for (const ac of L) box.appendChild(makeStrip(ac, d));
+    sec.querySelector('.sb-n').textContent = L.length || '';
+  }
+  const c = d.getElementById('sbCount'); if (c) c.textContent = $('stripCount').textContent;
+}
+$('popStrips').onclick = openStripBoard;
+$('backStrips').onclick = () => { if (stripWin && !stripWin.closed) stripWin.close(); closeStripBoard(); };
 function renderScore(){
   const s = S.score;
   $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>`;
@@ -7068,22 +7167,46 @@ function fidsStatus(r, kind){
   return late && S.running ? ['Delayed', 'bad'] : ['Scheduled', ''];
 }
 let fidsTab = 'ARR';
+// the stand: the timetable's, else the one the flight has been given in the session
+function fidsStand(r){
+  if (r.stand) return r.stand;
+  const ac = S.acs.find(a => a.cs === r.cs); return ac && ac.stand ? ac.stand.id : '';
+}
+function fidsBodyHTML(kind){
+  const rows = fidsRows(kind), nm = nowMin();
+  return rows.length ? rows.map(r => {
+    const [st, cls] = fidsStatus(r, kind), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
+    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${fidsStand(r)}</td><td class="st ${cls}">${st}</td></tr>`;
+  }).join('') : `<tr><td colspan="6" class="none">No ${kind === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
+}
+const fidsClockText = () => S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
+let fidsWin = null;
 function renderFids(){
+  if (fidsWin && !fidsWin.closed) {   // the pop-out board: arrivals and departures side by side
+    const d = fidsWin.document;
+    for (const k of ['ARR', 'DEP']) { const b = d.getElementById('fb' + k); if (b) b.innerHTML = fidsBodyHTML(k); }
+    const c = d.getElementById('fbClock'); if (c) c.textContent = fidsClockText();
+  }
   const el = document.getElementById('fidsBody'); if (!el || document.getElementById('fids').hidden) return;
-  const rows = fidsRows(fidsTab), nm = nowMin();
-  document.getElementById('fidsClock').textContent = S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
-  el.innerHTML = rows.length ? rows.map(r => {
-    const [st, cls] = fidsStatus(r, fidsTab), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
-    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${r.stand || ''}</td><td class="st ${cls}">${st}</td></tr>`;
-  }).join('') : `<tr><td colspan="6" class="none">No ${fidsTab === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
+  document.getElementById('fidsClock').textContent = fidsClockText();
+  el.innerHTML = fidsBodyHTML(fidsTab);
   document.getElementById('fidsAp').textContent = fidsTab === 'ARR' ? 'From' : 'To';
   document.querySelectorAll('[data-fids]').forEach(b => b.classList.toggle('on', b.dataset.fids === fidsTab));
+}
+function openFidsBoard(){
+  if (fidsWin && !fidsWin.closed) { fidsWin.focus(); return; }
+  fidsWin = popWin('cwFlights', `${APT.icao} flights`, 1200, 700); if (!fidsWin) return;
+  const tbl = k => `<section><h2>${k === 'ARR' ? 'Arrivals' : 'Departures'}</h2><div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th>${k === 'ARR' ? 'From' : 'To'}</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fb${k}"></tbody></table></div></section>`;
+  fidsWin.document.body.innerHTML = `<div class="fids fboard"><div class="fids-hd"><div><b>${esc(APT.name)} · flight information</b><span id="fbClock"></span></div></div><div class="fb-cols">${tbl('ARR')}${tbl('DEP')}</div></div>`;
+  document.getElementById('fids').hidden = true;
+  renderFids();
 }
 {
   const bt = document.getElementById('tgFids'), box = document.getElementById('fids');
   if (bt && box) {
-    bt.onclick = () => { box.hidden = !box.hidden; renderFids(); };
+    bt.onclick = () => { if (fidsWin && !fidsWin.closed) { fidsWin.focus(); return; } box.hidden = !box.hidden; renderFids(); };
     document.getElementById('fidsClose').onclick = () => { box.hidden = true; };
+    document.getElementById('fidsPop').onclick = openFidsBoard;
     document.querySelectorAll('[data-fids]').forEach(b => b.onclick = () => { fidsTab = b.dataset.fids; renderFids(); });
     S.listeners.push(ev => { if (ev === 'tick' || ev === 'start') renderFids(); });
   }
@@ -7275,7 +7398,9 @@ function voiceFor(who){
 // replaces the plain speaker: accent by airline, steadier controller, slight per-crew pitch and pace
 say = function(text, who){
   if (!S.voice) return;
-  if (who === 'atc' && S.fromVoice) return;   // you said it yourself
+  // you said it yourself: when you are talking on the radio, only the pilots' replies are played, including
+  // instructions you finish from a pop-up after speaking (taxi routes, push direction)
+  if (who === 'atc' && (S.fromVoice || (inCmd && Date.now() - (S.voiceAt || 0) < 120e3))) return;
   try {
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
     const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; }
@@ -7406,6 +7531,9 @@ function phraseToCmd(raw){
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const ptt = $('tgTalk'), heard = $('heard');
 let rec = null, talking = false, finalText = '';
+// what you are saying appears in the command box as it is recognised
+const cmdBox = $('cmd');
+function liveCmd(t){ if (!cmdBox) return; cmdBox.classList.toggle('listening', !!t); cmdBox.value = t || ''; }
 function setHeard(t, cls){ if (!heard) return; heard.textContent = t; heard.className = 'heard' + (cls ? ' ' + cls : ''); heard.hidden = !t; }
 function micBlocked(msg){
   sys(msg); ptt.disabled = true; ptt.title = msg; ptt.classList.remove('on');
@@ -7414,14 +7542,15 @@ function startTalk(){
   if (!SR || talking || ptt.disabled) return;
   try { speechSynthesis.cancel(); } catch(_) {}
   rec = new SR(); rec.lang = 'en-GB'; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 3;
-  finalText = ''; talking = true; ptt.classList.add('on'); setHeard('Listening…');
+  finalText = ''; talking = true; ptt.classList.add('on'); setHeard('Listening…'); liveCmd('Listening…'); S.voiceAt = Date.now();
   rec.onresult = e => {
     let interim = ''; finalText = '';
     for (const r of e.results) { if (r.isFinal) finalText += r[0].transcript + ' '; else interim += r[0].transcript; }
     setHeard((finalText + interim).trim() || 'Listening…');
+    liveCmd((finalText + interim).trim() || 'Listening…');
   };
   rec.onerror = e => {
-    talking = false; ptt.classList.remove('on');
+    talking = false; ptt.classList.remove('on'); liveCmd('');
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') micBlocked('The microphone is blocked here. Spoken commands work when the simulator is opened in its own browser tab with microphone access; typed commands and pilot voices still work.');
     else if (e.error !== 'no-speech' && e.error !== 'aborted') sys(`Speech recognition: ${e.error}.`);
   };
@@ -7430,12 +7559,15 @@ function startTalk(){
 }
 function stopTalk(){ if (rec && talking) try { rec.stop(); } catch(_) {} }
 function handleHeard(text){
+  liveCmd('');
   if (!text) { setHeard(''); return; }
+  S.voiceAt = Date.now();
   const { ac, cmd } = phraseToCmd(text);
   const target = ac || S.sel;
   if (!cmd) { setHeard(`“${text}” · not understood`, 'bad'); log('sys', `Heard “${text}” but found no instruction in it. Say again using standard phraseology.`); return; }
   if (!target) { setHeard(`“${text}” · no callsign`, 'bad'); sys('Start with the callsign, or select a flight first.'); return; }
   setHeard(`“${text}” → ${target.cs} ${cmd}`, 'ok');
+  liveCmd(`${target.cs} ${cmd}`); setTimeout(() => { if (cmdBox && cmdBox.classList.contains('listening') && !talking) liveCmd(''); }, 3000);
   S.fromVoice = true; try { command(`${target.cs} ${cmd}`); } finally { S.fromVoice = false; }
   setTimeout(() => setHeard(''), 6000);
 }
