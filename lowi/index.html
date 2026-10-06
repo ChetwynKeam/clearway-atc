@@ -4878,6 +4878,12 @@ const AD = {
   ]),
   ...AD_SITE
 };
+// Which lines are painted: where the profile has the real OpenStreetMap centrelines (osmLines, London City) those alone,
+// so the taxi graph's own straight links don't draw a second, slightly different line beside them; elsewhere every graph
+// edge and fillet. Painted edge lines are Gibraltar's (AD 2.9, edgeLines) and only run along plain taxiways, never the
+// runway links or apron taxilanes where they would cut across the fillets and stands; the blue edge lights follow the same set.
+const LINE_KEYS = Object.keys(AD.twys).filter(k => !AD.osmLines || (AD.twyExtra || []).some(e => e[0] === k));
+const EDGE_KEYS = LINE_KEYS.filter(k => AD.twys[k].every(([, o]) => Math.abs(o) > RHW + 25) && !(/^e\d+$/.test(k) && GE[+k.slice(1)].tw === 'APRON'));
 // ── taxiway designators and intermediate holding points, shared by every airport ──
 // Designators come from the taxi graph: one sign at the middle of each stretch of a named taxiway and more along long
 // ones, drawn as yellow-on-black location signs. Where they would overlap, the more important one (the longer
@@ -4907,6 +4913,28 @@ function twyAnchors(){
   if (typeof rm === 'function') for (const [k, m, o] of AD.twyLabels || []) if (!tws.has(k)) out.push({ tw: k, p: rm(m, o), pri: 0, k: 0 });
   out.sort((a, b) => b.pri - a.pri);
   return TWY_ANCH = out;
+}
+// ── lead-on and lead-off lines ──
+// The yellow taxiway centreline carries on over the runway along each fillet curve until it meets the runway centreline,
+// then runs 60 m beside it, 0.9 m to the side (ICAO Annex 14 5.2.8; the FAA lead-on and lead-off lines are laid out the
+// same way). A taxiway that meets the runway square on (a crossing) just runs straight across.
+function leadLine(pts){   // [m, off] in a runway frame, from the runway centreline out to the taxiway
+  const out = pts.map(p => p.slice()), [a, b] = out, dm = b[0] - a[0], s = Math.sign(out[out.length - 1][1]) || 1;
+  if (Math.abs(dm) < Math.abs(b[1] - a[1])*0.4) return out;
+  const d = Math.sign(dm); out[0] = [a[0], s*0.9];
+  return [[a[0] - d*60, s*0.9], ...out];
+}
+function strokeSmooth(P){   // screen points, rounded through the mid-points so mapped curves stay smooth
+  cx.beginPath(); cx.moveTo(...P[0]);
+  for (let i = 1; i < P.length - 1; i++) cx.quadraticCurveTo(P[i][0], P[i][1], (P[i][0] + P[i+1][0])/2, (P[i][1] + P[i+1][1])/2);
+  cx.lineTo(...P[P.length - 1]); cx.stroke();
+}
+// a runway designator, read from the approach: a parallel runway's letter sits under the number, nearer the threshold
+function drawRwyDesignator(X, Y, rw, crs, size){
+  const num = rw.replace(/[LRC]$/, ''), let_ = rw.slice(num.length);
+  cx.save(); cx.translate(X, Y); cx.rotate(crs*D2R); cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.font = `700 ${size}px ${FONT_L}`;
+  if (let_) { cx.fillText(let_, 0, size*0.55); cx.fillText(num, 0, -size*0.55); } else cx.fillText(rw, 0, 0);
+  cx.restore(); cx.textBaseline = 'alphabetic'; cx.textAlign = 'left';
 }
 function drawGroundSigns(){
   const sc = V.scale, mpx = sc/1852; if (sc < 140) return;
@@ -5000,7 +5028,7 @@ function drawAirport(){
       for (let d = 20; d < pre - 12; d += 40) { const m = m0 - dir*d; path([[m - dir*12, 0], [m, 0]], false); cx.stroke(); path([[m - dir*6, -2.5],[m, 0],[m - dir*6, 2.5]], false); cx.stroke(); }
       for (const k of [-1, 1]) { const m = m0 - dir*6; path([[m - dir*8, k*9],[m, k*12],[m - dir*8, k*15]], false); cx.stroke(); }
     }
-    { cx.font = `700 ${Math.max(9, 14*mpx)}px ${FONT_L}`; for (const [m0, lab, h] of [[THR_LO_M+58,RW_LO,CRS_LO],[THR_HI_M-58,RW_HI,CRS_HI]]) { cx.save(); cx.translate(...c(m0,0)); cx.rotate(h*D2R); cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(lab, 0, 0); cx.restore(); } cx.textBaseline = 'alphabetic'; }
+    for (const [m0, lab, h] of [[THR_LO_M+58,RW_LO,CRS_LO],[THR_HI_M-58,RW_HI,CRS_HI]]) drawRwyDesignator(...c(m0, 0), lab, h, Math.max(9, 14*mpx));
     // turn-pad guidance lines and edge markings
     cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35); path(TURN_E, false); cx.stroke(); path(TURN_W, false); cx.stroke();
     cx.strokeStyle = C.paint; cx.lineWidth = lw(0.6);
@@ -5011,18 +5039,19 @@ function drawAirport(){
     // taxiway centre and edge lines (solid yellow edges, AD 2.9)
     cx.save(); cx.beginPath(); cx.rect(0, 0, W, H); AD.rwyPoly.forEach(([m,o],k) => cx[k?'lineTo':'moveTo'](...c(m, o*1.02))); cx.closePath(); cx.clip('evenodd');   // taxi lines stop at the runway edge
     cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
-    for (const k in AD.twys) { path(AD.twys[k], false); cx.stroke(); }
+    for (const k of LINE_KEYS) { path(AD.twys[k], false); cx.stroke(); }
     cx.globalAlpha = 0.55; cx.lineWidth = lw(0.25);
-    for (const k in AD.twys) { const pts = AD.twys[k]; for (const s of [-9, 9]) { const off = pts.map(([m,o],i) => { const v = i ? [m - pts[i-1][0], o - pts[i-1][1]] : [pts[1][0]-m, pts[1][1]-o]; const L = Math.hypot(...v) || 1; return [m - v[1]/L*s, o + v[0]/L*s]; }); path(off, false); cx.stroke(); } }
+    if (AD.edgeLines) for (const k of EDGE_KEYS) { const pts = AD.twys[k]; for (const s of [-9, 9]) { const off = pts.map(([m,o],i) => { const v = i ? [m - pts[i-1][0], o - pts[i-1][1]] : [pts[1][0]-m, pts[1][1]-o]; const L = Math.hypot(...v) || 1; return [m - v[1]/L*s, o + v[0]/L*s]; }); path(off, false); cx.stroke(); } }
     cx.globalAlpha = 1;
     cx.restore();
+    // lead-on and lead-off lines over the runway, both ways from every entry
+    { const seen = new Set(); cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
+      for (const f of Object.values(FIL)) for (const pts of [f.W, f.E]) { const key = JSON.stringify(pts); if (seen.has(key)) continue; seen.add(key); strokeSmooth(leadLine(pts).map(([m, o]) => c(m, o))); } }
     // apron taxilanes and stand lead-ins
     cx.lineWidth = lw(0.3);
     for (const s of STANDS) {
       const ln = [mOf(s.lp), offOf(s.lp)];
-      cx.strokeStyle = C.yellow; path([ln, [s.m + (s.m - ln[0])*0.2, s.off + (s.off - ln[1])*0.25]], false); cx.stroke();
-      const nose = [s.m + (s.m - ln[0])*0.25, s.off + (s.off - ln[1])*0.3];
-      cx.save(); cx.translate(...c(...nose)); cx.rotate(s.hdg*D2R); cx.fillStyle = C.yellow; cx.fillRect(-4*mpx-2, -0.6, 8*mpx+4, 1.4); cx.restore();
+      cx.strokeStyle = C.yellow; path([ln, [s.m, s.off]], false); cx.stroke();   // the stand box carries on the centreline and stop bar
     }
     drawStandDetail(c, path, mpx);
     // closed portion of B and B1: unserviceable crosses
@@ -5051,7 +5080,7 @@ function drawAirport(){
     for (let o = -RHW + 0.5; o <= RHW - 0.5; o += 4) { glow(THR_LO_M, o, 'rgba(90,255,140,.9)'); glow(THR_HI_M, o, 'rgba(90,255,140,.9)'); glow(1, o, 'rgba(255,60,60,.85)'); glow(RWY_M-1, o, 'rgba(255,60,60,.85)'); }
     // SALS 300 m (09) and approach lights 27
     for (let d = 30; d <= 300; d += 30) glow(-d*0.15, 0, 'rgba(255,240,200,.0)');
-    for (const k in AD.twys) { const pts = AD.twys[k]; for (let i = 0; i < pts.length-1; i++) { const [m1,o1] = pts[i], [m2,o2] = pts[i+1], L = Math.hypot(m2-m1, o2-o1), n = Math.floor(L/30); for (let j = 1; j < n; j++) { const f = j/n, m = m1+(m2-m1)*f, o = o1+(o2-o1)*f, vx = (m2-m1)/L, vy = (o2-o1)/L; glow(m - vy*10, o + vx*10, 'rgba(70,130,255,.85)'); glow(m + vy*10, o - vx*10, 'rgba(70,130,255,.85)'); } } }
+    for (const k of EDGE_KEYS) { const pts = AD.twys[k]; for (let i = 0; i < pts.length-1; i++) { const [m1,o1] = pts[i], [m2,o2] = pts[i+1], L = Math.hypot(m2-m1, o2-o1), n = Math.floor(L/30); for (let j = 1; j < n; j++) { const f = j/n, m = m1+(m2-m1)*f, o = o1+(o2-o1)*f, vx = (m2-m1)/L, vy = (o2-o1)/L; glow(m - vy*10, o + vx*10, 'rgba(70,130,255,.85)'); glow(m + vy*10, o - vx*10, 'rgba(70,130,255,.85)'); } } }
     const on = Math.floor(S.t*1.4) % 2 === 0;
     for (const Hd of Object.values(HOLDS)) if (Hd.rgl) for (const sgn of [-1,1]) glow(Hd.m + sgn*12, Hd.off, (on === (sgn > 0)) ? 'rgba(255,190,40,.95)' : 'rgba(255,190,40,.18)', r*1.4);
     // apron floodlight pools

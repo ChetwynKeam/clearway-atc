@@ -280,7 +280,7 @@ const AD_SITE = {
   floods: [1125,1166,1206,1246,1293],
   aprons: [],
   roads: [],
-  twyExtra: [['N', [[1430.3,207],[1440.4,234.4]]]],
+  twyExtra: [['N', [[1430.3,207],[1440.4,234.4]]]], edgeLines: true,
   paag: [433, RWY_M - 405],
   twyLabels: [['B',1330,TW.B],['B',1490,TW.B],['A',TW.A,52],['E',TW.E,50],['C',TW.C,-55],['D',TW.D,-55]],
   hotspots: [['HS1', TW.A, 88]],

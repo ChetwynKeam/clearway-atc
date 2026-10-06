@@ -51,7 +51,7 @@ gn('RB', 68.6, -36); gn('HB', 68.6, -59.5); ge('RB', 'HB', 'B');
 gn('RC', 333.5, -36); gn('HC', 333.5, -59.1); ge('RC', 'HC', 'C');
 gn('RD', 413.0, -36); gn('HD', 429, -63.6); ge('RD', 'HD', 'D');
 gn('RE', 621.8, -36); gn('HE', 604, -59.7); ge('RE', 'HE', 'E');
-gn('RF', 1124.5, -36); gn('HF', 1093, -59.3); ge('RF', 'HF', 'F');
+gn('RF', 1113.9, -48.1); gn('HF', 1103.3, -59.3); ge('RF', 'HF', 'F');
 gn('RK', 1314.8, -36); gn('HK', 1327, -59.2); ge('RK', 'HK', 'K');
 gn('RL', 1462.8, -36); gn('HL', 1429, -66.3); ge('RL', 'HL', 'L');
 gn('RM', 1494.9, -36); gn('HM', 1495.1, -59.1); ge('RM', 'HM', 'M');
@@ -76,7 +76,7 @@ const HOLDS = {
   C: { node: 'HC', rwy: 'RC', m: 333.5, off: -59.1, rgl: true },
   D: { node: 'HD', rwy: 'RD', m: 429, off: -63.6, rgl: true },
   E: { node: 'HE', rwy: 'RE', m: 604, off: -59.7, rgl: true },
-  F: { node: 'HF', rwy: 'RF', m: 1093, off: -59.3, rgl: true },
+  F: { node: 'HF', rwy: 'RF', m: 1103.3, off: -59.3, rgl: true },
   K: { node: 'HK', rwy: 'RK', m: 1327, off: -59.2, rgl: true },
   L: { node: 'HL', rwy: 'RL', m: 1429, off: -66.3, rgl: true },
   M: { node: 'HM', rwy: 'RM', m: 1495.1, off: -59.1, rgl: true }
@@ -175,7 +175,7 @@ const TAXI_HINT = {
 
 // ═════════════════════════ aerodrome drawing (runway metres) ═════════════════════════
 const AD_SITE = {
-  aprons: APRONS, roads: [], buildings: [], twyExtra: OSM_TWY, shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [],
+  aprons: APRONS, roads: [], buildings: [], twyExtra: OSM_TWY, osmLines: true, shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [],
   twyLabels: [['T', 180, -88], ['T', 900, -95], ['T', -100, -68], ['A', 12, -48], ['B', 70, -48], ['C', 335, -48], ['D', 425, -52], ['E', 604, -50], ['F', 1095, -50], ['K', 1322, -50], ['L', 1440, -55], ['M', 1490, -48]],
   hotspots: [['HS1', 0, -72]],
   labels: [['MAIN APRON', 180, -150], ['EAST APRON', 610, -170], ['WEST APRON', -70, -130], ['GA APRON', -255, -110], ['TERMINAL', 360, -190],
