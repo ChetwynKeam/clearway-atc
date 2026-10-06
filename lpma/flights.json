@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-06T12:32:58Z",
+ "updated": "2026-10-06T12:57:44Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-06": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "London Gatwick",
-     "flight": "BA2716",
-     "sched": "11:30",
-     "status": "Arrived",
-     "expected": "12:18"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1687",
-     "sched": "11:40",
-     "status": "Arrived",
-     "expected": "12:49"
-    },
     {
      "place": "Paris Orly",
      "flight": "TO7698",
@@ -44,15 +30,15 @@
      "place": "Lisboa",
      "flight": "EJU7625",
      "sched": "13:45",
-     "status": "Estimated",
-     "expected": "13:30"
+     "status": "Arrived",
+     "expected": "13:32"
     },
     {
      "place": "Ponta Delgada",
      "flight": "S4160",
      "sched": "14:00",
      "status": "Estimated",
-     "expected": "13:50"
+     "expected": "13:45"
     },
     {
      "place": "London Stansted",
@@ -73,7 +59,7 @@
      "flight": "4Y702",
      "sched": "14:45",
      "status": "Estimated",
-     "expected": "14:50"
+     "expected": "14:45"
     },
     {
      "place": "Hannover",
@@ -108,7 +94,7 @@
      "flight": "EJU5333",
      "sched": "16:40",
      "status": "Estimated",
-     "expected": "16:50"
+     "expected": "16:25"
     },
     {
      "place": "Frankfurt",
@@ -128,8 +114,8 @@
      "place": "Stuttgart",
      "flight": "X32810",
      "sched": "17:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:10"
     },
     {
      "place": "Tenerife Norte",
@@ -240,13 +226,6 @@
    "dep": [
     {
      "place": "London Gatwick",
-     "flight": "EZY8520",
-     "sched": "11:45",
-     "status": "Departed",
-     "expected": "13:05"
-    },
-    {
-     "place": "London Gatwick",
      "flight": "BA2717",
      "sched": "12:20",
      "status": "Departed",
@@ -256,28 +235,28 @@
      "place": "Lisboa",
      "flight": "TP1688",
      "sched": "12:40",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Paris Orly",
      "flight": "TO7699",
      "sched": "13:25",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "13:30"
     },
     {
      "place": "Warsaw",
      "flight": "3Z7307",
      "sched": "14:00",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1690",
      "sched": "14:15",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
