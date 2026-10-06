@@ -334,6 +334,7 @@ const APT = {
   appRwys: () => FINAL[parallelOf(S.rwy)] ? [S.rwy, parallelOf(S.rwy)] : [S.rwy],
   // departures need a release only on flow-restricted routes: Boston and the Washington corridor (Approval Request)
   needRel: ac => KJFK.APREQ.includes(ac.d),
+  prefArea: ac => { const t = TERMINAL_OF[ac.cs.slice(0, 3)] || '4'; return { key: t, name: 'Terminal ' + t, has: s => s.term === t }; },
   standFor: ac => { const t = TERMINAL_OF[ac.cs.slice(0, 3)] || '4'; const free = STANDS.filter(s => !s.occ && s.term === t); return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null; },
   inboundAlt: gate => gate === 'S' || gate === 'SW' ? 8000 : 9000,
   divertTo: ac => ac.gate === 'S' || ac.gate === 'SW' || ac.gate === 'W' || ac.gate === 'NW' ? ['Newark', 'PUCKY'] : ['Boston', 'MERIT'],

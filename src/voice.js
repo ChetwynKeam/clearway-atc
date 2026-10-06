@@ -103,6 +103,11 @@ function heardRwy(s, re = / runway (\d{1,2})( left| right| center)? /){
   const r = String(+m[1]) + (m[2] ? m[2].trim()[0].toUpperCase() : '');
   return RW_ENDS.find(e => e === r || e === r.padStart(2, '0') || e === m[1] + (m[2] ? m[2].trim()[0].toUpperCase() : '')) || null;
 }
+// a spoken stand or gate ("five", "bravo two three", "five dash one four"): its id, if the airport has it
+function heardStand(t){
+  const parts = t.split(/ (?:via|hold) /)[0].trim().split(' ').filter(x => !/^(dash|hyphen)$/.test(x)).slice(0, 3).map(x => /^\d+$/.test(x) ? x : PHONW[x] || (x.length === 1 ? x.toUpperCase() : ''));
+  return [parts.join(''), parts.join('-')].find(c => STANDS.some(x => x.id.toUpperCase() === c)) || null;
+}
 function phraseToCmd(raw){
   let w = normSpeech(raw);
   const hit = heardCallsign(w);
@@ -129,12 +134,13 @@ function phraseToCmd(raw){
   // "taxi to holding point tango 3": an intermediate holding point (or, for an arrival, any holding point)
   const hpm = s.match(/ taxi .*?holding point (\S+)(?: (\d{1,2}))? /), hpId = hpm && ((PHONW[hpm[1]] || (hpm[1].length === 1 ? hpm[1].toUpperCase() : '')) + (hpm[2] || ''));
   const toHold = hpId && (IHPS[hpId] && !HOLDS[hpId] || (ac && ac.kind === 'ARR' && holdPt(hpId))) ? hpId : null;
+  // an arrival given its stand without a taxi clearance: "stand 5", "gate bravo two three"
+  if (ac && ac.kind === 'ARR' && !/ taxi /.test(s) && (m = s.match(/ (?:stand|gate) (.*)/))) { const id = heardStand(m[1]); if (id) out.push('STAND ' + id); }
   if (toHold) out.push('TAXI ' + toHold);
   // an arrival clear of the runway: "taxi to stand 5", "taxi to gate bravo two three via kilo"
   else if (ac && ac.kind === 'ARR' && / taxi /.test(s)) {
     let cmd = 'TAXI'; const g = s.match(/ (?:stand|gate) (.*)/);
-    if (g) { const parts = g[1].split(/ (?:via|hold) /)[0].trim().split(' ').filter(x => !/^(dash|hyphen)$/.test(x)).slice(0, 3).map(x => /^\d+$/.test(x) ? x : PHONW[x] || (x.length === 1 ? x.toUpperCase() : ''));
-      const id = [parts.join(''), parts.join('-')].find(c => STANDS.some(x => x.id.toUpperCase() === c)); if (id) cmd += ' ' + id; }
+    if (g) { const id = heardStand(g[1]); if (id) cmd += ' ' + id; }
     const v = s.match(/ via (.+?)( hold| $)/);
     if (v) { const vl = []; let solo = false; for (const x of v[1].split(' ')) { const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
       const vv = vl.filter(x => PHON[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
