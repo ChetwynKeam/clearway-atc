@@ -184,6 +184,10 @@ body.theme-dark .sb-bay { background: #0e1519; }
 .strip .rte, .strip .stt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .strip .stt { font-family: var(--font-label); font-weight: 600; font-size: 13px; letter-spacing: .03em; }
 .app button.strip.sel { outline: 2px solid var(--phos); outline-offset: 1px; }
+.strip .c-a { position: relative; }
+.strip .ctr { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 4px; background: #142024; color: #fff; cursor: pointer; }
+.strip .ctr svg { width: 14px; height: 14px; }
+.strip .ctr:hover, .strip .ctr:focus-visible { background: var(--phos); outline: none; }
 .app button.strip.need .stt { color: #a14a00; }
 .app button.strip.off { opacity: .62; cursor: default; }
 /* a landing or take-off clearance that still stands: green edge and a tick (purple stays for transferred flights) */

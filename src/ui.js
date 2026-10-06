@@ -411,7 +411,7 @@ function silhouette(ac, X, Y, mpx, col, shadow){
 // cleared for take-off until it is airborne
 const clrOf = ac => outOfCtl(ac) || ac.state === 'PRE' ? null : ac.ctl && (!ac.ground || ac.onRwy) ? 'CTL' : ac.cto && ac.ground && ac.kind === 'DEP' ? 'CTO' : null;
 function drawAc(ac){
-  const sc = V.scale, X = sx(ac.x), Y = sy(ac.y);
+  const sc = V.scale, M = acMid(ac), X = sx(M[0]), Y = sy(M[1]);
   if (X < -200 || Y < -200 || X > W+200 || Y > H+200) return;
   const sel = S.sel === ac, conf = S.conflictSet.has(ac.cs);
   const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : outOfCtl(ac) ? (conf ? C.conf : C.off) : conf || (ac.emerg && !ac.emerg.done) ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
@@ -718,7 +718,23 @@ function makeStrip(ac, doc = document){
   if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
   if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
   else d.onclick = () => tapSelect(ac);
+  // the selected flight's strip gets a recentre button: the map jumps to it (close in on the ground, the radar picture in the air)
+  if (S.sel === ac && !outOfCtl(ac)) {
+    const c = doc.createElement('span'); c.className = 'ctr'; c.setAttribute('role', 'button'); c.tabIndex = 0; c.title = 'Centre the map on ' + ac.cs; c.setAttribute('aria-label', c.title);
+    c.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/><path d="M8 0.5v3M8 12.5v3M0.5 8h3M12.5 8h3" stroke="currentColor" stroke-width="1.6"/></svg>';
+    c.onclick = e => { e.stopPropagation(); centreOn(ac); };
+    c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); centreOn(ac); } };
+    d.querySelector('.c-a').prepend(c);
+  }
   return d;
+}
+function centreOn(ac){
+  const m = Math.min(W, H) || 600, [x, y] = acMid(ac);
+  if (ac.ground) { V.scale = Math.max(V.scale, m/(700*M2NM)); V.name = 'gnd'; }   // about 700 m across the scope
+  else { V.scale = m/APT.view.app[2]; V.name = 'app'; }
+  V.cx = x; V.cy = y;
+  document.querySelectorAll('[data-view]').forEach(bt => bt.classList.toggle('on', bt.dataset.view === V.name));
+  if (phoneMQ.matches) setMTab('map');
 }
 function renderStrips(force){
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
@@ -857,7 +873,7 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac)) continue; const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac)) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
