@@ -41,12 +41,16 @@ const TURN_PAD = {};
 const TURN_END = { E: TURN_E[TURN_E.length-1][0], W: TURN_W[TURN_W.length-1][0] };
 const PHON = LOWI.TAXI.PHON;
 function depHold(ac){ return depRw() === RW_LO ? 'A' : 'B'; }
+// the hangar apron lane (stands 51-53) runs from its west end (m 880) to Lima: its pushes stay on it, not on the main
+// apron lane, and its only way out is east along it to Lima, whichever runway is in use
+const GA_LANE = [880, 1045];
+const laneOf = st => st.area === 'north' ? GA_LANE : G.LANE;
 function pushPath(ac, face){
-  const st = ac.stand, lm = mOf(st.lp), lo = offOf(st.lp);
+  const st = ac.stand, lm = mOf(st.lp), lo = offOf(st.lp), L = laneOf(st);
   const tail = face === 'west' ? 1 : -1;                    // facing west means the tail goes east
-  return [st.lp, rm(clamp(lm + tail*40, G.LANE[0], G.LANE[1]), lo)];
+  return [st.lp, rm(clamp(lm + tail*40, L[0], L[1]), lo)];
 }
-const pushRec = ac => depHold(ac) === 'B' ? 'east' : 'west';
+const pushRec = ac => ac.stand.area === 'north' || depHold(ac) === 'B' ? 'east' : 'west';
 
 // ═════════════════════════ fixes, STARs, SIDs (charts 9-1, 9-2, 11-1) ═════════════════════════
 for (const [id, p] of Object.entries(LOWI.FIX)) wp(id, p[0], p[1], /^WI(5|6|7|8)\d\d$/.test(id) || /^WI00[5-8]$/.test(id) || id === 'WI103' || id === 'WI002' ? { minor: true } : {});
@@ -277,7 +281,7 @@ const APT = {
   depClear: ac => ac.alt > ELEV + 400,
   shear(ac, rw, w){ return LOWI.isFoehn(w) && rw === RW_LO && Math.random() < 0.12 ? 'downdraught over the Inn on final' : null; },
   shearWhy: rw => LOWI.isFoehn(S.wx) ? 'severe föhn turbulence on final' : 'windshear on short final',
-  faceHold: (st, f) => f === 'east' ? 'B' : 'A',
+  faceHold: (st, f) => st.area === 'north' && f === 'east' ? depHold() : f === 'east' ? 'B' : 'A',
   faceWord: f => f,
   taxiHolds: south => ['A', 'B'],
   taxiHint: rw => depRw() === RW_LO ? 'Runway 08 departures leave from Alpha and backtrack to the turn pad at the west end.' : 'Runway 26 departures leave from Bravo and backtrack to the turn pad at the east end.',
