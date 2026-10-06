@@ -4832,7 +4832,11 @@ function vacSpeed(ac, dt){
 function startLineUp(ac){
   ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw()).id; ac.need = null;
   const back = true;
-  setPath(ac, lineUpPath(ac, ac.hp), 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw()); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; });
+  // finish on a straight stretch of centreline, so the turn onto the runway rounds out into line instead of snapping onto it
+  const pts = lineUpPath(ac, ac.hp), R = holdRwy(ac.hp), c = crsOf(depRw()), e = pts[pts.length-1];
+  const dir = Math.sin(c*D2R)*R.RU[0] + Math.cos(c*D2R)*R.RU[1] >= 0 ? 1 : -1;
+  pts.push(R.rm(R.mOf(e) + dir*Math.max(35, taxiR(ac)*1.5), 0));
+  setPath(ac, pts, 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw()); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; }, { fine: true });
   return back;
 }
 
@@ -5348,7 +5352,7 @@ function stepAir(ac, dt){
 // A taxiing aircraft's position (x, y) is its nose: it stops with the nose at a holding point line and turns where
 // the nose meets the turn, the body trailing behind. Parked, pushing or taking off, it is the middle of the aircraft.
 // ac.nose (metres) is how far the middle sits behind (x, y); it eases between the two so the icon never jumps.
-const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'ROLLOUT']);
+const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'ROLLOUT', 'LINEUP', 'LINEDUP']);
 function stepNose(ac, dt){
   const want = ac.ground && NOSE_STATES.has(ac.state) ? ac.perf.len/2 : 0, cur = ac.nose || 0;
   if (cur !== want) ac.nose = want > cur ? Math.min(want, cur + 4*dt) : Math.max(want, cur - 4*dt);
@@ -5413,7 +5417,7 @@ function stepGround(ac, dt){
       else {
         ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv;
         const d2 = dist(ac.x, ac.y, ...tgt);
-        if (last) { if (d2 < 0.0015 || (Math.abs(err) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
+        if (last) { if (d2 < (ac.path.fine ? mv : 0.0015) || (Math.abs(err) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
         else {
           const nxt = ac.path.pts[1], th = Math.abs(angDiff(want, brg(...tgt, ...nxt)));
           const lead = Math.min(R/1852*Math.tan(Math.min(th, 150)*D2R/2), dist(...tgt, ...nxt)/2);
