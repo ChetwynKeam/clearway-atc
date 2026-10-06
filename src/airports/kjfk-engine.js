@@ -458,3 +458,10 @@ const APT = {
     cmdHint: 'Command, e.g. JBU702 A30 APP · DAL1103 TAXI · AAL1 CROSS · / to focus, Tab cycles flights'
   }
 };
+// maintenance hangars (OpenStreetMap hangar buildings, north side and by Terminals 5 and 8): aircraft stored at the start
+// of a session are towed to a gate at their airline's terminal an hour before departure. The door is the nearest apron
+// taxilane node.
+APT.hangars = [[-946.1, 1520.5, 'n549'], [18.6, 1745.3, 'n564'], [888.1, 1249.7, 'n203'], [-1789.4, 1524.7, 'n333'],
+  [-1441.3, 1703.3, 'n414'], [-2097.7, 1520.1, 'n546'], [-1928.0, 1735.7, 'k307'], [-1715.5, 2031.4, 'n216']]
+  .filter(([, , node]) => GN[node])
+  .map(([e, n, node], i) => ({ id: 'H' + (i + 1), name: 'maintenance hangar ' + (i + 1), in: inF0(e, n), door: [GN[node].m, GN[node].off], node, fits: ac => true, pick: ac => APT.standFor(ac) }));

@@ -356,3 +356,7 @@ const APT = {
     return out;
   }
 };
+// the business aviation (Jet Centre) hangar behind the GA apron, west end: representative position and size, the
+// airport's own charts don't show it. Aircraft stored there are towed out to the GA or west apron an hour before departure.
+AD_SITE.buildings.push({ pts: [[-282, -128], [-230, -128], [-230, -166], [-282, -166]], h: 12, roof: 'hangar' });
+APT.hangars = [{ id: 'H1', name: 'the Jet Centre hangar', in: [-256, -147], door: [-256, -112], node: 'T0', to: ['north', 'civil'], fits: ac => true }];

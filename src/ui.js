@@ -70,7 +70,7 @@ function draw(){
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
-  for (const ac of S.acs) if (ac.ground) drawAc(ac);
+  for (const ac of S.acs) if (ac.ground && !inHangar(ac)) drawAc(ac);   // stored in a hangar: out of sight until it is towed out
   if (img) drawImageryCredit();
   else if (MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
   // scale bar
@@ -575,9 +575,12 @@ function renderSel(){
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
-  if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
+  if (ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) { const c = SLOT[ac.cs].ctot; html += `<div class="meta">Slot (CTOT) <b>${hhmm(c)}Z</b>: take-off between ${hhmm(c - 5)} and ${hhmm(c + 10)}Z.</div>`; }
+  if (inHangar(ac)) html += `<div class="meta">In ${ac.stand.name}${ac.kind === 'DEP' ? (ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? `: the tug calls to tow it out to a stand at about ${zt(ac.tow.at).slice(0,5)}Z, an hour before off-blocks.` : '.') : ', stored for the day.'}</div>`;
+  if (ac.kind === 'DEP' && ac.state === 'PARKED' && ac.slotHold) html += `<div class="meta">Held on stand from the Flights board: the crew won’t call for start-up until you release it there.</div>`;
+  else if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
-  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
+  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and ${ac.slotHold ? 'is holding outside your airspace until you release it on the Flights board' : `calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now`}.</p>`; return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–') + (ac.via && ac.app ? ' via procedure' : '')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
     ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.filter(k => !WP[k].hide).join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
@@ -737,9 +740,9 @@ function makeStrip(ac, doc = document){
   const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}${ac.state === 'DIVERTING' && !outOfCtl(ac) ? ' div' : ''}`;
   d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
   d.querySelector('.cs').textContent = ac.cs;
-  d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
+  d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
   d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
-  d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
+  d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? (ac.stand.area === 'hangar' ? 'Hangar ' : 'Stand ')+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
   // arrivals show the stand they are going to, once it is planned
   if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
   const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
@@ -903,7 +906,7 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac)) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac) || inHangar(ac)) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
@@ -940,7 +943,7 @@ renderSlots();
 function resetSession(){
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
   S.emg = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
-  STANDS.forEach(s => s.occ = null); logEl.innerHTML = ''; stripSig = '';
+  STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
   if (!S.running && !cwGate()) return;   // opening a position needs a plan that includes this airport (account.js)

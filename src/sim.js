@@ -259,6 +259,15 @@ function stepPending(ac, dt){
   const e = ENTRY[ac.gate], d = dist(ac.x, ac.y, ...e);
   // the previous sector hands it over in trail: it slows down outside the entry point until the one ahead has moved on
   const busy = d < 15 && entryBusy(ac, e, ENTRY_ALT[ac.gate], 8, 3000);   // 8 NM in trail, whatever the one ahead is descending to
+  // held, or slotted later on the Flights board: the previous sector holds it where it is (a rate-one orbit) until it is
+  // due to fly the rest of the way in
+  if (ac.slotHold || (!busy && S.t < ac.preAt - d/330*3600 - 20)) {
+    if (ac.slotHold) ac.preAt = Math.max(ac.preAt, S.t + d/330*3600);
+    ac.gs = 230; ac.hdg = ac.trk = norm(ac.hdg + 3*dt); ac.vs = 0; ac.holding = true;
+    const m = ac.gs/3600*dt; ac.x += Math.sin(ac.hdg*D2R)*m; ac.y += Math.cos(ac.hdg*D2R)*m;
+    return;
+  }
+  ac.holding = false;
   if (busy) ac.gs = Math.max(200, ac.gs - 3*dt); else if (ac.gs < 330) ac.gs = Math.min(330, ac.gs + 3*dt);
   const mv = ac.gs/3600*dt;
   ac.hdg = ac.trk = brg(ac.x, ac.y, ...e);
@@ -291,6 +300,14 @@ const isBiz = ac => ac.perf.wake === 'L' || ac.t === 'GLF6' || ac.t === 'C56X';
 function spawnResident(f){
   const ac = new Aircraft(f); ac.freq = 'TWR'; ac.ground = true; ac.alt = ELEV;
   const wait = f.depM == null ? Infinity : f.depM;
+  const hg = hangarFor(ac, f);
+  if (hg) {   // stored in a hangar: towed out to a stand before it leaves
+    hg.occ = ac; ac.stand = hg; ac.x = hg.p[0]; ac.y = hg.p[1]; ac.hdg = hg.hdg;
+    if (f.depM == null) { ac.kind = 'ARR'; ac.state = 'ONSTAND'; ac.doneAt = Infinity; }
+    else { ac.kind = 'DEP'; ac.state = 'PARKED'; ac.reqAt = Math.max(8, (f.depM - 6)*60); ac.tow = { at: Math.max(20, (f.depM - 60)*60), pref: f.stand }; }
+    S.acs.push(ac); emit('spawn', ac);
+    return ac;
+  }
   const remote = !isMil(ac) && !isBiz(ac) && wait > 45;
   const order = isMil(ac) ? ['south'] : isBiz(ac) ? ['north', 'civil'] : remote ? ['south', 'north', 'civil'] : ['civil', 'north'];
   let st = (!remote || APT.standFor) && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
@@ -303,9 +320,19 @@ function spawnResident(f){
   S.acs.push(ac); emit('spawn', ac);
   return ac;
 }
+// hangars (APT.hangars, where the airport has them): stand-like places an aircraft can be stored in at the start of a
+// session. It is out of sight until the tug calls to tow it out, an hour before off-blocks (remote stands: 35 minutes).
+const HANGARS = (APT.hangars || []).map(h => { const p = rm(...h.in), lp = rm(...h.door); return { id: h.id, name: h.name, p, lp, node: h.node, hdg: brg(...p, ...lp), area: 'hangar', occ: null, hg: h }; });   // parked facing the doors
+const inHangar = ac => !!(ac.stand && ac.stand.area === 'hangar' && (ac.state === 'PARKED' || ac.state === 'ONSTAND'));
+const towLead = ac => ac.stand && ac.stand.area === 'hangar' ? 60 : 35;
+function hangarFor(ac, f){
+  const wait = f.depM == null ? Infinity : f.depM;   // staying for the day, or leaving 75 minutes or more from now
+  if (wait < 75) return null;
+  return HANGARS.find(h => !h.occ && h.hg.fits(ac)) || null;
+}
 // after an arrival is on stand it becomes its own turnaround departure (new callsign), or stays parked
 function turnRound(ac){
-  const tr = ac.turn;
+  const tr = ac.turn && !ac.turn.cancel ? ac.turn : null;   // cancelled on the Flights board: it stays parked
   if (!tr) { ac.doneAt = ac.stand ? Infinity : S.t + 120; return; }
   const was = ac.cs;
   Object.assign(ac, { cs: tr.cs, kind: 'DEP', d: tr.d, gate: gateFor(tr.d), o: undefined, state: 'PARKED', need: null, freq: 'TWR', turn: null,
@@ -322,17 +349,24 @@ function towPath(ac, to){
     add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, ...filOut('C', 'E'), ...filIn('A', 'W'), GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, to.node));
   } else add(route(from.node, to.node));
   pts.push(to.p);
+  // out of a hangar: the tug walks it round the apron corners (tight turns), by way of the lane node outside the doors
+  if (from.area === 'hangar') return [from.lp, GN[from.node].p, ...pts.slice(1)].map((p, i, a) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; });
   return pts;
 }
 function stepTows(){
   for (const ac of S.acs) {
     if (!ac.tow || ac.state !== 'PARKED' || ac.tow.asked || S.t < ac.tow.at) continue;
-    const to = (ac.tow.pref && STANDS.find(s => s.id === ac.tow.pref && !s.occ && s.area === 'civil')) || STANDS.find(s => !s.occ && s.area === 'civil');
+    // from a hangar: the stand areas that hangar serves, in order; from a remote stand: the civil apron
+    // a stand change from the Flights board (only): that stand and no other, once it is free
+    const H = ac.stand.area === 'hangar' && ac.stand.hg, areas = H ? (typeof H.to === 'function' ? H.to(ac) : H.to || []) : ['civil'];
+    let to = ac.tow.pref && STANDS.find(s => s.id === ac.tow.pref && !s.occ && (ac.tow.only || areas.includes(s.area)));
+    if (!to && !ac.tow.only && H && H.pick) to = H.pick(ac);   // New York: a gate at the airline's terminal
+    if (!ac.tow.only) for (const a of areas) if (!to) to = STANDS.find(s => !s.occ && s.area === a);
     if (!to) { ac.tow.at = S.t + 120; continue; }
     to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
-    const cross = ac.stand.area === 'south';
-    log('plt', `${APT.tower[0]}, tug with ${ac.cs} on stand ${ac.stand.id}, request tow to stand ${to.id}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
-    say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} on stand ${ac.stand.id}, request tow to stand ${to.id}`, 'tug');
+    const cross = ac.stand.area === 'south', at = H ? `in ${H.name}` : `on ${APT.standWord || 'stand'} ${ac.stand.id}`;
+    log('plt', `${APT.tower[0]}, tug with ${ac.cs} ${at}, request tow to ${APT.standWord || 'stand'} ${to.id}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
+    say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} ${at}, request tow to ${APT.standWord || 'stand'} ${to.id}`, 'tug');
   }
 }
 // parked aircraft with nothing due in the next 15 minutes stay off the strip board
@@ -472,7 +506,7 @@ function taxiLimit(ac){
 // an arrival's stand is planned once it is cleared for an approach, so the card and strip show where it is going
 function planStand(ac){
   if (ac.kind !== 'ARR' || (ac.stand && ac.stand.occ === ac)) return;
-  const st = freeStand(ac); if (st) st.occ = ac; ac.stand = st;
+  const st = (ac.standPref && STANDS.find(s => s.id === ac.standPref && !s.occ)) || freeStand(ac); if (st) st.occ = ac; ac.stand = st;   // standPref: given on the Flights board
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
@@ -654,6 +688,7 @@ function commandRun(str){
     } else if (t === 'TOW') {
       if (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to) { sys(`${ac.cs} has no tow request.`); continue; }
       const to = ac.tow.to, from = ac.stand, cross = from.area === 'south';
+      if (from.area === 'hangar') { ac.x = from.lp[0]; ac.y = from.lp[1]; ac.hdg = from.hdg; ac.mg = ac.bh = null; }   // the doors open: it comes out onto the apron
       setPath(ac, towPath(ac, to), 5, () => { ac.state = 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is on stand ${to.id}.`); });
       if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null; ac.towCross = cross;
       log('atc', `Tug with ${ac.cs}, tow approved to stand ${to.id}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
@@ -858,7 +893,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
-  for (const f of S.sched) if (!f.spawned && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else spawnDeparture(f); }
+  for (const f of S.sched) if (!f.spawned && !f.hold && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else spawnDeparture(f); }
   const X = S.xing;
   if (APT.xing) {
   if (X.st === 'CLOSING' && S.t >= X.t) { X.st = 'CLOSED'; sys('Winston Churchill Avenue closed: barriers down, crossing clear, FOD check complete.'); renderAtis(); emit('xing', 'CLOSED'); }
