@@ -788,6 +788,7 @@ function step(dt){
     if (ac.state === 'TOW') { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
     if (ac.kind === 'ARR' && ac.app && !ac.stand && !ac.handed) planStand(ac);
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
+    stepNose(ac, dt);
     if (ac.rel) stepRelease(ac);
     if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; S.score.pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
@@ -972,6 +973,16 @@ function stepAir(ac, dt){
   { const T = APT.terrain, hit = T && (T.check ? T.check(ac) : ac.alt < T.min && inPoly([ac.x, ac.y], T.poly)); if (hit) { if (!ac.terr) { ac.terr = true; S.score.incidents++; S.score.pts -= (ac.alt < (T.lowAt ? T.lowAt(hit) : T.low) ? 80 : 30); sys(T.msg(ac, hit), true); } } else ac.terr = false; }
 }
 
+// A taxiing aircraft's position (x, y) is its nose: it stops with the nose at a holding point line and turns where
+// the nose meets the turn, the body trailing behind. Parked, pushing or taking off, it is the middle of the aircraft.
+// ac.nose (metres) is how far the middle sits behind (x, y); it eases between the two so the icon never jumps.
+const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'ROLLOUT']);
+function stepNose(ac, dt){
+  const want = ac.ground && NOSE_STATES.has(ac.state) ? ac.perf.len/2 : 0, cur = ac.nose || 0;
+  if (cur !== want) ac.nose = want > cur ? Math.min(want, cur + 4*dt) : Math.max(want, cur - 4*dt);
+}
+// where the middle of the aircraft is (draw the icon there, and hit-test clicks there)
+const acMid = ac => ac.nose ? [ac.x - Math.sin(ac.hdg*D2R)*ac.nose*M2NM, ac.y - Math.cos(ac.hdg*D2R)*ac.nose*M2NM] : [ac.x, ac.y];
 function stepGround(ac, dt){
   if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && !ac.tow && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, PH.startReq(ac)); }
   if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt) { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
