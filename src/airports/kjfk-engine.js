@@ -144,15 +144,30 @@ function drawKjfk(){
       const hw = R.width/2 - 1.5, quad = (m1, o1, m2, o2) => { pathP([R.rm(m1, o1), R.rm(m2, o1), R.rm(m2, o2), R.rm(m1, o2)]); cx.fill(); };
       cx.lineWidth = lw(0.9); pathP([R.rm(0, hw), R.rm(R.len, hw)], false); cx.stroke(); pathP([R.rm(0, -hw), R.rm(R.len, -hw)], false); cx.stroke();
       cx.setLineDash([36*mpx, 24*mpx]); pathP([R.rm(R.thr[R.lo] + 120, 0), R.rm(R.thr[R.hi] - 120, 0)], false); cx.stroke(); cx.setLineDash([]);
+      // FAA AC 150/5340-1: threshold bar, 12 stripes (16 on the 200 ft runways), aiming point at 1,000 ft, touchdown zone
+      // bars in threes, twos and ones every 500 ft to 3,000 ft, and arrows down the centreline before a displaced threshold
+      const nStripe = R.width > 55 ? 8 : 6;
       for (const [m0, dir] of [[R.thr[R.lo], 1], [R.thr[R.hi], -1]]) {
         quad(m0, -hw, m0 + dir*3, hw);
-        for (let i = 0; i < 8; i++) for (const k of [-1, 1]) { const o = k*(4 + i*(hw - 4)/8); quad(m0 + dir*6, o - 0.9*k, m0 + dir*46, o + 0.9*k); }
+        for (let i = 0; i < nStripe; i++) for (const k of [-1, 1]) { const o = k*(4 + i*(hw - 4)/nStripe); quad(m0 + dir*6, o - 0.9*k, m0 + dir*46, o + 0.9*k); }
         for (const k of [-1, 1]) quad(m0 + dir*305, k*6, m0 + dir*350, k*16);
+        const half = Math.abs(R.thr[R.hi] - R.thr[R.lo])/2;
+        for (const [d, n] of [[152, 3], [457, 2], [610, 2], [762, 1], [914, 1]]) if (d + 23 < half) for (const k of [-1, 1]) for (let j = 0; j < n; j++) {
+          const o = k*(6 + j*3.4); quad(m0 + dir*d, o, m0 + dir*(d + 23), o + k*1.8);
+        }
+        const pre = dir > 0 ? m0 : R.len - m0;
+        if (pre > 60) {
+          cx.lineWidth = lw(0.9);
+          for (let d = 30; d < pre - 15; d += 60) { const m = m0 - dir*d; pathP([R.rm(m - dir*18, 0), R.rm(m, 0)], false); cx.stroke(); pathP([R.rm(m - dir*8, -3), R.rm(m, 0), R.rm(m - dir*8, 3)], false); cx.stroke(); }
+          for (const k of [-1, 1]) { const m = m0 - dir*8; pathP([R.rm(m - dir*10, k*8), R.rm(m, k*12), R.rm(m - dir*10, k*16)], false); cx.stroke(); }
+        }
       }
-      cx.font = `700 ${Math.max(9, 16*mpx)}px ${FONT_L}`; cx.textAlign = 'center'; cx.textBaseline = 'middle';
-      for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 70], [R.hi, R.thr[R.hi] - 70]]) { cx.save(); cx.translate(...P2(R.rm(m0, 0))); cx.rotate(crsOf(rw)*D2R); cx.fillText(rw, 0, 0); cx.restore(); }
-      cx.textAlign = 'left'; cx.textBaseline = 'alphabetic';
+      for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 70], [R.hi, R.thr[R.hi] - 70]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
     }
+    // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
+    cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35);
+    { const seen = new Set(); for (const k in FIL) { const f = FIL[k].W, key = HOLDS[k].on + JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
+      const R = rwyById(HOLDS[k].on); strokeSmooth(leadLine(f).map(p => P2(R.rm(...p)))); } }
     // taxiway centrelines, stopping at the runway edges
     cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35);
     for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
