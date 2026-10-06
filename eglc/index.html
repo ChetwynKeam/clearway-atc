@@ -852,6 +852,31 @@ body.embed > *:not(.embed-cv) { display: none !important; }
 .toc #tocList .lbl:first-child { margin-top: 0; }
 .cr-ap { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--panel-2); color: var(--dim); vertical-align: 1px; }
 
+/* slot control on the flights board */
+.fids { width: min(800px, calc(100% - 32px)); }
+.fids tr.can { cursor: pointer; }
+.fids tr.can:hover td { background: rgba(255,255,255,.05); }
+.fids tr.pick td { background: rgba(247,198,0,.14); }
+.fids td.nt { color: #ffb366; }
+.fids td.nt i { font-style: normal; color: #8fd3ff; font-size: 12px; }
+.fids-tip { margin-left: auto; font: 12px Inter, system-ui, sans-serif; color: #9fb3c8; }
+.slotbar { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.1); background: #10233a; display: flex; flex-direction: column; gap: 8px; font: 13px Inter, system-ui, sans-serif; }
+.slotbar .sl-tip { margin: 0; color: #9fb3c8; font-size: 12px; }
+.slotbar .sl-hd { display: flex; align-items: baseline; gap: 10px; }
+.slotbar .sl-hd b { font: 600 15px "JetBrains Mono", ui-monospace, monospace; color: #fff; }
+.slotbar .sl-hd span { color: #9fb3c8; flex: 1; }
+.slotbar .sl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.slotbar label { display: inline-flex; align-items: center; gap: 6px; color: #cfdae6; margin-right: 6px; }
+.slotbar input { width: 64px; padding: 5px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,.2); background: #0b1a2c; color: #f3d36b; font: 13px "JetBrains Mono", ui-monospace, monospace; text-align: center; }
+.slotbar input.bad { border-color: #ff8a7a; }
+.slotbar button:not(.x) { padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #e9eef5; font: 500 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
+.slotbar button:not(.x):hover:not(:disabled) { background: rgba(255,255,255,.12); }
+.slotbar button:disabled { opacity: .4; cursor: default; }
+.slotbar button.go { background: #1f8f55; border-color: #1f8f55; color: #fff; }
+.slotbar button.warn { background: #f7c600; border-color: #f7c600; color: #1b1500; }
+.slotbar button.danger { background: transparent; border-color: #ff8a7a; color: #ff8a7a; }
+.slotbar .sl-note { margin: 0; color: #b9c7d6; font-size: 12px; min-height: 1em; }
+
 /* ═════ accounts, pricing, feedback, airport requests (account.html / account.js) ═════ */
 .topbar .status .btn.ghost { box-shadow: none; padding: 9px 14px; font-size: 14px; }
 .cw-note { display: inline-block; background: var(--accent-soft); color: var(--accent-2); border: 1px solid #c9d8ff; border-radius: 8px; padding: 10px 14px; font-size: 15px; font-weight: 500; }
@@ -1687,7 +1712,8 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <div class="fids-hd"><div><b id="fidsTitle">Flight information</b><span id="fidsClock"></span></div>
         <div class="seg" role="tablist"><button data-fids="ARR" class="on">Arrivals</button><button data-fids="DEP">Departures</button></div>
         <button class="popbtn dark" id="fidsPop" title="Open the flights board in its own window">Pop out ↗</button><button class="x" id="fidsClose" aria-label="Close">×</button></div>
-      <div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th id="fidsAp">From</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fidsBody"></tbody></table></div>
+      <div class="slotbar" id="fidsSlot" hidden></div>
+      <div class="fids-wrap"><table><thead><tr><th>Sched</th><th>New</th><th>Flight</th><th id="fidsAp">From</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fidsBody"></tbody></table></div>
     </div>
     <div class="heard" id="heard" hidden></div>
     <div class="hud-score" id="score"></div>
@@ -3662,6 +3688,15 @@ function stepPending(ac, dt){
   const e = ENTRY[ac.gate], d = dist(ac.x, ac.y, ...e);
   // the previous sector hands it over in trail: it slows down outside the entry point until the one ahead has moved on
   const busy = d < 15 && entryBusy(ac, e, ENTRY_ALT[ac.gate], 8, 3000);   // 8 NM in trail, whatever the one ahead is descending to
+  // held, or slotted later on the Flights board: the previous sector holds it where it is (a rate-one orbit) until it is
+  // due to fly the rest of the way in
+  if (ac.slotHold || (!busy && S.t < ac.preAt - d/330*3600 - 20)) {
+    if (ac.slotHold) ac.preAt = Math.max(ac.preAt, S.t + d/330*3600);
+    ac.gs = 230; ac.hdg = ac.trk = norm(ac.hdg + 3*dt); ac.vs = 0; ac.holding = true;
+    const m = ac.gs/3600*dt; ac.x += Math.sin(ac.hdg*D2R)*m; ac.y += Math.cos(ac.hdg*D2R)*m;
+    return;
+  }
+  ac.holding = false;
   if (busy) ac.gs = Math.max(200, ac.gs - 3*dt); else if (ac.gs < 330) ac.gs = Math.min(330, ac.gs + 3*dt);
   const mv = ac.gs/3600*dt;
   ac.hdg = ac.trk = brg(ac.x, ac.y, ...e);
@@ -3708,7 +3743,7 @@ function spawnResident(f){
 }
 // after an arrival is on stand it becomes its own turnaround departure (new callsign), or stays parked
 function turnRound(ac){
-  const tr = ac.turn;
+  const tr = ac.turn && !ac.turn.cancel ? ac.turn : null;   // cancelled on the Flights board: it stays parked
   if (!tr) { ac.doneAt = ac.stand ? Infinity : S.t + 120; return; }
   const was = ac.cs;
   Object.assign(ac, { cs: tr.cs, kind: 'DEP', d: tr.d, gate: gateFor(tr.d), o: undefined, state: 'PARKED', need: null, freq: 'TWR', turn: null,
@@ -4261,7 +4296,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
-  for (const f of S.sched) if (!f.spawned && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else spawnDeparture(f); }
+  for (const f of S.sched) if (!f.spawned && !f.hold && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else spawnDeparture(f); }
   const X = S.xing;
   if (APT.xing) {
   if (X.st === 'CLOSING' && S.t >= X.t) { X.st = 'CLOSED'; sys('Winston Churchill Avenue closed: barriers down, crossing clear, FOD check complete.'); renderAtis(); emit('xing', 'CLOSED'); }
@@ -5211,9 +5246,11 @@ function renderSel(){
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
-  if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
+  if (ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) { const c = SLOT[ac.cs].ctot; html += `<div class="meta">Slot (CTOT) <b>${hhmm(c)}Z</b>: take-off between ${hhmm(c - 5)} and ${hhmm(c + 10)}Z.</div>`; }
+  if (ac.kind === 'DEP' && ac.state === 'PARKED' && ac.slotHold) html += `<div class="meta">Held on stand from the Flights board: the crew won’t call for start-up until you release it there.</div>`;
+  else if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
-  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now.</p>`; return; }
+  if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and ${ac.slotHold ? 'is holding outside your airspace until you release it on the Flights board' : `calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now`}.</p>`; return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–') + (ac.via && ac.app ? ' via procedure' : '')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
     ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.filter(k => !WP[k].hide).join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
@@ -5373,7 +5410,7 @@ function makeStrip(ac, doc = document){
   const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}${ac.state === 'DIVERTING' && !outOfCtl(ac) ? ' div' : ''}`;
   d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
   d.querySelector('.cs').textContent = ac.cs;
-  d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}`;
+  d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
   d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
   d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? 'Stand '+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
   // arrivals show the stand they are going to, once it is planned
@@ -6315,11 +6352,19 @@ function buildFar(){
     if (off >= -5*3600 && off < -600) addDepGhost({ cs: dc, t, d: dd, dt0: off - S.t }, toLL(rm(THR_HI_M - 1500, 0)));
   }
 }
+// how far along its route a flight is. A retimed inbound (Flights board) flies on from (t1, d1) at speed v; one that
+// would get there early, or one you have put on hold, flies a holding pattern (hold.d) until it is due
+const farDist = g => g.hold ? g.hold.d : Math.min(g.leg.D, (g.d1 || 0) + (S.t - (g.t1 ?? g.tStart))/3600*(g.v || g.spd));
 function farState(g){
-  if (S.t < g.tStart || S.t > g.tEnd) return null;
-  const d = (S.t - g.tStart)/3600*g.spd, { ll, hdg } = legAt(g.leg, d), left = g.leg.D - d;
+  if (S.t > g.tEnd || (g.hold ? g.hold.ground : S.t < g.tStart)) return null;
+  const d = farDist(g), { ll, hdg } = legAt(g.leg, d), left = g.leg.D - d;
   const up = g.kind !== 'ARR' ? (g.startAlt || 0) + d*330 : 1500 + d*330, down = g.endAlt + left*300;
-  return { p: xy(...ll), hdg, alt: Math.max(0, Math.min(g.cruise, up, down)), gs: g.spd };
+  const alt = Math.max(0, Math.min(g.cruise, up, down));
+  if (g.hold || (g.t1 != null && d >= g.leg.D - 0.01)) {   // holding: a rate-one orbit round the point it stopped at
+    const c = xy(...ll), a = (S.t*3) % 360, r = 0.7*(g.spd/250);
+    return { p: [c[0] + Math.sin(a*D2R)*r, c[1] + Math.cos(a*D2R)*r], hdg: norm(a + 90), alt, gs: Math.round(g.spd*0.8), holding: true };
+  }
+  return { p: xy(...ll), hdg, alt, gs: g.v || g.spd };
 }
 S.listeners.push((ev, d) => {
   if (ev === 'start') buildFar();
@@ -6402,6 +6447,7 @@ S.listeners.push((ev, d) => {
   if (ev === 'start') FAR.done = {};
 });
 const zHM = ms => new Date(ms).toISOString().substr(11, 5);
+const hhmm = m => { m = ((Math.round(m) % 1440) + 1440) % 1440; return `${String(Math.floor(m/60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
 const nowMin = () => (S.hour || 0)*60 + S.t/60;
 function fidsRows(kind){
   const day = String((S.day || 0) + 1), rows = [];
@@ -6450,9 +6496,12 @@ function fidsStand(r){
 function fidsBodyHTML(kind){
   const rows = fidsRows(kind), nm = nowMin();
   return rows.length ? rows.map(r => {
-    const [st, cls] = fidsStatus(r, kind), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
-    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${fidsStand(r)}</td><td class="st ${cls}">${st}</td></tr>`;
-  }).join('') : `<tr><td colspan="6" class="none">No ${kind === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
+    // slot control: a retimed flight shows its new time and is judged late or not by it; held and cancelled flights say so
+    const e = SLOT[r.cs], ctl = slotCtl(r.cs, kind), rr = e ? { ...r, tm: e.tm } : r;
+    const [st, cls] = slotStatus(r.cs, kind) || fidsStatus(rr, kind), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
+    const nt = [e && Math.round(e.tm) !== r.tm ? `<b>${hhmm(e.tm)}</b>` : '', e && e.ctot != null ? `<i>CTOT ${hhmm(e.ctot)}</i>` : ''].filter(Boolean).join(' ');
+    return `<tr class="${past ? 'past' : ''}${ctl.ok ? ' can' : ''}${SLOT.sel === r.cs ? ' pick' : ''}" data-cs="${r.cs}" data-k="${kind}" data-tm="${r.tm}"><td class="tm">${hhmm(r.tm)}</td><td class="nt">${nt}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${fidsStand(r)}</td><td class="st ${cls}">${st}</td></tr>`;
+  }).join('') : `<tr><td colspan="7" class="none">No ${kind === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
 }
 const fidsClockText = () => S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
 let fidsWin = null;
@@ -6461,18 +6510,20 @@ function renderFids(){
     const d = fidsWin.document;
     for (const k of ['ARR', 'DEP']) { const b = d.getElementById('fb' + k); if (b) b.innerHTML = fidsBodyHTML(k); }
     const c = d.getElementById('fbClock'); if (c) c.textContent = fidsClockText();
+    slotTick(d);
   }
   const el = document.getElementById('fidsBody'); if (!el || document.getElementById('fids').hidden) return;
   document.getElementById('fidsClock').textContent = fidsClockText();
-  el.innerHTML = fidsBodyHTML(fidsTab);
+  el.innerHTML = fidsBodyHTML(fidsTab); slotTick(document);
   document.getElementById('fidsAp').textContent = fidsTab === 'ARR' ? 'From' : 'To';
   document.querySelectorAll('[data-fids]').forEach(b => b.classList.toggle('on', b.dataset.fids === fidsTab));
 }
 function openFidsBoard(){
   if (fidsWin && !fidsWin.closed) { fidsWin.focus(); return; }
   fidsWin = popWin('cwFlights', `${APT.icao} flights`, 1200, 700); if (!fidsWin) return;
-  const tbl = k => `<section><h2>${k === 'ARR' ? 'Arrivals' : 'Departures'}</h2><div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th>${k === 'ARR' ? 'From' : 'To'}</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fb${k}"></tbody></table></div></section>`;
-  fidsWin.document.body.innerHTML = `<div class="fids fboard"><div class="fids-hd"><div><b>${esc(APT.name)} · flight information</b><span id="fbClock"></span></div></div><div class="fb-cols">${tbl('ARR')}${tbl('DEP')}</div></div>`;
+  const tbl = k => `<section><h2>${k === 'ARR' ? 'Arrivals' : 'Departures'}</h2><div class="fids-wrap"><table><thead><tr><th>Sched</th><th>New</th><th>Flight</th><th>${k === 'ARR' ? 'From' : 'To'}</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fb${k}"></tbody></table></div></section>`;
+  fidsWin.document.body.innerHTML = `<div class="fids fboard"><div class="fids-hd"><div><b>${esc(APT.name)} · flight information</b><span id="fbClock"></span></div><span class="fids-tip">Click a flight to change its time, hold it or cancel it</span></div><div class="slotbar" id="fbSlot" hidden></div><div class="fb-cols">${tbl('ARR')}${tbl('DEP')}</div></div>`;
+  slotWire(fidsWin.document);
   document.getElementById('fids').hidden = true;
   renderFids();
 }
@@ -6637,6 +6688,258 @@ S.listeners.push(ev => {
     }
   }
 });
+
+// ═════════════════════════ slot control: you run the arrival and departure times from the Flights board ═════════════════════════
+// Click a flight on the board to give it a new time, hold it, cancel it or (departures) give it a CTOT, like a flow
+// manager. Everything the flight does follows: an inbound held or slotted later waits outside your airspace (in the
+// air, or on the ground at its origin if it hasn't left), a departure calls for start-up to match its new off-blocks
+// time or slot, a remote-stand tow comes 35 minutes before it, and a turnround departure keeps its link to the inbound.
+// Times are minutes of the UTC day; SLOT[cs] = { base, tm, hold, cancel, ctot } for every flight you have touched.
+const SLOT = { sel: null, selK: null };
+const slotH0 = () => (S.hour || 0)*60;
+S.listeners.push((ev, ac) => {
+  if (ev === 'start') { for (const k of Object.keys(SLOT)) delete SLOT[k]; SLOT.sel = SLOT.selK = null; slotRender(); }
+  // an arrival turning round into its departure, or a departure appearing on stand: it picks up any slot you gave it
+  if (ev === 'turnround' && ac) { ac.slotMin = S.t + 20*60; if (SLOT[ac.cs]) slotApplyDep(ac.cs); }
+  if (ev === 'spawn' && ac && ac.kind === 'DEP' && SLOT[ac.cs]) slotApplyDep(ac.cs);
+  // a slot is a take-off window, five minutes early to ten minutes late
+  if (ev === 'takeoff' && ac && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) {
+    const off = nowMin() - SLOT[ac.cs].ctot;
+    if (off < -5 || off > 10) sys(`${ac.cs} took off ${Math.abs(Math.round(off))} min ${off < 0 ? 'before' : 'after'} its slot (CTOT ${hhmm(SLOT[ac.cs].ctot)}Z, window −5/+10).`, true);
+    else sys(`${ac.cs} took off inside its slot (CTOT ${hhmm(SLOT[ac.cs].ctot)}Z).`);
+  }
+});
+
+// ── finding the flight behind a board row ──
+function slotFind(cs, kind){
+  const ac = S.acs.find(a => a.cs === cs), f = S.sched.find(x => x.cs === cs && (kind === 'ARR' ? x.k === 'ARR' : x.k !== 'ARR'));
+  const owner = kind === 'DEP' ? S.sched.find(x => x.turn && x.turn.cs === cs) : null;   // the inbound that turns round into it
+  return { ac, f, owner, tr: owner && owner.turn };
+}
+// can you still change it, and if not, why not
+function slotCtl(cs, kind){
+  if (!S.running) return { ok: false, why: 'Open a session to control the flights.' };
+  if (EXERCISES[S.mode]) return { ok: false, why: 'Exercises have fixed traffic.' };
+  const { ac, f, owner } = slotFind(cs, kind);
+  if (kind === 'ARR') {
+    if (ac && ac.kind === 'ARR' && ac.state === 'PRE') return { ok: true, pre: true };
+    if (ac && ac.kind === 'ARR') return { ok: false, why: `${cs} is with you now: use the radar controls (hold, speed, vectors) to fit it in.` };
+    if (f && (!f.spawned || f.slotCancel)) return { ok: true };
+    return { ok: false, why: `${cs} is not in this session any more.` };
+  }
+  if (ac && (ac.slotCancelled || (ac.kind === 'DEP' && ac.state === 'PARKED'))) return { ok: true, ac };
+  if (ac && ac.kind === 'DEP') return { ok: false, why: `${cs} is already ${ac.airborne ? 'airborne' : 'moving'}: its slot is in your hands on the scope now.` };
+  if (owner) {
+    if (SLOT[owner.cs] && SLOT[owner.cs].cancel) return { ok: false, why: `The inbound ${owner.cs} is cancelled, so there is no aircraft for ${cs}. Reinstate ${owner.cs} first.` };
+    const oa = S.acs.find(a => a.turn === owner.turn);
+    if (owner.turn && (!owner.spawned || oa)) return { ok: true, turn: true };
+  }
+  if (f && f.k === 'DEP' && (!f.spawned || f.slotCancel)) return { ok: true };
+  return { ok: false, why: `${cs} is not in this session any more.` };
+}
+// the board's status for a flight you have held or cancelled (null: the normal status)
+function slotStatus(cs, kind){
+  const e = SLOT[cs];
+  if (kind === 'DEP') { const { owner } = slotFind(cs, kind); if (owner && SLOT[owner.cs] && SLOT[owner.cs].cancel && !(e && e.cancel)) return ['Cancelled · no aircraft', 'bad']; }
+  if (!e || !slotCtl(cs, kind).ok) return null;
+  if (e.cancel) return ['Cancelled', 'bad'];
+  if (e.hold) {
+    if (kind === 'DEP') return ['Held on stand', 'bad'];
+    const g = slotGhost(cs);
+    return [g && g.hold && g.hold.ground ? `Held at ${g.from}` : 'Holding · held by you', 'bad'];
+  }
+  if (kind === 'DEP' && e.ctot != null) return [`Slot ${hhmm(e.ctot)}`, 'live'];
+  if (Math.round(e.tm) > e.base + 2) return [`Delayed · ${kind === 'ARR' ? 'exp' : 'new'} ${hhmm(e.tm)}`, 'bad'];
+  if (Math.round(e.tm) < e.base - 2) return [`Early · ${kind === 'ARR' ? 'exp' : 'new'} ${hhmm(e.tm)}`, 'live'];
+  return null;
+}
+const slotGhost = cs => FAR.list.find(g => g.kind === 'ARR' && g.cs === cs) || (SLOT[cs] && SLOT[cs].ghost);
+
+// ── arrivals ──
+function slotApplyArr(cs){
+  const e = SLOT[cs], { ac, f } = slotFind(cs, 'ARR');
+  if (ac && ac.state === 'PRE') {   // a pending track: the previous sector holds it, or brings it to the boundary for its new time
+    const d = Math.hypot(ac.x - ENTRY[ac.gate][0], ac.y - ENTRY[ac.gate][1]), soonest = S.t + d/330*3600;
+    ac.slotHold = !!e.hold;
+    if (!e.hold) { ac.preAt = Math.max(soonest, (e.tm - 15 - slotH0())*60); e.tm = slotH0() + ac.preAt/60 + 15; }
+    return;
+  }
+  if (!f) return;
+  let g = slotGhost(cs);
+  if (e.cancel) {
+    if (!f.slotCancel) { f.spawned = true; f.slotCancel = true; }
+    if (g && FAR.list.includes(g)) { FAR.list.splice(FAR.list.indexOf(g), 1); e.ghost = g; }
+    return;
+  }
+  if (f.slotCancel) {   // reinstated
+    f.spawned = false; f.slotCancel = false;
+    if (e.ghost) { FAR.list.push(e.ghost); e.ghost = null; }
+  }
+  if (e.hold) {
+    f.hold = true;
+    if (g && !g.hold) { const air = S.t >= g.tStart; g.hold = { d: air ? farDist(g) : 0, ground: !air }; g.tEnd = Infinity; }
+    return;
+  }
+  f.hold = false;
+  let T = (e.tm - 15 - slotH0())*60 - PRE_LEAD;   // when it reaches the pending-track point
+  if (g) {
+    const D = g.leg.D, enRoute = g.hold ? !g.hold.ground : S.t >= g.tStart;
+    if (!enRoute && !g.hold && T - D/g.spd*3600 >= S.t) {   // not left yet and can make it at normal speed: it simply leaves later or earlier
+      const sh = T - g.tEnd; g.tStart += sh; g.tEnd = T; g.t1 = g.d1 = g.v = undefined;
+    } else {
+      const d1 = enRoute ? (g.hold ? g.hold.d : farDist(g)) : 0, left = D - d1;
+      // flying at up to 15% faster than normal to make up time, or slowing to 75% and holding near the end if early
+      T = Math.max(T, S.t + left/(g.spd*1.15)*3600);
+      if (!enRoute) g.tStart = S.t;
+      g.t1 = S.t; g.d1 = d1; g.tEnd = T; g.hold = null;
+      g.v = clamp(T > S.t ? left/((T - S.t)/3600) : g.spd*1.15, g.spd*0.75, g.spd*1.15);
+    }
+  } else T = Math.max(T, S.t + 30);
+  f.m = (T + PRE_LEAD)/60; e.tm = slotH0() + f.m + 15;
+}
+
+// ── departures ──
+function slotApplyDep(cs){
+  const e = SLOT[cs], { ac, f, tr } = slotFind(cs, 'DEP');
+  const depM = e.tm - slotH0(), callM = Math.max(depM - 6, e.ctot != null ? e.ctot - slotH0() - 15 : -Infinity);
+  if (ac && (ac.slotCancelled || (ac.kind === 'DEP' && ac.state === 'PARKED'))) {
+    const asking = ac.need === 'Request start-up';
+    if (e.cancel) {
+      if (ac.slotCancelled) return;
+      // it stays on its stand for the day
+      if (ac.tow && ac.tow.to && ac.tow.to.occ === ac) ac.tow.to.occ = null;
+      ac.slotCancelled = { tow: ac.tow ? { pref: ac.tow.pref } : null };
+      if (asking || ac.need === 'Request tow') { atc(ac, 'your flight is cancelled, shut down and remain on stand'); pilot(ac, 'shutting down on stand'); }
+      Object.assign(ac, { kind: 'ARR', state: 'ONSTAND', need: null, tow: null, doneAt: Infinity, slotHold: false });
+      sys(`${cs} cancelled: it stays on ${APT.standWord || 'stand'} ${ac.stand ? ac.stand.id : ''}.`);
+      return;
+    }
+    if (ac.slotCancelled) {   // reinstated: back to a departure waiting to call
+      const t = ac.slotCancelled.tow;
+      Object.assign(ac, { kind: 'DEP', state: 'PARKED', doneAt: undefined, slotCancelled: null });
+      if (t) ac.tow = { at: 0, pref: t.pref };
+      sys(`${cs} reinstated, off-blocks ${hhmm(e.tm)}Z.`);
+    }
+    const towing = ac.tow && !ac.tow.asked;
+    if (e.hold) {
+      ac.slotHold = true; ac.reqAt = Infinity; if (towing) ac.tow.at = Infinity;
+      if (asking) { ac.need = null; atc(ac, 'hold on stand, start-up is delayed, I will call you back'); pilot(ac, 'holding on stand'); }
+      return;
+    }
+    ac.slotHold = false;
+    ac.reqAt = Math.max(S.t + 15, ac.slotMin || 0, callM*60);
+    if (towing) ac.tow.at = Math.max(S.t + 20, (depM - 35)*60);
+    if (asking && ac.reqAt > S.t + 90) { ac.need = null; atc(ac, `start-up delayed, expect start-up at ${zt(ac.reqAt).slice(0, 5)}`); pilot(ac, `expect start-up at ${zt(ac.reqAt).slice(0, 5)}`); }
+    return;
+  }
+  if (tr) { tr.cancel = !!e.cancel; tr.depM = depM; tr.at = hhmm(e.tm); return; }   // applied in full when the inbound turns round
+  if (f && f.k === 'DEP') {   // an extra departure not on stand yet
+    if (e.cancel) { if (!f.spawned) { f.spawned = true; f.slotCancel = true; } return; }
+    if (f.slotCancel) { f.spawned = false; f.slotCancel = false; }
+    f.hold = !!e.hold; f.m = Math.max(S.t/60, callM);
+  }
+}
+
+// ── what you do on the board ──
+function slotEntry(cs, kind, tm){
+  return SLOT[cs] ||= { base: tm, tm, hold: false, cancel: false, ctot: null, k: kind };
+}
+function slotSet(cs, kind, base, ch){
+  const c = slotCtl(cs, kind); if (!c.ok) { sys(c.why, true); return; }
+  const e = slotEntry(cs, kind, base);
+  if ('reset' in ch) Object.assign(e, { tm: e.base, hold: false, cancel: false, ctot: null });
+  if ('tm' in ch) e.tm = ch.tm;
+  if ('hold' in ch) e.hold = ch.hold;
+  if ('cancel' in ch) { if (ch.cancel && c.pre) { sys(`${cs} is already inbound to your sector: hold it instead.`, true); return; } e.cancel = ch.cancel; if (ch.cancel) e.hold = false; }
+  if ('ctot' in ch) e.ctot = ch.ctot;
+  (kind === 'ARR' ? slotApplyArr : slotApplyDep)(cs);
+  const what = 'reset' in ch ? 'back on its schedule' : e.cancel ? 'cancelled' : e.hold ? (kind === 'ARR' ? 'held outside your airspace' : 'held on stand') :
+    'ctot' in ch ? (e.ctot != null ? `given slot ${hhmm(e.ctot)}Z` : 'slot removed') : `${kind === 'ARR' ? 'expected' : 'off-blocks'} ${hhmm(e.tm)}Z`;
+  sys(`Flow: ${cs} ${what}.`);
+  renderFids(); slotRender();
+}
+// a time typed as HH:MM, on the session's day (the evening before or the early hours after when that is nearer)
+function slotParse(v, near){
+  const m = /^(\d{1,2}):?(\d{2})$/.exec(String(v).trim()); if (!m || +m[1] > 23 || +m[2] > 59) return null;
+  let t = +m[1]*60 + +m[2]; while (t < near - 720) t += 1440; while (t > near + 720) t -= 1440; return t;
+}
+
+// ── the editor bar over the board (main board and pop-out). Rebuilt only when you pick a flight or change it, so typing isn't
+// interrupted by the board refreshing; its status line updates every tick ──
+const slotDocs = new Set();
+function slotWire(doc){
+  slotDocs.add(doc);
+  doc.addEventListener('click', ev => {
+    const tr = ev.target.closest && ev.target.closest('.fids tr[data-cs]'); if (!tr) return;
+    SLOT.sel = tr.dataset.cs; SLOT.selK = tr.dataset.k; SLOT.selBase = +tr.dataset.tm;
+    renderFids(); slotRender();
+  });
+  slotRender();
+}
+function slotNote(cs, kind){
+  const c = slotCtl(cs, kind); if (!c.ok) return c.why;
+  const e = SLOT[cs], { ac, tr, f } = slotFind(cs, kind);
+  if (e && e.cancel) return kind === 'ARR' ? 'Cancelled: it will not come. Its turnround departure has no aircraft.' : 'Cancelled: it stays on stand. Reinstate to bring it back.';
+  if (kind === 'ARR') {
+    if (ac) return ac.slotHold ? 'Held by the previous sector, orbiting outside your airspace until you release it.' : `Pending track: calls you at the boundary at about ${zt(ac.preAt).slice(0, 5)}Z, lands about ${hhmm(slotH0() + ac.preAt/60 + 15)}Z.`;
+    const g = slotGhost(cs);
+    if (e && e.hold) return g && g.hold && !g.hold.ground ? 'Held en route: orbiting where it is until you release it.' : 'Held on the ground at its origin until you release it.';
+    if (f) return `Shows as a pending track at about ${zt(f.m*60 - PRE_LEAD).slice(0, 5)}Z and calls you at about ${zt(f.m*60).slice(0, 5)}Z.`;
+    return '';
+  }
+  if (ac) {
+    if (ac.slotHold) return 'Held on stand: the crew won’t call for start-up until you release it.';
+    if (ac.need) return `On stand, ${ac.need.toLowerCase()} now.`;
+    const tow = ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? ` Tow to a terminal stand at about ${zt(ac.tow.at).slice(0, 5)}Z.` : '';
+    return `On stand: calls for start-up at about ${zt(ac.reqAt).slice(0, 5)}Z.${tow}`;
+  }
+  if (tr) return `Turnround of the inbound ${slotFind(cs, kind).owner.cs}: calls for start-up about ${hhmm((e ? e.tm : tr.depM + slotH0()) - 6)}Z, at least 20 minutes after it is on stand.${e && e.hold ? ' Held: it will stay on stand when it turns round.' : ''}`;
+  return e && e.hold ? 'Held: it will not appear until you release it.' : '';
+}
+function slotRender(){
+  for (const doc of slotDocs) {
+    const bar = doc.getElementById('fidsSlot') || doc.getElementById('fbSlot'); if (!bar) continue;
+    const cs = SLOT.sel, kind = SLOT.selK;
+    if (!cs || !S.running) { bar.hidden = !S.running; bar.innerHTML = `<p class="sl-tip">Click a flight to change its time, hold it, cancel it or give a departure a slot (CTOT).</p>`; continue; }
+    bar.hidden = false;
+    const c = slotCtl(cs, kind), e = SLOT[cs], tm = e ? e.tm : SLOT.selBase, ARR = kind === 'ARR';
+    const B = (a, label, cls = '', dis = !c.ok) => `<button data-a="${a}" class="${cls}" ${dis ? 'disabled' : ''}>${label}</button>`;
+    bar.innerHTML = `<div class="sl-hd"><b>${esc(cs)}</b><span>${ARR ? 'Arrival' : 'Departure'} · scheduled ${hhmm(SLOT.selBase)}Z</span><button class="x" data-a="close" aria-label="Close">×</button></div>
+      <div class="sl-row"><label>${ARR ? 'Landing' : 'Off-blocks'} <input data-i="tm" value="${hhmm(tm)}" maxlength="5" inputmode="numeric" ${c.ok ? '' : 'disabled'}></label>
+        ${B('-5', '−5')}${B('+5', '+5')}${B('+15', '+15')}${B('+30', '+30')}
+        ${ARR ? '' : `<label>CTOT <input data-i="ctot" value="${e && e.ctot != null ? hhmm(e.ctot) : ''}" placeholder="--:--" maxlength="5" inputmode="numeric" ${c.ok ? '' : 'disabled'}></label>`}</div>
+      <div class="sl-row">${e && e.hold ? B('rel', 'Release', 'go', !c.ok || (e && e.cancel)) : B('hold', 'Hold', 'warn', !c.ok || (e && e.cancel))}${e && e.cancel ? B('reinst', 'Reinstate', 'go') : B('cancel', 'Cancel flight', 'danger', !c.ok || c.pre)}${B('reset', 'Back to schedule', '', !c.ok || !e)}</div>
+      <p class="sl-note"></p>`;
+    const go = ch => slotSet(cs, kind, SLOT.selBase, ch);
+    for (const b of bar.querySelectorAll('button[data-a]')) b.onclick = () => {
+      const a = b.dataset.a, cur = SLOT[cs] ? SLOT[cs].tm : SLOT.selBase;
+      if (a === 'close') { SLOT.sel = null; renderFids(); slotRender(); }
+      else if (/^[+-]\d+$/.test(a)) go({ tm: cur + +a });
+      else if (a === 'hold') go({ hold: true });
+      else if (a === 'rel') go({ hold: false });
+      else if (a === 'cancel') go({ cancel: true });
+      else if (a === 'reinst') go({ cancel: false });
+      else if (a === 'reset') go({ reset: true });
+    };
+    for (const i of bar.querySelectorAll('input[data-i]')) {
+      const set = () => {
+        const v = i.value.trim();
+        if (i.dataset.i === 'ctot' && !v) { if (SLOT[cs] && SLOT[cs].ctot != null) go({ ctot: null }); return; }
+        const t = slotParse(v, SLOT.selBase); if (t == null) { i.classList.add('bad'); return; }
+        go(i.dataset.i === 'tm' ? { tm: t } : { ctot: t });
+      };
+      i.onkeydown = ev => { ev.stopPropagation(); if (ev.key === 'Enter') { i.onchange = null; set(); } };
+      i.onchange = set;
+    }
+  }
+  slotTickAll();
+}
+function slotTick(doc){
+  const bar = doc.getElementById('fidsSlot') || doc.getElementById('fbSlot'); if (!bar || !SLOT.sel) return;
+  const n = bar.querySelector('.sl-note'); if (n) n.textContent = slotNote(SLOT.sel, SLOT.selK);
+}
+function slotTickAll(){ for (const d of slotDocs) slotTick(d); }
+if (document.getElementById('fidsSlot')) slotWire(document);
 
 // ═════════════════════════ voice: spoken commands and accented pilots ═════════════════════════
 // Speech in: the browser's speech recogniser hears standard phraseology ("Speedbird four niner two, turn left heading

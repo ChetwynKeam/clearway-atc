@@ -826,3 +826,28 @@ body.embed > *:not(.embed-cv) { display: none !important; }
 .toc #tocList .lbl { margin-top: 14px; }
 .toc #tocList .lbl:first-child { margin-top: 0; }
 .cr-ap { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--panel-2); color: var(--dim); vertical-align: 1px; }
+
+/* slot control on the flights board */
+.fids { width: min(800px, calc(100% - 32px)); }
+.fids tr.can { cursor: pointer; }
+.fids tr.can:hover td { background: rgba(255,255,255,.05); }
+.fids tr.pick td { background: rgba(247,198,0,.14); }
+.fids td.nt { color: #ffb366; }
+.fids td.nt i { font-style: normal; color: #8fd3ff; font-size: 12px; }
+.fids-tip { margin-left: auto; font: 12px Inter, system-ui, sans-serif; color: #9fb3c8; }
+.slotbar { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.1); background: #10233a; display: flex; flex-direction: column; gap: 8px; font: 13px Inter, system-ui, sans-serif; }
+.slotbar .sl-tip { margin: 0; color: #9fb3c8; font-size: 12px; }
+.slotbar .sl-hd { display: flex; align-items: baseline; gap: 10px; }
+.slotbar .sl-hd b { font: 600 15px "JetBrains Mono", ui-monospace, monospace; color: #fff; }
+.slotbar .sl-hd span { color: #9fb3c8; flex: 1; }
+.slotbar .sl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.slotbar label { display: inline-flex; align-items: center; gap: 6px; color: #cfdae6; margin-right: 6px; }
+.slotbar input { width: 64px; padding: 5px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,.2); background: #0b1a2c; color: #f3d36b; font: 13px "JetBrains Mono", ui-monospace, monospace; text-align: center; }
+.slotbar input.bad { border-color: #ff8a7a; }
+.slotbar button:not(.x) { padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #e9eef5; font: 500 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
+.slotbar button:not(.x):hover:not(:disabled) { background: rgba(255,255,255,.12); }
+.slotbar button:disabled { opacity: .4; cursor: default; }
+.slotbar button.go { background: #1f8f55; border-color: #1f8f55; color: #fff; }
+.slotbar button.warn { background: #f7c600; border-color: #f7c600; color: #1b1500; }
+.slotbar button.danger { background: transparent; border-color: #ff8a7a; color: #ff8a7a; }
+.slotbar .sl-note { margin: 0; color: #b9c7d6; font-size: 12px; min-height: 1em; }

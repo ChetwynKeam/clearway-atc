@@ -81,11 +81,19 @@ function buildFar(){
     if (off >= -5*3600 && off < -600) addDepGhost({ cs: dc, t, d: dd, dt0: off - S.t }, toLL(rm(THR_HI_M - 1500, 0)));
   }
 }
+// how far along its route a flight is. A retimed inbound (Flights board) flies on from (t1, d1) at speed v; one that
+// would get there early, or one you have put on hold, flies a holding pattern (hold.d) until it is due
+const farDist = g => g.hold ? g.hold.d : Math.min(g.leg.D, (g.d1 || 0) + (S.t - (g.t1 ?? g.tStart))/3600*(g.v || g.spd));
 function farState(g){
-  if (S.t < g.tStart || S.t > g.tEnd) return null;
-  const d = (S.t - g.tStart)/3600*g.spd, { ll, hdg } = legAt(g.leg, d), left = g.leg.D - d;
+  if (S.t > g.tEnd || (g.hold ? g.hold.ground : S.t < g.tStart)) return null;
+  const d = farDist(g), { ll, hdg } = legAt(g.leg, d), left = g.leg.D - d;
   const up = g.kind !== 'ARR' ? (g.startAlt || 0) + d*330 : 1500 + d*330, down = g.endAlt + left*300;
-  return { p: xy(...ll), hdg, alt: Math.max(0, Math.min(g.cruise, up, down)), gs: g.spd };
+  const alt = Math.max(0, Math.min(g.cruise, up, down));
+  if (g.hold || (g.t1 != null && d >= g.leg.D - 0.01)) {   // holding: a rate-one orbit round the point it stopped at
+    const c = xy(...ll), a = (S.t*3) % 360, r = 0.7*(g.spd/250);
+    return { p: [c[0] + Math.sin(a*D2R)*r, c[1] + Math.cos(a*D2R)*r], hdg: norm(a + 90), alt, gs: Math.round(g.spd*0.8), holding: true };
+  }
+  return { p: xy(...ll), hdg, alt, gs: g.v || g.spd };
 }
 S.listeners.push((ev, d) => {
   if (ev === 'start') buildFar();
@@ -168,6 +176,7 @@ S.listeners.push((ev, d) => {
   if (ev === 'start') FAR.done = {};
 });
 const zHM = ms => new Date(ms).toISOString().substr(11, 5);
+const hhmm = m => { m = ((Math.round(m) % 1440) + 1440) % 1440; return `${String(Math.floor(m/60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
 const nowMin = () => (S.hour || 0)*60 + S.t/60;
 function fidsRows(kind){
   const day = String((S.day || 0) + 1), rows = [];
@@ -216,9 +225,12 @@ function fidsStand(r){
 function fidsBodyHTML(kind){
   const rows = fidsRows(kind), nm = nowMin();
   return rows.length ? rows.map(r => {
-    const [st, cls] = fidsStatus(r, kind), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
-    return `<tr class="${past ? 'past' : ''}"><td class="tm">${String(Math.floor(r.tm/60) % 24).padStart(2, '0')}:${String(r.tm % 60).padStart(2, '0')}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${fidsStand(r)}</td><td class="st ${cls}">${st}</td></tr>`;
-  }).join('') : `<tr><td colspan="6" class="none">No ${kind === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
+    // slot control: a retimed flight shows its new time and is judged late or not by it; held and cancelled flights say so
+    const e = SLOT[r.cs], ctl = slotCtl(r.cs, kind), rr = e ? { ...r, tm: e.tm } : r;
+    const [st, cls] = slotStatus(r.cs, kind) || fidsStatus(rr, kind), past = r.tm < nm - 30 && /Landed|Departed|On stand/.test(st);
+    const nt = [e && Math.round(e.tm) !== r.tm ? `<b>${hhmm(e.tm)}</b>` : '', e && e.ctot != null ? `<i>CTOT ${hhmm(e.ctot)}</i>` : ''].filter(Boolean).join(' ');
+    return `<tr class="${past ? 'past' : ''}${ctl.ok ? ' can' : ''}${SLOT.sel === r.cs ? ' pick' : ''}" data-cs="${r.cs}" data-k="${kind}" data-tm="${r.tm}"><td class="tm">${hhmm(r.tm)}</td><td class="nt">${nt}</td><td class="fl">${r.cs}</td><td>${AP[r.ap] ? AP[r.ap][2] : r.apName || r.ap}<span class="ic">${AP[r.ap] ? r.ap : ''}</span></td><td class="ty">${r.t}</td><td class="sd">${fidsStand(r)}</td><td class="st ${cls}">${st}</td></tr>`;
+  }).join('') : `<tr><td colspan="7" class="none">No ${kind === 'ARR' ? 'arrivals' : 'departures'} scheduled today.</td></tr>`;
 }
 const fidsClockText = () => S.running ? `${DAYS[S.day || 0]} · ${zHM(S.start + S.t*1000)}Z` : 'Open a session to see live status';
 let fidsWin = null;
@@ -227,18 +239,20 @@ function renderFids(){
     const d = fidsWin.document;
     for (const k of ['ARR', 'DEP']) { const b = d.getElementById('fb' + k); if (b) b.innerHTML = fidsBodyHTML(k); }
     const c = d.getElementById('fbClock'); if (c) c.textContent = fidsClockText();
+    slotTick(d);
   }
   const el = document.getElementById('fidsBody'); if (!el || document.getElementById('fids').hidden) return;
   document.getElementById('fidsClock').textContent = fidsClockText();
-  el.innerHTML = fidsBodyHTML(fidsTab);
+  el.innerHTML = fidsBodyHTML(fidsTab); slotTick(document);
   document.getElementById('fidsAp').textContent = fidsTab === 'ARR' ? 'From' : 'To';
   document.querySelectorAll('[data-fids]').forEach(b => b.classList.toggle('on', b.dataset.fids === fidsTab));
 }
 function openFidsBoard(){
   if (fidsWin && !fidsWin.closed) { fidsWin.focus(); return; }
   fidsWin = popWin('cwFlights', `${APT.icao} flights`, 1200, 700); if (!fidsWin) return;
-  const tbl = k => `<section><h2>${k === 'ARR' ? 'Arrivals' : 'Departures'}</h2><div class="fids-wrap"><table><thead><tr><th>Sched</th><th>Flight</th><th>${k === 'ARR' ? 'From' : 'To'}</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fb${k}"></tbody></table></div></section>`;
-  fidsWin.document.body.innerHTML = `<div class="fids fboard"><div class="fids-hd"><div><b>${esc(APT.name)} · flight information</b><span id="fbClock"></span></div></div><div class="fb-cols">${tbl('ARR')}${tbl('DEP')}</div></div>`;
+  const tbl = k => `<section><h2>${k === 'ARR' ? 'Arrivals' : 'Departures'}</h2><div class="fids-wrap"><table><thead><tr><th>Sched</th><th>New</th><th>Flight</th><th>${k === 'ARR' ? 'From' : 'To'}</th><th>Type</th><th>Stand</th><th>Status</th></tr></thead><tbody id="fb${k}"></tbody></table></div></section>`;
+  fidsWin.document.body.innerHTML = `<div class="fids fboard"><div class="fids-hd"><div><b>${esc(APT.name)} · flight information</b><span id="fbClock"></span></div><span class="fids-tip">Click a flight to change its time, hold it or cancel it</span></div><div class="slotbar" id="fbSlot" hidden></div><div class="fb-cols">${tbl('ARR')}${tbl('DEP')}</div></div>`;
+  slotWire(fidsWin.document);
   document.getElementById('fids').hidden = true;
   renderFids();
 }

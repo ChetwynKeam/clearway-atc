@@ -259,6 +259,15 @@ function stepPending(ac, dt){
   const e = ENTRY[ac.gate], d = dist(ac.x, ac.y, ...e);
   // the previous sector hands it over in trail: it slows down outside the entry point until the one ahead has moved on
   const busy = d < 15 && entryBusy(ac, e, ENTRY_ALT[ac.gate], 8, 3000);   // 8 NM in trail, whatever the one ahead is descending to
+  // held, or slotted later on the Flights board: the previous sector holds it where it is (a rate-one orbit) until it is
+  // due to fly the rest of the way in
+  if (ac.slotHold || (!busy && S.t < ac.preAt - d/330*3600 - 20)) {
+    if (ac.slotHold) ac.preAt = Math.max(ac.preAt, S.t + d/330*3600);
+    ac.gs = 230; ac.hdg = ac.trk = norm(ac.hdg + 3*dt); ac.vs = 0; ac.holding = true;
+    const m = ac.gs/3600*dt; ac.x += Math.sin(ac.hdg*D2R)*m; ac.y += Math.cos(ac.hdg*D2R)*m;
+    return;
+  }
+  ac.holding = false;
   if (busy) ac.gs = Math.max(200, ac.gs - 3*dt); else if (ac.gs < 330) ac.gs = Math.min(330, ac.gs + 3*dt);
   const mv = ac.gs/3600*dt;
   ac.hdg = ac.trk = brg(ac.x, ac.y, ...e);
@@ -305,7 +314,7 @@ function spawnResident(f){
 }
 // after an arrival is on stand it becomes its own turnaround departure (new callsign), or stays parked
 function turnRound(ac){
-  const tr = ac.turn;
+  const tr = ac.turn && !ac.turn.cancel ? ac.turn : null;   // cancelled on the Flights board: it stays parked
   if (!tr) { ac.doneAt = ac.stand ? Infinity : S.t + 120; return; }
   const was = ac.cs;
   Object.assign(ac, { cs: tr.cs, kind: 'DEP', d: tr.d, gate: gateFor(tr.d), o: undefined, state: 'PARKED', need: null, freq: 'TWR', turn: null,
@@ -858,7 +867,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
-  for (const f of S.sched) if (!f.spawned && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else spawnDeparture(f); }
+  for (const f of S.sched) if (!f.spawned && !f.hold && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else spawnDeparture(f); }
   const X = S.xing;
   if (APT.xing) {
   if (X.st === 'CLOSING' && S.t >= X.t) { X.st = 'CLOSED'; sys('Winston Churchill Avenue closed: barriers down, crossing clear, FOD check complete.'); renderAtis(); emit('xing', 'CLOSED'); }
