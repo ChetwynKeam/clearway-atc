@@ -209,6 +209,10 @@ body.theme-dark .sb-bay { background: #0e1519; }
 .strip .rte, .strip .stt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .strip .stt { font-family: var(--font-label); font-weight: 600; font-size: 13px; letter-spacing: .03em; }
 .app button.strip.sel { outline: 2px solid var(--phos); outline-offset: 1px; }
+.strip .c-a { position: relative; }
+.strip .ctr { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 4px; background: #142024; color: #fff; cursor: pointer; }
+.strip .ctr svg { width: 14px; height: 14px; }
+.strip .ctr:hover, .strip .ctr:focus-visible { background: var(--phos); outline: none; }
 .app button.strip.need .stt { color: #a14a00; }
 .app button.strip.off { opacity: .62; cursor: default; }
 /* a landing or take-off clearance that still stands: green edge and a tick (purple stays for transferred flights) */
@@ -4188,6 +4192,17 @@ function goAround(ac, why){
 // ═════════════════════════ simulation ═════════════════════════
 function windAt(alt){ const w = S.wx; const k = alt < 1500 ? 1 : 1.3; const g = w.gust ? Math.random()*(w.gust-w.spd) : 0; const s = (w.spd + g*0.4)*k; const toward = (w.dir+180)*D2R; return [Math.sin(toward)*s, Math.cos(toward)*s]; }
 // position relative to a final path: nearest segment, track miles to go, cross-track (+ right), segment course
+// fly-by turn anticipation: how far before fix p to start turning towards nx, from the turn radius at 25° bank
+function turnLead(ac, p, nx){
+  const tas = Math.max(ac.ias*(1+ac.alt/1000*0.018), 60), r = tas*tas/(11.26*Math.tan(25*D2R))/6076;
+  return clamp(r*Math.tan(Math.abs(angDiff(brg(ac.x, ac.y, ...p), brg(...p, ...nx)))/2*D2R), 0.3, 3);
+}
+// the point d NM further along an approach path from where the aircraft is abeam it (q from onFinal)
+function pathAhead(F, q, d){
+  let i = q.i, a = F.pts[i], b = F.pts[i+1], L = dist(...a, ...b), t = q.t + d;
+  while (t > L && i < F.pts.length - 2) { t -= L; i++; a = F.pts[i]; b = F.pts[i+1]; L = dist(...a, ...b); }
+  return [a[0] + (b[0]-a[0])/L*t, a[1] + (b[1]-a[1])/L*t];
+}
 function onFinal(ac, F){
   let best = null;
   // an RNP path doubles back on itself, so only look forward from the leg the aircraft was last on
@@ -4227,6 +4242,7 @@ function step(dt){
     if (ac.state === 'TOW') { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
     if (ac.kind === 'ARR' && ac.app && !ac.stand && !ac.handed) planStand(ac);
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
+    stepNose(ac, dt);
     if (ac.rel) stepRelease(ac);
     if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; S.score.pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
@@ -4279,7 +4295,10 @@ function stepAir(ac, dt){
     const w = WP[ac.route[0]], d = dist(ac.x, ac.y, ...w.p);
     if (ac.kind === 'ARR' && !ac.app && !ac.askedApp && ac.state !== 'DIVERTING' && ac.route.length === 1 && d < 8) { ac.askedApp = true; if (!ac.need) { ac.need = 'Request approach'; pilot(ac, `approaching ${/final/.test(w.note||'') ? w.note : w.id}, request ${APT.reqApp ? APT.reqApp(S.rwy) : APT.appName} runway ${S.rwy}`); } }
     tgtH = brg(ac.x, ac.y, ...w.p); track = true;
-    if (d < Math.max(0.7, ac.gs/3600*22)) {
+    // fly-by: start the turn onto the next leg early by the turn radius at 25° bank × tan(half the course change)
+    const nx = ac.route[1] ? WP[ac.route[1]].p : ac.kind === 'ARR' && ac.app && finOf(ac) ? (() => { const F = finOf(ac), q = onFinal({ x: w.p[0], y: w.p[1] }, F); return q && q.d < 0.5 ? pathAhead(F, q, 2) : null; })() : null;
+    const lead = nx ? turnLead(ac, w.p, nx) : 0.7;
+    if (d < lead) {
       ac.route.shift();
       if (!ac.route.length) {
         if (ac.kind === 'ARR' && ac.app) {
@@ -4302,7 +4321,7 @@ function stepAir(ac, dt){
   if (ac.mode === 'HDG') tgtH = ac.tgtHdg;
   if (ac.mode === 'HOLD') {
     const h = ac.hold; h.t = (h.t||0) + dt;
-    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < 1) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) { h.ph = 'turn1'; h.t = 0; } }
+    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < (() => { const F = finOf(ac), q = onFinal({ x: h.c[0], y: h.c[1] }, F); return q && q.d < 0.5 ? turnLead(ac, h.c, pathAhead(F, q, 2)) : 1; })()) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) { h.ph = 'turn1'; h.t = 0; } }
     else if (h.ph === 'turn1') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb+180)) < 8) { h.ph = 'out'; h.t = 0; } }
     else if (h.ph === 'out') { tgtH = norm(h.inb + 180); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'turn2'; h.t = 0; } }
     else if (h.ph === 'turn2') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 25) { h.ph = 'in'; h.laps = (h.laps || 0) + 1; } }
@@ -4313,18 +4332,26 @@ function stepAir(ac, dt){
     if (q.togo > 3.2 && q.togo < 25 && Math.abs(q.xte) < 0.45 && Math.abs(angDiff(ac.hdg, q.crs)) < 70 && (q.i > 0 || q.t > -12)) { ac.mode = 'FINAL'; fin = q; }
   }
   if (ac.mode === 'FINAL' && fin) {
-    const F = finOf(ac); let crs = fin.crs;
-    if (fin.i < F.pts.length-2 && fin.L - fin.t < 0.2) crs = brg(...F.pts[fin.i+1], ...F.pts[fin.i+2]);
-    tgtH = norm(crs + clamp(-fin.xte*70, -35, 35)); track = true; ac.state = 'FINAL'; ac.turnDir = 0;
+    // close to the path it steers for a point about 15 seconds ahead along it, so curved (RF) legs are flown as one
+    // smooth arc the way an RNP autopilot does; further off it intercepts at up to 35°
+    const F = finOf(ac), la = clamp((ac.gs || ac.ias)/3600*15, 0.5, 1.5);
+    if (Math.abs(fin.xte) > 0.8*la) tgtH = norm(fin.crs + clamp(-fin.xte*70, -35, 35));
+    else tgtH = brg(ac.x, ac.y, ...pathAhead(F, fin, la));
+    track = true; ac.state = 'FINAL'; ac.turnDir = 0;
   }
   let hdgCmd = tgtH;
   if (track) { const tas = ac.ias*(1+ac.alt/1000*0.018) || 1; const cw = Wv[0]*Math.cos(tgtH*D2R) - Wv[1]*Math.sin(tgtH*D2R); hdgCmd = norm(tgtH - Math.asin(clamp(cw/tas, -0.5, 0.5))*R2D); }
   const diff = angDiff(ac.hdg, hdgCmd);
-  const rate = (Pf.wake === 'H' ? 2.4 : 3) * (ac.mode === 'FINAL' ? 1.3 : 1);
   let turn = diff;
   if ((ac.mode === 'HDG' || ac.mode === 'HOLD') && ac.turnDir && Math.abs(diff) > 4) turn = ac.turnDir > 0 ? (diff < 0 ? 360+diff : diff) : (diff > 0 ? diff-360 : diff);
   if (ac.mode === 'HDG' && Math.abs(diff) < 2) ac.turnDir = 0;
-  ac.hdg = norm(ac.hdg + clamp(turn, -rate*dt, rate*dt));
+  // turns are flown on bank angle like the autopilot: it rolls in and out at a few degrees a second, banks up to 25°,
+  // and the rate of turn follows from bank and true airspeed (g·tan φ / V). Off the approach it keeps to rate one (3°/s).
+  { const tas = Math.max(ac.ias*(1+ac.alt/1000*0.018), 60), K = 1091/tas;   // °/s of turn per unit of tan(bank)
+    const cap = ac.mode === 'FINAL' ? 25 : Math.min(25, Math.atan(3/K)*R2D);
+    const want = clamp(turn*1.6, -cap, cap), roll = Pf.wake === 'H' ? 4 : 5;
+    ac.bank = (ac.bank || 0) + clamp(want - (ac.bank || 0), -roll*dt, roll*dt);
+    ac.hdg = norm(ac.hdg + K*Math.tan(ac.bank*D2R)*dt); }
 
   // ── vertical
   let tgtA = ac.tgtAlt ?? ac.alt;
@@ -4411,6 +4438,16 @@ function stepAir(ac, dt){
   { const T = APT.terrain, hit = T && (T.check ? T.check(ac) : ac.alt < T.min && inPoly([ac.x, ac.y], T.poly)); if (hit) { if (!ac.terr) { ac.terr = true; S.score.incidents++; S.score.pts -= (ac.alt < (T.lowAt ? T.lowAt(hit) : T.low) ? 80 : 30); sys(T.msg(ac, hit), true); } } else ac.terr = false; }
 }
 
+// A taxiing aircraft's position (x, y) is its nose: it stops with the nose at a holding point line and turns where
+// the nose meets the turn, the body trailing behind. Parked, pushing or taking off, it is the middle of the aircraft.
+// ac.nose (metres) is how far the middle sits behind (x, y); it eases between the two so the icon never jumps.
+const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'ROLLOUT']);
+function stepNose(ac, dt){
+  const want = ac.ground && NOSE_STATES.has(ac.state) ? ac.perf.len/2 : 0, cur = ac.nose || 0;
+  if (cur !== want) ac.nose = want > cur ? Math.min(want, cur + 4*dt) : Math.max(want, cur - 4*dt);
+}
+// where the middle of the aircraft is (draw the icon there, and hit-test clicks there)
+const acMid = ac => ac.nose ? [ac.x - Math.sin(ac.hdg*D2R)*ac.nose*M2NM, ac.y - Math.cos(ac.hdg*D2R)*ac.nose*M2NM] : [ac.x, ac.y];
 function stepGround(ac, dt){
   if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && !ac.tow && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, PH.startReq(ac)); }
   if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt) { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
@@ -4925,7 +4962,7 @@ function silhouette(ac, X, Y, mpx, col, shadow){
 // cleared for take-off until it is airborne
 const clrOf = ac => outOfCtl(ac) || ac.state === 'PRE' ? null : ac.ctl && (!ac.ground || ac.onRwy) ? 'CTL' : ac.cto && ac.ground && ac.kind === 'DEP' ? 'CTO' : null;
 function drawAc(ac){
-  const sc = V.scale, X = sx(ac.x), Y = sy(ac.y);
+  const sc = V.scale, M = acMid(ac), X = sx(M[0]), Y = sy(M[1]);
   if (X < -200 || Y < -200 || X > W+200 || Y > H+200) return;
   const sel = S.sel === ac, conf = S.conflictSet.has(ac.cs);
   const col = ac.state === 'PRE' ? (sel ? C.sel : C.pre) : outOfCtl(ac) ? (conf ? C.conf : C.off) : conf || (ac.emerg && !ac.emerg.done) ? C.conf : sel ? C.sel : ac.kind === 'ARR' ? C.arr : C.dep;
@@ -5232,7 +5269,23 @@ function makeStrip(ac, doc = document){
   if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
   if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
   else d.onclick = () => tapSelect(ac);
+  // the selected flight's strip gets a recentre button: the map jumps to it (close in on the ground, the radar picture in the air)
+  if (S.sel === ac && !outOfCtl(ac)) {
+    const c = doc.createElement('span'); c.className = 'ctr'; c.setAttribute('role', 'button'); c.tabIndex = 0; c.title = 'Centre the map on ' + ac.cs; c.setAttribute('aria-label', c.title);
+    c.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/><path d="M8 0.5v3M8 12.5v3M0.5 8h3M12.5 8h3" stroke="currentColor" stroke-width="1.6"/></svg>';
+    c.onclick = e => { e.stopPropagation(); centreOn(ac); };
+    c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); centreOn(ac); } };
+    d.querySelector('.c-a').prepend(c);
+  }
   return d;
+}
+function centreOn(ac){
+  const m = Math.min(W, H) || 600, [x, y] = acMid(ac);
+  if (ac.ground) { V.scale = Math.max(V.scale, m/(700*M2NM)); V.name = 'gnd'; }   // about 700 m across the scope
+  else { V.scale = m/APT.view.app[2]; V.name = 'app'; }
+  V.cx = x; V.cy = y;
+  document.querySelectorAll('[data-view]').forEach(bt => bt.classList.toggle('on', bt.dataset.view === V.name));
+  if (phoneMQ.matches) setMTab('map');
 }
 function renderStrips(force){
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
@@ -5371,7 +5424,7 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac)) continue; const d = Math.hypot(sx(ac.x)-e.offsetX, sy(ac.y)-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac)) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });

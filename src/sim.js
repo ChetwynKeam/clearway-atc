@@ -749,6 +749,17 @@ function goAround(ac, why){
 // ═════════════════════════ simulation ═════════════════════════
 function windAt(alt){ const w = S.wx; const k = alt < 1500 ? 1 : 1.3; const g = w.gust ? Math.random()*(w.gust-w.spd) : 0; const s = (w.spd + g*0.4)*k; const toward = (w.dir+180)*D2R; return [Math.sin(toward)*s, Math.cos(toward)*s]; }
 // position relative to a final path: nearest segment, track miles to go, cross-track (+ right), segment course
+// fly-by turn anticipation: how far before fix p to start turning towards nx, from the turn radius at 25° bank
+function turnLead(ac, p, nx){
+  const tas = Math.max(ac.ias*(1+ac.alt/1000*0.018), 60), r = tas*tas/(11.26*Math.tan(25*D2R))/6076;
+  return clamp(r*Math.tan(Math.abs(angDiff(brg(ac.x, ac.y, ...p), brg(...p, ...nx)))/2*D2R), 0.3, 3);
+}
+// the point d NM further along an approach path from where the aircraft is abeam it (q from onFinal)
+function pathAhead(F, q, d){
+  let i = q.i, a = F.pts[i], b = F.pts[i+1], L = dist(...a, ...b), t = q.t + d;
+  while (t > L && i < F.pts.length - 2) { t -= L; i++; a = F.pts[i]; b = F.pts[i+1]; L = dist(...a, ...b); }
+  return [a[0] + (b[0]-a[0])/L*t, a[1] + (b[1]-a[1])/L*t];
+}
 function onFinal(ac, F){
   let best = null;
   // an RNP path doubles back on itself, so only look forward from the leg the aircraft was last on
@@ -841,7 +852,10 @@ function stepAir(ac, dt){
     const w = WP[ac.route[0]], d = dist(ac.x, ac.y, ...w.p);
     if (ac.kind === 'ARR' && !ac.app && !ac.askedApp && ac.state !== 'DIVERTING' && ac.route.length === 1 && d < 8) { ac.askedApp = true; if (!ac.need) { ac.need = 'Request approach'; pilot(ac, `approaching ${/final/.test(w.note||'') ? w.note : w.id}, request ${APT.reqApp ? APT.reqApp(S.rwy) : APT.appName} runway ${S.rwy}`); } }
     tgtH = brg(ac.x, ac.y, ...w.p); track = true;
-    if (d < Math.max(0.7, ac.gs/3600*22)) {
+    // fly-by: start the turn onto the next leg early by the turn radius at 25° bank × tan(half the course change)
+    const nx = ac.route[1] ? WP[ac.route[1]].p : ac.kind === 'ARR' && ac.app && finOf(ac) ? (() => { const F = finOf(ac), q = onFinal({ x: w.p[0], y: w.p[1] }, F); return q && q.d < 0.5 ? pathAhead(F, q, 2) : null; })() : null;
+    const lead = nx ? turnLead(ac, w.p, nx) : 0.7;
+    if (d < lead) {
       ac.route.shift();
       if (!ac.route.length) {
         if (ac.kind === 'ARR' && ac.app) {
@@ -864,7 +878,7 @@ function stepAir(ac, dt){
   if (ac.mode === 'HDG') tgtH = ac.tgtHdg;
   if (ac.mode === 'HOLD') {
     const h = ac.hold; h.t = (h.t||0) + dt;
-    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < 1) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) { h.ph = 'turn1'; h.t = 0; } }
+    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < (() => { const F = finOf(ac), q = onFinal({ x: h.c[0], y: h.c[1] }, F); return q && q.d < 0.5 ? turnLead(ac, h.c, pathAhead(F, q, 2)) : 1; })()) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) { h.ph = 'turn1'; h.t = 0; } }
     else if (h.ph === 'turn1') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb+180)) < 8) { h.ph = 'out'; h.t = 0; } }
     else if (h.ph === 'out') { tgtH = norm(h.inb + 180); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'turn2'; h.t = 0; } }
     else if (h.ph === 'turn2') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 25) { h.ph = 'in'; h.laps = (h.laps || 0) + 1; } }
@@ -875,18 +889,26 @@ function stepAir(ac, dt){
     if (q.togo > 3.2 && q.togo < 25 && Math.abs(q.xte) < 0.45 && Math.abs(angDiff(ac.hdg, q.crs)) < 70 && (q.i > 0 || q.t > -12)) { ac.mode = 'FINAL'; fin = q; }
   }
   if (ac.mode === 'FINAL' && fin) {
-    const F = finOf(ac); let crs = fin.crs;
-    if (fin.i < F.pts.length-2 && fin.L - fin.t < 0.2) crs = brg(...F.pts[fin.i+1], ...F.pts[fin.i+2]);
-    tgtH = norm(crs + clamp(-fin.xte*70, -35, 35)); track = true; ac.state = 'FINAL'; ac.turnDir = 0;
+    // close to the path it steers for a point about 15 seconds ahead along it, so curved (RF) legs are flown as one
+    // smooth arc the way an RNP autopilot does; further off it intercepts at up to 35°
+    const F = finOf(ac), la = clamp((ac.gs || ac.ias)/3600*15, 0.5, 1.5);
+    if (Math.abs(fin.xte) > 0.8*la) tgtH = norm(fin.crs + clamp(-fin.xte*70, -35, 35));
+    else tgtH = brg(ac.x, ac.y, ...pathAhead(F, fin, la));
+    track = true; ac.state = 'FINAL'; ac.turnDir = 0;
   }
   let hdgCmd = tgtH;
   if (track) { const tas = ac.ias*(1+ac.alt/1000*0.018) || 1; const cw = Wv[0]*Math.cos(tgtH*D2R) - Wv[1]*Math.sin(tgtH*D2R); hdgCmd = norm(tgtH - Math.asin(clamp(cw/tas, -0.5, 0.5))*R2D); }
   const diff = angDiff(ac.hdg, hdgCmd);
-  const rate = (Pf.wake === 'H' ? 2.4 : 3) * (ac.mode === 'FINAL' ? 1.3 : 1);
   let turn = diff;
   if ((ac.mode === 'HDG' || ac.mode === 'HOLD') && ac.turnDir && Math.abs(diff) > 4) turn = ac.turnDir > 0 ? (diff < 0 ? 360+diff : diff) : (diff > 0 ? diff-360 : diff);
   if (ac.mode === 'HDG' && Math.abs(diff) < 2) ac.turnDir = 0;
-  ac.hdg = norm(ac.hdg + clamp(turn, -rate*dt, rate*dt));
+  // turns are flown on bank angle like the autopilot: it rolls in and out at a few degrees a second, banks up to 25°,
+  // and the rate of turn follows from bank and true airspeed (g·tan φ / V). Off the approach it keeps to rate one (3°/s).
+  { const tas = Math.max(ac.ias*(1+ac.alt/1000*0.018), 60), K = 1091/tas;   // °/s of turn per unit of tan(bank)
+    const cap = ac.mode === 'FINAL' ? 25 : Math.min(25, Math.atan(3/K)*R2D);
+    const want = clamp(turn*1.6, -cap, cap), roll = Pf.wake === 'H' ? 4 : 5;
+    ac.bank = (ac.bank || 0) + clamp(want - (ac.bank || 0), -roll*dt, roll*dt);
+    ac.hdg = norm(ac.hdg + K*Math.tan(ac.bank*D2R)*dt); }
 
   // ── vertical
   let tgtA = ac.tgtAlt ?? ac.alt;
