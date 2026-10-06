@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-06T17:40:06Z",
+ "updated": "2026-10-06T17:55:09Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-06": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Berlin Brandenburg",
-     "flight": "EJU5333",
-     "sched": "16:40",
-     "status": "Arrived",
-     "expected": "16:27"
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "X32806",
-     "sched": "16:40",
-     "status": "Arrived",
-     "expected": "16:34"
-    },
     {
      "place": "Munich",
      "flight": "X32846",
@@ -65,8 +51,8 @@
      "place": "Lisboa",
      "flight": "TP1691",
      "sched": "18:35",
-     "status": "Estimated",
-     "expected": "18:30"
+     "status": "Arrived",
+     "expected": "18:35"
     },
     {
      "place": "London Gatwick",
@@ -87,28 +73,28 @@
      "flight": "FR6049",
      "sched": "19:15",
      "status": "Estimated",
-     "expected": "19:20"
+     "expected": "19:05"
     },
     {
      "place": "Katowice",
      "flight": "ENT5991",
      "sched": "19:40",
      "status": "Estimated",
-     "expected": "19:25"
+     "expected": "19:20"
     },
     {
      "place": "Lisboa",
      "flight": "FR385",
      "sched": "20:05",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:00"
     },
     {
      "place": "Lisboa",
      "flight": "EJU7627",
      "sched": "20:10",
      "status": "Estimated",
-     "expected": "19:40"
+     "expected": "19:45"
     },
     {
      "place": "Porto Santo",
@@ -140,13 +126,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Prague",
-     "flight": "QS1171",
-     "sched": "16:40",
-     "status": "Departed",
-     "expected": "16:48"
-    },
     {
      "place": "Manchester",
      "flight": "FR006",
@@ -193,15 +172,15 @@
      "place": "Geneva",
      "flight": "EZS1470",
      "sched": "18:15",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "18:44"
     },
     {
      "place": "Stuttgart",
      "flight": "X32811",
      "sched": "18:15",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "18:38"
     },
     {
      "place": "Nantes",
@@ -214,14 +193,14 @@
      "place": "Paris Ch. de Gaulle",
      "flight": "EJU4602",
      "sched": "19:00",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Porto Santo",
      "flight": "NT4936",
      "sched": "19:00",
-     "status": "Final Call",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -235,7 +214,7 @@
      "place": "London Gatwick",
      "flight": "BA2719",
      "sched": "19:35",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
