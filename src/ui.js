@@ -427,7 +427,7 @@ function drawAc(ac){
     cx.strokeStyle = col; cx.lineWidth = sel ? 2 : 1.3;
     if (ac.ground) { cx.beginPath(); cx.arc(X, Y, 3, 0, 7); cx.stroke(); }
     else {
-      planeIcon(X, Y, ac.hdg, col, sel, ac.t);   // type-shaped icon pointing along the heading
+      planeIcon(X, Y, bodyHdg(ac), col, sel, ac.t);   // type-shaped icon pointing along the heading
     }
   }
   if (ac.ground && sc < 70) return;

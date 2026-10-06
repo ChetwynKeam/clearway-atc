@@ -4559,9 +4559,26 @@ const NOSE_STATES = new Set(['TAXI', 'HOLDPT', 'HELD', 'VACATING', 'ROLLED', 'RO
 function stepNose(ac, dt){
   const want = ac.ground && NOSE_STATES.has(ac.state) ? ac.perf.len/2 : 0, cur = ac.nose || 0;
   if (cur !== want) ac.nose = want > cur ? Math.min(want, cur + 4*dt) : Math.max(want, cur - 4*dt);
+  stepBody(ac, dt);
 }
+// The body pivots on its main gear, a little behind the middle: the nose leads round the line and the main gear is
+// dragged after it, cutting slightly inside the turn, so the tail never swings out. ac.mg is the main gear point and
+// ac.bh the body heading (main gear to nose) the icon is drawn along; ac.hdg stays the nosewheel's direction of travel.
+function stepBody(ac, dt){
+  if (!ac.nose) { ac.mg = null; ac.bh = ac.hdg; return; }
+  const L = ac.nose*1.1*M2NM, along = () => [ac.x - Math.sin(ac.hdg*D2R)*L, ac.y - Math.cos(ac.hdg*D2R)*L];
+  if (!ac.mg || Math.abs(angDiff(ac.bh ?? ac.hdg, ac.hdg)) > 150) ac.mg = along();
+  let vx = ac.mg[0] - ac.x, vy = ac.mg[1] - ac.y;
+  // standing still, settle gently onto the heading (a heading set outright, e.g. lined up on the centreline)
+  if (ac.gs < 1) { const a = along(), k = Math.min(1, dt*0.5); vx += (a[0] - ac.mg[0])*k; vy += (a[1] - ac.mg[1])*k; }
+  let bh = brg(0, 0, -vx, -vy);
+  // the nosewheel can't steer more than about 60 degrees off the body: past that the body swings round with it
+  const lag = angDiff(ac.hdg, bh); if (Math.abs(lag) > 60) bh = norm(ac.hdg + Math.sign(lag)*60);
+  ac.bh = bh; ac.mg = [ac.x - Math.sin(bh*D2R)*L, ac.y - Math.cos(bh*D2R)*L];
+}
+const bodyHdg = ac => ac.nose && ac.bh != null ? ac.bh : ac.hdg;
 // where the middle of the aircraft is (draw the icon there, and hit-test clicks there)
-const acMid = ac => ac.nose ? [ac.x - Math.sin(ac.hdg*D2R)*ac.nose*M2NM, ac.y - Math.cos(ac.hdg*D2R)*ac.nose*M2NM] : [ac.x, ac.y];
+const acMid = ac => { if (!ac.nose) return [ac.x, ac.y]; const h = bodyHdg(ac)*D2R; return [ac.x - Math.sin(h)*ac.nose*M2NM, ac.y - Math.cos(h)*ac.nose*M2NM]; };
 function stepGround(ac, dt){
   if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && !ac.tow && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, PH.startReq(ac)); }
   if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt) { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
@@ -5104,7 +5121,7 @@ function drawAc(ac){
     cx.strokeStyle = col; cx.lineWidth = sel ? 2 : 1.3;
     if (ac.ground) { cx.beginPath(); cx.arc(X, Y, 3, 0, 7); cx.stroke(); }
     else {
-      planeIcon(X, Y, ac.hdg, col, sel, ac.t);   // type-shaped icon pointing along the heading
+      planeIcon(X, Y, bodyHdg(ac), col, sel, ac.t);   // type-shaped icon pointing along the heading
     }
   }
   if (ac.ground && sc < 70) return;
