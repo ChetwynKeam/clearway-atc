@@ -22,9 +22,11 @@ const BADGES = [
   { id: 'foehn',    ap: 'LOWI', name: 'Föhn tamer',        d: 'Land three arrivals at Innsbruck in föhn conditions in one session.', ic: 'M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8' },
   { id: 'valley',   ap: 'LOWI', name: 'Valley endorsement', d: 'Complete the three Innsbruck guided exercises.',         ic: 'M2 20l6-11 4 6 3-4 7 9zM8 9l2-4 2 4' },
   { id: 'crossing', ap: 'KJFK', name: 'Crossing guard',    d: 'Cross ten aircraft over an active runway at Kennedy in one session, with no incidents.', ic: 'M2 8h20M2 16h20M12 3v18M9 18l3 3 3-3' },
-  { id: 'kennedy',  ap: 'KJFK', name: 'Kennedy endorsement', d: 'Complete the three New York JFK guided exercises.',     ic: 'M4 21V11l8-6 8 6v10M9 21v-6h6v6M2 21h20' }
+  { id: 'kennedy',  ap: 'KJFK', name: 'Kennedy endorsement', d: 'Complete the three New York JFK guided exercises.',     ic: 'M4 21V11l8-6 8 6v10M9 21v-6h6v6M2 21h20' },
+  { id: 'gapfiller', ap: 'EGKK', name: 'Gap filler',       d: 'Fit a departure between two landings on Gatwick’s one runway ten times in one session.', ic: 'M2 12h20M5 8l-3 4 3 4M19 8l3 4-3 4M12 6v12' },
+  { id: 'gatwick',  ap: 'EGKK', name: 'Gatwick endorsement', d: 'Complete the three London Gatwick guided exercises.',   ic: 'M3 18h18M5 18l3-9h8l3 9M9 9V5h6v4' }
 ];
-const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK' };
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', EGKK: 'London Gatwick' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -55,12 +57,14 @@ function careerCheck(){
     if (s.ap === 'EGLC' && s.landed >= 5) careerAward('steep');
     if (s.ap === 'LOWI' && (s.lfoehn || 0) >= 3) careerAward('foehn');
     if (s.ap === 'KJFK' && (s.rwyx || 0) >= 10 && !s.incidents) careerAward('crossing');
+    if (s.ap === 'EGKK' && (s.gaps || 0) >= 10) careerAward('gapfiller');
   }
   if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
   if (['mdep','marr','mwind'].every(k => CAR.ex[k])) careerAward('island');
   if (['cdep','carr','ceast'].every(k => CAR.ex[k])) careerAward('docklands');
   if (['idep','iarr','ifoehn'].every(k => CAR.ex[k])) careerAward('valley');
   if (['kdep','karr','kcross'].every(k => CAR.ex[k])) careerAward('kennedy');
+  if (['gdep','garr','gmix'].every(k => CAR.ex[k])) careerAward('gatwick');
   if (T.secs >= 3600) careerAward('hour');
   if (T.secs >= 36000) careerAward('ten');
   if (T.mov >= 100) careerAward('century');
@@ -82,6 +86,9 @@ function careerSync(){
 S.listeners.push((ev, d) => {
   if (ev === 'landed' && carCur && d && d.app === '05' && APT.icao === 'LPMA') { carCur.l05 = (carCur.l05 || 0) + 1; carDirty = true; }
   if (ev === 'landed' && carCur && APT.icao === 'LOWI' && LOWI.isFoehn(S.wx)) { carCur.lfoehn = (carCur.lfoehn || 0) + 1; carDirty = true; }
+  // Gatwick: a departure that got airborne between two landings fills a gap
+  if (APT.icao === 'EGKK' && carCur && ev === 'airborne' && d && d.kind === 'DEP' && carCur.land1) carCur.depGap = true;
+  if (APT.icao === 'EGKK' && carCur && ev === 'landed') { if (carCur.depGap) { carCur.gaps = (carCur.gaps || 0) + 1; carDirty = true; } carCur.land1 = true; carCur.depGap = false; }
   if (ev === 'rwyx' && carCur) { carCur.rwyx = (carCur.rwyx || 0) + 1; carDirty = true; }
   if (ev === 'start') {
     careerSync();
@@ -96,7 +103,8 @@ function careerExercise(ex){ if (!CAR.ex[ex]) { CAR.ex[ex] = Date.now(); carDirt
 // ── career page ──
 const fmtHrs = s => s < 3600 ? `${Math.round(s/60)} min` : `${(s/3600).toFixed(s < 36000 ? 1 : 0)} h`;
 const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3',
-  mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3', cdep: 'Exercise 1', carr: 'Exercise 2', ceast: 'Exercise 3', idep: 'Exercise 1', iarr: 'Exercise 2', ifoehn: 'Exercise 3', kdep: 'Exercise 1', karr: 'Exercise 2', kcross: 'Exercise 3' };
+  mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3', cdep: 'Exercise 1', carr: 'Exercise 2', ceast: 'Exercise 3', idep: 'Exercise 1', iarr: 'Exercise 2', ifoehn: 'Exercise 3', kdep: 'Exercise 1', karr: 'Exercise 2', kcross: 'Exercise 3',
+  gdep: 'Exercise 1', garr: 'Exercise 2', gmix: 'Exercise 3' };
 function renderCareer(){
   careerSync();
   const T = carTotals(CAR), L = CAR.sessions.slice().reverse();

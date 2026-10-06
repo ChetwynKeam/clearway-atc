@@ -630,7 +630,7 @@ function renderSel(){
 // an arrival's stand: the one assigned, the airline's usual area, and a picker of the free stands (that area first)
 function standLine(ac){
   const sw = APT.standWord || 'stand', Sw = sw[0].toUpperCase() + sw.slice(1), pa = prefArea(ac), ch = standChoices(ac);
-  const grp = s => s.term ? 'Terminal ' + s.term : (APT.areaNames || AREA_NAMES)[s.area] || s.area;
+  const grp = s => s.term ? (APT.termName ? APT.termName(s.term) : 'Terminal ' + s.term) : (APT.areaNames || AREA_NAMES)[s.area] || s.area;
   const opt = s => `<option value="${s.id}"${ac.stand === s ? ' selected' : ''}>${s.id}${pa.has(s) ? '' : ' · ' + grp(s)}</option>`;
   const mine = ch.filter(s => pa.has(s)), rest = ch.filter(s => !pa.has(s)), locked = ac.taxiIn;
   return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b><span class="pref">prefers ${esc(pa.name)}</span>

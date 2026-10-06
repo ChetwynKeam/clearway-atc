@@ -92,6 +92,8 @@ const depRw = () => S.depRwy || S.rwy;
 // (metres from its low end, offset to the left), so landing and departing traffic can use different pavements.
 const RWYS = APT.runways || [{ id: 'R', lo: RW_LO, hi: RW_HI, rm, mOf, offOf, RU, TURN_W, TURN_E, TURN_END, roll: APT.roll }];
 const RW_ENDS = RWYS.flatMap(r => [r.lo, r.hi]);
+// a big taxiway network (several runways, or APT.bigGround: Gatwick) is routed by shortest paths, not by listing every path
+const BIG_GROUND = RWYS.length > 1 || !!APT.bigGround;
 const rwyOf = rw => RWYS.find(r => r.lo === rw || r.hi === rw) || RWYS[0];
 const rwyById = id => RWYS.find(r => r.id === id) || RWYS[0];
 const holdRwy = hp => rwyById(HOLDS[hp] && HOLDS[hp].on);
@@ -180,6 +182,8 @@ function coord(text, who){ log('coord', text, who); say(text, 'tel:' + who); }
 // departures need a release from the next unit before take-off, unless the airport only asks for some (APT.needRel:
 // New York calls for release only on flights under a flow restriction)
 const needRel = ac => !APT.needRel || APT.needRel(ac);
+// the altitude a SID climbs to (Gatwick: each SID's own stop altitude), otherwise the airport's initial climb
+const sidTop = ac => APT.sidAlt && ac.sid ? APT.sidAlt(ac) : APT.initClimb;
 function requestRelease(ac){
   const who = relUnit(ac), sid = sidName(ac.gate, depRw());
   ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
@@ -309,9 +313,10 @@ function spawnResident(f){
     return ac;
   }
   const remote = !isMil(ac) && !isBiz(ac) && wait > 45;
-  const order = isMil(ac) ? ['south'] : isBiz(ac) ? ['north', 'civil'] : remote ? ['south', 'north', 'civil'] : ['civil', 'north'];
-  let st = (!remote || APT.standFor) && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
-  if (!st && APT.standFor) st = APT.standFor(ac);   // New York: the airline's terminal, no remote stands or tows
+  const order = isMil(ac) ? ['south'] : isBiz(ac) ? ['north', 'civil'] : remote ? (APT.remoteAreas || ['south', 'north', 'civil']) : ['civil', 'north'];
+  const byTerm = APT.standFor && !(remote && APT.remoteAreas);   // the airline's terminal (New York; Gatwick unless it waits on a remote stand)
+  let st = (!remote || byTerm) && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
+  if (!st && byTerm) st = APT.standFor(ac);
   for (const a of order) if (!st) st = STANDS.find(s => !s.occ && s.area === a);
   if (!st) return null;
   st.occ = ac; ac.stand = st; ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
@@ -361,6 +366,7 @@ function stepTows(){
     const H = ac.stand.area === 'hangar' && ac.stand.hg, areas = H ? (typeof H.to === 'function' ? H.to(ac) : H.to || []) : ['civil'];
     let to = ac.tow.pref && STANDS.find(s => s.id === ac.tow.pref && !s.occ && (ac.tow.only || areas.includes(s.area)));
     if (!to && !ac.tow.only && H && H.pick) to = H.pick(ac);   // New York: a gate at the airline's terminal
+    if (!to && !ac.tow.only && !H && APT.remoteAreas && APT.standFor) to = APT.standFor(ac);   // Gatwick: from a remote stand to its terminal
     if (!ac.tow.only) for (const a of areas) if (!to) to = STANDS.find(s => !s.occ && s.area === a);
     if (!to) { ac.tow.at = S.t + 120; continue; }
     to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
@@ -407,14 +413,14 @@ function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => {
 function taxiFrom(ac){ return ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id; }
 function taxiRoute(ac, hp, via){
   if (via && via.length) { const o = taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v))); if (o) return o;
-    if (RWYS.length > 1) { const r = route(taxiFrom(ac), HOLDS[hp].node, e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8); if (r) return r; } }   // big airports: keep to the named taxiways
+    if (BIG_GROUND) { const r = route(taxiFrom(ac), HOLDS[hp].node, e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8); if (r) return r; } }   // big airports: keep to the named taxiways
   return route(taxiFrom(ac), HOLDS[hp].node);
 }
 // every sensible routing to a holding point: simple paths over the taxiway graph, one per distinct "via", shortest first
 function taxiOptions(ac, hp){
   const from = taxiFrom(ac), to = HOLDS[hp].node, out = [], seen = new Set();
   // a big airport (several runways: New York): the shortest route, then the shortest avoiding each taxiway it uses
-  if (RWYS.length > 1) {
+  if (BIG_GROUND) {
     const best = route(from, to); if (!best) return [];
     const res = [], seen = new Set(), L0 = pathLen(best.nodes);
     const add = r => { if (!r) return; r.len = pathLen(r.nodes); r.via = viaOf(r.tws, hp); const k = r.via.join(''); if (seen.has(k) || r.len > L0*1.8) return; seen.add(k); res.push(r); };
@@ -1078,7 +1084,7 @@ function stepAir(ac, dt){
     const clearRock = APT.depClear(ac);
     if (ac.onSid && ac.mode === 'HDG' && clearRock && (ac.alt > 3500 || !crossesRock(ac, WP[EXIT_ROUTE[ac.gate][0]].p))) { ac.onSid = false; ac.reqDct = true; ac.mode = 'NAV'; ac.route = EXIT_ROUTE[ac.gate].slice(); }
     if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && clearRock) { ac.reqDct = true; const fx = EXIT_ROUTE[ac.gate][0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
-    if (ac.calledRad && !ac.reqClimb && !ac.need && ac.alt > APT.initClimb - 400 && (ac.tgtAlt ?? 0) <= APT.initClimb) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
+    if (ac.calledRad && !ac.reqClimb && !ac.need && ac.alt > sidTop(ac) - 400 && (ac.tgtAlt ?? 0) <= sidTop(ac)) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
     if (ac.mode === 'NAV' && !ac.route.length) { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
     if (ac.calledRad && !ac.handed && dGBR > APT.handoffNM && !ac.askedHo) { ac.askedHo = true; ac.need = 'Ready for transfer'; }
   }
@@ -1281,7 +1287,7 @@ function stepGround(ac, dt){
     if (ac.ias >= ac.perf.vr) {
       ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = ELEV + 10; ac.ias = ac.perf.vr;
       APT.liftoff(ac);
-      ac.tgtAlt = ac.cleared = APT.initClimb; ac.onSid = true; S.score.pts += 10;
+      ac.tgtAlt = ac.cleared = sidTop(ac); ac.onSid = true; S.score.pts += 10;
       emit('airborne', ac);
     }
   }

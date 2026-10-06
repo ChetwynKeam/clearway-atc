@@ -20,6 +20,7 @@ window.__bot = function botTick(){
         else if (ac.freq === 'TWR' && !ac.ctl) go(ac, 'CTL');
       } else {
         if (typeof xingAhead === 'function' && xingAhead(ac) >= 0 && ac.hsAt) go(ac, 'CROSS ' + rwyName(ac.path.pts[xingAhead(ac)].hs));
+        else if (ac.need === 'Needs a stand') go(ac, 'STAND');
         else if (ac.vacated && !ac.taxiIn && ac.state === 'VACATING' && !ac.onRwy) go(ac, 'TAXI');
       }
     } else {

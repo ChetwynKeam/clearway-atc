@@ -1,7 +1,8 @@
 """Assemble the single-file Clearway simulator from src/ parts, one page per airport (same engine, site and Academy):
 LXGB: dist/index.html (GitHub Pages) and dist/gibraltar-atc.html (claude.ai artifact body);
 LPMA: dist/lpma/index.html and dist/madeira-atc.html; EGLC: dist/eglc/index.html and dist/london-city-atc.html;
-LOWI: dist/lowi/index.html and dist/innsbruck-atc.html; KJFK: dist/kjfk/index.html and dist/new-york-jfk-atc.html."""
+LOWI: dist/lowi/index.html and dist/innsbruck-atc.html; KJFK: dist/kjfk/index.html and dist/new-york-jfk-atc.html;
+EGKK: dist/egkk/index.html and dist/london-gatwick-atc.html."""
 import pathlib
 root = pathlib.Path(__file__).parent
 src = root/'src'
@@ -29,6 +30,9 @@ AIRPORTS = {
     'KJFK': dict(title='New York JFK · Clearway ATC Simulator', desc='Clearway: air traffic control at New York JFK (KJFK): four runways, parallel ILS approaches, runway crossings, FAA phraseology and live traffic.',
                  geo='airports/kjfk.geo.json', profile=['airports/kjfk.js', 'airports/kjfk-ground.js', 'airports/kjfk-engine.js'], site=['airports/kjfk-site.js'], artifact='new-york-jfk-atc.html', page='kjfk/index.html',
                  data=('KJFK', 'airports/kjfk.js')),
+    'EGKK': dict(title='London Gatwick · Clearway ATC Simulator', desc='Clearway: air traffic control at London Gatwick (EGKK), the busiest single runway in Europe: mixed-mode 08R/26L, RNAV SIDs and STARs, the TIMBA and WILLO holds, ILS approaches and live traffic.',
+                 geo='airports/egkk.geo.json', profile=['airports/egkk.js', 'airports/egkk-ground.js', 'airports/egkk-engine.js'], site=['airports/egkk-site.js'], artifact='london-gatwick-atc.html', page='egkk/index.html',
+                 data=('EGKK', 'airports/egkk.js')),
 }
 # One website: the airport whose page is index.html hosts every page of the site (home, airports, every briefing, the
 # whole Academy, Career). The other airports' pages only run their simulator (#sim, #ex/<key>, #wx/<preset>, #live)
