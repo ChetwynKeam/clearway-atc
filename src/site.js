@@ -326,6 +326,7 @@ const HERO_TRAFFIC = APT.site && APT.site.hero ? APT.site.hero() : APT.icao === 
   ['RYR8RK',  36.75, -5.95, 140, 420, 'rgba(60,75,95,.7)'], ['VLG41AM', 35.95, -6.20, 60, 430, 'rgba(60,75,95,.7)']
 ];
 function heroInit(){
+  if (!hero.cv) return false;   // the home page now shows a screenshot instead of the animated radar
   const r = hero.cv.getBoundingClientRect(); if (!r.width) return false;
   hero.base = document.createElement('canvas'); hero.base.style.width = r.width + 'px'; hero.base.style.height = r.height + 'px';
   // drawTo sizes from getBoundingClientRect, which a detached canvas lacks: borrow the hero canvas for the static map
