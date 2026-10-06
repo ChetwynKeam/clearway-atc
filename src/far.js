@@ -75,6 +75,7 @@ function buildFar(){
   const day = String((S.day || 0) + 1), t0 = (S.hour || 0)*60;
   if (/^live/.test(S.mode)) { const T = LIVE.session && LIVE.session.T; if (T) for (const d of T.dep) {   // today's real departures still en route
     const off = (d.tm + 8 - t0)*60; if (!d.cancelled && off >= -5*3600 && off < -600) addDepGhost({ cs: d.cs, t: d.t, d: d.ap, dt0: off - S.t }, toLL(rm(THR_HI_M - 1500, 0))); } return; }
+  if (S.mode === 'custom') return;   // custom traffic: only the flights you asked for
   for (const [, , , dc, dd, td, t, days] of TIMETABLE) {
     if (!dc || !days.includes(day)) continue;
     const off = (hm(td) + 8 - t0)*60;                 // airborne about eight minutes after off-blocks
@@ -186,6 +187,11 @@ function fidsRows(kind){
     for (const f of S.sched) if (f.k === kind && !rows.some(r => r.cs === f.cs)) rows.push({ cs: f.cs, t: f.t, ap: kind === 'ARR' ? f.o : f.d, tm: Math.round((S.hour || 0)*60 + f.m + (kind === 'ARR' ? 15 : 6)), stand: f.stand || '', extra: true });
     return rows.sort((a, b) => a.tm - b.tm);
   }
+  if (S.mode === 'custom') {   // custom traffic: the made-up flights only, parked departures included
+    for (const f of S.sched) if (f.k === kind || (kind === 'DEP' && f.k === 'RES' && f.depM != null))
+      rows.push({ cs: f.cs, t: f.t, ap: kind === 'ARR' ? f.o : f.d, tm: Math.round((S.hour || 0)*60 + (f.k === 'RES' ? f.depM : f.m + (kind === 'ARR' ? 15 : 6))), stand: f.stand || '' });
+    return rows.sort((a, b) => a.tm - b.tm);
+  }
   for (const [ac, o, ta, dc, dd, td, t, days, stand] of TIMETABLE) {
     if (!days.includes(day)) continue;
     if (kind === 'ARR' && ac) rows.push({ cs: ac, t, ap: o, tm: hm(ta), stand: dc ? stand : '' });
@@ -213,7 +219,7 @@ function fidsStatus(r, kind){
   if (g && S.t <= g.tEnd) return [S.t >= g.tStart ? `Departed · arr ${zHM(S.start + g.tEnd*1000)}` : 'Departed', 'ok'];
   if (FAR.done[r.cs]) return [FAR.done[r.cs], 'ok'];
   if (S.running && r.tm < (S.hour || 0)*60) return ['Departed', 'ok'];
-  const arr = TIMETABLE.find(x => x[3] === r.cs); if (arr && arr[0] && !S.acs.some(a => a.cs === arr[0]) && !FAR.done[arr[0]] && hm(arr[2]) > nowMin() - 5 && S.running && r.tm > nowMin()) return ['Aircraft inbound', ''];
+  const arr = S.mode !== 'custom' && TIMETABLE.find(x => x[3] === r.cs); if (arr && arr[0] && !S.acs.some(a => a.cs === arr[0]) && !FAR.done[arr[0]] && hm(arr[2]) > nowMin() - 5 && S.running && r.tm > nowMin()) return ['Aircraft inbound', ''];
   return late && S.running ? ['Delayed', 'bad'] : ['Scheduled', ''];
 }
 let fidsTab = 'ARR';
