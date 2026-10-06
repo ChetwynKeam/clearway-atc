@@ -219,6 +219,7 @@ function fidsStatus(r, kind){
 let fidsTab = 'ARR';
 // the stand: the timetable's, else the one the flight has been given in the session
 function fidsStand(r){
+  if (SLOT[r.cs] && SLOT[r.cs].stand) return SLOT[r.cs].stand;   // changed on the board
   if (r.stand) return r.stand;
   const ac = S.acs.find(a => a.cs === r.cs); return ac && ac.stand ? ac.stand.id : '';
 }

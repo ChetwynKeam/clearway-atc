@@ -851,3 +851,8 @@ body.embed > *:not(.embed-cv) { display: none !important; }
 .slotbar button.warn { background: #f7c600; border-color: #f7c600; color: #1b1500; }
 .slotbar button.danger { background: transparent; border-color: #ff8a7a; color: #ff8a7a; }
 .slotbar .sl-note { margin: 0; color: #b9c7d6; font-size: 12px; min-height: 1em; }
+.slotbar select { padding: 5px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,.2); background: #0b1a2c; color: #f3d36b; font: 13px "JetBrains Mono", ui-monospace, monospace; }
+.slotbar .sl-hint { color: #8aa0b8; font-size: 12px; }
+.slotbar .sl-tip { flex: 1; }
+.slotbar .sl-dis { margin: 0; font-size: 12px; white-space: nowrap; }
+.slotbar .sl-dis input { width: auto; accent-color: #f7c600; }

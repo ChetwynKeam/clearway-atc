@@ -357,14 +357,16 @@ function stepTows(){
   for (const ac of S.acs) {
     if (!ac.tow || ac.state !== 'PARKED' || ac.tow.asked || S.t < ac.tow.at) continue;
     // from a hangar: the stand areas that hangar serves, in order; from a remote stand: the civil apron
-    const H = ac.stand.area === 'hangar' && ac.stand.hg, areas = H ? (typeof H.to === 'function' ? H.to(ac) : H.to) : ['civil'];
-    let to = ac.tow.pref && STANDS.find(s => s.id === ac.tow.pref && !s.occ && areas.includes(s.area));
-    for (const a of areas) if (!to) to = STANDS.find(s => !s.occ && s.area === a);
+    // a stand change from the Flights board (only): that stand and no other, once it is free
+    const H = ac.stand.area === 'hangar' && ac.stand.hg, areas = H ? (typeof H.to === 'function' ? H.to(ac) : H.to || []) : ['civil'];
+    let to = ac.tow.pref && STANDS.find(s => s.id === ac.tow.pref && !s.occ && (ac.tow.only || areas.includes(s.area)));
+    if (!to && !ac.tow.only && H && H.pick) to = H.pick(ac);   // New York: a gate at the airline's terminal
+    if (!ac.tow.only) for (const a of areas) if (!to) to = STANDS.find(s => !s.occ && s.area === a);
     if (!to) { ac.tow.at = S.t + 120; continue; }
     to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
-    const cross = ac.stand.area === 'south', at = H ? `in ${H.name}` : `on stand ${ac.stand.id}`;
-    log('plt', `${APT.tower[0]}, tug with ${ac.cs} ${at}, request tow to stand ${to.id}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
-    say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} ${at}, request tow to stand ${to.id}`, 'tug');
+    const cross = ac.stand.area === 'south', at = H ? `in ${H.name}` : `on ${APT.standWord || 'stand'} ${ac.stand.id}`;
+    log('plt', `${APT.tower[0]}, tug with ${ac.cs} ${at}, request tow to ${APT.standWord || 'stand'} ${to.id}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
+    say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} ${at}, request tow to ${APT.standWord || 'stand'} ${to.id}`, 'tug');
   }
 }
 // parked aircraft with nothing due in the next 15 minutes stay off the strip board
@@ -504,7 +506,7 @@ function taxiLimit(ac){
 // an arrival's stand is planned once it is cleared for an approach, so the card and strip show where it is going
 function planStand(ac){
   if (ac.kind !== 'ARR' || (ac.stand && ac.stand.occ === ac)) return;
-  const st = freeStand(ac); if (st) st.occ = ac; ac.stand = st;
+  const st = (ac.standPref && STANDS.find(s => s.id === ac.standPref && !s.occ)) || freeStand(ac); if (st) st.occ = ac; ac.stand = st;   // standPref: given on the Flights board
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
