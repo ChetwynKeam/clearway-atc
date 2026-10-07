@@ -41,7 +41,11 @@ function heapPop(h){
 // every half second)
 const TAXI_MEMO = new Map();
 // pen (optional): a cost multiplier per edge, to find alternative routings at big airports
-function route(from, to, pen){
+// face (optional): the way the aircraft at `from` is pointing. An aircraft can't turn round on a taxiway, so the route
+// then starts within 100 degrees of that heading and never doubles back on itself at a node further on
+// outB (optional, with face): the way it must be able to turn on leaving `to` (onto a stand's lead-in)
+function route(from, to, pen, face, outB){
+  if (face != null) return routeFacing(from, to, pen, face, outB);
   const ck = pen ? null : from + '>' + to;
   if (ck && TAXI_MEMO.has(ck)) { const r = TAXI_MEMO.get(ck); return r && { nodes: r.nodes.slice(), tws: r.tws.slice() }; }
   const dd = new Map([[from, 0]]), prev = new Map(), done = new Set(), h = [[0, from]];
@@ -53,6 +57,38 @@ function route(from, to, pen){
   }
   let r = null;
   if (found) { const nodes = [to], tws = []; let c = to; while (c !== from) { const [u, e] = prev.get(c); nodes.unshift(u); tws.unshift(e.tw); c = u; } r = { nodes, tws }; }
+  if (ck) TAXI_MEMO.set(ck, r && { nodes: r.nodes.slice(), tws: r.tws.slice() });
+  return r;
+}
+// the sharpest turn a route takes at a junction: a junction's fillets are built for the turns it is meant for, so an
+// aircraft never turns back through more than this (the wrong way round a fillet); it goes round another way instead
+const TURN_START = 100, TURN_MAX = 115;
+// a leg's bearing; a zero-length leg (two nodes on the same spot, where generated graphs join) keeps the heading
+const legBrg = (u, v, inB) => dist(...GN[u].p, ...GN[v].p) < 0.3/1852 ? inB : brg(...GN[u].p, ...GN[v].p);
+// the ways on from node u: a zero-length edge (two nodes on one spot) is looked through to the edges beyond it
+function waysOn(u){ const out = []; for (const [v, e] of GN[u].adj) { if (e.len < 0.3/1852) { for (const [w, f] of GN[v].adj) if (w !== u) out.push([w, f]); } else out.push([v, e]); } return out; }
+function routeFacing(from, to, pen, face, outB){
+  const ck = pen ? null : from + '>' + to + '>' + face.toFixed(1) + '>' + (outB == null ? '' : outB.toFixed(1));
+  if (ck && TAXI_MEMO.has(ck)) { const r = TAXI_MEMO.get(ck); return r && { nodes: r.nodes.slice(), tws: r.tws.slice() }; }
+  // states are (node, the node it came from); the seed comes from nowhere, pointing `face`
+  const k0 = from + '|', dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face]]]), prev = new Map(), done = new Set(), h = [[0, k0]];
+  let end = null;
+  while (h.length) {
+    const [d, k] = heapPop(h); if (done.has(k)) continue; done.add(k);
+    const [u, from_, inB] = st.get(k);
+    if (u === to && (outB == null || Math.abs(angDiff(inB, outB)) <= TURN_MAX)) { end = k; break; }
+    for (const [v, e] of GN[u].adj) {
+      if (v !== to && v[0] === 'R') continue;
+      const b = legBrg(u, v, inB);
+      if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START)) continue;
+      const nk = v + '|' + u, nd = d + e.len*(pen ? pen(e) : 1), o = dd.get(nk);
+      if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, [v, u, b]); prev.set(nk, [k, e]); heapPush(h, [nd, nk]); }
+    }
+  }
+  let r = null;
+  if (end) { const nodes = [], tws = []; let c = end;
+    while (c) { nodes.unshift(st.get(c)[0]); const pv = prev.get(c); if (!pv) break; tws.unshift(pv[1].tw); c = pv[0]; }
+    r = { nodes, tws }; }
   if (ck) TAXI_MEMO.set(ck, r && { nodes: r.nodes.slice(), tws: r.tws.slice() });
   return r;
 }

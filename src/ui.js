@@ -725,7 +725,7 @@ function showPop(ac, anchor, html, bind){
 }
 const COMPASS = d => `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-opacity=".3"/><path d="M20 4v4M20 32v4M4 20h4M32 20h4" stroke="currentColor" stroke-opacity=".4"/><g transform="rotate(${d} 20 20)"><path d="M20 9l6 14h-12z" fill="currentColor"/><rect x="18.5" y="22" width="3" height="9" rx="1" fill="currentColor" opacity=".5"/></g></svg>`;
 function openPushPop(ac, anchor){
-  const st = ac.stand, rec = pushRec(ac), lh = mOf(st.lp);
+  const st = ac.stand, rec = pushFace(ac), lh = mOf(st.lp);
   const opts = ['east', 'west'].map(f => {
     const pts = pushPath(ac, f), hp = APT.faceHold(st, f);
     return { f, pts: [st.p, ...pts], hp, rec: f === rec };
@@ -751,7 +751,7 @@ function openTaxiPop(ac, anchor){
   const pre = ac.state === 'PARKED' ? [ac.stand.lp] : [[ac.x, ac.y]];
   const all = []; groups.forEach(g => g.opts.forEach((o, k) => all.push({ hp: g.hp, o, rec: g.hp === rec && k === 0 })));
   // intermediate holding points along the taxiways (London City T1-T9, Innsbruck L1/B1): taxi there and wait
-  const ihp = ihpOptions(taxiFrom(ac)); ihp.forEach(a => all.push(a));
+  const ihp = ihpOptions(...taxiStart(ac)); ihp.forEach(a => all.push(a));
   const H = (hp, o) => { const pts = [...pre, ...o.nodes.map(id => GN[id].p)]; if (ac.pushed && !ac.leftStand && pts.length > 2 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[2]))) < 90) pts.splice(1, 1); return pts; };
   const len = o => Math.round(o.len / M2NM / 10) * 10;
   showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${depRw()}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
@@ -773,9 +773,9 @@ function openTaxiPop(ac, anchor){
   if (V.name !== 'gnd' && V.scale < 70) setView('gnd');
 }
 // shortest route from a node to each intermediate holding point (and, for arrivals, the runway holding points too)
-function ihpOptions(from, rwyHolds){
+function ihpOptions(from, face, rwyHolds){
   const ids = [...Object.keys(IHPS), ...(rwyHolds ? Object.keys(HOLDS).filter(id => !/~\d+$/.test(id) || !HOLDS[id.replace(/~\d+$/, '')]) : [])];
-  const all = ids.map(id => { const h = holdPt(id), r = h && h.node !== from && route(from, h.node); return r && { hp: id, ihp: true, rwy: h.rwy, o: { nodes: r.nodes, via: viaOf(r.tws, id).filter(t => t !== 'APRON'), len: pathLen(r.nodes) } }; })
+  const all = ids.map(id => { const h = holdPt(id), r = h && h.node !== from && route(from, h.node, undefined, face); return r && { hp: id, ihp: true, rwy: h.rwy, o: { nodes: r.nodes, via: viaOf(r.tws, id).filter(t => t !== 'APRON'), len: pathLen(r.nodes) } }; })
     .filter(Boolean).sort((a, b) => a.o.len - b.o.len);
   return [...all.filter(a => !a.rwy), ...all.filter(a => a.rwy).slice(0, 8)];
 }
@@ -786,7 +786,7 @@ function ihpGroup(all, opts){
 }
 // an arrival clear of the runway: taxi to a holding point instead of straight to the stand
 function openHoldInPop(ac, anchor){
-  const from = ac.vacNode || nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id, all = ihpOptions(from, true);
+  const [from, face] = ac.path ? [ac.vacNode || taxiFrom(ac), null] : taxiStart(ac), all = ihpOptions(from, face, true);
   if (!all.length) { sys(`There are no holding points to taxi ${ac.cs} to.`); return; }
   const H = o => [[ac.x, ac.y], ...o.nodes.map(id => GN[id].p)];
   showPop(ac, anchor, `<div class="lbl">Taxi to a holding point</div><h4>${ac.cs} <span>${ac.taxiIn ? 'taxiing in' : 'clear of the runway'} · ${ac.t}</span></h4>

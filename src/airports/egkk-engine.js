@@ -83,16 +83,30 @@ function depHold(ac){
 // nose-in stands: the tug pushes the tail back onto the taxilane, then 40 m along it the way the tail points
 function laneDir(st, face){
   const tail = face === 'east' ? 270 : 90, lp = st.lp;
+  // a lead-in at the dead end of its lane: the tail goes back past the end, so the nose faces the only way on
+  const ways = waysOn(st.node); if (ways.length === 1) return norm(brg(...lp, ...GN[ways[0][0]].p) + 180);
   let best = null, bd = 999;
-  for (const [v] of GN[st.node].adj) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
-  return best ? brg(...lp, ...GN[best].p) : tail;
+  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
+  if (best && bd <= 60) return brg(...lp, ...GN[best].p);
+  // no way on behind it (a lead-in at the end of its lane, or one way along): the tail goes back past the end, so the
+  // nose faces along the way on nearest the side it is to face
+  let fwd = null, fd = 999;
+  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
+  return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
 }
 function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
 // face the way the route to the runway starts
 function pushRec(ac){
-  const st = ac.stand, r = route(st.node, HOLDS[depHold(ac)].node);
+  const st = ac.stand, to = HOLDS[depHold(ac)].node;
+  // the face whose push leaves the nose pointing the way the route to the runway sets off (it can't turn round
+  // afterwards): the shorter of the routes that start the way the nose points
+  const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
+  const E = len('east'), W = len('west');
+  if (E < Infinity || W < Infinity) return E <= W ? 'east' : 'west';
+  const r = route(st.node, to);
   if (!r || r.nodes.length < 2) return 'east';
-  return Math.sin(brg(...st.lp, ...GN[r.nodes[1]].p)*D2R) >= 0 ? 'east' : 'west';
+  const b = brg(...st.lp, ...GN[r.nodes[1]].p), off = f => Math.abs(angDiff(norm(laneDir(st, f) + 180), b));
+  return off('east') <= off('west') ? 'east' : 'west';
 }
 // exits for the landing runway: those the roll-out direction can turn into, on the terminal side, in the order met
 // (26L: Echo Romeo then Foxtrot Romeo, the rapid exits; 08R: Delta, then Charlie)
