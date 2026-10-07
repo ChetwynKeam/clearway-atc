@@ -1026,7 +1026,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
-  for (const f of S.sched) if (!f.spawned && !f.hold && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
+  for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && S.t < (S.liveWait || 0)) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
   if (APT.xing) {
   if (X.st === 'CLOSING' && S.t >= X.t) { X.st = 'CLOSED'; sys('Winston Churchill Avenue closed: barriers down, crossing clear, FOD check complete.'); renderAtis(); emit('xing', 'CLOSED'); }
@@ -1035,7 +1035,7 @@ function step(dt){
   }
 
   stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt);
-  if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, `${r.ac.unit()}, ${r.text}`, true); }
+  if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
     if (ac.kind === 'ARR' && ac.app && !ac.stand && !ac.handed) planStand(ac);

@@ -1038,6 +1038,7 @@ function start(){
     if (live) { S.start = +now; S.speed = 1; $('tgSpeed').textContent = '1×'; } else if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
     if (!live) S.wx = parseMetar(S.wx.raw.replace(new RegExp(`^(${APT.icao} )\\d{6}Z`), (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
     S.sched = buildSchedule(mode, day, hour);
+    S.liveWait = live && typeof liveJoin === 'function' ? 20 : 0;   // Real world: arrivals wait (up to 20 s) for the live traffic, which may already be flying them
     sys(`Position open: ${APT.radar[0]} ${APT.radar[1]} and ${APT.tower[0].split(' ').pop()} ${APT.tower[1]} combined. ${S.wx.raw}. Runway ${S.rwy}${S.depRwy && S.depRwy !== S.rwy ? ` for landing, ${S.depRwy} for departure` : ''}, information ${phonetic(S.atis)}.`);
     if (live && LIVE.session) sys(`Real world, ${DAYS[day]} ${zHM(S.start)}Z: ${S.sched.length} real flight${S.sched.length === 1 ? '' : 's'} still to come today, from ${APT.liveName}’s live flight information${LIVE.data.updated ? ` (updated ${LIVE.data.updated.substr(11, 5)}Z)` : ''}.`);
     else if (live) sys('Real world: today’s flight information could not be loaded here, so the session uses the timetable for this hour.', true);
