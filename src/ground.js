@@ -169,22 +169,25 @@ function drawStandDetail(c, path, mpx){
   if (sc > 350) { cx.font = `600 ${Math.max(8, 2.6*mpx)}px ${FONT_L}`; cx.fillStyle = C.gWhite; cx.textAlign = 'center'; const q = c(1270, 125); cx.save(); cx.translate(...q); cx.rotate(RWY_ANGLE()*Math.PI/180); cx.fillText('SERVICE ROAD', 0, Math.max(3, 0.9*mpx)); cx.restore(); cx.textAlign = 'left'; }
   }
   for (const s of STANDS) {
-    const civil = s.area === 'civil', box = civil ? [33, 38] : s.area === 'north' ? [32, 32] : [44, 46];
-    const h = s.hdg*D2R, P = [sx(s.p[0]), sy(s.p[1])];
+    const sz = standSize(s), h = s.hdg*D2R, P = [sx(s.p[0]), sy(s.p[1])];
     cx.save(); cx.translate(...P); cx.rotate(h);
-    const bw = box[0]*mpx, bh = box[1]*mpx;
-    // red apron safety (clearance) box and equipment restraint line
-    cx.strokeStyle = C.gRed; cx.globalAlpha = 0.8; cx.lineWidth = Math.max(1, 0.3*mpx);
-    cx.strokeRect(-bw/2, -bh*0.62, bw, bh);
-    cx.setLineDash([2*mpx, 2*mpx]); cx.strokeRect(-bw/2 - 2.5*mpx, -bh*0.62 - 2.5*mpx, bw + 5*mpx, bh + 5*mpx); cx.setLineDash([]); cx.globalAlpha = 1;
+    const bw = sz.w*mpx, bh = sz.l*mpx, f = sz.f || 0.62, sb = sz.f ? bh*f - 4*mpx : bh*0.36;   // stop bar: at the nose of the largest aircraft the stand takes
+    // red apron safety (clearance) box and equipment restraint line; an L/R stand sits inside its full-size stand's box
+    if (!sz.sub) {
+      cx.strokeStyle = C.gRed; cx.globalAlpha = 0.8; cx.lineWidth = Math.max(1, 0.3*mpx);
+      cx.strokeRect(-bw/2, -bh*f, bw, bh);
+      if (bw > 40) { cx.setLineDash([2*mpx, 2*mpx]); cx.strokeRect(-bw/2 - 2.5*mpx, -bh*f - 2.5*mpx, bw + 5*mpx, bh + 5*mpx); cx.setLineDash([]); }
+      cx.globalAlpha = 1;
+    }
     // stop bar at the nosewheel position with a short perpendicular tick
     cx.strokeStyle = C.yellow; cx.lineWidth = Math.max(1.2, 0.45*mpx);
-    cx.beginPath(); cx.moveTo(-3.5*mpx, -bh*0.36); cx.lineTo(3.5*mpx, -bh*0.36); cx.stroke();
+    cx.beginPath(); cx.moveTo(-3.5*mpx, -sb); cx.lineTo(3.5*mpx, -sb); cx.stroke();
     // centreline continues through the stand
-    cx.lineWidth = Math.max(1, 0.3*mpx); cx.beginPath(); cx.moveTo(0, bh*0.38); cx.lineTo(0, -bh*0.36); cx.stroke();
+    cx.lineWidth = Math.max(1, 0.3*mpx); cx.beginPath(); cx.moveTo(0, bh*0.38); cx.lineTo(0, -sb); cx.stroke();
     // stand number: yellow on black box at the lead-in
-    if (sc > 220) {
+    if (sc > 220 && !(sz.sub && sc < 900)) {
       const fs = Math.max(9, 3.4*mpx); cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(s.id).width + fs*0.6;
+      if (tw > bw*0.9 && !AD.standBox) { cx.restore(); continue; }   // too small on screen to label without overlapping the next stand
       const flip = Math.cos(h) < 0; if (flip) cx.rotate(Math.PI);
       const yb = flip ? -bh*0.38 + fs*0.2 : bh*0.38 - fs*1.4; cx.fillStyle = '#111'; cx.fillRect(-tw/2, yb, tw, fs*1.2); cx.fillStyle = C.yellow; cx.textAlign = 'center'; cx.fillText(s.id, 0, yb + fs*0.95); cx.textAlign = 'left';
     }

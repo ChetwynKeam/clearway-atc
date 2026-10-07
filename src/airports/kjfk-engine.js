@@ -118,7 +118,8 @@ function exitFor(ac, name){
 }
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
-const AD_SITE = { aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
+// FAA design group V taxiways: 75 ft wide, 35 ft paved shoulders (145 ft overall), continuous double yellow edge lines
+const AD_SITE = { pave: { w: 23, sh: 44, edge: 'faa' }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
 // hot spot HS 1 (FAA NE hot spots): the Kilo and Juliett junction near runway 4L and 31L
 const HS1 = (() => { const n = Object.values(GN).find(n => n.adj.some(([, e]) => e.tw === 'K') && n.adj.some(([, e]) => e.tw === 'J')); return n ? n.p : null; })();
 const TERM_LABELS = (() => { const by = {}; for (const s of STANDS) (by[s.term] ||= []).push(s.p); return Object.entries(by).map(([t, ps]) => [`TERMINAL ${t}`, ps.reduce((a, p) => [a[0] + p[0]/ps.length, a[1] + p[1]/ps.length], [0, 0])]); })();
@@ -142,6 +143,11 @@ function drawKjfk(){
     cx.strokeStyle = C.asphalt; cx.lineWidth = lw(23);
     for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
     for (const k in FIL) { const R = rwyById(HOLDS[k].on); pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  } else {
+    // over the street map: taxiways at their real width, clear of the buildings; the ramps are the map's own aprons
+    const lines = GE.filter(e => e.tw !== 'APRON').map(e => ({ pts: [P2(GN[e.a].p), P2(GN[e.b].p)], w: paveWidth(e.tw) }));
+    for (const k in FIL) { const R = rwyById(HOLDS[k].on); lines.push({ pts: FIL[k].W.map(([m, o]) => P2(R.rm(m, o))), w: paveWidth() }); }
+    drawPavement(lines, G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n)))), mpx);
   }
   cx.fillStyle = C.rwy;
   for (const R of RWY_LIST) { pathP(rwyPoly(R, R.width)); cx.fill(); }
@@ -186,7 +192,8 @@ function drawKjfk(){
     }
     // gate lead-in lines and numbers
     groundLines(lw(0.3), () => { for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); } });
-    if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
+    if (IMG) drawStandDetail(null, null, mpx);
+    else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
     if (HS1) { const [X, Y] = P2(HS1); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 60*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.font = `600 11px ${FONT_L}`; cx.fillText('HS 1', X + 60*mpx + 8, Y + 4); }
   }

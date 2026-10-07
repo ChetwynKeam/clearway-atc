@@ -266,6 +266,9 @@ const APT = {
 
 // ═════════════════════════ aerodrome drawing (runway metres) ═════════════════════════
 const AD_SITE = {
+  // taxiways 19 m (AD 2.8) with the shoulder band of the drawn chart; stand boxes as painted on chart D1
+  pave: { w: 19, sh: 25 },
+  standBox: s => s.area === 'civil' ? { w: 33, l: 38 } : s.area === 'north' ? { w: 32, l: 32 } : { w: 44, l: 46 },
   // OpenStreetMap aprons in runway metres
   civil: [[1314.7,216.1],[1315.1,116.7],[1106.4,115.9],[1105.4,210.8],[1110.8,210.8],[1110.8,215.4]],
   north: [[1400.9,262.4],[1457.4,241.8],[1477.6,234.4],[1492.3,229.6],[1464.4,155.7],[1463.4,149.2],[1464,144.2],[1467.2,136.2],[1472.7,128.4],[1480.1,123.1],[1490.7,118.5],[1343.6,118.4],[1336.5,122.2],[1355,151],[1397.5,261.5]],

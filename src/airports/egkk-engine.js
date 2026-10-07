@@ -113,7 +113,8 @@ function exitFor(ac, name){
 }
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
-const AD_SITE = { aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
+// taxiways 23 m with paved shoulders to 44 m overall (ICAO code E); J is the old 45 m runway 08L/26R
+const AD_SITE = { pave: { w: 23, sh: 44 }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
 // hot spots (AD 2-EGKK-2-1): HS1 the Foxtrot Romeo rapid exit, HS2 taxiway Echo, HS3 the Delta rapid exit, HS4 taxiway
 // Juliett by Quebec (potential routing error)
 const nodeWith = (a, b) => { const n = Object.values(GN).find(n => n.adj.some(([, e]) => e.tw === a) && n.adj.some(([, e]) => e.tw === b)); return n ? n.p : null; };
@@ -140,6 +141,12 @@ function drawEgkk(){
     cx.lineWidth = lw(23);
     for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
     for (const k in FIL) { pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  } else {
+    // over the street map: taxiways at their real width, clear of the buildings; the aprons are the map's own
+    const lines = GE.filter(e => e.tw !== 'APRON').map(e => ({ pts: [P2(GN[e.a].p), P2(GN[e.b].p)], w: paveWidth(e.tw) }));
+    for (const k in FIL) lines.push({ pts: FIL[k].W.map(([m, o]) => P2(R.rm(m, o))), w: paveWidth() });
+    lines.push({ pts: OLD_RWY.map(P2), w: 45, noSh: true });
+    drawPavement(lines, G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n)))), mpx);
   }
   cx.fillStyle = C.rwy; pathP(rwyPoly(R.width)); cx.fill();
   if (!IMG) { cx.fillStyle = C.bld; cx.strokeStyle = C.bldEdge; cx.lineWidth = 1; for (const b of G.buildings) { pathP(b.pts.map(([e, n]) => EN(e, n))); cx.fill(); cx.stroke(); } }
@@ -179,7 +186,8 @@ function drawEgkk(){
     }
     // stand lead-in lines and numbers
     groundLines(lw(0.3), () => { for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); } });
-    if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
+    if (IMG) drawStandDetail(null, null, mpx);
+    else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
     cx.font = `600 11px ${FONT_L}`;
     for (const [t, p] of HOTSPOTS) { const [X, Y] = P2(p); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 45*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.fillText(t, X + 45*mpx + 8, Y + 4); }

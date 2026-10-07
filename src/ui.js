@@ -217,6 +217,50 @@ function groundLines(w, draw){
   if (mapImagery() && C.name !== 'dark') { cx.save(); cx.strokeStyle = 'rgba(30,34,40,.55)'; cx.lineWidth = w + 1.6; draw(); cx.restore(); }
   cx.strokeStyle = C.yellow; cx.lineWidth = w; draw();
 }
+// ── taxiway pavement at its published width, laid over the street map ──
+// AD.pave per airport: w = default width (m), by = widths per taxiway (0: not paved, e.g. grass), sh = overall width
+// with paved shoulders, edge = 'faa' for the FAA continuous double yellow edge marking. lines: [{ pts: screen points, w }],
+// blds: building outlines (screen points) the paving must not cover.
+function paveWidth(tw){ const P = AD.pave || {}, b = P.by || {}; return tw in b ? b[tw] : (P.w || 18); }
+function drawPavement(lines, blds, mpx){
+  const P = AD.pave || {}, lw = m => Math.max(1, m*mpx), dark = C.name === 'dark';
+  const pass = (col, alpha, wOf) => { cx.strokeStyle = col; cx.globalAlpha = alpha; for (const l of lines) { const w = wOf(l); if (!(w > 0)) continue; cx.lineWidth = lw(w); cx.beginPath(); l.pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.stroke(); } };
+  cx.save(); cx.lineJoin = cx.lineCap = 'round';
+  if (blds.length) { cx.beginPath(); cx.rect(0, 0, W, H); for (const b of blds) { b.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.closePath(); } cx.clip('evenodd'); }
+  if (P.sh) pass(C.asphalt, dark ? 0.6 : 0.45, l => l.w && !l.noSh && l.w + (P.sh - (P.w || l.w)));       // paved shoulders, paler
+  pass(C.asphalt, dark ? 0.95 : 0.9, l => l.w);
+  if (P.edge === 'faa' && mpx > 1.1) {
+    // two 15 cm yellow lines 15 cm apart at the pavement edge: drawn as nested strokes so they break where taxiways meet
+    const y = C.yellow, a = C.asphalt, gap = Math.max(0.35, 1/mpx);
+    pass(y, 1, l => l.w && l.w + 0.3); pass(a, 1, l => l.w && l.w + 0.3 - gap); pass(y, 1, l => l.w && l.w + 0.3 - 2*gap); pass(a, 1, l => l.w && l.w + 0.3 - 3*gap);
+  }
+  cx.restore();
+}
+// ── stand markings: lead-in, stop bar, stand safety (wingtip clearance) box, equipment restraint line, number box ──
+// The box is as wide as the stand: the gap to the stand beside it, so neighbouring boxes share a line, as painted.
+// Multiple-apron-ramp stands (47 with 47L/47R, A7 with A7A/A7B) keep one box for the full-size stand; the others get their own
+// lead-in and stop bar inside it.
+let STAND_SZ = null;
+function standSize(s){
+  if (AD.standBox) return AD.standBox(s);
+  if (!STAND_SZ) {
+    STAND_SZ = new Map();
+    const ids = new Set(STANDS.map(t => t.id)), base = t => { const m = /^(.*\d)[LRAB]$/.exec(t.id); return m && ids.has(m[1]) ? m[1] : t.id; };
+    for (const t of STANDS) {
+      const u = [Math.sin(t.hdg*D2R), Math.cos(t.hdg*D2R)]; let lat = Infinity, near = Infinity;
+      for (const o of STANDS) {
+        if (o === t || base(o) === base(t)) continue;
+        const dx = (o.p[0] - t.p[0])/M2NM, dy = (o.p[1] - t.p[1])/M2NM, al = dx*u[0] + dy*u[1], la = Math.abs(dx*u[1] - dy*u[0]);
+        if (Math.abs(al) < 30 && la > 10) lat = Math.min(lat, la);
+        if (la > 10 || Math.abs(al) > 10) near = Math.min(near, Math.hypot(dx, dy));
+      }
+      // stands round a curved pier fan out, so the nearest stand at any angle also caps the width
+      const w = clamp(Math.min(isFinite(lat) ? lat : 38, near*1.1) - 1, 30, 82);
+      STAND_SZ.set(t, { w, l: clamp(w + 6, 24, 80), f: 0.56, sub: base(t) !== t.id });
+    }
+  }
+  return STAND_SZ.get(s);
+}
 function strokeSmooth(P){   // screen points, rounded through the mid-points so mapped curves stay smooth
   cx.beginPath(); cx.moveTo(...P[0]);
   for (let i = 1; i < P.length - 1; i++) cx.quadraticCurveTo(P[i][0], P[i][1], (P[i][0] + P[i+1][0])/2, (P[i][1] + P[i+1][1])/2);
@@ -288,7 +332,15 @@ function drawAirport(){
     drawApronSlabs(path);
   }
   drawRunwayShoulders(path);
-  if (!IMG) {
+  if (IMG) {
+    const lines = [];
+    for (const k of LINE_KEYS) {
+      const e = /^e\d+$/.test(k) && GE[+k.slice(1)];
+      if (e && e.tw === 'APRON') continue;
+      lines.push({ pts: AD.twys[k].map(([m, o]) => c(m, o)), w: paveWidth(e ? e.tw : k.replace(/[a-z]+$/, '')) });
+    }
+    drawPavement(lines, (AD.buildings || []).map(b => b.pts.map(([m, o]) => c(m, o))), mpx);
+  } else {
     const twyTex = texPattern('twy', 40, RWY_ANGLE()) || C.asphalt;
     cx.strokeStyle = C.gShoulder; cx.lineWidth = lw(25);
     for (const k in AD.twys) { path(AD.twys[k], false); cx.stroke(); }

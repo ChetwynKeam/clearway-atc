@@ -175,6 +175,7 @@ const TAXI_HINT = {
 
 // ═════════════════════════ aerodrome drawing (runway metres) ═════════════════════════
 const AD_SITE = {
+  pave: { w: 18 },   // OpenStreetMap width=18 on the apron taxiway and F (20 on K, L, M)
   aprons: APRONS, roads: [], buildings: [], twyExtra: OSM_TWY, osmLines: true, shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [],
   twyLabels: [['T', 180, -88], ['T', 900, -95], ['T', -100, -68], ['A', 12, -48], ['B', 70, -48], ['C', 335, -48], ['D', 425, -52], ['E', 604, -50], ['F', 1095, -50], ['K', 1322, -50], ['L', 1440, -55], ['M', 1490, -48]],
   hotspots: [['HS1', 0, -72]],
