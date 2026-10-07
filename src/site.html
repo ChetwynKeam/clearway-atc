@@ -1129,7 +1129,7 @@
         <tr><td class="mono">LU</td><td>Line up and backtrack</td><td class="mono">LU</td></tr>
         <tr><td class="mono">REL</td><td>Request the departure release from the next unit on the landline</td><td class="mono">REL</td></tr>
         <tr><td class="mono">CTO</td><td>Cleared for take-off on the departure route. Needs a valid release</td><td class="mono">CTO</td></tr>
-        <tr><td class="mono">VAC [exit]</td><td>Vacate via another exit (backtrack if needed). Arrivals vacate by themselves; this overrides their choice</td><td class="mono">VAC</td></tr>
+        <tr><td class="mono">VAC [exit]</td><td>Vacate via that exit. Give it on final and the crew plans its landing roll for it, braking harder for a near exit; if it can't make it, it says unable. On the runway it turns off there (backtracking if needed). Without it, arrivals pick their own exit</td><td class="mono">VAC</td></tr>
         <tr><td class="mono">TAXI [ihp]</td><td>Taxi to an intermediate holding point on a taxiway (Tango 1–9 at London City, Lima 1 and Bravo 1 at Innsbruck) and wait there. Arrivals can also be held at any runway holding point. <code>TAXI</code> on its own then carries on. The route picker lists them, and so does <b>Taxi to holding point…</b> for an arrival</td><td class="mono">CFE8703 TAXI T3</td></tr>
         <tr><td class="mono">TAXI [stand] [VIA …]</td><td>An arrival clear of the runway stops and asks for taxi: this sends it to its planned stand, or the one you name</td><td class="mono">EZY8901 TAXI 3</td></tr>
         <tr><td class="mono">ROG</td><td>Acknowledge a MAYDAY or PAN (any instruction to it also does)</td><td class="mono">EXS96K ROG</td></tr>

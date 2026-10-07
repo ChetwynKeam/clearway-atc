@@ -172,7 +172,11 @@ function phraseToCmd(raw){
   if (/ lineup /.test(s)) out.push('LU');
   if (/ cross runway /.test(s)) { const r = heardRwy(s, / cross runway (\d{1,2})( left| right| center)? /); out.push('CROSS' + (r ? ' ' + r : '')); }
   if (/ cleared( for)? takeoff /.test(s)) out.push('CTO');
-  if (/ vacate /.test(s)) out.push('VAC');
+  // "vacate via bravo 2" / "foxtrot romeo": the exit named after it
+  if ((m = s.match(/ vacate (?:(?:via|at|using|the|by) )*(.*)$/))) { const w = m[1].trim().split(' '); let ex = '', k = 0;
+    while (k < 2 && k < w.length && PHONW[w[k]]) ex += PHONW[w[k++]];
+    if (ex && /^\d{1,2}$/.test(w[k] || '')) ex += w[k];
+    out.push('VAC' + (ex ? ' ' + ex : '')); }
   if ((m = s.match(/ (contact|monitor) .*?(1\d\d)( decimal | point | )(\d{1,3}) /))) out.push(`HO ${m[2]}.${m[4]}`);
   else if (/ (contact|monitor) /.test(s)) out.push('HO');
   if (/ (request|requesting) release /.test(s) || / release /.test(s) && !/ released /.test(s)) out.push('REL');
