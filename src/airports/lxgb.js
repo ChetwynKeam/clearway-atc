@@ -68,6 +68,9 @@ chain('JA', [[1153.7,92.6],[1151.8,101.6],[1147.2,110.4]], 'AW', 'A');
 chain('JA', [[1157.1,84.3],[1162.4,93.9],[1168.3,99.9],[1176.5,105.3]], 'BW', 'A');
 chain('AW', [[1149.6,112.1]], 'L2', 'APRON'); ge('L2','BW','APRON');
 chain('AW', [[1129.9,131.4]], 'L1', 'APRON');
+// Alpha opens out onto the apron: the right turn off Alpha onto the taxilane east (and the left turn back) cuts the
+// corner, not round the back of AW (a turn of 160 degrees, which it can't make)
+ge(nearestNode(rm(1147.2, 110.4)).id, nearestNode(rm(1149.6, 112.1)).id, 'APRON');
 ge('BW','L3','B'); ge('L3','L4','B'); ge('L4','L5','B'); ge('L5','BN','B'); ge('BN','B1435','B'); ge('B1435','BE','B');
 chain('BE', [[1552.7,103.3],[1556.8,95]], 'HE', 'E'); ge('HE','RE','E');
 chain('BN', [[1384.1,115.1],[1396.5,124.9],[1404.4,137.1]], 'NT', 'APRON');
@@ -205,7 +208,9 @@ function depHold(ac){
 // pushback: straight back onto the taxilane, then along it so the nose ends up facing the chosen way
 function pushPath(ac, face){
   const st = ac.stand, lm = mOf(st.lp), lo = offOf(st.lp);
-  if (st.id === '1') return [st.lp, rm(1132, 124)];                       // stand 1 pushes back onto the curve to Alpha
+  // stand 1 pushes back down the curve to Alpha, and the tug swings the tail west so the nose faces along the taxilane
+  // (pushed straight back it would face up the dead-end curve, and it can't turn round on the taxiway)
+  if (st.id === '1') return [st.lp, rm(1138, 121), rm(1126, 126)];
   if (st.area === 'north') return [st.lp, rm(1411, 155)];                 // north stands push back down the apron taxiway
   const lim = st.area === 'civil' ? [1150, 1330] : [1060, 1185];
   const tail = face === 'west' ? 1 : -1;                     // facing east means the tail goes west

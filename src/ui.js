@@ -663,7 +663,7 @@ function showPop(ac, anchor, html, bind){
 }
 const COMPASS = d => `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-opacity=".3"/><path d="M20 4v4M20 32v4M4 20h4M32 20h4" stroke="currentColor" stroke-opacity=".4"/><g transform="rotate(${d} 20 20)"><path d="M20 9l6 14h-12z" fill="currentColor"/><rect x="18.5" y="22" width="3" height="9" rx="1" fill="currentColor" opacity=".5"/></g></svg>`;
 function openPushPop(ac, anchor){
-  const st = ac.stand, rec = pushRec(ac), lh = mOf(st.lp);
+  const st = ac.stand, rec = pushFace(ac), lh = mOf(st.lp);
   const opts = ['east', 'west'].map(f => {
     const pts = pushPath(ac, f), hp = APT.faceHold(st, f);
     return { f, pts: [st.p, ...pts], hp, rec: f === rec };

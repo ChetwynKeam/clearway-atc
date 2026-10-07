@@ -415,9 +415,21 @@ function taxiFrom(ac){ return taxiStart(ac)[0]; }
 // where a taxi route starts, and the way the aircraft is facing there (null: on its stand, not pushed, free to leave
 // either way). Out on the taxiways it is the node it is at, or the one ahead of it on the taxiway it is on, never the
 // one behind: an aircraft can't turn round on a taxiway (see route)
+// the way to push: the profile's choice, unless the nose would then point away from every route to the runway (it
+// can't turn round on the taxiway), when it is the other way
+function pushFace(ac){
+  const rec = pushRec(ac), H = HOLDS[depHold(ac)]; if (!ac.stand || !H) return rec;
+  const ok = f => { const pts = pushPath(ac, f), end = pts[pts.length-1], h = brg(...end, ...(pts.length > 1 ? pts[pts.length-2] : ac.stand.p)), n = GN[ac.stand.node].p, b = brg(...end, ...n);
+    return !!route(ac.stand.node, H.node, undefined, dist(...end, ...n) > 10/1852 && Math.abs(angDiff(h, b)) < 90 ? b : h); };
+  const other = rec === 'east' ? 'west' : 'east';
+  return ok(rec) || !ok(other) ? rec : other;
+}
 function taxiStart(ac){
-  if (ac.stand && !ac.leftStand && !ac.pushed) return [ac.stand.node, null];
   const p = [ac.x, ac.y], h = ac.hdg; let best = null;
+  // pushed back but not yet away: from the stand's lead-in point on the lane, the way the push left it facing
+  // on its stand (an arrival's stand, assigned while it taxis in, doesn't count)
+  if (ac.stand && !ac.leftStand && (ac.pushed || ['PARKED', 'ONSTAND', 'PUSH', 'READY', 'PULL'].includes(ac.state))) { const id = ac.stand.node; if (!ac.pushed) return [id, null];
+    const n = GN[id].p, b = brg(...p, ...n); return [id, dist(...p, ...n) > 10/1852 && Math.abs(angDiff(h, b)) < 90 ? b : h]; }
   for (const e of GE) { if (/^R/.test(e.a) || /^R/.test(e.b)) continue;
     const a = GN[e.a].p, b = GN[e.b].p, dx = b[0]-a[0], dy = b[1]-a[1], L2 = dx*dx + dy*dy || 1e-12, f = clamp(((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L2, 0, 1);
     const d = dist(...p, a[0] + dx*f, a[1] + dy*f); if (!best || d < best.d) best = { e, d }; }
@@ -449,7 +461,7 @@ function taxiOptions(ac, hp){
     if (out.length > 40) return;
     if (u === to) { out.push({ nodes: [...nodes], tws: [...tws], len }); return; }
     for (const [v, e] of GN[u].adj) { if (vis.has(v) || (/^R/.test(v) && v !== to)) continue;
-      const b = brg(...GN[u].p, ...GN[v].p); if (inB != null && Math.abs(angDiff(inB, b)) > (nodes.length > 1 ? TURN_MAX : TURN_START)) continue;   // no turning round
+      const b = inB == null ? brg(...GN[u].p, ...GN[v].p) : legBrg(u, v, inB); if (inB != null && Math.abs(angDiff(inB, b)) > (nodes.length > 1 ? TURN_MAX : TURN_START)) continue;   // no turning round
       vis.add(v); nodes.push(v); tws.push(e.tw); dfs(v, nodes, tws, len + e.len, vis, b); nodes.pop(); tws.pop(); vis.delete(v); }
   })(from, [from], [], 0, new Set([from]), face);
   // the only way round is a loop back through a junction already passed (a block to go round): the shortest such
@@ -487,15 +499,18 @@ function vacatePath(ac){
   const pts = [];
   const filM = (e, d) => FIL[e][d > 0 ? 'W' : 'E'][0][0];
   const ahead = 15 + stopDist(ac.gs || 0);
-  let ex = (ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs).find(e => (filM(e, dir) - m)*dir > ahead);
+  // an exit it can reach the stand from without turning round on the taxiway, if there is one (see route)
+  const canGo = e => !st || !!route(HOLDS[e].node, st.node, undefined, brg(...GN[HOLDS[e].rwy].p, ...GN[HOLDS[e].node].p));
+  const want = ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs.filter(canGo).length ? prefs.filter(canGo) : prefs;
+  let ex = want.find(e => (filM(e, dir) - m)*dir > ahead);
   ac.backtrack = false;
   // no turning circles (New York): too late for the exits it wanted, it takes the last one ahead of it
-  if (!ex && R.ends) ex = prefs.filter(e => (filM(e, dir) - m)*dir > 15).sort((a, b) => (filM(b, dir) - filM(a, dir))*dir)[0];
+  if (!ex && R.ends) ex = [want, prefs].map(L => L.filter(e => (filM(e, dir) - m)*dir > 15).sort((a, b) => (filM(b, dir) - filM(a, dir))*dir)[0]).find(e => e);
   if (!ex) { // roll on to the turning circle and backtrack
     let cur;
     if (dir < 0) { for (const [mm,o] of R.TURN_W) pts.push(padPt(R, mm, o)); cur = R.TURN_END.W; }
     else { for (const [mm,o] of R.TURN_E) pts.push(padPt(R, mm, o)); cur = R.TURN_END.E; }
-    ex = (ac.reqExit && HOLDS[ac.reqExit] ? ac.reqExit : prefs.slice().sort((a,b) => Math.abs(HOLDS[a].m-cur) - Math.abs(HOLDS[b].m-cur))[0]);
+    ex = (ac.reqExit && HOLDS[ac.reqExit] ? ac.reqExit : want.slice().sort((a,b) => Math.abs(HOLDS[a].m-cur) - Math.abs(HOLDS[b].m-cur))[0]);
     ac.backtrack = true;
   }
   const H = HOLDS[ex]; ac.exit = ex;
@@ -570,7 +585,9 @@ function taxiIn(ac, st, via, hold){
   else [from, face] = taxiStart(ac);
   // onto a stand: arriving the way its lead-in turns off, if there is such a route
   const pen = via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined;
-  const r = (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face); if (!r) return null;
+  const r = (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face)
+    // no way round from where it stopped (it can't stay on the runway's exit): the tight turn, rather than a jam
+    || (ac.vacated || rolling ? route(from, hold ? hold.node : st.node, pen) : null); if (!r) return null;
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
   const pts = r.nodes.map(id => GN[id].p);
   if (rolling) pts.splice(0, 1, ...ac.path.pts.filter(p => !p.ext));
@@ -751,7 +768,7 @@ function commandRun(str){
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
       const dir = { E:'east', EAST:'east', W:'west', WEST:'west' }[toks[i+1]]; if (dir) i++;
-      const face = dir || pushRec(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw());
+      const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw());
       ac.pushPts = pushPath(ac, face);
       setPath(ac, ac.pushPts, 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
       const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
@@ -759,7 +776,7 @@ function commandRun(str){
     } else if (t === 'PULL' || t === 'PULLBACK') {
       // pushed (or pushing) the wrong way: the tug tows it forward, back along the push line and onto its stand nose-in, to push again
       if (!['PUSH', 'READY'].includes(ac.state) || ac.leftStand || !ac.stand) { sys(`${ac.cs} ${ac.state === 'PARKED' ? 'is already on its ' + (APT.standWord || 'stand') : 'is not on push back'}: only an aircraft pushing or pushed back, and not yet taxiing, can be pulled forward.`); continue; }
-      const st = ac.stand, pp = ac.pushPts || pushPath(ac, ac.face || pushRec(ac));
+      const st = ac.stand, pp = ac.pushPts || pushPath(ac, ac.face || pushFace(ac));
       const got = ac.state === 'READY' || !ac.path ? pp.length : Math.max(0, pp.length - ac.path.pts.length);   // push points already reached
       ac.state = 'PULL'; ac.need = null; ac.pushed = false; ac.held = false;
       setPath(ac, [...pp.slice(0, got).reverse(), st.p], 4, () => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); }, { tug: true });

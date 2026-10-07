@@ -49,6 +49,10 @@ function route(from, to, pen, face, outB){
 // the sharpest turn a route takes at a junction: a junction's fillets are built for the turns it is meant for, so an
 // aircraft never turns back through more than this (the wrong way round a fillet); it goes round another way instead
 const TURN_START = 100, TURN_MAX = 115;
+// a leg's bearing; a zero-length leg (two nodes on the same spot, where generated graphs join) keeps the heading
+const legBrg = (u, v, inB) => dist(...GN[u].p, ...GN[v].p) < 0.3/1852 ? inB : brg(...GN[u].p, ...GN[v].p);
+// the ways on from node u: a zero-length edge (two nodes on one spot) is looked through to the edges beyond it
+function waysOn(u){ const out = []; for (const [v, e] of GN[u].adj) { if (e.len < 0.3/1852) { for (const [w, f] of GN[v].adj) if (w !== u) out.push([w, f]); } else out.push([v, e]); } return out; }
 function routeFacing(from, to, pen, face, outB){
   // states are (node, the node it came from); the seed comes from nowhere, pointing `face`
   const key = (v, u) => v + '|' + u, dd = { [key(from, '')]: 0 }, st = { [key(from, '')]: [from, '', face] }, prev = {}, done = new Set();
@@ -59,7 +63,7 @@ function routeFacing(from, to, pen, face, outB){
     if (u === to && (outB == null || Math.abs(angDiff(inB, outB)) <= TURN_MAX)) { end = k; break; }
     for (const [v, e] of GN[u].adj) {
       if (/^R/.test(v) && v !== to) continue;
-      const b = brg(...GN[u].p, ...GN[v].p);
+      const b = legBrg(u, v, inB);
       if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START)) continue;
       const nk = key(v, u), nd = dd[k] + e.len*(pen ? pen(e) : 1);
       if (dd[nk] === undefined || nd < dd[nk]) { dd[nk] = nd; st[nk] = [v, u, b]; prev[nk] = [k, e]; }
