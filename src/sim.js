@@ -411,29 +411,49 @@ const P = (m, off=0) => rm(m, off);
 // turn radius that fits the lead-in from the taxiway onto a stand: about 70% of the lead-in's length, no tighter than 8 m
 const standInR = (pts, st) => pts.length > 1 ? Math.max(8, dist(...pts[pts.length-2], ...st.p)*1852*0.7) : 8;
 function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; if (p.tight) q.tight = true; if (p.ext) q.ext = true; return q; }), spd, onDone, ...opts }; }
-function taxiFrom(ac){ return ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id; }
+function taxiFrom(ac){ return taxiStart(ac)[0]; }
+// where a taxi route starts, and the way the aircraft is facing there (null: on its stand, not pushed, free to leave
+// either way). Out on the taxiways it is the node it is at, or the one ahead of it on the taxiway it is on, never the
+// one behind: an aircraft can't turn round on a taxiway (see route)
+function taxiStart(ac){
+  if (ac.stand && !ac.leftStand && !ac.pushed) return [ac.stand.node, null];
+  const p = [ac.x, ac.y], h = ac.hdg; let best = null;
+  for (const e of GE) { if (/^R/.test(e.a) || /^R/.test(e.b)) continue;
+    const a = GN[e.a].p, b = GN[e.b].p, dx = b[0]-a[0], dy = b[1]-a[1], L2 = dx*dx + dy*dy || 1e-12, f = clamp(((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L2, 0, 1);
+    const d = dist(...p, a[0] + dx*f, a[1] + dy*f); if (!best || d < best.d) best = { e, d }; }
+  if (!best) return [nearestNode(p, n => !/^R/.test(n.id)).id, h];
+  const ends = [best.e.a, best.e.b].map(id => ({ id, d: dist(...p, ...GN[id].p), off: Math.abs(angDiff(h, brg(...p, ...GN[id].p))) }));
+  const here = ends.filter(n => n.d < 10/1852).sort((x, y) => x.d - y.d)[0]; if (here) return [here.id, h];
+  const ahead = ends.filter(n => n.off < 90).sort((x, y) => x.off - y.off)[0];
+  return ahead ? [ahead.id, brg(...p, ...GN[ahead.id].p)] : [ends.sort((x, y) => x.d - y.d)[0].id, h];
+}
+const routeAc = (ac, to, pen) => { const [from, face] = taxiStart(ac); return route(from, to, pen, face); };
 function taxiRoute(ac, hp, via){
   if (via && via.length) { const o = taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v))); if (o) return o;
-    if (BIG_GROUND) { const r = route(taxiFrom(ac), HOLDS[hp].node, e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8); if (r) return r; } }   // big airports: keep to the named taxiways
-  return route(taxiFrom(ac), HOLDS[hp].node);
+    if (BIG_GROUND) { const r = routeAc(ac, HOLDS[hp].node, e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8); if (r) return r; } }   // big airports: keep to the named taxiways
+  return routeAc(ac, HOLDS[hp].node);
 }
 // every sensible routing to a holding point: simple paths over the taxiway graph, one per distinct "via", shortest first
 function taxiOptions(ac, hp){
-  const from = taxiFrom(ac), to = HOLDS[hp].node, out = [], seen = new Set();
+  const [from, face] = taxiStart(ac), to = HOLDS[hp].node, out = [], seen = new Set();
   // a big airport (several runways: New York): the shortest route, then the shortest avoiding each taxiway it uses
   if (BIG_GROUND) {
-    const best = route(from, to); if (!best) return [];
+    const best = route(from, to, undefined, face); if (!best) return [];
     const res = [], seen = new Set(), L0 = pathLen(best.nodes);
     const add = r => { if (!r) return; r.len = pathLen(r.nodes); r.via = viaOf(r.tws, hp); const k = r.via.join(''); if (seen.has(k) || r.len > L0*1.8) return; seen.add(k); res.push(r); };
     add(best);
-    for (const tw of [...new Set(best.tws)].filter(t => t !== 'APRON' && t !== hp)) { if (res.length === 3) break; add(route(from, to, e => e.tw === tw ? 6 : 1)); }
+    for (const tw of [...new Set(best.tws)].filter(t => t !== 'APRON' && t !== hp)) { if (res.length === 3) break; add(route(from, to, e => e.tw === tw ? 6 : 1, face)); }
     return res.sort((a, b) => a.len - b.len);
   }
-  (function dfs(u, nodes, tws, len, vis){
+  (function dfs(u, nodes, tws, len, vis, inB){
     if (out.length > 40) return;
     if (u === to) { out.push({ nodes: [...nodes], tws: [...tws], len }); return; }
-    for (const [v, e] of GN[u].adj) { if (vis.has(v) || (/^R/.test(v) && v !== to)) continue; vis.add(v); nodes.push(v); tws.push(e.tw); dfs(v, nodes, tws, len + e.len, vis); nodes.pop(); tws.pop(); vis.delete(v); }
-  })(from, [from], [], 0, new Set([from]));
+    for (const [v, e] of GN[u].adj) { if (vis.has(v) || (/^R/.test(v) && v !== to)) continue;
+      const b = brg(...GN[u].p, ...GN[v].p); if (inB != null && Math.abs(angDiff(inB, b)) > (nodes.length > 1 ? TURN_MAX : TURN_START)) continue;   // no turning round
+      vis.add(v); nodes.push(v); tws.push(e.tw); dfs(v, nodes, tws, len + e.len, vis, b); nodes.pop(); tws.pop(); vis.delete(v); }
+  })(from, [from], [], 0, new Set([from]), face);
+  // the only way round is a loop back through a junction already passed (a block to go round): the shortest such
+  if (!out.length) { const r = route(from, to, undefined, face); if (r) out.push({ ...r, len: pathLen(r.nodes) }); }
   out.sort((a, b) => a.len - b.len);
   const res = [];
   for (const r of out) { r.via = viaOf(r.tws, hp); const k = r.via.join(''); if (seen.has(k)) continue; seen.add(k); if (r.len > out[0].len*2.2 && res.length) continue; res.push(r); if (res.length === 3) break; }
@@ -540,8 +560,13 @@ function startVacate(ac, auto){
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
   // still rolling off (or re-routed while taxiing in): carry on to the vacate stop point, then on from there
-  const rolling = ac.path && !ac.taxiIn && !ac.vacated, from = rolling || !ac.path ? ac.vacNode || nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id;
-  const r = route(from, hold ? hold.node : st.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined); if (!r) return null;
+  // the route starts the way it is facing: rolling off, along its vacate path into the stop point; otherwise from where it is
+  const rolling = ac.path && !ac.taxiIn && !ac.vacated;
+  let from, face;
+  if (rolling && ac.vacNode) { const P = [[ac.x, ac.y], ...ac.path.pts.filter(p => !p.ext)], v = GN[ac.vacNode].p, q = P.length > 1 ? P[P.length-2] : P[0];
+    from = ac.vacNode; face = dist(...q, ...v) > 1e-6 ? brg(...q, ...v) : ac.hdg; }
+  else [from, face] = taxiStart(ac);
+  const r = route(from, hold ? hold.node : st.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined, face); if (!r) return null;
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
   const pts = r.nodes.map(id => GN[id].p);
   if (rolling) pts.splice(0, 1, ...ac.path.pts.filter(p => !p.ext));
@@ -762,8 +787,8 @@ function commandRun(str){
       let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
       const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
       { const why = APT.taxiCheck && APT.taxiCheck(ac, hp); if (why) { sys(why); continue; } }
-      const rt = ihp ? route(taxiFrom(ac), ihp.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined) : taxiRoute(ac, hp, via);
-      if (!rt) { sys(`No taxi route to holding point ${ihp ? ihp.id : hp}.`); continue; }
+      const rt = ihp ? routeAc(ac, ihp.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined) : taxiRoute(ac, hp, via);
+      if (!rt) { sys(`No taxi route to holding point ${ihp ? ihp.id : hp}${taxiStart(ac)[1] != null ? ` going the way ${ac.cs} is facing: it can't turn round on the taxiway${ac.pushed && !ac.leftStand ? ' (Pull back to stand, then push the other way)' : ''}` : ''}.`); continue; }
       ac.hp = hp;
       const pts = rt.nodes.map(id => GN[id].p);
       // pushed onto the lane already: don't taxi back to the stand's lead-in point if the next node is ahead

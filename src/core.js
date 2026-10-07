@@ -31,7 +31,10 @@ function chain(a, pts, b, tw){ let prev = a; for (const [m, o] of pts) { const i
 const filIn = (hp, side) => FIL[hp][side].map(([m, o]) => holdRwy(hp).rm(m, o));   // in the frame of the hold's runway
 const filOut = (hp, side) => filIn(hp, side).reverse();
 // pen (optional): a cost multiplier per edge, to find alternative routings at big airports
-function route(from, to, pen){
+// face (optional): the way the aircraft at `from` is pointing. An aircraft can't turn round on a taxiway, so the route
+// then starts within 100 degrees of that heading and never doubles back on itself at a node further on
+function route(from, to, pen, face){
+  if (face != null) return routeFacing(from, to, pen, face);
   const dd = { [from]: 0 }, prev = {}, done = new Set();
   while (true) {
     let u = null, best = Infinity; for (const k in dd) if (!done.has(k) && dd[k] < best) { best = dd[k]; u = k; }
@@ -40,6 +43,26 @@ function route(from, to, pen){
   }
   const nodes = [to], tws = []; let c = to;
   while (c !== from) { const [u, e] = prev[c]; nodes.unshift(u); tws.unshift(e.tw); c = u; }
+  return { nodes, tws };
+}
+const TURN_START = 100, TURN_MAX = 150;
+function routeFacing(from, to, pen, face){
+  // states are (node, the node it came from); the seed comes from nowhere, pointing `face`
+  const key = (v, u) => v + '|' + u, dd = { [key(from, '')]: 0 }, st = { [key(from, '')]: [from, '', face] }, prev = {}, done = new Set();
+  let end = null;
+  while (true) {
+    let k = null, best = Infinity; for (const q in dd) if (!done.has(q) && dd[q] < best) { best = dd[q]; k = q; }
+    if (k === null) return null; const [u, from_, inB] = st[k]; if (u === to) { end = k; break; } done.add(k);
+    for (const [v, e] of GN[u].adj) {
+      if (/^R/.test(v) && v !== to) continue;
+      const b = brg(...GN[u].p, ...GN[v].p);
+      if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START)) continue;
+      const nk = key(v, u), nd = dd[k] + e.len*(pen ? pen(e) : 1);
+      if (dd[nk] === undefined || nd < dd[nk]) { dd[nk] = nd; st[nk] = [v, u, b]; prev[nk] = [k, e]; }
+    }
+  }
+  const nodes = [], tws = []; let c = end;
+  while (c) { nodes.unshift(st[c][0]); if (!prev[c]) break; tws.unshift(prev[c][1].tw); c = prev[c][0]; }
   return { nodes, tws };
 }
 // a new graph node on taxiway tw at the point nearest p, splitting the edge it falls on (intermediate holding points)
