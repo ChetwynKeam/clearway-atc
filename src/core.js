@@ -23,28 +23,42 @@ const add = (p, h, d) => [p[0]+Math.sin(h*D2R)*d, p[1]+Math.cos(h*D2R)*d];
 
 // ═════════════════════════ taxiway graph and procedures (filled in by the airport profile) ═════════════════════════
 const GN = {}, GE = [];
-function gn(id, m, off){ GN[id] = { id, m, off, p: rm(m, off), adj: [] }; }
-function ge(a, b, tw){ const e = { a, b, tw, len: dist(...GN[a].p, ...GN[b].p) }; GE.push(e); GN[a].adj.push([b, e]); GN[b].adj.push([a, e]); }
+function gn(id, m, off){ TAXI_MEMO.clear(); GN[id] = { id, m, off, p: rm(m, off), adj: [] }; }
+function ge(a, b, tw){ TAXI_MEMO.clear(); const e = { a, b, tw, len: dist(...GN[a].p, ...GN[b].p) }; GE.push(e); GN[a].adj.push([b, e]); GN[b].adj.push([a, e]); }
 let kN = 0;
 // a chain of points becomes graph nodes joined by edges carrying the taxiway designator
 function chain(a, pts, b, tw){ let prev = a; for (const [m, o] of pts) { const id = 'k' + (kN++); gn(id, m, o); ge(prev, id, tw); prev = id; } ge(prev, b, tw); }
 const filIn = (hp, side) => FIL[hp][side].map(([m, o]) => holdRwy(hp).rm(m, o));   // in the frame of the hold's runway
 const filOut = (hp, side) => filIn(hp, side).reverse();
+// a binary min-heap of [cost, ...] entries for the route searches (Gatwick's taxiway graph has thousands of nodes)
+function heapPush(h, it){ let i = h.length; h.push(it); while (i) { const p = (i - 1) >> 1; if (h[p][0] <= it[0]) break; h[i] = h[p]; i = p; } h[i] = it; }
+function heapPop(h){
+  const top = h[0], last = h.pop(), n = h.length; if (!n) return top;
+  let i = 0; while (true) { let c = 2*i + 1; if (c >= n) break; if (c + 1 < n && h[c+1][0] < h[c][0]) c++; if (h[c][0] >= last[0]) break; h[i] = h[c]; i = c; }
+  h[i] = last; return top;
+}
+// shortest routes without a penalty, remembered until the graph changes (the push and taxi boxes ask for the same ones
+// every half second)
+const TAXI_MEMO = new Map();
 // pen (optional): a cost multiplier per edge, to find alternative routings at big airports
 // face (optional): the way the aircraft at `from` is pointing. An aircraft can't turn round on a taxiway, so the route
 // then starts within 100 degrees of that heading and never doubles back on itself at a node further on
 // outB (optional, with face): the way it must be able to turn on leaving `to` (onto a stand's lead-in)
 function route(from, to, pen, face, outB){
   if (face != null) return routeFacing(from, to, pen, face, outB);
-  const dd = { [from]: 0 }, prev = {}, done = new Set();
-  while (true) {
-    let u = null, best = Infinity; for (const k in dd) if (!done.has(k) && dd[k] < best) { best = dd[k]; u = k; }
-    if (u === null) return null; if (u === to) break; done.add(u);
-    for (const [v, e] of GN[u].adj) { if (/^R/.test(v) && v !== to) continue; const nd = dd[u] + e.len*(pen ? pen(e) : 1); if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; prev[v] = [u, e]; } }
+  const ck = pen ? null : from + '>' + to;
+  if (ck && TAXI_MEMO.has(ck)) { const r = TAXI_MEMO.get(ck); return r && { nodes: r.nodes.slice(), tws: r.tws.slice() }; }
+  const dd = new Map([[from, 0]]), prev = new Map(), done = new Set(), h = [[0, from]];
+  let found = false;
+  while (h.length) {
+    const [d, u] = heapPop(h); if (done.has(u)) continue;
+    if (u === to) { found = true; break; } done.add(u);
+    for (const [v, e] of GN[u].adj) { if (v !== to && v[0] === 'R') continue; const nd = d + e.len*(pen ? pen(e) : 1), o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, [u, e]); heapPush(h, [nd, v]); } }
   }
-  const nodes = [to], tws = []; let c = to;
-  while (c !== from) { const [u, e] = prev[c]; nodes.unshift(u); tws.unshift(e.tw); c = u; }
-  return { nodes, tws };
+  let r = null;
+  if (found) { const nodes = [to], tws = []; let c = to; while (c !== from) { const [u, e] = prev.get(c); nodes.unshift(u); tws.unshift(e.tw); c = u; } r = { nodes, tws }; }
+  if (ck) TAXI_MEMO.set(ck, r && { nodes: r.nodes.slice(), tws: r.tws.slice() });
+  return r;
 }
 // the sharpest turn a route takes at a junction: a junction's fillets are built for the turns it is meant for, so an
 // aircraft never turns back through more than this (the wrong way round a fillet); it goes round another way instead
@@ -54,24 +68,29 @@ const legBrg = (u, v, inB) => dist(...GN[u].p, ...GN[v].p) < 0.3/1852 ? inB : br
 // the ways on from node u: a zero-length edge (two nodes on one spot) is looked through to the edges beyond it
 function waysOn(u){ const out = []; for (const [v, e] of GN[u].adj) { if (e.len < 0.3/1852) { for (const [w, f] of GN[v].adj) if (w !== u) out.push([w, f]); } else out.push([v, e]); } return out; }
 function routeFacing(from, to, pen, face, outB){
+  const ck = pen ? null : from + '>' + to + '>' + face.toFixed(1) + '>' + (outB == null ? '' : outB.toFixed(1));
+  if (ck && TAXI_MEMO.has(ck)) { const r = TAXI_MEMO.get(ck); return r && { nodes: r.nodes.slice(), tws: r.tws.slice() }; }
   // states are (node, the node it came from); the seed comes from nowhere, pointing `face`
-  const key = (v, u) => v + '|' + u, dd = { [key(from, '')]: 0 }, st = { [key(from, '')]: [from, '', face] }, prev = {}, done = new Set();
+  const k0 = from + '|', dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face]]]), prev = new Map(), done = new Set(), h = [[0, k0]];
   let end = null;
-  while (true) {
-    let k = null, best = Infinity; for (const q in dd) if (!done.has(q) && dd[q] < best) { best = dd[q]; k = q; }
-    if (k === null) return null; const [u, from_, inB] = st[k]; done.add(k);
+  while (h.length) {
+    const [d, k] = heapPop(h); if (done.has(k)) continue; done.add(k);
+    const [u, from_, inB] = st.get(k);
     if (u === to && (outB == null || Math.abs(angDiff(inB, outB)) <= TURN_MAX)) { end = k; break; }
     for (const [v, e] of GN[u].adj) {
-      if (/^R/.test(v) && v !== to) continue;
+      if (v !== to && v[0] === 'R') continue;
       const b = legBrg(u, v, inB);
       if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START)) continue;
-      const nk = key(v, u), nd = dd[k] + e.len*(pen ? pen(e) : 1);
-      if (dd[nk] === undefined || nd < dd[nk]) { dd[nk] = nd; st[nk] = [v, u, b]; prev[nk] = [k, e]; }
+      const nk = v + '|' + u, nd = d + e.len*(pen ? pen(e) : 1), o = dd.get(nk);
+      if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, [v, u, b]); prev.set(nk, [k, e]); heapPush(h, [nd, nk]); }
     }
   }
-  const nodes = [], tws = []; let c = end;
-  while (c) { nodes.unshift(st[c][0]); if (!prev[c]) break; tws.unshift(prev[c][1].tw); c = prev[c][0]; }
-  return { nodes, tws };
+  let r = null;
+  if (end) { const nodes = [], tws = []; let c = end;
+    while (c) { nodes.unshift(st.get(c)[0]); const pv = prev.get(c); if (!pv) break; tws.unshift(pv[1].tw); c = pv[0]; }
+    r = { nodes, tws }; }
+  if (ck) TAXI_MEMO.set(ck, r && { nodes: r.nodes.slice(), tws: r.tws.slice() });
+  return r;
 }
 // a new graph node on taxiway tw at the point nearest p, splitting the edge it falls on (intermediate holding points)
 function splitAt(id, p, tw){
@@ -82,7 +101,7 @@ function splitAt(id, p, tw){
   if (!best) return null;
   const { e, f, q } = best;
   if (f < 0.02) return e.a; if (f > 0.98) return e.b;
-  GN[id] = { id, m: typeof mOf === 'function' ? mOf(q) : 0, off: typeof offOf === 'function' ? offOf(q) : 0, p: q, adj: [] };
+  TAXI_MEMO.clear(); GN[id] = { id, m: typeof mOf === 'function' ? mOf(q) : 0, off: typeof offOf === 'function' ? offOf(q) : 0, p: q, adj: [] };
   GE.splice(GE.indexOf(e), 1);
   GN[e.a].adj = GN[e.a].adj.filter(([v, x]) => x !== e); GN[e.b].adj = GN[e.b].adj.filter(([v, x]) => x !== e);
   ge(e.a, id, tw); ge(id, e.b, tw);
