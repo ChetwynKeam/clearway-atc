@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-07T05:12:10Z",
+ "updated": "2026-10-07T05:28:32Z",
  "source": "avionio.com",
  "days": {
   "2026-10-07": {
@@ -185,7 +185,7 @@
      "flight": "AA1587",
      "sched": "05:43",
      "status": "Estimated",
-     "expected": "01:21"
+     "expected": "01:18"
     },
     {
      "place": "Salt Lake City",
@@ -248,7 +248,7 @@
      "flight": "AA10",
      "sched": "06:04",
      "status": "Estimated",
-     "expected": "04:35"
+     "expected": "00:52"
     },
     {
      "place": "San Diego",
@@ -262,7 +262,7 @@
      "flight": "AV20",
      "sched": "06:05",
      "status": "Estimated",
-     "expected": "05:46"
+     "expected": "05:48"
     },
     {
      "place": "Delhi",
@@ -304,14 +304,14 @@
      "flight": "DL709",
      "sched": "06:25",
      "status": "Estimated",
-     "expected": "01:25"
+     "expected": "01:06"
     },
     {
      "place": "Portland",
      "flight": "DL2139",
      "sched": "06:29",
      "status": "Estimated",
-     "expected": "01:30"
+     "expected": "01:24"
     },
     {
      "place": "San Francisco",
@@ -339,7 +339,7 @@
      "flight": "DL670",
      "sched": "06:41",
      "status": "Estimated",
-     "expected": "01:22"
+     "expected": "01:21"
     },
     {
      "place": "Ithaca",
@@ -394,8 +394,8 @@
      "place": "Las Vegas",
      "flight": "B6948",
      "sched": "07:02",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:20"
     },
     {
      "place": "Sao Paulo",
@@ -479,14 +479,14 @@
      "flight": "DL650",
      "sched": "07:28",
      "status": "Estimated",
-     "expected": "02:34"
+     "expected": "04:51"
     },
     {
      "place": "Los Angeles",
      "flight": "AA30",
      "sched": "07:29",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:25"
     },
     {
      "place": "Pittsburgh",
@@ -521,7 +521,7 @@
      "flight": "KQ2",
      "sched": "07:35",
      "status": "Estimated",
-     "expected": ""
+     "expected": "09:00"
     },
     {
      "place": "Cleveland",
@@ -549,7 +549,7 @@
      "flight": "JJ8180",
      "sched": "07:45",
      "status": "Estimated",
-     "expected": "07:35"
+     "expected": "07:33"
     },
     {
      "place": "Detroit",
@@ -706,6 +706,13 @@
      "expected": ""
     },
     {
+     "place": "Cleveland",
+     "flight": "9E5008",
+     "sched": "09:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Raleigh/Durham",
      "flight": "9E5239",
      "sched": "09:00",
@@ -822,7 +829,7 @@
      "flight": "AI101",
      "sched": "09:40",
      "status": "Estimated",
-     "expected": "09:18"
+     "expected": "09:17"
     },
     {
      "place": "Miami",
@@ -849,6 +856,13 @@
      "place": "Orlando",
      "flight": "DL2693",
      "sched": "09:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Anchorage",
+     "flight": "5Y812",
+     "sched": "09:57",
      "status": "Scheduled",
      "expected": ""
     },
@@ -969,7 +983,7 @@
      "flight": "TK3",
      "sched": "10:55",
      "status": "Estimated",
-     "expected": "09:49"
+     "expected": "10:15"
     },
     {
      "place": "Tokyo",
@@ -1061,20 +1075,6 @@
      "sched": "11:44",
      "status": "Cancelled",
      "expected": ""
-    },
-    {
-     "place": "Detroit",
-     "flight": "DL2751",
-     "sched": "11:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Atlanta",
-     "flight": "DL1034",
-     "sched": "11:57",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -1159,8 +1159,8 @@
      "place": "Hong Kong",
      "flight": "CX843",
      "sched": "01:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:07"
     },
     {
      "place": "New York",
@@ -1173,15 +1173,15 @@
      "place": "Tokyo",
      "flight": "NH159",
      "sched": "02:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:15"
     },
     {
      "place": "Manila",
      "flight": "PR127",
      "sched": "02:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:19"
     },
     {
      "place": "Guayaquil",
@@ -1534,6 +1534,13 @@
      "expected": ""
     },
     {
+     "place": "Detroit",
+     "flight": "9E5080",
+     "sched": "07:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Seattle",
      "flight": "DL699",
      "sched": "07:10",
@@ -1544,6 +1551,20 @@
      "place": "Chicago",
      "flight": "AA2907",
      "sched": "07:14",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Baku",
+     "flight": "7L8113",
+     "sched": "07:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "San Francisco",
+     "flight": "B615",
+     "sched": "07:15",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1590,6 +1611,13 @@
      "expected": ""
     },
     {
+     "place": "Chicago",
+     "flight": "9E4903",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Fort Worth",
      "flight": "AA2234",
      "sched": "07:30",
@@ -1604,9 +1632,30 @@
      "expected": ""
     },
     {
+     "place": "Bogota",
+     "flight": "AV21",
+     "sched": "07:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Aruba",
      "flight": "B657",
      "sched": "07:37",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Charlotte",
+     "flight": "9E5052",
+     "sched": "07:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Louisville",
+     "flight": "5X2115",
+     "sched": "07:45",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1646,6 +1695,20 @@
      "expected": ""
     },
     {
+     "place": "Nashville",
+     "flight": "9E4919",
+     "sched": "08:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Savannah",
+     "flight": "9E5207",
+     "sched": "08:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Charleston",
      "flight": "B61273",
      "sched": "08:00",
@@ -1655,13 +1718,6 @@
     {
      "place": "Houston",
      "flight": "B61381",
-     "sched": "08:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Nashville",
-     "flight": "B6273",
      "sched": "08:00",
      "status": "Scheduled",
      "expected": ""
@@ -2063,69 +2119,6 @@
      "flight": "B61009",
      "sched": "10:12",
      "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Washington",
-     "flight": "YX5822",
-     "sched": "10:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Chicago",
-     "flight": "AA788",
-     "sched": "10:29",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Saint Lucia",
-     "flight": "B6881",
-     "sched": "10:29",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Tokyo",
-     "flight": "AA167",
-     "sched": "10:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Raleigh/Durham",
-     "flight": "B62285",
-     "sched": "10:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Montego Bay",
-     "flight": "B6279",
-     "sched": "10:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Tampa",
-     "flight": "B6225",
-     "sched": "10:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Atlanta",
-     "flight": "B6119",
-     "sched": "10:44",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Martha's Vineyard",
-     "flight": "9K516",
-     "sched": "10:55",
-     "status": "Scheduled",
      "expected": ""
     }
    ]
