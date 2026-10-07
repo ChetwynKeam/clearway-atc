@@ -235,6 +235,21 @@ def nearest_seg(p):
         q = (q0[0] + ex*u, q0[1] + ey*u); d = math.dist(p, q)
         if best is None or d < best[0]: best = (d, e, i, u, q)
     return best
+def segpts_of(e, i):
+    pl = [NODE[inv[e[0]]]] + [tuple(p) for p in e[3]] + [NODE[inv[e[1]]]]
+    return pl[i], pl[i+1]
+def crosses(a, b, skip):
+    """the segment a-b crosses a taxiway segment other than on the edge it ends on"""
+    def cr(o, p, q): return (p[0]-o[0])*(q[1]-o[1]) - (p[1]-o[1])*(q[0]-o[0])
+    for e, i, q0, q1 in segpts:
+        if e is skip: continue
+        d1, d2, d3, d4 = cr(a, b, q0), cr(a, b, q1), cr(q0, q1, a), cr(q0, q1, b)
+        if d1*d2 < 0 and d3*d4 < 0:
+            # where it crosses: a lane met within 6 m of either end of the line is the one it starts from or runs onto
+            den = (b[0]-a[0])*(q1[1]-q0[1]) - (b[1]-a[1])*(q1[0]-q0[0]); tt = ((q0[0]-a[0])*(q1[1]-q0[1]) - (q0[1]-a[1])*(q1[0]-q0[0]))/den
+            Lab = math.dist(a, b)
+            if 6 < tt*Lab < Lab - 6: return True
+    return False
 pp = {}
 for w in ways:
     r = w.get('tags', {}).get('ref')
@@ -251,19 +266,51 @@ def term(sid):
     n = int(re.match(r'\d+', sid)[0])
     return '123' if n < 300 else '4' if n < 500 else '4S'
 gates, splits = [], []
+def along(pl, d):
+    """the point d metres along a polyline, and the index of the segment it is on"""
+    for i in range(len(pl) - 1):
+        s_ = math.dist(pl[i], pl[i+1])
+        if d <= s_ or i == len(pl) - 2:
+            f = min(1, d/(s_ or 1)); return (pl[i][0] + (pl[i+1][0]-pl[i][0])*f, pl[i][1] + (pl[i+1][1]-pl[i][1])*f), i
+        d -= s_
+TPTS = [NODE[n] for w in ways if w.get('tags', {}).get('aeroway') == 'terminal' for n in w['nodes'] if n in NODE]
+def tdist(p): return min((math.dist(p, t) for t in TPTS), default=1e9)
+def bear(a, b): return math.degrees(math.atan2(b[0]-a[0], b[1]-a[1])) % 360
 for sid, (q, L) in sorted(pp.items(), key=lambda kv: (kv[0][0] == 'T', int(re.search(r'\d+', kv[0])[0]), kv[0])):
+    line = None
     if len(q) > 1:
-        d0, d1 = nearest_seg(q[0])[0], nearest_seg(q[-1])[0]
-        p, far = (q[-1], q[0]) if d1 > d0 else (q[0], q[-1])        # the stop point is the end further from the lanes
-        dv = (far[0]-p[0], far[1]-p[1]); Ld = math.hypot(*dv); ax = (dv[0]/Ld, dv[1]/Ld) if Ld > 5 else None
-    else: p, ax = q[0], None
-    hit = ray_hit(p, ax) if ax else None
+        n0, n1 = nearest_seg(q[0]), nearest_seg(q[-1])
+        if n0[0] < 8 and n1[0] < 8 and L > 60:
+            # the mapped line runs from one lane to another (the lane behind the Terminal 1-2-3 stands, the remote ramps'
+            # drive-through stands): the aircraft comes in from the lane further from a terminal building and stops at the
+            # line's middle vertex (halfway along it when it has none)
+            if tdist(q[0]) < tdist(q[-1]): q = q[::-1]; n0, n1 = n1, n0
+            if len(q) == 3: p, k = q[1], 0
+            else: p, k = along(q, L/2)
+            line = q[:k+1] + [p]; hit = (n0[0], n0[1], n0[2], n0[3])
+            hd = bear(q[k], p) if math.dist(q[k], p) > 1 else bear(q[k], q[k+1])
+        else:
+            if n0[0] > n1[0]: q = q[::-1]; n0, n1 = n1, n0          # q runs from the lane end to the stop point
+            p = q[-1]; line = q
+            hd = bear(q[-2], q[-1]) if math.dist(q[-2], q[-1]) > 2 else bear(q[0], q[-1])
+            if n0[0] <= 30: hit = (n0[0], n0[1], n0[2], n0[3])      # the painted line meets its lane here
+            else:
+                dv = (q[0][0]-p[0], q[0][1]-p[1]); Ld = math.hypot(*dv)
+                hit = ray_hit(p, (dv[0]/Ld, dv[1]/Ld)) if Ld > 5 else None
+    else:
+        p = q[0]; hit = None; hd = None
     if not hit:
         ns = nearest_seg(p)
         if ns[0] > 220: continue
         hit = (ns[0], ns[1], ns[2], ns[3])
+    t, e, i, u = hit; q0, q1 = segpts_of(e, i); lq = (q0[0] + (q1[0]-q0[0])*u, q0[1] + (q1[1]-q0[1])*u)
+    if hd is None: hd = bear(lq, p)
+    # the painted lead-in: the mapped line from where it meets the lane; a straight one from the lane only when short.
+    # None where it would cross another lane
+    paint = [lq] + (line[1:] if line else [p]) if line or math.dist(p, lq) <= 45 else None
+    if paint and any(crosses(paint[j], paint[j+1], e) for j in range(len(paint) - 1)): paint = None
     splits.append((sid, hit))
-    gates.append([sid, term(sid), [r1(p[0]), r1(p[1])], hit])
+    gates.append([sid, term(sid), [r1(p[0]), r1(p[1])], hit, round(hd, 1), [[r1(x) for x in pt] for pt in paint] if paint else 0])
 byedge = collections.defaultdict(list)
 for sid, (t, e, i, u) in splits: byedge[id(e)].append((i + u, sid, e))
 newedges, gnode, POS = [], {}, {}
@@ -317,7 +364,7 @@ with open(OUT, 'w') as fo:
 // rnodes: runway-edge points 40 m out on each entry/exit; holds key: [hold node, runway-edge node, runway, m along it,
 // offset, directions that can turn off there, runway end it serves, taxiway]; hlink: the bend between the runway edge and
 // the holding point; fil: centreline to runway-edge fillet in the runway frame; hs: holding positions before a runway;
-// gates: [stand, terminal apron (123, 4, 4S), stop point [e, n], lead-in node]; ihps: [name, node] holding points away
+// gates: [stand, terminal apron (123, 4, 4S), stop point [e, n], lead-in node, heading into the stand, the painted lead-in line from the lane (0: none)]; ihps: [name, node] holding points away
 // from the runways.
 const LEMD_GROUND = ''')
     fo.write(json.dumps(out, separators=(',', ':')))

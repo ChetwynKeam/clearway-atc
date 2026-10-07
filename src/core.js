@@ -92,6 +92,36 @@ function routeFacing(from, to, pen, face, outB){
   if (ck) TAXI_MEMO.set(ck, r && { nodes: r.nodes.slice(), tws: r.tws.slice() });
   return r;
 }
+// shortest routes from one node to many (the holding-point lists): one search instead of one per target, with the same
+// rules and memo entries as route() without a penalty. Returns a Map of target → { nodes, tws } or null.
+function routesFrom(from, targets, face){
+  const out = new Map(), want = new Set(), facing = face != null;
+  const ck = t => facing ? from + '>' + t + '>' + face.toFixed(1) + '>' : from + '>' + t;
+  for (const t of targets) { if (t === from || out.has(t)) continue; const k = ck(t);
+    if (TAXI_MEMO.has(k)) { const r = TAXI_MEMO.get(k); out.set(t, r && { nodes: r.nodes.slice(), tws: r.tws.slice() }); } else want.add(t); }
+  if (!want.size) return out;
+  const k0 = facing ? from + '|' : from, dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face]]]), prev = new Map(), done = new Set(), h = [[0, k0]];
+  let left = want.size;
+  while (h.length && left) {
+    const [d, k] = heapPop(h); if (done.has(k)) continue; done.add(k);
+    const [u, from_, inB] = st.get(k);
+    if (want.has(u) && !out.has(u)) {
+      const nodes = [], tws = []; let c = k;
+      while (c) { nodes.unshift(st.get(c)[0]); const pv = prev.get(c); if (!pv) break; tws.unshift(pv[1].tw); c = pv[0]; }
+      out.set(u, { nodes, tws }); TAXI_MEMO.set(ck(u), { nodes: nodes.slice(), tws: tws.slice() }); left--;
+    }
+    if (u !== from && u[0] === 'R') continue;          // a runway-edge node is only ever an end point
+    for (const [v, e] of GN[u].adj) {
+      if (v[0] === 'R' && !want.has(v)) continue;
+      let b = inB;
+      if (facing) { b = legBrg(u, v, inB); if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START)) continue; }
+      const nk = facing ? v + '|' + u : v, nd = d + e.len, o = dd.get(nk);
+      if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, [v, u, b]); prev.set(nk, [k, e]); heapPush(h, [nd, nk]); }
+    }
+  }
+  for (const t of want) if (!out.has(t)) { out.set(t, null); TAXI_MEMO.set(ck(t), null); }
+  return out;
+}
 // a new graph node on taxiway tw at the point nearest p, splitting the edge it falls on (intermediate holding points)
 function splitAt(id, p, tw){
   let best = null;

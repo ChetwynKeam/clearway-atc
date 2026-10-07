@@ -735,15 +735,15 @@ function openPushPop(ac, anchor){
   });
   showPop(ac, anchor, `<div class="lbl">Start-up and push back</div><h4>${ac.cs} <span>stand ${st.id} · ${ac.t}</span></h4>
     <p class="hint">Choose which way the nose faces after the push. Face the way it will taxi: runway ${depRw(ac)} departures leave from ${PHON[depHold(ac)]}.</p>
-    <div class="opts two">${opts.map((o, j) => `<button class="opt${o.rec ? ' rec' : ''}" data-j="${j}">${COMPASS(o.f === 'east' ? CRS_LO : CRS_HI)}<b>Face ${APT.faceWord(o.f)}</b><span>Tail ${APT.faceWord(o.f === 'east' ? 'west' : 'east')} · towards ${PHON[o.hp]}</span>${o.rec ? '<i>Recommended</i>' : ''}</button>`).join('')}</div>
-    <div class="phr">“${spoken(ac.cs)}, start-up and push back approved, facing <em>${rec}</em>, ${PH.altim()}”</div>`, () => {
+    <div class="opts two">${opts.map((o, j) => `<button class="opt${o.rec ? ' rec' : ''}" data-j="${j}">${COMPASS(APT.faceHdg ? APT.faceHdg(st, o.f) : o.f === 'east' ? CRS_LO : CRS_HI)}<b>Face ${faceSay(ac, o.f)}</b><span>Tail ${APT.faceHdg ? compassWord(APT.faceHdg(st, o.f) + 180) : APT.faceWord(o.f === 'east' ? 'west' : 'east')} · towards ${PHON[o.hp]}</span>${o.rec ? '<i>Recommended</i>' : ''}</button>`).join('')}</div>
+    <div class="phr">“${spoken(ac.cs)}, start-up and push back approved, facing <em>${faceSay(ac, rec)}</em>, ${PH.altim()}”</div>`, () => {
     pop.querySelectorAll('.opt').forEach(bt => {
       const o = opts[+bt.dataset.j];
-      const pv = () => { S.preview = { pts: o.pts, label: 'Push · face ' + APT.faceWord(o.f) }; pop.querySelector('.phr em').textContent = APT.faceWord(o.f); };
+      const pv = () => { S.preview = { pts: o.pts, label: 'Push · face ' + faceSay(ac, o.f) }; pop.querySelector('.phr em').textContent = faceSay(ac, o.f); };
       bt.onmouseenter = pv; bt.onfocus = pv;
-      bt.onclick = () => { command(`${ac.cs} PUSH ${o.f === 'east' ? 'E' : 'W'}`); closePop(); };
+      bt.onclick = () => { command(`${ac.cs} PUSH ${APT.faceHdg ? ({ north: 'N', 'north-east': 'NE', east: 'E', 'south-east': 'SE', south: 'S', 'south-west': 'SW', west: 'W', 'north-west': 'NW' })[faceSay(ac, o.f)] : o.f === 'east' ? 'E' : 'W'}`); closePop(); };
     });
-    S.preview = { pts: opts.find(o => o.rec).pts, label: 'Push · face ' + APT.faceWord(rec) };
+    S.preview = { pts: opts.find(o => o.rec).pts, label: 'Push · face ' + faceSay(ac, rec) };
   });
 }
 function openTaxiPop(ac, anchor){
@@ -778,7 +778,8 @@ function openTaxiPop(ac, anchor){
 // shortest route from a node to each intermediate holding point (and, for arrivals, the runway holding points too)
 function ihpOptions(from, face, rwyHolds){
   const ids = [...Object.keys(IHPS), ...(rwyHolds ? Object.keys(HOLDS).filter(id => !/~\d+$/.test(id) || !HOLDS[id.replace(/~\d+$/, '')]) : [])];
-  const all = ids.map(id => { const h = holdPt(id), r = h && h.node !== from && route(from, h.node, undefined, face); return r && { hp: id, ihp: true, rwy: h.rwy, o: { nodes: r.nodes, via: viaOf(r.tws, id).filter(t => t !== 'APRON'), len: pathLen(r.nodes) } }; })
+  const hs = ids.map(id => [id, holdPt(id)]), R = routesFrom(from, hs.filter(([, h]) => h).map(([, h]) => h.node), face);
+  const all = hs.map(([id, h]) => { const r = h && h.node !== from && R.get(h.node); return r && { hp: id, ihp: true, rwy: h.rwy, o: { nodes: r.nodes, via: viaOf(r.tws, id).filter(t => t !== 'APRON'), len: pathLen(r.nodes) } }; })
     .filter(Boolean).sort((a, b) => a.o.len - b.o.len);
   return [...all.filter(a => !a.rwy), ...all.filter(a => a.rwy).slice(0, 8)];
 }

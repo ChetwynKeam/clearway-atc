@@ -365,6 +365,7 @@ const APT = {
   shearWhy: rw => 'windshear on short final',
   faceHold: (st, f) => depHold({ stand: st, leftStand: false, x: st.p[0], y: st.p[1] }),
   faceWord: f => f,
+  faceHdg: (st, f) => norm(laneDir(st, f) + 180),          // taxilanes run every way here: name the face by the compass
   // the three departure-end holding points nearest the aircraft
   taxiHolds: (south, ac) => { const ks = endHolds(depRw()), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
     const rec = ac && depHold(ac); return [...new Set([rec, ...ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p))].filter(Boolean))].slice(0, 3); },
@@ -379,8 +380,8 @@ const APT = {
   // push from Gatwick Ground
   phr: {
     push: (ac, dn, face) => { const top = sidTopOf(ac.sid);
-      return [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(top)}, squawk ${ac.sqk}, start-up and push back approved, facing ${APT.faceWord(face)}, QNH ${S.wx.qnh}`,
-        `cleared ${dn}, ${sidSpoken(ac.sid)}, altitude ${altShort(top)}, squawk ${ac.sqk}, start and push approved facing ${APT.faceWord(face)}, QNH ${S.wx.qnh}`]; },
+      return [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(top)}, squawk ${ac.sqk}, start-up and push back approved, facing ${faceSay(ac, face)}, QNH ${S.wx.qnh}`,
+        `cleared ${dn}, ${sidSpoken(ac.sid)}, altitude ${altShort(top)}, squawk ${ac.sqk}, start and push approved facing ${faceSay(ac, face)}, QNH ${S.wx.qnh}`]; },
     startReq: ac => `${EGKK.UNITS.gnd.name}, stand ${ac.stand.id}, ${ac.perf.name} to ${AP[ac.d] ? AP[ac.d][2] : ac.d}, information ${phonetic(S.atis)}, request start-up and push back`
   },
   atisPanel(w){

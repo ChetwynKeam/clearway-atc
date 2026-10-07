@@ -2149,7 +2149,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <tr><td class="mono">HO [freq]</td><td>Transfer: Radar or Approach ↔ Tower, then the next unit (Sevilla 132.6 or Casablanca 125.5 from Gibraltar, Lisboa 132.255 from Madeira). A wrong frequency sends the crew away and back</td><td class="mono">HO 132.6</td></tr>
         <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
         <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
-        <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west (north-east or south-west at Madeira)</td><td class="mono">BAW493 PUSH E</td></tr>
+        <tr><td class="mono">PUSH [E|W]</td><td>Route clearance, start-up and push back approved, facing east or west (north-east or south-west at Madeira; at Gatwick, New York JFK and Madrid the face is named by the compass and any compass point, e.g. <code>PUSH N</code>, picks the side nearest it)</td><td class="mono">BAW493 PUSH E</td></tr>
         <tr><td class="mono">PULL</td><td>Pushed the wrong way: the tug pulls it forward back onto its stand, nose-in, and the crew calls again for push back. Works while pushing or pushed, before taxi</td><td class="mono">BAW493 PULL</td></tr>
         <tr><td class="mono">TAXI [hp] [VIA …]</td><td>Taxi to a holding point (A, C, D or E at Gibraltar, B or C at Madeira), by the shortest route or the one you name. <b>Taxi…</b> on the selected flight opens the route picker</td><td class="mono">TAXI E VIA A B</td></tr>
         <tr><td class="mono">HP / RES</td><td>Hold position / continue taxi</td><td class="mono">HP</td></tr>
@@ -3163,6 +3163,36 @@ function routeFacing(from, to, pen, face, outB){
     r = { nodes, tws }; }
   if (ck) TAXI_MEMO.set(ck, r && { nodes: r.nodes.slice(), tws: r.tws.slice() });
   return r;
+}
+// shortest routes from one node to many (the holding-point lists): one search instead of one per target, with the same
+// rules and memo entries as route() without a penalty. Returns a Map of target → { nodes, tws } or null.
+function routesFrom(from, targets, face){
+  const out = new Map(), want = new Set(), facing = face != null;
+  const ck = t => facing ? from + '>' + t + '>' + face.toFixed(1) + '>' : from + '>' + t;
+  for (const t of targets) { if (t === from || out.has(t)) continue; const k = ck(t);
+    if (TAXI_MEMO.has(k)) { const r = TAXI_MEMO.get(k); out.set(t, r && { nodes: r.nodes.slice(), tws: r.tws.slice() }); } else want.add(t); }
+  if (!want.size) return out;
+  const k0 = facing ? from + '|' : from, dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face]]]), prev = new Map(), done = new Set(), h = [[0, k0]];
+  let left = want.size;
+  while (h.length && left) {
+    const [d, k] = heapPop(h); if (done.has(k)) continue; done.add(k);
+    const [u, from_, inB] = st.get(k);
+    if (want.has(u) && !out.has(u)) {
+      const nodes = [], tws = []; let c = k;
+      while (c) { nodes.unshift(st.get(c)[0]); const pv = prev.get(c); if (!pv) break; tws.unshift(pv[1].tw); c = pv[0]; }
+      out.set(u, { nodes, tws }); TAXI_MEMO.set(ck(u), { nodes: nodes.slice(), tws: tws.slice() }); left--;
+    }
+    if (u !== from && u[0] === 'R') continue;          // a runway-edge node is only ever an end point
+    for (const [v, e] of GN[u].adj) {
+      if (v[0] === 'R' && !want.has(v)) continue;
+      let b = inB;
+      if (facing) { b = legBrg(u, v, inB); if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START)) continue; }
+      const nk = facing ? v + '|' + u : v, nd = d + e.len, o = dd.get(nk);
+      if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, [v, u, b]); prev.set(nk, [k, e]); heapPush(h, [nd, nk]); }
+    }
+  }
+  for (const t of want) if (!out.has(t)) { out.set(t, null); TAXI_MEMO.set(ck(t), null); }
+  return out;
 }
 // a new graph node on taxiway tw at the point nearest p, splitting the edge it falls on (intermediate holding points)
 function splitAt(id, p, tw){
@@ -5707,6 +5737,19 @@ const rwyName = id => { const R = rwyById(id); return rwysInUse().find(r => rwyO
 // ── phraseology. ICAO (UK and European) wording unless the profile overrides it (APT.phr: New York uses the FAA's).
 // a holding point's spoken name: "T3" is Tango 3
 const hpWords = id => { id = id.replace(/~\d+$/, ''); return PHON[id] || id.replace(/^([A-Z]+)(\d+)$/, (m, l, d) => (PHON[l] || l) + ' ' + d); };
+// push-back faces: the engine's two options are 'east' and 'west' (nose that way along the taxilane). An airport whose
+// taxilanes run every which way (APT.faceHdg: the nose heading after the push) names them by the compass instead.
+const COMPASS_WORDS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+const compassWord = h => COMPASS_WORDS[Math.round(norm(h)/45) % 8];
+const faceSay = (ac, f) => APT.faceHdg && ac.stand ? compassWord(APT.faceHdg(ac.stand, f)) : APT.faceWord(f);
+// a typed PUSH direction (E, W, or with APT.faceHdg any compass point: the face whose nose heading is nearest)
+function pushDir(ac, tok){
+  const named = { E: 'east', EAST: 'east', W: 'west', WEST: 'west' }[tok];
+  if (!APT.faceHdg || !ac.stand) return named;
+  const H = { N: 0, NORTH: 0, NE: 45, E: 90, EAST: 90, SE: 135, S: 180, SOUTH: 180, SW: 225, W: 270, WEST: 270, NW: 315 }[tok];
+  if (H == null) return undefined;
+  return ['east', 'west'].sort((a, b) => Math.abs(angDiff(APT.faceHdg(ac.stand, a), H)) - Math.abs(angDiff(APT.faceHdg(ac.stand, b), H)))[0];
+}
 const PH = Object.assign({
   altim: () => `QNH ${S.wx.qnh}`,
   alt: (a, up) => [`${up ? 'climb' : 'descend'} ${altWords(a)}`, `${up ? 'climb' : 'descend'} ${altShort(a)}`],
@@ -5717,8 +5760,8 @@ const PH = Object.assign({
   lineUp: (ac, hp) => { const lu = APT.lineUpWords ? APT.lineUpWords(hp) : 'line up and backtrack'; return [`via ${PHON[hp]}, ${lu} runway ${depRw(ac)}`, `${lu} runway ${depRw(ac)}`]; },
   cto: (ac, sid, chg) => [`${chg ? 'amended clearance, ' : ''}${sidSpoken(sid)} departure, runway ${depRw(ac)}, cleared for takeoff, ${windPhrase()}`, `${chg ? 'amended, ' : ''}${sidSpoken(sid)}, cleared for takeoff runway ${depRw(ac)}`],
   ctl: (ac, rw) => [`runway ${rw}, cleared to land, ${windPhrase()}`, `cleared to land runway ${rw}`],
-  push: (ac, dn, face) => [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${APT.faceWord(face)}, ${PH.altim()}`,
-    `cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${APT.faceWord(face)}, ${PH.altim()}`],
+  push: (ac, dn, face) => [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${faceSay(ac, face)}, ${PH.altim()}`,
+    `cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${faceSay(ac, face)}, ${PH.altim()}`],
   pull: (ac, st) => [`pull forward onto ${APT.standWord || 'stand'} ${st.id}, call me for push back`, `pulling forward onto ${APT.standWord || 'stand'} ${st.id}`],
   startReq: ac => `${APT.tower[0]}, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up and push back`,
   checkIn: ac => `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, inbound ${ac.route[0]}, information ${phonetic(S.atis)}`,
@@ -6409,7 +6452,7 @@ function commandRun(str){
       return renderSel && renderSel();
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
-      const dir = { E:'east', EAST:'east', W:'west', WEST:'west' }[toks[i+1]]; if (dir) i++;
+      const dir = pushDir(ac, toks[i+1]); if (dir) i++;
       const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac));
       ac.pushPts = pushPath(ac, face);
       setPath(ac, ac.pushPts, 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
@@ -7731,15 +7774,15 @@ function openPushPop(ac, anchor){
   });
   showPop(ac, anchor, `<div class="lbl">Start-up and push back</div><h4>${ac.cs} <span>stand ${st.id} · ${ac.t}</span></h4>
     <p class="hint">Choose which way the nose faces after the push. Face the way it will taxi: runway ${depRw(ac)} departures leave from ${PHON[depHold(ac)]}.</p>
-    <div class="opts two">${opts.map((o, j) => `<button class="opt${o.rec ? ' rec' : ''}" data-j="${j}">${COMPASS(o.f === 'east' ? CRS_LO : CRS_HI)}<b>Face ${APT.faceWord(o.f)}</b><span>Tail ${APT.faceWord(o.f === 'east' ? 'west' : 'east')} · towards ${PHON[o.hp]}</span>${o.rec ? '<i>Recommended</i>' : ''}</button>`).join('')}</div>
-    <div class="phr">“${spoken(ac.cs)}, start-up and push back approved, facing <em>${rec}</em>, ${PH.altim()}”</div>`, () => {
+    <div class="opts two">${opts.map((o, j) => `<button class="opt${o.rec ? ' rec' : ''}" data-j="${j}">${COMPASS(APT.faceHdg ? APT.faceHdg(st, o.f) : o.f === 'east' ? CRS_LO : CRS_HI)}<b>Face ${faceSay(ac, o.f)}</b><span>Tail ${APT.faceHdg ? compassWord(APT.faceHdg(st, o.f) + 180) : APT.faceWord(o.f === 'east' ? 'west' : 'east')} · towards ${PHON[o.hp]}</span>${o.rec ? '<i>Recommended</i>' : ''}</button>`).join('')}</div>
+    <div class="phr">“${spoken(ac.cs)}, start-up and push back approved, facing <em>${faceSay(ac, rec)}</em>, ${PH.altim()}”</div>`, () => {
     pop.querySelectorAll('.opt').forEach(bt => {
       const o = opts[+bt.dataset.j];
-      const pv = () => { S.preview = { pts: o.pts, label: 'Push · face ' + APT.faceWord(o.f) }; pop.querySelector('.phr em').textContent = APT.faceWord(o.f); };
+      const pv = () => { S.preview = { pts: o.pts, label: 'Push · face ' + faceSay(ac, o.f) }; pop.querySelector('.phr em').textContent = faceSay(ac, o.f); };
       bt.onmouseenter = pv; bt.onfocus = pv;
-      bt.onclick = () => { command(`${ac.cs} PUSH ${o.f === 'east' ? 'E' : 'W'}`); closePop(); };
+      bt.onclick = () => { command(`${ac.cs} PUSH ${APT.faceHdg ? ({ north: 'N', 'north-east': 'NE', east: 'E', 'south-east': 'SE', south: 'S', 'south-west': 'SW', west: 'W', 'north-west': 'NW' })[faceSay(ac, o.f)] : o.f === 'east' ? 'E' : 'W'}`); closePop(); };
     });
-    S.preview = { pts: opts.find(o => o.rec).pts, label: 'Push · face ' + APT.faceWord(rec) };
+    S.preview = { pts: opts.find(o => o.rec).pts, label: 'Push · face ' + faceSay(ac, rec) };
   });
 }
 function openTaxiPop(ac, anchor){
@@ -7774,7 +7817,8 @@ function openTaxiPop(ac, anchor){
 // shortest route from a node to each intermediate holding point (and, for arrivals, the runway holding points too)
 function ihpOptions(from, face, rwyHolds){
   const ids = [...Object.keys(IHPS), ...(rwyHolds ? Object.keys(HOLDS).filter(id => !/~\d+$/.test(id) || !HOLDS[id.replace(/~\d+$/, '')]) : [])];
-  const all = ids.map(id => { const h = holdPt(id), r = h && h.node !== from && route(from, h.node, undefined, face); return r && { hp: id, ihp: true, rwy: h.rwy, o: { nodes: r.nodes, via: viaOf(r.tws, id).filter(t => t !== 'APRON'), len: pathLen(r.nodes) } }; })
+  const hs = ids.map(id => [id, holdPt(id)]), R = routesFrom(from, hs.filter(([, h]) => h).map(([, h]) => h.node), face);
+  const all = hs.map(([id, h]) => { const r = h && h.node !== from && R.get(h.node); return r && { hp: id, ihp: true, rwy: h.rwy, o: { nodes: r.nodes, via: viaOf(r.tws, id).filter(t => t !== 'APRON'), len: pathLen(r.nodes) } }; })
     .filter(Boolean).sort((a, b) => a.o.len - b.o.len);
   return [...all.filter(a => !a.rwy), ...all.filter(a => a.rwy).slice(0, 8)];
 }
