@@ -409,6 +409,7 @@ const APT = {
   shearWhy: rw => S.wx.cb ? 'microburst alert on final' : 'windshear on short final',
   faceHold: (st, f) => depHold({ stand: st, leftStand: false, x: st.p[0], y: st.p[1] }),
   faceWord: f => f,
+  faceHdg: (st, f) => norm(laneDir(st, f) + 180),          // taxilanes run every way here: name the face by the compass
   // the three departure-end entries nearest the aircraft
   taxiHolds: (south, ac) => { const ks = endHolds(depRw()), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
     const rec = ac && depHold(ac); return [...new Set([rec, ...ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p))].filter(Boolean))].slice(0, 3); },

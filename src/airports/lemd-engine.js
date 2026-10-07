@@ -74,9 +74,12 @@ for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
 // from a terminal for long turnarounds; ramp 7 by the cargo terminal (178-264) is the cargo apron, used the same way.
 const kindOf = id => { const n = /^\d+$/.test(id) ? +id : null; if (n == null) return null;
   return n >= 178 && n <= 264 ? 'C' : (n >= 75 && n <= 175) || (n >= 412 && n <= 432) || (n >= 600 && n <= 628) || (n >= 700 && n <= 722) ? 'R' : null; };
-const STANDS = G.gates.map(([id, term, [e, n], node]) => { const p = EN(e, n), k = kindOf(id);
-  return { id, term: k || term, p, m: mOf(p), off: offOf(p), node, area: k ? 'remote' : 'civil', occ: null, noLead: k === 'C' }; });
-STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = brg(...s.lp, ...s.p); });
+// each stand's painted lead-in follows its mapped line from the lane (drive-through stands on the remote ramps stop halfway
+// along a line from one lane to the next); none is painted where it would cross another lane
+const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line]) => { const p = EN(e, n), k = kindOf(id);
+  return { id, term: k || term, p, m: mOf(p), off: offOf(p), node, area: k ? 'remote' : 'civil', occ: null, noLead: k === 'C' || !line, h0: hdg,
+    line: line ? line.map(([e, n]) => EN(e, n)) : null }; });
+STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 const TERM_NAME = { '123': 'Terminals 1-2-3', '4': 'Terminal 4', '4S': 'Terminal 4S', R: 'remote stands', C: 'cargo stands' };
 // which side of each runway its exits are on (the side the taxiway system is)
@@ -169,6 +172,12 @@ function exitFor(ac, name){
 // taxiways 23 m (ICAO code E/F); runways 60 m
 const AD_SITE = { pave: { w: 23 }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
 const TERM_LABELS = (() => { const by = {}; for (const s of STANDS) if (s.area === 'civil') (by[s.term] ||= []).push(s.p); return Object.entries(by).map(([t, ps]) => [TERM_NAME[t].toUpperCase(), ps.reduce((a, p) => [a[0] + p[0]/ps.length, a[1] + p[1]/ps.length], [0, 0])]); })();
+// the lead-on and lead-off lines in map coordinates, worked out once (one per distinct fillet)
+let LEADS = null;
+const leadPts = () => LEADS || (LEADS = (() => { const seen = new Set(), out = [];
+  for (const k in FIL) { const f = FIL[k].W, key = HOLDS[k].on + JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
+    const R = rwyById(HOLDS[k].on); out.push(leadLine(f).map(p => R.rm(...p))); }
+  return out; })());
 function drawLemd(){
   const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
   const P2 = p => [sx(p[0]), sy(p[1])];
@@ -182,7 +191,7 @@ function drawLemd(){
     cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
     cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
     for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-    cx.lineWidth = lw(44); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
+    cx.lineWidth = lw(44); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
     cx.strokeStyle = C.asphalt; cx.lineWidth = lw(23);
     for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
     for (const k in FIL) { const R = rwyById(HOLDS[k].on); pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
@@ -219,9 +228,7 @@ function drawLemd(){
       for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 60], [R.hi, R.thr[R.hi] - 60]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
     }
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
-    { const seen = new Set(), leads = []; for (const k in FIL) { const f = FIL[k].W, key = HOLDS[k].on + JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
-      const R = rwyById(HOLDS[k].on); leads.push(leadLine(f).map(p => P2(R.rm(...p)))); }
-      groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
+    { const leads = leadPts().map(l => l.map(p => P2(p))); groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
     groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
@@ -231,7 +238,7 @@ function drawLemd(){
       cx.setLineDash([]);
     }
     // stand lead-in lines and numbers
-    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP([s.lp, s.p], false); cx.stroke(); } });
+    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); } });
     if (IMG) { cx.save(); clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx); cx.restore(); }   // stand paint stops at the terminal walls
     else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
@@ -427,6 +434,7 @@ const APT = {
   shearWhy: rw => S.wx.cb ? 'microburst alert on final' : 'windshear on short final',
   faceHold: (st, f) => depHold({ stand: st, leftStand: false, x: st.p[0], y: st.p[1] }),
   faceWord: f => f,
+  faceHdg: (st, f) => norm(laneDir(st, f) + 180),          // taxilanes run every way here: name the face by the compass
   // the departure-end holding points of the aircraft's runway nearest it, then the other departure runway's
   taxiHolds: (south, ac) => { const rw = ac ? depRw(ac) : depRw(), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
     const near = ks => ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p));
@@ -446,8 +454,8 @@ const APT = {
   // from one position (Madrid Clearances, the apron service and Barajas Ground combined)
   phr: {
     push: (ac, dn, face) => { const top = sidTopOf(ac.sid);
-      return [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, runway ${depRw(ac)}, climb ${altWords(top)}, squawk ${ac.sqk}, start-up and push back approved, facing ${APT.faceWord(face)}, QNH ${S.wx.qnh}`,
-        `cleared ${dn}, ${sidSpoken(ac.sid)}, runway ${depRw(ac)}, altitude ${altShort(top)}, squawk ${ac.sqk}, start and push approved facing ${APT.faceWord(face)}, QNH ${S.wx.qnh}`]; },
+      return [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, runway ${depRw(ac)}, climb ${altWords(top)}, squawk ${ac.sqk}, start-up and push back approved, facing ${faceSay(ac, face)}, QNH ${S.wx.qnh}`,
+        `cleared ${dn}, ${sidSpoken(ac.sid)}, runway ${depRw(ac)}, altitude ${altShort(top)}, squawk ${ac.sqk}, start and push approved facing ${faceSay(ac, face)}, QNH ${S.wx.qnh}`]; },
     startReq: ac => `${LEMD.UNITS.gnd.name}, stand ${ac.stand.id}, ${ac.perf.name} to ${AP[ac.d] ? AP[ac.d][2] : ac.d}, information ${phonetic(S.atis)}, request start-up and push back`,
     checkIn: ac => { const star = DIR[ac.gate] && DIR[ac.gate].star[cfgNow()];
       return `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, ${star ? star.replace(/(\d)([A-Z])$/, ' $1 $2') + ' arrival' : 'inbound ' + ac.route[0]}, information ${phonetic(S.atis)}`; },

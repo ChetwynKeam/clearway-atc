@@ -124,6 +124,19 @@ const rwyName = id => { const R = rwyById(id); return rwysInUse().find(r => rwyO
 // ── phraseology. ICAO (UK and European) wording unless the profile overrides it (APT.phr: New York uses the FAA's).
 // a holding point's spoken name: "T3" is Tango 3
 const hpWords = id => { id = id.replace(/~\d+$/, ''); return PHON[id] || id.replace(/^([A-Z]+)(\d+)$/, (m, l, d) => (PHON[l] || l) + ' ' + d); };
+// push-back faces: the engine's two options are 'east' and 'west' (nose that way along the taxilane). An airport whose
+// taxilanes run every which way (APT.faceHdg: the nose heading after the push) names them by the compass instead.
+const COMPASS_WORDS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+const compassWord = h => COMPASS_WORDS[Math.round(norm(h)/45) % 8];
+const faceSay = (ac, f) => APT.faceHdg && ac.stand ? compassWord(APT.faceHdg(ac.stand, f)) : APT.faceWord(f);
+// a typed PUSH direction (E, W, or with APT.faceHdg any compass point: the face whose nose heading is nearest)
+function pushDir(ac, tok){
+  const named = { E: 'east', EAST: 'east', W: 'west', WEST: 'west' }[tok];
+  if (!APT.faceHdg || !ac.stand) return named;
+  const H = { N: 0, NORTH: 0, NE: 45, E: 90, EAST: 90, SE: 135, S: 180, SOUTH: 180, SW: 225, W: 270, WEST: 270, NW: 315 }[tok];
+  if (H == null) return undefined;
+  return ['east', 'west'].sort((a, b) => Math.abs(angDiff(APT.faceHdg(ac.stand, a), H)) - Math.abs(angDiff(APT.faceHdg(ac.stand, b), H)))[0];
+}
 const PH = Object.assign({
   altim: () => `QNH ${S.wx.qnh}`,
   alt: (a, up) => [`${up ? 'climb' : 'descend'} ${altWords(a)}`, `${up ? 'climb' : 'descend'} ${altShort(a)}`],
@@ -134,8 +147,8 @@ const PH = Object.assign({
   lineUp: (ac, hp) => { const lu = APT.lineUpWords ? APT.lineUpWords(hp) : 'line up and backtrack'; return [`via ${PHON[hp]}, ${lu} runway ${depRw(ac)}`, `${lu} runway ${depRw(ac)}`]; },
   cto: (ac, sid, chg) => [`${chg ? 'amended clearance, ' : ''}${sidSpoken(sid)} departure, runway ${depRw(ac)}, cleared for takeoff, ${windPhrase()}`, `${chg ? 'amended, ' : ''}${sidSpoken(sid)}, cleared for takeoff runway ${depRw(ac)}`],
   ctl: (ac, rw) => [`runway ${rw}, cleared to land, ${windPhrase()}`, `cleared to land runway ${rw}`],
-  push: (ac, dn, face) => [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${APT.faceWord(face)}, ${PH.altim()}`,
-    `cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${APT.faceWord(face)}, ${PH.altim()}`],
+  push: (ac, dn, face) => [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${faceSay(ac, face)}, ${PH.altim()}`,
+    `cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${faceSay(ac, face)}, ${PH.altim()}`],
   pull: (ac, st) => [`pull forward onto ${APT.standWord || 'stand'} ${st.id}, call me for push back`, `pulling forward onto ${APT.standWord || 'stand'} ${st.id}`],
   startReq: ac => `${APT.tower[0]}, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up and push back`,
   checkIn: ac => `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, inbound ${ac.route[0]}, information ${phonetic(S.atis)}`,
@@ -826,7 +839,7 @@ function commandRun(str){
       return renderSel && renderSel();
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
-      const dir = { E:'east', EAST:'east', W:'west', WEST:'west' }[toks[i+1]]; if (dir) i++;
+      const dir = pushDir(ac, toks[i+1]); if (dir) i++;
       const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac));
       ac.pushPts = pushPath(ac, face);
       setPath(ac, ac.pushPts, 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
