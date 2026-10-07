@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-07T02:41:37Z",
+ "updated": "2026-10-07T02:54:28Z",
  "source": "avionio.com",
  "days": {
   "2026-10-06": {
@@ -44,8 +44,8 @@
      "place": "Santa Ana",
      "flight": "DL556",
      "sched": "22:18",
-     "status": "Cancelled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "17:41"
     },
     {
      "place": "San Francisco",
@@ -191,8 +191,8 @@
      "place": "Fort Lauderdale",
      "flight": "DL1419",
      "sched": "22:50",
-     "status": "Estimated",
-     "expected": "22:04"
+     "status": "Landed",
+     "expected": "20:18"
     },
     {
      "place": "London",
@@ -212,8 +212,8 @@
      "place": "Tokyo",
      "flight": "NH160",
      "sched": "22:55",
-     "status": "Cancelled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "10:54"
     },
     {
      "place": "Miami",
@@ -397,7 +397,7 @@
      "flight": "TP210",
      "sched": "22:05",
      "status": "Estimated",
-     "expected": "22:33"
+     "expected": "22:26"
     },
     {
      "place": "Madrid",
@@ -425,35 +425,35 @@
      "flight": "9E5297",
      "sched": "22:15",
      "status": "Estimated",
-     "expected": "23:01"
+     "expected": "22:38"
     },
     {
      "place": "Singapore",
      "flight": "SQ23",
      "sched": "22:15",
-     "status": "Estimated",
-     "expected": "22:40"
+     "status": "Departed",
+     "expected": "22:46"
     },
     {
      "place": "Dublin",
      "flight": "DL44",
      "sched": "22:20",
      "status": "Estimated",
-     "expected": "22:22"
+     "expected": "22:34"
     },
     {
      "place": "Milan",
      "flight": "EK206",
      "sched": "22:20",
      "status": "Estimated",
-     "expected": "22:20"
+     "expected": "22:11"
     },
     {
      "place": "Abu Dhabi",
      "flight": "EY4",
      "sched": "22:20",
      "status": "Estimated",
-     "expected": "22:41"
+     "expected": "22:39"
     },
     {
      "place": "Warsaw",
@@ -481,7 +481,7 @@
      "flight": "B61516",
      "sched": "22:34",
      "status": "Estimated",
-     "expected": "22:55"
+     "expected": "22:51"
     },
     {
      "place": "Anchorage",
@@ -530,7 +530,7 @@
      "flight": "DL264",
      "sched": "22:40",
      "status": "Estimated",
-     "expected": "23:06"
+     "expected": "22:49"
     },
     {
      "place": "Amsterdam",
@@ -731,7 +731,7 @@
      "flight": "AA944",
      "sched": "00:58",
      "status": "Estimated",
-     "expected": "22:22"
+     "expected": "23:37"
     },
     {
      "place": "Panama City",
@@ -828,15 +828,15 @@
      "place": "Port of Spain",
      "flight": "BW540",
      "sched": "05:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Los Angeles",
      "flight": "B61524",
      "sched": "05:01",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "23:49"
     },
     {
      "place": "Albuquerque",
@@ -877,7 +877,7 @@
      "place": "Medellin",
      "flight": "AV42",
      "sched": "05:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1179,7 +1179,7 @@
      "flight": "DL650",
      "sched": "07:28",
      "status": "Estimated",
-     "expected": "22:05"
+     "expected": "02:34"
     },
     {
      "place": "Los Angeles",
@@ -1235,7 +1235,7 @@
      "flight": "JJ8180",
      "sched": "07:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:35"
     },
     {
      "place": "Detroit",
@@ -1961,6 +1961,13 @@
      "expected": ""
     },
     {
+     "place": "Marrakech",
+     "flight": "GJW21SJ",
+     "sched": "08:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Los Angeles",
      "flight": "B6323",
      "sched": "08:05",
@@ -2040,13 +2047,6 @@
     {
      "place": "Washington",
      "flight": "YX4586",
-     "sched": "08:29",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Nashville",
-     "flight": "YX4599",
      "sched": "08:29",
      "status": "Scheduled",
      "expected": ""
