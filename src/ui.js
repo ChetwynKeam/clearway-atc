@@ -570,8 +570,9 @@ function renderAtis(){
   const pct = X.st === 'CLOSING' ? clamp(1 - (X.t - S.t)/150, 0, 1) : X.st === 'CLOSED' ? 1 : X.st === 'OPENING' ? clamp((X.t - S.t)/15, 0, 1) : 0;
   $('atis').innerHTML = `
     <div class="ph"><span class="lbl">ATIS</span><button id="atisRead" class="atis-letter" title="Read the ATIS broadcast">${S.atis}</button>${APT.splitRwy ? '' : `<span class="lbl dimmer">${phonetic(S.atis)}</span>`}
-      <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">${APT.splitRwy ? 'Land' : 'Runway'}</span>
-      ${RW_ENDS.length > 2 ? `<select id="rwSel" class="rwsel" aria-label="Landing runway">${RW_ENDS.map(r => `<option${r === S.rwy ? ' selected' : ''}>${r}</option>`).join('')}</select><span class="lbl">Dep</span><select id="drSel" class="rwsel" aria-label="Departure runway">${RW_ENDS.map(r => `<option${r === depRw() ? ' selected' : ''}>${r}</option>`).join('')}</select>`
+      <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">${APT.rwyConfigs ? 'Flow' : APT.splitRwy ? 'Land' : 'Runway'}</span>
+      ${APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" class="${APT.configOf(S.rwy) === c.key ? 'on' : ''}" title="Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}">${c.name}</button>`).join('')}</span>`
+        : RW_ENDS.length > 2 ? `<select id="rwSel" class="rwsel" aria-label="Landing runway">${RW_ENDS.map(r => `<option${r === S.rwy ? ' selected' : ''}>${r}</option>`).join('')}</select><span class="lbl">Dep</span><select id="drSel" class="rwsel" aria-label="Departure runway">${RW_ENDS.map(r => `<option${r === depRw() ? ' selected' : ''}>${r}</option>`).join('')}</select>`
         : `<span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span>${APT.splitRwy ? `<span class="lbl">Dep</span><span class="seg sm"><button id="drHi" class="${depRw()===RW_HI?'on':''}">${RW_HI}</button><button id="drLo" class="${depRw()===RW_LO?'on':''}">${RW_LO}</button></span>` : ''}`}</div>
     <div class="metar"></div>
     <div class="tiles">
@@ -594,7 +595,8 @@ function renderAtis(){
       <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`}`;
   $('atis').querySelector('.metar').textContent = w.raw;
   $('atisRead').onclick = () => openAtis();
-  if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
+  if (APT.rwyConfigs) $('atis').querySelectorAll('[data-cfg]').forEach(bt => bt.onclick = () => setRwy(bt.dataset.cfg));
+  else if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
   else { $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO); }
   if ($('drHi')) { $('drHi').onclick = () => setDepRwy(RW_HI); $('drLo').onclick = () => setDepRwy(RW_LO); }
   if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
@@ -622,7 +624,7 @@ const ICON = {
 };
 const relCls = ac => { const R = ac.rel; return !R ? 'none' : R.st === 'REQ' ? 'req' : R.st === 'EXP' ? 'exp' : R.nb && S.t < R.nb ? 'req' : 'ok'; };
 function relText(ac){
-  const R = ac.rel, who = relUnit(ac), sid = ac.sid || sidName(ac.gate, depRw());
+  const R = ac.rel, who = relUnit(ac), sid = ac.sid || sidName(ac.gate, depRw(ac));
   const st = !needRel(ac) ? 'no release needed' : !R ? `no release from ${who} yet` : R.st === 'REQ' ? `release requested, ${who} will call back` : R.st === 'EXP' ? 'release expired: request a new one' : R.nb && S.t < R.nb ? `released not before ${zt(R.nb).slice(0,5)}, until ${zt(R.until).slice(0,5)}` : `released until ${zt(R.until).slice(0,5)}`;
   return `<b>${esc(sid)}</b> · ${st}`;
 }
@@ -646,13 +648,13 @@ function renderSel(){
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and ${ac.slotHold ? 'is holding outside your airspace until you release it on the Flights board' : `calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now`}.</p>`; return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–') + (ac.via && ac.app ? ' via procedure' : '')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
-    ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + EXIT_ROUTE[ac.gate].join(' › ') : ac.route.length ? 'Route '+ac.route.filter(k => !WP[k].hide).join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
+    ${ac.route.length || ac.mode === 'HOLD' || ac.onSid ? `<div class="meta">${ac.onSid ? ac.sid + ' departure, initial turn, then ' + exitRouteOf(ac).join(' › ') : ac.route.length ? 'Route '+ac.route.filter(k => !WP[k].hide).join(' › ') : ''}${ac.mode === 'HOLD' ? 'Holding at '+ac.hold.name : ''}</div>` : ''}
     <div class="ctl"><label><span class="lbl">Heading</span><input id="iH" placeholder="270" inputmode="numeric"></label><label><span class="lbl">Altitude ×100</span><input id="iA" placeholder="40" inputmode="numeric"></label><label><span class="lbl">Speed</span><input id="iS" placeholder="180" inputmode="numeric"></label></div><div class="btns">`;
     if (ac.diverting && ac.state !== 'DIVERTING') html += b(`DCT ${ac.diverting} A${(APT.divertAlt || 8000)/100}`, 'Approve diversion', true, 'go');
     if (ac.need === 'Say again' && ac.lastCmd) html += b(ac.lastCmd, 'Say again: ' + esc(ac.lastCmd), true, 'go');
     if (ac.kind === 'ARR' && S.emg && S.emg.ws && !ac.wsTold) html += b('WS', 'Pass windshear', true, 'go');
-    if (ac.kind === 'ARR') html += (APT.appRwys ? APT.appRwys() : [RW_HI, RW_LO]).map(r => b('APP '+r, APT.appShort+' '+r, true, S.rwy===r?'on':'')).join('') + (APT.rnp ? APT.rnpButtons(S.rwy).map(([c, l]) => b(c, l, true, ac.need === 'Request RNP approach' ? 'go' : '')).join('') : '') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
-    else html += b('HO', ac.freq === 'TWR' ? `To ${(APT.depRadar || APT.radar)[0].split(' ').pop()} ${(APT.depRadar || APT.radar)[1]}` : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+EXIT_ROUTE[ac.gate][0], 'Direct '+EXIT_ROUTE[ac.gate][0]) + b('A'+APT.climbFL, 'Climb FL'+APT.climbFL);
+    if (ac.kind === 'ARR') html += (APT.appRwys ? APT.appRwys() : [RW_HI, RW_LO]).map(r => b('APP '+r, APT.appShort+' '+r, true, landRw(ac)===r?'on':'')).join('') + (APT.rnp ? APT.rnpButtons(S.rwy).map(([c, l]) => b(c, l, true, ac.need === 'Request RNP approach' ? 'go' : '')).join('') : '') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
+    else html += b('HO', ac.freq === 'TWR' ? `To ${(APT.depRadar || APT.radar)[0].split(' ').pop()} ${(APT.depRadar || APT.radar)[1]}` : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+exitRouteOf(ac)[0], 'Direct '+exitRouteOf(ac)[0]) + b('A'+APT.climbFL, 'Climb FL'+APT.climbFL);
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).filter(k => !WP[k].hide).map(k => `<option>${k}</option>`).join('')}</select></div>`;
   } else {
     html += `<div class="btns">`;
@@ -732,7 +734,7 @@ function openPushPop(ac, anchor){
     return { f, pts: [st.p, ...pts], hp, rec: f === rec };
   });
   showPop(ac, anchor, `<div class="lbl">Start-up and push back</div><h4>${ac.cs} <span>stand ${st.id} · ${ac.t}</span></h4>
-    <p class="hint">Choose which way the nose faces after the push. Face the way it will taxi: runway ${depRw()} departures leave from ${PHON[depHold(ac)]}.</p>
+    <p class="hint">Choose which way the nose faces after the push. Face the way it will taxi: runway ${depRw(ac)} departures leave from ${PHON[depHold(ac)]}.</p>
     <div class="opts two">${opts.map((o, j) => `<button class="opt${o.rec ? ' rec' : ''}" data-j="${j}">${COMPASS(o.f === 'east' ? CRS_LO : CRS_HI)}<b>Face ${APT.faceWord(o.f)}</b><span>Tail ${APT.faceWord(o.f === 'east' ? 'west' : 'east')} · towards ${PHON[o.hp]}</span>${o.rec ? '<i>Recommended</i>' : ''}</button>`).join('')}</div>
     <div class="phr">“${spoken(ac.cs)}, start-up and push back approved, facing <em>${rec}</em>, ${PH.altim()}”</div>`, () => {
     pop.querySelectorAll('.opt').forEach(bt => {
@@ -755,12 +757,12 @@ function openTaxiPop(ac, anchor){
   const ihp = ihpOptions(...taxiStart(ac)); ihp.forEach(a => all.push(a));
   const H = (hp, o) => { const pts = [...pre, ...o.nodes.map(id => GN[id].p)]; if (ac.pushed && !ac.leftStand && pts.length > 2 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[2]))) < 90) pts.splice(1, 1); return pts; };
   const len = o => Math.round(o.len / M2NM / 10) * 10;
-  showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${depRw()}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
-    <p class="hint">Pick a holding point and the routing. Hover to preview it on the scope. ${APT.taxiHint(depRw())}</p>
-    ${groups.map(g => `<div class="grp"><div class="gh"><b>Holding point ${PHON[g.hp]}</b><span>${HOLDS[g.hp].rgl ? 'Guard lights' : ''}${g.hp === rec ? ' · runway ' + depRw() + ' departure point' : ''}</span></div>
+  showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${depRw(ac)}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
+    <p class="hint">Pick a holding point and the routing. Hover to preview it on the scope. ${APT.taxiHint(depRw(ac))}</p>
+    ${groups.map(g => `<div class="grp"><div class="gh"><b>Holding point ${PHON[g.hp]}</b><span>${HOLDS[g.hp].rgl ? 'Guard lights' : ''}${g.hp === rec ? ' · runway ' + depRw(ac) + ' departure point' : HOLDS[g.hp].end && HOLDS[g.hp].end !== depRw(ac) ? ' · runway ' + HOLDS[g.hp].end : ''}</span></div>
       ${g.opts.map(o => { const j = all.findIndex(a => a.o === o); const a = all[j]; return `<button class="opt row${a.rec ? ' rec' : ''}" data-j="${j}"><span class="hp">${g.hp.replace(/~\d+$/, '')}</span><b>via ${(o.via.length ? o.via : [g.hp]).map(t => PHON[t]).join(', ')}</b><span class="ln">${len(o)} m</span>${a.rec ? '<i>Recommended</i>' : ''}</button>`; }).join('')}</div>`).join('')}
     ${ihpGroup(all, ihp)}
-    <div class="phr">“${spoken(ac.cs)}, ${APT.phr && APT.phr.taxiPop ? APT.phr.taxiPop() : `taxi to holding point <em></em>, runway ${depRw()}, ${PH.altim()}`}”</div>`, () => {
+    <div class="phr">“${spoken(ac.cs)}, ${APT.phr && APT.phr.taxiPop ? APT.phr.taxiPop() : `taxi to holding point <em></em>, runway ${depRw(ac)}, ${PH.altim()}`}”</div>`, () => {
     const say = a => pop.querySelector('.phr em').textContent = a.ihp ? hpWords(a.hp) + (a.o.via.length ? ' via ' + a.o.via.map(t => PHON[t] || t).join(', ') : '') : APT.phr && APT.phr.taxiPop ? [...a.o.via, HOLDS[a.hp].ref].map(t => PHON[t] || t).join(', ')
       : PHON[a.hp] + (a.o.via.length ? ' via ' + a.o.via.map(t => PHON[t]).join(', ') : '');
     pop.querySelectorAll('.opt').forEach(bt => {
@@ -1039,7 +1041,7 @@ function start(){
     if (!live) S.wx = parseMetar(S.wx.raw.replace(new RegExp(`^(${APT.icao} )\\d{6}Z`), (m, p) => { const z = new Date(S.start - 600e3); return p + String(z.getUTCDate()).padStart(2,'0') + String(z.getUTCHours()).padStart(2,'0') + '50Z'; }));
     S.sched = buildSchedule(mode, day, hour);
     S.liveWait = live && typeof liveJoin === 'function' ? 20 : 0;   // Real world: arrivals wait (up to 20 s) for the live traffic, which may already be flying them
-    sys(`Position open: ${APT.radar[0]} ${APT.radar[1]} and ${APT.tower[0].split(' ').pop()} ${APT.tower[1]} combined. ${S.wx.raw}. Runway ${S.rwy}${S.depRwy && S.depRwy !== S.rwy ? ` for landing, ${S.depRwy} for departure` : ''}, information ${phonetic(S.atis)}.`);
+    sys(`Position open: ${APT.radar[0]} ${APT.radar[1]} and ${APT.tower[0].split(' ').pop()} ${APT.tower[1]} combined. ${S.wx.raw}. ${APT.rwyConfigs ? (c => `${c.name} flow: runways ${c.lands.join(' and ')} for landing, ${c.deps.join(' and ')} for departure`)(APT.rwyConfigs.find(c => c.key === APT.configOf(S.rwy))) : `Runway ${S.rwy}${S.depRwy && S.depRwy !== S.rwy ? ` for landing, ${S.depRwy} for departure` : ''}`}, information ${phonetic(S.atis)}.`);
     if (live && LIVE.session) sys(`Real world, ${DAYS[day]} ${zHM(S.start)}Z: ${S.sched.length} real flight${S.sched.length === 1 ? '' : 's'} still to come today, from ${APT.liveName}’s live flight information${LIVE.data.updated ? ` (updated ${LIVE.data.updated.substr(11, 5)}Z)` : ''}.`);
     else if (live) sys('Real world: today’s flight information could not be loaded here, so the session uses the timetable for this hour.', true);
     else if (mode === 'custom') sys(`${DAYS[day]} ${String(hour).padStart(2,'0')}00Z, custom traffic: ${S.sched.filter(f => f.k === 'ARR').length} arrivals and ${S.sched.filter(f => f.k !== 'ARR').length} departures over the next hour, from ${CUSTOM.src}.`);

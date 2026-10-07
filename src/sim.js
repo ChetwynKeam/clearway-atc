@@ -86,8 +86,11 @@ const S = {
   listeners: []
 };
 const emit = (ev, data) => { for (const f of S.listeners) try { f(ev, data); } catch(e) {} };
-// the departure runway: the runway in use, unless the airport departs the other way (Innsbruck lands 26, departs 08)
-const depRw = () => S.depRwy || S.rwy;
+// the departure runway: the runway in use, unless the airport departs the other way (Innsbruck lands 26, departs 08).
+// Airports with two departure runways at once (Madrid) pick one per aircraft (APT.depRwyOf), and two landing runways
+// (APT.landRwyOf): pass the aircraft where there is one.
+const depRw = ac => (ac && APT.depRwyOf && APT.depRwyOf(ac)) || S.depRwy || S.rwy;
+const landRw = ac => (ac && ac.app) || (ac && APT.landRwyOf && APT.landRwyOf(ac)) || S.rwy;
 // ── runways. A one-runway airport is described by its profile's globals (rm, mOf, offOf, RU, RW_LO/RW_HI, TURN_W/E);
 // an airport with several runways (New York JFK) lists them in APT.runways, each with its own frame along the runway
 // (metres from its low end, offset to the left), so landing and departing traffic can use different pavements.
@@ -111,8 +114,12 @@ const holdPt = id => HOLDS[id] ? { id, node: HOLDS[id].node, rwy: true } : IHPS[
 // something on the pavement of the runway that rw names (either direction)
 const onRunway = (o, rw) => o.onRwy && (o.rwyId || RWYS[0].id) === rwyOf(rw).id;
 // runways in use for landing or departure: taxiing traffic holds short of these until cleared to cross
-const activeRwy = id => rwyOf(S.rwy).id === id || rwyOf(depRw()).id === id;
-const rwyName = id => { const R = rwyById(id); return [S.rwy, depRw()].find(r => rwyOf(r) === R) || R.lo + '/' + R.hi; };
+const rwysInUse = () => APT.activeRwys ? APT.activeRwys() : [S.rwy, depRw()];
+const depRwys = () => APT.depRwys ? APT.depRwys() : [depRw()];
+// a departure's route after its SID's initial climb: its own runway's SID where the airport has two departure runways
+const exitRouteOf = ac => APT.exitRouteOf ? APT.exitRouteOf(ac) : EXIT_ROUTE[ac.gate];
+const activeRwy = id => rwysInUse().some(r => rwyOf(r).id === id);
+const rwyName = id => { const R = rwyById(id); return rwysInUse().find(r => rwyOf(r) === R) || R.lo + '/' + R.hi; };
 
 // ── phraseology. ICAO (UK and European) wording unless the profile overrides it (APT.phr: New York uses the FAA's).
 // a holding point's spoken name: "T3" is Tango 3
@@ -122,10 +129,10 @@ const PH = Object.assign({
   alt: (a, up) => [`${up ? 'climb' : 'descend'} ${altWords(a)}`, `${up ? 'climb' : 'descend'} ${altShort(a)}`],
   via: a => [`descend via the procedure to ${altWords(a)}`, `descending via the procedure, ${altShort(a)}`],
   speed: (s, ac) => [`speed ${s} knots`, `speed ${s}`],
-  taxi: (ac, hp, vw) => [`taxi to holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw()}, ${PH.altim()}`, `holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw()}, ${PH.altim()}`],
+  taxi: (ac, hp, vw) => [`taxi to holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw(ac)}, ${PH.altim()}`, `holding point ${PHON[hp]}${viaWords(vw)}, runway ${depRw(ac)}, ${PH.altim()}`],
   atHold: (ac, hp) => `holding point ${PHON[hp]}, ready for departure`,
-  lineUp: (ac, hp) => { const lu = APT.lineUpWords ? APT.lineUpWords(hp) : 'line up and backtrack'; return [`via ${PHON[hp]}, ${lu} runway ${depRw()}`, `${lu} runway ${depRw()}`]; },
-  cto: (ac, sid, chg) => [`${chg ? 'amended clearance, ' : ''}${sidSpoken(sid)} departure, runway ${depRw()}, cleared for takeoff, ${windPhrase()}`, `${chg ? 'amended, ' : ''}${sidSpoken(sid)}, cleared for takeoff runway ${depRw()}`],
+  lineUp: (ac, hp) => { const lu = APT.lineUpWords ? APT.lineUpWords(hp) : 'line up and backtrack'; return [`via ${PHON[hp]}, ${lu} runway ${depRw(ac)}`, `${lu} runway ${depRw(ac)}`]; },
+  cto: (ac, sid, chg) => [`${chg ? 'amended clearance, ' : ''}${sidSpoken(sid)} departure, runway ${depRw(ac)}, cleared for takeoff, ${windPhrase()}`, `${chg ? 'amended, ' : ''}${sidSpoken(sid)}, cleared for takeoff runway ${depRw(ac)}`],
   ctl: (ac, rw) => [`runway ${rw}, cleared to land, ${windPhrase()}`, `cleared to land runway ${rw}`],
   push: (ac, dn, face) => [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${APT.faceWord(face)}, ${PH.altim()}`,
     `cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${APT.faceWord(face)}, ${PH.altim()}`],
@@ -186,9 +193,9 @@ const needRel = ac => !APT.needRel || APT.needRel(ac);
 // the altitude a SID climbs to (Gatwick: each SID's own stop altitude), otherwise the airport's initial climb
 const sidTop = ac => APT.sidAlt && ac.sid ? APT.sidAlt(ac) : APT.initClimb;
 function requestRelease(ac){
-  const who = relUnit(ac), sid = sidName(ac.gate, depRw());
+  const who = relUnit(ac), sid = sidName(ac.gate, depRw(ac));
   ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
-  coord(`${who}, ${APT.coordName}, request release ${ac.cs}, ${ac.t} to ${ac.d}, ${sid}, runway ${depRw()}`, APT.coordName.toUpperCase());
+  coord(`${who}, ${APT.coordName}, request release ${ac.cs}, ${ac.t} to ${ac.d}, ${sid}, runway ${depRw(ac)}`, APT.coordName.toUpperCase());
 }
 function stepRelease(ac){
   const R = ac.rel, who = relUnit(ac);
@@ -531,8 +538,8 @@ const padPt = (R, m, o) => { const q = R.rm(m, o); q.tight = true; return q; };
 function lineUpPath(ac, hp){
   const H = HOLDS[hp], R = holdRwy(hp), pts = [GN[H.rwy].p];
   // a runway entered at its end (R.ends: New York) is lined up straight away, pointing down the runway
-  if (R.ends) { const up = depRw() === R.lo; pts.push(...filOut(hp, up ? 'E' : 'W')); const e = pts[pts.length-1]; pts.push(R.rm(R.mOf(e) + (up ? 60 : -60), 0)); return pts; }
-  if (depRw() === R.hi) { pts.push(...filOut(hp, 'E')); for (const [m,o] of R.TURN_E) if (m > H.m + 40) pts.push(padPt(R, m, o)); }
+  if (R.ends) { const up = depRw(ac) === R.lo; pts.push(...filOut(hp, up ? 'E' : 'W')); const e = pts[pts.length-1]; pts.push(R.rm(R.mOf(e) + (up ? 60 : -60), 0)); return pts; }
+  if (depRw(ac) === R.hi) { pts.push(...filOut(hp, 'E')); for (const [m,o] of R.TURN_E) if (m > H.m + 40) pts.push(padPt(R, m, o)); }
   else { pts.push(...filOut(hp, 'W')); for (const [m,o] of R.TURN_W) if (m < H.m - 40) pts.push(padPt(R, m, o)); }
   return pts;
 }
@@ -669,13 +676,13 @@ function vacSpeed(ac, dt){
   return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, Math.sqrt(turnV*turnV + 2*VAC_DEC*d*3600)));
 }
 function startLineUp(ac){
-  ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw()).id; ac.need = null;
+  ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw(ac)).id; ac.need = null;
   const back = true;
   // finish on a straight stretch of centreline, so the turn onto the runway rounds out into line instead of snapping onto it
-  const pts = lineUpPath(ac, ac.hp), R = holdRwy(ac.hp), c = crsOf(depRw()), e = pts[pts.length-1];
+  const pts = lineUpPath(ac, ac.hp), R = holdRwy(ac.hp), c = crsOf(depRw(ac)), e = pts[pts.length-1];
   const dir = Math.sin(c*D2R)*R.RU[0] + Math.cos(c*D2R)*R.RU[1] >= 0 ? 1 : -1;
   pts.push(R.rm(R.mOf(e) + dir*10, 0), R.rm(R.mOf(e) + dir*Math.max(35, taxiR(ac)*2), 0));
-  setPath(ac, pts, 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw()); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; }, { fine: true });
+  setPath(ac, pts, 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; }, { fine: true });
   return back;
 }
 
@@ -736,14 +743,14 @@ function commandRun(str){
       if (!w) { sys(`Unknown fix ${id||''}. Fixes: ${Object.keys(WP).filter(k => !WP[k].hide).join(' ')}`); return; }
       i++; const idx = ac.route.indexOf(id); ac.onSid = false;
       if (ac.appId && id !== finOf(ac).entry) rnpCancel(ac);
-      ac.route = idx >= 0 ? ac.route.slice(idx) : (ac.kind === 'DEP' && EXIT_ROUTE[ac.gate].includes(id) ? EXIT_ROUTE[ac.gate].slice(EXIT_ROUTE[ac.gate].indexOf(id)) : [id]); ac.mode = 'NAV';
+      ac.route = idx >= 0 ? ac.route.slice(idx) : (ac.kind === 'DEP' && exitRouteOf(ac).includes(id) ? exitRouteOf(ac).slice(exitRouteOf(ac).indexOf(id)) : [id]); ac.mode = 'NAV';
       if (ac.alt < 3500 && crossesRock(ac, w.p)) sys(`Caution: ${ac.cs} direct ${id} tracks over ${APT.terrain.name}.`, true);
       if (ac.state === 'HOLDING') ac.state = 'VECTORS';
       if (ac.kind === 'DEP' && ac.need && ac.need.startsWith('Request')) ac.need = null;
       if (ac.diverting && id === ac.diverting) { ac.need = null; ac.state = 'DIVERTING'; }
       said.push(`proceed direct ${id}`); reads.push(`direct ${id}`);
     } else if (t === 'APP' && air) {
-      const rw = RW_ENDS.includes(toks[i+1]) ? toks[++i] : S.rwy;
+      const rw = RW_ENDS.includes(toks[i+1]) ? toks[++i] : landRw(ac);
       // RNP: "APP RNP", "APP 05 RNPY", "APP RNP Z" (airports with RNP approaches only)
       let v = null; if (APT.rnp && /^RNP[A-Z]?$/.test(toks[i+1] || '')) { v = toks[++i].slice(3) || (/^[A-Z]$/.test(toks[i+1] || '') ? toks[++i] : '*'); }
       if (ac.kind !== 'ARR') { sys(`${ac.cs} is a departure.`); continue; }
@@ -786,7 +793,7 @@ function commandRun(str){
     } else if (t === 'CTL') {
       if (ac.kind !== 'ARR' || !air) { sys(`${ac.cs} is not on approach.`); continue; }
       { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): you can't clear ${ac.cs} to land. Hold it or send it around.`, true); continue; } }
-      const rw = ac.app || S.rwy; ac.ctl = true; ac.need = null; ac.freq = 'TWR';
+      const rw = landRw(ac); ac.ctl = true; ac.need = null; ac.freq = 'TWR';
       { const [sa, ra] = PH.ctl(ac, rw); said.push(sa); reads.push(ra); }
       if (APT.xing && (S.xing.st === 'OPEN' || S.xing.st === 'OPENING')) sys('Winston Churchill Avenue is still open.');
     } else if (t === 'GA' && air) {
@@ -820,7 +827,7 @@ function commandRun(str){
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
       const dir = { E:'east', EAST:'east', W:'west', WEST:'west' }[toks[i+1]]; if (dir) i++;
-      const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw());
+      const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac));
       ac.pushPts = pushPath(ac, face);
       setPath(ac, ac.pushPts, 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
       const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
@@ -888,21 +895,21 @@ function commandRun(str){
       ac.held = false; said.push('continue taxi'); reads.push('continuing');
     } else if (t === 'LU') {
       if (ac.state !== 'HOLDPT') { sys(`${ac.cs} is not at a holding point.`); continue; }
-      if (S.acs.some(o => o !== ac && onRunway(o, depRw()))) sys('Careful: the runway is occupied.', true);
+      if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)))) sys('Careful: the runway is occupied.', true);
       if (APT.xing && S.xing.st !== 'CLOSED' && ((S.rwy === RW_LO && HOLDS[ac.hp].m > XING_M) || (S.rwy === RW_HI && HOLDS[ac.hp].m < XING_M))) sys('The backtrack crosses Winston Churchill Avenue: close the road first.', true);
       startLineUp(ac);
       { const [sa, ra] = PH.lineUp(ac, ac.hp); said.push(sa); reads.push(ra); }
     } else if (t === 'CTO') {
       if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state)) { sys(`${ac.cs} is not ready for takeoff.`); continue; }
-      { const tl = APT.toLimit && APT.toLimit(depRw()); if (tl) { atc(ac, `runway ${depRw()}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
-      if (S.wx.vis < 1000) { atc(ac, `runway ${depRw()}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
-      if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw()}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
+      { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
+      if (S.wx.vis < 1000) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
+      if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
       if (needRel(ac)) { const R = ac.rel, who = relUnit(ac);
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
-      const sid = sidName(ac.gate, depRw()), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
-      ac.cto = true; ac.need = null; ac.depRwy = depRw();
+      const sid = sidName(ac.gate, depRw(ac)), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
+      ac.cto = true; ac.need = null; ac.depRwy = depRw(ac);
       if (ac.state === 'HOLDPT') startLineUp(ac);
       { const [sa, ra] = PH.cto(ac, sid, chg); said.push(sa); reads.push(ra); }
       if (ac.state === 'LINEDUP') beginTakeoff(ac);
@@ -946,11 +953,11 @@ function willIntercept(ac, F){
   return false;
 }
 function crossesRock(ac, p){ const T = APT.terrain; if (!T) return false; for (let f = 0; f <= 1; f += 0.02) { if (inPoly([ac.x + (p[0]-ac.x)*f, ac.y + (p[1]-ac.y)*f], T.poly)) return true; } return false; }
-function beginTakeoff(ac){ ac.state = 'TAKEOFF'; ac.cto = true; ac.ias = 0; ac.depRwy = depRw(); ac.hdg = crsOf(depRw()); ac.path = null; ac.need = null; emit('takeoff', ac); }
+function beginTakeoff(ac){ ac.state = 'TAKEOFF'; ac.cto = true; ac.ias = 0; ac.depRwy = depRw(ac); ac.hdg = crsOf(ac.depRwy); ac.path = null; ac.need = null; emit('takeoff', ac); }
 function windLimit(ac, rw){ if (APT.windLimit) return APT.windLimit(ac, rw); const c = windComp(S.wx, crsOf(rw)); if (c.headG < -10) return 'tailwind out of limits'; if (c.crossG > (ac.perf.wake === 'L' ? 22 : 33)) return 'crosswind out of limits'; return null; }
 function goAround(ac, why){
   if (ac.state === 'MISSED' || (ac.gaT && S.t - ac.gaT < 30)) return;
-  const rw = ac.app || S.rwy;
+  const rw = landRw(ac);
   ac.state = 'MISSED'; ac.mode = 'HDG'; ac.tgtHdg = Math.round(crsOf(rw)); ac.turnDir = 0; ac.gaT = S.t;
   APT.gaEarly(ac, rw);
   { const F = finOf(ac); ac.missRoute = F && F.missed ? F.missed.slice() : null; ac.appId = null; ac.finI = null; }
@@ -1037,7 +1044,11 @@ function step(dt){
   stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt);
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
-    if (ac.state === 'TOW') { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
+    if (ac.state === 'TOW') {
+      // a tow on the runway pavement (several runways: the one it is on, within its ends, not on the line beyond them)
+      if (RWYS.length > 1) { const q = [ac.x, ac.y], R = RWYS.find(R => Math.abs(R.offOf(q)) < 35 && R.mOf(q) > -60 && R.mOf(q) < R.len + 60); ac.onRwy = !!R; ac.rwyId = R ? R.id : RWYS[0].id; }
+      else { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
+    }
     if (ac.kind === 'ARR' && ac.app && !ac.stand && !ac.handed) planStand(ac);
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
     stepNose(ac, dt);
@@ -1063,6 +1074,7 @@ function step(dt){
     const a = air[i], b = air[j], d = dist(a.x,a.y,b.x,b.y);
     if (Math.abs(a.alt-b.alt) >= 950 || d >= 3) continue;
     if (a.mode === 'FINAL' && b.mode === 'FINAL' && d >= 2.5) continue;
+    if (APT.sepOk && APT.sepOk(a, b, d)) continue;   // independent parallel approaches or departures (Madrid)
     conf.add(a.cs); conf.add(b.cs);
     const key = [a.cs, b.cs].sort().join('|');
     if (!S.conflicts.has(key)) { S.conflicts.add(key); S.score.los++; S.score.pts -= 50; sys(`Loss of separation: ${a.cs} and ${b.cs} (${d.toFixed(1)} NM, ${Math.round(Math.abs(a.alt-b.alt))} ft).`, true); }
@@ -1091,7 +1103,7 @@ function stepAir(ac, dt){
   let tgtH = ac.hdg, track = false;
   if (ac.mode === 'NAV' && ac.route.length) {
     const w = WP[ac.route[0]], d = dist(ac.x, ac.y, ...w.p);
-    if (ac.kind === 'ARR' && !ac.app && !ac.askedApp && ac.state !== 'DIVERTING' && ac.route.length === 1 && d < 8) { ac.askedApp = true; if (!ac.need) { ac.need = 'Request approach'; pilot(ac, `approaching ${/final/.test(w.note||'') ? w.note : w.id}, request ${APT.reqApp ? APT.reqApp(S.rwy) : APT.appName} runway ${S.rwy}`); } }
+    if (ac.kind === 'ARR' && !ac.app && !ac.askedApp && ac.state !== 'DIVERTING' && ac.route.length === 1 && d < 8) { ac.askedApp = true; if (!ac.need) { ac.need = 'Request approach'; pilot(ac, `approaching ${/final/.test(w.note||'') ? w.note : w.id}, request ${APT.reqApp ? APT.reqApp(landRw(ac)) : APT.appName} runway ${landRw(ac)}`); } }
     tgtH = brg(ac.x, ac.y, ...w.p); track = true;
     // fly-by: start the turn onto the next leg early by the turn radius at 25° bank × tan(half the course change)
     const nx = ac.route[1] ? WP[ac.route[1]].p : ac.kind === 'ARR' && ac.app && finOf(ac) ? (() => { const F = finOf(ac), q = onFinal({ x: w.p[0], y: w.p[1] }, F); return q && q.d < 0.5 ? pathAhead(F, q, 2) : null; })() : null;
@@ -1181,8 +1193,8 @@ function stepAir(ac, dt){
     if (ac.alt > 1000 && !ac.calledAir) { ac.calledAir = true; if (ac.freq === 'TWR') ac.need = 'Airborne, transfer to Radar'; }
     if (ac.freq === 'RAD' && !ac.calledRad) { ac.calledRad = true; ac.state = 'CLIMB'; pilot(ac, PH.depCall(ac)); }
     const clearRock = APT.depClear(ac);
-    if (ac.onSid && ac.mode === 'HDG' && clearRock && (ac.alt > 3500 || !crossesRock(ac, WP[EXIT_ROUTE[ac.gate][0]].p))) { ac.onSid = false; ac.reqDct = true; ac.mode = 'NAV'; ac.route = EXIT_ROUTE[ac.gate].slice(); }
-    if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && clearRock) { ac.reqDct = true; const fx = EXIT_ROUTE[ac.gate][0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
+    if (ac.onSid && ac.mode === 'HDG' && clearRock && (ac.alt > 3500 || !crossesRock(ac, WP[exitRouteOf(ac)[0]].p))) { ac.onSid = false; ac.reqDct = true; ac.mode = 'NAV'; ac.route = exitRouteOf(ac).slice(); }
+    if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && clearRock) { ac.reqDct = true; const fx = exitRouteOf(ac)[0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
     if (ac.calledRad && !ac.reqClimb && !ac.need && ac.alt > sidTop(ac) - 400 && (ac.tgtAlt ?? 0) <= sidTop(ac)) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
     if (ac.mode === 'NAV' && !ac.route.length) { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
     if (ac.calledRad && !ac.handed && dGBR > APT.handoffNM && !ac.askedHo) { ac.askedHo = true; ac.need = 'Ready for transfer'; }
