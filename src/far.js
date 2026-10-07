@@ -205,7 +205,7 @@ function fidsStatus(r, kind){
   const late = nowMin() > r.tm + 5;
   if (r.real && !ac && !FAR.done[r.cs] && !(g && S.t >= g.tStart && S.t <= g.tEnd)) return [r.real, /cancel/i.test(r.real) ? 'bad' : /landed|departed|arrived/i.test(r.real) ? 'ok' : /estimated|delayed/i.test(r.real) ? 'live' : ''];
   if (kind === 'ARR') {
-    if (ac) return ac.ground ? (['ONSTAND', 'PARKED'].includes(ac.state) ? ['On stand', 'ok'] : ['Landed', 'ok']) : ac.state === 'PRE' ? ['Approaching', 'live'] : ac.state === 'DIVERTING' ? ['Diverting', 'bad'] : ['On approach', 'live'];
+    if (ac) return ac.ground ? (['ONSTAND', 'PARKED', 'TOW'].includes(ac.state) ? ['On stand', 'ok'] : ['Landed', 'ok']) : ac.state === 'PRE' ? ['Approaching', 'live'] : ac.state === 'DIVERTING' ? ['Diverting', 'bad'] : ['On approach', 'live'];
     if (FAR.done[r.cs]) return [FAR.done[r.cs], /^Diverted/.test(FAR.done[r.cs]) ? 'bad' : 'ok'];
     if (g && g.kind === 'ARR' && S.t >= g.tStart && S.t <= g.tEnd) { const eta = zHM(S.start + (g.tEnd + PRE_LEAD + 15*60)*1000); return [`En route · exp ${eta}`, 'live']; }
     if (S.running && r.tm < (S.hour || 0)*60) return ['Landed', 'ok'];
