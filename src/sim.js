@@ -164,8 +164,10 @@ const PH = Object.assign({
 // ═════════════════════════ R/T log & speech ═════════════════════════
 const logEl = document.getElementById('log');
 const zt = t => new Date(S.start + t*1000).toISOString().substr(11,8);
-function log(cls, text, who){
+function log(cls, text, who, ac){
   const div = document.createElement('div'); div.className = 'ln ' + cls;
+  // a line about one aircraft (a tug's tow request): click it to select that aircraft and centre the map on it
+  if (ac) { div.classList.add('go'); div.title = 'Show ' + ac.cs + ' on the map'; div.onclick = () => { if (!S.acs.includes(ac) || typeof select !== 'function') return; select(ac); if (typeof centreOn === 'function') centreOn(ac); }; }
   const tm = document.createElement('span'); tm.className = 'tm'; tm.textContent = zt(S.t).slice(0,5);
   const wh = document.createElement('span'); wh.className = 'who'; wh.textContent = who || (cls === 'sys' || cls === 'bad' ? 'SYSTEM' : '');
   const tx = document.createElement('span'); tx.className = 'tx'; tx.textContent = text;
@@ -403,7 +405,7 @@ const towDest = to => to.area === 'hangar' ? to.name : `${to.area === 'remote' ?
 function towCall(ac, to){
   to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
   const H = ac.stand.area === 'hangar' && ac.stand.hg, cross = ac.stand.area === 'south', at = H ? `in ${H.name}` : `on ${APT.standWord || 'stand'} ${ac.stand.id}`;
-  log('plt', `${APT.tower[0]}, tug with ${ac.cs} ${at}, request tow to ${towDest(to)}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
+  log('plt', `${APT.tower[0]}, tug with ${ac.cs} ${at}, request tow to ${towDest(to)}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG', ac);
   say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} ${at}, request tow to ${towDest(to)}`, 'tug');
 }
 // random tows (not in exercises): a parked aircraft with a long wait is towed off its gate to a remote stand or a
