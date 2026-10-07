@@ -118,8 +118,8 @@ function exitFor(ac, name){
 }
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
-// FAA design group V taxiways: 75 ft wide, 35 ft paved shoulders (145 ft overall), continuous double yellow edge lines
-const AD_SITE = { pave: { w: 23, sh: 44, edge: 'faa' }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
+// FAA design group V taxiways: 75 ft wide, continuous double yellow edge lines
+const AD_SITE = { pave: { w: 23, edge: 'faa' }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
 // hot spot HS 1 (FAA NE hot spots): the Kilo and Juliett junction near runway 4L and 31L
 const HS1 = (() => { const n = Object.values(GN).find(n => n.adj.some(([, e]) => e.tw === 'K') && n.adj.some(([, e]) => e.tw === 'J')); return n ? n.p : null; })();
 const TERM_LABELS = (() => { const by = {}; for (const s of STANDS) (by[s.term] ||= []).push(s.p); return Object.entries(by).map(([t, ps]) => [`TERMINAL ${t}`, ps.reduce((a, p) => [a[0] + p[0]/ps.length, a[1] + p[1]/ps.length], [0, 0])]); })();

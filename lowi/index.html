@@ -5267,27 +5267,31 @@ function groundLines(w, draw){
   cx.strokeStyle = C.yellow; cx.lineWidth = w; draw();
 }
 // ── taxiway pavement at its published width, laid over the street map ──
-// AD.pave per airport: w = default width (m), by = widths per taxiway (0: not paved, e.g. grass), sh = overall width
-// with paved shoulders, edge = 'faa' for the FAA continuous double yellow edge marking. lines: [{ pts: screen points, w }],
+// AD.pave per airport: w = default width (m), by = widths per taxiway (0: not paved, e.g. grass), edge = 'faa' for the
+// FAA continuous double yellow edge marking. lines: [{ pts: screen points, w }],
 // blds: building outlines (screen points) the paving must not cover.
 function paveWidth(tw){ const P = AD.pave || {}, b = P.by || {}; return tw in b ? b[tw] : (P.w || 18); }
 // clip the building outlines (screen points) out of what is drawn next, inside a save/restore
 function clipOut(blds){ if (!blds.length) return; cx.beginPath(); cx.rect(0, 0, W, H); for (const b of blds) { b.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.closePath(); } cx.clip('evenodd'); }
 function drawPavement(lines, blds, mpx){
-  const P = AD.pave || {}, lw = m => Math.max(1, m*mpx), dark = C.name === 'dark';
-  const pass = (col, alpha, wOf) => { cx.strokeStyle = col; cx.globalAlpha = alpha; for (const l of lines) { const w = wOf(l); if (!(w > 0)) continue; cx.lineWidth = lw(w); cx.beginPath(); l.pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.stroke(); } };
+  const P = AD.pave || {}, byW = new Map();
+  // one opaque path per width, so where stretches overlap at a junction the shading never shows a darker patch
+  for (const l of lines) if (l.w > 0 && l.pts.length > 1) { if (!byW.has(l.w)) byW.set(l.w, []); byW.get(l.w).push(l); }
+  const pass = (col, dw) => {
+    cx.strokeStyle = col;
+    for (const [w, ls] of byW) { if (w + dw <= 0) continue; cx.lineWidth = Math.max(1, (w + dw)*mpx); cx.beginPath(); for (const l of ls) l.pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.stroke(); }
+  };
   cx.save(); cx.lineJoin = cx.lineCap = 'round';
   clipOut(blds);
-  if (P.sh) pass(C.asphalt, dark ? 0.6 : 0.45, l => l.w && !l.noSh && l.w + (P.sh - (P.w || l.w)));       // paved shoulders, paler
-  pass(C.asphalt, dark ? 0.95 : 0.9, l => l.w);
+  pass(C.asphalt, 0);
   if (P.edge === 'faa' && mpx > 1.1) {
     // two 15 cm yellow lines 15 cm apart at the pavement edge: drawn as nested strokes so they break where taxiways meet
-    const y = C.yellow, a = C.asphalt, gap = Math.max(0.35, 1/mpx);
-    pass(y, 1, l => l.w && l.w + 0.3); pass(a, 1, l => l.w && l.w + 0.3 - gap); pass(y, 1, l => l.w && l.w + 0.3 - 2*gap); pass(a, 1, l => l.w && l.w + 0.3 - 3*gap);
+    const gap = Math.max(0.35, 1/mpx);
+    pass(C.yellow, 0); pass(C.asphalt, -gap); pass(C.yellow, -2*gap); pass(C.asphalt, -3*gap);
   }
   cx.restore();
 }
-// ── stand markings: lead-in, stop bar, stand safety (wingtip clearance) box, equipment restraint line, number box ──
+// ── stand markings: lead-in, stop bar, number box; on the drawn chart also the red stand safety box and restraint line ──
 // The box is as wide as the stand: the gap to the stand beside it, so neighbouring boxes share a line, as painted.
 // Multiple-apron-ramp stands (47 with 47L/47R, A7 with A7A/A7B) keep one box for the full-size stand; the others get their own
 // lead-in and stop bar inside it.
@@ -6616,7 +6620,7 @@ function drawStandDetail(c, path, mpx){
     cx.save(); cx.translate(...P); cx.rotate(h);
     const bw = sz.w*mpx, bh = sz.l*mpx, f = sz.f || 0.62, sb = sz.f ? bh*f - 4*mpx : bh*0.36;   // stop bar: at the nose of the largest aircraft the stand takes
     // red apron safety (clearance) box and equipment restraint line; an L/R stand sits inside its full-size stand's box
-    if (!sz.sub) {
+    if (!sz.sub && !mapImagery()) {   // over the street map only the yellow paint is drawn
       cx.strokeStyle = C.gRed; cx.globalAlpha = 0.8; cx.lineWidth = Math.max(1, 0.3*mpx);
       cx.strokeRect(-bw/2, -bh*f, bw, bh);
       if (bw > 40) { cx.setLineDash([2*mpx, 2*mpx]); cx.strokeRect(-bw/2 - 2.5*mpx, -bh*f - 2.5*mpx, bw + 5*mpx, bh + 5*mpx); cx.setLineDash([]); }

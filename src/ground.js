@@ -173,7 +173,7 @@ function drawStandDetail(c, path, mpx){
     cx.save(); cx.translate(...P); cx.rotate(h);
     const bw = sz.w*mpx, bh = sz.l*mpx, f = sz.f || 0.62, sb = sz.f ? bh*f - 4*mpx : bh*0.36;   // stop bar: at the nose of the largest aircraft the stand takes
     // red apron safety (clearance) box and equipment restraint line; an L/R stand sits inside its full-size stand's box
-    if (!sz.sub) {
+    if (!sz.sub && !mapImagery()) {   // over the street map only the yellow paint is drawn
       cx.strokeStyle = C.gRed; cx.globalAlpha = 0.8; cx.lineWidth = Math.max(1, 0.3*mpx);
       cx.strokeRect(-bw/2, -bh*f, bw, bh);
       if (bw > 40) { cx.setLineDash([2*mpx, 2*mpx]); cx.strokeRect(-bw/2 - 2.5*mpx, -bh*f - 2.5*mpx, bw + 5*mpx, bh + 5*mpx); cx.setLineDash([]); }

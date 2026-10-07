@@ -113,8 +113,8 @@ function exitFor(ac, name){
 }
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
-// taxiways 23 m with paved shoulders to 44 m overall (ICAO code E); J is the old 45 m runway 08L/26R
-const AD_SITE = { pave: { w: 23, sh: 44 }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
+// taxiways 23 m (ICAO code E); J is the old 45 m runway 08L/26R
+const AD_SITE = { pave: { w: 23 }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
 // hot spots (AD 2-EGKK-2-1): HS1 the Foxtrot Romeo rapid exit, HS2 taxiway Echo, HS3 the Delta rapid exit, HS4 taxiway
 // Juliett by Quebec (potential routing error)
 const nodeWith = (a, b) => { const n = Object.values(GN).find(n => n.adj.some(([, e]) => e.tw === a) && n.adj.some(([, e]) => e.tw === b)); return n ? n.p : null; };
@@ -145,7 +145,7 @@ function drawEgkk(){
     // over the street map: taxiways at their real width, clear of the buildings; the aprons are the map's own
     const lines = GE.filter(e => e.tw !== 'APRON').map(e => ({ pts: [P2(GN[e.a].p), P2(GN[e.b].p)], w: paveWidth(e.tw) }));
     for (const k in FIL) lines.push({ pts: FIL[k].W.map(([m, o]) => P2(R.rm(m, o))), w: paveWidth() });
-    lines.push({ pts: OLD_RWY.map(P2), w: 45, noSh: true });
+    lines.push({ pts: OLD_RWY.map(P2), w: 45 });
     drawPavement(lines, G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n)))), mpx);
   }
   cx.fillStyle = C.rwy; pathP(rwyPoly(R.width)); cx.fill();
