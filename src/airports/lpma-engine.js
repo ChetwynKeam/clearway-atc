@@ -235,6 +235,7 @@ const ISLAND_HIGH = [[32.845,-17.20],[32.865,-17.00],[32.825,-16.86],[32.785,-16
 
 // ═════════════════════════ aerodrome drawing (runway metres) ═════════════════════════
 const AD_SITE = {
+  pave: { w: 23 },   // OpenStreetMap width=23 on A, B and C
   aprons: [APRON_A], roads: [], buildings: [...TERMINAL.map(p => ({ pts: p, h: 14, roof: '' })), { pts: TWR_BLD, h: 30, roof: '' }],
   twyExtra: [['MID', TURN_MID]], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [],
   twyLabels: [['A', 1000, -123], ['A', 1450, -136], ['B', 1640, -105], ['C', 660, -70]], hotspots: [],
