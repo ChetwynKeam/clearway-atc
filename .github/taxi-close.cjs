@@ -1,4 +1,4 @@
-// temporary: close-up ground views with the real map tiles (removed before merge)
+// temporary: close-up ground views with the real map tiles (removed before merge) v2
 const { chromium } = require('playwright');
 const fs = require('fs');
 const BASE = process.env.BASE, OUT = process.env.OUT;
