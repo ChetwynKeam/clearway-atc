@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-07T03:43:28Z",
+ "updated": "2026-10-07T03:56:36Z",
  "source": "avionio.com",
  "days": {
   "2026-10-06": {
@@ -31,21 +31,21 @@
      "flight": "DL697",
      "sched": "23:34",
      "status": "Landed",
-     "expected": "19:21"
+     "expected": "21:17"
     },
     {
      "place": "Phoenix",
      "flight": "AA832",
      "sched": "23:39",
      "status": "Landed",
-     "expected": "19:10"
+     "expected": "21:18"
     },
     {
      "place": "Los Angeles",
      "flight": "DL938",
      "sched": "23:39",
-     "status": "Estimated",
-     "expected": "21:10"
+     "status": "Landed",
+     "expected": "18:44"
     },
     {
      "place": "Minneapolis/Saint Paul",
@@ -86,8 +86,8 @@
      "place": "Los Angeles",
      "flight": "AA28",
      "sched": "23:55",
-     "status": "Cancelled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "18:50"
     },
     {
      "place": "Las Vegas",
@@ -101,7 +101,7 @@
      "flight": "BW526",
      "sched": "23:55",
      "status": "Landed",
-     "expected": "17:54"
+     "expected": "20:39"
     },
     {
      "place": "Fort Worth",
@@ -130,8 +130,8 @@
      "place": "Dubai",
      "flight": "EK202",
      "sched": "23:00",
-     "status": "Estimated",
-     "expected": "22:55"
+     "status": "Departed",
+     "expected": "23:17"
     },
     {
      "place": "Reykjavik",
@@ -145,14 +145,14 @@
      "flight": "GB152",
      "sched": "23:10",
      "status": "Estimated",
-     "expected": "23:30"
+     "expected": "23:21"
     },
     {
      "place": "Indianapolis",
      "flight": "FX1612",
      "sched": "23:11",
-     "status": "Estimated",
-     "expected": "23:06"
+     "status": "Departed",
+     "expected": "23:08"
     },
     {
      "place": "Buenos Aires",
@@ -226,15 +226,15 @@
      "place": "Seattle",
      "flight": "DL1065",
      "sched": "00:11",
-     "status": "Estimated",
-     "expected": "23:49"
+     "status": "Landed",
+     "expected": "19:19"
     },
     {
      "place": "Monterrey",
      "flight": "VB686",
      "sched": "00:20",
-     "status": "Estimated",
-     "expected": "23:55"
+     "status": "Landed",
+     "expected": "20:16"
     },
     {
      "place": "Guayaquil",
@@ -262,7 +262,7 @@
      "flight": "DL2398",
      "sched": "00:47",
      "status": "Estimated",
-     "expected": "00:15"
+     "expected": "00:30"
     },
     {
      "place": "Zaragoza",
@@ -325,7 +325,7 @@
      "flight": "AV152",
      "sched": "02:40",
      "status": "Estimated",
-     "expected": "02:11"
+     "expected": "02:10"
     },
     {
      "place": "Guayaquil",
@@ -339,7 +339,7 @@
      "flight": "CM808",
      "sched": "03:59",
      "status": "Estimated",
-     "expected": ""
+     "expected": "03:44"
     },
     {
      "place": "Nottingham",
@@ -381,7 +381,7 @@
      "flight": "B61524",
      "sched": "05:01",
      "status": "Estimated",
-     "expected": "23:49"
+     "expected": "23:47"
     },
     {
      "place": "Albuquerque",
@@ -429,7 +429,7 @@
      "place": "San Salvador",
      "flight": "AV568",
      "sched": "05:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -478,8 +478,8 @@
      "place": "Burbank",
      "flight": "B6359",
      "sched": "05:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "00:42"
     },
     {
      "place": "Tel Aviv-Yafo",
@@ -513,21 +513,21 @@
      "place": "Seattle",
      "flight": "B6264",
      "sched": "06:01",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "00:57"
     },
     {
      "place": "Los Angeles",
      "flight": "AA10",
      "sched": "06:04",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "00:59"
     },
     {
      "place": "San Diego",
      "flight": "B61190",
      "sched": "06:04",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1088,7 +1088,7 @@
      "flight": "MS985",
      "sched": "10:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:25"
     },
     {
      "place": "Columbus",
@@ -1173,15 +1173,15 @@
      "place": "Istanbul",
      "flight": "TK12",
      "sched": "00:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "00:57"
     },
     {
      "place": "Rome",
      "flight": "N0402",
      "sched": "00:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "00:48"
     },
     {
      "place": "Seoul",
@@ -1306,6 +1306,13 @@
      "place": "Panama City",
      "flight": "CM807",
      "sched": "02:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Fort Worth",
+     "flight": "AS2613",
+     "sched": "02:27",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2054,13 +2061,6 @@
     {
      "place": "Santiago",
      "flight": "B61737",
-     "sched": "09:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Columbus",
-     "flight": "YX5649",
      "sched": "09:50",
      "status": "Scheduled",
      "expected": ""
