@@ -375,33 +375,61 @@ function turnRound(ac){
   sys(`${was} is on stand ${ac.stand ? ac.stand.id : ''} and turns round as ${tr.cs} to ${tr.d}, off-blocks ${tr.at}Z.`);
   emit('turnround', ac);
 }
-// the tug's route: from the stand (or, held at a holding point on the way, from there) to the destination, or only as
-// far as a holding point (o.hold), keeping to the taxiways in o.via where it can
+// a tow is moved like a taxiing aircraft: off a stand the tug first pushes it back onto the lane, the way that leaves it
+// facing its route, then tows it nose first along the taxiways under the taxi rules (no turning round on a taxiway, the
+// junction turn limits, steered round the corners), and in along the destination stand's lead-in line (into a hangar,
+// through its doors). From a hangar it comes out through the doors; held at a holding point, it goes on from there.
+// o.hold: only as far as that holding point; o.via: keep to those taxiways where it can. null: no way there.
+function towPlan(ac, to, o = {}){
+  const from = ac.stand, held = ac.state === 'TOW' && ac.towNode, end = o.hold ? o.hold.node : to.node;
+  if (!held && from.area === 'south' && to.area !== 'south') return null;   // Gibraltar: across the runway at Charlie (towPath)
+  const pen = o.via && o.via.length ? e => o.via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : o.avoid ? e => e.tw === o.avoid ? 6 : 1 : undefined;
+  const outB = o.hold || to.area === 'hangar' ? null : brg(...to.lp, ...to.p);
+  // the way it is facing, onto the stand's lead-in where it can; failing that, round a block by any way (a tug can)
+  const go = (n, face) => (outB != null && face != null && route(n, end, pen, face, outB)) || (face != null && route(n, end, pen, face)) || route(n, end, pen);
+  let push = null, r = null;
+  if (held) r = go(ac.towNode, ac.hdg);
+  else if (from.area === 'hangar') { const n = GN[from.node].p; r = go(from.node, dist(...from.lp, ...n) > 5/1852 ? brg(...from.lp, ...n) : from.hdg); }
+  else for (const f of ['east', 'west']) {
+    let pp; try { pp = pushPath(ac, f); } catch(e) { continue; } if (!pp || !pp.length) continue;
+    const e = pp[pp.length-1], h = brg(...e, ...(pp.length > 1 ? pp[pp.length-2] : from.p)), n = GN[from.node].p, b = brg(...e, ...n);
+    const rr = go(from.node, dist(...e, ...n) > 10/1852 && Math.abs(angDiff(h, b)) < 90 ? b : h);
+    if (rr && (!r || pathLen(rr.nodes) < pathLen(r.nodes))) { r = rr; push = pp; }
+  }
+  if (!r) return null;
+  const pts = r.nodes.map(id => GN[id].p);
+  if (held && pts.length > 1 && dist(ac.x, ac.y, ...pts[0]) < 3/1852) pts.shift();
+  // pushed past the lane node already: on from there, not back to it
+  if (push && pts.length > 1) { const e = push[push.length-1], h = brg(...e, ...(push.length > 1 ? push[push.length-2] : from.p));
+    if (Math.abs(angDiff(h, brg(...e, ...pts[1]))) < 90 && Math.abs(angDiff(h, brg(...e, ...pts[0]))) > 90) pts.shift(); }
+  if (!o.hold) { if (to.area === 'hangar') { const q = [to.lp[0], to.lp[1]]; q.tight = true; pts.push(q); } pts.push(to.p); }
+  return { push, pts, r, inR: !o.hold && to.area !== 'hangar' ? standInR(pts, to) : undefined };
+}
+// the whole of the tow's route, for the map
 function towPath(ac, to, o = {}){
-  const from = ac.stand, held = ac.state === 'TOW' && ac.towNode, pts = [held ? [ac.x, ac.y] : from.lp], end = o.hold ? o.hold.node : to.node;
-  const pen = o.via && o.via.length ? e => o.via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined;
-  let ok = true; const add = r => { if (r) for (const id of r.nodes.slice(1)) pts.push(GN[id].p); else ok = false; };
-  if (!held && from.area === 'south' && to.area !== 'south') {
-    add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, ...filOut('C', 'E'), ...filIn('A', 'W'), GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, end, pen));
-  } else add(route(held ? ac.towNode : from.node, end, pen));
-  if (o.hold) return ok ? pts : null;
+  const P = towPlan(ac, to, o); if (P) return [...(P.push || []), ...P.pts];
+  if (o.hold || ac.state === 'TOW' || ac.stand.area !== 'south') return null;
+  return towPathSouth(ac, to);
+}
+// Gibraltar's south apron: across the runway from Charlie to Alpha, the tug turning it tightly round the corners
+function towPathSouth(ac, to){
+  const from = ac.stand, pts = [from.lp], add = r => { if (r) for (const id of r.nodes.slice(1)) pts.push(GN[id].p); };
+  add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, ...filOut('C', 'E'), ...filIn('A', 'W'), GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, to.node));
   if (to.area === 'hangar') { const q = [to.lp[0], to.lp[1]]; q.tight = true; pts.push(q); }   // into a hangar: through the doors
   pts.push(to.p);
-  // out of a hangar: the tug walks it round the apron corners (tight turns), by way of the lane node outside the doors
-  if (!held && from.area === 'hangar') return [from.lp, GN[from.node].p, ...pts.slice(1)].map((p, i, a) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; });
   return pts;
 }
 // the routings a tug can take to its destination: the shortest, then the shortest avoiding each taxiway on it (up to three)
 function towOptions(ac){
   const to = ac.tow && ac.tow.to; if (!to) return [];
-  const held = ac.state === 'TOW' && ac.towNode; if (!held && ac.stand.area === 'south' && to.area !== 'south') return [];   // across the runway at Charlie: one way only
-  const from = held ? ac.towNode : ac.stand.node, best = route(from, to.node); if (!best) return [];
-  const res = [], seen = new Set(), L0 = pathLen(best.nodes) || 1e-9;
-  const add = r => { if (!r) return; r.len = pathLen(r.nodes); r.via = viaOf(r.tws).filter(t => t !== 'APRON'); const k = r.via.join(' '); if (seen.has(k) || new Set(r.via).size < r.via.length || r.len > L0*1.8 + 0.05) return; seen.add(k); res.push(r); };   // not one that leaves a taxiway and comes back to it
+  const best = towPlan(ac, to); if (!best) return [];   // across the runway at Charlie: one way only
+  const res = [], seen = new Set(), L0 = pathLen(best.r.nodes) || 1e-9;
+  const add = P => { if (!P) return; const r = P.r; r.len = pathLen(r.nodes); r.via = viaOf(r.tws).filter(t => t !== 'APRON'); const k = r.via.join(' '); if (seen.has(k) || new Set(r.via).size < r.via.length || r.len > L0*1.8 + 0.05) return; seen.add(k); res.push(r); };   // not one that leaves a taxiway and comes back to it
   add(best);
-  for (const tw of [...new Set(best.tws)].filter(t => t !== 'APRON')) { if (res.length === 3) break; add(route(from, to.node, e => e.tw === tw ? 6 : 1)); }
+  for (const tw of [...new Set(best.r.tws)].filter(t => t !== 'APRON')) { if (res.length === 3) break; add(towPlan(ac, to, { avoid: tw })); }
   return res.sort((a, b) => a.len - b.len);
 }
+const TOW_KT = 8;   // a tug's towing speed
 function stepTows(){
   for (const ac of S.acs) {
     if (!ac.tow || ac.state !== 'PARKED' || ac.tow.asked || S.t < ac.tow.at) continue;
@@ -868,19 +896,25 @@ function commandRun(str){
       if (hold && heldAt && hold.node === ac.towNode) { sys(`${ac.cs} is already holding at ${hold.id.replace(/~\d+$/, '')}.`); continue; }
       const to = ac.tow.to, from = ac.stand, cross = !heldAt && from.area === 'south' && to.area !== 'south';
       if (hold && cross) { sys(`The tow from ${from.id} crosses the runway at Charlie: it can't stop on the way.`); continue; }
-      const raw = towPath(ac, to, { via, hold }); if (!raw) { sys(`No tow route to holding point ${hold.id.replace(/~\d+$/, '')}.`); continue; }
+      const plan = cross ? null : towPlan(ac, to, { via, hold }), raw = cross ? towPathSouth(ac, to) : null;
+      if (!plan && !raw) { sys(`No tow route to ${hold ? 'holding point ' + hold.id.replace(/~\d+$/, '') : towDest(to)}.`); continue; }
       if (!heldAt) {
         if (from.area === 'hangar') { ac.x = from.lp[0]; ac.y = from.lp[1]; ac.hdg = from.hdg; ac.mg = ac.bh = null; }   // the doors open: it comes out onto the apron
         ac.towWas = ac.state; if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.towCross = cross; ac.rtowed = true;   // moved once: no random tow after this one
       }
       ac.need = null; ac.towHold = null; ac.towNode = null; ac.held = false; ac.towTgt = hold ? hold.id : null;
-      // a tug turns the aircraft tightly round every corner, so it lines up on the stand instead of circling it
-      const pts = raw.map((p, k) => { const q = [p[0], p[1]]; if (k) q.tight = true; return q; });
       const H = hold && hold.id.replace(/~\d+$/, ''), vw = via.length ? ', via ' + via.join(' ') : '';
-      if (hold) setPath(ac, pts, 5, () => { ac.path = null; ac.gs = 0; ac.towNode = hold.node; ac.towHold = H; ac.towTgt = null; ac.need = `Tug holding at ${H}`;
+      // pushed back off the stand first, where it is on one; then towed along its route at a tug's pace
+      const tow = (pts, onDone) => {
+        const go = () => setPath(ac, raw ? raw.map((p, k) => { const q = [p[0], p[1]]; if (k) q.tight = true; return q; }) : plan.pts, TOW_KT, onDone, raw ? {} : { inR: plan.inR });
+        if (plan && plan.push) { ac.towNext = plan.pts; setPath(ac, plan.push, 3, () => { ac.towNext = null; go(); }, { reverse: true }); } else go();
+      };
+      if (hold) tow(null, () => { ac.path = null; ac.gs = 0; ac.towNode = hold.node; ac.towHold = H; ac.towTgt = null; ac.need = `Tug holding at ${H}`;
         log('plt', `${APT.tower[0]}, tug with ${ac.cs} holding at ${H}`, 'TUG', ac); say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} holding at ${hpWords(hold.id)}`, 'tug'); if (S.sel === ac && renderSel) renderSel(); });
       else { const was = ac.towWas, then = ac.tow.then;
-        setPath(ac, pts, 5, () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; ac.towWas = ac.towTgt = null; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); }); }
+        // on the stand: if it came in at an angle, the tug swings it round square before it is left there
+        const park = () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; ac.towWas = ac.towTgt = null; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); };
+        tow(null, () => { if (to.hdg != null && Math.abs(angDiff(ac.hdg, to.hdg)) > 8) ac.towAlign = { h: to.hdg, done: park }; else park(); }); }
       const what = hold ? `tow to holding point ${H}${vw}, hold there` : `${heldAt ? 'continue tow' : 'tow approved'} to ${towDest(to)}${vw}`;
       log('atc', `Tug with ${ac.cs}, ${what}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
       say(`Tug with ${spoken(ac.cs)}, ${hold ? `tow to holding point ${hpWords(hold.id)}${via.length ? ', via ' + via.map(t => PHON[t] || t).join(', ') : ''}, hold there` : `${heldAt ? 'continue tow' : 'tow approved'} to ${towDest(to)}${via.length ? ', via ' + via.map(t => PHON[t] || t).join(', ') : ''}`}`, 'atc');
@@ -1106,6 +1140,7 @@ function step(dt){
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') {
+      if (ac.towAlign && !ac.path) { const A = ac.towAlign, e = angDiff(ac.hdg, A.h); ac.hdg = norm(ac.hdg + clamp(e, -8*dt, 8*dt)); if (Math.abs(e) <= 8*dt) { ac.hdg = A.h; ac.towAlign = null; A.done(); } }
       // a tow on the runway pavement (several runways: the one it is on, within its ends, not on the line beyond them)
       if (RWYS.length > 1) { const q = [ac.x, ac.y], R = RWYS.find(R => Math.abs(R.offOf(q)) < 35 && R.mOf(q) > -60 && R.mOf(q) < R.len + 60); ac.onRwy = !!R; ac.rwyId = R ? R.id : RWYS[0].id; }
       else { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }

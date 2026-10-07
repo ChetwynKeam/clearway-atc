@@ -722,7 +722,7 @@ const towAsk = ac => towPending(ac) || (towOn(ac) && !!ac.towHold);   // waiting
 // under tow, the route still to go and where it ends
 function drawTowRoute(ac){
   const T = ac.tow; let pts;
-  if (ac.state === 'TOW' && ac.path) pts = ac.path.pts;
+  if (ac.state === 'TOW' && ac.path) pts = ac.towNext ? [...ac.path.pts, ...ac.towNext] : ac.path.pts;   // pushing back: and the tow after it
   else { const k = T.to.id + '|' + (ac.towNode || ac.stand.id); if (T.pvKey !== k) { T.pvKey = k; try { T.pv = towPath(ac, T.to); } catch(e) { T.pv = null; } } pts = T.pv; }
   if (!pts || !pts.length || V.scale < 100) return;
   cx.save(); cx.globalAlpha = S.sel === ac || ac.state === 'TOW' ? 1 : 0.7;
