@@ -379,7 +379,7 @@ function stepTows(){
     towCall(ac, to);
   }
 }
-const towDest = to => to.area === 'hangar' ? to.name : `${to.area === 'remote' ? APT.remoteWord || 'remote ' + (APT.standWord || 'stand') : APT.standWord || 'stand'} ${to.id}`;
+const towDest = to => to.area === 'hangar' ? to.name : `${to.area === 'remote' ? (APT.remoteWord && APT.remoteWord(to)) || 'remote ' + (APT.standWord || 'stand') : APT.standWord || 'stand'} ${to.id}`;
 function towCall(ac, to){
   to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
   const H = ac.stand.area === 'hangar' && ac.stand.hg, cross = ac.stand.area === 'south', at = H ? `in ${H.name}` : `on ${APT.standWord || 'stand'} ${ac.stand.id}`;
@@ -388,8 +388,8 @@ function towCall(ac, to){
 }
 // random tows (not in exercises): a parked aircraft with a long wait is towed off its gate to a remote stand or a
 // hangar to free the gate, and towed back about 35 minutes (from a hangar, an hour) before off-blocks; or it is moved
-// to another gate at the same terminal. Busier airports (more stands) see more of them; each still needs your approval.
-const TOW_RATE = APT.towRate ?? Math.min(6, Math.max(0.5, STANDS.length/20));   // random tows an hour
+// to another gate at the same terminal. Every airport has them; busier ones (more stands) see more. Each needs your approval.
+const TOW_RATE = APT.towRate ?? Math.min(6, Math.max(1, STANDS.length/20));   // random tows an hour
 const towLen = (a, b) => { if (a === b) return 0; const r = route(a, b); return r ? pathLen(r.nodes) : Infinity; };   // NM
 // the nearest of these free places (by straight line, then by the taxi route), or one of the nearest few at random
 function nearestFree(ac, list, spread){
@@ -404,8 +404,8 @@ function randomTowFor(ac){
   const off = [];   // off the gate: a remote stand, or a hangar that takes it and serves this apron
   if (wait > 80*60 && APT.remoteAreas) off.push(...STANDS.filter(s => APT.remoteAreas.includes(s.area)));
   if (wait > 120*60) off.push(...HANGARS.filter(h => h.hg.fits(ac) && (!h.hg.to || (typeof h.hg.to === 'function' ? h.hg.to(ac) : h.hg.to).includes(st.area))));
-  const big = STANDS.length >= 60;   // gate to gate: only at the big airports, with plenty of gates to juggle
-  const same = big && wait > 40*60 ? STANDS.filter(s => s.area === st.area && (st.term ? s.term === st.term : true)) : [];
+  // gate to gate: another stand on the same apron (at the same terminal)
+  const same = wait > 40*60 ? STANDS.filter(s => s.area === st.area && (st.term ? s.term === st.term : true)) : [];
   const first = off.length && (!same.length || Math.random() < 0.65) ? [off, same] : [same, off];
   for (const list of first) { const to = list.length && nearestFree(ac, list, list === same); if (to) return to; }
   return null;
@@ -811,7 +811,8 @@ function commandRun(str){
       const to = ac.tow.to, from = ac.stand, cross = from.area === 'south';
       if (from.area === 'hangar') { ac.x = from.lp[0]; ac.y = from.lp[1]; ac.hdg = from.hdg; ac.mg = ac.bh = null; }   // the doors open: it comes out onto the apron
       const was = ac.state, then = ac.tow.then;
-      setPath(ac, towPath(ac, to), 5, () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); });
+      // a tug turns the aircraft tightly round every corner, so it lines up on the stand instead of circling it
+      setPath(ac, towPath(ac, to).map((p, i) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; }), 5, () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); });
       if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null; ac.towCross = cross; ac.rtowed = true;   // moved once: no random tow after this one
       log('atc', `Tug with ${ac.cs}, tow approved to ${towDest(to)}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
       say(`Tug with ${spoken(ac.cs)}, tow approved to ${towDest(to)}`, 'atc');

@@ -70,7 +70,13 @@ const HARDSTANDS = [['HS1A', -1237, 380, 'n148'], ['HS2A', -1222, 427, 'n603'], 
   ['D1', 390, 207, 'n402'], ['D2', 365, 250, 'n625'], ['D5', 427, 271, 'n394'], ['D13', 341, 294, 'n423'], ['H1', 429, 214, 'n402'], ['H1A', 433, 245, 'n403'],
   ['H3', 388, 286, 'n437'], ['H6', 418, 372, 'n530'], ['H7', 439, 409, 'n405'], ['H9', 469, 369, 'n394'], ['H11', 429, 318, 'n394'],
   ['31A', -1370, 963, 'n535'], ['31B', -1412, 953, 'n534'], ['31C', -1433, 932, 'n107'], ['32F', -1410, 1016, 'n141'], ['32G', -1407, 1042, 'n141'], ['32I', -1412, 1085, 'n144']];
-for (const [id, e, n, node] of HARDSTANDS) if (GN[node]) { const p = EN(e, n); STANDS.push({ id, term: 'R', p, m: mOf(p), off: offOf(p), node, area: 'remote', occ: null }); }
+// cargo stands (OpenStreetMap parking positions by the FedEx, DHL and north cargo buildings), used as remote stands
+// for airliners that wait a long time. Named after the cargo area, with the stand number painted there. The taxiway
+// graph stops at the edge of the cargo aprons, so the tug crosses the open apron (no lead-in line is drawn).
+const CARGO_STANDS = [['F1', -592, 2424, 'k289'], ['F2', -537, 2391, 'k290'], ['F3', -483, 2350, 'n326'], ['F4', -416, 2327, 'k297'], ['F5', -355, 2282, 'k298'],
+  ['DHL1', -2013, 1168, 'k271'], ['DHL2', -1947, 1164, 'k271'], ['DHL3', -1828, 1148, 'k272'], ['DHL4', -1748, 1145, 'k272'],
+  ['C1', -1488, 2480, 'n219'], ['C2', -1489, 2436, 'n230'], ['C3', -1489, 2393, 'n230'], ['C4', -1447, 2379, 'n230'], ['C5', -1446, 2422, 'n230'], ['C6', -1450, 2459, 'n230'], ['CC', -1467, 2547, 'n219']];
+for (const [term, list] of [['R', HARDSTANDS], ['C', CARGO_STANDS]]) for (const [id, e, n, node] of list) if (GN[node]) { const p = EN(e, n); STANDS.push({ id, term, p, m: mOf(p), off: offOf(p), node, area: 'remote', occ: null, noLead: term === 'C' }); }
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = brg(...s.lp, ...s.p); });
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 // which side of each runway the terminals are on (all of them sit inside the four runways' central area)
@@ -213,7 +219,7 @@ function drawKjfk(){
       cx.setLineDash([]);
     }
     // gate lead-in lines and numbers
-    groundLines(lw(0.3), () => { for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); } });
+    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP([s.lp, s.p], false); cx.stroke(); } });
     if (IMG) { cx.save(); clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx); cx.restore(); }   // stand paint stops at the terminal walls
     else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
@@ -367,8 +373,8 @@ const APT = {
   // remote hardstands for long turnarounds (towed to the gate), shown as their own group in the stand picker
   remoteAreas: ['remote'],
   areaNames: { civil: 'gates', remote: 'remote hardstands' },
-  termName: t => t === 'R' ? 'Remote hardstands' : 'Terminal ' + t,
-  remoteWord: 'hardstand',
+  termName: t => t === 'R' ? 'Remote hardstands' : t === 'C' ? 'Cargo stands' : 'Terminal ' + t,
+  remoteWord: s => s.term === 'C' ? 'cargo stand' : 'hardstand',
   prefArea: ac => { const t = TERMINAL_OF[ac.cs.slice(0, 3)] || '4'; return { key: t, name: 'Terminal ' + t, has: s => s.term === t }; },
   standFor: ac => { const t = TERMINAL_OF[ac.cs.slice(0, 3)] || '4'; const free = STANDS.filter(s => !s.occ && s.term === t); return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null; },
   inboundAlt: gate => gate === 'S' || gate === 'SW' ? 8000 : 9000,

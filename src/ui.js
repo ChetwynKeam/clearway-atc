@@ -401,7 +401,7 @@ function drawAirport(){
       for (const f of Object.values(FIL)) for (const pts of [f.W, f.E]) { const key = JSON.stringify(pts); if (seen.has(key)) continue; seen.add(key); leads.push(leadLine(pts).map(([m, o]) => c(m, o))); }
       groundLines(lw(0.3), () => leads.forEach(strokeSmooth)); }
     // apron taxilanes and stand lead-ins (the stand box carries on the centreline and stop bar)
-    groundLines(lw(0.3), () => { for (const s of STANDS) { path([[mOf(s.lp), offOf(s.lp)], [s.m, s.off]], false); cx.stroke(); } });
+    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { path([[mOf(s.lp), offOf(s.lp)], [s.m, s.off]], false); cx.stroke(); } });
     cx.save(); if (IMG) clipOut((AD.buildings || []).map(b => b.pts.map(([m, o]) => c(m, o)))); drawStandDetail(c, path, mpx); cx.restore();   // stand paint stops at the terminal walls
     // closed portion of B and B1: unserviceable crosses
     cx.strokeStyle = 'rgba(255,255,255,.75)'; cx.lineWidth = lw(0.8);
