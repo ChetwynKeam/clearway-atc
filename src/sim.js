@@ -375,17 +375,32 @@ function turnRound(ac){
   sys(`${was} is on stand ${ac.stand ? ac.stand.id : ''} and turns round as ${tr.cs} to ${tr.d}, off-blocks ${tr.at}Z.`);
   emit('turnround', ac);
 }
-function towPath(ac, to){
-  const from = ac.stand, pts = [from.lp];
-  const add = r => { if (r) for (const id of r.nodes.slice(1)) pts.push(GN[id].p); };
-  if (from.area === 'south' && to.area !== 'south') {
-    add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, ...filOut('C', 'E'), ...filIn('A', 'W'), GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, to.node));
-  } else add(route(from.node, to.node));
+// the tug's route: from the stand (or, held at a holding point on the way, from there) to the destination, or only as
+// far as a holding point (o.hold), keeping to the taxiways in o.via where it can
+function towPath(ac, to, o = {}){
+  const from = ac.stand, held = ac.state === 'TOW' && ac.towNode, pts = [held ? [ac.x, ac.y] : from.lp], end = o.hold ? o.hold.node : to.node;
+  const pen = o.via && o.via.length ? e => o.via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined;
+  let ok = true; const add = r => { if (r) for (const id of r.nodes.slice(1)) pts.push(GN[id].p); else ok = false; };
+  if (!held && from.area === 'south' && to.area !== 'south') {
+    add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, ...filOut('C', 'E'), ...filIn('A', 'W'), GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, end, pen));
+  } else add(route(held ? ac.towNode : from.node, end, pen));
+  if (o.hold) return ok ? pts : null;
   if (to.area === 'hangar') { const q = [to.lp[0], to.lp[1]]; q.tight = true; pts.push(q); }   // into a hangar: through the doors
   pts.push(to.p);
   // out of a hangar: the tug walks it round the apron corners (tight turns), by way of the lane node outside the doors
-  if (from.area === 'hangar') return [from.lp, GN[from.node].p, ...pts.slice(1)].map((p, i, a) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; });
+  if (!held && from.area === 'hangar') return [from.lp, GN[from.node].p, ...pts.slice(1)].map((p, i, a) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; });
   return pts;
+}
+// the routings a tug can take to its destination: the shortest, then the shortest avoiding each taxiway on it (up to three)
+function towOptions(ac){
+  const to = ac.tow && ac.tow.to; if (!to) return [];
+  const held = ac.state === 'TOW' && ac.towNode; if (!held && ac.stand.area === 'south' && to.area !== 'south') return [];   // across the runway at Charlie: one way only
+  const from = held ? ac.towNode : ac.stand.node, best = route(from, to.node); if (!best) return [];
+  const res = [], seen = new Set(), L0 = pathLen(best.nodes) || 1e-9;
+  const add = r => { if (!r) return; r.len = pathLen(r.nodes); r.via = viaOf(r.tws).filter(t => t !== 'APRON'); const k = r.via.join(' '); if (seen.has(k) || new Set(r.via).size < r.via.length || r.len > L0*1.8 + 0.05) return; seen.add(k); res.push(r); };   // not one that leaves a taxiway and comes back to it
+  add(best);
+  for (const tw of [...new Set(best.tws)].filter(t => t !== 'APRON')) { if (res.length === 3) break; add(route(from, to.node, e => e.tw === tw ? 6 : 1)); }
+  return res.sort((a, b) => a.len - b.len);
 }
 function stepTows(){
   for (const ac of S.acs) {
@@ -830,15 +845,31 @@ function commandRun(str){
       else { ac.freq = 'TWR'; if (ac.need === 'Back on frequency') ac.need = null; }
       said.push(`contact ${unit[0]} ${unit[1]}`); reads.push(`${unit[1]}, ${ac.handed ? 'good day' : 'thanks'}`);
     } else if (t === 'TOW') {
-      if (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to) { sys(`${ac.cs} has no tow request.`); continue; }
-      const to = ac.tow.to, from = ac.stand, cross = from.area === 'south';
-      if (from.area === 'hangar') { ac.x = from.lp[0]; ac.y = from.lp[1]; ac.hdg = from.hdg; ac.mg = ac.bh = null; }   // the doors open: it comes out onto the apron
-      const was = ac.state, then = ac.tow.then;
+      // TOW [holding point] [VIA taxiways]: approve the tug's request (or, held at a holding point, send it on), by the
+      // shortest route or the one through the named taxiways; to a holding point, it stops there and waits
+      const heldAt = ac.state === 'TOW' && ac.towHold;
+      if (!heldAt && (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to)) { sys(ac.state === 'TOW' ? `${ac.cs} is already under tow: it can be re-routed once it is holding.` : `${ac.cs} has no tow request.`); continue; }
+      const hold = toks[i+1] && holdPt(toks[i+1]) ? holdPt(toks[++i]) : null;
+      const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
+      if (hold && heldAt && hold.node === ac.towNode) { sys(`${ac.cs} is already holding at ${hold.id.replace(/~\d+$/, '')}.`); continue; }
+      const to = ac.tow.to, from = ac.stand, cross = !heldAt && from.area === 'south' && to.area !== 'south';
+      if (hold && cross) { sys(`The tow from ${from.id} crosses the runway at Charlie: it can't stop on the way.`); continue; }
+      const raw = towPath(ac, to, { via, hold }); if (!raw) { sys(`No tow route to holding point ${hold.id.replace(/~\d+$/, '')}.`); continue; }
+      if (!heldAt) {
+        if (from.area === 'hangar') { ac.x = from.lp[0]; ac.y = from.lp[1]; ac.hdg = from.hdg; ac.mg = ac.bh = null; }   // the doors open: it comes out onto the apron
+        ac.towWas = ac.state; if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.towCross = cross; ac.rtowed = true;   // moved once: no random tow after this one
+      }
+      ac.need = null; ac.towHold = null; ac.towNode = null; ac.held = false; ac.towTgt = hold ? hold.id : null;
       // a tug turns the aircraft tightly round every corner, so it lines up on the stand instead of circling it
-      setPath(ac, towPath(ac, to).map((p, i) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; }), 5, () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); });
-      if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null; ac.towCross = cross; ac.rtowed = true;   // moved once: no random tow after this one
-      log('atc', `Tug with ${ac.cs}, tow approved to ${towDest(to)}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
-      say(`Tug with ${spoken(ac.cs)}, tow approved to ${towDest(to)}`, 'atc');
+      const pts = raw.map((p, k) => { const q = [p[0], p[1]]; if (k) q.tight = true; return q; });
+      const H = hold && hold.id.replace(/~\d+$/, ''), vw = via.length ? ', via ' + via.join(' ') : '';
+      if (hold) setPath(ac, pts, 5, () => { ac.path = null; ac.gs = 0; ac.towNode = hold.node; ac.towHold = H; ac.towTgt = null; ac.need = `Tug holding at ${H}`;
+        log('plt', `${APT.tower[0]}, tug with ${ac.cs} holding at ${H}`, 'TUG', ac); say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} holding at ${hpWords(hold.id)}`, 'tug'); if (S.sel === ac && renderSel) renderSel(); });
+      else { const was = ac.towWas, then = ac.tow.then;
+        setPath(ac, pts, 5, () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; ac.towWas = ac.towTgt = null; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); }); }
+      const what = hold ? `tow to holding point ${H}${vw}, hold there` : `${heldAt ? 'continue tow' : 'tow approved'} to ${towDest(to)}${vw}`;
+      log('atc', `Tug with ${ac.cs}, ${what}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
+      say(`Tug with ${spoken(ac.cs)}, ${hold ? `tow to holding point ${hpWords(hold.id)}${via.length ? ', via ' + via.map(t => PHON[t] || t).join(', ') : ''}, hold there` : `${heldAt ? 'continue tow' : 'tow approved'} to ${towDest(to)}${via.length ? ', via ' + via.map(t => PHON[t] || t).join(', ') : ''}`}`, 'atc');
       return renderSel && renderSel();
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
