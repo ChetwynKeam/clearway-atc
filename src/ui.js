@@ -70,7 +70,9 @@ function draw(){
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
-  for (const ac of S.acs) if (towPending(ac) || towOn(ac)) drawTowRoute(ac);
+  // a tug calling for a tow shows where it would go; any other route only while you have that aircraft selected
+  for (const ac of S.acs) if (towPending(ac) || (S.sel === ac && towOn(ac))) drawTowRoute(ac);
+  if (S.sel && S.sel.ground && S.sel.path && !towOn(S.sel)) drawTaxiRoute(S.sel);
   for (const ac of S.acs) if (ac.ground && (!inHangar(ac) || towPending(ac))) drawAc(ac);   // stored in a hangar: out of sight until a tug calls for it
   if (img) drawImageryCredit();
   else if (MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
@@ -730,6 +732,15 @@ function drawTowRoute(ac){
   if (!pts || !pts.length || V.scale < 100) return;
   cx.save(); cx.globalAlpha = S.sel === ac || ac.state === 'TOW' ? 1 : 0.7;
   drawPreview({ pts: [acMid(ac), ...pts], label: 'Tow ' + ac.cs + (ac.path && ac.towTgt ? ' to hold ' + ac.towTgt + ', then ' : ' to ') + towDest(T.to) }); cx.restore();
+}
+// the selected aircraft's taxi route still to go, and where it ends
+function drawTaxiRoute(ac){
+  if (V.scale < 100 || !ac.path.pts.length) return;
+  const hp = (ac.holdAt || ac.hp || '').replace(/~\d+$/, '');
+  const end = ac.state === 'PUSH' ? 'Push back' : ac.state === 'PULL' ? 'Pull forward to ' + (APT.standWord || 'stand') + ' ' + ac.stand.id
+    : ac.kind === 'ARR' ? (ac.taxiIn && ac.stand ? 'Taxi to ' + (APT.standWord || 'stand') + ' ' + ac.stand.id : ac.holdAt ? 'Hold ' + hp : 'Vacate')
+    : hp ? 'Taxi to hold ' + hp : 'Taxi';
+  drawPreview({ pts: [acMid(ac), ...ac.path.pts], label: ac.cs + ' · ' + end });
 }
 const pop = document.createElement('div'); pop.className = 'pop'; pop.hidden = true; pop.setAttribute('role', 'dialog'); document.body.appendChild(pop);
 let popAc = null;
