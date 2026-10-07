@@ -73,6 +73,7 @@ function draw(){
   // a tug calling for a tow shows where it would go; any other route only while you have that aircraft selected
   for (const ac of S.acs) if (towPending(ac) || (S.sel === ac && towOn(ac))) drawTowRoute(ac);
   if (S.sel && S.sel.ground && S.sel.path && !towOn(S.sel)) drawTaxiRoute(S.sel);
+  else if (S.sel) drawVacRoute(S.sel);
   for (const ac of S.acs) if (ac.ground && (!inHangar(ac) || towPending(ac))) drawAc(ac);   // stored in a hangar: out of sight until a tug calls for it
   if (img) drawImageryCredit();
   else if (MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
@@ -659,6 +660,9 @@ function renderSel(){
     if (ac.diverting && ac.state !== 'DIVERTING') html += b(`DCT ${ac.diverting} A${(APT.divertAlt || 8000)/100}`, 'Approve diversion', true, 'go');
     if (ac.need === 'Say again' && ac.lastCmd) html += b(ac.lastCmd, 'Say again: ' + esc(ac.lastCmd), true, 'go');
     if (ac.kind === 'ARR' && S.emg && S.emg.ws && !ac.wsTold) html += b('WS', 'Pass windshear', true, 'go');
+    // the exit to vacate by after landing, once it is cleared for an approach: only those it can still make
+    if (ac.kind === 'ARR' && ac.app && !['MISSED', 'DIVERTING'].includes(ac.state)) { const ch = vacChoices(ac); if (ac.reqExit && !ch.includes(ac.reqExit)) ch.unshift(ac.reqExit);
+      html += ch.map(h => b('VAC '+h, vacLabel(ac, h), true, ac.reqExit === h ? 'on' : '')).join(''); }
     if (ac.kind === 'ARR') html += (APT.appRwys ? APT.appRwys() : [RW_HI, RW_LO]).map(r => b('APP '+r, APT.appShort+' '+r, true, landRw(ac)===r?'on':'')).join('') + (APT.rnp ? APT.rnpButtons(S.rwy).map(([c, l]) => b(c, l, true, ac.need === 'Request RNP approach' ? 'go' : '')).join('') : '') + b('HO','To Tower', ac.freq !== 'TWR') + b('CTL','Cleared to land', true, 'go') + b('GA','Go around', true, 'danger') + b('HOLD','Hold');
     else html += b('HO', ac.freq === 'TWR' ? `To ${(APT.depRadar || APT.radar)[0].split(' ').pop()} ${(APT.depRadar || APT.radar)[1]}` : `To ${NEXT_UNIT[ac.gate][0].split(' ')[0]} ${NEXT_UNIT[ac.gate][1]}`, true, 'go') + b('DCT '+exitRouteOf(ac)[0], 'Direct '+exitRouteOf(ac)[0]) + b('A'+APT.climbFL, 'Climb FL'+APT.climbFL);
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).filter(k => !WP[k].hide).map(k => `<option>${k}</option>`).join('')}</select></div>`;
@@ -682,7 +686,8 @@ function renderSel(){
       // the runway exits offered come from the airport's profile
       // it vacates by itself; these override the exit until it is off the runway
       const canVac = ['ROLLED','ROLLOUT'].includes(ac.state) || (ac.state === 'VACATING' && ac.onRwy);
-      html += (APT.vacExits ? APT.vacExits(ac) : Object.keys(HOLDS)).map(h => b('VAC '+h, 'Vacate '+h.replace(/~\d+$/, ''), canVac, ac.state === 'VACATING' && ac.exit === h ? 'on' : '')).join('');
+      const ch = canVac ? vacChoices(ac) : APT.vacExits ? APT.vacExits(ac) : Object.keys(HOLDS); if (canVac && ac.reqExit && !ch.includes(ac.reqExit)) ch.unshift(ac.reqExit);
+      html += ch.map(h => b('VAC '+h, canVac && ac.state !== 'VACATING' ? vacLabel(ac, h) : 'Vacate '+h.replace(/~\d+$/, ''), canVac, (ac.state === 'VACATING' ? ac.exit : ac.reqExit) === h ? 'on' : '')).join('');
       html += b('VAC','Backtrack', ['ROLLED','ROLLOUT'].includes(ac.state), ac.state === 'ROLLED' ? 'go' : '');
       // clear of the runway it stops and waits for this
       const canIn = ac.state === 'VACATING' && !ac.onRwy;
@@ -695,6 +700,9 @@ function renderSel(){
     html += `</div>`;
   }
   el.innerHTML = html; wireRm();
+  // pointing at an exit button shows that way off the runway on the map
+  el.onmouseover = e => { const bt = e.target.closest && e.target.closest('button[data-c^="VAC "]'); vacHover = bt && !bt.disabled ? { ac: S.sel, ex: bt.dataset.c.slice(4) } : null; };
+  el.onmouseleave = () => { vacHover = null; };
   { const sp = $('iStand'); if (sp) sp.onchange = () => sp.value && command(`${ac.cs} STAND ${sp.value}`); }
   el.querySelectorAll('button[data-c]').forEach(bt => bt.onclick = () => { const c = bt.dataset.c; if (c === 'POP:push') openPushPop(ac, bt); else if (c === 'POP:taxi') openTaxiPop(ac, bt); else if (c === 'POP:holdin') openHoldInPop(ac, bt); else if (c === 'POP:tow') openTowPop(ac, bt); else command(ac.cs+' '+c); });
   const keyCmd = (id, pre) => { const i = $(id); if (i) i.onkeydown = e => { if (e.key === 'Enter' && i.value.trim()) command(`${ac.cs} ${pre}${i.value.trim()}`); }; };
@@ -738,9 +746,19 @@ function drawTaxiRoute(ac){
   if (V.scale < 100 || !ac.path.pts.length) return;
   const hp = (ac.holdAt || ac.hp || '').replace(/~\d+$/, '');
   const end = ac.state === 'PUSH' ? 'Push back' : ac.state === 'PULL' ? 'Pull forward to ' + (APT.standWord || 'stand') + ' ' + ac.stand.id
-    : ac.kind === 'ARR' ? (ac.taxiIn && ac.stand ? 'Taxi to ' + (APT.standWord || 'stand') + ' ' + ac.stand.id : ac.holdAt ? 'Hold ' + hp : 'Vacate')
+    : ac.kind === 'ARR' ? (ac.taxiIn && ac.stand ? 'Taxi to ' + (APT.standWord || 'stand') + ' ' + ac.stand.id : ac.holdAt ? 'Hold ' + hp : 'Vacate ' + (ac.exit || '').replace(/~\d+$/, ''))
     : hp ? 'Taxi to hold ' + hp : 'Taxi';
   drawPreview({ pts: [acMid(ac), ...ac.path.pts], label: ac.cs + ' · ' + end });
+}
+// an arrival on final or rolling out: the exit you gave it (or the one you are pointing at on its card), from touchdown
+let vacHover = null;
+// two exits by the same name (Gatwick's Golf 1s): each says how far down the runway it is
+const vacLabel = (ac, h) => { const c = exitCheck(ac, h), n = h.replace(/~\d+$/, ''), twin = Object.keys(HOLDS).some(k => k !== h && k.replace(/~\d+$/, '') === n && (HOLDS[k].on || 0) === (HOLDS[h].on || 0));
+  return (c && c.back ? 'Backtrack to ' : 'Vacate ') + n + (twin && c && !c.back ? ` · ${(Math.max(0, c.ahead)/1000).toFixed(1)} km` : ''); };
+function drawVacRoute(ac){
+  if (V.scale < 100 || ac.kind !== 'ARR' || ac.vacated || (ac.ground && ac.path)) return;
+  const ex = (vacHover && vacHover.ac === ac && vacHover.ex) || ac.reqExit, pts = ex && vacPreview(ac, ex); if (!pts) return;
+  drawPreview({ pts, label: ac.cs + ' · Vacate ' + ex.replace(/~\d+$/, '') + (exitCheck(ac, ex).back ? ' (backtrack)' : '') });
 }
 const pop = document.createElement('div'); pop.className = 'pop'; pop.hidden = true; pop.setAttribute('role', 'dialog'); document.body.appendChild(pop);
 let popAc = null;

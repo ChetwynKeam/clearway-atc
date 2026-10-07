@@ -605,7 +605,56 @@ function lineUpPath(ac, hp){
 // Leaving the runway. The crew picks the exit (APT.vacPrefs, for its stand) and keeps rolling; the controller can name
 // another exit (VAC <exit>) at any time until it is off the runway. dir: the way it is moving along the runway.
 const VAC_TURN = 16, VAC_RWY = 30, VAC_DEC = 2.5, VAC_CLEAR = 0.03;   // turn-off speed, backtrack speed (kt), braking (kt/s), how far past the holding point it stops (NM)
-const stopDist = v => Math.max(0, v*v - VAC_TURN*VAC_TURN)/(2*VAC_DEC)*0.5144;   // metres to slow from v to the turn-off
+const stopDist = (v, dec = VAC_DEC) => Math.max(0, v*v - VAC_TURN*VAC_TURN)/(2*dec)*0.5144;   // metres to slow from v to the turn-off
+// The controller can name the exit from final onwards (VAC <exit>). The crew plans its braking for it: gently for a far
+// exit, firmer for a near one, up to about what the type does with firm manual braking (VAC_MAX, kt/s). An exit it can't
+// make is refused; on a runway with turning pads one it has passed is reached by backtracking instead.
+const VAC_MAX = { L: 5.5, M: 5, H: 4.5 }, VAC_SOFT = 2;
+const vacMax = ac => VAC_MAX[ac.perf.wake] || 5;
+const exitWord = e => PHON[e] || (HOLDS[e] && PHON[HOLDS[e].ref]) || String(e).replace(/~\d+$/, '');
+// the runway it is landing or rolling on, which way, where it is along it (m; airborne: where it will touch down) and how fast
+function vacPos(ac){
+  if (ac.ground) { if (!ac.rwyId || !ac.onRwy) return null; const R = rwyById(ac.rwyId);
+    return { R, dir: Math.sin(ac.hdg*D2R)*R.RU[0] + Math.cos(ac.hdg*D2R)*R.RU[1] >= 0 ? 1 : -1, m: R.mOf([ac.x, ac.y]), v: ac.gs || 0 }; }
+  const rw = ac.app, F = rw && finOf(ac); if (!F) return null;
+  const R = rwyOf(rw), dir = rw === R.lo ? 1 : -1;
+  return { R, dir, m: R.mOf(F.pts[F.pts.length-1]) + dir*0.12*1852, v: Math.max(0, ac.perf.vapp - 5) };   // touchdown: 0.12 NM past the threshold
+}
+// every exit off that runway the crew would accept, for its stand
+const vacAll = ac => [...new Set([...(APT.vacExits ? APT.vacExits(ac) : []), ...APT.vacPrefs(ac.stand || null, ac)])].filter(e => HOLDS[e]);
+// can it make this exit? ok, back (only by backtracking), ahead (m to the turn-off) and dec (the braking it plans, kt/s)
+function exitCheck(ac, ex){
+  const P = vacPos(ac); if (!P || !HOLDS[ex]) return null;
+  const { R, dir, m, v } = P, f = FIL[ex] && FIL[ex][dir > 0 ? 'W' : 'E'], fm = f && f.length ? f[0][0] : HOLDS[ex].m;
+  const ahead = (fm - m)*dir, need = 15 + stopDist(v, vacMax(ac)), back = ahead < need;
+  return { ok: !back || !R.ends, back, ahead, dec: Math.max(0, v*v - VAC_TURN*VAC_TURN)*0.5144/(2*Math.max(1, ahead - 15)) };
+}
+// the exits to offer: those it can still make, in the order it meets them (with turning pads, the airport's own list)
+function vacChoices(ac){
+  const P = vacPos(ac); if (!P) return [];
+  const all = vacAll(ac).map(e => [e, exitCheck(ac, e)]).filter(([, c]) => c && c.ok);
+  if (!P.R.ends) { const ok = all.map(([e]) => e); return APT.vacExits ? APT.vacExits(ac).filter(e => ok.includes(e)) : ok; }
+  const side = all.filter(([e]) => P.R.side == null || Math.sign(HOLDS[e].off) === P.R.side);
+  return (side.length ? side : all).sort((a, b) => a[1].ahead - b[1].ahead).slice(0, 4).map(([e]) => e);
+}
+// the way it would go: from where it is (or will touch down) along the runway, off at the exit, to the holding point
+function vacPreview(ac, ex){
+  const c = exitCheck(ac, ex); if (!c || !c.ok) return null;
+  const { R, dir, m } = vacPos(ac), H = HOLDS[ex], pts = [R.rm(m, 0)];
+  if (c.back) for (const [mm, o] of dir < 0 ? R.TURN_W : R.TURN_E) pts.push(R.rm(mm, o));
+  pts.push(...filIn(ex, (c.back ? -dir : dir) > 0 ? 'W' : 'E'), GN[H.rwy].p, GN[H.node].p);
+  return pts;
+}
+// after touchdown, for an exit it was given: a near one means braking for it now; a far one, the normal roll-out first
+function planVac(ac){
+  if (!ac.reqExit) return;
+  let c = exitCheck(ac, ac.reqExit);
+  if (!c || !c.ok) {   // landed long: the next exit it can make
+    const alt = vacChoices(ac)[0]; pilot(ac, `unable ${exitWord(ac.reqExit)}, too fast to make it${alt ? `, we'll take ${exitWord(alt)}` : ''}`);
+    ac.reqExit = alt || null; c = alt && exitCheck(ac, alt); if (!c) return; }
+  if (c.back || c.dec <= VAC_SOFT) return;
+  ac.vacDec = Math.min(vacMax(ac), c.dec*1.05); startVacate(ac, false);
+}
 function vacatePath(ac){
   const R = rwyById(ac.rwyId), m = R.mOf([ac.x, ac.y]), dir = Math.sin(ac.hdg*D2R)*R.RU[0] + Math.cos(ac.hdg*D2R)*R.RU[1] >= 0 ? 1 : -1;
   // no stand yet: the crew heads for the exit and side of the airport it usually parks on
@@ -614,7 +663,7 @@ function vacatePath(ac){
   if (ac.reqExit && !prefs.includes(ac.reqExit) && !(APT.vacExits && APT.vacExits(ac).includes(ac.reqExit))) ac.reqExit = null;
   const pts = [];
   const filM = (e, d) => FIL[e][d > 0 ? 'W' : 'E'][0][0];
-  const ahead = 15 + stopDist(ac.gs || 0);
+  const ahead = 15 + stopDist(ac.gs || 0, ac.reqExit && ac.vacDec || VAC_DEC);
   // an exit it can reach the stand from without turning round on the taxiway, if there is one (see route)
   const canGo = e => !st || !!route(HOLDS[e].node, st.node, undefined, brg(...GN[HOLDS[e].rwy].p, ...GN[HOLDS[e].node].p));
   const want = ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs.filter(canGo).length ? prefs.filter(canGo) : prefs;
@@ -690,7 +739,7 @@ function planStand(ac){
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
-  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; if (!ac.taxiIn) { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } emit('vacated', ac); });
+  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } emit('vacated', ac); });
 }
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
@@ -724,8 +773,8 @@ function atHoldIn(ac, hold, quiet){
 // on the runway, a vacating aircraft keeps its roll-out speed (or backtracks at VAC_RWY) and brakes in time for the
 // first real turn on its path: the turn-off, or the turning circle
 function vacSpeed(ac, dt){
-  const P = ac.path.pts, cur = ac.gs || 0;
-  let v = cur > VAC_RWY ? Math.max(VAC_RWY, cur - 4.2*dt) : Math.min(VAC_RWY, cur + 2*dt);
+  const P = ac.path.pts, cur = ac.gs || 0, dec = ac.vacDec || VAC_DEC;   // vacDec: braking planned for a given exit
+  let v = cur > VAC_RWY ? Math.max(VAC_RWY, cur - (ac.vacDec ? Math.min(4.2, ac.vacDec) : 4.2)*dt) : Math.min(VAC_RWY, cur + 2*dt);
   let d = 0, from = [ac.x, ac.y];
   let turnV = VAC_TURN;
   for (const p of P) {
@@ -734,7 +783,7 @@ function vacSpeed(ac, dt){
     if (Math.abs(angDiff(ac.hdg, brg(...from, ...p))) > 25) break;
     d += seg; from = p;
   }
-  return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, Math.sqrt(turnV*turnV + 2*VAC_DEC*d*3600)));
+  return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, Math.sqrt(turnV*turnV + 2*dec*d*3600)));
 }
 // v: the speed it reaches the holding point at, cleared on while still taxiing: it keeps rolling onto the runway
 function startLineUp(ac, v){
@@ -1021,11 +1070,26 @@ function commandRun(str){
       { const [sa, ra] = PH.cto(ac, sid, chg); said.push(sa); reads.push(ra); }
       if (ac.state === 'LINEDUP') beginTakeoff(ac);
     } else if (t === 'VAC') {
-      if (!(ac.state === 'ROLLED' || ac.state === 'ROLLOUT' || (ac.state === 'VACATING' && ac.onRwy))) { sys(`${ac.cs} is ${ac.state === 'VACATING' ? 'already off the runway' : 'not on the runway'}.`); continue; }
-      if (toks[i+1] && APT.exitFor && /^[A-Z]{1,2}\d{0,2}(~\d)?$/.test(toks[i+1]) && APT.exitFor(ac, toks[i+1])) ac.reqExit = APT.exitFor(ac, toks[++i]);   // "VAC H": that taxiway's exit ahead
-      else if (toks[i+1] && HOLDS[toks[i+1]]) ac.reqExit = toks[++i];
-      startVacate(ac, false);
-      said.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}`); reads.push(`${ac.backtrack ? 'backtrack, ' : ''}vacate via ${PHON[ac.exit]}`);
+      // VAC [exit]: on the runway, vacate now (by that exit); on an approach, the exit to plan the landing roll for
+      const rolling = ac.state === 'ROLLED' || ac.state === 'ROLLOUT' || (ac.state === 'VACATING' && ac.onRwy);
+      const onApp = air && ac.kind === 'ARR' && !!ac.app && !['MISSED', 'DIVERTING'].includes(ac.state);
+      if (!rolling && !onApp) { sys(`${ac.cs} is ${ac.state === 'VACATING' ? 'already off the runway' : air && ac.kind === 'ARR' ? 'not cleared for an approach yet: give it its exit once it is' : 'not on the runway'}.`); continue; }
+      let ex = null;
+      if (toks[i+1] && APT.exitFor && /^[A-Z]{1,2}\d{0,2}(~\d)?$/.test(toks[i+1]) && APT.exitFor(ac, toks[i+1])) ex = APT.exitFor(ac, toks[++i]);   // "VAC H": that taxiway's exit ahead
+      else if (toks[i+1] && HOLDS[toks[i+1]]) ex = toks[++i];
+      if (onApp && !ex) { sys(`Name the exit for ${ac.cs}${vacChoices(ac).length ? ', e.g. ' + ac.cs + ' VAC ' + vacChoices(ac)[0].replace(/~\d+$/, '') : ''}.`); continue; }
+      if (ex && !vacAll(ac).includes(ex)) { sys(`${ex.replace(/~\d+$/, '')} is not an exit ${ac.cs} can use off runway ${onApp ? ac.app : rwyName(ac.rwyId)}.`); continue; }
+      let c = ex && exitCheck(ac, ex), unable = '';
+      // one it can't make: the crew says so and takes the next one it can
+      if (c && !c.ok) { const alt = vacChoices(ac)[0]; said.push(`vacate via ${exitWord(ex)}`);
+        unable = `unable ${exitWord(ex)}, ${c.ahead < 0 ? 'already past it' : 'too fast to make it'}`;
+        if (!alt) { reads.push(unable); continue; }
+        ex = alt; c = exitCheck(ac, ex); unable += ', '; }
+      if (ex) ac.reqExit = ex;
+      const words = back => `${back ? 'backtrack, ' : ''}vacate via ${exitWord(ac.exit && !onApp && ac.state === 'VACATING' ? ac.exit : ex)}`;
+      if (onApp || (ac.state === 'ROLLOUT' && ex && (planVac(ac), ac.state === 'ROLLOUT'))) { if (!unable) said.push(words(c.back)); reads.push(unable + words(c.back)); continue; }
+      if (ac.state !== 'VACATING' || !ex || ac.exit !== ex) { if (c && !c.back) ac.vacDec = Math.max(VAC_DEC, Math.min(vacMax(ac), c.dec*1.05)); startVacate(ac, false); }
+      if (!unable) said.push(words(ac.backtrack)); reads.push(unable + words(ac.backtrack));
     } else if (t === 'ROG') {
       const a = emgAck(ac); if (!a) { sys(`${ac.cs} has not declared an emergency.`); continue; } said.push(a); reads.push('roger');
     } else if (t === 'WS') {
@@ -1069,6 +1133,7 @@ function goAround(ac, why){
   ac.state = 'MISSED'; ac.mode = 'HDG'; ac.tgtHdg = Math.round(crsOf(rw)); ac.turnDir = 0; ac.gaT = S.t;
   APT.gaEarly(ac, rw);
   { const F = finOf(ac); ac.missRoute = F && F.missed ? F.missed.slice() : null; ac.appId = null; ac.finI = null; }
+  ac.reqExit = null; ac.vacDec = null;
   ac.tgtAlt = ac.cleared = APT.gaAlt; ac.via = false; ac.ctl = false; ac.app = null; ac.gaTurn = false; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.spdAssigned = false; ac.route = []; ac.freq = 'RAD';
   ac.gaRwy = rw; S.score.ga++; ac.gaCount = (ac.gaCount||0) + 1;
   if (why) pilot(ac, `going around, ${why}`);
@@ -1356,7 +1421,7 @@ function stepAir(ac, dt){
     if (fin.togo < -0.12 && ac.alt < tdElev(rw) + 70) { // touchdown
       const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = ELEV; ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
       ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } S.score.landed++; S.score.pts += 25; ac.need = null;
-      emit('landed', ac);
+      emit('landed', ac); planVac(ac);
     }
   }
   { const Rz = APT.restricted; if (Rz && ac.alt < Rz.top && !(Rz.ok && Rz.ok(ac)) && inPoly([ac.x, ac.y], Rz.poly)) { if (!ac.infr) { ac.infr = true; S.score.infr++; S.score.pts -= 40; sys(Rz.msg(ac), true); } } else ac.infr = false; }
@@ -1497,7 +1562,7 @@ function stepGround(ac, dt){
     if (ac.ias > 40 && (m < R.roll[0] || m > R.roll[1])) { ac.ias = Math.max(40, ac.ias - 12*dt); ac.gs = ac.ias; }
     if (ac.ias <= 40) {
       startVacate(ac, true);
-      pilot(ac, `${ac.backtrack ? 'backtracking, ' : ''}vacating via ${PHON[ac.exit]}, ${ac.stand ? 'for stand ' + ac.stand.id : 'as directed'}`);
+      pilot(ac, `${ac.backtrack ? 'backtracking, ' : ''}vacating via ${exitWord(ac.exit)}, ${ac.stand ? 'for stand ' + ac.stand.id : 'as directed'}`);
     }
   }
   if (ac.state === 'TAKEOFF') {
