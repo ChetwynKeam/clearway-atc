@@ -668,7 +668,9 @@ function taxiLimit(ac){
   const P = ac.path.pts; let D = 0, from = [ac.x, ac.y], lim = Infinity;
   for (let i = 0; i < P.length && D < 0.25; i++) {
     D += dist(...from, ...P[i]);
-    if (i === P.length - 1) { lim = Math.min(lim, Math.max(3, Math.sqrt(2*TAXI_DEC*D*3600))); break; }   // stop at the end
+    // stop at the end, unless cleared on: onto the runway (path.thru: about 10 kt into the line-up turn), or straight into
+    // a rolling take-off (path.roll: no limit, it keeps its speed down the centreline)
+    if (i === P.length - 1) { if (!ac.path.roll) lim = Math.min(lim, Math.max(3, Math.sqrt((ac.path.thru ? 100 : 0) + 2*TAXI_DEC*D*3600))); break; }
     if (P[i].tight) lim = Math.min(lim, Math.sqrt(PAD_V*PAD_V + 2*TAXI_DEC*D*3600));   // round a turning pad at walking pace
     // the turn at this point, measured over the next 40 m so a curve drawn as many short legs counts as one turn
     let j = i + 1; while (j < P.length - 1 && dist(...P[i], ...P[j]) < 0.022) j++;
@@ -734,16 +736,21 @@ function vacSpeed(ac, dt){
   }
   return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, Math.sqrt(turnV*turnV + 2*VAC_DEC*d*3600)));
 }
-function startLineUp(ac){
-  ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw(ac)).id; ac.need = null;
+// v: the speed it reaches the holding point at, cleared on while still taxiing: it keeps rolling onto the runway
+function startLineUp(ac, v){
+  ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw(ac)).id; ac.need = null; ac.luq = false; ac.gs = ac.ias = v || 0;
   const back = true;
   // finish on a straight stretch of centreline, so the turn onto the runway rounds out into line instead of snapping onto it
   const pts = lineUpPath(ac, ac.hp), R = holdRwy(ac.hp), c = crsOf(depRw(ac)), e = pts[pts.length-1];
   const dir = Math.sin(c*D2R)*R.RU[0] + Math.cos(c*D2R)*R.RU[1] >= 0 ? 1 : -1;
   pts.push(R.rm(R.mOf(e) + dir*10, 0), R.rm(R.mOf(e) + dir*Math.max(35, taxiR(ac)*2), 0));
-  setPath(ac, pts, 18, () => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.cto) beginTakeoff(ac); else ac.need = 'Lined up'; }, { fine: true });
+  setPath(ac, pts, 18, v => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; }, { fine: true, roll: !!ac.cto });
   return back;
 }
+
+// a departure taxiing to its runway holding point (not an intermediate one): it can be cleared to line up or take off
+// before it gets there, and rolls straight on through the holding point
+const luTaxi = ac => ac.kind === 'DEP' && ac.state === 'TAXI' && !!ac.path && !ac.path.ihp && !ac.holdAt && !!ac.hp && !!HOLDS[ac.hp];
 
 // ═════════════════════════ commands ═════════════════════════
 // a flight handed to the next unit is shown in its own colour and can't be selected or instructed
@@ -970,8 +977,8 @@ function commandRun(str){
       if (ac.pushed && !ac.leftStand && pts.length > 1 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90) pts.shift();
       if (ac.state === 'PARKED') { ac.pushed = false; pts.unshift(ac.stand.lp); }
       ac.state = 'TAXI'; ac.need = null; ac.leftStand = true; ac.held = false; ac.holdAt = null;
-      if (ihp) setPath(ac, pts, 15, () => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); });
-      else setPath(ac, pts, 15, () => { ac.state = 'HOLDPT'; if (!ac.cto) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac); });
+      if (ihp) { ac.luq = false; ac.cto = false; setPath(ac, pts, 15, () => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); }, { ihp: ihp.id }); }
+      else setPath(ac, pts, 15, v => { ac.state = 'HOLDPT'; if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); }, { thru: !!(ac.cto || ac.luq) });
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       const vw = viaOf(rt.tws, hp);
       { const [sa, ra] = ihp ? PH.taxiHold(ac, ihp, vw) : PH.taxi(ac, hp, vw); said.push(sa); reads.push(ra); }
@@ -989,13 +996,17 @@ function commandRun(str){
       if (!ac.held) { sys(`${ac.cs} is not holding position.`); continue; }
       ac.held = false; said.push('continue taxi'); reads.push('continuing');
     } else if (t === 'LU') {
-      if (ac.state !== 'HOLDPT') { sys(`${ac.cs} is not at a holding point.`); continue; }
+      if (ac.state !== 'HOLDPT' && !luTaxi(ac)) { sys(`${ac.cs} is not at${ac.state === 'TAXI' ? ', or taxiing to,' : ''} a holding point${ac.state === 'TAXI' && (ac.holdAt || (ac.path && ac.path.ihp)) ? ' for the runway: taxi it on to one first' : ''}.`); continue; }
+      if (ac.luq || (ac.cto && ac.state === 'TAXI')) { sys(`${ac.cs} is already cleared onto the runway.`); continue; }
+      { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
       if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)))) sys('Careful: the runway is occupied.', true);
       if (APT.xing && S.xing.st !== 'CLOSED' && ((S.rwy === RW_LO && HOLDS[ac.hp].m > XING_M) || (S.rwy === RW_HI && HOLDS[ac.hp].m < XING_M))) sys('The backtrack crosses Winston Churchill Avenue: close the road first.', true);
-      startLineUp(ac);
+      if (luTaxi(ac)) { ac.luq = true; ac.path.thru = true; }   // still taxiing: it rolls straight on through the holding point
+      else startLineUp(ac);
       { const [sa, ra] = PH.lineUp(ac, ac.hp); said.push(sa); reads.push(ra); }
     } else if (t === 'CTO') {
-      if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state)) { sys(`${ac.cs} is not ready for takeoff.`); continue; }
+      if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state) && !luTaxi(ac)) { sys(`${ac.cs} is not ready for takeoff${ac.state === 'TAXI' && (ac.holdAt || (ac.path && ac.path.ihp)) ? ': taxi it on to the runway holding point first' : ''}.`); continue; }
+      { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
       if (S.wx.vis < 1000) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
@@ -1006,6 +1017,7 @@ function commandRun(str){
       const sid = sidName(ac.gate, depRw(ac)), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
       ac.cto = true; ac.need = null; ac.depRwy = depRw(ac);
       if (ac.state === 'HOLDPT') startLineUp(ac);
+      else if (ac.path && (ac.state === 'TAXI' || ac.state === 'LINEUP')) { ac.path.thru = true; if (ac.state === 'LINEUP') ac.path.roll = true; }   // rolling: straight on into the take-off
       { const [sa, ra] = PH.cto(ac, sid, chg); said.push(sa); reads.push(ra); }
       if (ac.state === 'LINEDUP') beginTakeoff(ac);
     } else if (t === 'VAC') {
@@ -1048,7 +1060,8 @@ function willIntercept(ac, F){
   return false;
 }
 function crossesRock(ac, p){ const T = APT.terrain; if (!T) return false; for (let f = 0; f <= 1; f += 0.02) { if (inPoly([ac.x + (p[0]-ac.x)*f, ac.y + (p[1]-ac.y)*f], T.poly)) return true; } return false; }
-function beginTakeoff(ac){ ac.state = 'TAKEOFF'; ac.cto = true; ac.ias = 0; ac.depRwy = depRw(ac); ac.hdg = crsOf(ac.depRwy); ac.path = null; ac.need = null; emit('takeoff', ac); }
+// v: rolling onto the runway, it carries its speed into the take-off run (a rolling take-off)
+function beginTakeoff(ac, v){ ac.state = 'TAKEOFF'; ac.cto = true; ac.ias = v || 0; ac.depRwy = depRw(ac); ac.hdg = crsOf(ac.depRwy); ac.path = null; ac.need = null; emit('takeoff', ac); }
 function windLimit(ac, rw){ if (APT.windLimit) return APT.windLimit(ac, rw); const c = windComp(S.wx, crsOf(rw)); if (c.headG < -10) return 'tailwind out of limits'; if (c.crossG > (ac.perf.wake === 'L' ? 22 : 33)) return 'crosswind out of limits'; return null; }
 function goAround(ac, why){
   if (ac.state === 'MISSED' || (ac.gaT && S.t - ac.gaT < 30)) return;
@@ -1436,7 +1449,7 @@ function stepGround(ac, dt){
       // crossing a runway: on it from the holding position on one side to the one on the other
       if (p.hs && p.hs === ac.xing) { if (ac.xcross) emit('rwyx', ac); ac.xing = null; ac.xcross = null; ac.onRwy = false; ac.xok = (ac.xok || []).filter(r => r !== p.hs); }
       else if (p.hs && ac.path.pts.length && hsEnters([p, ...ac.path.pts], 0)) { ac.xing = ac.xcross = p.hs; if (activeRwy(p.hs)) { ac.onRwy = true; ac.rwyId = p.hs; } if (ac.hsAt === p.hs) { ac.hsAt = null; if (ac.need && ac.need.startsWith('Holding short')) ac.need = null; } }
-      if (!ac.path.pts.length) { const cb = ac.path.onDone; ac.path = null; ac.gs = 0; cb && cb(); }
+      if (!ac.path.pts.length) { const cb = ac.path.onDone, v0 = ac.path.thru || ac.path.roll ? ac.gs : 0; ac.path = null; ac.gs = 0; cb && cb(v0); }
     };
     if (v <= 0) {}
     else if (ac.path.reverse) {   // pushed by the tug: straight back along the push line
@@ -1463,7 +1476,7 @@ function stepGround(ac, dt){
       else {
         ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv;
         const d2 = dist(ac.x, ac.y, ...tgt);
-        if (last) { if (d2 < (ac.path.fine ? mv : 0.0015) || (Math.abs(errT) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
+        if (last) { if (d2 < (ac.path.fine || ac.path.thru ? mv : 0.0015) || (Math.abs(errT) > 90 && d2 < 0.01)) { ac.x = tgt[0]; ac.y = tgt[1]; done(); } }
         else {
           const nxt = ac.path.pts[1], th = Math.abs(angDiff(want, brg(...tgt, ...nxt)));
           const lead = Math.min(R/1852*Math.tan(Math.min(th, 150)*D2R/2), dist(...tgt, ...nxt)/2);

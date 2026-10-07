@@ -672,7 +672,10 @@ function renderSel(){
       html += b('POP:taxi', ac.state === 'TAXI' ? 'Re-route taxi…' : 'Taxi…', canTaxi && ac.state !== 'HOLDPT', ac.state === 'READY' && ac.need ? 'go' : '');
       const R = ac.rel, relOk = !needRel(ac) || (R && R.st === 'OK' && !(R.nb && S.t < R.nb)), canRel = ac.state !== 'TOW';
       if (needRel(ac)) html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
-      html += b('LU','Line up', ac.state === 'HOLDPT') + b('CTO','Cleared take-off', ['HOLDPT','LINEUP','LINEDUP'].includes(ac.state), relOk ? 'go' : '');
+      // taxiing to the runway, it can be cleared on before it reaches the holding point, and won't stop there
+      const onTaxi = luTaxi(ac), cleared = onTaxi && (ac.luq || ac.cto);
+      html += b('LU', ac.luq && onTaxi ? 'Lining up' : 'Line up', ac.state === 'HOLDPT' || (onTaxi && !cleared), ac.luq && onTaxi ? 'on' : '')
+        + b('CTO', 'Cleared take-off', (['HOLDPT','LINEUP','LINEDUP'].includes(ac.state) && !(ac.state === 'LINEUP' && ac.cto)) || (onTaxi && !ac.cto), ac.cto && (onTaxi || ac.state === 'LINEUP') ? 'on' : relOk ? 'go' : '');
     } else {
       // the runway exits offered come from the airport's profile
       // it vacates by itself; these override the exit until it is off the runway
