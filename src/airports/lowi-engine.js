@@ -225,6 +225,8 @@ function drawLowiRelief(){
 
 // ═════════════════════════ aerodrome drawing (runway metres) ═════════════════════════
 const AD_SITE = {
+  // AD 2.8: A 18 m, B and L 23 m, Z 15 m asphalt, Y 15 m grass (not paved); H is the hangar apron
+  pave: { w: 18, by: { A: 18, B: 23, L: 23, Z: 15, Y: 0, H: 0 } },
   aprons: G.APRONS, roads: [], buildings: G.BUILDINGS, twyExtra: G.TWY_EXTRA || [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [],
   twyLabels: G.TWY_LABELS, hotspots: [], labels: G.LABELS
 };

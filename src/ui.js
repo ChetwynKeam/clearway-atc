@@ -211,6 +211,62 @@ function leadLine(pts){   // [m, off] in a runway frame, from the runway centrel
   const d = Math.sign(dm); out[0] = [a[0], s*0.9];
   return [[a[0] - d*60, s*0.9], ...out];
 }
+// yellow ground paint: over the pale street map a thin dark casing goes underneath so the line still reads
+// (draw strokes the paths and leaves the colour and width alone)
+function groundLines(w, draw){
+  if (mapImagery() && C.name !== 'dark') { cx.save(); cx.strokeStyle = 'rgba(30,34,40,.55)'; cx.lineWidth = w + 1.6; draw(); cx.restore(); }
+  cx.strokeStyle = C.yellow; cx.lineWidth = w; draw();
+}
+// ── taxiway pavement at its published width, laid over the street map ──
+// AD.pave per airport: w = default width (m), by = widths per taxiway (0: not paved, e.g. grass), edge = 'faa' for the
+// FAA continuous double yellow edge marking. lines: [{ pts: screen points, w }],
+// blds: building outlines (screen points) the paving must not cover.
+function paveWidth(tw){ const P = AD.pave || {}, b = P.by || {}; return tw in b ? b[tw] : (P.w || 18); }
+// clip the building outlines (screen points) out of what is drawn next, inside a save/restore
+function clipOut(blds){ if (!blds.length) return; cx.beginPath(); cx.rect(0, 0, W, H); for (const b of blds) { b.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.closePath(); } cx.clip('evenodd'); }
+function drawPavement(lines, blds, mpx){
+  const P = AD.pave || {}, byW = new Map();
+  // one opaque path per width, so where stretches overlap at a junction the shading never shows a darker patch
+  for (const l of lines) if (l.w > 0 && l.pts.length > 1) { if (!byW.has(l.w)) byW.set(l.w, []); byW.get(l.w).push(l); }
+  const pass = (col, dw) => {
+    cx.strokeStyle = col;
+    for (const [w, ls] of byW) { if (w + dw <= 0) continue; cx.lineWidth = Math.max(1, (w + dw)*mpx); cx.beginPath(); for (const l of ls) l.pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.stroke(); }
+  };
+  cx.save(); cx.lineJoin = cx.lineCap = 'round';
+  clipOut(blds);
+  pass(C.asphalt, 0);
+  if (P.edge === 'faa' && mpx > 1.1) {
+    // two 15 cm yellow lines 15 cm apart at the pavement edge: drawn as nested strokes so they break where taxiways meet
+    const gap = Math.max(0.35, 1/mpx);
+    pass(C.yellow, 0); pass(C.asphalt, -gap); pass(C.yellow, -2*gap); pass(C.asphalt, -3*gap);
+  }
+  cx.restore();
+}
+// ── stand markings: lead-in, stop bar, number box; on the drawn chart also the red stand safety box and restraint line ──
+// The box is as wide as the stand: the gap to the stand beside it, so neighbouring boxes share a line, as painted.
+// Multiple-apron-ramp stands (47 with 47L/47R, A7 with A7A/A7B) keep one box for the full-size stand; the others get their own
+// lead-in and stop bar inside it.
+let STAND_SZ = null;
+function standSize(s){
+  if (AD.standBox) return AD.standBox(s);
+  if (!STAND_SZ) {
+    STAND_SZ = new Map();
+    const ids = new Set(STANDS.map(t => t.id)), base = t => { const m = /^(.*\d)[LRAB]$/.exec(t.id); return m && ids.has(m[1]) ? m[1] : t.id; };
+    for (const t of STANDS) {
+      const u = [Math.sin(t.hdg*D2R), Math.cos(t.hdg*D2R)]; let lat = Infinity, near = Infinity;
+      for (const o of STANDS) {
+        if (o === t || base(o) === base(t)) continue;
+        const dx = (o.p[0] - t.p[0])/M2NM, dy = (o.p[1] - t.p[1])/M2NM, al = dx*u[0] + dy*u[1], la = Math.abs(dx*u[1] - dy*u[0]);
+        if (Math.abs(al) < 30 && la > 10) lat = Math.min(lat, la);
+        if (la > 10 || Math.abs(al) > 10) near = Math.min(near, Math.hypot(dx, dy));
+      }
+      // stands round a curved pier fan out, so the nearest stand at any angle also caps the width
+      const w = clamp(Math.min(isFinite(lat) ? lat : 38, near*1.1) - 1, 30, 82);
+      STAND_SZ.set(t, { w, l: clamp(w + 6, 24, 80), f: 0.56, sub: base(t) !== t.id });
+    }
+  }
+  return STAND_SZ.get(s);
+}
 function strokeSmooth(P){   // screen points, rounded through the mid-points so mapped curves stay smooth
   cx.beginPath(); cx.moveTo(...P[0]);
   for (let i = 1; i < P.length - 1; i++) cx.quadraticCurveTo(P[i][0], P[i][1], (P[i][0] + P[i+1][0])/2, (P[i][1] + P[i+1][1])/2);
@@ -276,18 +332,28 @@ function drawAirport(){
   // frontier fence with hatching on the Spanish side
   if (!IMG && FRONTIER.length) { cx.strokeStyle = rgba('r164', .55); cx.lineWidth = 1.2; poly(FRONTIER, false); cx.stroke(); }
   if (sc > 160 && !IMG) { cx.strokeStyle = rgba('r164', .35); for (let i = 0; i < FRONTIER.length-1; i++) { const a = FRONTIER[i], b = FRONTIER[i+1], L = dist(...a, ...b)/M2NM, n = Math.floor(L/25); for (let k = 0; k < n; k++) { const f = k/n, x = a[0]+(b[0]-a[0])*f, y = a[1]+(b[1]-a[1])*f; const X = sx(x), Y = sy(y); cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(X+5, Y-7); cx.stroke(); } } }
-  // pavement
-  cx.fillStyle = C.concrete; for (const a of AD.aprons) { path(a); cx.fill(); }
-  drawApronSlabs(path);
+  // pavement: over the street map the mapped aprons and taxiways are already there, so only the drawn chart paves them
+  if (!IMG) {
+    cx.fillStyle = C.concrete; for (const a of AD.aprons) { path(a); cx.fill(); }
+    drawApronSlabs(path);
+  }
   drawRunwayShoulders(path);
-  const twyTex = texPattern('twy', 40, RWY_ANGLE()) || C.asphalt;
-  cx.strokeStyle = C.gShoulder; cx.lineWidth = lw(25);
-  for (const k in AD.twys) { path(AD.twys[k], false); cx.stroke(); }
-  cx.strokeStyle = twyTex; cx.lineWidth = lw(19);
-  for (const k in AD.twys) { path(AD.twys[k], false); cx.stroke(); }
-  if (AD.closedB && AD.closedB.length) { cx.strokeStyle = C.closed; path(AD.closedB, false); cx.stroke(); }
-  // fillets where taxiways meet the runway
-  cx.fillStyle = twyTex;
+  if (IMG) {
+    const lines = [];
+    for (const k of LINE_KEYS) {
+      const e = /^e\d+$/.test(k) && GE[+k.slice(1)];
+      if (e && e.tw === 'APRON') continue;
+      lines.push({ pts: AD.twys[k].map(([m, o]) => c(m, o)), w: paveWidth(e ? e.tw : k.replace(/[a-z]+$/, '')) });
+    }
+    drawPavement(lines, (AD.buildings || []).map(b => b.pts.map(([m, o]) => c(m, o))), mpx);
+  } else {
+    const twyTex = texPattern('twy', 40, RWY_ANGLE()) || C.asphalt;
+    cx.strokeStyle = C.gShoulder; cx.lineWidth = lw(25);
+    for (const k in AD.twys) { path(AD.twys[k], false); cx.stroke(); }
+    cx.strokeStyle = twyTex; cx.lineWidth = lw(19);
+    for (const k in AD.twys) { path(AD.twys[k], false); cx.stroke(); }
+    if (AD.closedB && AD.closedB.length) { cx.strokeStyle = C.closed; path(AD.closedB, false); cx.stroke(); }
+  }
   cx.fillStyle = texPattern('asphalt', 40, RWY_ANGLE()) || C.rwy;
   // turning pads at each end: the mapped loop paved 23 m wide plus the pad itself
   cx.strokeStyle = cx.fillStyle; cx.lineWidth = lw(23); path(TURN_E, false); cx.stroke(); path(TURN_W, false); cx.stroke();
@@ -325,22 +391,18 @@ function drawAirport(){
     for (const m of AD.paag || []) for (const o of [-14, 0, 14]) { const [X,Y] = c(m,o); cx.beginPath(); cx.arc(X, Y, Math.max(1.5, 3*mpx), 0, 7); cx.stroke(); }
     // taxiway centre and edge lines (solid yellow edges, AD 2.9)
     cx.save(); cx.beginPath(); cx.rect(0, 0, W, H); AD.rwyPoly.forEach(([m,o],k) => cx[k?'lineTo':'moveTo'](...c(m, o*1.02))); cx.closePath(); cx.clip('evenodd');   // taxi lines stop at the runway edge
-    cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
-    for (const k of LINE_KEYS) { path(AD.twys[k], false); cx.stroke(); }
-    cx.globalAlpha = 0.55; cx.lineWidth = lw(0.25);
+    groundLines(lw(0.3), () => { for (const k of LINE_KEYS) { path(AD.twys[k], false); cx.stroke(); } });
+    cx.strokeStyle = C.yellow; cx.globalAlpha = 0.55; cx.lineWidth = lw(0.25);
     if (AD.edgeLines) for (const k of EDGE_KEYS) { const pts = AD.twys[k]; for (const s of [-9, 9]) { const off = pts.map(([m,o],i) => { const v = i ? [m - pts[i-1][0], o - pts[i-1][1]] : [pts[1][0]-m, pts[1][1]-o]; const L = Math.hypot(...v) || 1; return [m - v[1]/L*s, o + v[0]/L*s]; }); path(off, false); cx.stroke(); } }
     cx.globalAlpha = 1;
     cx.restore();
     // lead-on and lead-off lines over the runway, both ways from every entry
-    { const seen = new Set(); cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
-      for (const f of Object.values(FIL)) for (const pts of [f.W, f.E]) { const key = JSON.stringify(pts); if (seen.has(key)) continue; seen.add(key); strokeSmooth(leadLine(pts).map(([m, o]) => c(m, o))); } }
-    // apron taxilanes and stand lead-ins
-    cx.lineWidth = lw(0.3);
-    for (const s of STANDS) {
-      const ln = [mOf(s.lp), offOf(s.lp)];
-      cx.strokeStyle = C.yellow; path([ln, [s.m, s.off]], false); cx.stroke();   // the stand box carries on the centreline and stop bar
-    }
-    drawStandDetail(c, path, mpx);
+    { const seen = new Set(), leads = [];
+      for (const f of Object.values(FIL)) for (const pts of [f.W, f.E]) { const key = JSON.stringify(pts); if (seen.has(key)) continue; seen.add(key); leads.push(leadLine(pts).map(([m, o]) => c(m, o))); }
+      groundLines(lw(0.3), () => leads.forEach(strokeSmooth)); }
+    // apron taxilanes and stand lead-ins (the stand box carries on the centreline and stop bar)
+    groundLines(lw(0.3), () => { for (const s of STANDS) { path([[mOf(s.lp), offOf(s.lp)], [s.m, s.off]], false); cx.stroke(); } });
+    cx.save(); if (IMG) clipOut((AD.buildings || []).map(b => b.pts.map(([m, o]) => c(m, o)))); drawStandDetail(c, path, mpx); cx.restore();   // stand paint stops at the terminal walls
     // closed portion of B and B1: unserviceable crosses
     cx.strokeStyle = 'rgba(255,255,255,.75)'; cx.lineWidth = lw(0.8);
     // holding position markings (pattern A: solid lines on the taxiway side) and signs

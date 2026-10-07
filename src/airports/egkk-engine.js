@@ -127,7 +127,8 @@ function exitFor(ac, name){
 }
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
-const AD_SITE = { aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
+// taxiways 23 m (ICAO code E); J is the old 45 m runway 08L/26R
+const AD_SITE = { pave: { w: 23 }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
 // hot spots (AD 2-EGKK-2-1): HS1 the Foxtrot Romeo rapid exit, HS2 taxiway Echo, HS3 the Delta rapid exit, HS4 taxiway
 // Juliett by Quebec (potential routing error)
 const nodeWith = (a, b) => { const n = Object.values(GN).find(n => n.adj.some(([, e]) => e.tw === a) && n.adj.some(([, e]) => e.tw === b)); return n ? n.p : null; };
@@ -143,15 +144,24 @@ function drawEgkk(){
   const R = R0, rwyPoly = w => [R.rm(0, -w/2), R.rm(R.len, -w/2), R.rm(R.len, w/2), R.rm(0, w/2)];
   if (sc <= 70) { cx.fillStyle = rgba('rwyOut', .9); pathP(rwyPoly(Math.max(R.width, 2.2/mpx))); cx.fill(); return; }
   cx.lineJoin = 'round'; cx.lineCap = 'round';
-  // aprons, then the old runway and the taxiways (every graph edge), then the runway on top
-  cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
-  cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
-  for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-  cx.lineWidth = lw(44); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
-  cx.strokeStyle = C.asphalt; cx.lineCap = 'butt'; cx.lineWidth = lw(45); pathP(OLD_RWY, false); cx.stroke(); cx.lineCap = 'round';
-  cx.lineWidth = lw(23);
-  for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-  for (const k in FIL) { pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  // aprons, then the old runway and the taxiways (every graph edge), then the runway on top; over the street map the
+  // mapped aprons and taxiways are already there, so only the drawn chart paves them
+  if (!IMG) {
+    cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
+    cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
+    for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    cx.lineWidth = lw(44); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
+    cx.strokeStyle = C.asphalt; cx.lineCap = 'butt'; cx.lineWidth = lw(45); pathP(OLD_RWY, false); cx.stroke(); cx.lineCap = 'round';
+    cx.lineWidth = lw(23);
+    for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    for (const k in FIL) { pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  } else {
+    // over the street map: taxiways at their real width, clear of the buildings; the aprons are the map's own
+    const lines = GE.filter(e => e.tw !== 'APRON').map(e => ({ pts: [P2(GN[e.a].p), P2(GN[e.b].p)], w: paveWidth(e.tw) }));
+    for (const k in FIL) lines.push({ pts: FIL[k].W.map(([m, o]) => P2(R.rm(m, o))), w: paveWidth() });
+    lines.push({ pts: OLD_RWY.map(P2), w: 45 });
+    drawPavement(lines, G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n)))), mpx);
+  }
   cx.fillStyle = C.rwy; pathP(rwyPoly(R.width)); cx.fill();
   if (!IMG) { cx.fillStyle = C.bld; cx.strokeStyle = C.bldEdge; cx.lineWidth = 1; for (const b of G.buildings) { pathP(b.pts.map(([e, n]) => EN(e, n))); cx.fill(); cx.stroke(); } }
   if (sc > 150) {
@@ -177,11 +187,11 @@ function drawEgkk(){
     }
     for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 60], [R.hi, R.thr[R.hi] - 60]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
-    cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35);
-    { const seen = new Set(); for (const k in FIL) { const f = FIL[k].W, key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
-      strokeSmooth(leadLine(f).map(p => P2(R.rm(...p)))); } }
+    { const seen = new Set(), leads = []; for (const k in FIL) { const f = FIL[k].W, key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
+      leads.push(leadLine(f).map(p => P2(R.rm(...p)))); }
+      groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -189,9 +199,9 @@ function drawEgkk(){
       cx.setLineDash([]);
     }
     // stand lead-in lines and numbers
-    cx.lineWidth = lw(0.3);
-    for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
-    if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
+    groundLines(lw(0.3), () => { for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); } });
+    if (IMG) { cx.save(); clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx); cx.restore(); }   // stand paint stops at the terminal walls
+    else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
     cx.font = `600 11px ${FONT_L}`;
     for (const [t, p] of HOTSPOTS) { const [X, Y] = P2(p); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 45*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.fillText(t, X + 45*mpx + 8, Y + 4); }
