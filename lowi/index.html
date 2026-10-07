@@ -5271,11 +5271,13 @@ function groundLines(w, draw){
 // with paved shoulders, edge = 'faa' for the FAA continuous double yellow edge marking. lines: [{ pts: screen points, w }],
 // blds: building outlines (screen points) the paving must not cover.
 function paveWidth(tw){ const P = AD.pave || {}, b = P.by || {}; return tw in b ? b[tw] : (P.w || 18); }
+// clip the building outlines (screen points) out of what is drawn next, inside a save/restore
+function clipOut(blds){ if (!blds.length) return; cx.beginPath(); cx.rect(0, 0, W, H); for (const b of blds) { b.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.closePath(); } cx.clip('evenodd'); }
 function drawPavement(lines, blds, mpx){
   const P = AD.pave || {}, lw = m => Math.max(1, m*mpx), dark = C.name === 'dark';
   const pass = (col, alpha, wOf) => { cx.strokeStyle = col; cx.globalAlpha = alpha; for (const l of lines) { const w = wOf(l); if (!(w > 0)) continue; cx.lineWidth = lw(w); cx.beginPath(); l.pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.stroke(); } };
   cx.save(); cx.lineJoin = cx.lineCap = 'round';
-  if (blds.length) { cx.beginPath(); cx.rect(0, 0, W, H); for (const b of blds) { b.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.closePath(); } cx.clip('evenodd'); }
+  clipOut(blds);
   if (P.sh) pass(C.asphalt, dark ? 0.6 : 0.45, l => l.w && !l.noSh && l.w + (P.sh - (P.w || l.w)));       // paved shoulders, paler
   pass(C.asphalt, dark ? 0.95 : 0.9, l => l.w);
   if (P.edge === 'faa' && mpx > 1.1) {
@@ -5445,7 +5447,7 @@ function drawAirport(){
       groundLines(lw(0.3), () => leads.forEach(strokeSmooth)); }
     // apron taxilanes and stand lead-ins (the stand box carries on the centreline and stop bar)
     groundLines(lw(0.3), () => { for (const s of STANDS) { path([[mOf(s.lp), offOf(s.lp)], [s.m, s.off]], false); cx.stroke(); } });
-    drawStandDetail(c, path, mpx);
+    cx.save(); if (IMG) clipOut((AD.buildings || []).map(b => b.pts.map(([m, o]) => c(m, o)))); drawStandDetail(c, path, mpx); cx.restore();   // stand paint stops at the terminal walls
     // closed portion of B and B1: unserviceable crosses
     cx.strokeStyle = 'rgba(255,255,255,.75)'; cx.lineWidth = lw(0.8);
     // holding position markings (pattern A: solid lines on the taxiway side) and signs
