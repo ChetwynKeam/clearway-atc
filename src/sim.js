@@ -736,13 +736,27 @@ function viaStop(ac, said, reads){
   if (a > (ac.cleared ?? 0) + 50) { ac.tgtAlt = ac.cleared = a; said.push(`maintain ${altWords(a)}`); reads.push(`maintaining ${altShort(a)}`); }
 }
 function rnpCancel(ac){ ac.app = null; ac.appId = null; ac.finI = null; ac.askedApp = false; if (ac.mode === 'HOLD') ac.mode = 'HDG'; sys(`${ac.cs} is off the RNP approach: clear it again when you want it back on.`); }
+// take a flight out of the session (stuck or unwanted): frees its stand, hangar or tow stand, and everything waiting on it
+function removeAc(ac){
+  if (!ac || !S.acs.includes(ac)) return false;
+  S.acs = S.acs.filter(x => x !== ac);
+  for (const s of [...STANDS, ...HANGARS]) if (s.occ === ac) s.occ = null;
+  if (S.sel === ac) S.sel = null;
+  if (S.recalls) S.recalls = S.recalls.filter(r => r.ac !== ac);
+  if (S.emg && S.emg.inspectAfter === ac) S.emg.inspectAfter = null;
+  sys(`${ac.cs} removed from the session.`); emit('removed', ac);
+  if (typeof renderSel === 'function') { renderSel(); renderStrips(true); }
+  return true;
+}
 function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
 function commandRun(str){
   const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
   if (!toks.length) return;
+  if (toks.length === 2 && /^(REMOVE|DELETE|DEL)$/.test(toks[0]) && findAc(toks[1])) toks.reverse();   // "REMOVE BAW123" as well as "BAW123 REMOVE"
   let ac = findAc(toks[0]);
   if (ac) toks.shift(); else ac = S.sel;
   if (!ac || !S.acs.includes(ac)) { sys('Select a flight first, or start the command with its callsign.'); return; }
+  if (toks.length === 1 && /^(REMOVE|DELETE|DEL)$/.test(toks[0])) { removeAc(ac); return; }   // works on any flight, yours or not
   if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
   if (ac.state === 'PRE') { select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
   select(ac);
