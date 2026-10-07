@@ -9920,6 +9920,19 @@ function voiceFor(who){
   if (allVoices.length) voiceCache[who] = v;
   return v;
 }
+// a voice for another language reads digits and letters in that language ("treinta y seis" for 36), so for those the
+// text is written out in English words first: the crew keeps its accent and still speaks English
+const EN_DIG = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+const digWords = s => s.split('').map(d => EN_DIG[d]).join(' ');
+function inEnglish(t){
+  return t.replace(/\b(\d{2})([LRC])\b/g, (m, n, s) => digWords(n) + ' ' + { L: 'left', R: 'right', C: 'centre' }[s])
+    .replace(/\b(\d{1,2}),?(\d)00\b/g, (m, a, b) => digWords(a) + ' thousand' + (+b ? ' ' + EN_DIG[b] + ' hundred' : ''))
+    .replace(/\b(\d)00 (feet|ft)\b/g, (m, a, f) => EN_DIG[a] + ' hundred ' + f)
+    .replace(/(\d)\.(\d)/g, '$1 decimal $2')
+    .replace(/\d+/g, digWords)
+    .replace(/\bQNH\b/g, 'Q N H').replace(/\bILS\b/g, 'I L S').replace(/\bSID\b/g, 'sid');
+}
+const isEnglishVoice = v => !v || /^en/i.test(v.lang);
 // replaces the plain speaker: accent by airline, steadier controller, slight per-crew pitch and pace
 say = function(text, who){
   if (!S.voice) return;
@@ -9928,7 +9941,7 @@ say = function(text, who){
   if (who === 'atc' && (S.fromVoice || (inCmd && Date.now() - (S.voiceAt || 0) < 120e3))) return;
   try {
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
-    const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; }
+    const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; if (!isEnglishVoice(v)) u.text = inEnglish(u.text); }
     u.rate = who === 'atc' ? 1.1 : 1.05 + (hash(who) % 20)/100; u.pitch = who === 'atc' ? 1 : 0.85 + (hash(who+'p') % 30)/100;
     if (!/^tel:/.test(who) && typeof radioFx === 'function') { u.onstart = () => radioFx('open'); u.onend = () => radioFx('close'); }   // landline calls have no squelch
     speechSynthesis.speak(u);
