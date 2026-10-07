@@ -70,7 +70,8 @@ function draw(){
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
-  for (const ac of S.acs) if (ac.ground && !inHangar(ac)) drawAc(ac);   // stored in a hangar: out of sight until it is towed out
+  for (const ac of S.acs) if (towPending(ac) || towOn(ac)) drawTowRoute(ac);
+  for (const ac of S.acs) if (ac.ground && (!inHangar(ac) || towPending(ac))) drawAc(ac);   // stored in a hangar: out of sight until a tug calls for it
   if (img) drawImageryCredit();
   else if (MAP_LAYER !== 'drawn' && TILE.failed && cv.id === 'scope') { cx.font = `11px ${FONT_L}`; cx.fillStyle = rgba('lab', .7); cx.textAlign = 'right'; cx.fillText('Map imagery could not load here, so the drawn chart is shown', W - 12, H - 8); cx.textAlign = 'left'; }
   // scale bar
@@ -528,7 +529,8 @@ function drawAc(ac){
   cx.font = `500 11.5px ${FONT_D}`;
   const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need ? ' ◆' : '');
   let l2, l3 = '';
-  if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN'; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
+  if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN';
+    else if (towOn(ac)) l3 = 'TOW › ' + (ac.path && ac.towTgt ? ac.towTgt + ' › ' : '') + ac.tow.to.id; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
   else {
     const a = String(Math.max(0, Math.round(ac.alt/100))).padStart(3,'0'), tr = ac.vs > 300 ? '↑' : ac.vs < -300 ? '↓' : ' ';
     const cl = ac.mode === 'FINAL' ? (ac.appId ? 'RNP' : APT.appShort) : ac.tgtAlt != null ? String(Math.round(ac.tgtAlt/100)).padStart(3,'0') : '';
@@ -544,7 +546,7 @@ function drawAc(ac){
 }
 
 function stateLabel(ac){
-  return ({ PARKED:'STAND '+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', PULL:'PULL FORWARD', READY:'STARTED', TAXI:ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
+  return ({ PARKED:(ac.stand && ac.stand.area === 'hangar' ? 'HANGAR ' : 'STAND ')+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', PULL:'PULL FORWARD', READY:'STARTED', TAXI:ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:ac.towHold ? 'TOW HOLDING '+ac.towHold : 'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
 }
 
 // ═════════════════════════ console UI ═════════════════════════
@@ -641,6 +643,7 @@ function renderSel(){
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
   if (ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) { const c = SLOT[ac.cs].ctot; html += `<div class="meta">Slot (CTOT) <b>${hhmm(c)}Z</b>: take-off between ${hhmm(c - 5)} and ${hhmm(c + 10)}Z.</div>`; }
+  if (towOn(ac)) html += `<div class="meta">Under tow to ${towDest(ac.tow.to)}${ac.towHold ? `, the tug holding at ${ac.towHold}: send it on, or pick another route or holding point.` : ac.towTgt ? `, stopping at holding point ${ac.towTgt} to wait for you.` : '. Hold position stops it.'}</div>`;
   if (inHangar(ac)) html += `<div class="meta">In ${ac.stand.name}${ac.kind === 'DEP' ? (ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? `: the tug calls to tow it out to a stand at about ${zt(ac.tow.at).slice(0,5)}Z, an hour before off-blocks.` : '.') : ', stored for the day.'}</div>`;
   if (ac.kind === 'DEP' && ac.state === 'PARKED' && ac.slotHold) html += `<div class="meta">Held on stand from the Flights board: the crew won’t call for start-up until you release it there.</div>`;
   else if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
@@ -658,7 +661,7 @@ function renderSel(){
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).filter(k => !WP[k].hide).map(k => `<option>${k}</option>`).join('')}</select></div>`;
   } else {
     html += `<div class="btns">`;
-    if (ac.need === 'Request tow') html += b('TOW', `Approve tow to ${ac.tow && ac.tow.to ? towDest(ac.tow.to) : APT.standWord || 'stand'}`, true, 'go');
+    if (towAsk(ac)) html += b('TOW', `${ac.towHold ? 'Continue tow' : 'Approve tow'} to ${towDest(ac.tow.to)}`, true, 'go') + b('POP:tow', ac.towHold ? 'Tow route or hold…' : 'Tow by route or to hold…');
     if (ac.kind === 'ARR' && (ac.state === 'ONSTAND' || ac.state === 'TOW')) {}   // parked for the day: only a tug moves it
     else if (ac.kind === 'DEP') {
       const south = ac.stand && ac.stand.area === 'south', canTaxi = ac.state === 'READY' || (ac.state === 'PARKED' && !!ac.need && ac.need !== 'Request tow') || ac.state === 'TAXI' || ac.state === 'HOLDPT';
@@ -687,7 +690,7 @@ function renderSel(){
   }
   el.innerHTML = html;
   { const sp = $('iStand'); if (sp) sp.onchange = () => sp.value && command(`${ac.cs} STAND ${sp.value}`); }
-  el.querySelectorAll('button[data-c]').forEach(bt => bt.onclick = () => { const c = bt.dataset.c; if (c === 'POP:push') openPushPop(ac, bt); else if (c === 'POP:taxi') openTaxiPop(ac, bt); else if (c === 'POP:holdin') openHoldInPop(ac, bt); else command(ac.cs+' '+c); });
+  el.querySelectorAll('button[data-c]').forEach(bt => bt.onclick = () => { const c = bt.dataset.c; if (c === 'POP:push') openPushPop(ac, bt); else if (c === 'POP:taxi') openTaxiPop(ac, bt); else if (c === 'POP:holdin') openHoldInPop(ac, bt); else if (c === 'POP:tow') openTowPop(ac, bt); else command(ac.cs+' '+c); });
   const keyCmd = (id, pre) => { const i = $(id); if (i) i.onkeydown = e => { if (e.key === 'Enter' && i.value.trim()) command(`${ac.cs} ${pre}${i.value.trim()}`); }; };
   keyCmd('iH','H'); keyCmd('iA','A'); keyCmd('iS','S');
   const d = $('iD'); if (d) d.onchange = () => d.value && command(`${ac.cs} DCT ${d.value}`);
@@ -709,6 +712,20 @@ function drawPreview(pv){
   const e = pv.pts[pv.pts.length-1]; cx.fillStyle = C.pv; cx.beginPath(); cx.arc(sx(e[0]), sy(e[1]), 5, 0, 7); cx.fill();
   if (pv.label) { cx.font = `600 12px ${FONT_L}`; const t = pv.label, w = cx.measureText(t).width + 12; cx.fillStyle = C.pvBg; cx.fillRect(sx(e[0]) + 9, sy(e[1]) - 22, w, 18); cx.fillStyle = C.pvTxt; cx.fillText(t, sx(e[0]) + 15, sy(e[1]) - 9); }
   cx.restore();
+}
+// a tug asking for a tow: the aircraft shows on the map (even inside its hangar) with the route it would be towed along,
+// so you can see where it is and where it is going before you approve
+const towPending = ac => ac.need === 'Request tow' && !!(ac.tow && ac.tow.to && ac.stand);
+const towOn = ac => ac.state === 'TOW' && !!(ac.tow && ac.tow.to);   // under tow, or held by the tug at a holding point
+const towAsk = ac => towPending(ac) || (towOn(ac) && !!ac.towHold);   // waiting for your word
+// under tow, the route still to go and where it ends
+function drawTowRoute(ac){
+  const T = ac.tow; let pts;
+  if (ac.state === 'TOW' && ac.path) pts = ac.path.pts;
+  else { const k = T.to.id + '|' + (ac.towNode || ac.stand.id); if (T.pvKey !== k) { T.pvKey = k; try { T.pv = towPath(ac, T.to); } catch(e) { T.pv = null; } } pts = T.pv; }
+  if (!pts || !pts.length || V.scale < 100) return;
+  cx.save(); cx.globalAlpha = S.sel === ac || ac.state === 'TOW' ? 1 : 0.7;
+  drawPreview({ pts: [acMid(ac), ...pts], label: 'Tow ' + ac.cs + (ac.path && ac.towTgt ? ' to hold ' + ac.towTgt + ', then ' : ' to ') + towDest(T.to) }); cx.restore();
 }
 const pop = document.createElement('div'); pop.className = 'pop'; pop.hidden = true; pop.setAttribute('role', 'dialog'); document.body.appendChild(pop);
 let popAc = null;
@@ -808,6 +825,29 @@ function openHoldInPop(ac, anchor){
   });
   if (V.name !== 'gnd' && V.scale < 70) setView('gnd');
 }
+// a tug's tow: the routings to its destination, or a holding point to stop at and wait (TOW [hp] [VIA ..])
+function openTowPop(ac, anchor){
+  const to = ac.tow.to, routes = towOptions(ac).map((o, k) => ({ o, k, rec: !k })), hps = ihpOptions(ac.towNode || ac.stand.node, null, true);
+  const all = [...routes, ...hps], len = o => Math.round(o.len / M2NM / 10) * 10;
+  const P = a => a.ihp ? towPath(ac, to, { hold: holdPt(a.hp) }) : towPath(ac, to, a.k ? { via: a.o.via } : {});
+  const lab = a => a.ihp ? 'Tow to hold ' + a.hp.replace(/~\d+$/, '') : 'Tow to ' + towDest(to) + (a.o.via.length ? ' via ' + a.o.via.join(' ') : '');
+  const row = (a, j) => `<button class="opt row${a.rec ? ' rec' : ''}" data-j="${j}"><span class="hp">${to.id}</span><b>${a.o.via.length ? 'via ' + a.o.via.map(t => PHON[t] || t).join(', ') : 'direct across the apron'}</b><span class="ln">${len(a.o)} m</span>${a.rec ? '<i>Shortest</i>' : ''}</button>`;
+  showPop(ac, anchor, `<div class="lbl">Tow · ${towDest(to)}</div><h4>${ac.cs} <span>${ac.towHold ? 'tug holding at ' + ac.towHold : ac.stand.area === 'hangar' ? 'in ' + ac.stand.name : (APT.standWord || 'stand') + ' ' + ac.stand.id} · ${ac.t}</span></h4>
+    <p class="hint">Send the tug to ${towDest(to)} by one of these routes, or to a holding point to stop and wait for you. Hover to preview it on the map.</p>
+    ${routes.length ? `<div class="grp"><div class="gh"><b>To ${towDest(to)}</b><span>the tug's routing</span></div>${routes.map(a => row(a, all.indexOf(a))).join('')}</div>` : ''}
+    ${ihpGroup(all, hps)}
+    <div class="phr">“Tug with ${spoken(ac.cs)}, <em></em>”</div>`, () => {
+    const say = a => pop.querySelector('.phr em').textContent = a.ihp ? `tow to holding point ${hpWords(a.hp)}, hold there` : `${ac.towHold ? 'continue tow' : 'tow approved'} to ${towDest(to)}${a.o.via.length ? ', via ' + a.o.via.map(t => PHON[t] || t).join(', ') : ''}`;
+    const pv = a => { const p = P(a); S.preview = p ? { pts: [acMid(ac), ...p], label: lab(a) } : null; say(a); };
+    pop.querySelectorAll('.opt').forEach(bt => {
+      const a = all[+bt.dataset.j];
+      bt.onmouseenter = () => pv(a); bt.onfocus = () => pv(a);
+      bt.onclick = () => { command(`${ac.cs} TOW${a.ihp ? ' ' + a.hp : a.o.via.length && a.k ? ' VIA ' + a.o.via.join(' ') : ''}`); closePop(); };
+    });
+    if (all.length) pv(all[0]);
+  });
+  if (V.name !== 'gnd' && V.scale < 70) setView('gnd');
+}
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) closePop(); });
 document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !(e.target.closest && e.target.closest('#sel'))) closePop(); });
 
@@ -819,7 +859,7 @@ function makeStrip(ac, doc = document){
   d.querySelector('.cs').textContent = ac.cs;
   d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
   d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
-  d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? (ac.stand.area === 'hangar' ? 'Hangar ' : 'Stand ')+ac.stand.id : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
+  d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? (ac.stand.area === 'hangar' ? 'Hangar ' : 'Stand ')+ac.stand.id : towOn(ac) ? 'Tow › '+(ac.path && ac.towTgt ? ac.towTgt : ac.tow.to.id) : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
   // arrivals show the stand they are going to, once it is planned
   if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
   else if (ac.kind === 'ARR' && !outOfCtl(ac) && (ac.ground || ac.app) && ac.state !== 'DIVERTING') { const r = d.querySelector('.rte'); r.title = `${r.textContent}, no stand assigned (prefers ${prefArea(ac).name})`; r.textContent = 'Stand ?'; r.classList.add('nostand'); }
@@ -828,7 +868,7 @@ function makeStrip(ac, doc = document){
   if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = doc.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
   if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
   if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
-  else d.onclick = () => tapSelect(ac);
+  else d.onclick = () => { tapSelect(ac); if (towAsk(ac) && !phoneMQ.matches) centreOn(ac); };   // a tow request: show me where it is
   // the selected flight's strip gets a recentre button: the map jumps to it (close in on the ground, the radar picture in the air)
   if (S.sel === ac && !outOfCtl(ac)) {
     const c = doc.createElement('span'); c.className = 'ctr'; c.setAttribute('role', 'button'); c.tabIndex = 0; c.title = 'Centre the map on ' + ac.cs; c.setAttribute('aria-label', c.title);
@@ -984,7 +1024,7 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac) || inHangar(ac)) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac) || (inHangar(ac) && !towPending(ac))) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
