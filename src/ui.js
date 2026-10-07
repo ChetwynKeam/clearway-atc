@@ -401,7 +401,7 @@ function drawAirport(){
       for (const f of Object.values(FIL)) for (const pts of [f.W, f.E]) { const key = JSON.stringify(pts); if (seen.has(key)) continue; seen.add(key); leads.push(leadLine(pts).map(([m, o]) => c(m, o))); }
       groundLines(lw(0.3), () => leads.forEach(strokeSmooth)); }
     // apron taxilanes and stand lead-ins (the stand box carries on the centreline and stop bar)
-    groundLines(lw(0.3), () => { for (const s of STANDS) { path([[mOf(s.lp), offOf(s.lp)], [s.m, s.off]], false); cx.stroke(); } });
+    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { path([[mOf(s.lp), offOf(s.lp)], [s.m, s.off]], false); cx.stroke(); } });
     cx.save(); if (IMG) clipOut((AD.buildings || []).map(b => b.pts.map(([m, o]) => c(m, o)))); drawStandDetail(c, path, mpx); cx.restore();   // stand paint stops at the terminal walls
     // closed portion of B and B1: unserviceable crosses
     cx.strokeStyle = 'rgba(255,255,255,.75)'; cx.lineWidth = lw(0.8);
@@ -635,7 +635,7 @@ function renderSel(){
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
-  if (ac.kind === 'ARR' && !['PRE', 'ONSTAND', 'DIVERTING'].includes(ac.state)) html += standLine(ac);
+  if (ac.kind === 'ARR' && !['PRE', 'ONSTAND', 'DIVERTING', 'TOW'].includes(ac.state)) html += standLine(ac);
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
   if (ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) { const c = SLOT[ac.cs].ctot; html += `<div class="meta">Slot (CTOT) <b>${hhmm(c)}Z</b>: take-off between ${hhmm(c - 5)} and ${hhmm(c + 10)}Z.</div>`; }
@@ -656,10 +656,11 @@ function renderSel(){
     html += `<select id="iD" aria-label="Direct to fix"><option value="">Direct to…</option>${Object.keys(WP).filter(k => !WP[k].hide).map(k => `<option>${k}</option>`).join('')}</select></div>`;
   } else {
     html += `<div class="btns">`;
-    if (ac.kind === 'DEP') {
+    if (ac.need === 'Request tow') html += b('TOW', `Approve tow to ${ac.tow && ac.tow.to ? towDest(ac.tow.to) : APT.standWord || 'stand'}`, true, 'go');
+    if (ac.kind === 'ARR' && (ac.state === 'ONSTAND' || ac.state === 'TOW')) {}   // parked for the day: only a tug moves it
+    else if (ac.kind === 'DEP') {
       const south = ac.stand && ac.stand.area === 'south', canTaxi = ac.state === 'READY' || (ac.state === 'PARKED' && !!ac.need && ac.need !== 'Request tow') || ac.state === 'TAXI' || ac.state === 'HOLDPT';
       const startReq = ac.state === 'PARKED' && !!ac.need && ac.need !== 'Request tow';
-      if (ac.need === 'Request tow') html += b('TOW', `Approve tow to stand ${ac.tow && ac.tow.to ? ac.tow.to.id : ''}`, true, 'go');
       html += b('POP:push','Start &amp; push…', startReq, startReq ? 'go' : '');
       if (ac.state === 'PUSH' || ac.state === 'READY') html += b('PULL', `Pull back to ${APT.standWord || 'stand'} ${ac.stand ? ac.stand.id : ''}`, !ac.leftStand);
       html += b('POP:taxi', ac.state === 'TAXI' ? 'Re-route taxi…' : 'Taxi…', canTaxi && ac.state !== 'HOLDPT', ac.state === 'READY' && ac.need ? 'go' : '');
@@ -1017,7 +1018,7 @@ daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListen
 renderSlots();
 function resetSession(){
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
-  S.emg = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+  S.emg = null; S.rtow = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
@@ -1047,6 +1048,7 @@ function start(){
     if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong.replace(/\.$/, '') + (APT.rnp && APT.rnpMinsOk(S.wx, S.rwy) ? ': arrivals will ask for an RNP approach.' : ': arrivals will not be able to land.'));
     if (APT.windLimit && windLimit({ perf: { wake: 'M' } }, S.rwy)) sys(`Wind is outside the ${APT.name} limits for runway ${S.rwy}: landings and take-offs are not allowed until it eases.`, true);
     emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
+    S.rtow = ex ? null : { next: rnd(4, 10)*60 };   // random tows around the apron (sim.js stepRandomTows)
     if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');
     emit('start', mode);

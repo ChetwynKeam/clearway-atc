@@ -318,7 +318,12 @@ function spawnResident(f){
   const byTerm = APT.standFor && !(remote && APT.remoteAreas);   // the airline's terminal (New York; Gatwick unless it waits on a remote stand)
   let st = (!remote || byTerm) && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
   if (!st && byTerm) st = APT.standFor(ac);
+  if (!st && remote && APT.remoteAreas && APT.prefArea) {   // the free remote stand nearest its airline's terminal, so the tow in is short
+    const T = STANDS.filter(APT.prefArea(ac).has), c = T.length ? T.reduce((a, s) => [a[0] + s.p[0]/T.length, a[1] + s.p[1]/T.length], [0, 0]) : null;
+    if (c) st = STANDS.filter(s => !s.occ && APT.remoteAreas.includes(s.area)).sort((a, b) => dist(...a.p, ...c) - dist(...b.p, ...c))[0];
+  }
   for (const a of order) if (!st) st = STANDS.find(s => !s.occ && s.area === a);
+  if (!st && remote && APT.remoteAreas) st = (APT.standFor && APT.standFor(ac)) || STANDS.find(s => !s.occ && s.area === 'civil');   // remote stands full: it waits at a gate
   if (!st) return null;
   st.occ = ac; ac.stand = st; ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
   if (f.depM == null) { ac.kind = 'ARR'; ac.state = 'ONSTAND'; ac.doneAt = Infinity; }
@@ -354,6 +359,7 @@ function towPath(ac, to){
   if (from.area === 'south' && to.area !== 'south') {
     add(route(from.node, HOLDS.C.node)); pts.push(GN[HOLDS.C.rwy].p, ...filOut('C', 'E'), ...filIn('A', 'W'), GN[HOLDS.A.rwy].p, GN[HOLDS.A.node].p); add(route(HOLDS.A.node, to.node));
   } else add(route(from.node, to.node));
+  if (to.area === 'hangar') { const q = [to.lp[0], to.lp[1]]; q.tight = true; pts.push(q); }   // into a hangar: through the doors
   pts.push(to.p);
   // out of a hangar: the tug walks it round the apron corners (tight turns), by way of the lane node outside the doors
   if (from.area === 'hangar') return [from.lp, GN[from.node].p, ...pts.slice(1)].map((p, i, a) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; });
@@ -370,14 +376,58 @@ function stepTows(){
     if (!to && !ac.tow.only && !H && APT.remoteAreas && APT.standFor) to = APT.standFor(ac);   // Gatwick: from a remote stand to its terminal
     if (!ac.tow.only) for (const a of areas) if (!to) to = STANDS.find(s => !s.occ && s.area === a);
     if (!to) { ac.tow.at = S.t + 120; continue; }
-    to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
-    const cross = ac.stand.area === 'south', at = H ? `in ${H.name}` : `on ${APT.standWord || 'stand'} ${ac.stand.id}`;
-    log('plt', `${APT.tower[0]}, tug with ${ac.cs} ${at}, request tow to ${APT.standWord || 'stand'} ${to.id}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
-    say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} ${at}, request tow to ${APT.standWord || 'stand'} ${to.id}`, 'tug');
+    towCall(ac, to);
   }
 }
+const towDest = to => to.area === 'hangar' ? to.name : `${to.area === 'remote' ? (APT.remoteWord && APT.remoteWord(to)) || 'remote ' + (APT.standWord || 'stand') : APT.standWord || 'stand'} ${to.id}`;
+function towCall(ac, to){
+  to.occ = ac; ac.tow.to = to; ac.tow.asked = true; ac.need = 'Request tow';
+  const H = ac.stand.area === 'hangar' && ac.stand.hg, cross = ac.stand.area === 'south', at = H ? `in ${H.name}` : `on ${APT.standWord || 'stand'} ${ac.stand.id}`;
+  log('plt', `${APT.tower[0]}, tug with ${ac.cs} ${at}, request tow to ${towDest(to)}${cross ? ', crossing the runway from Charlie to Alpha' : ''}`, 'TUG');
+  say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} ${at}, request tow to ${towDest(to)}`, 'tug');
+}
+// random tows (not in exercises): a parked aircraft with a long wait is towed off its gate to a remote stand or a
+// hangar to free the gate, and towed back about 35 minutes (from a hangar, an hour) before off-blocks; or it is moved
+// to another gate at the same terminal. Every airport has them; busier ones (more stands) see more. Each needs your approval.
+const TOW_RATE = APT.towRate ?? Math.min(6, Math.max(1, STANDS.length/20));   // random tows an hour
+const towLen = (a, b) => { if (a === b) return 0; const r = route(a, b); return r ? pathLen(r.nodes) : Infinity; };   // NM
+// the nearest of these free places (by straight line, then by the taxi route), or one of the nearest few at random
+function nearestFree(ac, list, spread){
+  const from = ac.stand, c = list.filter(s => !s.occ && s !== from).sort((a, b) => dist(...a.p, ...from.p) - dist(...b.p, ...from.p)).slice(0, spread ? 6 : 4)
+    .map(s => [s, towLen(from.node, s.node)]).filter(([, L]) => L < 3.5).sort((a, b) => a[1] - b[1]);
+  if (!c.length) return null;
+  return (spread ? c[Math.floor(Math.random()*c.length)] : c[0])[0];
+}
+function randomTowFor(ac){
+  const st = ac.stand, wait = ac.state === 'ONSTAND' ? Infinity : ac.reqAt - S.t;   // seconds until the crew calls
+  if (!st || st.area === 'hangar' || st.area === 'south' || (APT.remoteAreas || []).includes(st.area)) return null;
+  const off = [];   // off the gate: a remote stand, or a hangar that takes it and serves this apron
+  if (wait > 80*60 && APT.remoteAreas) off.push(...STANDS.filter(s => APT.remoteAreas.includes(s.area)));
+  if (wait > 120*60) off.push(...HANGARS.filter(h => h.hg.fits(ac) && (!h.hg.to || (typeof h.hg.to === 'function' ? h.hg.to(ac) : h.hg.to).includes(st.area))));
+  // gate to gate: another stand on the same apron (at the same terminal)
+  const same = wait > 40*60 ? STANDS.filter(s => s.area === st.area && (st.term ? s.term === st.term : true)) : [];
+  const first = off.length && (!same.length || Math.random() < 0.65) ? [off, same] : [same, off];
+  for (const list of first) { const to = list.length && nearestFree(ac, list, list === same); if (to) return to; }
+  return null;
+}
+function stepRandomTows(){
+  const R = S.rtow; if (!R || S.t < R.next) return;
+  R.next = S.t + 3600/TOW_RATE*rnd(0.5, 1.5);
+  const can = ac => ac.ground && ac.stand && !ac.tow && !ac.rtowed && !ac.need && !outOfCtl(ac) && !ac.emerg && !ac.slotHold && !ac.slotCancelled && S.sel !== ac &&
+    (ac.state === 'ONSTAND' ? ac.doneAt === Infinity : ac.state === 'PARKED' && ac.kind === 'DEP' && ac.reqAt - S.t > 40*60);
+  const list = S.acs.filter(can).sort(() => Math.random() - 0.5);
+  for (const ac of list.slice(0, 6)) {
+    const to = randomTowFor(ac); if (!to) continue;
+    // a departure towed off its gate is towed back to its terminal before it leaves
+    const back = ac.kind === 'DEP' && (to.area === 'hangar' || (APT.remoteAreas || []).includes(to.area));
+    ac.tow = { at: S.t, random: true, then: back ? { pref: ac.stand.id, at: Math.max(S.t + 20*60, ac.reqAt + 360 - (to.area === 'hangar' ? 60 : 35)*60) } : null };
+    ac.rtowed = true; towCall(ac, to); emit('towreq', ac);
+    return;
+  }
+  R.next = S.t + rnd(4, 8)*60;   // nobody to move just now
+}
 // parked aircraft with nothing due in the next 15 minutes stay off the strip board
-const dormant = ac => ac.state === 'ONSTAND' || (ac.state === 'PARKED' && !ac.need && ac.reqAt - S.t > 15*60 && !(ac.tow && S.t >= ac.tow.at - 300));
+const dormant = ac => (ac.state === 'ONSTAND' && !ac.need) || (ac.state === 'PARKED' && !ac.need && ac.reqAt - S.t > 15*60 && !(ac.tow && S.t >= ac.tow.at - 300));
 // arrivals don't get a stand by themselves: the controller assigns one (STAND), guided by the airline's usual area
 const AREA_NAMES = { civil: 'terminal apron', north: 'GA apron', south: 'south apron' };
 const standAreas = ac => isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
@@ -760,10 +810,12 @@ function commandRun(str){
       if (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to) { sys(`${ac.cs} has no tow request.`); continue; }
       const to = ac.tow.to, from = ac.stand, cross = from.area === 'south';
       if (from.area === 'hangar') { ac.x = from.lp[0]; ac.y = from.lp[1]; ac.hdg = from.hdg; ac.mg = ac.bh = null; }   // the doors open: it comes out onto the apron
-      setPath(ac, towPath(ac, to), 5, () => { ac.state = 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is on stand ${to.id}.`); });
-      if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null; ac.towCross = cross;
-      log('atc', `Tug with ${ac.cs}, tow approved to stand ${to.id}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
-      say(`Tug with ${spoken(ac.cs)}, tow approved to stand ${to.id}`, 'atc');
+      const was = ac.state, then = ac.tow.then;
+      // a tug turns the aircraft tightly round every corner, so it lines up on the stand instead of circling it
+      setPath(ac, towPath(ac, to).map((p, i) => { const q = [p[0], p[1]]; if (i) q.tight = true; return q; }), 5, () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); });
+      if (from.occ === ac) from.occ = null; ac.state = 'TOW'; ac.need = null; ac.towCross = cross; ac.rtowed = true;   // moved once: no random tow after this one
+      log('atc', `Tug with ${ac.cs}, tow approved to ${towDest(to)}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
+      say(`Tug with ${spoken(ac.cs)}, tow approved to ${towDest(to)}`, 'atc');
       return renderSel && renderSel();
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
@@ -982,7 +1034,7 @@ function step(dt){
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
   }
 
-  stepTows(); if (S.emg) stepEmerg(dt);
+  stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt);
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
