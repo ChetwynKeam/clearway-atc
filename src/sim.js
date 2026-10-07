@@ -180,7 +180,7 @@ function loadVoices(){ try { voices = speechSynthesis.getVoices().filter(v => /^
 try { speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); } catch(e) {}
 function hash(s){ let h = 0; for (const c of String(s)) h = (h*31 + c.charCodeAt(0))|0; return Math.abs(h); }
 function say(text, who){
-  if (!S.voice) return;
+  if (!S.voice || who === 'atc') return;   // your own transmissions are only written, never spoken
   try {
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
     if (voices.length) u.voice = who === 'atc' ? voices[0] : voices[1 + hash(who) % Math.max(1, voices.length-1)] || voices[0];
