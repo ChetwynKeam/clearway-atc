@@ -70,8 +70,8 @@ function draw(){
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
-  // a tug calling for a tow shows where it would go; any other route only while you have that aircraft selected
-  for (const ac of S.acs) if (towPending(ac) || (S.sel === ac && towOn(ac))) drawTowRoute(ac);
+  // a route (taxi, or a tow asked for or under way) only while you have that aircraft selected
+  if (S.sel && (towPending(S.sel) || towOn(S.sel))) drawTowRoute(S.sel);
   if (S.sel && S.sel.ground && S.sel.path && !towOn(S.sel)) drawTaxiRoute(S.sel);
   else if (S.sel) drawVacRoute(S.sel);
   for (const ac of S.acs) if (ac.ground && (!inHangar(ac) || towPending(ac))) drawAc(ac);   // stored in a hangar: out of sight until a tug calls for it
