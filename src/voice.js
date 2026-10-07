@@ -46,9 +46,9 @@ const isEnglishVoice = v => !v || /^en/i.test(v.lang);
 // replaces the plain speaker: accent by airline, steadier controller, slight per-crew pitch and pace
 say = function(text, who){
   if (!S.voice) return;
-  // you said it yourself: when you are talking on the radio, only the pilots' replies are played, including
-  // instructions you finish from a pop-up after speaking (taxi routes, push direction)
-  if (who === 'atc' && (S.fromVoice || (inCmd && Date.now() - (S.voiceAt || 0) < 120e3))) return;
+  // you are the controller: your own transmissions stay written in the radio log but are never read aloud,
+  // only pilots, tugs and other stations are heard
+  if (who === 'atc') return;
   try {
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
     const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; if (!isEnglishVoice(v)) u.text = inEnglish(u.text); }
