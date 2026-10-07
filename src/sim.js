@@ -506,7 +506,9 @@ function vacatePath(ac){
   let via = [], stop = H.node;
   // never past a point where the route doubles back (the stand is behind): it would have to stop mid U-turn
   const sharp = p => pts.length > 1 && Math.abs(angDiff(brg(...pts[pts.length-2], ...pts[pts.length-1]), brg(...pts[pts.length-1], ...p))) > 100;
-  if (st) { const r = route(H.node, st.node); if (r) { via = viaOf(r.tws, ex); let D = 0;
+  // the planned route on: leaving the runway along the link, so it can't turn back on itself (see route)
+  const vf = brg(...GN[H.rwy].p, ...GN[H.node].p);
+  if (st) { const r = route(H.node, st.node, undefined, vf, brg(...st.lp, ...st.p)) || route(H.node, st.node, undefined, vf) || route(H.node, st.node); if (r) { via = viaOf(r.tws, ex); let D = 0;
     for (let i = 1; i < r.nodes.length - 1 && D < VAC_CLEAR; i++) { const n = GN[r.nodes[i]];
       if (n.p.hs || /^R/.test(n.id) || n.id === st.node || sharp(n.p) || (D += dist(...GN[r.nodes[i-1]].p, ...n.p)) > VAC_CLEAR*3) break;
       pts.push(n.p); stop = n.id; }
@@ -566,7 +568,9 @@ function taxiIn(ac, st, via, hold){
   if (rolling && ac.vacNode) { const P = [[ac.x, ac.y], ...ac.path.pts.filter(p => !p.ext)], v = GN[ac.vacNode].p, q = P.length > 1 ? P[P.length-2] : P[0];
     from = ac.vacNode; face = dist(...q, ...v) > 1e-6 ? brg(...q, ...v) : ac.hdg; }
   else [from, face] = taxiStart(ac);
-  const r = route(from, hold ? hold.node : st.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined, face); if (!r) return null;
+  // onto a stand: arriving the way its lead-in turns off, if there is such a route
+  const pen = via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined;
+  const r = (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face); if (!r) return null;
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
   const pts = r.nodes.map(id => GN[id].p);
   if (rolling) pts.splice(0, 1, ...ac.path.pts.filter(p => !p.ext));

@@ -33,8 +33,9 @@ const filOut = (hp, side) => filIn(hp, side).reverse();
 // pen (optional): a cost multiplier per edge, to find alternative routings at big airports
 // face (optional): the way the aircraft at `from` is pointing. An aircraft can't turn round on a taxiway, so the route
 // then starts within 100 degrees of that heading and never doubles back on itself at a node further on
-function route(from, to, pen, face){
-  if (face != null) return routeFacing(from, to, pen, face);
+// outB (optional, with face): the way it must be able to turn on leaving `to` (onto a stand's lead-in)
+function route(from, to, pen, face, outB){
+  if (face != null) return routeFacing(from, to, pen, face, outB);
   const dd = { [from]: 0 }, prev = {}, done = new Set();
   while (true) {
     let u = null, best = Infinity; for (const k in dd) if (!done.has(k) && dd[k] < best) { best = dd[k]; u = k; }
@@ -45,14 +46,17 @@ function route(from, to, pen, face){
   while (c !== from) { const [u, e] = prev[c]; nodes.unshift(u); tws.unshift(e.tw); c = u; }
   return { nodes, tws };
 }
-const TURN_START = 100, TURN_MAX = 150;
-function routeFacing(from, to, pen, face){
+// the sharpest turn a route takes at a junction: a junction's fillets are built for the turns it is meant for, so an
+// aircraft never turns back through more than this (the wrong way round a fillet); it goes round another way instead
+const TURN_START = 100, TURN_MAX = 115;
+function routeFacing(from, to, pen, face, outB){
   // states are (node, the node it came from); the seed comes from nowhere, pointing `face`
   const key = (v, u) => v + '|' + u, dd = { [key(from, '')]: 0 }, st = { [key(from, '')]: [from, '', face] }, prev = {}, done = new Set();
   let end = null;
   while (true) {
     let k = null, best = Infinity; for (const q in dd) if (!done.has(q) && dd[q] < best) { best = dd[q]; k = q; }
-    if (k === null) return null; const [u, from_, inB] = st[k]; if (u === to) { end = k; break; } done.add(k);
+    if (k === null) return null; const [u, from_, inB] = st[k]; done.add(k);
+    if (u === to && (outB == null || Math.abs(angDiff(inB, outB)) <= TURN_MAX)) { end = k; break; }
     for (const [v, e] of GN[u].adj) {
       if (/^R/.test(v) && v !== to) continue;
       const b = brg(...GN[u].p, ...GN[v].p);
