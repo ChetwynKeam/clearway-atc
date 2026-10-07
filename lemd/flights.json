@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-07T22:40:47Z",
+ "updated": "2026-10-07T22:53:59Z",
  "source": "avionio.com",
  "days": {
   "2026-10-08": {
@@ -52,7 +52,7 @@
      "flight": "FR5469",
      "sched": "00:30",
      "status": "Estimated",
-     "expected": "00:45"
+     "expected": "00:46"
     },
     {
      "place": "Istanbul",
@@ -129,7 +129,7 @@
      "flight": "IB920",
      "sched": "02:10",
      "status": "Estimated",
-     "expected": "02:22"
+     "expected": "02:24"
     },
     {
      "place": "Hannover",
@@ -143,7 +143,7 @@
      "flight": "IB922",
      "sched": "04:05",
      "status": "Estimated",
-     "expected": "03:59"
+     "expected": "04:11"
     },
     {
      "place": "Guadalajara",
@@ -178,7 +178,7 @@
      "flight": "AM34",
      "sched": "05:00",
      "status": "Estimated",
-     "expected": "04:25"
+     "expected": "04:26"
     },
     {
      "place": "Guayaquil",
@@ -346,7 +346,7 @@
      "flight": "DL62",
      "sched": "06:20",
      "status": "Estimated",
-     "expected": "05:54"
+     "expected": "05:50"
     },
     {
      "place": "Liege",
@@ -423,7 +423,7 @@
      "flight": "IB382",
      "sched": "07:30",
      "status": "Estimated",
-     "expected": "07:44"
+     "expected": "07:40"
     },
     {
      "place": "Santander",
@@ -800,8 +800,8 @@
      "place": "Miami",
      "flight": "AA68",
      "sched": "09:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:07"
     },
     {
      "place": "New York",
@@ -892,7 +892,7 @@
      "flight": "IB272",
      "sched": "10:45",
      "status": "Estimated",
-     "expected": "10:32"
+     "expected": "10:06"
     },
     {
      "place": "Milan",
@@ -1078,7 +1078,7 @@
     },
     {
      "place": "Sao Paulo",
-     "flight": "LA8076",
+     "flight": "JJ8076",
      "sched": "12:15",
      "status": "Scheduled",
      "expected": ""
@@ -1327,13 +1327,6 @@
      "sched": "15:00",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Rome",
-     "flight": "FR9673",
-     "sched": "15:00",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -1342,7 +1335,7 @@
      "flight": "FR5931",
      "sched": "00:00",
      "status": "Estimated",
-     "expected": "00:41"
+     "expected": "00:52"
     },
     {
      "place": "Bogota",
@@ -1355,8 +1348,8 @@
      "place": "Buenos Aires",
      "flight": "IB103",
      "sched": "00:05",
-     "status": "Estimated",
-     "expected": "00:23"
+     "status": "Departed",
+     "expected": "00:21"
     },
     {
      "place": "Bogota",
@@ -1377,13 +1370,13 @@
      "flight": "UX15",
      "sched": "00:20",
      "status": "Estimated",
-     "expected": "00:35"
+     "expected": "00:37"
     },
     {
      "place": "Palma de Mallorca",
      "flight": "WT332",
      "sched": "01:30",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1507,7 +1500,7 @@
     },
     {
      "place": "Amsterdam",
-     "flight": "G35691",
+     "flight": "KL1500",
      "sched": "06:00",
      "status": "Scheduled",
      "expected": ""
@@ -1563,21 +1556,21 @@
     },
     {
      "place": "Bilbao",
-     "flight": "AD6936",
-     "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malaga",
-     "flight": "AD6992",
+     "flight": "AM6818",
      "sched": "06:30",
      "status": "Scheduled",
      "expected": ""
     },
     {
      "place": "Lisbon",
-     "flight": "AD7855",
+     "flight": "UX1159",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "UX5035",
      "sched": "06:30",
      "status": "Scheduled",
      "expected": ""
@@ -1838,6 +1831,13 @@
      "place": "Geneva",
      "flight": "AA8821",
      "sched": "07:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brussels",
+     "flight": "AM6821",
+     "sched": "07:20",
      "status": "Scheduled",
      "expected": ""
     }
