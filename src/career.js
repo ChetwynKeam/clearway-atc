@@ -24,9 +24,11 @@ const BADGES = [
   { id: 'crossing', ap: 'KJFK', name: 'Crossing guard',    d: 'Cross ten aircraft over an active runway at Kennedy in one session, with no incidents.', ic: 'M2 8h20M2 16h20M12 3v18M9 18l3 3 3-3' },
   { id: 'kennedy',  ap: 'KJFK', name: 'Kennedy endorsement', d: 'Complete the three New York JFK guided exercises.',     ic: 'M4 21V11l8-6 8 6v10M9 21v-6h6v6M2 21h20' },
   { id: 'gapfiller', ap: 'EGKK', name: 'Gap filler',       d: 'Fit a departure between two landings on Gatwick’s one runway ten times in one session.', ic: 'M2 12h20M5 8l-3 4 3 4M19 8l3 4-3 4M12 6v12' },
-  { id: 'gatwick',  ap: 'EGKK', name: 'Gatwick endorsement', d: 'Complete the three London Gatwick guided exercises.',   ic: 'M3 18h18M5 18l3-9h8l3 9M9 9V5h6v4' }
+  { id: 'gatwick',  ap: 'EGKK', name: 'Gatwick endorsement', d: 'Complete the three London Gatwick guided exercises.',   ic: 'M3 18h18M5 18l3-9h8l3 9M9 9V5h6v4' },
+  { id: 'sidebyside', ap: 'LEMD', name: 'Side by side',     d: 'Land five arrivals on each runway of a parallel pair at Madrid in one session.', ic: 'M7 21L10 3M14 21L17 3M3 21h18' },
+  { id: 'barajas',  ap: 'LEMD', name: 'Barajas endorsement', d: 'Complete the three Madrid-Barajas guided exercises.',   ic: 'M2 16c4-4 8-6 10-6s6 2 10 6M2 20h20M6 16v4M12 10v10M18 16v4' }
 ];
-const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', EGKK: 'London Gatwick' };
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -58,6 +60,7 @@ function careerCheck(){
     if (s.ap === 'LOWI' && (s.lfoehn || 0) >= 3) careerAward('foehn');
     if (s.ap === 'KJFK' && (s.rwyx || 0) >= 10 && !s.incidents) careerAward('crossing');
     if (s.ap === 'EGKK' && (s.gaps || 0) >= 10) careerAward('gapfiller');
+    if (s.ap === 'LEMD' && s.lrw && [['32L', '32R'], ['18R', '18L']].some(([a, b]) => (s.lrw[a] || 0) >= 5 && (s.lrw[b] || 0) >= 5)) careerAward('sidebyside');
   }
   if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
   if (['mdep','marr','mwind'].every(k => CAR.ex[k])) careerAward('island');
@@ -65,6 +68,7 @@ function careerCheck(){
   if (['idep','iarr','ifoehn'].every(k => CAR.ex[k])) careerAward('valley');
   if (['kdep','karr','kcross'].every(k => CAR.ex[k])) careerAward('kennedy');
   if (['gdep','garr','gmix'].every(k => CAR.ex[k])) careerAward('gatwick');
+  if (['ldep','larr','lmix'].every(k => CAR.ex[k])) careerAward('barajas');
   if (T.secs >= 3600) careerAward('hour');
   if (T.secs >= 36000) careerAward('ten');
   if (T.mov >= 100) careerAward('century');
@@ -89,6 +93,8 @@ S.listeners.push((ev, d) => {
   // Gatwick: a departure that got airborne between two landings fills a gap
   if (APT.icao === 'EGKK' && carCur && ev === 'airborne' && d && d.kind === 'DEP' && carCur.land1) carCur.depGap = true;
   if (APT.icao === 'EGKK' && carCur && ev === 'landed') { if (carCur.depGap) { carCur.gaps = (carCur.gaps || 0) + 1; carDirty = true; } carCur.land1 = true; carCur.depGap = false; }
+  // Madrid: landings on each runway, for Side by side
+  if (APT.icao === 'LEMD' && carCur && ev === 'landed' && d && d.app) { (carCur.lrw ||= {})[d.app] = (carCur.lrw[d.app] || 0) + 1; carDirty = true; }
   if (ev === 'rwyx' && carCur) { carCur.rwyx = (carCur.rwyx || 0) + 1; carDirty = true; }
   if (ev === 'start') {
     careerSync();

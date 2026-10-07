@@ -249,9 +249,9 @@ function adoptArr(a, p, row){
 }
 function adoptDepAir(a, p, row){
   const gate = row ? gateFor(row.ap) : depGateOf(p, a.trk || 0), ac = liveAc(a, p, row, 'DEP', gate), d = dist(...p, ...RADAR_REF);
-  Object.assign(ac, { depRwy: depRw(), sid: sidName(gate, depRw()), cto: true, turned: true, pushed: true, leftStand: true, state: 'AIRBORNE', reqDct: true, onSid: false });
+  const drw = depRw(ac); Object.assign(ac, { depRwy: drw, sid: sidName(gate, drw), cto: true, turned: true, pushed: true, leftStand: true, state: 'AIRBORNE', reqDct: true, onSid: false });
   const top = sidTop(ac); ac.tgtAlt = ac.cleared = a.alt > top - 300 ? Math.ceil((a.alt + 1500)/1000)*1000 : top;
-  ac.route = routeOn(p, RADAR_REF, EXIT_ROUTE[gate]); ac.mode = ac.route.length ? 'NAV' : 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360;
+  ac.route = routeOn(p, RADAR_REF, exitRouteOf(ac)); ac.mode = ac.route.length ? 'NAV' : 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360;
   if (d < 4 && a.alt < ELEV + 2500) { ac.freq = 'TWR'; ac.calledAir = false; }   // just airborne: still with Tower, transfer it to Radar
   else { ac.freq = 'RAD'; ac.calledAir = ac.calledRad = true; ac.state = 'CLIMB'; ac.reqClimb = ac.tgtAlt > top; liveCall(ac, PH.depCall(ac)); }
   return ac;
@@ -276,31 +276,33 @@ function adoptGround(a, p){
       Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'ROLLOUT', app: rw, rollDir: dir, hdg: crsOf(rw), mode: 'GROUND', ias: gs, freq: 'TWR', checked: true, ctl: true });
       return ac;
     }
-    if (gs <= 30 && along && !exArr && rwyOf(depRw()) === R) {   // stopped on the runway, lined up: a departure waiting for take-off clearance
-      const row = exDep || liveRow(a, 'DEP', 3, 30), gate = row ? gateFor(row.ap) : depGateOf(p, crsOf(depRw())), ac = liveAc(a, R.rm(R.mOf(p), 0), row, 'DEP', gate);
-      Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'LINEDUP', hdg: crsOf(depRw()), sid: sidName(gate, depRw()), pushed: true, leftStand: true, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0, need: 'Lined up' });
-      liveCall(ac, `${APT.tower[0]}, ${greet()}, lined up runway ${depRw()}`);
+    const lrw = depRwys().find(r => rwyOf(r) === R);
+    if (gs <= 30 && along && !exArr && lrw) {   // stopped on the runway, lined up: a departure waiting for take-off clearance
+      const row = exDep || liveRow(a, 'DEP', 3, 30), gate = row ? gateFor(row.ap) : depGateOf(p, crsOf(lrw)), ac = liveAc(a, R.rm(R.mOf(p), 0), row, 'DEP', gate);
+      Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'LINEDUP', depRwy: lrw, hdg: crsOf(lrw), sid: sidName(gate, lrw), pushed: true, leftStand: true, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0, need: 'Lined up' });
+      liveCall(ac, `${APT.tower[0]}, ${greet()}, lined up runway ${lrw}`);
       return ac;
     }
   }
   // parked (or just being pushed) on a stand: the stand's own aircraft, already there
   if (gs < 6 && STANDS.some(s => dist(...s.p, ...p) < 60*M2NM)) return null;
   const node = nearestNode(p, n => !/^R/.test(n.id)); if (!node || dist(...node.p, ...p) > 150*M2NM) return null;
-  const hold = Object.keys(HOLDS).find(k => HOLDS[k].node && GN[HOLDS[k].node] && holdRwy(k) === rwyOf(depRw()) && dist(...GN[HOLDS[k].node].p, ...p) < 70*M2NM);
+  const hold = Object.keys(HOLDS).find(k => HOLDS[k].node && GN[HOLDS[k].node] && depRwys().some(r => holdRwy(k) === rwyOf(r)) && dist(...GN[HOLDS[k].node].p, ...p) < 70*M2NM);
   // which way it is going: a callsign on today's list, or a departure if it is heading for the departure holding points
   let kind = exDep ? 'DEP' : exArr ? 'ARR' : null;
   if (!kind) { const hp = HOLDS[depHold({ x: p[0], y: p[1], leftStand: true, stand: null })], to = hp && GN[hp.node] ? GN[hp.node].p : RADAR_REF, ahead = [p[0] + Math.sin((a.trk||0)*D2R)*0.1, p[1] + Math.cos((a.trk||0)*D2R)*0.1];
     kind = hold && gs < 4 ? 'DEP' : dist(...ahead, ...to) < dist(...p, ...to) ? 'DEP' : 'ARR'; }
   if (kind === 'DEP') {
     const row = exDep || liveRow(a, 'DEP', 8, 40), gate = row ? gateFor(row.ap) : depGateOf(p, a.trk || 0), at = hold && gs < 4 ? GN[HOLDS[hold].node].p : node.p, ac = liveAc(a, at, row, 'DEP', gate);
-    Object.assign(ac, { ground: true, sid: sidName(gate, depRw()), pushed: true, leftStand: true, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0 });
+    if (hold && depRwys().length > 1) ac.depRwy = depRwys().find(r => holdRwy(hold) === rwyOf(r));
+    Object.assign(ac, { ground: true, sid: sidName(gate, depRw(ac)), pushed: true, leftStand: true, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0 });
     if (hold && gs < 4) { ac.state = 'HOLDPT'; ac.hp = hold; ac.need = 'Ready for departure'; liveCall(ac, PH.atHold(ac, hold)); }
     else { ac.state = 'READY'; ac.need = 'Ready to taxi'; liveCall(ac, `${APT.tower[0]}, ${greet()}, ready to taxi`); }
     return ac;
   }
   const row = exArr || liveRow(a, 'ARR', -6, 25), ac = liveAc(a, node.p, row, 'ARR', nearGate(p));
   const ex = Object.keys(HOLDS).sort((k1, k2) => dist(...GN[HOLDS[k1].node].p, ...p) - dist(...GN[HOLDS[k2].node].p, ...p))[0];
-  Object.assign(ac, { ground: true, state: 'VACATING', vacated: true, onRwy: false, path: null, vacNode: node.id, exit: ex, app: S.rwy, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0, checked: true, ctl: true });
+  Object.assign(ac, { ground: true, state: 'VACATING', vacated: true, onRwy: false, path: null, vacNode: node.id, exit: ex, app: landRw(ac), mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0, checked: true, ctl: true });
   ac.need = 'Needs a stand'; liveCall(ac, `${APT.tower[0]}, ${greet()}, request taxi`);
   return ac;
 }
