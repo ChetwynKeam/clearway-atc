@@ -129,15 +129,18 @@ function drawEgkk(){
   const R = R0, rwyPoly = w => [R.rm(0, -w/2), R.rm(R.len, -w/2), R.rm(R.len, w/2), R.rm(0, w/2)];
   if (sc <= 70) { cx.fillStyle = rgba('rwyOut', .9); pathP(rwyPoly(Math.max(R.width, 2.2/mpx))); cx.fill(); return; }
   cx.lineJoin = 'round'; cx.lineCap = 'round';
-  // aprons, then the old runway and the taxiways (every graph edge), then the runway on top
-  cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
-  cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
-  for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-  cx.lineWidth = lw(44); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
-  cx.strokeStyle = C.asphalt; cx.lineCap = 'butt'; cx.lineWidth = lw(45); pathP(OLD_RWY, false); cx.stroke(); cx.lineCap = 'round';
-  cx.lineWidth = lw(23);
-  for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-  for (const k in FIL) { pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  // aprons, then the old runway and the taxiways (every graph edge), then the runway on top; over the street map the
+  // mapped aprons and taxiways are already there, so only the drawn chart paves them
+  if (!IMG) {
+    cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
+    cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
+    for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    cx.lineWidth = lw(44); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
+    cx.strokeStyle = C.asphalt; cx.lineCap = 'butt'; cx.lineWidth = lw(45); pathP(OLD_RWY, false); cx.stroke(); cx.lineCap = 'round';
+    cx.lineWidth = lw(23);
+    for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    for (const k in FIL) { pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  }
   cx.fillStyle = C.rwy; pathP(rwyPoly(R.width)); cx.fill();
   if (!IMG) { cx.fillStyle = C.bld; cx.strokeStyle = C.bldEdge; cx.lineWidth = 1; for (const b of G.buildings) { pathP(b.pts.map(([e, n]) => EN(e, n))); cx.fill(); cx.stroke(); } }
   if (sc > 150) {
@@ -163,11 +166,11 @@ function drawEgkk(){
     }
     for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 60], [R.hi, R.thr[R.hi] - 60]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
-    cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35);
-    { const seen = new Set(); for (const k in FIL) { const f = FIL[k].W, key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
-      strokeSmooth(leadLine(f).map(p => P2(R.rm(...p)))); } }
+    { const seen = new Set(), leads = []; for (const k in FIL) { const f = FIL[k].W, key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
+      leads.push(leadLine(f).map(p => P2(R.rm(...p)))); }
+      groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -175,8 +178,7 @@ function drawEgkk(){
       cx.setLineDash([]);
     }
     // stand lead-in lines and numbers
-    cx.lineWidth = lw(0.3);
-    for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
+    groundLines(lw(0.3), () => { for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); } });
     if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
     cx.font = `600 11px ${FONT_L}`;

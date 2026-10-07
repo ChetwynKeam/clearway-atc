@@ -130,16 +130,19 @@ function drawKjfk(){
   const rwyPoly = (R, w) => [R.rm(0, -w/2), R.rm(R.len, -w/2), R.rm(R.len, w/2), R.rm(0, w/2)];
   if (sc <= 70) { cx.fillStyle = rgba('rwyOut', .9); for (const R of RWY_LIST) { pathP(rwyPoly(R, Math.max(R.width, 2.2/mpx))); cx.fill(); } return; }
   cx.lineJoin = 'round'; cx.lineCap = 'round';
-  // aprons, then taxiways (every graph edge), then the runways on top
-  cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
-  // the mapped apron outlines did not survive conversion, so the ramp is paved along its taxilanes and gate lead-ins:
-  // the yellow ramp lines then sit on concrete instead of on the grass
-  cx.strokeStyle = C.concrete; cx.lineWidth = lw(70);
-  for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-  cx.lineWidth = lw(48); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
-  cx.strokeStyle = C.asphalt; cx.lineWidth = lw(23);
-  for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-  for (const k in FIL) { const R = rwyById(HOLDS[k].on); pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  // aprons, then taxiways (every graph edge), then the runways on top; over the street map the mapped aprons and
+  // taxiways are already there, so only the drawn chart paves them
+  if (!IMG) {
+    cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
+    // the mapped apron outlines did not survive conversion, so the ramp is paved along its taxilanes and gate lead-ins:
+    // the yellow ramp lines then sit on concrete instead of on the grass
+    cx.strokeStyle = C.concrete; cx.lineWidth = lw(70);
+    for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    cx.lineWidth = lw(48); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
+    cx.strokeStyle = C.asphalt; cx.lineWidth = lw(23);
+    for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    for (const k in FIL) { const R = rwyById(HOLDS[k].on); pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
+  }
   cx.fillStyle = C.rwy;
   for (const R of RWY_LIST) { pathP(rwyPoly(R, R.width)); cx.fill(); }
   if (!IMG) { cx.fillStyle = C.bld; cx.strokeStyle = C.bldEdge; cx.lineWidth = 1; for (const b of G.buildings) { pathP(b.pts.map(([e, n]) => EN(e, n))); cx.fill(); cx.stroke(); } }
@@ -170,12 +173,11 @@ function drawKjfk(){
       for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 70], [R.hi, R.thr[R.hi] - 70]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
     }
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
-    cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35);
-    { const seen = new Set(); for (const k in FIL) { const f = FIL[k].W, key = HOLDS[k].on + JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
-      const R = rwyById(HOLDS[k].on); strokeSmooth(leadLine(f).map(p => P2(R.rm(...p)))); } }
+    { const seen = new Set(), leads = []; for (const k in FIL) { const f = FIL[k].W, key = HOLDS[k].on + JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
+      const R = rwyById(HOLDS[k].on); leads.push(leadLine(f).map(p => P2(R.rm(...p)))); }
+      groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.35);
-    for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
     // runway holding positions: two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -183,8 +185,7 @@ function drawKjfk(){
       cx.setLineDash([]);
     }
     // gate lead-in lines and numbers
-    cx.lineWidth = lw(0.3);
-    for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
+    groundLines(lw(0.3), () => { for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); } });
     if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
     if (HS1) { const [X, Y] = P2(HS1); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 60*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.font = `600 11px ${FONT_L}`; cx.fillText('HS 1', X + 60*mpx + 8, Y + 4); }
