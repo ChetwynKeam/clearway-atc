@@ -436,6 +436,7 @@ function stepRandomTows(){
   const R = S.rtow; if (!R || S.t < R.next) return;
   R.next = S.t + 3600/TOW_RATE*rnd(0.5, 1.5);
   const can = ac => ac.ground && ac.stand && !ac.tow && !ac.rtowed && !ac.need && !outOfCtl(ac) && !ac.emerg && !ac.slotHold && !ac.slotCancelled && S.sel !== ac &&
+    !(ac.inAt != null && S.t - ac.inAt < ac.inGap) &&   // just on stand: passengers off, bags out and the crew gone (30-45 min) before a tug comes for it
     (ac.state === 'ONSTAND' ? ac.doneAt === Infinity : ac.state === 'PARKED' && ac.kind === 'DEP' && ac.reqAt - S.t > 40*60);
   const list = S.acs.filter(can).sort(() => Math.random() - 0.5);
   for (const ac of list.slice(0, 6)) {
@@ -668,7 +669,7 @@ function taxiIn(ac, st, via, hold){
   // to a holding point: it stops there and waits for the next taxi instruction
   if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, () => atHoldIn(ac, hold)); else atHoldIn(ac, hold, true); return ac.taxiVia; }
   pts.push(st.p);
-  setPath(ac, pts, 15, () => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; emit('onstand', ac); turnRound(ac); }, { inR: standInR(pts, st) });
+  setPath(ac, pts, 15, () => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); }, { inR: standInR(pts, st) });
   return ac.taxiVia;
 }
 function atHoldIn(ac, hold, quiet){
