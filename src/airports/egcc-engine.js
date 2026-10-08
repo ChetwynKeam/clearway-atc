@@ -241,7 +241,7 @@ function drawEgcc(){
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
     { const leads = leadPts().map(l => l.map(p => P2(p))); groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
+    { const segs = edgeSegs(); groundLines(lw(0.35), () => { for (const [x1, y1, x2, y2] of segs) { cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke(); } }); }
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -254,6 +254,12 @@ function drawEgcc(){
     else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
   }
+}
+// lights and terminal names: drawn every frame over the airfield layer (in the dark theme the lights add their glow to
+// what is under them, so they can't go in the layer)
+function drawEgccTop(){
+  const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
+  const P2 = p => [sx(p[0]), sy(p[1])];
   // lights: runway edges and thresholds (dark theme glow)
   if (sc > 110) {
     cx.save(); cx.globalCompositeOperation = C.glow;
@@ -435,7 +441,7 @@ const APT = {
   lineUpWords: hp => 'line up and wait',
   terrain: { name: 'the Pennines', poly: PENNINES, min: 3100, low: 2500, msg: ac => `${ac.cs} is over the Pennines at ${Math.round(ac.alt)} ft (Kinder Scout 2,087 ft, minimum 3,100 ft)${ac.alt < 2500 ? ', TERRAIN' : ''}.` },
   restricted: null,
-  drawAirport: drawEgcc,
+  drawAirport: drawEgcc, drawAirportTop: drawEgccTop,
   gaEarly(ac, rw){},
   // missed approach: climb straight ahead to 3,500 ft; 23R turns right onto 355° after 750 ft, 05R right onto 185°
   gaTurn(ac){ const rw = ac.gaRwy, F = FINAL[rw] || FINAL['23R'], I = EGCC.ILS[rw] || EGCC.ILS['23R'];

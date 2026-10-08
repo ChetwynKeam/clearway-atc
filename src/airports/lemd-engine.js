@@ -256,7 +256,7 @@ function drawLemd(){
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
     { const leads = leadPts().map(l => l.map(p => P2(p))); groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
+    { const segs = edgeSegs(); groundLines(lw(0.35), () => { for (const [x1, y1, x2, y2] of segs) { cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke(); } }); }
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -269,6 +269,12 @@ function drawLemd(){
     else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
   }
+}
+// lights and terminal names: drawn every frame over the airfield layer (in the dark theme the lights add their glow to
+// what is under them, so they can't go in the layer)
+function drawLemdTop(){
+  const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
+  const P2 = p => [sx(p[0]), sy(p[1])];
   // lights: runway edges and thresholds (dark theme glow)
   if (sc > 110) {
     cx.save(); cx.globalCompositeOperation = C.glow;
@@ -448,7 +454,7 @@ const APT = {
   lineUpWords: hp => 'line up and wait',
   terrain: { name: 'the Sierra de Guadarrama', poly: GUADARRAMA, min: 9000, low: 8000, msg: ac => `${ac.cs} is over the Sierra de Guadarrama at ${Math.round(ac.alt)} ft (peaks to 7,966 ft)${ac.alt < 8000 ? ', TERRAIN' : ''}.` },
   restricted: null,
-  drawAirport: drawLemd,
+  drawAirport: drawLemd, drawAirportTop: drawLemdTop,
   gaEarly(ac, rw){},
   // missed approach: climb straight ahead, then turn (32: left, 18: right) direct ROFIX and hold at 5,000 or 6,000 ft
   gaTurn(ac){ const rw = ac.gaRwy, F = FINAL[rw] || FINAL['32L']; if (ac.alt > ELEV + 1500 || dist(ac.x, ac.y, ...(THR[rw] || ARP)) > 3) { ac.gaTurn = true; ac.mode = 'NAV'; ac.route = F.missed.slice(); ac.turnDir = (LEMD.ILS[rw] || {}).turn || 0; ac.tgtAlt = ac.cleared = Math.max(ac.cleared || 0, F.missAlt); } },
