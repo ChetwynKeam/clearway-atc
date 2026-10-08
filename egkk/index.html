@@ -5690,6 +5690,7 @@ function draw(){
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
+  if (S.sel && S.sel.airborne) drawAirRoute(S.sel);   // under the traffic, so it never hides a label
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   // a route (taxi, or a tow asked for or under way) only while you have that aircraft selected
   if (S.sel && (towPending(S.sel) || towOn(S.sel))) drawTowRoute(S.sel);
@@ -6342,8 +6343,9 @@ function standLine(ac){
 // ── clearance pop-outs (push direction, taxi routing) ──
 function drawPreview(pv){
   cx.save(); cx.lineJoin = cx.lineCap = 'round';
-  cx.strokeStyle = 'rgba(0,0,0,.55)'; cx.lineWidth = 7; poly(pv.pts, false); cx.stroke();
-  cx.strokeStyle = C.pv; cx.lineWidth = 3; cx.setLineDash([9, 6]); cx.lineDashOffset = -performance.now()/40; poly(pv.pts, false); cx.stroke(); cx.setLineDash([]);
+  const lw = pv.thin ? 1.6 : 3;   // thin: an airborne route on the radar picture
+  cx.strokeStyle = pv.thin ? 'rgba(0,0,0,.35)' : 'rgba(0,0,0,.55)'; cx.lineWidth = lw + (pv.thin ? 2.4 : 4); poly(pv.pts, false); cx.stroke();
+  cx.strokeStyle = C.pv; cx.lineWidth = lw; cx.setLineDash([9, 6]); cx.lineDashOffset = -performance.now()/40; poly(pv.pts, false); cx.stroke(); cx.setLineDash([]);
   const e = pv.pts[pv.pts.length-1]; cx.fillStyle = C.pv; cx.beginPath(); cx.arc(sx(e[0]), sy(e[1]), 5, 0, 7); cx.fill();
   if (pv.label) { cx.font = `600 12px ${FONT_L}`; const t = pv.label, w = cx.measureText(t).width + 12; cx.fillStyle = C.pvBg; cx.fillRect(sx(e[0]) + 9, sy(e[1]) - 22, w, 18); cx.fillStyle = C.pvTxt; cx.fillText(t, sx(e[0]) + 15, sy(e[1]) - 9); }
   cx.restore();
@@ -6381,6 +6383,54 @@ function drawVacRoute(ac){
   const ex = (vacHover && vacHover.ac === ac && vacHover.ex) || ac.reqExit, pts = ex && vacPreview(ac, ex); if (!pts) return;
   drawPreview({ pts, label: ac.cs + ' · Vacate ' + ex.replace(/~\d+$/, '') + (exitCheck(ac, ex).back ? ' (backtrack)' : '') });
 }
+// an airborne flight you control: the way it is flying from here (heading, direct, STAR, hold) to the runway threshold,
+// or for a departure to the fix where it leaves you
+const finFrom = (F, p, keep) => { const q = onFinal({ x: p[0], y: p[1], finI: keep }, F); return q ? [pathAhead(F, q, 0), ...F.pts.slice(q.i + 1)] : F.pts; };
+function hdgCut(ac, h, F){   // where a heading meets the final, and the final from there
+  const a = [ac.x, ac.y], b = add(a, h, 40); let best = null;
+  for (let i = 0; i < F.pts.length - 1; i++) {
+    const c = F.pts[i], d = F.pts[i+1], r = [b[0]-a[0], b[1]-a[1]], e = [d[0]-c[0], d[1]-c[1]], den = r[0]*e[1] - r[1]*e[0]; if (Math.abs(den) < 1e-9) continue;
+    const t = ((c[0]-a[0])*e[1] - (c[1]-a[1])*e[0])/den, u = ((c[0]-a[0])*r[1] - (c[1]-a[1])*r[0])/den;
+    if (t > 0 && t <= 1 && u >= 0 && u <= 1 && (!best || t < best.t)) best = { t, i, p: [a[0] + r[0]*t, a[1] + r[1]*t] };
+  }
+  return best && [best.p, ...F.pts.slice(best.i + 1)];
+}
+function holdPts(ac, h){   // the racetrack: one-minute legs at its present speed, turns at 25° bank
+  const s = h.left ? -1 : 1, tas = Math.max(ac.ias*(1 + ac.alt/1000*0.018), 120), r = tas*tas/(11.26*Math.tan(25*D2R))/6076, L = tas/60;
+  const arc = (o, from) => Array.from({ length: 13 }, (_, k) => add(o, from + s*k*15, r));
+  const o1 = add(h.c, h.inb + 90*s, r), e1 = add(o1, h.inb + 90*s, r), e2 = add(e1, h.inb + 180, L), o2 = add(e2, h.inb + 180 + 90*s, r);
+  return [h.c, ...arc(o1, h.inb - 90*s), e2, ...arc(o2, h.inb + 90*s), h.c];
+}
+function airRoute(ac){
+  if (outOfCtl(ac) || ac.state === 'PRE' || (typeof outsideRadar === 'function' && outsideRadar(ac))) return null;
+  const me = [ac.x, ac.y], rw = ac.kind === 'ARR' ? landRw(ac) : null, F = ac.kind === 'ARR' && !ac.diverting && ac.state !== 'DIVERTING' ? (ac.app ? finOf(ac) : FINAL[rw]) : null;
+  const to = ac.kind !== 'ARR' ? null : ac.state === 'DIVERTING' ? 'diverting' : ac.app ? (F && F.rnp && F.short ? F.short + ' runway ' + ac.app : 'runway ' + ac.app) : 'expect runway ' + rw;
+  const fixes = (ac.route || []).filter(id => WP[id]);
+  let pts = null, what = null;
+  if (ac.mode === 'FINAL' && F) pts = [me, ...finFrom(F, me, ac.finI)];
+  else if (ac.mode === 'NAV' && fixes.length) {
+    pts = [me, ...fixes.map(id => WP[id].p)];
+    if (F && ac.kind === 'ARR') pts.push(...finFrom(F, pts[pts.length - 1]));
+    else what = fixes[fixes.length - 1];
+  }
+  else if (ac.mode === 'HOLD' && ac.hold) {
+    pts = [...(ac.hold.ph === 'in' ? [me] : []), ...holdPts(ac, ac.hold)];
+    if (F && ac.app) pts.push(...finFrom(F, ac.hold.c));
+    else what = 'hold ' + ac.hold.name;
+  }
+  else if (ac.mode === 'HDG') {
+    const h = ac.tgtHdg ?? ac.hdg, cut = F && ac.app && !F.rnp && hdgCut(ac, h, F);
+    if (cut) pts = [me, ...cut];
+    else {
+      pts = [me, add(me, h, 6)]; what = 'heading ' + hdg3(h);
+      if (ac.kind === 'DEP' && ac.onSid) { const ex = (exitRouteOf(ac) || []).filter(id => WP[id]); if (ex.length) { pts.push(...ex.map(id => WP[id].p)); what = ex[ex.length - 1]; } }
+    }
+  }
+  if (!pts || pts.length < 2) return null;
+  const label = ac.cs + ' · ' + (ac.kind === 'ARR' && F && !what ? to : ac.kind === 'ARR' && what ? what + (to ? ', ' + to : '') : what || '');
+  return { pts, label, thin: true };
+}
+function drawAirRoute(ac){ const r = airRoute(ac); if (r) drawPreview(r); }
 const pop = document.createElement('div'); pop.className = 'pop'; pop.hidden = true; pop.setAttribute('role', 'dialog'); document.body.appendChild(pop);
 let popAc = null;
 function closePop(){ pop.hidden = true; popAc = null; S.preview = null; }
