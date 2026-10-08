@@ -2184,13 +2184,15 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <tr><td class="mono">OPS1 CHECK [rwy]</td><td>Send the airside operations car on a runway inspection: it drives to a holding point and asks to enter. Also <b>Runway check</b> in the weather panel</td><td class="mono">OPS1 CHECK 26L</td></tr>
         <tr><td class="mono">OPS1 ENTER</td><td>Clear it onto the runway. It drives the length and back and reports vacated; until then the runway is occupied. Also <b>Enter runway</b> on its yellow strip</td><td class="mono">OPS1 ENTER</td></tr>
         <tr><td class="mono">OPS1 VACATE / HOLD / CANCEL</td><td>Off the runway at the nearest exit now; hold at the holding point; call the inspection off</td><td class="mono">OPS1 VACATE</td></tr>
+        <tr><td class="mono">[vehicle] GO / HOLD</td><td>Answer a vehicle that asks to drive along a taxiway or to cross a runway: approve it (also <b>Approve</b> or <b>Cross</b> on its yellow strip), or keep it where it is</td><td class="mono">FUEL3 GO</td></tr>
+        <tr><td class="mono">VEHICLES AUTO / ASK / GO</td><td>Let vehicles use the taxiways without asking (they still ask to cross a runway); make them ask again; approve every taxiway request now</td><td class="mono">VEHICLES AUTO</td></tr>
       </table></div>
       <p>Commands chain: <code>EZY6497 L180 A40 S200</code> is one transmission. The callsign can be shortened to its unique digits.</p>
     </section>
 
     <section id="t-emergencies" data-track="core"><h2><span class="n">09</span>Emergencies and the unexpected</h2>
       <p>Pick how often things go wrong when you open a session: <b>Off</b>, <b>Occasional</b> (about every 20 minutes) or <b>Frequent</b> (about every 10). Guided exercises have none. An emergency aircraft turns red on the scope and the strips, squawks 7700 for a MAYDAY, and its card shows what is wrong with a <b>Roger</b> button. Your first transmission to it acknowledges it, so you can roger it and give the approach in one go.</p>
-      <p><b>Ground vehicles.</b> Zoom in on the apron and the airport is working: steps or the jet bridge at the door, baggage tractors with their carts, belt loaders, catering high-loaders, fuel bowsers, ground power, apron buses to the remote stands, the tug that comes to the nose and pushes or tows (drawn on the aircraft), engineers' vans from the hangars and the fire service out training. They drive the real airside roads from OpenStreetMap and give way to aircraft; they don't need you, and clicking one shows what it is doing. The exception is <b>Ops 1</b>, the airside operations car: every hour or two it asks to inspect the runway. It calls from a holding point and gets a yellow strip; clear it with <b>Enter runway</b> (<code>OPS1 ENTER</code>) when there is a gap. While it is on the runway the runway is occupied: an arrival will go around and you must not clear a departure. <code>OPS1 VACATE</code> gets it off at the nearest exit. With the runway closed for an inspection it goes on by itself.</p>
+      <p><b>Ground vehicles.</b> Zoom in on the apron and the airport is working: steps or the jet bridge at the door, baggage tractors with their carts, belt loaders, catering high-loaders, fuel bowsers, ground power, apron buses to the remote stands, the tug that comes to the nose and pushes or tows (drawn on the aircraft), engineers' vans from the hangars and the fire service out training. They drive the real airside roads from OpenStreetMap and give way to aircraft, and clicking one shows what it is doing. On the roads and aprons they don't need you, but where a vehicle has to drive along a taxiway it stops and asks first ("Fuel 3, request to proceed via Lima, Papa to the fuel farm"), and it stops at the holding position of every runway and asks to cross. Each gets a yellow strip: <b>Approve</b> or <b>Cross</b> (<code>FUEL3 GO</code>), or <b>Hold</b>. A crossing vehicle occupies the runway until it reports vacated. Fire tenders and the ambulance on blue lights don't ask for the taxiways and cross a runway as soon as it is clear. If the taxiway calls get too busy, <b>Approve automatically</b> in the weather panel (<code>VEHICLES AUTO</code>) lets them use the taxiways without asking; they still ask to cross runways. The other radio vehicle is <b>Ops 1</b>, the airside operations car: every hour or two it asks to inspect the runway. It calls from a holding point and gets a yellow strip; clear it with <b>Enter runway</b> (<code>OPS1 ENTER</code>) when there is a gap. While it is on the runway the runway is occupied: an arrival will go around and you must not clear a departure. <code>OPS1 VACATE</code> gets it off at the nearest exit. With the runway closed for an inspection it goes on by itself.</p>
       <figure class="fig"><canvas id="figEmerg" aria-label="A MAYDAY aircraft on short final with the runway closed"></canvas><figcaption>The runway closed for debris, with red crosses along it, while EXS96K comes down final under a MAYDAY. It cannot be cleared to land: send it around or hold it until the runway reopens. A departure waits at the holding point with its release.</figcaption></figure>
       <div class="tbl"><table>
         <tr><th>Event</th><th>What happens</th><th>What to do</th></tr>
@@ -5257,7 +5259,7 @@ function commandRun(str){
       if (ac.luq || (ac.cto && ac.state === 'TAXI')) { sys(`${ac.cs} is already cleared onto the runway.`); continue; }
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
       if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)))) sys('Careful: the runway is occupied.', true);
-      else if (typeof vehOnRwy === 'function' && vehOnRwy(depRw(ac))) sys(`Careful: ${vehOnRwy(depRw(ac)).cs} is on the runway.`, true);
+      else if (typeof vehOnRwy === 'function' && vehOnRwy(depRw(ac))) sys(`Careful: ${radioName(vehOnRwy(depRw(ac)))} is on the runway.`, true);
       if (APT.xing && S.xing.st !== 'CLOSED' && ((S.rwy === RW_LO && HOLDS[ac.hp].m > XING_M) || (S.rwy === RW_HI && HOLDS[ac.hp].m < XING_M))) sys('The backtrack crosses Winston Churchill Avenue: close the road first.', true);
       if (luTaxi(ac)) { ac.luq = true; ac.path.thru = true; }   // still taxiing: it rolls straight on through the holding point
       else startLineUp(ac);
@@ -7562,9 +7564,10 @@ const VEH_DATA = {"nodes":[[-36,-1476],[-33,-1481],[-32,-1504],[-29,-1509],[-25,
 // the pushback tug that comes to the nose and pushes or tows, the jet bridges that swing out to the door, engineers'
 // vans between the hangars and the stands, and the fire service out on training runs.
 // They drive the real airside roads (OpenStreetMap service roads inside the aerodrome fence, from the airport's
-// <icao>-veh.js, built by tools/vehicles_osm.py), keep to their side of the road (left in the UK), cross the
-// taxiways on the way and give way to aircraft. The controller never instructs them; clicking one says what it is
-// doing (no route is drawn). Where an airport's map has no road somewhere, they use the taxiway edge.
+// <icao>-veh.js, built by tools/vehicles_osm.py), keep to their side of the road (left in the UK) and give way to
+// aircraft. Where an airport's map has no road somewhere, they use the taxiway edge: then they stop and ask you
+// before driving along a taxiway, and they stop short of every runway and ask to cross (see "asking" below).
+// Clicking one says what it is doing (no route is drawn).
 const VM = M2NM;   // metres to NM
 const VD = typeof VEH_DATA !== 'undefined' ? VEH_DATA : { nodes: [], edges: [], fire: [], firetrain: [], hangars: [], fuel: [], catering: [], terms: [], bridges: [] };
 const VP = ([e, n]) => [e*VM, n*VM];
@@ -7601,6 +7604,27 @@ function vgBuild(){
   // the taxiways (never the runway itself): a vehicle drives along their edge where the roads don't reach
   for (const id in GN) if (id[0] !== 'R') vgAdd('t:' + id, GN[id].p, false);
   for (const e of GE) if (VG['t:' + e.a] && VG['t:' + e.b] && !crossesRwy(GN[e.a].p, GN[e.b].p)) vgLink('t:' + e.a, 't:' + e.b, 't');
+  // across a runway where a taxiway crosses it: from the taxiway node one side, over the runway's own nodes, to the
+  // taxiway node the other side (only ever driven with the tower's clearance)
+  const HW = (APT.rwyHalfWidth || 22.5) + 8, onR = p => RWYS.find(R => Math.abs(R.offOf(p)) < HW && R.mOf(p) > -60 && R.mOf(p) < rLen(R) + 60);
+  for (const id in GN) {
+    if (!VG['t:' + id] || onR(GN[id].p)) continue;
+    for (const [r0] of GN[id].adj) {
+      if (!onR(GN[r0].p)) continue;
+      const seen = new Set([id, r0]), q = [[r0, dist(...GN[id].p, ...GN[r0].p)]];
+      while (q.length) {
+        const [n, L] = q.shift();
+        for (const [m] of GN[n].adj) {
+          if (seen.has(m)) continue; seen.add(m); const L2 = L + dist(...GN[n].p, ...GN[m].p); if (L2 > 400*VM) continue;
+          if (onR(GN[m].p)) { q.push([m, L2]); continue; }
+          if (!VG['t:' + m] || VX.has('t:' + id + '|t:' + m)) continue;
+          const a = GN[id].p, b = GN[m].p, R = RWYS.find(R => R.offOf(a)*R.offOf(b) < 0 && Math.abs(R.mOf(a) - R.mOf(b)) < 250 && R.mOf(a) > -60 && R.mOf(a) < rLen(R) + 60);
+          if (!R) continue;
+          vgLink('t:' + id, 't:' + m, 'x'); VX.set('t:' + id + '|t:' + m, R); VX.set('t:' + m + '|t:' + id, R);
+        }
+      }
+    }
+  }
   // roads join the taxiways where they meet them (an apron road running onto a taxiway, a dead end at the apron edge)
   for (let i = 0; i < VD.nodes.length; i++) {
     const id = 'r:' + i, deg = VG[id].adj.length, t = vgNear(VG[id].p, deg <= 1 ? 90 : 35, N => !N.road && !crossesRwy(VG[id].p, N.p));
@@ -7612,11 +7636,12 @@ const VR_MEMO = new Map();
 function vroute(from, to, urgent){
   if (from === to) return [from];
   const ck = from + '>' + to + (urgent ? '!' : ''); if (VR_MEMO.has(ck)) return VR_MEMO.get(ck);
-  const w = urgent ? { r: 1, l: 1, t: 1.15 } : { r: 1, l: 1.5, t: 3 };
+  // a runway crossing costs a detour's worth: the roads round are taken if there are any
+  const w = urgent ? { r: 1, l: 1, t: 1.15, x: 1 } : { r: 1, l: 1.5, t: 3, x: 3 }, xc = (urgent ? 150 : 900)*VM;
   const dd = new Map([[from, 0]]), prev = new Map(), done = new Set(), h = [[0, from]]; let found = false;
   while (h.length) {
     const [d, u] = heapPop(h); if (done.has(u)) continue; if (u === to) { found = true; break; } done.add(u);
-    for (const [v, L, k] of VG[u].adj) { const nd = d + L*w[k], o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, u); heapPush(h, [nd, v]); } }
+    for (const [v, L, k] of VG[u].adj) { const nd = d + L*w[k] + (k === 'x' ? xc : 0), o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, u); heapPush(h, [nd, v]); } }
   }
   let r = null; if (found) { r = [to]; let c = to; while (c !== from) { c = prev.get(c); r.unshift(c); } }
   if (VR_MEMO.size > 4000) VR_MEMO.clear();
@@ -7628,10 +7653,120 @@ function laneOffset(ids){
   for (let i = 0; i < P.length; i++) {
     const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)], h = brg(...a, ...b);
     const road = VG[ids[i]].road, off = (road ? 2.2 : 9)*VM*(KEEP_LEFT ? -1 : 1);
-    out.push(i === 0 || i === P.length - 1 ? P[i] : [P[i][0] + Math.cos(h*D2R)*off, P[i][1] - Math.sin(h*D2R)*off]);
+    out.push(i === 0 || i === P.length - 1 ? P[i].slice() : [P[i][0] + Math.cos(h*D2R)*off, P[i][1] - Math.sin(h*D2R)*off]);
   }
   return out;
 }
+
+// ── asking: a vehicle drives the roads and aprons by itself, but asks the tower before it drives along a taxiway
+// (more than a short hop across one, and not the apron lanes or a stand's lead-in) and stops short of every runway to
+// ask to cross. Fire tenders and the ambulance on blue lights don't ask for the taxiways, and cross a runway as soon as
+// it is clear. In the Academy exercises nobody asks.
+const VX = new Map();   // 't:a|t:b' across a runway -> that runway
+const edgeKind = (a, b) => { const e = VG[a] && VG[a].adj.find(x => x[0] === b); return e ? e[2] : null; };
+function edgeTw(a, b){
+  if (a[0] !== 't' || b[0] !== 't') return null;
+  const e = GN[a.slice(2)].adj.find(([n]) => n === b.slice(2)); return e ? e[1].tw : null;
+}
+// the taxiway a node is on, by the way into the runway (for "holding short on Juliet")
+function twAt(id){ const n = id.slice(2), e = GN[n] && GN[n].adj.find(([m, E]) => E.tw && E.tw !== 'APRON'); return e ? e[1].tw : null; }
+let STAND_NODES = null;
+const standNode = id => { if (!STAND_NODES) STAND_NODES = new Set(STANDS.map(s => s.node).filter(Boolean)); return id[0] === 't' && STAND_NODES.has(id.slice(2)); };
+// a route's points, with the stops where it has to ask
+function routePts(ids, v){
+  const pts = laneOffset(ids);
+  // taxiway stretches: one request at the start of each (over any crossings: those it asks for again)
+  for (let i = 0; i < ids.length - 1; i++) {
+    const k = edgeKind(ids[i], ids[i+1]); if (k !== 't') continue;
+    const k0 = i ? edgeKind(ids[i-1], ids[i]) : null; if (k0 === 't' || k0 === 'x') continue;
+    let j = i, L = 0; const tws = [];
+    for (; j < ids.length - 1; j++) {
+      const kj = edgeKind(ids[j], ids[j+1]); if (kj !== 't' && kj !== 'x') break; if (kj === 'x') continue;
+      const tw = edgeTw(ids[j], ids[j+1]);
+      if (tw && tw !== 'APRON' && !standNode(ids[j]) && !standNode(ids[j+1])) { L += dist(...VG[ids[j]].p, ...VG[ids[j+1]].p); if (!tws.includes(tw)) tws.push(tw); }
+    }
+    if (L > 150*VM) pts[i].stop = { k: 'twy', tws };
+    i = j - 1;
+  }
+  // the crossings (last first: points are added): a stop at the holding position, well short of the runway, and the
+  // runway clear again once over it
+  const HOLD_OFF = (APT.rwyHalfWidth || 22.5) + 55;
+  for (let i = ids.length - 2; i >= 0; i--) {
+    if (edgeKind(ids[i], ids[i+1]) !== 'x') continue;
+    const R = VX.get(ids[i] + '|' + ids[i+1]), off = p => Math.abs(R.offOf(p)), X = { k: 'rwy', R, tw: twAt(ids[i]) };
+    const nx = pts[i+1], cb0 = nx.cb;
+    nx.cb = w => { if (w.onRwy === R.id) { w.onRwy = null; if (!w.xAuto) vcall(w, `runway ${rwN(R)} vacated`); w.xing = null; w.xAuto = false; } if (cb0) cb0(w); };
+    let k = i, sp, at;
+    if (off(pts[k]) >= HOLD_OFF) { sp = pts[k].slice(); at = k + 1; }
+    else {
+      while (k > 0 && off(pts[k-1]) < HOLD_OFF) k--;
+      if (!k) { sp = pts[0].slice(); at = 0; }
+      else { const a = pts[k-1], b = pts[k], fa = off(a), t = (fa - HOLD_OFF)/(fa - off(b)); sp = [a[0] + (b[0] - a[0])*t, a[1] + (b[1] - a[1])*t]; at = k; }
+    }
+    sp.stop = X; pts.splice(at, 0, sp);
+  }
+  return pts;
+}
+// callsigns, given when a vehicle first calls ("Fuel 3")
+const VCS = { bus: 'BUS', steps: 'STEPS', bags: 'BAGGAGE', belt: 'LOADER', cater: 'CATERING', fuel: 'FUEL', gpu: 'POWER', lav: 'SERVICE', water: 'WATER', tug: 'TUG', van: 'ENGINEER', fire: 'FIRE', amb: 'AMBULANCE', ops: 'OPS', crew: 'CREW' };
+function vehCs(v){ if (v.cs) return v.cs; const p = VCS[v.type] || 'VEHICLE'; let n = 1; while (VEH.list.some(w => w.cs === p + n && !w.gone)) n++; return v.cs = p + n; }
+// nothing on or about to use the runway: an arrival inside 3 NM, anything on it or lined up
+function rwyClearFor(R){
+  return !S.acs.some(o => (o.onRwy && (o.rwyId || RWYS[0].id) === R.id) || (o.kind === 'ARR' && o.airborne && o.ctl && rwyOf(landRw(o)) === R && finalDist(o) < 3) || ((o.state === 'LINEUP' || o.state === 'TAKEOFF') && rwyOf(depRw(o)) === R))
+    && !VEH.list.some(w => w.onRwy === R.id && !w.gone);
+}
+function vehDest(v){
+  const sw = APT.standWord || 'stand';
+  if (S.rc && S.rc.v === v) return `holding point ${hpWords(S.rc.hp)}`;
+  if (v.home) return { fire: 'the fire station', fuel: 'the fuel farm', cater: 'the catering base', maint: 'the hangars' }[BASE_OF[v.type]] || 'the terminal';
+  if (v.training) return v.atGround ? 'the fire training ground' : 'the far side of the airfield';
+  if (v.ac && v.ac.stand && v.type !== 'fire') return `${sw} ${v.ac.stand.id}`;
+  if (v.ac) return spoken(v.ac.cs);
+  if (v.job && v.job.k === 'trip') return 'the other side of the airfield';
+  return 'the apron';
+}
+// a runway by the end in use (13L, not 13L/31R)
+const rwN = R => rwyName(R.id).split('/')[0];
+const twList = tws => tws.map(t => hpWords(t)).join(', ');
+// at a stop: ask (or, on blue lights and in the exercises, go when it may)
+function vehAsk(v, X){
+  v.req = X; X.t = S.t; X.asked = S.t; vehCs(v);
+  if (X.k === 'twy' && (v.urgent || !S.rtow || VEH.autoTwy)) { X.ok = true; v.req = null; return; }
+  if (X.k === 'rwy' && (v.urgent || !S.rtow)) { X.auto = true; return; }   // across as soon as the runway is clear
+  if (X.k === 'twy') vcall(v, `request to proceed via taxiway${X.tws.length > 1 ? 's' : ''} ${twList(X.tws)} to ${vehDest(v)}`);
+  else vcall(v, `holding short of runway ${rwN(X.R)}${X.tw ? ' on ' + hpWords(X.tw) : ''}, request to cross`);
+  if (typeof renderStrips === 'function') renderStrips(true);
+}
+function vehGo(v){
+  const X = v.req; if (!X) return; X.ok = true; v.req = null;
+  if (X.k === 'rwy') { v.onRwy = X.R.id; v.xing = S.t; v.xAuto = !!X.auto; }
+}
+// the controller approves a vehicle's request (or tells it to hold)
+function vehApprove(v){
+  const X = v.req; if (!X) return false;
+  if (X.k === 'rwy') {
+    const rw = rwN(X.R), busy = S.acs.find(o => onRunway(o, rw)), fin = S.acs.find(o => o.kind === 'ARR' && o.airborne && o.ctl && rwyOf(landRw(o)) === X.R && finalDist(o) < 3);
+    if (busy) sys(`Careful: ${busy.cs} is on the runway.`, true);
+    else if (fin) sys(`Careful: ${fin.cs} is on ${finalDist(fin).toFixed(1)} NM final: it will go around if ${radioName(v)} is still crossing.`, true);
+    vatc(v, `cross runway ${rw}, report vacated`); vread(v, `crossing runway ${rw}, wilco`);
+  } else { vatc(v, `proceed via ${X.tws.join(', ')}, give way to all aircraft`); vread(v, `via ${twList(X.tws)}, giving way to aircraft`); }
+  vehGo(v); return true;
+}
+// blue-light crossings once the runway is clear, and a reminder when one has waited a while
+function stepVehReqs(){
+  for (const v of VEH.list) {
+    const X = v.req; if (!X || v.gone) continue;
+    if (X.auto) { if (rwyClearFor(X.R)) vehGo(v); continue; }
+    if (S.t - X.asked > 240) { X.asked = S.t; vcall(v, X.k === 'rwy' ? `still holding short of runway ${rwN(X.R)}` : `still waiting to proceed via ${twList(X.tws)}`); }
+  }
+}
+// taxiway requests approved for you (runway crossings still ask): VEHICLES AUTO / VEHICLES ASK, or the weather panel
+function setVehAuto(on){
+  VEH.autoTwy = on; try { localStorage.setItem('cw-veh-auto', on ? '1' : '0'); } catch (e) {}
+  if (on) for (const v of VEH.list) if (v.req && v.req.k === 'twy') vehGo(v);
+  sys(on ? 'Vehicles now drive the taxiways without asking (they still ask to cross a runway).' : 'Vehicles now ask before driving on a taxiway.');
+}
+const vehAsking = () => VEH.list.filter(v => v.req && !v.req.auto && !v.gone);
 
 // ── the fleet
 // len, wid (metres), body colour, cab colour, top speed on the road (kt)
@@ -7653,6 +7788,7 @@ const VTYPES = {
   crew:   { name: 'Crew minibus',           len: 6,    wid: 2.1, col: '#e9edf2', cab: '#2d5fa8', kt: 16 }
 };
 const VEH = { list: [], n: 0, tick: 0, nextRoam: 0, nextFire: 0, bridges: [], bridgeBy: new Map(), cap: 0 };
+try { VEH.autoTwy = localStorage.getItem('cw-veh-auto') === '1'; } catch (e) {}
 const vehUnder = () => VEH.list.length < VEH.cap;
 // where each kind of vehicle is based: graph nodes near the real places (fire station, fuel farm, hangars, catering,
 // the terminal's apron face). Where the map has none, the handling base by the terminal stands in.
@@ -7719,7 +7855,8 @@ function newVeh(type, at, hdg, o = {}){
 function driveTo(v, p, h, urgent){
   const a = vgNear([v.x, v.y], 400), b = vgNear(p, 350, N => N.road) || vgNear(p, 600);
   let pts = [];
-  if (a && b) { const r = vroute(a, b, urgent); if (r) pts = laneOffset(r); if (pts.length && dist(v.x, v.y, ...pts[0]) < 4*VM) pts.shift(); }
+  v.req = null; if (v.onRwy && !(S.rc && S.rc.v === v)) v.onRwy = null;
+  if (a && b) { const r = vroute(a, b, urgent); if (r) pts = routePts(r, v); if (pts.length && dist(v.x, v.y, ...pts[0]) < 4*VM && !pts[0].stop) pts.shift(); }
   // the last bit, across the apron: lined up a few lengths out so it noses in square to its slot
   if (h != null) { const back = v.T.len*1.6 + 8; pts.push([p[0] - Math.sin(h*D2R)*back*VM, p[1] - Math.cos(h*D2R)*back*VM]); }
   pts.push([p[0], p[1]]);
@@ -7727,8 +7864,8 @@ function driveTo(v, p, h, urgent){
 }
 function sendHome(v, wait = 0){
   const n = baseFor(v.type, [v.x, v.y]); if (!n) { v.gone = true; return; }
-  v.job = null; v.home = true; v.leaveAt = S.t + wait; v.pts = []; v.endH = null;
-  v.go = () => { const a = vgNear([v.x, v.y], 400), r = a && vroute(a, n); v.pts = r ? laneOffset(r) : [VG[n].p]; v.parked = false; };
+  v.job = null; v.home = true; v.leaveAt = S.t + wait; v.pts = []; v.endH = null; v.req = null;
+  v.go = () => { const a = vgNear([v.x, v.y], 400), r = a && vroute(a, n); v.pts = r ? routePts(r, v) : [VG[n].p.slice()]; v.parked = false; };
 }
 // a vehicle out of its base at node n, heading off for point p
 function dispatch(type, p, h, job, urgent){
@@ -7904,19 +8041,20 @@ function giveWay(v, dt){
 }
 function driveStep(v, dt){
   if (v.leaveAt != null) { if (S.t < v.leaveAt) return; v.leaveAt = null; v.go && v.go(); v.go = null; }
+  if (v.req) { v.v = 0; return; }   // stopped, asking
   if (!v.pts.length) { if (v.home) v.gone = true; else if (!v.parked) { v.parked = true; v.v = 0; if (v.endH != null) v.hdg = v.endH; } return; }
   const tgt = v.pts[0], d = dist(v.x, v.y, ...tgt), last = v.pts.length === 1;
   // slow for the corner ahead and for the last leg in to the aircraft
   let top = v.spd*(v.urgent ? 1.6 : 1);
   if (v.pts.length > 1) { const turn = Math.abs(angDiff(brg(v.x, v.y, ...tgt), brg(...tgt, ...v.pts[1]))); if (turn > 35 && d < 30*VM) top = Math.min(top, turn > 100 ? 5 : 8); }
-  if (v.pts.length <= 2 && !v.home) top = Math.min(top, 6 + d/VM*0.15);
+  if ((v.pts.length <= 2 && !v.home) || (tgt.stop && !tgt.stop.ok)) top = Math.min(top, 6 + d/VM*0.15);
   if (giveWay(v, dt)) top = 0;
   const acc = top >= v.v ? 2.4 : 5; v.v = top >= v.v ? Math.min(top, v.v + acc*dt) : Math.max(top, v.v - acc*dt);
   const mv = v.v*0.5144*dt*VM;
   if (mv <= 0) return;
   const want = brg(v.x, v.y, ...tgt), rate = Math.max(30, v.v*0.5144/6*R2D);
   v.hdg = norm(v.hdg + clamp(angDiff(v.hdg, want), -rate*dt, rate*dt));
-  if (d <= mv || (d < 3*VM && Math.abs(angDiff(v.hdg, want)) > 100)) { v.x = tgt[0]; v.y = tgt[1]; v.pts.shift(); if (!v.pts.length && v.endH != null && !v.home) v.hdg = v.endH; if (tgt.cb) tgt.cb(v); }
+  if (d <= mv || (d < 3*VM && Math.abs(angDiff(v.hdg, want)) > 100)) { v.x = tgt[0]; v.y = tgt[1]; if (tgt.stop && !tgt.stop.ok) { v.v = 0; vehAsk(v, tgt.stop); return; } v.pts.shift(); if (!v.pts.length && v.endH != null && !v.home) v.hdg = v.endH; if (tgt.cb) tgt.cb(v); }
   else { v.x += Math.sin(v.hdg*D2R)*mv; v.y += Math.cos(v.hdg*D2R)*mv; }
   if (v.T.carts) { const t = v.trail, p = t[0]; if (!p || dist(...p, v.x, v.y) > 0.8*VM) { t.unshift([v.x, v.y]); if (t.length > 40) t.pop(); } }
 }
@@ -7963,7 +8101,7 @@ function vehInit(){
 function stepVehicles(dt){
   if (!VG_BUILT) return;
   VEH.tick += dt;
-  if (VEH.tick >= 1) { VEH.tick = 0; stepTurnarounds(); stepRoamers(); stepFireTraining(); stepRadio(); }
+  if (VEH.tick >= 1) { VEH.tick = 0; stepTurnarounds(); stepRoamers(); stepFireTraining(); stepRadio(); stepVehReqs(); }
   stepTugs(); stepBridges(dt);
   for (const v of VEH.list) {
     if (v.attached) continue;
@@ -8038,6 +8176,8 @@ function drawVehicles(){
 // what a vehicle is up to, for the pop-up when it is clicked
 function vehDoing(v){
   const C = S.rc;
+  if (v.req) return v.req.k === 'rwy' ? `Holding short of runway ${rwN(v.req.R)}, ${v.req.auto ? 'crossing when it is clear' : 'asking to cross'}` : `Asking to drive via taxiway ${v.req.tws.join(', ')}`;
+  if (v.xing && v.onRwy) return `Crossing runway ${rwyName(v.onRwy).split('/')[0]}`;
   if (C && C.v === v) return C.st === 'OUT' ? `Driving to holding point ${C.hp.replace(/~\d+$/, '')} for a ${C.why}` : C.st === 'READY' ? `At holding point ${C.hp.replace(/~\d+$/, '')}, asking to enter runway ${C.rw}` : C.st === 'ON' ? `Inspecting runway ${C.rw}` : `Vacating runway ${C.rw}`;
   if (v.type === 'fire' && v.ac && v.blues) return v.parked ? (v.job && v.job.k === 'attend' ? `Attending ${v.ac.cs}` : `Standing by for ${v.ac.cs}'s ${v.ac.emerg ? v.ac.emerg.k : 'emergency'}`) : `On a call to ${v.ac.cs}`;
   if (v.type === 'amb' && v.ac) return v.parked ? `Meeting ${v.ac.cs} on ${APT.standWord || 'stand'} ${v.ambSt ? v.ambSt.id : ''}` : `On a call to meet ${v.ac.cs}`;
@@ -8079,8 +8219,8 @@ document.addEventListener('pointerdown', e => { if (!vehPop.hidden && !vehPop.co
 // stops clear of the runway, the tenders surround it and inspect it, and then a tug comes to tow it in: approve that
 // tow like any other. A medical: the ambulance meets the aircraft on its stand.
 const RC_SPEED = 40;   // kt on the runway
-const radioName = v => v.cs ? v.cs.replace(/^([A-Z]+)(\d)$/, (m, w, d) => w[0] + w.slice(1).toLowerCase() + ' ' + d) : v.T.name;
-const radioSpoken = v => v.cs ? v.cs.replace(/^([A-Z]+)(\d)$/, (m, w, d) => w[0] + w.slice(1).toLowerCase() + ' ' + DIG[+d]) : v.T.name;
+const radioName = v => v.cs ? v.cs.replace(/^([A-Z]+)(\d+)$/, (m, w, d) => w[0] + w.slice(1).toLowerCase() + ' ' + d) : v.T.name;
+const radioSpoken = v => v.cs ? v.cs.replace(/^([A-Z]+)(\d+)$/, (m, w, d) => w[0] + w.slice(1).toLowerCase() + ' ' + d.split('').map(c => DIG[+c]).join(' ')) : v.T.name;
 function vcall(v, text){ const t = `${APT.tower[0]}, ${radioSpoken(v)}, ${text}`; log('plt', t.replace(radioSpoken(v), radioName(v)), radioName(v).toUpperCase()); say(t, v.cs); }
 function vread(v, text){ const t = `${text}, ${radioSpoken(v)}`; log('plt', t.replace(radioSpoken(v), radioName(v)), radioName(v).toUpperCase()); say(t, v.cs); }
 function vatc(v, text){ log('atc', `${radioName(v)}, ${text}`, 'TOWER'); }
@@ -8107,7 +8247,7 @@ function opsCheck(rw, why, auto){
   const hp = rcEntry(R, base); if (!hp) return null;
   const v = newVeh('ops', VG[base].p, 0, { cs: 'OPS1' });
   const r = vroute(base, 't:' + HOLDS[hp].node, true);
-  v.pts = r ? laneOffset(r) : [GN[HOLDS[hp].node].p]; const end = v.pts[v.pts.length - 1] = GN[HOLDS[hp].node].p.slice();
+  v.pts = r ? routePts(r, v) : [GN[HOLDS[hp].node].p]; const end = v.pts[v.pts.length - 1] = GN[HOLDS[hp].node].p.slice();
   end.cb = () => rcAtHold();
   if (r && r.length > 1) v.hdg = brg(...VG[r[0]].p, ...VG[r[1]].p);
   S.rc = { v, R, rw: rwyName(R.id), hp, st: 'OUT', auto: !!auto, why: why || 'routine runway inspection', t: S.t };
@@ -8153,9 +8293,25 @@ function rcVacate(){
   return true;
 }
 // the controller's instructions to a radio vehicle: OPS1 ENTER / VACATE / HOLD / CHECK [rwy]; RWY CHECK [rwy]
+const GO_WORDS = /^(GO|APPROVE|APPROVED|OK|CROSS|PROCEED|CLEAR|CLEARED|ENTER)$/;
 function vehCommand(toks){
   let t0 = toks[0];
   if ((t0 === 'RWY' || t0 === 'RUNWAY') && toks[1] === 'CHECK') { toks = ['OPS1', 'CHECK', ...toks.slice(2)]; t0 = 'OPS1'; }
+  if (t0 === 'VEHICLES' || t0 === 'VEH') {
+    if (toks[1] === 'AUTO') setVehAuto(true); else if (toks[1] === 'ASK') setVehAuto(false);
+    else if (toks[1] === 'GO' || toks[1] === 'APPROVE') { const L = vehAsking().filter(v => v.req.k === 'twy'); L.forEach(vehApprove); if (!L.length) sys('No vehicle is asking to use a taxiway.'); }
+    else sys('VEHICLES AUTO (taxiways without asking), VEHICLES ASK, or VEHICLES GO (approve every taxiway request).');
+    renderAtisSoon(); return true;
+  }
+  // a vehicle asking to use a taxiway or cross a runway: FUEL3 GO (or CROSS, PROCEED, APPROVE), FUEL3 HOLD
+  const V0 = /^[A-Z]+\d+$/.test(t0) && VEH.list.find(v => v.cs === t0 && v.req && !v.req.auto && !v.gone);
+  if (V0) {
+    const what = toks[1] || 'GO';
+    if (GO_WORDS.test(what)) { vehApprove(V0); return true; }
+    if (what === 'HOLD' || what === 'WAIT') { V0.req.asked = S.t; vatc(V0, V0.req.k === 'rwy' ? `hold short of runway ${rwN(V0.req.R)}` : 'hold position'); vread(V0, 'holding'); return true; }
+    sys(`${radioName(V0)}: GO (approve) or HOLD.`); return true;
+  }
+  if (/^[A-Z]+\d+$/.test(t0) && !/^(OPS1?|FIRE\d?)$/.test(t0) && VEH.list.some(v => v.cs === t0 && !v.gone)) { sys(`${radioName(VEH.list.find(v => v.cs === t0))} isn't asking for anything.`); return true; }
   if (!/^(OPS1?|FIRE\d?)$/.test(t0)) return false;
   const what = toks[1] || '', arg = toks[2];
   if (/^FIRE/.test(t0)) { sys('The fire service is busy with its emergency: it reports to you when the inspection is done.'); return true; }
@@ -8208,6 +8364,11 @@ function stepRadio(){
     if (!(ac.onRwy && (ac.rwyId || RWYS[0].id) === C.R.id) || ac.rcHit === C.t) continue;
     if (ac.state === 'TAKEOFF' || ac.state === 'ROLLOUT') { ac.rcHit = C.t; S.score.incidents++; S.score.pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with Ops 1 on the runway.`, true); }
   }
+  // anything landing or taking off with a vehicle crossing
+  for (const v of VEH.list) if (v.xing && v.onRwy && !v.gone) for (const ac of S.acs) {
+    if (!(ac.onRwy && (ac.rwyId || RWYS[0].id) === v.onRwy) || ac.rcHit === v.xing || !(ac.state === 'TAKEOFF' || ac.state === 'ROLLOUT')) continue;
+    ac.rcHit = v.xing; S.score.incidents++; S.score.pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with ${radioName(v)} crossing the runway.`, true);
+  }
   // the runway closed for an inspection (bird strike, debris, after an emergency): Ops 1 goes out and drives it
   if (S.emg && S.emg.rwyBlock && !C) opsCheck(S.rwy, 'runway inspection', true);
   stepFire();
@@ -8222,7 +8383,7 @@ function fireStandby(ac){
   for (let k = 0; k < n; k++) {
     const want = L*(k + 1)/(n + 1), h = hs.sort((a, b) => Math.abs(a[1] - want) - Math.abs(b[1] - want))[0]; if (!h) break;
     const p = GN[HOLDS[h[0]].node].p, v = dispatch('fire', p, null, { k: 'standby' }, true); if (!v) break;
-    v.cs = 'FIRE' + (k + 1); v.urgent = true; v.blues = true; v.ac = ac; v.leaveAt = S.t + k*6; ac.fireV.push(v);
+    v.cs = null; vehCs(v); v.urgent = true; v.blues = true; v.ac = ac; v.leaveAt = S.t + k*6; ac.fireV.push(v);
   }
   if (ac.fireV.length) log('coord', `Fire service: ${ac.fireV.length} tenders to standby positions by runway ${rwyName(R.id)} for ${ac.cs}.`, 'FIRE');
 }
@@ -8285,9 +8446,24 @@ S.listeners.push((ev, ac) => {
 });
 
 // ── the strip board: a radio vehicle waiting for you (Ops 1 at the holding point) gets its own strip
-function vehSig(){ const C = S.rc; return C ? C.st + (C.v.need || '') : ''; }
+function vehSig(){ const C = S.rc; return (C ? C.st + (C.v.need || '') : '') + vehAsking().map(v => v.cs + v.req.k).join(); }
+// a vehicle asking to drive a taxiway or cross a runway
+function reqStrip(v, doc){
+  const X = v.req, d = doc.createElement('div'); d.className = 'strip VEH need';
+  const what = X.k === 'rwy' ? `Cross ${rwN(X.R)}` : `Via ${X.tws.join(' ')}`;
+  d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq">${X.k === 'rwy' ? 'TWR' : 'GND'}</span></span>`;
+  d.querySelector('.cs').textContent = radioName(v).toUpperCase(); d.querySelector('.ty').textContent = v.T.name;
+  d.querySelector('.rte').textContent = what; d.querySelector('.lv').textContent = X.k === 'rwy' ? (X.tw ? 'On ' + X.tw : 'Holding short') : 'To ' + vehDest(v).replace(/^the /, '');
+  d.querySelector('.stt').textContent = '◆ ' + (X.k === 'rwy' ? 'Wants to cross' : 'Wants taxiway');
+  const acts = doc.createElement('span'); acts.className = 'vacts';
+  const bt = (label, cmd, cls) => { const b = doc.createElement('button'); b.type = 'button'; b.textContent = label; if (cls) b.className = cls; b.onclick = e => { e.stopPropagation(); command(cmd); renderStrips(true); }; acts.append(b); };
+  bt(X.k === 'rwy' ? 'Cross' : 'Approve', v.cs + ' GO', 'go'); bt('Hold', v.cs + ' HOLD');
+  d.append(acts);
+  d.onclick = () => { V.cx = v.x; V.cy = v.y; V.scale = Math.max(V.scale, (Math.min(W, H) || 600)/(900*M2NM)); };
+  return d;
+}
 function vehStrips(doc = document){
-  const C = S.rc; if (!C) return [];
+  const C = S.rc, out = vehAsking().map(v => reqStrip(v, doc)); if (!C) return out;
   const d = doc.createElement('div'); d.className = `strip VEH${C.v.need ? ' need' : ''}`;
   const st = C.st === 'OUT' ? `To ${C.hp.replace(/~\d+$/, '')}` : C.st === 'READY' ? `Hold ${C.hp.replace(/~\d+$/, '')}` : C.st === 'ON' ? `On ${C.rw}` : 'Vacating';
   d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs">OPS 1</span><span class="ty">Runway inspection</span></span><span class="c-b"><span class="rte">${esc(C.rw)}</span><span class="lv">${esc(st)}</span></span><span class="c-c"><span class="stt"></span><span class="fq">TWR</span></span>`;
@@ -8299,7 +8475,7 @@ function vehStrips(doc = document){
   if (C.st === 'OUT' || C.st === 'READY') bt('Cancel', 'OPS1 CANCEL');
   d.append(acts);
   d.onclick = () => { V.cx = C.v.x; V.cy = C.v.y; V.scale = Math.max(V.scale, (Math.min(W, H) || 600)/(900*M2NM)); };
-  return [d];
+  return [d, ...out];
 }
 // the weather panel's runway line: send Ops 1 to inspect the runway, or see where it is
 function rcPanel(){
@@ -8307,7 +8483,8 @@ function rcPanel(){
   const C = S.rc;
   const st = !C ? 'Runway inspection: Ops 1 at base' : C.st === 'OUT' ? `Ops 1 driving to ${C.hp.replace(/~\d+$/, '')} for a ${C.why}` : C.st === 'READY' ? `Ops 1 at ${C.hp.replace(/~\d+$/, '')}, requesting to enter ${C.rw}` : C.st === 'ON' ? `Ops 1 on runway ${C.rw}: runway occupied` : 'Ops 1 vacating';
   const b = !C ? '<button data-rc="OPS1 CHECK">Runway check</button>' : C.st === 'READY' ? '<button data-rc="OPS1 ENTER" class="go">Enter runway</button>' : C.st === 'ON' ? '<button data-rc="OPS1 VACATE" class="danger">Vacate</button>' : '';
-  return `<div class="rcline${C && C.st === 'ON' ? ' on' : ''}${C && C.st === 'READY' ? ' ask' : ''}"><span>${esc(st)}</span>${b}</div>`;
+  return `<div class="rcline${C && C.st === 'ON' ? ' on' : ''}${C && C.st === 'READY' ? ' ask' : ''}"><span>${esc(st)}</span>${b}</div>`
+    + `<div class="rcline"><span>Vehicles on taxiways: ${VEH.autoTwy ? 'go without asking' : 'ask you first'}</span><button data-rc="VEHICLES ${VEH.autoTwy ? 'ASK' : 'AUTO'}">${VEH.autoTwy ? 'Make them ask' : 'Approve automatically'}</button></div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-rc]'); if (b) { command(b.dataset.rc); renderAtis(); renderStrips(true); } });
 
