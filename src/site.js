@@ -1,9 +1,9 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 // an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
 const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
@@ -53,7 +53,7 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK and LEMD are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD and EGCC are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
 // ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
@@ -66,6 +66,7 @@ const AIRPORTS_NET = [
   { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'plan', pos:['APP','TWR','GND'], diff:5, blurb:'Four holding stacks, runway alternation and a heavy wake mix on two parallel runways.' },
   { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'The world’s busiest single runway, in mixed mode: fit every departure into the gaps between arrivals from the TIMBA and WILLO holds. The old 08L/26R is now a taxiway.' },
   { icao:'LEMD', ll:[40.472, -3.561], iata:'MAD', name:'Madrid-Barajas', ctry:'Spain', region:'Europe', rwys:['14L/32R','14R/32L','18L/36R','18R/36L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'Four runways at once: parallel ILS approaches to 32L and 32R, departures off 36L and 36R, a north and a south flow, and arrivals crossing 18R/36L between Terminals 4 and 4S.' },
+  { icao:'EGCC', ll:[53.354, -2.275], iata:'MAN', name:'Manchester', ctry:'United Kingdom', region:'UK & Ireland', rwys:['05L/23R','05R/23L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'Two parallel runways in segregated mode: land on one, depart from the other across it. Arrivals from the ROSUN, MIRSI and DAYNE holds, SIDs that stop at 5,000 ft, the Pennines to the east.' },
   { icao:'TNCM', ll:[18.041, -63.109], iata:'SXM', name:'Princess Juliana', ctry:'Sint Maarten', region:'Caribbean', rwys:['10/28'], status:'plan', pos:['APP','TWR'], diff:3, blurb:'Low arrivals over Maho Beach, Caribbean squalls and a single runway between the sea and the lagoon.' },
   { icao:'VQPR', ll:[27.403, 89.425], iata:'PBH', name:'Paro', ctry:'Bhutan', region:'Asia', rwys:['15/33'], status:'plan', pos:['TWR'], diff:5, blurb:'A visual approach through a Himalayan valley, with daylight-only operations.' },
   { icao:'KSAN', ll:[32.734, -117.19], iata:'SAN', name:'San Diego', ctry:'United States', region:'North America', rwys:['09/27'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'A busy single runway, with downtown buildings under the approach to 27.' },
@@ -520,6 +521,13 @@ const SCEN_TEXT = { LPMA: {
   low: 'Winter low cloud at 300 ft, close to the ILS minima. Keep the spacing on each final wide: some arrivals will go around to ROFIX.',
   fog: 'Radiation fog on the plateau, below the CAT I minima. Hold the arrivals at FAFEQ and RUDBI, plan diversions to Valencia and Seville, and keep the departures waiting.',
   storm: 'A summer thunderstorm, gusting into the thirties from the south-west. Windshear on final and go-arounds while the flow is changed.'
+}, EGCC: {
+  west: 'The usual south-westerly. Land 23R by the terminals, depart 23L to the south, and cross every departure over runway 1 between the arrivals.',
+  east: 'An easterly. Land 05R and depart 05L: now the arrivals cross runway 1 on their way in from runway 2, and the SIDs climb out over Stockport.',
+  rain: 'Pennine rain and a 400 ft cloud base, close to the ILS 23R minima. Keep the spacing wide: some arrivals will go around and climb back to 3,500 ft.',
+  fog: 'Fog on the Cheshire Plain, below the CAT I minima. Hold the arrivals at ROSUN, MIRSI and DAYNE, plan diversions to Liverpool and Leeds Bradford, and keep the departures waiting.',
+  storm: 'An Atlantic gale gusting into the forties across both runways. Turbulence and windshear on short final: expect go-arounds.',
+  calm: 'High pressure, light and variable wind and haze. A quiet day to learn the two-runway flow.'
 }, LXGB: {
   fair: 'A gentle westerly and good visibility. Learn the flow: road closures, backtracks and the SRA to runway 27.',
   levanter: 'The easterly gale and its banner cloud. Runway 09, approaches through RIPRA, and turbulence curling off the Rock.',
@@ -593,6 +601,7 @@ const ENDORSE = {
   LOWI: { name: 'Innsbruck', ex: ['idep', 'iarr', 'ifoehn'], badge: 'valley', p: 'The offset LOC/DME East from RTT, circling to 08, departures down the valley against the arrivals, minimum vectoring altitudes and föhn.' },
   EGKK: { name: 'London Gatwick', ex: ['gdep', 'garr', 'gmix'], badge: 'gatwick', p: 'One runway in mixed mode, RNAV SIDs with their own stop altitudes, arrivals from the TIMBA and WILLO holds onto the ILS, rapid exits and two terminals.' },
   LEMD: { name: 'Madrid-Barajas', ex: ['ldep', 'larr', 'lmix'], badge: 'barajas', p: 'Four runways at once: independent parallel ILS approaches, two departure runways, the north and south flows, RNAV SIDs to 13,000 ft and the 18R/36L crossing between Terminals 4 and 4S.' },
+  EGCC: { name: 'Manchester', ex: ['rdep', 'rarr', 'rmix'], badge: 'ringway', p: 'Two parallel runways in segregated mode: departures across runway 1 to runway 2, arrivals from the ROSUN, MIRSI and DAYNE holds onto the ILS, SIDs that stop at 5,000 ft and hand-offs to Scottish Control.' },
   KJFK: { name: 'New York JFK', ex: ['kdep', 'karr', 'kcross'], badge: 'kennedy', p: 'Four runways in two parallel pairs, the Kennedy Five, ILS approaches, runway crossings, calls for release on flow-restricted routes and FAA phraseology.' }
 };
 function renderHub(){
@@ -622,7 +631,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });

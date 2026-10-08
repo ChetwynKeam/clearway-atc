@@ -5,7 +5,8 @@ name: Refresh airport flights
 # Innsbruck (avionio.com's INN boards: innsbruck-airport.com refuses automated requests) as lowi/flights.json,
 # New York JFK (avionio.com's JFK boards, eight pages of about half an hour each way) as kjfk/flights.json,
 # London Gatwick (avionio.com's LGW boards, six pages each way) as egkk/flights.json,
-# Madrid-Barajas (avionio.com's MAD boards, ten pages each way) as lemd/flights.json.
+# Madrid-Barajas (avionio.com's MAD boards, ten pages each way) as lemd/flights.json,
+# Manchester (avionio.com's MAN boards, ten pages each way) as egcc/flights.json.
 on:
   schedule:
     - cron: '2,17,32,47 * * * *'
@@ -78,9 +79,19 @@ jobs:
           [ -n "$A" ] && [ -n "$D" ] || exit 0
           python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/lemd.json Europe/Madrid || exit 0
           python3 -c "import json,sys; d=json.load(open('/tmp/lemd.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p lemd && cp /tmp/lemd.json lemd/flights.json || echo "no Madrid flights parsed"
+      - name: Fetch Manchester's flight information
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; A=""; D=""
+          for P in 0 1 2 3 4 5 6 7 8 9; do
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/man_a$P.html "https://www.avionio.com/en/airport/man/arrivals?page=$P" && A="$A,/tmp/man_a$P.html"
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/man_d$P.html "https://www.avionio.com/en/airport/man/departures?page=$P" && D="$D,/tmp/man_d$P.html"
+          done
+          [ -n "$A" ] && [ -n "$D" ] || exit 0
+          python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/egcc.json Europe/London || exit 0
+          python3 -c "import json,sys; d=json.load(open('/tmp/egcc.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p egcc && cp /tmp/egcc.json egcc/flights.json || echo "no Manchester flights parsed"
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json egkk/flights.json lemd/flights.json; do [ -f "$f" ] && git add "$f"; done; true
+          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json egkk/flights.json lemd/flights.json egcc/flights.json; do [ -f "$f" ] && git add "$f"; done; true
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main
