@@ -67,23 +67,38 @@ const TURN_START = 100, TURN_MAX = 115;
 const legBrg = (u, v, inB) => dist(...GN[u].p, ...GN[v].p) < 0.3/1852 ? inB : brg(...GN[u].p, ...GN[v].p);
 // the ways on from node u: a zero-length edge (two nodes on one spot) is looked through to the edges beyond it
 function waysOn(u){ const out = []; for (const [v, e] of GN[u].adj) { if (e.len < 0.3/1852) { for (const [w, f] of GN[v].adj) if (w !== u) out.push([w, f]); } else out.push([v, e]); } return out; }
+// no hairpins: within HAIR_WIN of route (two junction fillets back to back, a lap round a junction's circle) the heading
+// never swings round by more than HAIR_MAX, whatever the single turns. A state carries the bearings of the legs that
+// started within HAIR_WIN of its node ([bearing, distance back to the leg's start]), the aircraft's own heading first
+const HAIR_WIN = 80/1852, HAIR_MAX = 150;
+const hairOk = (hist, b) => hist.every(([hb]) => Math.abs(angDiff(hb, b)) <= HAIR_MAX);
+function histOn(hist, b, len){ if (len < 0.5/1852) return hist; const out = [[b, len]]; for (const [hb, d] of hist) if (d + len < HAIR_WIN) out.push([hb, d + len]); return out; }
+// a line that doubles back on itself, by the same rule
+function doublesBack(pts){ let hist = []; for (let i = 1; i < pts.length; i++) { const len = dist(...pts[i-1], ...pts[i]); if (len < 0.5/1852) continue;
+  const b = brg(...pts[i-1], ...pts[i]); if (!hairOk(hist, b)) return true; hist = histOn(hist, b, len); } return false; }
+// one step of a facing search from state k at node u: the legs on that keep within the turn limits
+function facingSteps(k, u, from_, inB, hist, d, pen, ok, push){
+  for (const [v, e] of GN[u].adj) {
+    if (!ok(v)) continue;
+    const b = legBrg(u, v, inB);
+    if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START) || !hairOk(hist, b)) continue;
+    // keyed by the node before u too, so a junction reached two ways keeps both pasts (they turn on differently)
+    push(v + '|' + u + '|' + from_, [v, u, b, histOn(hist, b, e.len)], d + e.len*(pen ? pen(e) : 1), k, e);
+  }
+}
 function routeFacing(from, to, pen, face, outB){
   const ck = pen ? null : from + '>' + to + '>' + face.toFixed(1) + '>' + (outB == null ? '' : outB.toFixed(1));
   if (ck && TAXI_MEMO.has(ck)) { const r = TAXI_MEMO.get(ck); return r && { nodes: r.nodes.slice(), tws: r.tws.slice() }; }
-  // states are (node, the node it came from); the seed comes from nowhere, pointing `face`
-  const k0 = from + '|', dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face]]]), prev = new Map(), done = new Set(), h = [[0, k0]];
+  // states are (node, the node it came from, the one before that); the seed comes from nowhere, pointing `face`
+  const k0 = from + '|', dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face, [[face, 0]]]]]), prev = new Map(), done = new Set(), h = [[0, k0]];
+  const ok = v => v === to || v[0] !== 'R';
+  const push = (nk, s, nd, k, e) => { const o = dd.get(nk); if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, s); prev.set(nk, [k, e]); heapPush(h, [nd, nk]); } };
   let end = null;
   while (h.length) {
     const [d, k] = heapPop(h); if (done.has(k)) continue; done.add(k);
-    const [u, from_, inB] = st.get(k);
-    if (u === to && (outB == null || Math.abs(angDiff(inB, outB)) <= TURN_MAX)) { end = k; break; }
-    for (const [v, e] of GN[u].adj) {
-      if (v !== to && v[0] === 'R') continue;
-      const b = legBrg(u, v, inB);
-      if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START)) continue;
-      const nk = v + '|' + u, nd = d + e.len*(pen ? pen(e) : 1), o = dd.get(nk);
-      if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, [v, u, b]); prev.set(nk, [k, e]); heapPush(h, [nd, nk]); }
-    }
+    const [u, from_, inB, hist] = st.get(k);
+    if (u === to && (outB == null || (Math.abs(angDiff(inB, outB)) <= TURN_MAX && hairOk(hist, outB)))) { end = k; break; }
+    facingSteps(k, u, from_, inB, hist, d, pen, ok, push);
   }
   let r = null;
   if (end) { const nodes = [], tws = []; let c = end;
@@ -100,24 +115,21 @@ function routesFrom(from, targets, face){
   for (const t of targets) { if (t === from || out.has(t)) continue; const k = ck(t);
     if (TAXI_MEMO.has(k)) { const r = TAXI_MEMO.get(k); out.set(t, r && { nodes: r.nodes.slice(), tws: r.tws.slice() }); } else want.add(t); }
   if (!want.size) return out;
-  const k0 = facing ? from + '|' : from, dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face]]]), prev = new Map(), done = new Set(), h = [[0, k0]];
+  const k0 = facing ? from + '|' : from, dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face, [[face, 0]]]]]), prev = new Map(), done = new Set(), h = [[0, k0]];
+  const ok = v => v[0] !== 'R' || want.has(v);
+  const push = (nk, s, nd, k, e) => { const o = dd.get(nk); if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, s); prev.set(nk, [k, e]); heapPush(h, [nd, nk]); } };
   let left = want.size;
   while (h.length && left) {
     const [d, k] = heapPop(h); if (done.has(k)) continue; done.add(k);
-    const [u, from_, inB] = st.get(k);
+    const [u, from_, inB, hist] = st.get(k);
     if (want.has(u) && !out.has(u)) {
       const nodes = [], tws = []; let c = k;
       while (c) { nodes.unshift(st.get(c)[0]); const pv = prev.get(c); if (!pv) break; tws.unshift(pv[1].tw); c = pv[0]; }
       out.set(u, { nodes, tws }); TAXI_MEMO.set(ck(u), { nodes: nodes.slice(), tws: tws.slice() }); left--;
     }
     if (u !== from && u[0] === 'R') continue;          // a runway-edge node is only ever an end point
-    for (const [v, e] of GN[u].adj) {
-      if (v[0] === 'R' && !want.has(v)) continue;
-      let b = inB;
-      if (facing) { b = legBrg(u, v, inB); if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START)) continue; }
-      const nk = facing ? v + '|' + u : v, nd = d + e.len, o = dd.get(nk);
-      if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, [v, u, b]); prev.set(nk, [k, e]); heapPush(h, [nd, nk]); }
-    }
+    if (facing) { facingSteps(k, u, from_, inB, hist, d, null, ok, push); continue; }
+    for (const [v, e] of GN[u].adj) if (ok(v)) push(v, [v, u, inB], d + e.len, k, e);
   }
   for (const t of want) if (!out.has(t)) { out.set(t, null); TAXI_MEMO.set(ck(t), null); }
   return out;

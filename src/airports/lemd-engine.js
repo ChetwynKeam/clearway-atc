@@ -113,6 +113,18 @@ PHON.APRON = 'the apron';
 // runway of the flow: in the north flow Terminal 4 to 36L and Terminal 4S to 36R (the AIP's standard routes),
 // otherwise the one nearer its stand by taxi distance.
 const endHolds = rw => Object.keys(HOLDS).filter(k => HOLDS[k].end === rw);
+// an intersection departure point for runway rw: a holding point along it (not at its end) whose way on reaches the
+// centreline facing the way it departs, without doubling back, with at least 2,000 m of runway ahead (ZW2 for 36L)
+const LU_OK = new Map();
+function luOk(k, rw){
+  const ck = k + rw; if (LU_OK.has(ck)) return LU_OK.get(ck);
+  const H = HOLDS[k], R = RWYS_BY_END(rw); let ok = false;
+  if (H && H.on === R.id && !H.end) {
+    const up = rw === R.lo, pts = [GN[H.node].p, ...holdLink(k), GN[H.rwy].p, ...filOut(k, up ? 'E' : 'W')], n = pts.length, m = R.mOf(pts[n-1]);
+    ok = (up ? R.len - m : m) > 2000 && !doublesBack(pts) && Math.abs(angDiff(brg(...pts[n-2], ...pts[n-1]), crsOf(rw))) < 100;
+  }
+  LU_OK.set(ck, ok); return ok;
+}
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
 const fromNode = ac => ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)) || {}).id;
 const DEP_PICK = new Map();
@@ -453,7 +465,10 @@ const APT = {
   taxiHolds: (south, ac) => { const rw = ac ? depRw(ac) : depRw(), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
     const near = ks => ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p));
     const other = depRwysOf().find(r => r !== rw), rec = ac && depHold(ac);
-    return [...new Set([rec, ...near(endHolds(rw)).slice(0, 2), ...near(endHolds(other)).slice(0, 1)].filter(Boolean))].slice(0, 4); },
+    // and the nearest intersection departure points (one per holding position)
+    const isx = near(Object.keys(HOLDS).filter(k => luOk(k, rw))).filter((k, i, a) => a.findIndex(j => HOLDS[j].node === HOLDS[k].node) === i);
+    return [...new Set([rec, ...near(endHolds(rw)).slice(0, 2), ...isx.slice(0, 2), ...near(endHolds(other)).slice(0, 1)].filter(Boolean))].slice(0, 6); },
+  luOk: (k, rw) => luOk(k, rw),
   taxiHint: rw => ({ '36L': 'Runway 36L departures enter at Zulu 1 to Zulu 4 at the south end (Terminals 1-2-3 and 4).',
     '36R': 'Runway 36R departures enter at Yankee 1 to Yankee 3 at the south end (Terminal 4S).',
     '14L': 'Runway 14L departures enter at Kilo 1 to Kilo 3 at the north-west end.',
