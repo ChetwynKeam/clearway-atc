@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-08T22:42:02Z",
+ "updated": "2026-10-08T22:55:44Z",
  "source": "avionio.com",
  "days": {
   "2026-10-09": {
@@ -45,7 +45,7 @@
      "flight": "FR2628",
      "sched": "00:15",
      "status": "Landed",
-     "expected": "00:30"
+     "expected": "00:28"
     },
     {
      "place": "Bogota",
@@ -108,7 +108,7 @@
      "flight": "FR2514",
      "sched": "01:15",
      "status": "Estimated",
-     "expected": "01:02"
+     "expected": "01:00"
     },
     {
      "place": "Cairo",
@@ -241,7 +241,7 @@
      "flight": "UX46",
      "sched": "05:10",
      "status": "Estimated",
-     "expected": "04:14"
+     "expected": "04:19"
     },
     {
      "place": "Bogota",
@@ -356,6 +356,13 @@
      "expected": "06:01"
     },
     {
+     "place": "Barcelona",
+     "flight": "QY8430",
+     "sched": "06:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Boston",
      "flight": "DL62",
      "sched": "06:20",
@@ -437,7 +444,7 @@
      "flight": "QR147",
      "sched": "07:35",
      "status": "Estimated",
-     "expected": "07:50"
+     "expected": "07:32"
     },
     {
      "place": "Chengdu",
@@ -472,7 +479,7 @@
      "flight": "IB334",
      "sched": "07:45",
      "status": "Estimated",
-     "expected": "06:57"
+     "expected": "06:55"
     },
     {
      "place": "Vigo",
@@ -515,6 +522,13 @@
      "sched": "07:55",
      "status": "Estimated",
      "expected": "07:41"
+    },
+    {
+     "place": "Asturias",
+     "flight": "YW1236",
+     "sched": "07:55",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Beijing",
@@ -703,14 +717,14 @@
      "flight": "AA36",
      "sched": "09:05",
      "status": "Estimated",
-     "expected": "00:27"
+     "expected": "04:40"
     },
     {
      "place": "Bogota",
      "flight": "AV182",
      "sched": "09:05",
      "status": "Estimated",
-     "expected": "09:19"
+     "expected": "09:40"
     },
     {
      "place": "Venice",
@@ -1143,8 +1157,8 @@
      "place": "Santa Cruz",
      "flight": "OB776",
      "sched": "12:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:30"
     },
     {
      "place": "Frankfurt",
@@ -1369,20 +1383,6 @@
      "sched": "14:20",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "San Salvador",
-     "flight": "IB224",
-     "sched": "14:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Fort Worth",
-     "flight": "IB364",
-     "sched": "14:25",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -1390,28 +1390,28 @@
      "place": "Buenos Aires",
      "flight": "IB103",
      "sched": "00:05",
-     "status": "Estimated",
-     "expected": "00:15"
+     "status": "Departed",
+     "expected": "00:18"
     },
     {
      "place": "Rabat",
      "flight": "FR6612",
      "sched": "00:10",
-     "status": "Estimated",
-     "expected": "00:23"
+     "status": "Departed",
+     "expected": "00:21"
     },
     {
      "place": "Beijing",
      "flight": "CA898",
      "sched": "00:35",
      "status": "Estimated",
-     "expected": "01:59"
+     "expected": "01:04"
     },
     {
      "place": "Palma de Mallorca",
      "flight": "WT332",
      "sched": "01:30",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1425,15 +1425,15 @@
      "place": "Algiers",
      "flight": "AH2207",
      "sched": "01:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Guayaquil",
      "flight": "UX39",
      "sched": "01:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:58"
     },
     {
      "place": "Lima",
@@ -1569,20 +1569,6 @@
      "expected": ""
     },
     {
-     "place": "Bilbao",
-     "flight": "AD6936",
-     "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malaga",
-     "flight": "AM6841",
-     "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "Lisbon",
      "flight": "UX1159",
      "sched": "06:30",
@@ -1590,8 +1576,22 @@
      "expected": ""
     },
     {
+     "place": "Malaga",
+     "flight": "UX5035",
+     "sched": "06:30",
+     "status": "Estimated",
+     "expected": "06:45"
+    },
+    {
+     "place": "Bilbao",
+     "flight": "UX7161",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Porto",
-     "flight": "AD7869",
+     "flight": "UX1147",
      "sched": "06:35",
      "status": "Scheduled",
      "expected": ""
@@ -1605,14 +1605,14 @@
     },
     {
      "place": "A Coruna",
-     "flight": "AF4833",
+     "flight": "EY7562",
      "sched": "06:40",
      "status": "Scheduled",
      "expected": ""
     },
     {
      "place": "Tenerife",
-     "flight": "AV6092",
+     "flight": "I21561",
      "sched": "06:40",
      "status": "Scheduled",
      "expected": ""
@@ -1873,6 +1873,48 @@
      "place": "Santiago de Compostela",
      "flight": "IB517",
      "sched": "07:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Asturias",
+     "flight": "AA8606",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "AA8803",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "AM6890",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "AM6896",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Venice",
+     "flight": "AM6954",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Nantes",
+     "flight": "AY4783",
+     "sched": "07:30",
      "status": "Scheduled",
      "expected": ""
     }
