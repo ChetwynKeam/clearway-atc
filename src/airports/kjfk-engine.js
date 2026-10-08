@@ -211,7 +211,7 @@ function drawKjfk(){
       const R = rwyById(HOLDS[k].on); leads.push(leadLine(f).map(p => P2(R.rm(...p)))); }
       groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
+    { const segs = edgeSegs(); groundLines(lw(0.35), () => { for (const [x1, y1, x2, y2] of segs) { cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke(); } }); }
     // runway holding positions: two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -225,6 +225,12 @@ function drawKjfk(){
     drawGroundSigns();
     if (HS1) { const [X, Y] = P2(HS1); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 60*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.font = `600 11px ${FONT_L}`; cx.fillText('HS 1', X + 60*mpx + 8, Y + 4); }
   }
+}
+// lights and terminal names: drawn every frame over the airfield layer (in the dark theme the lights add their glow to
+// what is under them, so they can't go in the layer)
+function drawKjfkTop(){
+  const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
+  const P2 = p => [sx(p[0]), sy(p[1])];
   // lights: runway edges and thresholds, taxiway edge blue (dark theme glow)
   if (sc > 110) {
     cx.save(); cx.globalCompositeOperation = C.glow;
@@ -388,7 +394,7 @@ const APT = {
   lineUpWords: hp => 'line up and wait',
   terrain: { name: 'the Manhattan skyline', poly: MANHATTAN, min: 2000, low: 1500, msg: ac => `${ac.cs} is over Manhattan at ${Math.round(ac.alt)} ft (One World Trade Center is 1,776 ft)${ac.alt < 1500 ? ', OBSTACLE' : ''}.` },
   restricted: null,
-  drawAirport: drawKjfk,
+  drawAirport: drawKjfk, drawAirportTop: drawKjfkTop,
   gaEarly(ac, rw){},
   // missed approach: climb on the runway heading to the published altitude, then direct the missed approach fix and hold
   gaTurn(ac){ const rw = ac.gaRwy, F = FINAL[rw] || FINAL['22L']; if (dist(ac.x, ac.y, ...THR[rw]) > 1.2 || ac.alt > ELEV + 1200) { ac.gaTurn = true; ac.mode = 'NAV'; ac.route = F.missed.slice(); } },

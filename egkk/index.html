@@ -4009,7 +4009,7 @@ function drawEgkk(){
       leads.push(leadLine(f).map(p => P2(R.rm(...p)))); }
       groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
+    { const segs = edgeSegs(); groundLines(lw(0.35), () => { for (const [x1, y1, x2, y2] of segs) { cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke(); } }); }
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -4024,6 +4024,13 @@ function drawEgkk(){
     cx.font = `600 11px ${FONT_L}`;
     for (const [t, p] of HOTSPOTS) { const [X, Y] = P2(p); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 45*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.fillText(t, X + 45*mpx + 8, Y + 4); }
   }
+}
+// lights and terminal names: drawn every frame over the airfield layer (in the dark theme the lights add their glow to
+// what is under them, so they can't go in the layer)
+function drawEgkkTop(){
+  const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
+  const P2 = p => [sx(p[0]), sy(p[1])];
+  const R = R0;
   // lights: runway edges and thresholds (dark theme glow)
   if (sc > 110) {
     cx.save(); cx.globalCompositeOperation = C.glow;
@@ -4171,7 +4178,7 @@ const APT = {
   lineUpWords: hp => 'line up and wait',
   terrain: null,
   restricted: null,
-  drawAirport: drawEgkk,
+  drawAirport: drawEgkk, drawAirportTop: drawEgkkTop,
   gaEarly(ac, rw){},
   // missed approach: climb straight ahead to 3,000 ft; at 2,000 ft turn (08R right, 26L left) for Mayfield and hold
   gaTurn(ac){ const rw = ac.gaRwy, F = FINAL[rw] || FINAL['26L']; if (ac.alt > ELEV + 1800 || dist(ac.x, ac.y, ...THR[rw]) > 3) { ac.gaTurn = true; ac.mode = 'NAV'; ac.route = F.missed.slice(); ac.turnDir = EGKK.ILS[rw].turn; } },
@@ -6092,7 +6099,17 @@ function groundLines(w, draw){
 // blds: building outlines (screen points) the paving must not cover.
 function paveWidth(tw){ const P = AD.pave || {}, b = P.by || {}; return tw in b ? b[tw] : (P.w || 18); }
 // clip the building outlines (screen points) out of what is drawn next, inside a save/restore
-function clipOut(blds){ if (!blds.length) return; cx.beginPath(); cx.rect(0, 0, W, H); for (const b of blds) { b.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.closePath(); } cx.clip('evenodd'); }
+// (an outline wholly off the screen changes nothing on it, so it is left out)
+function clipOut(blds){ if (!blds.length) return; cx.beginPath(); cx.rect(0, 0, W, H);
+  for (const b of blds) { if (b.every(q => q[0] < 0) || b.every(q => q[0] > W) || b.every(q => q[1] < 0) || b.every(q => q[1] > H)) continue; b.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.closePath(); }
+  cx.clip('evenodd'); }
+// every taxiway graph edge as a screen segment [x1, y1, x2, y2], leaving out those wholly off the screen
+function edgeSegs(){
+  const out = [];
+  for (const e of GE) { const a = GN[e.a].p, b = GN[e.b].p, x1 = sx(a[0]), y1 = sy(a[1]), x2 = sx(b[0]), y2 = sy(b[1]);
+    if (Math.max(x1, x2) < -20 || Math.min(x1, x2) > W + 20 || Math.max(y1, y2) < -20 || Math.min(y1, y2) > H + 20) continue; out.push([x1, y1, x2, y2]); }
+  return out;
+}
 function drawPavement(lines, blds, mpx){
   const P = AD.pave || {}, byW = new Map();
   // one opaque path per width, so where stretches overlap at a junction the shading never shows a darker patch
@@ -6181,8 +6198,35 @@ function drawGroundSigns(){
     cx.fillStyle = '#f5c518'; cx.fillText(a.tw, x + 4, y + fs*0.98);
   }
 }
+// The big airports' airfield (pavement, paint, signs, stand markings: thousands of strokes) only changes when the view
+// does, so it is drawn once into a layer of its own and that picture is reused every frame until the map is moved,
+// zoomed, resized or re-themed. The context's settings are carried into and out of the layer, so everything drawn
+// after it starts exactly as it would have.
+const GLAYER = { cv: null, cx: null, key: '', out: null };
+const CTX_KEYS = ['fillStyle', 'strokeStyle', 'lineWidth', 'lineCap', 'lineJoin', 'miterLimit', 'font', 'textAlign', 'textBaseline', 'globalAlpha', 'globalCompositeOperation', 'lineDashOffset'];
+const ctxState = c => { const o = { m: c.getTransform(), dash: c.getLineDash() }; for (const k of CTX_KEYS) o[k] = c[k]; return o; };
+const setCtxState = (c, o) => { c.setTransform(o.m); c.setLineDash(o.dash); for (const k of CTX_KEYS) c[k] = o[k]; };
+if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { GLAYER.key = ''; });
+function groundLayer(fn){
+  if (cv.id !== 'scope' || V.scale <= 70) return fn();
+  const key = [V.cx, V.cy, V.scale, cv.width, cv.height, DPR, C.name, mapImagery(), GE.length, STANDS.length].join();
+  if (!GLAYER.cv) { GLAYER.cv = document.createElement('canvas'); GLAYER.cx = GLAYER.cv.getContext('2d'); }
+  const L = GLAYER.cv, lx = GLAYER.cx;
+  if (key !== GLAYER.key) {
+    if (L.width !== cv.width || L.height !== cv.height) { L.width = cv.width; L.height = cv.height; }
+    else { lx.setTransform(1, 0, 0, 1, 0, 0); lx.clearRect(0, 0, L.width, L.height); }
+    setCtxState(lx, ctxState(cx));
+    const main = cx; cx = lx;
+    try { fn(); } finally { cx = main; }
+    GLAYER.key = key; GLAYER.out = ctxState(lx);
+  }
+  cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
+  cx.drawImage(L, 0, 0);
+  setCtxState(cx, GLAYER.out);
+}
 function drawAirport(){
-  if (APT.drawAirport) return APT.drawAirport();   // several runways (New York) draw themselves
+  // several runways (New York) draw themselves: the airfield into its layer, then the lights and names on top
+  if (APT.drawAirport) { groundLayer(APT.drawAirport); if (APT.drawAirportTop) APT.drawAirportTop(); return; }
   const sc = V.scale, mpx = sc/1852;
   const c = (m, off) => { const p = rm(m, off); return [sx(p[0]), sy(p[1])]; };
   const path = (pts, close=true) => { cx.beginPath(); pts.forEach(([m,o],i) => cx[i?'lineTo':'moveTo'](...c(m,o))); if (close) cx.closePath(); };

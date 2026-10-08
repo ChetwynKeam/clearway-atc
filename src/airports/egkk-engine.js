@@ -191,7 +191,7 @@ function drawEgkk(){
       leads.push(leadLine(f).map(p => P2(R.rm(...p)))); }
       groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    groundLines(lw(0.35), () => { for (const e of GE) { pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); } });
+    { const segs = edgeSegs(); groundLines(lw(0.35), () => { for (const [x1, y1, x2, y2] of segs) { cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke(); } }); }
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -206,6 +206,13 @@ function drawEgkk(){
     cx.font = `600 11px ${FONT_L}`;
     for (const [t, p] of HOTSPOTS) { const [X, Y] = P2(p); cx.strokeStyle = rgba('hot', .85); cx.lineWidth = 1.2; cx.beginPath(); cx.arc(X, Y, 45*mpx + 6, 0, 7); cx.stroke(); cx.fillStyle = rgba('hot', .95); cx.fillText(t, X + 45*mpx + 8, Y + 4); }
   }
+}
+// lights and terminal names: drawn every frame over the airfield layer (in the dark theme the lights add their glow to
+// what is under them, so they can't go in the layer)
+function drawEgkkTop(){
+  const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
+  const P2 = p => [sx(p[0]), sy(p[1])];
+  const R = R0;
   // lights: runway edges and thresholds (dark theme glow)
   if (sc > 110) {
     cx.save(); cx.globalCompositeOperation = C.glow;
@@ -353,7 +360,7 @@ const APT = {
   lineUpWords: hp => 'line up and wait',
   terrain: null,
   restricted: null,
-  drawAirport: drawEgkk,
+  drawAirport: drawEgkk, drawAirportTop: drawEgkkTop,
   gaEarly(ac, rw){},
   // missed approach: climb straight ahead to 3,000 ft; at 2,000 ft turn (08R right, 26L left) for Mayfield and hold
   gaTurn(ac){ const rw = ac.gaRwy, F = FINAL[rw] || FINAL['26L']; if (ac.alt > ELEV + 1800 || dist(ac.x, ac.y, ...THR[rw]) > 3) { ac.gaTurn = true; ac.mode = 'NAV'; ac.route = F.missed.slice(); ac.turnDir = EGKK.ILS[rw].turn; } },
