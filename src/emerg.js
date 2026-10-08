@@ -115,7 +115,8 @@ function shearReport(ac, rw){
 }
 function stepEmerg(dt){
   const E = S.emg; if (!E) return;
-  if (E.rwyBlock && S.t >= E.rwyBlock.until) { E.rwyBlock = null; sys(`Runway ${S.rwy} inspection complete: the runway is open again.`); nextAtis(); renderAtis(); emit('rwyopen'); }
+  if (E.rwyBlock && S.t >= E.rwyBlock.until && !(typeof vehOnRwy === 'function' && vehOnRwy(S.rwy))) {   // the inspection car off the runway first
+    E.rwyBlock = null; sys(`Runway ${S.rwy} inspection complete: the runway is open again.`); nextAtis(); renderAtis(); emit('rwyopen'); }
   if (E.incursion && S.t >= E.incursion.until) { E.incursion = null; sys('The pedestrian has been escorted off the runway by the police: the crossing is clear.'); }
   if (E.ws && S.t - E.ws.t > 25*60) { E.ws = null; nextAtis(); renderAtis(); }
   if (E.inspectAfter && E.inspectAfter.cs && !E.inspectAfter.onRwy && !E.inspectAfter.airborne) { E.inspectAfter = null; block('runway inspection after the emergency landing', rnd(2.5, 4)); }
@@ -154,8 +155,10 @@ function emgWS(ac){
 S.listeners.push((ev, ac) => {
   if (ev === 'landed' && ac && ac.emerg) {
     S.score.pts += 40; S.emg.handled++;
-    sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'Fire service following it in.' : 'Ambulance meeting it on stand.'}`);
+    sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'It will stop clear of the runway: the fire service will go to it, then a tug tows it in.' : /medical/.test(ac.emerg.why) ? 'The ambulance is meeting it on stand.' : ''}`);
     if (ac.emerg.k === 'MAYDAY' || S.emg.inspectAfter === 'bird') S.emg.inspectAfter = ac;
+    if (ac.emerg.k === 'MAYDAY') ac.emgStop = true;   // it stops clear of the runway for the fire service, then is towed in (vehicles.js)
+    else if (/medical/.test(ac.emerg.why)) ac.medical = true;
     ac.emerg.done = true;
   }
 });

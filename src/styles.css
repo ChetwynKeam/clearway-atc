@@ -20,7 +20,7 @@
   color-scheme: light;
 }
 /* the operations display: simulator console, pop-outs and product shots */
-.dark, body.theme-dark #page-sim, body.theme-dark .pop {
+.dark, body.theme-dark #page-sim, body.theme-dark .pop, body.theme-dark .vehpop {
   --bg: #0b1116; --bg-2: #0f171d; --panel: #121c23; --panel-2: #18242c; --panel-3: #1e2d36;
   --line: #22323c; --line-2: #2f4552;
   --ink: #e2ebef; --ink-2: #b9c8cf; --dim: #8a9ea8; --faint: #5f7480;
@@ -869,3 +869,19 @@ body.embed > *:not(.embed-cv) { display: none !important; }
 .slotbar .sl-tip { flex: 1; }
 .slotbar .sl-dis { margin: 0; font-size: 12px; white-space: nowrap; }
 .slotbar .sl-dis input { width: auto; accent-color: #f7c600; }
+/* a ground vehicle clicked on the map: what it is and what it is doing (vehicles.js) */
+.vehpop { position: absolute; z-index: 41; max-width: 230px; display: flex; flex-direction: column; gap: 1px; background: var(--panel, #fff); color: var(--ink); border: 1px solid var(--line-2); border-left: 3px solid var(--amber); border-radius: 6px; padding: 7px 10px; box-shadow: var(--shadow-2); font-size: 12.5px; line-height: 1.35; pointer-events: none; }
+.vehpop b { font-family: var(--font-label); font-size: 13.5px; }
+.vehpop .vt { color: var(--dim); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; }
+/* a radio vehicle's strip (Ops 1 on a runway check): yellow, with its instructions on the strip */
+.app div.strip.VEH { flex: none; display: grid; grid-template-columns: 6px minmax(0,1.05fr) minmax(0,1fr) minmax(0,1.2fr); align-items: stretch; background: #f5edc2; color: #142024; border: 1px solid #d6c67a; border-radius: 2px; font-family: var(--font-data); font-size: 12px; overflow: hidden; cursor: pointer; }
+.strip.VEH .bar { background: #d9a300; }
+.app div.strip.VEH.need .stt { color: #a14a00; }
+.strip.VEH .vacts { grid-column: 1 / -1; display: flex; gap: 5px; padding: 4px 8px 5px 14px; border-top: 1px solid rgba(0,0,0,.1); border-left: 0 !important; flex-direction: row !important; justify-content: flex-start !important; }
+.strip.VEH .vacts button { font-size: 11.5px; padding: 3px 9px; min-height: 0; }
+/* the weather panel's runway inspection line */
+.rcline { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--ink-2); }
+.rcline span { flex: 1; min-width: 0; }
+.rcline button { font-size: 11.5px; padding: 3px 9px; }
+.rcline.ask span { color: var(--warn); font-weight: 600; }
+.rcline.on span { color: var(--alert); font-weight: 600; }
