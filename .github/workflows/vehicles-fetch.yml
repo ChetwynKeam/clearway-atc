@@ -1,0 +1,35 @@
+name: Fetch ground vehicle data
+# One-off for ground vehicles: airside service roads, fire stations, hangars, jet bridges, fuel farms and the
+# aerodrome boundary at every airport from OpenStreetMap, published to the vehicles-data branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/workflows/vehicles-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          ovp(){ for R in 1 2 3; do for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do curl -sSf -m 300 -A "$UA" --data-urlencode "data=$1" "$H/api/interpreter" -o "$2" && { echo "$2 from $H"; return 0; }; sleep 15; done; done; echo "FAILED $2" >> failures.txt; return 0; }
+          q(){ B="$2"; ovp "[out:json][timeout:180];(way[highway]($B);way[aeroway]($B);node[aeroway]($B);relation[aeroway]($B);nwr[amenity~\"fire_station|fuel\"]($B);nwr[emergency]($B);way[building~\"hangar|fire_station|service|industrial\"]($B);way[man_made~\"storage_tank|works\"]($B);way[landuse~\"industrial|garages\"]($B);way[barrier~\"fence|wall|gate\"]($B);node[barrier]($B););out geom;" "$1.json"; sleep 5; }
+          q LXGB 36.138,-5.368,36.162,-5.328
+          q LPMA 32.675,-16.800,32.712,-16.755
+          q EGLC 51.498,0.020,51.512,0.090
+          q LOWI 47.250,11.315,47.270,11.375
+          q KJFK 40.615,-73.830,40.668,-73.740
+          q EGKK 51.135,-0.230,51.170,-0.130
+          q LEMD 40.440,-3.610,40.540,-3.530
+          ls -la
+      - name: Publish to vehicles-data branch
+        run: |
+          cd out
+          git init -q -b vehicles-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "Ground vehicle OSM data"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" vehicles-data
