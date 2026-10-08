@@ -573,13 +573,14 @@ function taxiOptions(ac, hp){
     for (const tw of [...new Set(best.tws)].filter(t => t !== 'APRON' && t !== hp)) { if (res.length === 3) break; add(route(from, to, e => e.tw === tw ? 6 : 1, face)); }
     return res.sort((a, b) => a.len - b.len);
   }
-  (function dfs(u, nodes, tws, len, vis, inB){
+  (function dfs(u, nodes, tws, len, vis, inB, hist){
     if (out.length > 40) return;
     if (u === to) { out.push({ nodes: [...nodes], tws: [...tws], len }); return; }
     for (const [v, e] of GN[u].adj) { if (vis.has(v) || (/^R/.test(v) && v !== to)) continue;
-      const b = inB == null ? brg(...GN[u].p, ...GN[v].p) : legBrg(u, v, inB); if (inB != null && Math.abs(angDiff(inB, b)) > (nodes.length > 1 ? TURN_MAX : TURN_START)) continue;   // no turning round
-      vis.add(v); nodes.push(v); tws.push(e.tw); dfs(v, nodes, tws, len + e.len, vis, b); nodes.pop(); tws.pop(); vis.delete(v); }
-  })(from, [from], [], 0, new Set([from]), face);
+      const b = inB == null ? brg(...GN[u].p, ...GN[v].p) : legBrg(u, v, inB);
+      if (inB != null && (Math.abs(angDiff(inB, b)) > (nodes.length > 1 ? TURN_MAX : TURN_START) || !hairOk(hist, b))) continue;   // no turning round
+      vis.add(v); nodes.push(v); tws.push(e.tw); dfs(v, nodes, tws, len + e.len, vis, b, histOn(hist, b, e.len)); nodes.pop(); tws.pop(); vis.delete(v); }
+  })(from, [from], [], 0, new Set([from]), face, face == null ? [] : [[face, 0]]);
   // the only way round is a loop back through a junction already passed (a block to go round): the shortest such
   if (!out.length) { const r = route(from, to, undefined, face); if (r) out.push({ ...r, len: pathLen(r.nodes) }); }
   out.sort((a, b) => a.len - b.len);
