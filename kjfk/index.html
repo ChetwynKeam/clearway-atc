@@ -7879,9 +7879,25 @@ function stepTugs(){
     } else if (v) {
       ac.tugV = null; v.attached = false; v.ac = null;
       // the towbar off and the headset in: it backs away and drives off
-      if (!v.gone) { v.hdg = norm(v.hdg + 180); sendHome(v, rnd(15, 30)); }
+      if (!v.gone) { v.hdg = norm(v.hdg + 180); if (!nextTow(v)) sendHome(v, rnd(15, 30)); }
     }
   }
+}
+// a tug just off a push or a tow: on to the nearest aircraft that will want one soon (its tug not yet there), or home
+function nextTow(v){
+  let best = null, bd = 2;   // NM
+  for (const ac of S.acs) {
+    if (!ac.ta || !onStandNow(ac)) continue;
+    const j = ac.ta.jobs.find(j => j.type === 'tug' && !j.done); if (!j || (j.v && !j.v.home && (j.v.parked || dist(j.v.x, j.v.y, ...ac.stand.p) < dist(v.x, v.y, ...ac.stand.p)))) continue;
+    if (!j.started && j.at - S.t > 15*60) continue;
+    const d = dist(v.x, v.y, ...ac.stand.p); if (d < bd) { bd = d; best = [ac, j]; }
+  }
+  if (!best) return false;
+  const [ac, j] = best;
+  if (j.v && j.v !== v) { j.v.ac = null; j.v.job = null; sendHome(j.v, 0); }   // the one on its way from base turns back
+  j.started = true; j.v = v; Object.assign(v, { job: j, ac, home: false, leaveAt: S.t + rnd(15, 30), pts: [], endH: null });
+  v.go = () => { const s = slotAt(ac, 'tug'); driveTo(v, s.p, s.h); };
+  return true;
 }
 
 // ── jet bridges: from the map (aeroway=jet_bridge), each fixed to its terminal and swinging out to the stand nearest
