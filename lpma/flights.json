@@ -1,17 +1,10 @@
 {
- "updated": "2026-10-08T15:08:29Z",
+ "updated": "2026-10-08T15:30:34Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-08": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Manchester",
-     "flight": "FR007",
-     "sched": "14:15",
-     "status": "Arrived",
-     "expected": "14:12"
-    },
     {
      "place": "Porto",
      "flight": "EJU6833",
@@ -86,15 +79,15 @@
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "16:50",
-     "status": "Estimated",
-     "expected": "16:15"
+     "status": "Arrived",
+     "expected": "16:11"
     },
     {
      "place": "Munich",
      "flight": "DE1572",
      "sched": "16:55",
-     "status": "Estimated",
-     "expected": "16:25"
+     "status": "Arrived",
+     "expected": "16:20"
     },
     {
      "place": "Paris Orly",
@@ -135,8 +128,8 @@
      "place": "Bournemouth",
      "flight": "LS3623",
      "sched": "18:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:40"
     },
     {
      "place": "Lisboa",
@@ -197,13 +190,6 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1690",
-     "sched": "14:25",
-     "status": "Departed",
-     "expected": "14:36"
-    },
-    {
      "place": "Edinburgh",
      "flight": "LS736",
      "sched": "14:40",
@@ -228,8 +214,8 @@
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "16:10",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:17"
     },
     {
      "place": "Faro",
@@ -242,35 +228,35 @@
      "place": "Frankfurt",
      "flight": "DE1571",
      "sched": "16:30",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Prague",
      "flight": "QS1171",
      "sched": "16:40",
-     "status": "Final Call",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Vienna",
      "flight": "OS488",
      "sched": "16:40",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Warsaw",
      "flight": "W61536",
      "sched": "16:45",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Hamburg",
      "flight": "DI6507",
      "sched": "17:05",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
