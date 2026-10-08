@@ -73,6 +73,9 @@ function waysOn(u){ const out = []; for (const [v, e] of GN[u].adj) { if (e.len 
 const HAIR_WIN = 80/1852, HAIR_MAX = 150;
 const hairOk = (hist, b) => hist.every(([hb]) => Math.abs(angDiff(hb, b)) <= HAIR_MAX);
 function histOn(hist, b, len){ if (len < 0.5/1852) return hist; const out = [[b, len]]; for (const [hb, d] of hist) if (d + len < HAIR_WIN) out.push([hb, d + len]); return out; }
+// a line that doubles back on itself, by the same rule
+function doublesBack(pts){ let hist = []; for (let i = 1; i < pts.length; i++) { const len = dist(...pts[i-1], ...pts[i]); if (len < 0.5/1852) continue;
+  const b = brg(...pts[i-1], ...pts[i]); if (!hairOk(hist, b)) return true; hist = histOn(hist, b, len); } return false; }
 // one step of a facing search from state k at node u: the legs on that keep within the turn limits
 function facingSteps(k, u, from_, inB, hist, d, pen, ok, push){
   for (const [v, e] of GN[u].adj) {

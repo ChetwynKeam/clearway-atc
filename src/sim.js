@@ -101,6 +101,13 @@ const BIG_GROUND = RWYS.length > 1 || !!APT.bigGround;
 const rwyOf = rw => RWYS.find(r => r.lo === rw || r.hi === rw) || RWYS[0];
 const rwyById = id => RWYS.find(r => r.id === id) || RWYS[0];
 const holdRwy = hp => rwyById(HOLDS[hp] && HOLDS[hp].on);
+// the bend between a holding point and its runway-edge point, hold end first: the mapped taxiway (Madrid: ZW2 runs on
+// past a junction before turning onto the runway); none where the link is straight
+const holdLink = hp => { const H = HOLDS[hp], r = H && route(H.node, H.rwy); return r ? r.nodes.slice(1, -1).map(id => GN[id].p) : []; };
+// the way an aircraft leaving the runway there is facing when it reaches the holding point
+const vacFace = hp => { const L = holdLink(hp), H = HOLDS[hp]; return brg(...(L.length ? L[0] : GN[H.rwy].p), ...GN[H.node].p); };
+// the way onto that bend from the holding point: a route to it arrives able to carry on (see route's outB)
+const holdOut = hp => { const L = holdLink(hp), H = HOLDS[hp]; return brg(...GN[H.node].p, ...(L.length ? L[0] : GN[H.rwy].p)); };
 // intermediate holding points along the taxiways (APT.ihps, from the aerodrome chart): { id, node } or { id, tw, at }
 const IHPS = {};
 for (const h of APT.ihps || []) {
@@ -555,22 +562,25 @@ function taxiStart(ac){
   const ahead = ends.filter(n => n.off < 90).sort((x, y) => x.off - y.off)[0];
   return ahead ? [ahead.id, brg(...p, ...GN[ahead.id].p)] : [ends.sort((x, y) => x.d - y.d)[0].id, h];
 }
-const routeAc = (ac, to, pen) => { const [from, face] = taxiStart(ac); return route(from, to, pen, face); };
+// outB (optional): the way it must be able to carry on from `to` (onto a runway holding point's link), if it can
+const routeAc = (ac, to, pen, outB) => { const [from, face] = taxiStart(ac); return (outB != null && face != null && route(from, to, pen, face, outB)) || route(from, to, pen, face); };
 function taxiRoute(ac, hp, via){
   if (via && via.length) { const o = taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v))); if (o) return o;
-    if (BIG_GROUND) { const r = routeAc(ac, HOLDS[hp].node, e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8); if (r) return r; } }   // big airports: keep to the named taxiways
-  return routeAc(ac, HOLDS[hp].node);
+    if (BIG_GROUND) { const r = routeAc(ac, HOLDS[hp].node, e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8, holdOut(hp)); if (r) return r; } }   // big airports: keep to the named taxiways
+  return routeAc(ac, HOLDS[hp].node, undefined, BIG_GROUND ? holdOut(hp) : null);
 }
 // every sensible routing to a holding point: simple paths over the taxiway graph, one per distinct "via", shortest first
 function taxiOptions(ac, hp){
   const [from, face] = taxiStart(ac), to = HOLDS[hp].node, out = [], seen = new Set();
   // a big airport (several runways: New York): the shortest route, then the shortest avoiding each taxiway it uses
   if (BIG_GROUND) {
-    const best = route(from, to, undefined, face); if (!best) return [];
+    // arriving at the holding point able to carry on along its link onto the runway (Madrid ZW2), where it can
+    const ob = face != null ? holdOut(hp) : null, rt = pen => (ob != null && route(from, to, pen, face, ob)) || route(from, to, pen, face);
+    const best = rt(); if (!best) return [];
     const res = [], seen = new Set(), L0 = pathLen(best.nodes);
     const add = r => { if (!r) return; r.len = pathLen(r.nodes); r.via = viaOf(r.tws, hp); const k = r.via.join(''); if (seen.has(k) || r.len > L0*1.8) return; seen.add(k); res.push(r); };
     add(best);
-    for (const tw of [...new Set(best.tws)].filter(t => t !== 'APRON' && t !== hp)) { if (res.length === 3) break; add(route(from, to, e => e.tw === tw ? 6 : 1, face)); }
+    for (const tw of [...new Set(best.tws)].filter(t => t !== 'APRON' && t !== hp)) { if (res.length === 3) break; add(rt(e => e.tw === tw ? 6 : 1)); }
     return res.sort((a, b) => a.len - b.len);
   }
   (function dfs(u, nodes, tws, len, vis, inB, hist){
@@ -596,7 +606,7 @@ const pathLen = nodes => nodes.slice(1).reduce((L, id, i) => L + dist(...GN[node
 // a point on a runway-end turning pad: the aircraft goes round it slowly and tight, staying on the pad
 const padPt = (R, m, o) => { const q = R.rm(m, o); q.tight = true; return q; };
 function lineUpPath(ac, hp){
-  const H = HOLDS[hp], R = holdRwy(hp), pts = [GN[H.rwy].p];
+  const H = HOLDS[hp], R = holdRwy(hp), pts = [...holdLink(hp), GN[H.rwy].p];
   // a runway entered at its end (R.ends: New York) is lined up straight away, pointing down the runway
   if (R.ends) { const up = depRw(ac) === R.lo; pts.push(...filOut(hp, up ? 'E' : 'W')); const e = pts[pts.length-1]; pts.push(R.rm(R.mOf(e) + (up ? 60 : -60), 0)); return pts; }
   if (depRw(ac) === R.hi) { pts.push(...filOut(hp, 'E')); for (const [m,o] of R.TURN_E) if (m > H.m + 40) pts.push(padPt(R, m, o)); }
@@ -643,7 +653,7 @@ function vacPreview(ac, ex){
   const c = exitCheck(ac, ex); if (!c || !c.ok) return null;
   const { R, dir, m } = vacPos(ac), H = HOLDS[ex], pts = [R.rm(m, 0)];
   if (c.back) for (const [mm, o] of dir < 0 ? R.TURN_W : R.TURN_E) pts.push(R.rm(mm, o));
-  pts.push(...filIn(ex, (c.back ? -dir : dir) > 0 ? 'W' : 'E'), GN[H.rwy].p, GN[H.node].p);
+  pts.push(...filIn(ex, (c.back ? -dir : dir) > 0 ? 'W' : 'E'), GN[H.rwy].p, ...holdLink(ex).reverse(), GN[H.node].p);
   return pts;
 }
 // after touchdown, for an exit it was given: a near one means braking for it now; a far one, the normal roll-out first
@@ -666,7 +676,7 @@ function vacatePath(ac){
   const filM = (e, d) => FIL[e][d > 0 ? 'W' : 'E'][0][0];
   const ahead = 15 + stopDist(ac.gs || 0, ac.reqExit && ac.vacDec || VAC_DEC);
   // an exit it can reach the stand from without turning round on the taxiway, if there is one (see route)
-  const canGo = e => !st || !!route(HOLDS[e].node, st.node, undefined, brg(...GN[HOLDS[e].rwy].p, ...GN[HOLDS[e].node].p));
+  const canGo = e => !st || !!route(HOLDS[e].node, st.node, undefined, vacFace(e));
   const want = ac.reqExit && HOLDS[ac.reqExit] ? [ac.reqExit] : prefs.filter(canGo).length ? prefs.filter(canGo) : prefs;
   let ex = want.find(e => (filM(e, dir) - m)*dir > ahead);
   ac.backtrack = false;
@@ -681,14 +691,14 @@ function vacatePath(ac){
   }
   const H = HOLDS[ex]; ac.exit = ex;
   const moving = ac.backtrack ? -dir : dir;
-  pts.push(...filIn(ex, moving > 0 ? 'W' : 'E'), GN[H.rwy].p, GN[H.node].p);
+  pts.push(...filIn(ex, moving > 0 ? 'W' : 'E'), GN[H.rwy].p, ...holdLink(ex).reverse(), GN[H.node].p);
   // it stops once its tail is clear of the holding point, a little way along its likely route to the stand, and
   // waits there for the controller's taxi instruction (TAXI)
   let via = [], stop = H.node;
   // never past a point where the route doubles back (the stand is behind): it would have to stop mid U-turn
   const sharp = p => pts.length > 1 && Math.abs(angDiff(brg(...pts[pts.length-2], ...pts[pts.length-1]), brg(...pts[pts.length-1], ...p))) > 100;
   // the planned route on: leaving the runway along the link, so it can't turn back on itself (see route)
-  const vf = brg(...GN[H.rwy].p, ...GN[H.node].p);
+  const vf = vacFace(ex);
   if (st) { const r = route(H.node, st.node, undefined, vf, brg(...st.lp, ...st.p)) || route(H.node, st.node, undefined, vf) || route(H.node, st.node); if (r) { via = viaOf(r.tws, ex); let D = 0;
     for (let i = 1; i < r.nodes.length - 1 && D < VAC_CLEAR; i++) { const n = GN[r.nodes[i]];
       if (n.p.hs || /^R/.test(n.id) || n.id === st.node || sharp(n.p) || (D += dist(...GN[r.nodes[i-1]].p, ...n.p)) > VAC_CLEAR*3) break;

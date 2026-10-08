@@ -134,6 +134,21 @@ def inward(hp, R):
             dfs(o, Pp, used + [t], depth + 1)
     dfs(hp, [mo(NODE[hp])], [], 0)
     return res
+def hairpin(pl, win=80, most=150):
+    """the line doubles back on itself: within win metres its heading swings round by more than most degrees"""
+    L, B = [], []
+    for i in range(1, len(pl)):
+        d = math.dist(pl[i-1], pl[i])
+        if d < 0.5: continue
+        L.append(d); B.append(math.degrees(math.atan2(pl[i][0]-pl[i-1][0], pl[i][1]-pl[i-1][1])))
+    for i in range(len(B)):
+        acc = 0
+        for j in range(i + 1, len(B)):
+            acc += L[j-1]
+            if acc > win: break
+            if abs((B[j] - B[i] + 180) % 360 - 180) > most: return True
+    return False
+hold_used = []
 byrwy = collections.defaultdict(list)
 for n in HP:
     if n not in use: continue
@@ -148,6 +163,7 @@ for rid, R in FR.items():
         hs[NID(h)] = rid
         for Pp, used in ps:
             for t in used: drop.add(id(t))
+            hold_used.append((h, used))
             Pp = Pp[::-1]
             lim = min(40, abs(Pp[-1][1])*0.5)
             f = [Pp[0]]; rest = []
@@ -161,6 +177,7 @@ for rid, R in FR.items():
             dirs = [lo, hi] if ang > 55 else ([lo] if d > 0 else [hi])
             m0 = f[0][0]; endr = lo if m0 < 250 and hp_m < 120 else hi if m0 > R['L'] - 250 and hp_m > R['L'] - 120 else ''
             if endr: dirs = [lo, hi]
+            elif hairpin(Pp): dirs = []                  # it doubles back between the runway and the hold: no way off (or on) there
             cnt[ref] += 1; key = ref if cnt[ref] == 1 else '%s~%d' % (ref, cnt[ref])
             rn = 'R%d' % len(rnodes); fe, fn = (a[0] + U[0]*f[-1][0] + N[0]*f[-1][1], a[1] + U[1]*f[-1][0] + N[1]*f[-1][1])
             rnodes.append([rn, r1(fe), r1(fn)])
@@ -169,6 +186,20 @@ for rid, R in FR.items():
             holds[key] = [NID(h), rn, rid, r1(hp[0]), r1(hp[1]), ','.join(dirs), endr, [[r1(m), r1(o)] for m, o in rest], tw]
             fil[key] = [[r1(m), r1(o)] for m, o in f]
             paths.append((h, f[0], key, rid))
+# a holding point short of a junction (ZW2/ZW3: the parallel taxiway and W1 meet between the holds and runway 18R/36L):
+# the way on to the last junction that leads anywhere else stays a taxiway, so the taxiways there stay joined up; only
+# the rest is the runway link
+def on_rwy(t): return any(onAny(NODE[q]) for q in [t[0], t[1]] + t[3])
+keep = set()
+for h, used in hold_used:
+    n, seq = h, []
+    for t in used: n = t[1] if t[0] == n else t[0]; seq.append(n)
+    last = -1
+    for i, n in enumerate(seq[:-1]):
+        if any(t not in used and id(t) not in drop and not on_rwy(t) for t in adj[n]): last = i
+    for t in used[:last + 1]: keep.add(id(t))
+drop -= keep
+print('kept as taxiway', len(keep))
 # crossings: holding positions either side of one runway that reach the same centreline point
 xedges, XN, pairs = [], {}, set()
 for h1, c1, k1, r1d in paths:
