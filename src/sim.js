@@ -1052,7 +1052,7 @@ function commandRun(str){
       if (ac.luq || (ac.cto && ac.state === 'TAXI')) { sys(`${ac.cs} is already cleared onto the runway.`); continue; }
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
       if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)))) sys('Careful: the runway is occupied.', true);
-      else if (typeof vehOnRwy === 'function' && vehOnRwy(depRw(ac))) sys(`Careful: ${vehOnRwy(depRw(ac)).cs} is on the runway.`, true);
+      else if (typeof vehOnRwy === 'function' && vehOnRwy(depRw(ac))) sys(`Careful: ${radioName(vehOnRwy(depRw(ac)))} is on the runway.`, true);
       if (APT.xing && S.xing.st !== 'CLOSED' && ((S.rwy === RW_LO && HOLDS[ac.hp].m > XING_M) || (S.rwy === RW_HI && HOLDS[ac.hp].m < XING_M))) sys('The backtrack crosses Winston Churchill Avenue: close the road first.', true);
       if (luTaxi(ac)) { ac.luq = true; ac.path.thru = true; }   // still taxiing: it rolls straight on through the holding point
       else startLineUp(ac);
