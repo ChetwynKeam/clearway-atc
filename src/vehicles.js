@@ -148,7 +148,7 @@ function routePts(ids, v){
   return pts;
 }
 // callsigns, given when a vehicle first calls ("Fuel 3")
-const VCS = { bus: 'BUS', steps: 'STEPS', bags: 'BAGGAGE', belt: 'LOADER', cater: 'CATERING', fuel: 'FUEL', gpu: 'POWER', lav: 'SERVICE', water: 'WATER', tug: 'TUG', van: 'ENGINEER', fire: 'FIRE', amb: 'AMBULANCE', ops: 'OPS', crew: 'CREW' };
+const VCS = { bus: 'BUS', steps: 'STEPS', bags: 'BAGGAGE', belt: 'LOADER', cater: 'CATERING', fuel: 'FUEL', gpu: 'POWER', lav: 'SERVICE', water: 'WATER', tug: 'TUG', van: 'ENGINEER', fire: 'FIRE', amb: 'AMBULANCE', ops: 'OPS', follow: 'FOLLOW', crew: 'CREW' };
 function vehCs(v){ if (v.cs) return v.cs; const p = VCS[v.type] || 'VEHICLE'; let n = 1; while (VEH.list.some(w => w.cs === p + n && !w.gone)) n++; return v.cs = p + n; }
 // nothing on or about to use the runway: an arrival inside 3 NM, anything on it or lined up
 function rwyClearFor(R){
@@ -225,6 +225,7 @@ const VTYPES = {
   fire:   { name: 'Fire tender',            len: 11.5, wid: 3,   col: '#d8251d', cab: '#f2f2f2', kt: 20, blue: true },
   amb:    { name: 'Ambulance',              len: 6.5,  wid: 2.3, col: '#ffe600', cab: '#1f8f3a', kt: 18, blue: true },
   ops:    { name: 'Airside operations car', len: 4.6,  wid: 1.9, col: '#ffd21a', cab: '#1a1a1a', kt: 18, check: true },
+  follow: { name: 'Follow-me car',          len: 4.6,  wid: 1.9, col: '#ffd21a', cab: '#1a1a1a', kt: 18, check: true },
   crew:   { name: 'Crew minibus',           len: 6,    wid: 2.1, col: '#e9edf2', cab: '#2d5fa8', kt: 16 }
 };
 const VEH = { list: [], n: 0, tick: 0, nextRoam: 0, nextFire: 0, bridges: [], bridgeBy: new Map(), cap: 0 };
@@ -245,7 +246,7 @@ function vehBases(){
   VBASE.fire = baseNodes(VD.fire); VBASE.fuel = baseNodes(VD.fuel); VBASE.cater = baseNodes(VD.catering); VBASE.maint = baseNodes(VD.hangars);
   for (const k of ['fire', 'fuel', 'cater', 'maint']) if (!VBASE[k].length) VBASE[k] = terms;
 }
-const BASE_OF = { bus: 'hand', steps: 'hand', bags: 'hand', belt: 'hand', gpu: 'hand', lav: 'hand', water: 'hand', tug: 'hand', crew: 'hand', cater: 'cater', fuel: 'fuel', van: 'maint', fire: 'fire', amb: 'fire', ops: 'fire' };
+const BASE_OF = { bus: 'hand', steps: 'hand', bags: 'hand', belt: 'hand', gpu: 'hand', lav: 'hand', water: 'hand', tug: 'hand', crew: 'hand', cater: 'cater', fuel: 'fuel', van: 'maint', fire: 'fire', amb: 'fire', ops: 'fire', follow: 'fire' };
 // the base of that kind nearest a point (by road)
 function baseFor(type, p){
   const L = VBASE[BASE_OF[type]] || VBASE.hand; if (!L || !L.length) return null;
@@ -558,7 +559,7 @@ function stepVehicles(dt){
   if (!VG_BUILT) return;
   VEH.tick += dt;
   if (VEH.tick >= 1) { VEH.tick = 0; stepTurnarounds(); stepRoamers(); stepFireTraining(); stepRadio(); stepVehReqs(); }
-  stepTugs(); stepBridges(dt);
+  stepTugs(); stepBridges(dt); stepFollow(dt);
   for (const v of VEH.list) {
     if (v.attached) continue;
     if (v.visitUntil != null && v.parked && S.t >= v.visitUntil) { v.visitUntil = null; sendHome(v, 0); }
@@ -636,8 +637,7 @@ function vehDoing(v){
   if (v.xing && v.onRwy) return `Crossing runway ${rwyName(v.onRwy).split('/')[0]}`;
   if (C && C.v === v) return C.st === 'OUT' ? `Driving to holding point ${C.hp.replace(/~\d+$/, '')} for a ${C.why}` : C.st === 'READY' ? `At holding point ${C.hp.replace(/~\d+$/, '')}, asking to enter runway ${C.rw}` : C.st === 'ON' ? `Inspecting runway ${C.rw}` : `Vacating runway ${C.rw}`;
   if (v.type === 'fire' && v.ac && v.blues) return v.parked ? (v.job && v.job.k === 'attend' ? `Attending ${v.ac.cs}` : `Standing by for ${v.ac.cs}'s ${v.ac.emerg ? v.ac.emerg.k : 'emergency'}`) : `On a call to ${v.ac.cs}`;
-  if (v.type === 'amb' && v.ac && v.medAt) return v.parked ? `Paramedics treating a passenger on ${v.ac.cs}` : `On blue lights to ${v.ac.cs}`;
-  if (v.type === 'amb' && v.ac && v.ac.airborne) return v.parked ? `Standing by for ${v.ac.cs}'s medical emergency` : `On the way to stand by for ${v.ac.cs}`;
+  if (v.type === 'follow' && v.ac) return v.leading ? `Leading ${v.ac.cs} to ${APT.standWord || 'stand'} ${v.ac.stand ? v.ac.stand.id : ''}` : v.ac.airborne ? `Waiting by the runway for ${v.ac.cs}'s medical emergency` : `Meeting ${v.ac.cs} to lead it in`;
   if (v.type === 'amb' && v.ac) return v.parked ? `Meeting ${v.ac.cs} on ${APT.standWord || 'stand'} ${v.ambSt ? v.ambSt.id : ''}` : `On a call to meet ${v.ac.cs}`;
   if (v.type === 'tug' && v.job && v.job.k === 'emgtug' && v.ac) return `Tug for ${v.ac.cs} after its emergency`;
   if (v.attached && v.ac) return `${v.ac.state === 'TOW' ? 'Towing' : v.ac.state === 'PULL' ? 'Pulling forward' : 'Pushing back'} ${v.ac.cs}`;
@@ -847,7 +847,6 @@ function fireStandby(ac){
 }
 // the aircraft has stopped clear of the runway: the tenders close in, inspect it, then a tug comes to tow it in
 function emgStopped(ac){
-  if (ac.medStop) return medStopped(ac);
   ac.need = 'Fire service attending'; ac.emgSeq = { st: 'FIRE', t: S.t };
   const ex = exitWord(ac.exit || '');
   pilot(ac, `${ac.unit()}, ${spoken(ac.cs)}, we're stopping here on ${ex || 'the taxiway'}, request the fire service to check the aircraft over`);
@@ -855,35 +854,11 @@ function emgStopped(ac){
   (ac.fireV || []).forEach((v, k) => { const s = slotAt(ac, FIRE_SLOTS[k % 4]); v.job = { k: 'attend' }; driveTo(v, s.p, s.h, true); v.blues = true; });
   if (S.sel === ac && typeof renderSel === 'function') renderSel();
 }
-// a medical: stopped clear of the runway, the ambulance comes to the aircraft, the paramedics take the patient off,
-// the ambulance leaves on blue lights, and then the aircraft taxis to its stand under its own power
-function medStopped(ac){
-  ac.need = 'Ambulance attending'; ac.emgSeq = { st: 'AMB', t: S.t };
-  const ex = exitWord(ac.exit || '');
-  pilot(ac, `${ac.unit()}, ${spoken(ac.cs)}, we're stopping here on ${ex || 'the taxiway'} for the ambulance`);
-  const s = slotAt(ac, 'amb');
-  if (ac.ambV && !ac.ambV.gone && !ac.ambV.home) driveTo(ac.ambV, s.p, s.h, true);
-  else { const v = dispatch('amb', s.p, s.h, { k: 'amb' }, true); if (v) { v.ac = ac; ac.ambV = v; } }
-  if (ac.ambV) { ac.ambV.blues = true; ac.ambV.urgent = true; ac.ambV.medAt = true; }
-  if (S.sel === ac && typeof renderSel === 'function') renderSel();
-}
-function stepMed(ac){
-  const E = ac.emgSeq, A = ac.ambV;
-  if (E.st === 'AMB' && ((A && A.parked) || !A || A.gone || S.t - E.t > 600)) { E.st = 'TREAT'; E.t = S.t; E.until = S.t + rnd(4, 7)*60; ac.need = 'Paramedics on board'; }
-  else if (E.st === 'TREAT' && S.t >= E.until) {
-    if (A && !A.gone) { vehCs(A); vcall(A, `patient from ${spoken(ac.cs)} on board, leaving the airfield for the hospital`); A.ac = null; A.medAt = false; sendHome(A, rnd(5, 15)); A.blues = true; A.urgent = true; }
-    ac.ambV = null; ac.medical = false; ac.medStop = false; ac.emgStop = false; ac.emgSeq = null;
-    ac.need = ac.stand ? 'Request taxi' : 'Needs a stand';
-    pilot(ac, `${ac.unit()}, ${spoken(ac.cs)}, the patient is off, ${ac.stand ? 'request taxi to ' + (APT.standWord || 'stand') + ' ' + ac.stand.id : 'request taxi, we need a stand'}`);
-    if (S.sel === ac && typeof renderSel === 'function') renderSel();
-  }
-}
 function stepFire(){
   for (const ac of S.acs) {
     if (ac.emerg && !ac.emerg.done && ac.emerg.k === 'MAYDAY' && !ac.fireV && (ac.emerg.ack || S.t - ac.emerg.t > 30)) fireStandby(ac);
     const E = ac.emgSeq;
-    if (E && (E.st === 'AMB' || E.st === 'TREAT')) stepMed(ac);
-    else if (E && E.st === 'FIRE') {
+    if (E && E.st === 'FIRE') {
       const there = (ac.fireV || []).filter(v => !v.gone && v.parked).length;
       if ((ac.fireV && ac.fireV.length && there === ac.fireV.filter(v => !v.gone).length) || S.t - E.t > 240) { E.st = 'INSP'; E.t = S.t; E.until = S.t + rnd(3, 5)*60; ac.need = 'Fire service inspecting'; }
     } else if (E && E.st === 'INSP' && S.t >= E.until) {
@@ -908,14 +883,13 @@ function stepFire(){
       for (const v of ac.fireV) if (!v.gone) { v.urgent = false; v.blues = false; sendHome(v, rnd(5, 20)); }
       ac.fireV = []; if (ac.emgSeq && ac.state === 'TOW') ac.emgSeq = null;
     }
-    // a medical: the ambulance out to a holding point by the landing runway, ready to meet the aircraft as it vacates
-    if (ac.medical && ac.airborne && !ac.ambV && finalDist(ac) < 12) {
-      const R = rwyOf(landRw(ac)), hs = rcHolds(R).map(h => [h, holdM(R, h)]).sort((a, b) => Math.abs(a[1] - rLen(R)*0.6) - Math.abs(b[1] - rLen(R)*0.6));
-      const v = hs.length && dispatch('amb', GN[HOLDS[hs[0][0]].node].p, null, { k: 'amb' }, true);
-      if (v) { v.ac = ac; v.blues = true; ac.ambV = v; }
+    // a medical: the ambulance to its stand, there before it is
+    if (ac.medical && ac.stand && !ac.ambV && (ac.ground || finalDist(ac) < 12)) {
+      const s = slotFrom(ac.stand.p, ac.stand.hdg || 0, ac.perf, 'amb'), v = dispatch('amb', s.p, s.h, { k: 'amb' }, true);
+      if (v) { v.ac = ac; v.blues = true; ac.ambV = v; v.ambSt = ac.stand; }
     }
     const A = ac.ambV;
-    if (A && !A.gone && !ac.medStop && !A.medAt) {
+    if (A && !A.gone) {
       if (ac.stand && A.ambSt !== ac.stand && !A.home) { A.ambSt = ac.stand; const s = slotFrom(ac.stand.p, ac.stand.hdg || 0, ac.perf, 'amb'); driveTo(A, s.p, s.h, true); }
       if (A.visitUntil == null && ac.state === 'ONSTAND' && A.parked) { A.visitUntil = S.t + rnd(8, 12)*60; A.urgent = false; }
       if (A.visitUntil != null && A.parked && S.t >= A.visitUntil) { A.blues = false; A.visitUntil = null; ac.medical = false; sendHome(A, 0); }
@@ -923,6 +897,56 @@ function stepFire(){
   }
   // gone (removed, or left): any vehicles with nothing left to do go home
   for (const v of VEH.list) if (v.ac && !S.acs.includes(v.ac) && !v.home && !v.attached) { v.ac = null; v.urgent = false; v.blues = false; sendHome(v, 5); }
+}
+// a medical: an ops car (Follow 1) waits by the landing runway, meets the aircraft as it vacates and leads it to its
+// stand, the aircraft following at a brisker taxi than usual; the ambulance is waiting on the stand
+function leadPoint(ac, d){
+  const P = ac.path ? ac.path.pts : []; let from = [ac.x, ac.y], left = d;
+  for (let i = 0; i < P.length; i++) {
+    const L = dist(...from, ...P[i]);
+    if (L >= left) { const k = left/L; return { p: [from[0] + (P[i][0] - from[0])*k, from[1] + (P[i][1] - from[1])*k], h: brg(...from, ...P[i]) }; }
+    left -= L; from = P[i];
+  }
+  return P.length ? { p: P[P.length - 1].slice(), h: P.length > 1 ? brg(...P[P.length - 2], ...P[P.length - 1]) : bodyHdg(ac) } : null;
+}
+function stepFollow(dt){
+  for (const ac of S.acs) {
+    if (ac.medical && ac.kind === 'ARR' && ac.airborne && !ac.followV && finalDist(ac) < 12) {
+      const R = rwyOf(landRw(ac)), hs = rcHolds(R).map(h => [h, holdM(R, h)]).sort((a, b) => Math.abs(a[1] - rLen(R)*0.6) - Math.abs(b[1] - rLen(R)*0.6));
+      const v = hs.length && dispatch('follow', GN[HOLDS[hs[0][0]].node].p, null, { k: 'follow' }, true);
+      if (v) { v.ac = ac; ac.followV = v; vehCs(v); }
+    }
+    const F = ac.followV; if (!F || F.gone) continue;
+    const ahead = (ac.perf.len/2 + 45)*VM;
+    if (ac.state === 'ONSTAND' || ac.state === 'PARKED') {
+      // on the stand: the car pulls away and goes back to base
+      F.attached = false; F.leading = false; F.ac = null; ac.followV = null; F.urgent = false; sendHome(F, 5); continue;
+    }
+    if (!ac.ground) continue;
+    if ((ac.state === 'TAXI' || (ac.state === 'VACATING' && ac.taxiIn)) && ac.path && !ac.onRwy) {
+      const L = leadPoint(ac, ahead + dist(ac.x, ac.y, ...acMid(ac))); if (!L) continue;
+      const d = dist(F.x, F.y, ...L.p);
+      if (F.leading || d < 25*VM) {
+        if (!F.leading) { F.leading = true; vcall(F, `leading ${spoken(ac.cs)} to ${APT.standWord || 'stand'} ${ac.stand ? ac.stand.id : ''}`); }
+        F.attached = true; F.pts = []; F.parked = false; F.v = ac.gs || 0;
+        F.hdg = norm(F.hdg + clamp(angDiff(F.hdg, L.h), -40*dt, 40*dt)); F.x = L.p[0]; F.y = L.p[1];
+      } else if (d < 1000*VM) {
+        // racing round to get in front: straight across the apron at up to 35 kt
+        F.attached = true; F.pts = []; F.parked = false; F.v = Math.min(35, (F.v || 0) + 4*dt);
+        const want = brg(F.x, F.y, ...L.p), mv = Math.min(d, F.v*0.5144*dt*VM);
+        F.hdg = norm(F.hdg + clamp(angDiff(F.hdg, want), -90*dt, 90*dt)); F.x += Math.sin(F.hdg*D2R)*mv; F.y += Math.cos(F.hdg*D2R)*mv;
+      } else if (!F.chase || S.t - F.chase > 15) { F.attached = false; F.chase = S.t; driveTo(F, L.p, L.h, true); }
+      // the aircraft waits for the car to get in front (creeping once it is close), then follows it in briskly;
+      // if it hasn't come in three minutes the aircraft taxis in by itself
+      if (!F.leading) { F.waitT = (F.waitT || 0) + dt; if (F.waitT > 180) { F.attached = false; F.ac = null; ac.followV = null; F.urgent = false; sendHome(F, 5); ac.path.spd = 15; continue; } }
+      ac.path.spd = F.leading ? 22 : d < 300*VM ? 8 : 0;
+    } else if (ac.vacated && !F.met) {
+      // the aircraft is clear of the runway: the car pulls up ahead of its nose
+      F.met = true; const h = bodyHdg(ac), M = acMid(ac), p = [M[0] + Math.sin(h*D2R)*ahead*1.2, M[1] + Math.cos(h*D2R)*ahead*1.2];
+      driveTo(F, p, h, true);
+    }
+  }
+  for (const v of VEH.list) if (v.type === 'follow' && v.ac && !S.acs.includes(v.ac)) { v.attached = false; v.leading = false; v.ac = null; sendHome(v, 5); }
 }
 S.listeners.push((ev, ac) => {
   if (ev === 'emergency' && ac && ac.emerg && /medical/.test(ac.emerg.why)) ac.medical = true;
