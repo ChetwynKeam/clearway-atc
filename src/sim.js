@@ -1017,7 +1017,7 @@ function commandRun(str){
     } else if (t === 'TAXI' && ac.kind === 'ARR') {
       if (ac.state !== 'VACATING') { sys(`${ac.cs} ${['ROLLED','ROLLOUT'].includes(ac.state) ? 'has not vacated the runway yet' : 'is not on the ground'}.`); continue; }
       if (ac.onRwy) { sys(`${ac.cs} is still on the runway: let it vacate first.`); continue; }
-      if (ac.emgStop) { sys(`${ac.cs} is stopping clear of the runway for the fire service after its MAYDAY: a tug will tow it in.`); continue; }
+      if (ac.emgStop) { sys(ac.medStop ? `${ac.cs} is stopped for the ambulance: it asks to taxi once the patient is off.` : `${ac.cs} is stopping clear of the runway for the fire service after its MAYDAY: a tug will tow it in.`); continue; }
       let st = ac.stand, hold = null; if (toks[i+1] === 'STAND' || toks[i+1] === 'GATE') i++;
       else if (toks[i+1] && holdPt(toks[i+1])) hold = holdPt(toks[++i]);
       if (!hold && toks[i+1] && toks[i+1] !== 'VIA') { const want = STANDS.find(x => x.id.toUpperCase() === toks[i+1]); if (!want) { sys(`There is no stand ${toks[i+1]}.`); continue; } i++;

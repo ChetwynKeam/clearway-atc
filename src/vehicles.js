@@ -636,6 +636,8 @@ function vehDoing(v){
   if (v.xing && v.onRwy) return `Crossing runway ${rwyName(v.onRwy).split('/')[0]}`;
   if (C && C.v === v) return C.st === 'OUT' ? `Driving to holding point ${C.hp.replace(/~\d+$/, '')} for a ${C.why}` : C.st === 'READY' ? `At holding point ${C.hp.replace(/~\d+$/, '')}, asking to enter runway ${C.rw}` : C.st === 'ON' ? `Inspecting runway ${C.rw}` : `Vacating runway ${C.rw}`;
   if (v.type === 'fire' && v.ac && v.blues) return v.parked ? (v.job && v.job.k === 'attend' ? `Attending ${v.ac.cs}` : `Standing by for ${v.ac.cs}'s ${v.ac.emerg ? v.ac.emerg.k : 'emergency'}`) : `On a call to ${v.ac.cs}`;
+  if (v.type === 'amb' && v.ac && v.medAt) return v.parked ? `Paramedics treating a passenger on ${v.ac.cs}` : `On blue lights to ${v.ac.cs}`;
+  if (v.type === 'amb' && v.ac && v.ac.airborne) return v.parked ? `Standing by for ${v.ac.cs}'s medical emergency` : `On the way to stand by for ${v.ac.cs}`;
   if (v.type === 'amb' && v.ac) return v.parked ? `Meeting ${v.ac.cs} on ${APT.standWord || 'stand'} ${v.ambSt ? v.ambSt.id : ''}` : `On a call to meet ${v.ac.cs}`;
   if (v.type === 'tug' && v.job && v.job.k === 'emgtug' && v.ac) return `Tug for ${v.ac.cs} after its emergency`;
   if (v.attached && v.ac) return `${v.ac.state === 'TOW' ? 'Towing' : v.ac.state === 'PULL' ? 'Pulling forward' : 'Pushing back'} ${v.ac.cs}`;
@@ -845,6 +847,7 @@ function fireStandby(ac){
 }
 // the aircraft has stopped clear of the runway: the tenders close in, inspect it, then a tug comes to tow it in
 function emgStopped(ac){
+  if (ac.medStop) return medStopped(ac);
   ac.need = 'Fire service attending'; ac.emgSeq = { st: 'FIRE', t: S.t };
   const ex = exitWord(ac.exit || '');
   pilot(ac, `${ac.unit()}, ${spoken(ac.cs)}, we're stopping here on ${ex || 'the taxiway'}, request the fire service to check the aircraft over`);
@@ -852,11 +855,35 @@ function emgStopped(ac){
   (ac.fireV || []).forEach((v, k) => { const s = slotAt(ac, FIRE_SLOTS[k % 4]); v.job = { k: 'attend' }; driveTo(v, s.p, s.h, true); v.blues = true; });
   if (S.sel === ac && typeof renderSel === 'function') renderSel();
 }
+// a medical: stopped clear of the runway, the ambulance comes to the aircraft, the paramedics take the patient off,
+// the ambulance leaves on blue lights, and then the aircraft taxis to its stand under its own power
+function medStopped(ac){
+  ac.need = 'Ambulance attending'; ac.emgSeq = { st: 'AMB', t: S.t };
+  const ex = exitWord(ac.exit || '');
+  pilot(ac, `${ac.unit()}, ${spoken(ac.cs)}, we're stopping here on ${ex || 'the taxiway'} for the ambulance`);
+  const s = slotAt(ac, 'amb');
+  if (ac.ambV && !ac.ambV.gone && !ac.ambV.home) driveTo(ac.ambV, s.p, s.h, true);
+  else { const v = dispatch('amb', s.p, s.h, { k: 'amb' }, true); if (v) { v.ac = ac; ac.ambV = v; } }
+  if (ac.ambV) { ac.ambV.blues = true; ac.ambV.urgent = true; ac.ambV.medAt = true; }
+  if (S.sel === ac && typeof renderSel === 'function') renderSel();
+}
+function stepMed(ac){
+  const E = ac.emgSeq, A = ac.ambV;
+  if (E.st === 'AMB' && ((A && A.parked) || !A || A.gone || S.t - E.t > 600)) { E.st = 'TREAT'; E.t = S.t; E.until = S.t + rnd(4, 7)*60; ac.need = 'Paramedics on board'; }
+  else if (E.st === 'TREAT' && S.t >= E.until) {
+    if (A && !A.gone) { vehCs(A); vcall(A, `patient from ${spoken(ac.cs)} on board, leaving the airfield for the hospital`); A.ac = null; A.medAt = false; sendHome(A, rnd(5, 15)); A.blues = true; A.urgent = true; }
+    ac.ambV = null; ac.medical = false; ac.medStop = false; ac.emgStop = false; ac.emgSeq = null;
+    ac.need = ac.stand ? 'Request taxi' : 'Needs a stand';
+    pilot(ac, `${ac.unit()}, ${spoken(ac.cs)}, the patient is off, ${ac.stand ? 'request taxi to ' + (APT.standWord || 'stand') + ' ' + ac.stand.id : 'request taxi, we need a stand'}`);
+    if (S.sel === ac && typeof renderSel === 'function') renderSel();
+  }
+}
 function stepFire(){
   for (const ac of S.acs) {
     if (ac.emerg && !ac.emerg.done && ac.emerg.k === 'MAYDAY' && !ac.fireV && (ac.emerg.ack || S.t - ac.emerg.t > 30)) fireStandby(ac);
     const E = ac.emgSeq;
-    if (E && E.st === 'FIRE') {
+    if (E && (E.st === 'AMB' || E.st === 'TREAT')) stepMed(ac);
+    else if (E && E.st === 'FIRE') {
       const there = (ac.fireV || []).filter(v => !v.gone && v.parked).length;
       if ((ac.fireV && ac.fireV.length && there === ac.fireV.filter(v => !v.gone).length) || S.t - E.t > 240) { E.st = 'INSP'; E.t = S.t; E.until = S.t + rnd(3, 5)*60; ac.need = 'Fire service inspecting'; }
     } else if (E && E.st === 'INSP' && S.t >= E.until) {
@@ -881,13 +908,14 @@ function stepFire(){
       for (const v of ac.fireV) if (!v.gone) { v.urgent = false; v.blues = false; sendHome(v, rnd(5, 20)); }
       ac.fireV = []; if (ac.emgSeq && ac.state === 'TOW') ac.emgSeq = null;
     }
-    // a medical: the ambulance to its stand, there before it is
-    if (ac.medical && ac.stand && !ac.ambV && (ac.ground || finalDist(ac) < 12)) {
-      const s = slotFrom(ac.stand.p, ac.stand.hdg || 0, ac.perf, 'amb'), v = dispatch('amb', s.p, s.h, { k: 'amb' }, true);
-      if (v) { v.ac = ac; v.blues = true; ac.ambV = v; v.ambSt = ac.stand; }
+    // a medical: the ambulance out to a holding point by the landing runway, ready to meet the aircraft as it vacates
+    if (ac.medical && ac.airborne && !ac.ambV && finalDist(ac) < 12) {
+      const R = rwyOf(landRw(ac)), hs = rcHolds(R).map(h => [h, holdM(R, h)]).sort((a, b) => Math.abs(a[1] - rLen(R)*0.6) - Math.abs(b[1] - rLen(R)*0.6));
+      const v = hs.length && dispatch('amb', GN[HOLDS[hs[0][0]].node].p, null, { k: 'amb' }, true);
+      if (v) { v.ac = ac; v.blues = true; ac.ambV = v; }
     }
     const A = ac.ambV;
-    if (A && !A.gone) {
+    if (A && !A.gone && !ac.medStop && !A.medAt) {
       if (ac.stand && A.ambSt !== ac.stand && !A.home) { A.ambSt = ac.stand; const s = slotFrom(ac.stand.p, ac.stand.hdg || 0, ac.perf, 'amb'); driveTo(A, s.p, s.h, true); }
       if (A.visitUntil == null && ac.state === 'ONSTAND' && A.parked) { A.visitUntil = S.t + rnd(8, 12)*60; A.urgent = false; }
       if (A.visitUntil != null && A.parked && S.t >= A.visitUntil) { A.blues = false; A.visitUntil = null; ac.medical = false; sendHome(A, 0); }
