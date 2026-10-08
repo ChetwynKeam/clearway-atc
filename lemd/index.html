@@ -3719,9 +3719,23 @@ const kindOf = id => { const n = /^\d+$/.test(id) ? +id : null; if (n == null) r
 // each stand's painted lead-in follows its mapped line from the lane (drive-through stands on the remote ramps stop halfway
 // along a line from one lane to the next); none is painted where it would cross another lane
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line]) => { const p = EN(e, n), k = kindOf(id);
-  return { id, term: k || term, p, m: mOf(p), off: offOf(p), node, area: k ? 'remote' : 'civil', occ: null, noLead: k === 'C' || !line, h0: hdg,
+  return { id, term: k || term, p, m: mOf(p), off: offOf(p), node, area: k ? 'remote' : 'civil', occ: null, noLead: !line, h0: hdg,
     line: line ? line.map(([e, n]) => EN(e, n)) : null }; });
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
+// the mapped stand line ends where the nose stops (often the apron's far edge): the stand's point is the aircraft's
+// middle, so it sits back from that end by the stop-bar distance of the largest aircraft the stand takes (the stand box
+// the scope draws, sized from the spacing to the stands either side as in standSize)
+{ const at = new Map();
+  for (const t of STANDS) {
+    const u = dirv(t.hdg); let lat = Infinity, near = Infinity;
+    for (const o of STANDS) { if (o === t) continue;
+      const dx = (o.p[0] - t.p[0])/M2NM, dy = (o.p[1] - t.p[1])/M2NM, al = dx*u[0] + dy*u[1], la = Math.abs(dx*u[1] - dy*u[0]);
+      if (Math.abs(al) < 30 && la > 10) lat = Math.min(lat, la);
+      if (la > 10 || Math.abs(al) > 10) near = Math.min(near, Math.hypot(dx, dy)); }
+    const w = clamp(Math.min(isFinite(lat) ? lat : 38, near*1.1) - 1, 30, 82), sb = clamp(w + 6, 24, 80)*0.56 - 4;
+    at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
+  }
+  for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 const TERM_NAME = { '123': 'Terminals 1-2-3', '4': 'Terminal 4', '4S': 'Terminal 4S', R: 'remote stands', C: 'cargo stands' };
 // which side of each runway its exits are on (the side the taxiway system is)
