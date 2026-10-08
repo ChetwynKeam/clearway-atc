@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-08T09:29:39Z",
+ "updated": "2026-10-08T09:45:15Z",
  "source": "avionio.com",
  "days": {
   "2026-10-08": {
@@ -23,8 +23,8 @@
      "place": "Albuquerque",
      "flight": "B666",
      "sched": "05:01",
-     "status": "Estimated",
-     "expected": "01:43"
+     "status": "Landed",
+     "expected": "03:32"
     },
     {
      "place": "San Francisco",
@@ -58,8 +58,8 @@
      "place": "Medellin",
      "flight": "AV42",
      "sched": "05:20",
-     "status": "Estimated",
-     "expected": "05:15"
+     "status": "Landed",
+     "expected": "05:17"
     },
     {
      "place": "San Salvador",
@@ -80,7 +80,7 @@
      "flight": "5X1112",
      "sched": "05:27",
      "status": "Estimated",
-     "expected": "05:36"
+     "expected": "05:37"
     },
     {
      "place": "Sao Paulo",
@@ -114,8 +114,8 @@
      "place": "Phoenix",
      "flight": "AA1587",
      "sched": "05:43",
-     "status": "Estimated",
-     "expected": "03:23"
+     "status": "Landed",
+     "expected": "01:17"
     },
     {
      "place": "Tel Aviv-Yafo",
@@ -136,14 +136,14 @@
      "flight": "FX1712",
      "sched": "05:58",
      "status": "Estimated",
-     "expected": "05:55"
+     "expected": "05:54"
     },
     {
      "place": "Anchorage",
      "flight": "CI5320",
      "sched": "05:59",
      "status": "Estimated",
-     "expected": "06:10"
+     "expected": "06:09"
     },
     {
      "place": "Burbank",
@@ -171,28 +171,28 @@
      "flight": "B6264",
      "sched": "06:01",
      "status": "Estimated",
-     "expected": "05:35"
+     "expected": "05:38"
     },
     {
      "place": "Los Angeles",
      "flight": "AA10",
      "sched": "06:04",
-     "status": "Estimated",
-     "expected": "03:08"
+     "status": "Landed",
+     "expected": "00:45"
     },
     {
      "place": "San Diego",
      "flight": "B61190",
      "sched": "06:04",
      "status": "Estimated",
-     "expected": "05:29"
+     "expected": "03:08"
     },
     {
      "place": "Bogota",
      "flight": "AV20",
      "sched": "06:05",
      "status": "Estimated",
-     "expected": "06:11"
+     "expected": "06:09"
     },
     {
      "place": "Delhi",
@@ -227,21 +227,21 @@
      "flight": "DL709",
      "sched": "06:25",
      "status": "Estimated",
-     "expected": "05:51"
+     "expected": "06:01"
     },
     {
      "place": "Portland",
      "flight": "DL2139",
      "sched": "06:29",
      "status": "Estimated",
-     "expected": "05:44"
+     "expected": "05:53"
     },
     {
      "place": "San Francisco",
      "flight": "AA276",
      "sched": "06:30",
      "status": "Estimated",
-     "expected": "01:18"
+     "expected": "03:44"
     },
     {
      "place": "Salt Lake City",
@@ -332,7 +332,7 @@
      "flight": "DL452",
      "sched": "07:00",
      "status": "Estimated",
-     "expected": "07:16"
+     "expected": "03:04"
     },
     {
      "place": "Sao Paulo",
@@ -395,7 +395,7 @@
      "flight": "DL568",
      "sched": "07:24",
      "status": "Estimated",
-     "expected": "07:11"
+     "expected": "07:13"
     },
     {
      "place": "Boston",
@@ -416,7 +416,7 @@
      "flight": "DL650",
      "sched": "07:28",
      "status": "Estimated",
-     "expected": "06:46"
+     "expected": "06:48"
     },
     {
      "place": "Los Angeles",
@@ -451,7 +451,7 @@
      "flight": "B6604",
      "sched": "07:35",
      "status": "Estimated",
-     "expected": "06:45"
+     "expected": "06:48"
     },
     {
      "place": "Cleveland",
@@ -465,7 +465,7 @@
      "flight": "AS22",
      "sched": "07:44",
      "status": "Estimated",
-     "expected": "06:50"
+     "expected": "06:49"
     },
     {
      "place": "Providence",
@@ -479,7 +479,7 @@
      "flight": "JJ8180",
      "sched": "07:45",
      "status": "Estimated",
-     "expected": "07:28"
+     "expected": "07:27"
     },
     {
      "place": "Pittsburgh",
@@ -528,7 +528,7 @@
      "flight": "B6162",
      "sched": "08:02",
      "status": "Estimated",
-     "expected": "07:25"
+     "expected": "07:28"
     },
     {
      "place": "Los Angeles",
@@ -584,7 +584,7 @@
      "flight": "B61224",
      "sched": "08:30",
      "status": "Estimated",
-     "expected": "08:17"
+     "expected": "08:20"
     },
     {
      "place": "Rochester",
@@ -612,7 +612,7 @@
      "flight": "B6616",
      "sched": "08:35",
      "status": "Estimated",
-     "expected": "08:08"
+     "expected": "08:09"
     },
     {
      "place": "Abu Dhabi",
@@ -1465,9 +1465,9 @@
     },
     {
      "place": "Bogota",
-     "flight": "AV21",
+     "flight": "AV021",
      "sched": "07:35",
-     "status": "Scheduled",
+     "status": "Cancelled",
      "expected": ""
     },
     {
@@ -2082,13 +2082,6 @@
     {
      "place": "Santiago",
      "flight": "B61737",
-     "sched": "09:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "San Juan",
-     "flight": "B6503",
      "sched": "09:50",
      "status": "Scheduled",
      "expected": ""
