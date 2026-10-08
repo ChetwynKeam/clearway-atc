@@ -155,10 +155,10 @@ function emgWS(ac){
 S.listeners.push((ev, ac) => {
   if (ev === 'landed' && ac && ac.emerg) {
     S.score.pts += 40; S.emg.handled++;
-    sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'It will stop clear of the runway: the fire service will go to it, then a tug tows it in.' : /medical/.test(ac.emerg.why) ? 'The ambulance is meeting it on stand.' : ''}`);
+    sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'It will stop clear of the runway: the fire service will go to it, then a tug tows it in.' : /medical/.test(ac.emerg.why) ? 'It will stop clear of the runway for the ambulance, then ask to taxi in.' : ''}`);
     if (ac.emerg.k === 'MAYDAY' || S.emg.inspectAfter === 'bird') S.emg.inspectAfter = ac;
     if (ac.emerg.k === 'MAYDAY') ac.emgStop = true;   // it stops clear of the runway for the fire service, then is towed in (vehicles.js)
-    else if (/medical/.test(ac.emerg.why)) ac.medical = true;
+    else if (/medical/.test(ac.emerg.why)) { ac.medical = true; ac.emgStop = true; ac.medStop = true; }   // stops for the ambulance, then taxis in
     ac.emerg.done = true;
   }
 });
