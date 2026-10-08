@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-08T11:55:40Z",
+ "updated": "2026-10-08T12:09:15Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-08": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Berlin Brandenburg",
-     "flight": "EJU5333",
-     "sched": "10:55",
-     "status": "Arrived",
-     "expected": "10:00"
-    },
-    {
-     "place": "Bristol",
-     "flight": "EZY2877",
-     "sched": "10:55",
-     "status": "Arrived",
-     "expected": "10:06"
-    },
     {
      "place": "Lisboa",
      "flight": "TP1687",
@@ -58,8 +44,8 @@
      "place": "Edinburgh",
      "flight": "LS735",
      "sched": "13:40",
-     "status": "Estimated",
-     "expected": "13:00"
+     "status": "Arrived",
+     "expected": "13:02"
     },
     {
      "place": "Dublin",
@@ -79,8 +65,8 @@
      "place": "Porto",
      "flight": "EJU6833",
      "sched": "14:45",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:30"
     },
     {
      "place": "Lisboa",
@@ -149,15 +135,15 @@
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "16:50",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:15"
     },
     {
      "place": "Munich",
      "flight": "DE1572",
      "sched": "16:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:55"
     },
     {
      "place": "Paris Orly",
@@ -260,20 +246,6 @@
    ],
    "dep": [
     {
-     "place": "Leipzig",
-     "flight": "DI6579",
-     "sched": "10:55",
-     "status": "Departed",
-     "expected": "11:01"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "EZY8520",
-     "sched": "11:00",
-     "status": "Departed",
-     "expected": "11:14"
-    },
-    {
      "place": "Bristol",
      "flight": "EZY2878",
      "sched": "11:25",
@@ -298,7 +270,7 @@
      "place": "London Gatwick",
      "flight": "BA2717",
      "sched": "13:15",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
@@ -312,7 +284,7 @@
      "place": "Lisboa",
      "flight": "EJU7624",
      "sched": "13:45",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
