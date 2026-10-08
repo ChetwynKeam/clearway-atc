@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-08T04:57:17Z",
+ "updated": "2026-10-08T05:08:04Z",
  "source": "avionio.com",
  "days": {
   "2026-10-08": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Islamabad",
-     "flight": "BA2160",
-     "sched": "05:15",
-     "status": "Landed",
-     "expected": "05:03"
-    },
-    {
-     "place": "Bangkok",
-     "flight": "BA2230",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "05:29"
-    },
     {
      "place": "Melbourne",
      "flight": "BY71",
@@ -220,7 +206,7 @@
      "flight": "EC8078",
      "sched": "08:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:05"
     },
     {
      "place": "Bergen",
@@ -310,7 +296,7 @@
      "place": "Bilbao",
      "flight": "VY7290",
      "sched": "08:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -837,114 +823,23 @@
      "sched": "12:35",
      "status": "Scheduled",
      "expected": ""
+    },
+    {
+     "place": "Dubai",
+     "flight": "EK15",
+     "sched": "12:35",
+     "status": "Estimated",
+     "expected": "12:09"
+    },
+    {
+     "place": "Rome",
+     "flight": "U28324",
+     "sched": "12:35",
+     "status": "Scheduled",
+     "expected": ""
     }
    ],
    "dep": [
-    {
-     "place": "Athens",
-     "flight": "U28183",
-     "sched": "05:15",
-     "status": "Departed",
-     "expected": "05:24"
-    },
-    {
-     "place": "Malaga",
-     "flight": "U28067",
-     "sched": "05:35",
-     "status": "Estimated",
-     "expected": "05:53"
-    },
-    {
-     "place": "Ibiza",
-     "flight": "U28099",
-     "sched": "05:35",
-     "status": "Estimated",
-     "expected": "05:50"
-    },
-    {
-     "place": "Tirana",
-     "flight": "W95703",
-     "sched": "05:35",
-     "status": "Estimated",
-     "expected": "05:47"
-    },
-    {
-     "place": "Palermo",
-     "flight": "U28321",
-     "sched": "05:40",
-     "status": "Estimated",
-     "expected": "05:58"
-    },
-    {
-     "place": "Kalamata",
-     "flight": "U28193",
-     "sched": "05:45",
-     "status": "Estimated",
-     "expected": "05:57"
-    },
-    {
-     "place": "Zakynthos Island",
-     "flight": "U28203",
-     "sched": "05:45",
-     "status": "Estimated",
-     "expected": "06:02"
-    },
-    {
-     "place": "Budapest",
-     "flight": "U28735",
-     "sched": "05:45",
-     "status": "Estimated",
-     "expected": "06:51"
-    },
-    {
-     "place": "Krakow/Balice",
-     "flight": "U28821",
-     "sched": "05:45",
-     "status": "Estimated",
-     "expected": "05:59"
-    },
-    {
-     "place": "Kerkyra",
-     "flight": "U28207",
-     "sched": "05:50",
-     "status": "Estimated",
-     "expected": "06:03"
-    },
-    {
-     "place": "Lanzarote",
-     "flight": "BY4460",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "06:14"
-    },
-    {
-     "place": "Almeria",
-     "flight": "U28003",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "06:10"
-    },
-    {
-     "place": "Alicante",
-     "flight": "U28107",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "05:55"
-    },
-    {
-     "place": "Thessaloniki",
-     "flight": "U28243",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "06:12"
-    },
-    {
-     "place": "Nice",
-     "flight": "U28417",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "06:10"
-    },
     {
      "place": "Dubrovnik",
      "flight": "BY4422",
@@ -1614,6 +1509,111 @@
      "place": "Rome",
      "flight": "U28325",
      "sched": "08:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Doha",
+     "flight": "QR330",
+     "sched": "09:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "U25901",
+     "sched": "09:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bari",
+     "flight": "U28281",
+     "sched": "09:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dubai",
+     "flight": "EK12",
+     "sched": "09:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Chania",
+     "flight": "U28225",
+     "sched": "09:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Riga",
+     "flight": "BT652",
+     "sched": "09:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Pisa",
+     "flight": "U28315",
+     "sched": "09:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "VY7831",
+     "sched": "09:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Ibiza",
+     "flight": "A02680",
+     "sched": "09:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "U28057",
+     "sched": "09:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "U28303",
+     "sched": "09:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Goteborg",
+     "flight": "D85261",
+     "sched": "09:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Oslo",
+     "flight": "DY1303",
+     "sched": "09:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Asturias",
+     "flight": "VY6626",
+     "sched": "09:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "BT431",
+     "sched": "09:25",
      "status": "Scheduled",
      "expected": ""
     }
