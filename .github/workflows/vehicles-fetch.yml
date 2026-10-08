@@ -25,6 +25,7 @@ jobs:
           q KJFK 40.615,-73.830,40.668,-73.740
           q EGKK 51.135,-0.230,51.170,-0.130
           q LEMD 40.440,-3.610,40.540,-3.530
+          q EGCC 53.330,-2.330,53.385,-2.225
           ls -la
       - name: Publish to vehicles-data branch
         run: |
