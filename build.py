@@ -77,6 +77,8 @@ def page(icao, A):
     others = [(k, B['data']) for k, B in AIRPORTS.items() if k != icao and B.get('data')] if icao == HOST else []
     prof += ''.join('\n' + r(f) for k, (g, f) in others)
     ap_data = '{' + ', '.join(f'{k}: {g}' for k, (g, f) in others) + '}'
+    vf = src/'airports'/f'{icao.lower()}-veh.js'   # the airside roads and ground-vehicle places (tools/vehicles_osm.py)
+    veh = vf.read_text() if vf.exists() else ''
     site = '\n'.join(r(n) for n in A.get('site', []))   # the airport's own Academy coach steps, after site.js
     out = f'''<meta charset="utf-8">
 <title>{A['title']}</title>
@@ -105,6 +107,8 @@ const AP_DATA = {ap_data};
 {r('emerg.js')}
 {r('career.js')}
 {r('ground.js')}
+{veh}
+{r('vehicles.js')}
 {r('tiles.js')}
 {r('far.js')}
 {r('live.js')}
