@@ -909,6 +909,7 @@ function commandRun(str){
   if (typeof vehCommand === 'function' && vehCommand(toks)) return;   // a radio vehicle (OPS, FIRE): vehicles.js
   let ac = findAc(toks[0]);
   if (ac) toks.shift(); else ac = S.sel;
+  if (ac && toks[0] === ac.cs.toUpperCase()) toks.shift();   // the box already held the callsign and it was typed again
   if (!ac || !S.acs.includes(ac)) { sys('Select a flight first, or start the command with its callsign.'); return; }
   if (toks.length === 1 && /^(REMOVE|DELETE|DEL)$/.test(toks[0])) { removeAc(ac); return; }   // works on any flight, yours or not
   if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
