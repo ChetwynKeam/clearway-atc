@@ -768,7 +768,7 @@ function planStand(ac){
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
-  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); });
+  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); });
 }
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
@@ -1052,6 +1052,9 @@ function commandRun(str){
       if (ac.taxiIn && ac.stand !== st) { sys(`${ac.cs} is taxiing to ${sw} ${ac.stand.id}: re-route it with TAXI ${st.id}.`); continue; }
       assignStand(ac, st); ac.standPref = st.id;
       said.push(`${sw} ${st.id}`); reads.push(`${sw} ${st.id}`);
+    } else if (t === 'FOLLOW' && ac.kind === 'ARR') {
+      const r = followCmd(ac); if (r.err) { sys(r.err); continue; }
+      said.push(r.said); reads.push(r.read);
     } else if (t === 'TAXI' && ac.kind === 'ARR') {
       if (ac.state !== 'VACATING') { sys(`${ac.cs} ${['ROLLED','ROLLOUT'].includes(ac.state) ? 'has not vacated the runway yet' : 'is not on the ground'}.`); continue; }
       if (ac.onRwy) { sys(`${ac.cs} is still on the runway: let it vacate first.`); continue; }

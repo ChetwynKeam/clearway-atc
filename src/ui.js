@@ -740,7 +740,8 @@ function renderSel(){
       // clear of the runway it stops and waits for this
       const canIn = ac.state === 'VACATING' && !ac.onRwy;
       const sw = APT.standWord || 'stand', sid = ac.stand ? sw + ' ' + ac.stand.id : 'a ' + sw;
-      html += b('TAXI', (ac.taxiIn ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn && !!ac.stand, ac.taxiIn ? 'on' : ac.vacated && ac.stand ? 'go' : '');
+      if (ac.followV) html += b('FOLLOW', ac.following ? 'Following car to ' + sid : 'Follow car to ' + sid, canIn && !ac.taxiIn && !!ac.stand, ac.following ? 'on' : ac.vacated && ac.stand ? 'go' : '');
+      html += b('TAXI', (ac.taxiIn && !ac.following ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn && !!ac.stand, ac.taxiIn && !ac.following ? 'on' : ac.vacated && ac.stand && !ac.followV ? 'go' : '');
       html += b('POP:holdin', 'Taxi to holding point…', canIn);
     }
     if (xingAhead(ac) >= 0) { const r = rwyName(ac.path.pts[xingAhead(ac)].hs); html += b('CROSS ' + r, 'Cross runway ' + r, true, ac.hsAt ? 'go' : ''); }
