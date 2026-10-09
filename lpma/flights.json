@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-09T09:45:36Z",
+ "updated": "2026-10-09T09:59:12Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-09": {
@@ -55,18 +55,18 @@
      "expected": "11:20"
     },
     {
-     "place": "Bristol",
-     "flight": "LS1825",
-     "sched": "11:00",
-     "status": "Estimated",
-     "expected": "10:40"
-    },
-    {
      "place": "Lisboa",
      "flight": "FR385",
      "sched": "11:00",
      "status": "Estimated",
      "expected": "11:10"
+    },
+    {
+     "place": "Bristol",
+     "flight": "LS1825",
+     "sched": "11:00",
+     "status": "Arrived",
+     "expected": "10:41"
     },
     {
      "place": "London Gatwick",
@@ -149,8 +149,8 @@
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "14:45",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:20"
     },
     {
      "place": "London Gatwick",
@@ -305,14 +305,14 @@
      "place": "Manchester",
      "flight": "EZY2214",
      "sched": "11:00",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "10:54"
     },
     {
      "place": "Gran Canaria",
      "flight": "NT4073",
      "sched": "11:15",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
