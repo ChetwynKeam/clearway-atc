@@ -705,7 +705,7 @@ S.listeners.push((ev, d) => {
 const st = (cs, ...l) => { const a = A(cs); return !!a && l.includes(a.state); };
 const sn = cs => seen[cs] || {};
 // an arrival stops once it is clear of the runway and asks for taxi
-const standFirst = cs => `Arrivals don't get a ${APT.standWord || 'stand'} by themselves: pick one in the <b>${(APT.standWord || 'stand').replace(/^./, c => c.toUpperCase())}</b> list on its panel (its airline's usual area is listed first), or type <code>${cs} STAND</code> for the first free one there. `;
+const standFirst = cs => `Arrivals don't get a ${APT.standWord || 'stand'} by themselves: pick one in the <b>${(APT.standWord || 'stand').replace(/^./, c => c.toUpperCase())}</b> list on its panel (its airline's usual area is listed first), press <b>Auto</b> to let the sim pick one, or type <code>${cs} STAND</code> (or <code>${cs} STAND AUTO</code>) for the first free one there. `;
 const taxiInStep = (cs, p, h = 'Taxi it to its stand') => ({ h, p: standFirst(cs) + (p || `Once it is clear of the runway it stops and asks for taxi. Press <b>Taxi to stand</b> or type <code>${cs} TAXI</code>. To send it to another stand, add the stand (<code>${cs} TAXI 4</code>); to choose the route, add <code>VIA</code> and the taxiways.`),
   cmd: [`${cs} STAND`, `${cs} TAXI`], ok: () => { const a = A(cs); return !!a && (!!a.taxiIn || a.kind === 'DEP') || !!sn(cs).onstand; }, wait: () => { const a = A(cs); return !!a && !a.vacated; } });
 const roadShut = () => S.xing.st === 'CLOSING' || S.xing.st === 'CLOSED';
