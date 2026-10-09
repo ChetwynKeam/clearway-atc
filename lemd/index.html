@@ -10521,8 +10521,23 @@ function aiDepart(ac){
   const wait = last ? last.t + gap - S.t : 0, busy = rwyBusy(R, ac);
   if (!busy && a.eta >= need && wait <= 0) { why(''); return aiDo('TWR', ac, 'CTO'); }
   why(busy ? 'runway occupied' + (busy.cs ? ' by ' + busy.cs : '') : a.eta < need ? `arrival ${a.nm.toFixed(1)} NM out` : 'spacing behind the last departure');
-  // only the spacing behind the last departure stops it: line up and wait
-  if (!lined && ac.state === 'HOLDPT' && !rwyBusy(R, ac, true) && a.eta >= need + wait + 60 && wait > 0 && wait < 45) return aiDo('TWR', ac, 'LU');
+  // the one ahead is rolling (or just gone): line up and wait behind it, ready to go once the spacing allows, if the next
+  // arrival leaves room for that. Lined up, it needs about 45 s to be rolling away instead of the taxi on
+  const rolling = S.acs.some(o => o !== ac && o.state === 'TAKEOFF' && o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id));
+  const lineNeed = 45 + 110 + (a.opp ? 300 : a.head ? 150 : 0);
+  if (!lined && ac.state === 'HOLDPT' && (wait > 0 || rolling) && luBehind(ac, R) && a.eta >= Math.max(wait, rolling ? 30 : 0) + lineNeed + 30) { ac.aiWhy = 'lining up behind the departure'; return aiDo('TWR', ac, 'LU'); }
+}
+// free to line up on: nothing on the runway (or one crossing it) but a departure already rolling away, past the point
+// where this one enters, on the same runway
+function luBehind(ac, R){
+  const H = HOLDS[ac.hp];
+  for (const o of S.acs) {
+    if (o === ac || o.state !== 'TAKEOFF' || !o.onRwy || !sameRwy(R, o.rwyId || RWYS[0].id)) continue;
+    if ((o.rwyId || RWYS[0].id) !== R.id || !H || !GN[H.rwy]) return false;
+    const dir = (o.depRwy || depRw(o)) === R.lo ? 1 : -1;
+    if ((R.mOf([o.x, o.y]) - R.mOf(GN[H.rwy].p))*dir < 300) return false;
+  }
+  return !rwyBusy(R, ac, true);
 }
 // clear to land: nothing on the runway (a departure already rolling is fine) and nobody ahead still to land
 function landBlock(ac){
