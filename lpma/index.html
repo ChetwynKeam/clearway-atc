@@ -2829,6 +2829,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       </div>
       <h3>Taxi</h3>
       <p>Departures enter at the departure end of the runway: Foxtrot Bravo or Echo for 22R, Kilo 1 or Kilo 2 for 4L, Papa Foxtrot, Papa Echo or Papa Delta for 13R, Juliett Bravo or Juliett Alpha for 31L. Kennedy has no turning pads: a departure lines up straight onto the runway from the end. <code>TAXI</code> picks the nearest entry; the <b>Taxi…</b> button shows three routings to choose from. The clearance names the runway first and then each taxiway in order: "runway two two right, taxi via Foxtrot, Bravo, Echo, Foxtrot Bravo".</p>
+      <p>You can also give an <b>intersection departure</b> from a taxiway that joins the runway from the terminal side with at least 7,000 ft of runway ahead, at its real hold-short line. For 31L these are Yankee, Kilo Delta, Kilo Echo and Lima; for 31R, Echo; for 13R, Papa Charlie, Papa Alpha, Mike Delta, Mike Charlie, Mike and Mike Bravo; for 22R, Charlie, Yankee Alpha, Foxtrot, Zulu and Golf; for 4L, Kilo 3, Kilo 4 and Juliett; for 13L, Uniform 3 and Victor. Type <code>TAXI KE</code> or pick it under <b>Taxi…</b>, which shows the runway left ahead. The runway is then named with the intersection: "runway three one left at Kilo Echo, taxi via Alpha, Kilo Echo", and the same for line up and wait and the takeoff clearance. A heavy jet needs about 9,800 ft, so it can't take the shorter ones.</p>
       <h3>Crossing a runway</h3>
       <p>In the south-west and north-east flows the arrival runway lies beyond the departure runway, so arrivals on their way in reach the <b>hold-short line</b> of the departure runway. They stop there and call: "holding short of runway two two right". Press <b>Cross runway 22R</b> or type <code>CROSS</code>. A crossing is given on its own, never as part of the taxi clearance, and only when nothing is lined up, rolling or on short final on that runway. Ten crossings in one session with no incidents earn the <b>Crossing guard</b> badge.</p>
       <div class="rt">
@@ -5255,6 +5256,7 @@ function commandRun(str){
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
       const ihp = toks[i+1] && IHPS[toks[i+1]] && !HOLDS[toks[i+1]] ? IHPS[toks[++i]] : null;   // an intermediate holding point on the way
       let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
+      if (APT.depHoldAs) hp = APT.depHoldAs(ac, hp);   // a name with a holding point each side of the runway: the side departures use
       const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
       { const why = APT.taxiCheck && APT.taxiCheck(ac, hp); if (why) { sys(why); continue; } }
       const rt = ihp ? routeAc(ac, ihp.node, viaPen(via)) : taxiRoute(ac, hp, via);
@@ -6735,7 +6737,7 @@ function openTaxiPop(ac, anchor){
   const len = o => Math.round(o.len / M2NM / 10) * 10;
   showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${depRw(ac)}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
     <p class="hint">Pick a holding point and the routing. Hover to preview it on the scope. ${APT.taxiHint(depRw(ac))}</p>
-    ${groups.map(g => `<div class="grp"><div class="gh"><b>Holding point ${PHON[g.hp]}</b><span>${HOLDS[g.hp].rgl ? 'Guard lights' : ''}${g.hp === rec ? ' · runway ' + depRw(ac) + ' departure point' : HOLDS[g.hp].end && HOLDS[g.hp].end !== depRw(ac) ? ' · runway ' + HOLDS[g.hp].end : ''}</span></div>
+    ${groups.map(g => `<div class="grp"><div class="gh"><b>Holding point ${PHON[g.hp]}</b><span>${HOLDS[g.hp].rgl ? 'Guard lights' : ''}${g.hp === rec ? ' · runway ' + depRw(ac) + ' departure point' : HOLDS[g.hp].end && HOLDS[g.hp].end !== depRw(ac) ? ' · runway ' + HOLDS[g.hp].end : ''}${APT.holdNote ? APT.holdNote(g.hp, depRw(ac)) : ''}</span></div>
       ${g.opts.map(o => { const j = all.findIndex(a => a.o === o); const a = all[j]; return `<button class="opt row${a.rec ? ' rec' : ''}" data-j="${j}"><span class="hp">${g.hp.replace(/~\d+$/, '')}</span><b>via ${(o.via.length ? o.via : [g.hp]).map(t => PHON[t]).join(', ')}</b><span class="ln">${len(o)} m</span>${a.rec ? '<i>Recommended</i>' : ''}</button>`; }).join('')}</div>`).join('')}
     ${ihpGroup(all, ihp)}
     <div class="phr">“${spoken(ac.cs)}, ${APT.phr && APT.phr.taxiPop ? APT.phr.taxiPop() : `taxi to holding point <em></em>, runway ${depRw(ac)}, ${PH.altim()}`}”</div>`, () => {

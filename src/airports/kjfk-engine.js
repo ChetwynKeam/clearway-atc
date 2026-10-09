@@ -93,6 +93,24 @@ PHON.APRON = 'the ramp';
 
 // departure entries: the holding points at the departure end of a runway, nearest first from where the aircraft is
 const endHolds = rw => Object.keys(HOLDS).filter(k => HOLDS[k].end === rw);
+// intersection departures: a taxiway joining the runway from the terminal side, at its OpenStreetMap runway holding
+// position, that meets the runway square or angled the way the takeoff goes (not one angled back, which would need a
+// turn of more than about 100 degrees), with at least INTX_MIN metres of runway ahead, and not where another runway
+// crosses (31L: Y, K, KD, KE, L)
+const INTX_MIN = 2100;
+const intxRun = (k, rw) => { const H = HOLDS[k], R = rwyById(H.on), m = R.mOf(GN[H.rwy].p); return rw === R.lo ? R.len - m : m; };
+const intxWay = (k, rw) => { const R = rwyById(HOLDS[k].on), f = FIL[k].W, a = f[f.length-1], b = f[0], dm = b[0] - a[0], L = Math.hypot(dm, b[1] - a[1]);
+  return !L || dm*(rw === R.lo ? 1 : -1)/L >= -0.17; };
+const intxHolds = rw => { const R = RWYS_BY_END(rw);
+  return Object.keys(HOLDS).filter(k => { const H = HOLDS[k], q = GN[H.rwy].p;
+    return H.on === R.id && !H.end && Math.sign(H.off) === R.side && intxWay(k, rw) && intxRun(k, rw) >= INTX_MIN
+      && RWY_LIST.every(O => O === R || Math.abs(O.offOf(q)) > 100 || O.mOf(q) < -100 || O.mOf(q) > O.len + 100); })
+    .sort((a, b) => intxRun(b, rw) - intxRun(a, rw)); };
+const depHolds = rw => [...endHolds(rw), ...intxHolds(rw)];
+// a holding point named for a departure (TAXI KE): the one of that name its runway is entered from (KE has one each
+// side of 31L, and departures use the terminal side)
+const depHoldAs = (ac, hp) => { const rw = depRw(ac), ok = depHolds(rw); if (!HOLDS[hp] || ok.includes(hp)) return hp;
+  return ok.find(k => HOLDS[k].ref === HOLDS[hp].ref) || hp; };
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
 function depHold(ac){
   const rw = depRw(), from = ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id;
@@ -353,6 +371,8 @@ const depFor = rw => (CONFIGS.find(([l]) => l === rw) || [])[1] || parallelOf(rw
 const MANHATTAN = [[40.700, -74.020], [40.708, -73.976], [40.745, -73.966], [40.800, -73.927], [40.873, -73.908], [40.880, -73.928], [40.760, -74.012], [40.705, -74.022]].map(LL);
 
 // ═════════════════════════ engine hooks ═════════════════════════
+// "runway 31L", or "runway 31L at Kilo Echo" for an intersection departure (JO 7110.65 3-9-4)
+const rwyAt = (ac, hp) => `runway ${depRw(ac)}${hp && HOLDS[hp] && intxHolds(depRw(ac)).includes(hp) ? ' at ' + PHON[HOLDS[hp].ref] : ''}`;
 const windFAA = () => { const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3(w.dir)} at ${w.spd}${w.gust ? ' gust ' + w.gust : ''}`; };
 const altim = () => `altimeter ${S.wx.inhg.toFixed(2)}`;
 const visSM = v => v >= 9999 ? '10' : v >= 4800 ? String(Math.round(v/1609)) : String(Math.round(v/1609*4)/4).replace(/\.25$/, ' 1/4').replace(/\.5$/, ' 1/2').replace(/\.75$/, ' 3/4').replace(/^0 /, '');
@@ -416,10 +436,20 @@ const APT = {
   faceHold: (st, f) => depHold({ stand: st, leftStand: false, x: st.p[0], y: st.p[1] }),
   faceWord: f => f,
   faceHdg: (st, f) => norm(laneDir(st, f) + 180),          // taxilanes run every way here: name the face by the compass
-  // the three departure-end entries nearest the aircraft
-  taxiHolds: (south, ac) => { const ks = endHolds(depRw()), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
-    const rec = ac && depHold(ac); return [...new Set([rec, ...ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p))].filter(Boolean))].slice(0, 3); },
-  taxiHint: rw => `Runway ${rw} departures enter at the runway end. Kennedy has no turning pads: the crew lines up straight onto the runway.${Object.keys(HOLDS).some(k => HOLDS[k].end === rw) ? '' : ''}`,
+  // the three departure-end entries nearest the aircraft, then the intersection departures, longest runway ahead first
+  taxiHolds: (south, ac) => { const rw = depRw(ac), ks = endHolds(rw), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
+    const rec = ac && depHold(ac), ends = [...new Set([rec, ...ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p))].filter(Boolean))].slice(0, 3);
+    return [...ends, ...intxHolds(rw).filter(k => !ac || ac.perf.wake !== 'H' || intxRun(k, rw) >= 3000)]; },
+  holdNote: (hp, rw) => intxHolds(rw).includes(hp) ? ` · intersection, ${(Math.round(intxRun(hp, rw)/0.3048/100)*100).toLocaleString("en-US")} ft of runway ahead` : '',
+  depHoldAs,
+  // a departure goes from one of its runway's entries
+  taxiCheck: (ac, hp) => { if (ac.kind !== 'DEP' || !HOLDS[hp]) return null; const rw = depRw(ac), ok = depHolds(rw);
+    // a heavy jet wants at least 3,000 m (about 9,800 ft) ahead of it
+    if (intxHolds(rw).includes(hp) && ac.perf.wake === 'H' && intxRun(hp, rw) < 3000) return `${ac.cs} (${ac.t}, heavy) needs more runway than ${HOLDS[hp].ref} leaves (${(Math.round(intxRun(hp, rw)/0.3048/100)*100).toLocaleString('en-US')} ft): it can't take an intersection departure there.`;
+    if (ok.includes(hp)) return null;
+    const ref = k => HOLDS[k].ref, ends = [...new Set(endHolds(rw).map(ref))], ix = [...new Set(intxHolds(rw).map(ref))];
+    return `${ref(hp)} is not a runway ${rw} departure point. Runway ${rw} departures enter at ${ends.join(', ')}${ix.length ? `, or at the intersection${ix.length > 1 ? 's' : ''} ${ix.join(', ')}` : ''}.`; },
+  taxiHint: rw => `Full-length departures from runway ${rw} enter at the runway end${intxHolds(rw).length ? `, intersection departures at ${[...new Set(intxHolds(rw).map(k => HOLDS[k].ref))].join(', ')}` : ''}. Kennedy has no turning pads: the crew lines up straight onto the runway.`,
   // medical diversions: flights crossing the New York area at cruise
   diverts: [{ cs: 'UAL917', t: 'B772', o: 'KIAD', gate: 'SW', to: 'London' }, { cs: 'ACA871', t: 'B789', o: 'CYYZ', gate: 'NW', to: 'Paris' },
     { cs: 'AAL1281', t: 'A321', o: 'KMIA', gate: 'S', to: 'Boston' }, { cs: 'DAL1955', t: 'B739', o: 'KATL', gate: 'SW', to: 'Hartford' }],
@@ -433,13 +463,13 @@ const APT = {
     alt: (a, up) => [`${up ? 'climb' : 'descend'} and maintain ${altWords(a)}`, `${up ? 'climb' : 'descend'} and maintain ${altShort(a)}`],
     speed: s => [`maintain ${s} knots`, `${s} knots`],
     taxi: (ac, hp, vw) => { const via = [...vw, HOLDS[hp].ref].map(t => PHON[t] || t).join(', ');
-      return [`runway ${depRw()}, taxi via ${via}, ${altim()}`, `runway ${depRw()}, taxi via ${via}`]; },
+      return [`${rwyAt(ac, hp)}, taxi via ${via}, ${altim()}`, `${rwyAt(ac, hp)}, taxi via ${via}`]; },
     taxiPop: () => `runway ${depRw()}, taxi via <em></em>, ${altim()}`,
     atHold: (ac, hp) => `holding short runway ${depRw()} at ${PHON[hp]}, ready for departure`,
-    lineUp: (ac, hp) => [`runway ${depRw()}, line up and wait`, `line up and wait runway ${depRw()}`],
+    lineUp: (ac, hp) => [`${rwyAt(ac, hp)}, line up and wait`, `line up and wait ${rwyAt(ac, hp)}`],
     cto: (ac, sid, chg) => { const init = KJFK.SIDS.JFK5.init[depRw()], rnav = KJFK.SIDS[sid] && KJFK.SIDS[sid].rnav;
       const how = rnav ? `RNAV to ${KJFK.SIDS[sid].pts[0]}` : typeof init === 'string' ? 'Breezy Point climb' : `fly heading ${hdg3(norm(init - KJFK.RWY.var))}`;
-      return [`${chg ? 'amended departure, ' : ''}${windFAA()}, runway ${depRw()}, ${how}, cleared for takeoff`, `${how}, cleared for takeoff runway ${depRw()}`]; },
+      return [`${chg ? 'amended departure, ' : ''}${windFAA()}, ${rwyAt(ac, ac.hp)}, ${how}, cleared for takeoff`, `${how}, cleared for takeoff ${rwyAt(ac, ac.hp)}`]; },
     ctl: (ac, rw) => [`${windFAA()}, runway ${rw}, cleared to land`, `cleared to land runway ${rw}`],
     push: (ac, dn, face) => {
       const fix = EXIT_FIX[ac.gate], f = KJFK.UNITS.dep.freq.replace(/0+$/, '');
