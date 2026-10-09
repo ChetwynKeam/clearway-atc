@@ -2307,7 +2307,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <div class="tbl"><table>
         <tr><th>Event</th><th>What happens</th><th>What to do</th></tr>
         <tr><td>MAYDAY</td><td>Engine failure or fire, smoke in the cabin, hydraulic failure. A departure turns back</td><td>Acknowledge, make it number one on the approach, keep others out of its way. The fire tenders go out to standby by the runway. After landing it stops clear of the runway, the tenders surround it and inspect it, then a tug calls to tow it to a stand: approve the tow. The runway is inspected after it lands</td></tr>
-        <tr><td>PAN medical</td><td>An arrival has a sick passenger and wants priority and an ambulance</td><td>Acknowledge and sequence it first. A follow-me car (Follow 1) meets it as it vacates and leads it to its stand at a brisk taxi, where the ambulance is waiting</td></tr>
+        <tr><td>PAN medical</td><td>An arrival has a sick passenger and wants priority and an ambulance</td><td>Acknowledge and sequence it first. A follow-me car (Follow 1) drives out and waits just past the exit the aircraft will take. When it vacates and asks for the follow-me, press <b>Follow car</b> (or type <code>FOLLOW</code>) instead of a taxi route, and the car leads it to its stand at a brisk taxi, where the ambulance is waiting</td></tr>
         <tr><td>Medical diversion</td><td>An overflight diverts in from the edge of your airspace</td><td>Treat it as an extra arrival with priority</td></tr>
         <tr><td>Bird strike</td><td>A departure hits birds after take-off and returns, or an arrival reports birds on short final</td><td>Bring the returning aircraft in. The runway closes for an inspection</td></tr>
         <tr><td>Runway closed</td><td>Debris, a tyre fragment or a fuel spill, for four to seven minutes</td><td>Cancel landing clearances (<code>GA</code> or <code>HOLD</code>) and hold departures until it reopens</td></tr>
@@ -4939,7 +4939,7 @@ function planStand(ac){
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
-  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); });
+  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); });
 }
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
@@ -5223,6 +5223,9 @@ function commandRun(str){
       if (ac.taxiIn && ac.stand !== st) { sys(`${ac.cs} is taxiing to ${sw} ${ac.stand.id}: re-route it with TAXI ${st.id}.`); continue; }
       assignStand(ac, st); ac.standPref = st.id;
       said.push(`${sw} ${st.id}`); reads.push(`${sw} ${st.id}`);
+    } else if (t === 'FOLLOW' && ac.kind === 'ARR') {
+      const r = followCmd(ac); if (r.err) { sys(r.err); continue; }
+      said.push(r.said); reads.push(r.read);
     } else if (t === 'TAXI' && ac.kind === 'ARR') {
       if (ac.state !== 'VACATING') { sys(`${ac.cs} ${['ROLLED','ROLLOUT'].includes(ac.state) ? 'has not vacated the runway yet' : 'is not on the ground'}.`); continue; }
       if (ac.onRwy) { sys(`${ac.cs} is still on the runway: let it vacate first.`); continue; }
@@ -6553,7 +6556,8 @@ function renderSel(){
       // clear of the runway it stops and waits for this
       const canIn = ac.state === 'VACATING' && !ac.onRwy;
       const sw = APT.standWord || 'stand', sid = ac.stand ? sw + ' ' + ac.stand.id : 'a ' + sw;
-      html += b('TAXI', (ac.taxiIn ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn && !!ac.stand, ac.taxiIn ? 'on' : ac.vacated && ac.stand ? 'go' : '');
+      if (ac.followV) html += b('FOLLOW', ac.following ? 'Following car to ' + sid : 'Follow car to ' + sid, canIn && !ac.taxiIn && !!ac.stand, ac.following ? 'on' : ac.vacated && ac.stand ? 'go' : '');
+      html += b('TAXI', (ac.taxiIn && !ac.following ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn && !!ac.stand, ac.taxiIn && !ac.following ? 'on' : ac.vacated && ac.stand && !ac.followV ? 'go' : '');
       html += b('POP:holdin', 'Taxi to holding point…', canIn);
     }
     if (xingAhead(ac) >= 0) { const r = rwyName(ac.path.pts[xingAhead(ac)].hs); html += b('CROSS ' + r, 'Cross runway ' + r, true, ac.hsAt ? 'go' : ''); }
@@ -8260,7 +8264,7 @@ function vehDoing(v){
   if (v.xing && v.onRwy) return `Crossing runway ${rwyName(v.onRwy).split('/')[0]}`;
   if (C && C.v === v) return C.st === 'OUT' ? `Driving to holding point ${C.hp.replace(/~\d+$/, '')} for a ${C.why}` : C.st === 'READY' ? `At holding point ${C.hp.replace(/~\d+$/, '')}, asking to enter runway ${C.rw}` : C.st === 'ON' ? `Inspecting runway ${C.rw}` : `Vacating runway ${C.rw}`;
   if (v.type === 'fire' && v.ac && v.blues) return v.parked ? (v.job && v.job.k === 'attend' ? `Attending ${v.ac.cs}` : `Standing by for ${v.ac.cs}'s ${v.ac.emerg ? v.ac.emerg.k : 'emergency'}`) : `On a call to ${v.ac.cs}`;
-  if (v.type === 'follow' && v.ac) return v.leading ? `Leading ${v.ac.cs} to ${APT.standWord || 'stand'} ${v.ac.stand ? v.ac.stand.id : ''}` : v.ac.airborne ? `Waiting by the runway for ${v.ac.cs}'s medical emergency` : `Meeting ${v.ac.cs} to lead it in`;
+  if (v.type === 'follow' && v.ac) return v.leading ? `Leading ${v.ac.cs} to ${APT.standWord || 'stand'} ${v.ac.stand ? v.ac.stand.id : ''}` : v.ac.following ? `Pulling in front of ${v.ac.cs}` : v.parked ? `Waiting at the exit for ${v.ac.cs} (medical)` : `On the way to meet ${v.ac.cs} at its exit`;
   if (v.type === 'amb' && v.ac) return v.parked ? `Meeting ${v.ac.cs} on ${APT.standWord || 'stand'} ${v.ambSt ? v.ambSt.id : ''}` : `On a call to meet ${v.ac.cs}`;
   if (v.type === 'tug' && v.job && v.job.k === 'emgtug' && v.ac) return `Tug for ${v.ac.cs} after its emergency`;
   if (v.attached && v.ac) return `${v.ac.state === 'TOW' ? 'Towing' : v.ac.state === 'PULL' ? 'Pulling forward' : 'Pushing back'} ${v.ac.cs}`;
@@ -8532,44 +8536,76 @@ function leadPoint(ac, d){
   }
   return P.length ? { p: P[P.length - 1].slice(), h: P.length > 1 ? brg(...P[P.length - 2], ...P[P.length - 1]) : bodyHdg(ac) } : null;
 }
+// where the car waits: on the aircraft's way from its exit to its stand, far enough past the holding point that the
+// aircraft stops behind it (ex: the exit it took; otherwise the one it will most likely take)
+function followWait(ac, ex){
+  const st = ac.stand || freeStand(ac);
+  if (!ex) {
+    const prefs = (APT.vacPrefs(st, ac) || []).filter(e => HOLDS[e]);
+    // as the crew picks it (vacatePath): the first exit it prefers that it can reach the stand from and still make at normal braking
+    const ok = prefs.filter(e => !st || route(HOLDS[e].node, st.node, undefined, vacFace(e))), want = ok.length ? ok : prefs, P = vacPos(ac);
+    // the roll-out brakes at 4.2 kt/s and the crew picks its exit at 40 kt (stepGround)
+    const roll = P ? Math.max(0, P.v*P.v - 1600)/(2*4.2)*0.5144 : 0, makes = e => { const c = P && exitCheck(ac, e); return c && c.ahead > roll + 15 + stopDist(40, VAC_DEC); };
+    ex = ac.reqExit && HOLDS[ac.reqExit] ? ac.reqExit : want.find(makes) || want[0];
+  }
+  if (!ex || !HOLDS[ex]) return null;
+  const r = st && route(HOLDS[ex].node, st.node, undefined, vacFace(ex)), P = r && r.nodes.length > 1 ? r.nodes.map(n => GN[n].p) : [GN[HOLDS[ex].node].p];
+  let left = (ac.perf.len + 90)*VM, from = P[0];
+  for (let i = 1; i < P.length; i++) {
+    const L = dist(...from, ...P[i]);
+    if (L >= left) { const k = left/L; return { ex, key: ex + (st ? st.id : ''), p: [from[0] + (P[i][0] - from[0])*k, from[1] + (P[i][1] - from[1])*k], h: brg(...from, ...P[i]) }; }
+    left -= L; from = P[i];
+  }
+  return { ex, key: ex + (st ? st.id : ''), p: from.slice(), h: P.length > 1 ? brg(...P[P.length - 2], ...from) : vacFace(ex) };
+}
+function followHome(ac, F){ F.attached = false; F.leading = false; F.ac = null; ac.followV = null; ac.following = false; F.urgent = false; sendHome(F, 5); }
 function stepFollow(dt){
   for (const ac of S.acs) {
     if (ac.medical && ac.kind === 'ARR' && ac.airborne && !ac.followV && finalDist(ac) < 12) {
-      const R = rwyOf(landRw(ac)), hs = rcHolds(R).map(h => [h, holdM(R, h)]).sort((a, b) => Math.abs(a[1] - rLen(R)*0.6) - Math.abs(b[1] - rLen(R)*0.6));
-      const v = hs.length && dispatch('follow', GN[HOLDS[hs[0][0]].node].p, null, { k: 'follow' }, true);
-      if (v) { v.ac = ac; ac.followV = v; vehCs(v); }
+      const W = followWait(ac), v = W && dispatch('follow', W.p, W.h, { k: 'follow' }, true);
+      if (v) { v.ac = ac; ac.followV = v; vehCs(v); v.waitKey = W.key; v.waitT0 = S.t; }
     }
     const F = ac.followV; if (!F || F.gone) continue;
-    const ahead = (ac.perf.len/2 + 45)*VM;
-    if (ac.state === 'ONSTAND' || ac.state === 'PARKED') {
-      // on the stand: the car pulls away and goes back to base
-      F.attached = false; F.leading = false; F.ac = null; ac.followV = null; F.urgent = false; sendHome(F, 5); continue;
+    if (ac.state === 'ONSTAND' || ac.state === 'PARKED' || (ac.taxiIn && !ac.following)) { followHome(ac, F); continue; }   // in, or taxied in on its own
+    // until it is led away: waiting where the aircraft will vacate (moved if the exit or the stand changes)
+    if (!ac.following) {
+      if (!F.leading && (!F.recheck || S.t - F.recheck > 3)) {
+        F.recheck = S.t; const W = followWait(ac, ac.state === 'VACATING' ? ac.exit : null);
+        if (W && W.key !== F.waitKey) { F.waitKey = W.key; F.attached = false; driveTo(F, W.p, W.h, true); }
+      }
+      continue;
     }
-    if (!ac.ground) continue;
-    if ((ac.state === 'TAXI' || (ac.state === 'VACATING' && ac.taxiIn)) && ac.path && !ac.onRwy) {
-      const L = leadPoint(ac, ahead + dist(ac.x, ac.y, ...acMid(ac))); if (!L) continue;
-      const d = dist(F.x, F.y, ...L.p);
-      if (F.leading || d < 25*VM) {
-        if (!F.leading) { F.leading = true; vcall(F, `leading ${spoken(ac.cs)} to ${APT.standWord || 'stand'} ${ac.stand ? ac.stand.id : ''}`); }
-        F.attached = true; F.pts = []; F.parked = false; F.v = ac.gs || 0;
-        F.hdg = norm(F.hdg + clamp(angDiff(F.hdg, L.h), -40*dt, 40*dt)); F.x = L.p[0]; F.y = L.p[1];
-      } else if (d < 1000*VM) {
-        // racing round to get in front: straight across the apron at up to 35 kt
-        F.attached = true; F.pts = []; F.parked = false; F.v = Math.min(35, (F.v || 0) + 4*dt);
-        const want = brg(F.x, F.y, ...L.p), mv = Math.min(d, F.v*0.5144*dt*VM);
-        F.hdg = norm(F.hdg + clamp(angDiff(F.hdg, want), -90*dt, 90*dt)); F.x += Math.sin(F.hdg*D2R)*mv; F.y += Math.cos(F.hdg*D2R)*mv;
-      } else if (!F.chase || S.t - F.chase > 15) { F.attached = false; F.chase = S.t; driveTo(F, L.p, L.h, true); }
-      // the aircraft waits for the car to get in front (creeping once it is close), then follows it in briskly;
-      // if it hasn't come in three minutes the aircraft taxis in by itself
-      if (!F.leading) { F.waitT = (F.waitT || 0) + dt; if (F.waitT > 180) { F.attached = false; F.ac = null; ac.followV = null; F.urgent = false; sendHome(F, 5); ac.path.spd = 15; continue; } }
-      ac.path.spd = F.leading ? 22 : d < 300*VM ? 8 : 0;
-    } else if (ac.vacated && !F.met) {
-      // the aircraft is clear of the runway: the car pulls up ahead of its nose
-      F.met = true; const h = bodyHdg(ac), M = acMid(ac), p = [M[0] + Math.sin(h*D2R)*ahead*1.2, M[1] + Math.cos(h*D2R)*ahead*1.2];
-      driveTo(F, p, h, true);
-    }
+    if (!(ac.ground && ac.path && !ac.onRwy)) continue;
+    const ahead = (ac.perf.len/2 + 45)*VM, L = leadPoint(ac, ahead + dist(ac.x, ac.y, ...acMid(ac))); if (!L) continue;
+    const d = dist(F.x, F.y, ...L.p);
+    if (F.leading || d < 25*VM) {
+      if (!F.leading) { F.leading = true; vcall(F, `leading ${spoken(ac.cs)} to ${APT.standWord || 'stand'} ${ac.stand ? ac.stand.id : ''}`); }
+      F.attached = true; F.pts = []; F.parked = false; F.v = ac.gs || 0;
+      F.hdg = norm(F.hdg + clamp(angDiff(F.hdg, L.h), -40*dt, 40*dt)); F.x = L.p[0]; F.y = L.p[1];
+    } else if (d < 1000*VM) {
+      // not quite in front yet: it pulls round ahead of the nose
+      F.attached = true; F.pts = []; F.parked = false; F.v = Math.min(30, (F.v || 0) + 4*dt);
+      const want = brg(F.x, F.y, ...L.p), mv = Math.min(d, F.v*0.5144*dt*VM);
+      F.hdg = norm(F.hdg + clamp(angDiff(F.hdg, want), -90*dt, 90*dt)); F.x += Math.sin(F.hdg*D2R)*mv; F.y += Math.cos(F.hdg*D2R)*mv;
+    } else if (!F.chase || S.t - F.chase > 15) { F.attached = false; F.chase = S.t; driveTo(F, L.p, L.h, true); }
+    // the aircraft waits for the car to be in front (creeping once it is close), then follows it in briskly;
+    // if it hasn't come in three minutes the aircraft taxis in by itself
+    if (!F.leading) { F.waitT = (F.waitT || 0) + dt; if (F.waitT > 180) { ac.path.spd = 15; followHome(ac, F); continue; } }
+    ac.path.spd = F.leading ? 22 : d < 300*VM ? 8 : 0;
   }
   for (const v of VEH.list) if (v.type === 'follow' && v.ac && !S.acs.includes(v.ac)) { v.attached = false; v.leading = false; v.ac = null; sendHome(v, 5); }
+}
+// FOLLOW: the controller tells the aircraft to follow the car in (instead of a taxi route)
+function followCmd(ac){
+  const F = ac.followV, sw = APT.standWord || 'stand';
+  if (!F || F.gone) return { err: `${ac.cs} has no follow-me car. Give it a taxi route instead.` };
+  if (ac.state !== 'VACATING' || ac.onRwy) return { err: `${ac.cs} has to vacate the runway first.` };
+  if (ac.taxiIn) return { err: `${ac.cs} is already taxiing.` };
+  if (!ac.stand) return { err: `${ac.cs} has no ${sw} yet. Assign one first (${ac.cs} STAND).` };
+  ac.following = true; const vw = taxiIn(ac, ac.stand, []);
+  if (!vw) { ac.following = false; return { err: `No taxi route to ${sw} ${ac.stand.id}.` }; }
+  ac.need = null; F.waitT = 0;
+  return { said: `follow the follow-me car to ${sw} ${ac.stand.id}`, read: `following the car to ${sw} ${ac.stand.id}` };
 }
 S.listeners.push((ev, ac) => {
   if (ev === 'emergency' && ac && ac.emerg && /medical/.test(ac.emerg.why)) ac.medical = true;
