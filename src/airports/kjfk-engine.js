@@ -382,7 +382,7 @@ const APT = {
   termName: t => t === 'R' ? 'Remote hardstands' : t === 'C' ? 'Cargo stands' : 'Terminal ' + t,
   remoteWord: s => s.term === 'C' ? 'cargo stand' : 'hardstand',
   prefArea: ac => { const t = TERMINAL_OF[ac.cs.slice(0, 3)] || '4'; return { key: t, name: 'Terminal ' + t, has: s => s.term === t }; },
-  standFor: ac => { const t = TERMINAL_OF[ac.cs.slice(0, 3)] || '4'; const free = STANDS.filter(s => !s.occ && s.term === t); return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null; },
+  standFor: ac => { const t = TERMINAL_OF[ac.cs.slice(0, 3)] || '4'; const free = STANDS.filter(s => standFree(s, ac) && s.term === t); return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null; },
   inboundAlt: gate => gate === 'S' || gate === 'SW' ? 8000 : 9000,
   divertTo: ac => ac.gate === 'S' || ac.gate === 'SW' || ac.gate === 'W' || ac.gate === 'NW' ? ['Newark', 'PUCKY'] : ['Boston', 'MERIT'],
   firstAlt: g => ENTRY_ALT[g] - 2000,

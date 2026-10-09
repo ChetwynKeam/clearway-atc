@@ -43,7 +43,8 @@ const TURN_W = R0.TURN_W, TURN_E = R0.TURN_E, TURN_END = R0.TURN_END, TURN_PAD =
 const inF0 = (e, n) => { const p = EN(e, n); return [mOf(p), offOf(p)]; };
 for (const [id, e, n] of G.nodes) gn(id, ...inF0(e, n));
 for (const [id, e, n] of G.rnodes) gn(id, ...inF0(e, n));
-for (const [a, b, tw, mid] of G.edges) chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw);
+// the fifth field: which of taxilane S's three lines an edge is (b S West, r S East, c the centre line; x a crossover)
+for (const [a, b, tw, mid, line] of G.edges) { const k = GE.length; chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw); markLine(k, line); }
 const HOLDS = {}, FIL = {};
 for (const [k, [node, rwy, on, m, off, dirs, end, tw]] of Object.entries(G.holds)) {
   HOLDS[k] = { node, rwy, on, m, off, dirs: dirs.split(','), end: end || null, ref: k.replace(/~\d+$/, ''), tw };
@@ -322,10 +323,11 @@ const sraMinsOk = w => minsOk(w, '26L');
 // the terminal an airline uses; easyJet spills over to the other terminal when its own is full
 const termOf = ac => EGKK.TERMINAL_OF[ac.cs.slice(0, 3)] || (isBiz(ac) ? 'W' : 'S');
 function standAt(ac, t){
-  const free = STANDS.filter(s => !s.occ && s.term === t);
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
   return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
 }
 const APT = {
+  lineSay: { b: 'West', r: 'East' },   // taxilane S's side lines are S West and S East (VIA S WEST, VIA S EAST)
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT },   // STAR levels, then the downwind and base
   icao: 'EGKK', name: 'London Gatwick', coordName: 'Gatwick', radarName: 'LGW', utcOff: 1,
   radar: [EGKK.UNITS.app.name, EGKK.UNITS.app.freq], depRadar: ['London Control', '134.125'],

@@ -29,6 +29,10 @@ function gn(id, m, off){ TAXI_MEMO.clear(); GN[id] = { id, m, off, p: rm(m, off)
 function ge(a, b, tw){ TAXI_MEMO.clear(); const e = { a, b, tw, len: dist(...GN[a].p, ...GN[b].p) }; GE.push(e); GN[a].adj.push([b, e]); GN[b].adj.push([a, e]); }
 let kN = 0;
 // a chain of points becomes graph nodes joined by edges carrying the taxiway designator
+// mark the edges added since GE index k with their line on a lane painted with more than one (b blue, o orange, r red,
+// c the centre line), or x for a crossover between them: not painted, and costlier to route over, so a route takes it
+// when the controller names a line (TAXI .. VIA Z CENTRE) or it saves a long way round
+function markLine(k, line){ if (line) for (const e of GE.slice(k)) { if (line === 'x') { e.bare = true; e.k = 4; } else e.line = line; } }
 function chain(a, pts, b, tw){ let prev = a; for (const [m, o] of pts) { const id = 'k' + (kN++); gn(id, m, o); ge(prev, id, tw); prev = id; } ge(prev, b, tw); }
 const filIn = (hp, side) => FIL[hp][side].map(([m, o]) => holdRwy(hp).rm(m, o));   // in the frame of the hold's runway
 const filOut = (hp, side) => filIn(hp, side).reverse();

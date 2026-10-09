@@ -224,8 +224,8 @@ function groundLines(w, draw, col){
   cx.strokeStyle = col || C.yellow; cx.lineWidth = w; draw();
 }
 // the coloured lines of a lane painted with three (Manchester's NA, NB and Z: blue and orange either side of the yellow
-// centre line); every other line is yellow
-const LINE_COL = { b: '#2f7fe0', o: '#f08a1c' };
+// centre line; Gatwick's S: S West blue, S East red); every other line is yellow
+const LINE_COL = { b: '#2f7fe0', o: '#f08a1c', r: '#e0362c' };
 const lineCol = k => { const e = /^e\d+$/.test(k) && GE[+k.slice(1)]; return (e && LINE_COL[e.line]) || null; };
 // ── taxiway pavement at its published width, laid over the street map ──
 // AD.pave per airport: w = default width (m), by = widths per taxiway (0: not paved, e.g. grass), edge = 'faa' for the

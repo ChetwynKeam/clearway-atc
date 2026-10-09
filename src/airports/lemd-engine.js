@@ -397,7 +397,7 @@ const GUADARRAMA = [[40.55, -4.45], [40.72, -4.20], [40.84, -3.92], [40.98, -3.7
 // T-4S; everyone else at T-1, T-2 and T-3); Terminals 4 and 4S spill over into each other when full
 const termOf = ac => LEMD.TERMINAL_OF[ac.cs.slice(0, 3)] || '123';
 function standAt(ac, t){
-  const free = STANDS.filter(s => !s.occ && s.term === t);
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
   return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
 }
 const flowText = c => `land ${landRwys(c).join(' and ')}, depart ${depRwysOf(c).join(' and ')}`;

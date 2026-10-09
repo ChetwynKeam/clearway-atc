@@ -57,11 +57,8 @@ const landOf = (c = cfgNow()) => CFG[c].land, depOf = (c = cfgNow()) => CFG[c].d
 const inF0 = (e, n) => { const p = EN(e, n); return [mOf(p), offOf(p)]; };
 for (const [id, e, n] of G.nodes) gn(id, ...inF0(e, n));
 for (const [id, e, n] of G.rnodes) gn(id, ...inF0(e, n));
-// the fifth field: which of the three lines of NA, NB and Z an edge is (b blue, o orange, c centre), or x for a crossover
-// between them: not painted, and taken by a route only when the controller names a line (TAXI .. VIA Z CENTRE) or it
-// saves a long way round
-for (const [a, b, tw, mid, line] of G.edges) { const k = GE.length; chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw);
-  if (line) for (const e of GE.slice(k)) { if (line === 'x') { e.bare = true; e.k = 4; } else e.line = line; } }
+// the fifth field: which of the three lines of NA, NB and Z an edge is (b blue, o orange, c centre; x a crossover)
+for (const [a, b, tw, mid, line] of G.edges) { const k = GE.length; chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw); markLine(k, line); }
 const HOLDS = {}, FIL = {};
 for (const [k, [node, rwy, on, m, off, dirs, end, tw]] of Object.entries(G.holds)) {
   HOLDS[k] = { node, rwy, on, m, off, dirs: dirs.split(','), end: end || null, ref: k.replace(/~\d+$/, ''), tw };
@@ -93,17 +90,6 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
     at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
   }
   for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
-// stands that share apron space: the MARS groups (231 with 231L and 231R, 80, 74, 44, 61...) and the tight pier stands.
-// A stand reads as taken (by its neighbour's aircraft) while an aircraft parked next to it leaves too little room for
-// another narrowbody: wingtips at least 2 m apart, the newcomer taken as 36 m across
-{ const span = ac => (ac && ac.perf && ac.perf.span) || 36;
-  for (const t of STANDS) {
-    const nb = STANDS.filter(o => o !== t && dist(...o.p, ...t.p)/M2NM < 70).map(o => [o, dist(...o.p, ...t.p)/M2NM]);
-    let own = null;
-    Object.defineProperty(t, 'occ', { enumerable: true, configurable: true, set(v){ own = v; },
-      get(){ if (own) return own; for (const [o, d] of nb) { const a = o.ownOcc; if (a && d < (span(a) + 36)/2 + 2) return a; } return null; } });
-    Object.defineProperty(t, 'ownOcc', { get: () => own });
-  } }
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 const TERM_NAME = { '2': 'Terminal 2', '3': 'Terminal 3', R: 'remote stands', C: 'north-west remote stands' };
 // which side of each runway its exits are on (the side the taxiway system is): runway 1 has exits both sides
@@ -400,7 +386,7 @@ const PENNINES = [[53.22, -1.97], [53.40, -1.97], [53.56, -1.99], [53.70, -1.98]
 // Terminal 2); the two spill over into each other when full
 const termOf = ac => EGCC.TERMINAL_OF[ac.cs.slice(0, 3)] || '2';
 function standAt(ac, t){
-  const free = STANDS.filter(s => !s.occ && s.term === t);
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
   return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
 }
 const flowText = c => `land ${CFG[c].land}, depart ${CFG[c].dep}`;

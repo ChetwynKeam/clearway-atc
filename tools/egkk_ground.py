@@ -1,5 +1,7 @@
 # Gatwick (EGKK) aerodrome layout from OpenStreetMap + AIP AD 2-EGKK-2-3 stand coordinates -> src/airports/egkk-ground.js
-import json, math, re, sys, collections
+import json, math, re, sys, collections, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ground_lanes import add_crossovers
 OSM, STANDS_TXT, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 A = (51 + 8/60 + 53/3600, -(11/60 + 25/3600))                      # ARP 510853N 0001125W
 KX = 60*1852*math.cos(math.radians(A[0])); KY = 60*1852
@@ -71,6 +73,8 @@ for w in taxi:
     for n in ns[1:]:
         cur.append(n)
         if n in gnodes: segs.append([cur[0], cur[-1], ref, cur[1:-1], w['id']]); cur = [n]
+# taxilane S is three lines on one stretch of pavement: S West (blue) and S East (red) either side of the centre line S
+LINE = {w['id']: {'S WEST': 'b', 'S EAST': 'r', 'S': 'c'}[w['tags']['ref'].upper()] for w in taxi if (w['tags'].get('ref') or '').upper() in ('S WEST', 'S EAST', 'S')}
 # name the unnamed: inside an apron -> APRON; else the name shared by its neighbours, else the neighbour's
 adj = collections.defaultdict(list)
 for s in segs: adj[s[0]].append(s); adj[s[1]].append(s)
@@ -162,7 +166,7 @@ def runway_seg(s):
 edges = []
 for s in segs:
     if runway_seg(s): continue
-    edges.append([NID(s[0]), NID(s[1]), s[2], [[r1(x) for x in NODE[n]] for n in s[3]]])
+    edges.append([NID(s[0]), NID(s[1]), s[2], [[r1(x) for x in NODE[n]] for n in s[3]]] + ([LINE[s[4]]] if s[4] in LINE else []))
 edges += xedges
 # keep the largest connected component
 g = collections.defaultdict(set)
@@ -255,12 +259,13 @@ for e in edges:
             if mids == [] and prev in POS and math.dist(POS[prev], q) < 4: gnode[sid] = prev; k += 1; continue
             nn = 's' + sid
             nodes.append([nn, r1(q[0]), r1(q[1])]); POS[nn] = q
-            newedges.append([prev, nn, e[2], [[r1(x) for x in m] for m in mids]]); prev, mids = nn, []; gnode[sid] = nn; k += 1
+            newedges.append([prev, nn, e[2], [[r1(x) for x in m] for m in mids]] + e[4:]); prev, mids = nn, []; gnode[sid] = nn; k += 1
         if idx + 1 < len(pl) - 1: mids.append(pl[idx+1])
-    newedges.append([prev, e[1], e[2], [[r1(x) for x in m] for m in mids]])
+    newedges.append([prev, e[1], e[2], [[r1(x) for x in m] for m in mids]] + e[4:])
     for j in range(k, len(lst)): gnode[lst[j][1]] = e[1]
 edges = newedges
 for gt in gates: gt[3] = gnode[gt[0]]
+edges = add_crossovers(edges, nodes, gates, r1)
 # ── aprons, buildings, hangars
 def ring(w): return [[r1(x) for x in NODE[n]] for n in w['nodes']]
 aprons_out = [ring(w) for w in ways if tagged(w, 'apron')]
@@ -290,7 +295,8 @@ with open(OUT, 'w') as fo:
 // stands at their AIP AD 2-EGKK-2-3 coordinates and the 08R/26L thresholds from AD 2-EGKK-2-1. Positions are metres east
 // and north of the ARP (51°08'53"N 000°11'25"W). Runway 08L/26R is no longer a runway: its centreline is part of taxiway J.
 // runways: pavement ends a and b, length, thresholds in metres from a, elevations (ft)
-// nodes [id, east, north], edges [a, b, taxiway, intermediate points], rnodes: runway-edge points 40 m out on each
+// nodes [id, east, north] (c: a crossover's end), edges [a, b, taxiway, intermediate points, line on taxilane S (b S West,
+// r S East, c the centre line; x a crossover between them)], rnodes: runway-edge points 40 m out on each
 // entry/exit; holds key: [hold node, runway-edge node, runway, m along it, offset, directions that can turn off there,
 // runway end it serves]; hlink: the bend between the runway edge and the holding point; fil: centreline to runway-edge
 // fillet in the runway frame; hs: holding positions before 08R/26L; gates: [stand, terminal (N, S, R remote, W west
