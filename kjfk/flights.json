@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-09T04:10:20Z",
+ "updated": "2026-10-09T04:29:10Z",
  "source": "avionio.com",
  "days": {
   "2026-10-09": {
@@ -10,7 +10,7 @@
      "flight": "DL1065",
      "sched": "00:11",
      "status": "Landed",
-     "expected": "19:19"
+     "expected": "21:32"
     },
     {
      "place": "Anchorage",
@@ -24,7 +24,7 @@
      "flight": "VB686",
      "sched": "00:20",
      "status": "Landed",
-     "expected": "20:23"
+     "expected": "22:07"
     },
     {
      "place": "Guayaquil",
@@ -38,28 +38,28 @@
      "flight": "AA9797",
      "sched": "00:30",
      "status": "Landed",
-     "expected": "21:24"
+     "expected": "22:39"
     },
     {
      "place": "San Francisco",
      "flight": "DL363",
      "sched": "00:39",
-     "status": "Cancelled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "19:36"
     },
     {
      "place": "Quito",
      "flight": "2K7396",
      "sched": "00:45",
      "status": "Estimated",
-     "expected": "00:06"
+     "expected": "00:04"
     },
     {
      "place": "Miami",
      "flight": "AA944",
      "sched": "00:58",
      "status": "Estimated",
-     "expected": "00:33"
+     "expected": "22:18"
     },
     {
      "place": "Atlanta",
@@ -87,7 +87,7 @@
      "flight": "B61536",
      "sched": "01:25",
      "status": "Estimated",
-     "expected": "23:09"
+     "expected": "23:55"
     },
     {
      "place": "San Salvador",
@@ -122,7 +122,7 @@
      "flight": "2K7394",
      "sched": "03:40",
      "status": "Estimated",
-     "expected": "03:12"
+     "expected": "03:11"
     },
     {
      "place": "Panama City",
@@ -150,21 +150,21 @@
      "flight": "BW540",
      "sched": "05:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "04:34"
     },
     {
      "place": "Los Angeles",
      "flight": "B61524",
      "sched": "05:01",
      "status": "Estimated",
-     "expected": "23:50"
+     "expected": "03:57"
     },
     {
      "place": "Los Angeles",
      "flight": "DL960",
      "sched": "05:05",
      "status": "Estimated",
-     "expected": "00:17"
+     "expected": "02:36"
     },
     {
      "place": "Louisville",
@@ -177,7 +177,7 @@
      "place": "Albuquerque",
      "flight": "B666",
      "sched": "05:10",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -206,14 +206,14 @@
      "flight": "IZ993",
      "sched": "05:20",
      "status": "Estimated",
-     "expected": "05:20"
+     "expected": "05:33"
     },
     {
      "place": "Anchorage",
      "flight": "CI5312",
      "sched": "05:26",
      "status": "Estimated",
-     "expected": ""
+     "expected": "05:44"
     },
     {
      "place": "Louisville",
@@ -227,7 +227,7 @@
      "flight": "DL226",
      "sched": "05:29",
      "status": "Estimated",
-     "expected": "02:48"
+     "expected": "03:56"
     },
     {
      "place": "Santa Ana",
@@ -332,7 +332,7 @@
      "flight": "AA293",
      "sched": "06:10",
      "status": "Estimated",
-     "expected": "03:17"
+     "expected": "04:31"
     },
     {
      "place": "Memphis",
@@ -359,22 +359,22 @@
      "place": "Portland",
      "flight": "DL2139",
      "sched": "06:29",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:30"
     },
     {
      "place": "San Francisco",
      "flight": "AA276",
      "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:45"
     },
     {
      "place": "Seattle",
      "flight": "B6264",
      "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:25"
     },
     {
      "place": "Salt Lake City",
@@ -394,8 +394,8 @@
      "place": "San Francisco",
      "flight": "DL670",
      "sched": "06:41",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:35"
     },
     {
      "place": "Las Vegas",
@@ -423,14 +423,14 @@
      "flight": "AA954",
      "sched": "06:55",
      "status": "Estimated",
-     "expected": "04:05"
+     "expected": "05:20"
     },
     {
      "place": "Honolulu",
      "flight": "AS830",
      "sched": "06:55",
      "status": "Estimated",
-     "expected": "21:30"
+     "expected": "02:13"
     },
     {
      "place": "Miami",
@@ -615,6 +615,13 @@
      "expected": ""
     },
     {
+     "place": "Providence",
+     "flight": "B61129",
+     "sched": "07:44",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Sao Paulo",
      "flight": "JJ8180",
      "sched": "07:45",
@@ -706,9 +713,23 @@
      "expected": ""
     },
     {
+     "place": "Norfolk",
+     "flight": "9E5356",
+     "sched": "08:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Rochester",
      "flight": "B61285",
      "sched": "08:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Buffalo",
+     "flight": "9E5284",
+     "sched": "08:33",
      "status": "Scheduled",
      "expected": ""
     },
@@ -776,6 +797,13 @@
      "expected": ""
     },
     {
+     "place": "Detroit",
+     "flight": "9E5216",
+     "sched": "08:57",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Doha",
      "flight": "QR703",
      "sched": "09:00",
@@ -783,10 +811,24 @@
      "expected": "09:01"
     },
     {
+     "place": "Indianapolis",
+     "flight": "9E4932",
+     "sched": "09:04",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cincinnati",
+     "flight": "9E5044",
+     "sched": "09:09",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Lima",
      "flight": "LA2468",
      "sched": "09:10",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -807,6 +849,13 @@
      "place": "Indianapolis",
      "flight": "YX4631",
      "sched": "09:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Jacksonville",
+     "flight": "9E4959",
+     "sched": "09:25",
      "status": "Scheduled",
      "expected": ""
     },
@@ -849,7 +898,7 @@
      "place": "Liege",
      "flight": "X7551",
      "sched": "09:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -881,6 +930,13 @@
      "expected": ""
     },
     {
+     "place": "Anchorage",
+     "flight": "5Y812",
+     "sched": "09:57",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Seoul",
      "flight": "OZ222",
      "sched": "10:00",
@@ -898,6 +954,13 @@
      "place": "Tampa",
      "flight": "DL2475",
      "sched": "10:09",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Santiago",
+     "flight": "B62536",
+     "sched": "10:12",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1010,70 +1073,7 @@
      "place": "Athens",
      "flight": "N0503",
      "sched": "11:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Charlotte",
-     "flight": "AA2024",
-     "sched": "11:28",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "VS3",
-     "sched": "11:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Copenhagen",
-     "flight": "DL219",
-     "sched": "11:40",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Miami",
-     "flight": "AA2341",
-     "sched": "11:44",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Detroit",
-     "flight": "DL2751",
-     "sched": "11:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "DL287",
-     "sched": "11:50",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Fuzhou",
-     "flight": "MF849",
-     "sched": "11:55",
      "status": "Estimated",
-     "expected": "12:10"
-    },
-    {
-     "place": "Paris",
-     "flight": "DL267",
-     "sched": "11:56",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Atlanta",
-     "flight": "DL1034",
-     "sched": "11:57",
-     "status": "Scheduled",
      "expected": ""
     }
    ],
@@ -1103,15 +1103,15 @@
      "place": "Paris",
      "flight": "AF11",
      "sched": "01:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:27"
     },
     {
      "place": "Quito",
      "flight": "2K7397",
      "sched": "01:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:28"
     },
     {
      "place": "Taipei",
@@ -1422,6 +1422,20 @@
      "expected": ""
     },
     {
+     "place": "Guayaquil",
+     "flight": "B6505",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Aruba",
+     "flight": "B657",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Washington",
      "flight": "YX4671",
      "sched": "06:30",
@@ -1446,6 +1460,20 @@
      "place": "Boston",
      "flight": "B62718",
      "sched": "06:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Medellin",
+     "flight": "AV43",
+     "sched": "06:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "San Salvador",
+     "flight": "AV569",
+     "sched": "06:55",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1494,6 +1522,13 @@
     {
      "place": "New Orleans",
      "flight": "B675",
+     "sched": "07:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Port of Spain",
+     "flight": "BW521",
      "sched": "07:00",
      "status": "Scheduled",
      "expected": ""
@@ -2056,48 +2091,6 @@
      "flight": "B6503",
      "sched": "09:50",
      "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Columbus",
-     "flight": "YX5649",
-     "sched": "09:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Boston",
-     "flight": "YX5733",
-     "sched": "09:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Honolulu",
-     "flight": "DL636",
-     "sched": "09:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Cleveland",
-     "flight": "YX4670",
-     "sched": "09:56",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Portland",
-     "flight": "AS19",
-     "sched": "09:59",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Miami",
-     "flight": "AA688",
-     "sched": "10:00",
-     "status": "Scheduled",
      "expected": ""
     }
    ]
