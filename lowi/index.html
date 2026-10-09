@@ -10236,6 +10236,64 @@ function pushClear(ac){
   const p = st.lp || st.p;
   return !S.acs.some(o => o !== ac && o.ground && ((o.path && !['PARKED', 'ONSTAND'].includes(o.state) && dist(o.x, o.y, ...p) < 90*M2NM) || (o.state === 'PUSH' && dist(o.x, o.y, ...p) < 120*M2NM)));
 }
+// ── taxi routes like a controller would give them: not simply the shortest, but one that keeps clear of traffic coming
+// the other way along the same taxiway (head to head) and of aircraft stopped on it. The shortest still wins unless it
+// meets someone, and a way round is taken only if it is not much longer (1.8 times at most)
+function groundFlows(me){
+  const at = new Map(); for (const id in GN) at.set(GN[id].p[0] + ',' + GN[id].p[1], id);
+  const dir = new Set(), used = new Set(), blockE = new Set();
+  for (const o of S.acs) {
+    if (o === me || !o.ground || o.state === 'PRE' || o.onRwy || ['TAKEOFF', 'LINEUP', 'LINEDUP', 'ROLLOUT'].includes(o.state)) continue;
+    if (o.path && o.path.pts.length) {
+      let prev = null;
+      for (const p of o.path.pts) { const id = at.get(p[0] + ',' + p[1]); if (!id) continue;
+        if (prev && prev !== id) { dir.add(prev + '>' + id); for (const [v, e] of GN[prev].adj) if (v === id) used.add(e); }
+        prev = id; }
+    } else if (!['PARKED', 'ONSTAND'].includes(o.state)) {   // stopped out on the taxiways: pushed back, holding, waiting for a route
+      let be = null, bd = 40/1852;
+      for (const e of GE) { if (e.a[0] === 'R' || e.b[0] === 'R') continue; const A = GN[e.a].p, B = GN[e.b].p, dx = B[0] - A[0], dy = B[1] - A[1], L2 = dx*dx + dy*dy || 1e-12, f = clamp(((o.x - A[0])*dx + (o.y - A[1])*dy)/L2, 0, 1), d = dist(o.x, o.y, A[0] + dx*f, A[1] + dy*f); if (d < bd) { bd = d; be = e; } }
+      if (be) blockE.add(be);
+    }
+  }
+  return { dir, used, blockE };
+}
+const flowPen = F => e => (F.used.has(e) ? 6 : 1)*(F.blockE.has(e) ? 8 : 1);
+// the candidate to give (null: the plain shortest is fine), from routes { nodes, tws }; costs in NM, a head-on leg six times
+function pickRoute(cands, F){
+  const ok = cands.filter(r => r && r.nodes && r.nodes.length > 1);
+  for (const r of ok) { r.L = pathLen(r.nodes); let c = 0, head = 0;
+    for (let i = 1; i < r.nodes.length; i++) { const u = r.nodes[i-1], v = r.nodes[i], d = dist(...GN[u].p, ...GN[v].p);
+      if (F.dir.has(v + '>' + u)) { c += d*6; head += d; } else c += d;
+      for (const [w, e] of GN[u].adj) if (w === v && F.blockE.has(e) && i > 1 && i < r.nodes.length - 1) c += 0.3; }
+    r.cost = c; r.head = head; }
+  if (!ok.length) return null;
+  const short = ok.reduce((a, b) => b.L < a.L ? b : a), best = ok.reduce((a, b) => b.cost < a.cost ? b : a);
+  if (best === short || best.L > short.L*1.8 || best.cost > short.cost - 0.05 || best.nodes.join() === short.nodes.join()) return null;
+  return best;
+}
+const aiViaWords = v => v.length && v.every(t => /^[A-Z]{1,2}\d{0,2}$/.test(t) && PHON[t]) ? ' VIA ' + v.join(' ') : null;
+// the taxi instruction for ac: TAXI, or TAXI ... VIA ... round the traffic
+function aiTaxiCmd(ac){
+  try {
+    const F = groundFlows(ac), [from, face] = taxiStart(ac), pen = flowPen(F);
+    if (ac.kind === 'ARR') {
+      const st = ac.stand; if (!st) return 'TAXI';
+      const lead = brg(...st.lp, ...st.p), rt = q => (face != null && route(from, st.node, q, face, lead)) || route(from, st.node, q, face) || route(from, st.node, q);
+      const base = rt(); if (!base) return 'TAXI';
+      const cands = [base, rt(pen), ...[...new Set(base.tws)].filter(t => t !== 'APRON').slice(0, 4).map(tw => rt(e => e.tw === tw ? 6 : 1))];
+      const b = pickRoute(cands, F), w = b && aiViaWords(viaOf(b.tws, ac.exit));
+      if (w) { ac.aiWhy = `routed round ${b === cands[1] ? 'traffic' : 'traffic on ' + viaOf(base.tws, ac.exit).join(', ')}`; return 'TAXI STAND' + w; }
+      return 'TAXI';
+    }
+    let hp = ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac); if (APT.depHoldAs) hp = APT.depHoldAs(ac, hp);
+    if (!HOLDS[hp]) return 'TAXI';
+    const to = HOLDS[hp].node, ob = BIG_GROUND && face != null ? holdOut(hp) : null, rt = q => (ob != null && route(from, to, q, face, ob)) || route(from, to, q, face);
+    const cands = [...taxiOptions(ac, hp), rt(pen)];
+    const b = pickRoute(cands, F), w = b && aiViaWords(viaOf(b.tws, hp));
+    if (w) { ac.aiWhy = 'routed round traffic'; return `TAXI ${hp}` + w; }
+  } catch (e) {}
+  return 'TAXI';
+}
 function aiGround(ac){
   const n = ac.need || '';
   if (n === 'Request start-up' && ac.state === 'PARKED') {
@@ -10243,14 +10301,23 @@ function aiGround(ac){
     const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
     if (sl && sl.ctot != null && nowMin() < sl.ctot - 20) return;   // its slot is a while off: it waits on stand
     if (!pushClear(ac) && aiSince(ac, n) < 150) return;
-    if (!aiDo('GND', ac, 'PUSH')) aiDo('GND', ac, 'TAXI');
+    if (!aiDo('GND', ac, 'PUSH')) aiDo('GND', ac, aiTaxiCmd(ac));
     return;
   }
-  if (n === 'Ready to taxi' && aiDue(ac, n, 3, 7)) return aiDo('GND', ac, 'TAXI');
-  if (n.startsWith('Holding at') && aiDue(ac, n, 4, 9)) return aiDo('GND', ac, 'TAXI');
-  if ((n === 'Request taxi' || n === 'Needs a stand') && aiDue(ac, n, 3, 7)) return aiDo('GND', ac, ac.stand ? 'TAXI' : 'STAND AUTO TAXI');
+  if (n === 'Ready to taxi' && aiDue(ac, n, 3, 7)) return aiDo('GND', ac, aiTaxiCmd(ac));
+  if (n.startsWith('Holding at') && aiDue(ac, n, 4, 9)) return aiDo('GND', ac, aiTaxiCmd(ac));
+  if ((n === 'Request taxi' || n === 'Needs a stand') && aiDue(ac, n, 3, 7)) {
+    if (!ac.stand) aiDo('GND', ac, 'STAND AUTO');
+    return aiDo('GND', ac, ac.stand ? aiTaxiCmd(ac) : 'STAND AUTO TAXI');
+  }
   if (n.startsWith('Request follow') && aiDue(ac, n, 3, 6)) return aiDo('GND', ac, ac.stand ? 'FOLLOW' : 'STAND AUTO FOLLOW');
   if ((n === 'Request tow' || n.startsWith('Tug holding')) && aiDue(ac, n, 4, 10)) return aiDo('GND', ac, 'TOW');
+  // stopped nose to nose with someone coming the other way: send it round another way, if there is one
+  if (ac.path && (ac.state === 'TAXI' || ac.taxiIn) && !ac.held && !ac.hsAt && (ac.gs || 0) < 1) {
+    if (!ac.aiStop) ac.aiStop = S.t;
+    const nose = S.t - ac.aiStop > 15 && S.acs.find(o => o !== ac && o.ground && dist(o.x, o.y, ac.x, ac.y) < 200/1852 && Math.abs(angDiff(o.hdg, ac.hdg)) > 120 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40);
+    if (nose && aiDue(ac, 'round' + ac.aiStop, 1, 4)) { const c = aiTaxiCmd(ac); if (c !== 'TAXI') { aiDo('GND', ac, c); ac.aiWhy = `sent round ${nose.cs}`; } }
+  } else ac.aiStop = null;
 }
 
 // ── Tower: line-up and take-off, landing clearances, go-arounds, runway crossings, transfers, the road at Gibraltar
