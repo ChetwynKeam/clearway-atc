@@ -735,7 +735,7 @@ function rcEnter(auto){
 function rcOff(done){
   const C = S.rc; if (!C) return; const v = C.v;
   v.onRwy = null; v.spd = v.T.kt; v.urgent = false;
-  if (done) { vcall(v, `runway ${C.rw} vacated at ${hpWords(C.hp)}, inspection complete, ${Math.random() < 0.15 ? 'one item of FOD picked up, ' : ''}runway is clear`); if (!C.auto) S.score.pts += 5; }
+  if (done) { vcall(v, `runway ${C.rw} vacated at ${hpWords(C.hp)}, inspection complete, ${Math.random() < 0.15 ? 'one item of FOD picked up, ' : ''}runway is clear`); if (!C.auto && S.seats.TWR !== 'AI') S.score.pts += 5; }
   else vcall(v, 'runway vacated');
   S.rc = null; sendHome(v, 3); renderAtisSoon(); emit('rcdone', done);
 }
@@ -820,12 +820,12 @@ function stepRadio(){
   if (C && C.st === 'READY' && C.asked != null && S.t - C.asked > 240) { C.asked = S.t; vcall(C.v, `still holding at ${hpWords(C.hp)} for the runway inspection`); }
   if (C && C.st === 'ON') for (const ac of S.acs) {
     if (!(ac.onRwy && (ac.rwyId || RWYS[0].id) === C.R.id) || ac.rcHit === C.t) continue;
-    if (ac.state === 'TAKEOFF' || ac.state === 'ROLLOUT') { ac.rcHit = C.t; S.score.incidents++; S.score.pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with Ops 1 on the runway.`, true); }
+    if (ac.state === 'TAKEOFF' || ac.state === 'ROLLOUT') { ac.rcHit = C.t; SC(ac).incidents++; SC(ac).pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with Ops 1 on the runway.`, true); }
   }
   // anything landing or taking off with a vehicle crossing
   for (const v of VEH.list) if (v.xing && v.onRwy && !v.gone) for (const ac of S.acs) {
     if (!(ac.onRwy && (ac.rwyId || RWYS[0].id) === v.onRwy) || ac.rcHit === v.xing || !(ac.state === 'TAKEOFF' || ac.state === 'ROLLOUT')) continue;
-    ac.rcHit = v.xing; S.score.incidents++; S.score.pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with ${radioName(v)} crossing the runway.`, true);
+    ac.rcHit = v.xing; SC(ac).incidents++; SC(ac).pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with ${radioName(v)} crossing the runway.`, true);
   }
   // the runway closed for an inspection (bird strike, debris, after an emergency): Ops 1 goes out and drives it
   if (S.emg && S.emg.rwyBlock && !C) opsCheck(S.rwy, 'runway inspection', true);

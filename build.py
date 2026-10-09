@@ -118,6 +118,7 @@ const AP_DATA = {ap_data};
 {r('live.js')}
 {r('custom.js')}
 {r('slots.js')}
+{r('ai.js')}
 {r('voice.js')}
 {r('radio.js')}
 {r('account.js')}
