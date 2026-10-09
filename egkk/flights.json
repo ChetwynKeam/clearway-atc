@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-09T00:10:11Z",
+ "updated": "2026-10-09T00:40:27Z",
  "source": "avionio.com",
  "days": {
   "2026-10-09": {
@@ -9,7 +9,7 @@
      "place": "Dalaman",
      "flight": "U28566",
      "sched": "01:05",
-     "status": "Estimated",
+     "status": "Landed",
      "expected": "00:48"
     },
     {
@@ -30,8 +30,8 @@
      "place": "Tenerife",
      "flight": "BY5459",
      "sched": "01:10",
-     "status": "Estimated",
-     "expected": "00:59"
+     "status": "Landed",
+     "expected": "01:07"
     },
     {
      "place": "Alicante",
@@ -59,7 +59,7 @@
      "flight": "U28218",
      "sched": "01:40",
      "status": "Estimated",
-     "expected": "01:28"
+     "expected": "01:27"
     },
     {
      "place": "Paphos",
@@ -101,21 +101,21 @@
      "flight": "BY553",
      "sched": "02:40",
      "status": "Estimated",
-     "expected": "02:50"
+     "expected": "02:52"
     },
     {
      "place": "Sal Island",
      "flight": "BY783",
      "sched": "03:05",
      "status": "Estimated",
-     "expected": "03:01"
+     "expected": "03:02"
     },
     {
      "place": "Dalaman",
      "flight": "BY269",
      "sched": "03:25",
      "status": "Estimated",
-     "expected": "03:18"
+     "expected": "03:19"
     },
     {
      "place": "Accra",
@@ -129,14 +129,14 @@
      "flight": "BY4499",
      "sched": "04:55",
      "status": "Estimated",
-     "expected": "05:06"
+     "expected": "05:03"
     },
     {
      "place": "Punta Cana",
      "flight": "BY75",
      "sched": "06:00",
      "status": "Estimated",
-     "expected": "06:03"
+     "expected": "06:05"
     },
     {
      "place": "Lagos",
@@ -150,21 +150,21 @@
      "flight": "Z0702",
      "sched": "06:20",
      "status": "Estimated",
-     "expected": "06:05"
+     "expected": "06:04"
     },
     {
      "place": "Guangzhou",
      "flight": "CZ689",
      "sched": "06:30",
      "status": "Estimated",
-     "expected": "06:25"
+     "expected": "06:29"
     },
     {
      "place": "Beijing",
      "flight": "CA851",
      "sched": "06:35",
      "status": "Estimated",
-     "expected": "06:24"
+     "expected": "06:29"
     },
     {
      "place": "Shanghai",
@@ -178,14 +178,14 @@
      "flight": "QR329",
      "sched": "06:40",
      "status": "Estimated",
-     "expected": "06:24"
+     "expected": "06:28"
     },
     {
      "place": "Orlando",
      "flight": "BA2036",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:20"
+     "expected": "06:16"
     },
     {
      "place": "Mauritius",
@@ -199,7 +199,7 @@
      "flight": "CA847",
      "sched": "06:55",
      "status": "Estimated",
-     "expected": "06:34"
+     "expected": "06:33"
     },
     {
      "place": "Bahrain",
@@ -213,7 +213,7 @@
      "flight": "SQ312",
      "sched": "06:55",
      "status": "Estimated",
-     "expected": "06:58"
+     "expected": "07:00"
     },
     {
      "place": "Heraklion",
@@ -255,14 +255,14 @@
      "flight": "BY93",
      "sched": "07:30",
      "status": "Estimated",
-     "expected": "06:46"
+     "expected": "06:39"
     },
     {
      "place": "Port of Spain",
      "flight": "BA2238",
      "sched": "07:35",
      "status": "Estimated",
-     "expected": "07:23"
+     "expected": "07:35"
     },
     {
      "place": "Basel/Mulhouse",
@@ -318,7 +318,7 @@
      "flight": "BY37",
      "sched": "07:50",
      "status": "Estimated",
-     "expected": "07:18"
+     "expected": "07:15"
     },
     {
      "place": "Malaga",
@@ -339,7 +339,7 @@
      "flight": "TS282",
      "sched": "07:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "04:33"
     },
     {
      "place": "Aberdeen",
@@ -625,7 +625,7 @@
      "place": "Orlando",
      "flight": "BA2038",
      "sched": "10:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1621,6 +1621,76 @@
      "place": "Dublin",
      "flight": "FR127",
      "sched": "22:00",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-10-10": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Dublin",
+     "flight": "FR112",
+     "sched": "08:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR114",
+     "sched": "09:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cork",
+     "flight": "FR7721",
+     "sched": "09:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR1111",
+     "sched": "11:30",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Dublin",
+     "flight": "FR113",
+     "sched": "08:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR115",
+     "sched": "09:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cork",
+     "flight": "FR7722",
+     "sched": "10:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR1112",
+     "sched": "12:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR117",
+     "sched": "13:15",
      "status": "Scheduled",
      "expected": ""
     }
