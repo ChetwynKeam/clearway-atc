@@ -5244,6 +5244,7 @@ function commandRun(str){
   if (typeof vehCommand === 'function' && vehCommand(toks)) return;   // a radio vehicle (OPS, FIRE): vehicles.js
   let ac = findAc(toks[0]);
   if (ac) toks.shift(); else ac = S.sel;
+  if (ac && toks[0] === ac.cs.toUpperCase()) toks.shift();   // the box already held the callsign and it was typed again
   if (!ac || !S.acs.includes(ac)) { sys('Select a flight first, or start the command with its callsign.'); return; }
   if (toks.length === 1 && /^(REMOVE|DELETE|DEL)$/.test(toks[0])) { removeAc(ac); return; }   // works on any flight, yours or not
   if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
@@ -6607,7 +6608,20 @@ function stateLabel(ac){
 // ═════════════════════════ console UI ═════════════════════════
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
-function select(ac){ if (ac && outOfCtl(ac)) return; S.sel = ac; renderSel(); renderStrips(true); }
+function select(ac){ if (ac && outOfCtl(ac)) return; S.sel = ac; renderSel(); renderStrips(true); cmdPrefill(); }
+// the selected flight's callsign waits in the command box, so you only type the instruction after it. Only text the
+// box put there itself (or a bare callsign) is replaced; anything you have started typing is left alone. On a mouse,
+// the box takes the focus unless you are typing in another field; on a touch screen it doesn't, so no keyboard pops up.
+let cmdFill = '';
+function cmdPrefill(){
+  const b = $('cmd'); if (!b || b.classList.contains('listening')) return;
+  const v = b.value.trim().toUpperCase();
+  if (v && b.value !== cmdFill && !(S.acs.some(a => a.cs === v))) return;
+  b.value = cmdFill = S.sel ? S.sel.cs + ' ' : '';
+  const f = document.activeElement;
+  if (S.sel && f !== b && !(f && /INPUT|TEXTAREA|SELECT/.test(f.tagName)) && matchMedia('(pointer: fine)').matches && document.body.dataset.route === 'sim') b.focus();
+  if (document.activeElement === b) b.setSelectionRange(b.value.length, b.value.length);
+}
 // ── phone and tablet: one panel at a time under the scope, chosen from a tab bar ──
 const phoneMQ = matchMedia('(max-width: 900px)');
 function setMTab(t){
@@ -7167,8 +7181,8 @@ cv.addEventListener('pointerup', e => {
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
 
-$('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; if (v.trim()) command(v); $('cmd').value = ''; };
-$('cmd').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const L = S.acs.filter(a => !outOfCtl(a)); if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
+$('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; $('cmd').value = cmdFill = ''; if (v.trim()) command(v); cmdPrefill(); };
+$('cmd').addEventListener('keydown', e => { if (e.key === 'Escape') { $('cmd').blur(); return; } if (e.key === 'Tab') { e.preventDefault(); const L = S.acs.filter(a => !outOfCtl(a)); if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
 document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim') return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === ' ') { e.preventDefault(); $('tgPause').click(); } if (e.key === '/') { e.preventDefault(); $('cmd').focus(); } });
 
 const wxSel = $('wxPreset'); { const o = document.createElement('option'); o.value = 'live'; o.textContent = `Live weather · current ${APT.icao} METAR`; wxSel.appendChild(o); }
