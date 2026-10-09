@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-09T06:34:27Z",
+ "updated": "2026-10-09T07:02:00Z",
  "source": "avionio.com",
  "days": {
   "2026-10-09": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Luxembourg",
-     "flight": "LG4605",
-     "sched": "07:30",
-     "status": "Estimated",
-     "expected": "07:27"
-    },
-    {
-     "place": "Berlin",
-     "flight": "CJ8490",
-     "sched": "07:50",
-     "status": "Estimated",
-     "expected": "07:43"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "CJ8450",
-     "sched": "07:55",
-     "status": "Estimated",
-     "expected": "07:50"
-    },
     {
      "place": "Guernsey",
      "flight": "GR400",
@@ -38,7 +17,7 @@
      "flight": "CJ8751",
      "sched": "08:15",
      "status": "Estimated",
-     "expected": "07:48"
+     "expected": "07:47"
     },
     {
      "place": "Milan",
@@ -59,21 +38,21 @@
      "flight": "CJ8711",
      "sched": "08:40",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:28"
     },
     {
      "place": "Frankfurt",
      "flight": "EN8772",
      "sched": "08:40",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:36"
     },
     {
      "place": "Zurich",
      "flight": "LX460",
      "sched": "08:40",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:51"
     },
     {
      "place": "Amsterdam",
@@ -93,7 +72,7 @@
      "place": "Edinburgh",
      "flight": "CJ8713",
      "sched": "09:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -101,7 +80,7 @@
      "flight": "CJ3271",
      "sched": "09:10",
      "status": "Estimated",
-     "expected": ""
+     "expected": "09:15"
     },
     {
      "place": "Amsterdam",
@@ -109,23 +88,44 @@
      "sched": "09:30",
      "status": "Scheduled",
      "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "CJ8703",
+     "sched": "09:55",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "CJ4463",
+     "sched": "10:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "CJ8723",
+     "sched": "10:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rotterdam",
+     "flight": "CJ4451",
+     "sched": "10:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "BA8764",
+     "sched": "10:55",
+     "status": "Scheduled",
+     "expected": ""
     }
    ],
    "dep": [
-    {
-     "place": "Zurich",
-     "flight": "CJ8763",
-     "sched": "07:00",
-     "status": "Departed",
-     "expected": "07:04"
-    },
-    {
-     "place": "Ibiza",
-     "flight": "CJ8463",
-     "sched": "07:15",
-     "status": "Estimated",
-     "expected": "07:15"
-    },
     {
      "place": "Luxembourg",
      "flight": "LG4606",
@@ -137,15 +137,15 @@
      "place": "Rotterdam",
      "flight": "CJ4450",
      "sched": "08:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:15"
     },
     {
      "place": "Berlin",
      "flight": "CJ8491",
      "sched": "08:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:26"
     },
     {
      "place": "Amsterdam",
@@ -158,15 +158,15 @@
      "place": "Nice",
      "flight": "CJ8475",
      "sched": "08:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:31"
     },
     {
      "place": "Guernsey",
      "flight": "GR401",
      "sched": "08:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:30"
     },
     {
      "place": "Florence",
@@ -235,6 +235,20 @@
      "place": "Madrid",
      "flight": "BA3272",
      "sched": "09:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Berlin",
+     "flight": "CJ7027",
+     "sched": "10:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "WA984",
+     "sched": "10:00",
      "status": "Scheduled",
      "expected": ""
     }
