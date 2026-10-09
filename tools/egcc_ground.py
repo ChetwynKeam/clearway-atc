@@ -322,7 +322,9 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0
     line = None
     if len(q) > 1:
         n0, n1 = nearest_seg(q[0]), nearest_seg(q[-1])
-        if n0[0] < 8 and n1[0] < 8 and L > 60:
+        # (within 55 m of a lane at both ends: the west remote ramp's 70-74, 80 and 231 groups, whose left and right
+        # lines end short of the far lane, stop where their centre lines do)
+        if n0[0] < 55 and n1[0] < 55 and L > 60:
             # the mapped line runs from one lane to another (the lane behind the Terminal 1-2-3 stands, the remote ramps'
             # drive-through stands): the aircraft comes in from the lane further from a terminal building and stops at the
             # line's middle vertex (halfway along it when it has none)

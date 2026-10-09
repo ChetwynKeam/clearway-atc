@@ -89,6 +89,17 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
     at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
   }
   for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
+// stands that share apron space: the MARS groups (231 with 231L and 231R, 80, 74, 44, 61...) and the tight pier stands.
+// A stand reads as taken (by its neighbour's aircraft) while an aircraft parked next to it leaves too little room for
+// another narrowbody: wingtips at least 2 m apart, the newcomer taken as 36 m across
+{ const span = ac => (ac && ac.perf && ac.perf.span) || 36;
+  for (const t of STANDS) {
+    const nb = STANDS.filter(o => o !== t && dist(...o.p, ...t.p)/M2NM < 70).map(o => [o, dist(...o.p, ...t.p)/M2NM]);
+    let own = null;
+    Object.defineProperty(t, 'occ', { enumerable: true, configurable: true, set(v){ own = v; },
+      get(){ if (own) return own; for (const [o, d] of nb) { const a = o.ownOcc; if (a && d < (span(a) + 36)/2 + 2) return a; } return null; } });
+    Object.defineProperty(t, 'ownOcc', { get: () => own });
+  } }
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 const TERM_NAME = { '2': 'Terminal 2', '3': 'Terminal 3', R: 'remote stands', C: 'north-west remote stands' };
 // which side of each runway its exits are on (the side the taxiway system is): runway 1 has exits both sides
