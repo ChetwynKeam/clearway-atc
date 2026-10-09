@@ -318,7 +318,7 @@ function stepPending(ac, dt){
 function spawnDeparture(f){
   const ac = new Aircraft(f); ac.kind = 'DEP'; ac.freq = 'TWR';
   const wantSouth = isMil(ac);
-  const st = STANDS.find(s => s.id === f.stand && !s.occ) || (APT.standFor && APT.standFor(ac)) || STANDS.find(s => !s.occ && (wantSouth ? s.area === 'south' : s.area !== 'south')) || STANDS.find(s => !s.occ);
+  const st = STANDS.find(s => s.id === f.stand && standFree(s, ac)) || (APT.standFor && APT.standFor(ac)) || STANDS.find(s => standFree(s, ac) && (wantSouth ? s.area === 'south' : s.area !== 'south')) || STANDS.find(s => standFree(s, ac));
   if (!st) return null;
   st.occ = ac; ac.stand = st;
   ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
@@ -345,14 +345,14 @@ function spawnResident(f){
   const remote = !isMil(ac) && !isBiz(ac) && wait > 45;
   const order = isMil(ac) ? ['south'] : isBiz(ac) ? ['north', 'civil'] : remote ? (APT.remoteAreas || ['south', 'north', 'civil']) : ['civil', 'north'];
   const byTerm = APT.standFor && !(remote && APT.remoteAreas);   // the airline's terminal (New York; Gatwick unless it waits on a remote stand)
-  let st = (!remote || byTerm) && f.stand && STANDS.find(s => s.id === f.stand && !s.occ);
+  let st = (!remote || byTerm) && f.stand && STANDS.find(s => s.id === f.stand && standFree(s, ac));
   if (!st && byTerm) st = APT.standFor(ac);
   if (!st && remote && APT.remoteAreas && APT.prefArea) {   // the free remote stand nearest its airline's terminal, so the tow in is short
     const T = STANDS.filter(APT.prefArea(ac).has), c = T.length ? T.reduce((a, s) => [a[0] + s.p[0]/T.length, a[1] + s.p[1]/T.length], [0, 0]) : null;
-    if (c) st = STANDS.filter(s => !s.occ && APT.remoteAreas.includes(s.area)).sort((a, b) => dist(...a.p, ...c) - dist(...b.p, ...c))[0];
+    if (c) st = STANDS.filter(s => standFree(s, ac) && APT.remoteAreas.includes(s.area)).sort((a, b) => dist(...a.p, ...c) - dist(...b.p, ...c))[0];
   }
-  for (const a of order) if (!st) st = STANDS.find(s => !s.occ && s.area === a);
-  if (!st && remote && APT.remoteAreas) st = (APT.standFor && APT.standFor(ac)) || STANDS.find(s => !s.occ && s.area === 'civil');   // remote stands full: it waits at a gate
+  for (const a of order) if (!st) st = STANDS.find(s => standFree(s, ac) && s.area === a);
+  if (!st && remote && APT.remoteAreas) st = (APT.standFor && APT.standFor(ac)) || STANDS.find(s => standFree(s, ac) && s.area === 'civil');   // remote stands full: it waits at a gate
   if (!st) return null;
   st.occ = ac; ac.stand = st; ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
   if (f.depM == null) { ac.kind = 'ARR'; ac.state = 'ONSTAND'; ac.doneAt = Infinity; }
@@ -390,7 +390,7 @@ function turnRound(ac){
 function towPlan(ac, to, o = {}){
   const from = ac.stand, held = ac.state === 'TOW' && ac.towNode, end = o.hold ? o.hold.node : to.node;
   if (!held && from.area === 'south' && to.area !== 'south') return null;   // Gibraltar: across the runway at Charlie (towPath)
-  const pen = o.via && o.via.length ? e => o.via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : o.avoid ? e => e.tw === o.avoid ? 6 : 1 : undefined;
+  const pen = o.via && o.via.length ? viaPen(o.via) : o.avoid ? e => e.tw === o.avoid ? 6 : 1 : undefined;
   const outB = o.hold || to.area === 'hangar' ? null : brg(...to.lp, ...to.p);
   // the way it is facing, onto the stand's lead-in where it can; failing that, round a block by any way (a tug can)
   const go = (n, face) => (outB != null && face != null && route(n, end, pen, face, outB)) || (face != null && route(n, end, pen, face)) || route(n, end, pen);
@@ -510,7 +510,25 @@ function prefArea(ac){
   return { key: k, name: (APT.areaNames || AREA_NAMES)[k] || k, has: s => s.area === k };
 }
 // free stands for an arrival, its preferred area first
-const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => !s.occ || s.occ === ac).sort((a, b) => pa.has(b) - pa.has(a)); };
+// ── stands that share apron space: the MARS groups (Manchester's 231 with 231L and 231R, Madrid's 120 with 120A, New
+// York's B25 with B25A and B25B) and stands set closer together than the aircraft on them are wide. A stand reads as
+// taken (occ: the neighbour's aircraft) while one parked or due on a stand next to it leaves no room for a narrowbody
+// (36 m across) between the wingtips; standRoom(st, ac) asks the same for a given aircraft, and the stand choices only
+// offer stands with room for it. Distances are between the stands' stop points.
+const spanOf = ac => (ac && ac.perf && ac.perf.span) || 36;
+for (const t of STANDS) {
+  if (!t.p) continue;
+  t.nb = STANDS.filter(o => o !== t && o.p && dist(...o.p, ...t.p)/M2NM < 90).map(o => [o, dist(...o.p, ...t.p)/M2NM]);
+  let own = t.occ || null;
+  Object.defineProperty(t, 'occ', { enumerable: true, configurable: true, set(v){ own = v; },
+    get(){ if (own) return own; for (const [o, d] of t.nb) { const a = o.ownOcc; if (a && d < (spanOf(a) + 36)/2) return a; } return null; } });
+  Object.defineProperty(t, 'ownOcc', { get: () => own });
+}
+// the aircraft on or due at a stand next to st that leaves ac no room there (null: none)
+function standBy(st, ac){ for (const [o, d] of st.nb || []) { const a = o.ownOcc; if (a && a !== ac && d < (spanOf(a) + spanOf(ac))/2) return a; } return null; }
+const standRoom = (st, ac) => !standBy(st, ac);
+const standFree = (s, ac) => !s.occ && standRoom(s, ac);
+const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => s.occ === ac || standFree(s, ac)).sort((a, b) => pa.has(b) - pa.has(a)); };
 function assignStand(ac, st){
   if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null;
   st.occ = ac; ac.stand = st;
@@ -520,8 +538,8 @@ function assignStand(ac, st){
 function freeStand(ac){
   if (APT.standFor) { const s = APT.standFor(ac); if (s) return s; }
   const area = isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
-  for (const a of area) { const s = STANDS.find(s => !s.occ && s.area === a); if (s) return s; }
-  return STANDS.find(s => !s.occ);
+  for (const a of area) { const s = STANDS.find(s => standFree(s, ac) && s.area === a); if (s) return s; }
+  return STANDS.find(s => standFree(s, ac));
 }
 const ATIS_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const PHON_ALPHA = ['Alfa','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India','Juliett','Kilo','Lima','Mike','November','Oscar','Papa','Quebec','Romeo','Sierra','Tango','Uniform','Victor','Whiskey','X-ray','Yankee','Zulu'];
@@ -565,8 +583,8 @@ function taxiStart(ac){
 // outB (optional): the way it must be able to carry on from `to` (onto a runway holding point's link), if it can
 const routeAc = (ac, to, pen, outB) => { const [from, face] = taxiStart(ac); return (outB != null && face != null && route(from, to, pen, face, outB)) || route(from, to, pen, face); };
 function taxiRoute(ac, hp, via){
-  if (via && via.length) { const o = taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v))); if (o) return o;
-    if (BIG_GROUND) { const r = routeAc(ac, HOLDS[hp].node, e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8, holdOut(hp)); if (r) return r; } }   // big airports: keep to the named taxiways
+  if (via && via.length) { const o = !via.line && (taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v)))); if (o) return o;
+    if (BIG_GROUND || via.line) { const r = routeAc(ac, HOLDS[hp].node, viaPen(via), holdOut(hp)); if (r) return r; } }   // big airports (or a line to keep to): keep to the named taxiways
   return routeAc(ac, HOLDS[hp].node, undefined, BIG_GROUND ? holdOut(hp) : null);
 }
 // every sensible routing to a holding point: simple paths over the taxiway graph, one per distinct "via", shortest first
@@ -762,7 +780,7 @@ function taxiIn(ac, st, via, hold){
     from = ac.vacNode; face = dist(...q, ...v) > 1e-6 ? brg(...q, ...v) : ac.hdg; }
   else [from, face] = taxiStart(ac);
   // onto a stand: arriving the way its lead-in turns off, if there is such a route
-  const pen = via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined;
+  const pen = viaPen(via);
   const r = (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face)
     // no way round from where it stopped (it can't stay on the runway's exit): the tight turn, rather than a jam
     || (ac.vacated || rolling ? route(from, hold ? hold.node : st.node, pen) : null); if (!r) return null;
@@ -820,7 +838,26 @@ function findAc(token){
   return S.acs.find(a => a.cs === token) || (token.length >= 3 && /\d/.test(token) ? S.acs.find(a => a.cs.endsWith(token)) : null) || null;
 }
 function windPhrase(){ const w = S.wx; return `wind ${w.vrb ? 'variable' : hdg3(w.dir)+' degrees'} ${w.spd} knots${w.gust ? ' gusting '+w.gust : ''}`; }
-const viaWords = v => v.length ? ' via ' + v.map(t => PHON[t] || t).join(', ') : '';
+const viaWords = v => v.length ? ' via ' + v.map(t => (PHON[t] || t) + (v.line && v.line[0] === t ? ' ' + ((APT.lineSay || {})[v.line[1]] || LINE_SAY[v.line[1]]) : '')).join(', ') : '';
+// a lane painted with more than one line (Manchester's NA, NB and Z: a blue and an orange line either side of the centre
+// line; Gatwick's S: S West blue, S East red; crossovers between them): a word after the taxiway in VIA picks the line
+// to keep to (TAXI T1 VIA Z CENTRE, TAXI 207 VIA NA BLUE, VIA S EAST), cutting across onto it at the first crossover.
+// via.line = [taxiway, 'c' | 'b' | 'o' | 'r']
+const LINE_WORDS = { CENTRE: 'c', CENTER: 'c', MIDDLE: 'c', CENTRELINE: 'c', BLUE: 'b', ORANGE: 'o', RED: 'r', WEST: 'b', EAST: 'r' }, LINE_SAY = { c: 'centre line', b: 'blue line', o: 'orange line', r: 'red line' };
+let LINED = null;
+const hasLines = tw => (LINED ||= new Set(GE.filter(e => e.line).map(e => e.tw))).has(tw);
+// the taxiways after VIA (from toks[i]): returns the index of the last one read
+function readVia(toks, i, via){
+  for (;;) {
+    const t = toks[i+1];
+    if (t && /^[A-Z]{1,2}\d{0,2}$/.test(t) && PHON[t]) via.push(toks[++i]);
+    else if (t && LINE_WORDS[t] && via.length && hasLines(via[via.length-1])) { via.line = [via[via.length-1], LINE_WORDS[t]]; i++; if (toks[i+1] === 'LINE') i++; }
+    else return i;
+  }
+}
+// the cost weighting for a route through the named taxiways: 8 times the length off them, and with a line named, 8 times
+// on that lane's other lines, its crossovers at their plain length
+const viaPen = via => via.length ? e => via.line && e.bare && e.tw === via.line[0] ? 1/(e.k || 1) : (via.includes(e.tw) && !(via.line && e.line && via.line[0] === e.tw && e.line !== via.line[1])) || e.tw === 'APRON' ? 1 : 8 : undefined;
 const SAY_AGAIN = ['say again', 'say again, you were broken', `${APT.coordName}, readability two, say again`, 'say again the last instruction'];
 const garbleable = (ac, toks) => ac.airborne && !ac.emerg && ac.mode !== 'FINAL' && ac.state !== 'PRE' && toks.length && toks.every(t => /^([HLRACDS]\d{1,5}|SN|DCT|APP|HOLD)$/.test(t) || RW_ENDS.includes(t) || WP[t]);
 // a heading or a direct-to off an RNP AR approach ends it: the crew needs a new approach clearance
@@ -960,7 +997,7 @@ function commandRun(str){
       const heldAt = ac.state === 'TOW' && ac.towHold;
       if (!heldAt && (ac.need !== 'Request tow' || !ac.tow || !ac.tow.to)) { sys(ac.state === 'TOW' ? `${ac.cs} is already under tow: it can be re-routed once it is holding.` : `${ac.cs} has no tow request.`); continue; }
       const hold = toks[i+1] && holdPt(toks[i+1]) ? holdPt(toks[++i]) : null;
-      const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
+      const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
       if (hold && heldAt && hold.node === ac.towNode) { sys(`${ac.cs} is already holding at ${hold.id.replace(/~\d+$/, '')}.`); continue; }
       const to = ac.tow.to, from = ac.stand, cross = !heldAt && from.area === 'south' && to.area !== 'south';
       if (hold && cross) { sys(`The tow from ${from.id} crosses the runway at Charlie: it can't stop on the way.`); continue; }
@@ -1011,6 +1048,7 @@ function commandRun(str){
       let st = id ? STANDS.find(x => x.id.toUpperCase() === id) : ac.stand || standChoices(ac).find(x => !x.occ && prefArea(ac).has(x)) || freeStand(ac);
       if (!st) { sys(id ? `There is no ${sw} ${id}.` : `No free ${sw} for ${ac.cs}.`); continue; }
       if (st.occ && st.occ !== ac) { sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is occupied (${st.occ.cs}).`); continue; }
+      if (!standRoom(st, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for ${sw} ${st.id} with ${standBy(st, ac).cs} next to it.`); continue; }
       if (ac.taxiIn && ac.stand !== st) { sys(`${ac.cs} is taxiing to ${sw} ${ac.stand.id}: re-route it with TAXI ${st.id}.`); continue; }
       assignStand(ac, st); ac.standPref = st.id;
       said.push(`${sw} ${st.id}`); reads.push(`${sw} ${st.id}`);
@@ -1021,18 +1059,19 @@ function commandRun(str){
       let st = ac.stand, hold = null; if (toks[i+1] === 'STAND' || toks[i+1] === 'GATE') i++;
       else if (toks[i+1] && holdPt(toks[i+1])) hold = holdPt(toks[++i]);
       if (!hold && toks[i+1] && toks[i+1] !== 'VIA') { const want = STANDS.find(x => x.id.toUpperCase() === toks[i+1]); if (!want) { sys(`There is no stand ${toks[i+1]}.`); continue; } i++;
-        if (want.occ && want.occ !== ac) { sys(`Stand ${want.id} is occupied (${want.occ.cs}).`); continue; } st = want; }
+        if (want.occ && want.occ !== ac) { sys(`Stand ${want.id} is occupied (${want.occ.cs}).`); continue; }
+        if (!standRoom(want, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for stand ${want.id} with ${standBy(want, ac).cs} next to it.`); continue; } st = want; }
       if (!st && !hold) { const sw = APT.standWord || 'stand'; sys(`${ac.cs} has no ${sw} yet. Assign one first (${ac.cs} STAND takes the first free one in its usual area; ${ac.cs} STAND ${(standChoices(ac)[0] || STANDS[0]).id} picks one), or taxi it to a holding point out of the way to wait.`); continue; }
-      const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
-      const vw = taxiIn(ac, st, via, hold); if (!vw) { sys(`No taxi route to ${hold ? 'holding point ' + hold.id : 'stand ' + st.id}.`); continue; }
+      const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
+      const vw = taxiIn(ac, st, via, hold); if (vw && via.line && vw.includes(via.line[0])) vw.line = via.line; if (!vw) { sys(`No taxi route to ${hold ? 'holding point ' + hold.id : 'stand ' + st.id}.`); continue; }
       { const [sa, ra] = hold ? PH.taxiHold(ac, hold, vw) : PH.taxiIn(ac, st, vw); said.push(sa); reads.push(ra); }
     } else if (t === 'TAXI') {
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
       const ihp = toks[i+1] && IHPS[toks[i+1]] && !HOLDS[toks[i+1]] ? IHPS[toks[++i]] : null;   // an intermediate holding point on the way
       let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
-      const via = []; if (toks[i+1] === 'VIA') { i++; while (toks[i+1] && /^[A-Z]{1,2}\d{0,2}$/.test(toks[i+1]) && PHON[toks[i+1]]) via.push(toks[++i]); }
+      const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
       { const why = APT.taxiCheck && APT.taxiCheck(ac, hp); if (why) { sys(why); continue; } }
-      const rt = ihp ? routeAc(ac, ihp.node, via.length ? e => via.includes(e.tw) || e.tw === 'APRON' ? 1 : 8 : undefined) : taxiRoute(ac, hp, via);
+      const rt = ihp ? routeAc(ac, ihp.node, viaPen(via)) : taxiRoute(ac, hp, via);
       if (!rt) { sys(`No taxi route to holding point ${ihp ? ihp.id : hp}${taxiStart(ac)[1] != null ? ` going the way ${ac.cs} is facing: it can't turn round on the taxiway${ac.pushed && !ac.leftStand ? ' (Pull back to stand, then push the other way)' : ''}` : ''}.`); continue; }
       ac.hp = hp;
       const pts = rt.nodes.map(id => GN[id].p);
@@ -1043,7 +1082,7 @@ function commandRun(str){
       if (ihp) { ac.luq = false; ac.cto = false; setPath(ac, pts, 15, () => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); }, { ihp: ihp.id }); }
       else setPath(ac, pts, 15, v => { ac.state = 'HOLDPT'; if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); }, { thru: !!(ac.cto || ac.luq) });
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
-      const vw = viaOf(rt.tws, hp);
+      const vw = viaOf(rt.tws, hp); if (via.line && vw.includes(via.line[0])) vw.line = via.line;
       { const [sa, ra] = ihp ? PH.taxiHold(ac, ihp, vw) : PH.taxi(ac, hp, vw); said.push(sa); reads.push(ra); }
     } else if (t === 'CROSS' || t === 'X') {
       if (air || !ac.path) { sys(`${ac.cs} is not taxiing.`); continue; }

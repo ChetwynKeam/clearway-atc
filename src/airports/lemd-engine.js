@@ -256,7 +256,7 @@ function drawLemd(){
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
     { const leads = leadPts().map(l => l.map(p => P2(p))); groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    { const segs = edgeSegs(); groundLines(lw(0.35), () => { for (const [x1, y1, x2, y2] of segs) { cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke(); } }); }
+    paintEdgeLines(lw(0.35));
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -397,7 +397,7 @@ const GUADARRAMA = [[40.55, -4.45], [40.72, -4.20], [40.84, -3.92], [40.98, -3.7
 // T-4S; everyone else at T-1, T-2 and T-3); Terminals 4 and 4S spill over into each other when full
 const termOf = ac => LEMD.TERMINAL_OF[ac.cs.slice(0, 3)] || '123';
 function standAt(ac, t){
-  const free = STANDS.filter(s => !s.occ && s.term === t);
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
   return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
 }
 const flowText = c => `land ${landRwys(c).join(' and ')}, depart ${depRwysOf(c).join(' and ')}`;

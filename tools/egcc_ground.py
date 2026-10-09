@@ -4,7 +4,9 @@
 # Two parallel runways 390 m apart, offset: 05L/23R (runway 1, by the terminals) and 05R/23L (runway 2, to the south-west).
 # Each gets its own frame (m from its low-numbered end, offset to the left), its holding points and its crossings: the
 # taxiways to runway 2 cross runway 1 at BZ1, DZ1, FZ1 and HZ1.
-import json, math, re, sys, collections
+import json, math, re, sys, collections, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ground_lanes import add_crossovers
 OSM, OUT = sys.argv[1], sys.argv[2]
 A = (53 + 21/60 + 13/3600, -(2 + 16/60 + 30/3600))                 # ARP 532113N 0021630W
 KX = 60*1852*math.cos(math.radians(A[0])); KY = 60*1852
@@ -93,6 +95,12 @@ for w in taxi:
         if n in gnodes: segs.append([cur[0], cur[-1], ref, cur[1:-1], w['id']]); cur = [n]
 adj = collections.defaultdict(list)
 for s in segs: adj[s[0]].append(s); adj[s[1]].append(s)
+# the dual-function lanes NA, NB and Z: their blue and orange lines and the centre line between them ('b', 'o', 'c')
+LINE = {}
+for w in taxi:
+    r = (w['tags'].get('ref') or '').strip().upper()
+    if re.match(r'^(NA|NB|Z) (BLUE|ORANGE)$', r): LINE[w['id']] = r.split()[1][0].lower()
+    elif r in ('NA', 'NB', 'Z'): LINE[w['id']] = 'c'
 for it in range(8):
     for s in segs:
         if s[2]: continue
@@ -222,7 +230,7 @@ def runway_seg(s): return id(s) in drop or any(onAny(NODE[n]) for n in [s[0], s[
 edges = []
 for s in segs:
     if runway_seg(s): continue
-    edges.append([NID(s[0]), NID(s[1]), s[2], [[r1(x) for x in NODE[n]] for n in s[3]]])
+    edges.append([NID(s[0]), NID(s[1]), s[2], [[r1(x) for x in NODE[n]] for n in s[3]]] + ([LINE[s[4]]] if s[4] in LINE else []))
 edges += xedges
 g = collections.defaultdict(set)
 for e in edges: g[e[0]].add(e[1]); g[e[1]].add(e[0])
@@ -322,7 +330,9 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0
     line = None
     if len(q) > 1:
         n0, n1 = nearest_seg(q[0]), nearest_seg(q[-1])
-        if n0[0] < 8 and n1[0] < 8 and L > 60:
+        # (within 55 m of a lane at both ends: the west remote ramp's 70-74, 80 and 231 groups, whose left and right
+        # lines end short of the far lane, stop where their centre lines do)
+        if n0[0] < 55 and n1[0] < 55 and L > 60:
             # the mapped line runs from one lane to another (the lane behind the Terminal 1-2-3 stands, the remote ramps'
             # drive-through stands): the aircraft comes in from the lane further from a terminal building and stops at the
             # line's middle vertex (halfway along it when it has none)
@@ -369,12 +379,13 @@ for e in edges:
             if mids == [] and prev not in POS and math.dist(NODE[inv[prev]], q) < 3: gnode[sid] = prev; k += 1; continue
             nn = 's' + sid
             nodes.append([nn, r1(q[0]), r1(q[1])]); POS[nn] = q
-            newedges.append([prev, nn, e[2], [[r1(x) for x in m] for m in mids]]); prev, mids = nn, []; gnode[sid] = nn; k += 1
+            newedges.append([prev, nn, e[2], [[r1(x) for x in m] for m in mids]] + e[4:]); prev, mids = nn, []; gnode[sid] = nn; k += 1
         if idx + 1 < len(pl) - 1: mids.append(pl[idx+1])
-    newedges.append([prev, e[1], e[2], [[r1(x) for x in m] for m in mids]])
+    newedges.append([prev, e[1], e[2], [[r1(x) for x in m] for m in mids]] + e[4:])
     for j in range(k, len(lst)): gnode[lst[j][1]] = e[1]
 edges = newedges
 for gt in gates: gt[3] = gnode[gt[0]]
+edges = add_crossovers(edges, nodes, gates, r1)
 # ── aprons, buildings, hangars
 def ring(pts): return [[r1(x) for x in p] for p in pts]
 aprons_out = [ring(p) for p in aprons]
@@ -402,7 +413,8 @@ with open(OUT, 'w') as fo:
 // hangars) with the runway thresholds from AIP AD 2-EGCC-2-1. Positions are metres east and north of the ARP
 // (53°21'13"N 002°16'30"W).
 // runways: pavement ends a (the low-numbered end) and b, length, thresholds in metres from a, elevations (ft)
-// nodes [id, east, north] (x: on a runway centreline, s: a stand's lead-in), edges [a, b, taxiway, intermediate points],
+// nodes [id, east, north] (x: on a runway centreline, s: a stand's lead-in, c: a crossover's end), edges [a, b, taxiway,
+// intermediate points, line on the three-line lanes NA, NB and Z (b blue, o orange, c centre; x a crossover between them)],
 // rnodes: runway-edge points 40 m out on each entry/exit; holds key: [hold node, runway-edge node, runway, m along it,
 // offset, directions that can turn off there, runway end it serves, taxiway]; hlink: the bend between the runway edge and
 // the holding point; fil: centreline to runway-edge fillet in the runway frame; hs: holding positions before a runway;

@@ -57,7 +57,8 @@ const landOf = (c = cfgNow()) => CFG[c].land, depOf = (c = cfgNow()) => CFG[c].d
 const inF0 = (e, n) => { const p = EN(e, n); return [mOf(p), offOf(p)]; };
 for (const [id, e, n] of G.nodes) gn(id, ...inF0(e, n));
 for (const [id, e, n] of G.rnodes) gn(id, ...inF0(e, n));
-for (const [a, b, tw, mid] of G.edges) chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw);
+// the fifth field: which of the three lines of NA, NB and Z an edge is (b blue, o orange, c centre; x a crossover)
+for (const [a, b, tw, mid, line] of G.edges) { const k = GE.length; chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw); markLine(k, line); }
 const HOLDS = {}, FIL = {};
 for (const [k, [node, rwy, on, m, off, dirs, end, tw]] of Object.entries(G.holds)) {
   HOLDS[k] = { node, rwy, on, m, off, dirs: dirs.split(','), end: end || null, ref: k.replace(/~\d+$/, ''), tw };
@@ -241,7 +242,7 @@ function drawEgcc(){
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
     { const leads = leadPts().map(l => l.map(p => P2(p))); groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
-    { const segs = edgeSegs(); groundLines(lw(0.35), () => { for (const [x1, y1, x2, y2] of segs) { cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke(); } }); }
+    paintEdgeLines(lw(0.35));
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
@@ -385,7 +386,7 @@ const PENNINES = [[53.22, -1.97], [53.40, -1.97], [53.56, -1.99], [53.70, -1.98]
 // Terminal 2); the two spill over into each other when full
 const termOf = ac => EGCC.TERMINAL_OF[ac.cs.slice(0, 3)] || '2';
 function standAt(ac, t){
-  const free = STANDS.filter(s => !s.occ && s.term === t);
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
   return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
 }
 const flowText = c => `land ${CFG[c].land}, depart ${CFG[c].dep}`;
