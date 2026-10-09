@@ -3308,6 +3308,9 @@ const dist = (x1,y1,x2,y2) => Math.hypot(x2-x1, y2-y1);
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const rnd = (a,b) => a + Math.random()*(b-a);
 const dirv = h => [Math.sin(h*D2R), Math.cos(h*D2R)];
+// distance (m) from p to the segment a-b, and (sampled) between two segments
+const segDistM = (p, a, b) => { const dx = b[0]-a[0], dy = b[1]-a[1], L = dx*dx + dy*dy || 1e-18, u = Math.max(0, Math.min(1, ((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L)); return dist(...p, a[0] + dx*u, a[1] + dy*u)/M2NM; };
+function segSegM(a, b, c, d){ let m = Infinity; for (let k = 0; k <= 12; k++) { const f = k/12; m = Math.min(m, segDistM([a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f], c, d), segDistM([c[0] + (d[0]-c[0])*f, c[1] + (d[1]-c[1])*f], a, b)); } return m; }
 const add = (p, h, d) => [p[0]+Math.sin(h*D2R)*d, p[1]+Math.cos(h*D2R)*d];
 
 // ═════════════════════════ taxiway graph and procedures (filled in by the airport profile) ═════════════════════════
@@ -3340,6 +3343,7 @@ const TAXI_MEMO = new Map();
 // then starts within 100 degrees of that heading and never doubles back on itself at a node further on
 // outB (optional, with face): the way it must be able to turn on leaving `to` (onto a stand's lead-in)
 function route(from, to, pen, face, outB){
+  if (typeof refreshShut === 'function') refreshShut();
   if (face != null) return routeFacing(from, to, pen, face, outB);
   const ck = pen ? null : from + '>' + to;
   if (ck && TAXI_MEMO.has(ck)) { const r = TAXI_MEMO.get(ck); return r && { nodes: r.nodes.slice(), tws: r.tws.slice() }; }
@@ -3348,7 +3352,7 @@ function route(from, to, pen, face, outB){
   while (h.length) {
     const [d, u] = heapPop(h); if (done.has(u)) continue;
     if (u === to) { found = true; break; } done.add(u);
-    for (const [v, e] of GN[u].adj) { if (v !== to && v[0] === 'R') continue; const nd = d + e.len*(e.k || 1)*(pen ? pen(e) : 1), o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, [u, e]); heapPush(h, [nd, v]); } }
+    for (const [v, e] of GN[u].adj) { if (e.closed || (v !== to && v[0] === 'R')) continue; const nd = d + e.len*(e.k || 1)*(pen ? pen(e) : 1), o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, [u, e]); heapPush(h, [nd, v]); } }
   }
   let r = null;
   if (found) { const nodes = [to], tws = []; let c = to; while (c !== from) { const [u, e] = prev.get(c); nodes.unshift(u); tws.unshift(e.tw); c = u; } r = { nodes, tws }; }
@@ -3374,7 +3378,7 @@ function doublesBack(pts){ let hist = []; for (let i = 1; i < pts.length; i++) {
 // one step of a facing search from state k at node u: the legs on that keep within the turn limits
 function facingSteps(k, u, from_, inB, hist, d, pen, ok, push){
   for (const [v, e] of GN[u].adj) {
-    if (!ok(v)) continue;
+    if (e.closed || !ok(v)) continue;
     const b = legBrg(u, v, inB);
     if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START) || !hairOk(hist, b)) continue;
     // keyed by the node before u too, so a junction reached two ways keeps both pasts (they turn on differently)
@@ -3382,6 +3386,7 @@ function facingSteps(k, u, from_, inB, hist, d, pen, ok, push){
   }
 }
 function routeFacing(from, to, pen, face, outB){
+  if (typeof refreshShut === 'function') refreshShut();
   const ck = pen ? null : from + '>' + to + '>' + face.toFixed(1) + '>' + (outB == null ? '' : outB.toFixed(1));
   if (ck && TAXI_MEMO.has(ck)) { const r = TAXI_MEMO.get(ck); return r && { nodes: r.nodes.slice(), tws: r.tws.slice() }; }
   // states are (node, the node it came from, the one before that); the seed comes from nowhere, pointing `face`
@@ -3405,6 +3410,7 @@ function routeFacing(from, to, pen, face, outB){
 // shortest routes from one node to many (the holding-point lists): one search instead of one per target, with the same
 // rules and memo entries as route() without a penalty. Returns a Map of target → { nodes, tws } or null.
 function routesFrom(from, targets, face){
+  if (typeof refreshShut === 'function') refreshShut();
   const out = new Map(), want = new Set(), facing = face != null;
   const ck = t => facing ? from + '>' + t + '>' + face.toFixed(1) + '>' : from + '>' + t;
   for (const t of targets) { if (t === from || out.has(t)) continue; const k = ck(t);
@@ -3424,7 +3430,7 @@ function routesFrom(from, targets, face){
     }
     if (u !== from && u[0] === 'R') continue;          // a runway-edge node is only ever an end point
     if (facing) { facingSteps(k, u, from_, inB, hist, d, null, ok, push); continue; }
-    for (const [v, e] of GN[u].adj) if (ok(v)) push(v, [v, u, inB], d + e.len*(e.k || 1), k, e);
+    for (const [v, e] of GN[u].adj) if (!e.closed && ok(v)) push(v, [v, u, inB], d + e.len*(e.k || 1), k, e);
   }
   for (const t of want) if (!out.has(t)) { out.set(t, null); TAXI_MEMO.set(ck(t), null); }
   return out;
@@ -4963,6 +4969,27 @@ for (const t of STANDS) {
   Object.defineProperty(t, 'ownOcc', { get: () => own });
 }
 // the aircraft on or due at a stand next to st that leaves ac no room there (null: none)
+// dual-function taxiways (APT.dualLanes; Manchester's D between D9 and D10, NC, and LINK5 through stand 74: taxiway
+// or stand): while an aircraft is parked on a stand, the taxiway edges its wings or body cover (within 12 m of the
+// centreline) are closed to the route searches. Once it calls for push or taxi they open again, so it can leave along them.
+const footprint = (s, ac) => { const L = (ac.perf && ac.perf.len || 38)/2, W = spanOf(ac)/2; return [add(s.p, s.hdg, L*M2NM), add(s.p, s.hdg + 180, L*M2NM), add(s.p, s.hdg - 90, W*M2NM), add(s.p, s.hdg + 90, W*M2NM)]; };
+function covers(s, ac, e){ const [n, tl, wl, wr] = footprint(s, ac), a = GN[e.a].p, b = GN[e.b].p; return segSegM(n, tl, a, b) < 12 || segSegM(wl, wr, a, b) < 12; }
+const DUAL = [];
+if (APT.dualLanes) for (const s of STANDS) {
+  if (!s.p || s.hdg == null) continue;
+  const big = { perf: { len: 76, span: 80 } };   // the most any aircraft could cover
+  s.under = GE.filter(e => !e.bare && dist(...GN[e.a].p, ...GN[e.b].p) > 1e-7 && covers(s, big, e));
+  if (s.under.length) DUAL.push(s);
+}
+// called by the route searches: the closures as they stand now (the route memo is dropped when they change)
+let shutSig = '';
+function refreshShut(){
+  const on = DUAL.filter(s => { const a = s.ownOcc; return a && a.ground && (a.state === 'PARKED' || a.state === 'ONSTAND') && !a.need && !a.path && dist(a.x, a.y, ...s.p) < 30*M2NM; });
+  const sig = on.map(s => s.id + s.ownOcc.cs).join();
+  if (sig === shutSig) return; shutSig = sig; TAXI_MEMO.clear();
+  for (const s of DUAL) for (const e of s.under) e.closed = false;
+  for (const s of on) for (const e of s.under) if (covers(s, s.ownOcc, e)) e.closed = true;
+}
 function standBy(st, ac){ for (const [o, d] of st.nb || []) { const a = o.ownOcc; if (a && a !== ac && d < (spanOf(a) + spanOf(ac))/2) return a; } return null; }
 const standRoom = (st, ac) => !standBy(st, ac);
 const standFree = (s, ac) => !s.occ && standRoom(s, ac);
