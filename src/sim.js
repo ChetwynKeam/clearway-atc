@@ -525,6 +525,27 @@ for (const t of STANDS) {
   Object.defineProperty(t, 'ownOcc', { get: () => own });
 }
 // the aircraft on or due at a stand next to st that leaves ac no room there (null: none)
+// dual-function taxiways (APT.dualLanes; Manchester's D between D9 and D10, NC, and LINK5 through stand 74: taxiway
+// or stand): while an aircraft is parked on a stand, the taxiway edges its wings or body cover (within 12 m of the
+// centreline) are closed to the route searches. Once it calls for push or taxi they open again, so it can leave along them.
+const footprint = (s, ac) => { const L = (ac.perf && ac.perf.len || 38)/2, W = spanOf(ac)/2; return [add(s.p, s.hdg, L*M2NM), add(s.p, s.hdg + 180, L*M2NM), add(s.p, s.hdg - 90, W*M2NM), add(s.p, s.hdg + 90, W*M2NM)]; };
+function covers(s, ac, e){ const [n, tl, wl, wr] = footprint(s, ac), a = GN[e.a].p, b = GN[e.b].p; return segSegM(n, tl, a, b) < 12 || segSegM(wl, wr, a, b) < 12; }
+const DUAL = [];
+if (APT.dualLanes) for (const s of STANDS) {
+  if (!s.p || s.hdg == null) continue;
+  const big = { perf: { len: 76, span: 80 } };   // the most any aircraft could cover
+  s.under = GE.filter(e => !e.bare && dist(...GN[e.a].p, ...GN[e.b].p) > 1e-7 && covers(s, big, e));
+  if (s.under.length) DUAL.push(s);
+}
+// called by the route searches: the closures as they stand now (the route memo is dropped when they change)
+let shutSig = '';
+function refreshShut(){
+  const on = DUAL.filter(s => { const a = s.ownOcc; return a && a.ground && (a.state === 'PARKED' || a.state === 'ONSTAND') && !a.need && !a.path && dist(a.x, a.y, ...s.p) < 30*M2NM; });
+  const sig = on.map(s => s.id + s.ownOcc.cs).join();
+  if (sig === shutSig) return; shutSig = sig; TAXI_MEMO.clear();
+  for (const s of DUAL) for (const e of s.under) e.closed = false;
+  for (const s of on) for (const e of s.under) if (covers(s, s.ownOcc, e)) e.closed = true;
+}
 function standBy(st, ac){ for (const [o, d] of st.nb || []) { const a = o.ownOcc; if (a && a !== ac && d < (spanOf(a) + spanOf(ac))/2) return a; } return null; }
 const standRoom = (st, ac) => !standBy(st, ac);
 const standFree = (s, ac) => !s.occ && standRoom(s, ac);

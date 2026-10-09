@@ -90,6 +90,23 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
     at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
   }
   for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
+// The west remote ramp's drive-through lines (70-74 between E and D, 80 and 231 along NC) run across or along a
+// taxiway, so a stop halfway along them put the aircraft on it. Each stand whose narrowbody (38 m long, 36 m across)
+// would come within 12 m of a taxiway centreline slides along its line to the nearest spot at least 14 m clear (the
+// most clear spot when there is none). LINK5 and NC, which run down the centre lines of the MARS groups 74, 80 and 231,
+// don't count: they are dual function (AD 2-EGCC-2-1: TWY D between D9 and D10 and TWY NC) and close while the stands
+// over them are in use.
+const MARS_LANES = new Set(['NC', 'LINK5']);
+{ const body = (c, h) => [add(c, h, 19*M2NM), add(c, h + 180, 19*M2NM), add(c, h - 90, 18*M2NM), add(c, h + 90, 18*M2NM)];
+  for (const t of STANDS) {
+    const u = t.hdg, end = add(t.lp, u, 100*M2NM);
+    const lanes = GE.filter(e => !e.bare && !MARS_LANES.has(e.tw) && dist(...GN[e.a].p, ...GN[e.b].p) > 1e-7 && segDistM(t.p, GN[e.a].p, GN[e.b].p) < 150);
+    const clr = c => { const [n, tl, wl, wr] = body(c, u); let m = Infinity; for (const e of lanes) { const a = GN[e.a].p, b = GN[e.b].p; m = Math.min(m, segSegM(n, tl, a, b), segSegM(wl, wr, a, b)); } return m; };
+    if (clr(t.p) >= 12) continue;
+    const r0 = dist(...t.lp, ...t.p)/M2NM; let best = null;
+    for (let r = 22; r <= 95; r++) { const c = add(t.lp, u, r*M2NM), k = clr(c), sc = k >= 14 ? 1000 - Math.abs(r - r0) : k; if (!best || sc > best.sc) best = { sc, c }; }
+    t.p = best.c; t.m = mOf(t.p); t.off = offOf(t.p);
+  } }
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 const TERM_NAME = { '2': 'Terminal 2', '3': 'Terminal 3', R: 'remote stands', C: 'north-west remote stands' };
 // which side of each runway its exits are on (the side the taxiway system is): runway 1 has exits both sides
@@ -261,6 +278,10 @@ function drawEgcc(){
 function drawEgccTop(){
   const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
   const P2 = p => [sx(p[0]), sy(p[1])];
+  // the dual-function taxiway under a parked aircraft (NC through the MARS stands, LINK5 at 74) is closed: red dashes
+  if (sc > 60 && typeof refreshShut === 'function') { refreshShut(); const shut = GE.filter(e => e.closed);
+    if (shut.length) { cx.save(); cx.strokeStyle = 'rgba(214,40,40,.85)'; cx.lineWidth = Math.max(1.5, 0.8*mpx); cx.setLineDash([Math.max(4, 3*mpx), Math.max(3, 2*mpx)]);
+      cx.beginPath(); for (const e of shut) { cx.moveTo(...P2(GN[e.a].p)); cx.lineTo(...P2(GN[e.b].p)); } cx.stroke(); cx.restore(); } }
   // lights: runway edges and thresholds (dark theme glow)
   if (sc > 110) {
     cx.save(); cx.globalCompositeOperation = C.glow;
@@ -391,6 +412,7 @@ function standAt(ac, t){
 }
 const flowText = c => `land ${CFG[c].land}, depart ${CFG[c].dep}`;
 const APT = {
+  dualLanes: true,   // AD 2-EGCC-2-1: TWY D (D9 to D10) and TWY NC are dual function: closed under their stands while in use
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT, TICZU: 3500, NODUC: 3500, EVAKU: 3000, FECJO: 3000 },   // STAR levels, then the downwind, base and IF
   icao: 'EGCC', name: 'Manchester', coordName: 'Manchester', radarName: 'MAN', utcOff: 1,
   radar: [EGCC.UNITS.app.name, EGCC.UNITS.app.freq], depRadar: [EGCC.UNITS.app.name, EGCC.UNITS.app.freq],
