@@ -1,10 +1,38 @@
 {
- "updated": "2026-10-09T16:58:20Z",
+ "updated": "2026-10-09T17:09:19Z",
  "source": "avionio.com",
  "days": {
   "2026-10-09": {
    "utcOffsetMin": 120,
    "arr": [
+    {
+     "place": "Rome",
+     "flight": "EAT392",
+     "sched": "14:09",
+     "status": "Landed",
+     "expected": "14:07"
+    },
+    {
+     "place": "Hamburg",
+     "flight": "DGJ567",
+     "sched": "14:21",
+     "status": "Landed",
+     "expected": "14:28"
+    },
+    {
+     "place": "Venice",
+     "flight": "TYW759",
+     "sched": "15:07",
+     "status": "Landed",
+     "expected": "14:46"
+    },
+    {
+     "place": "Venice",
+     "flight": "TYW759",
+     "sched": "15:57",
+     "status": "Estimated",
+     "expected": ""
+    },
     {
      "place": "Vienna",
      "flight": "OS107",
@@ -15,11 +43,45 @@
    ],
    "dep": [
     {
+     "place": "Chania",
+     "flight": "TYW757",
+     "sched": "08:10",
+     "status": "Departed",
+     "expected": "08:07"
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS102",
+     "sched": "08:20",
+     "status": "Departed",
+     "expected": "08:23"
+    },
+    {
+     "place": "Cologne/Bonn",
+     "flight": "DGJ567",
+     "sched": "15:30",
+     "status": "Departed",
+     "expected": "15:17"
+    },
+    {
      "place": "Vienna",
      "flight": "OS108",
      "sched": "18:50",
      "status": "Estimated",
      "expected": "18:59"
+    }
+   ]
+  },
+  "2026-10-08": {
+   "utcOffsetMin": 120,
+   "arr": [],
+   "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
+     "status": "Departed",
+     "expected": "19:18"
     }
    ]
   }
