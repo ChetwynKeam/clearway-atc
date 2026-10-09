@@ -80,6 +80,7 @@ function careerCheck(){
 // called every frame with the real seconds that passed while the sim ran
 function careerTick(dtr){
   if (!S.running || S.paused || !carCur) return;
+  if (typeof AI_SEATS !== 'undefined' && AI_SEATS.every(k => S.seats[k] === 'AI') && !EXERCISES[S.mode]) return;   // every seat on AI: you are only watching
   carCur.secs += dtr; carDirty = true;
 }
 function careerSync(){
@@ -92,6 +93,7 @@ function careerSync(){
   if (carDirty) { careerSave(CAR); carDirty = false; }
 }
 S.listeners.push((ev, d) => {
+  if (d && d.cs && typeof aiOwns === 'function' && aiOwns(d) && ev !== 'start') return;   // an AI controller's flight: not yours
   if (ev === 'landed' && carCur && d && d.app === '05' && APT.icao === 'LPMA') { carCur.l05 = (carCur.l05 || 0) + 1; carDirty = true; }
   if (ev === 'landed' && carCur && APT.icao === 'LOWI' && LOWI.isFoehn(S.wx)) { carCur.lfoehn = (carCur.lfoehn || 0) + 1; carDirty = true; }
   // Gatwick: a departure that got airborne between two landings fills a gap

@@ -171,8 +171,10 @@ const PH = Object.assign({
 // ═════════════════════════ R/T log & speech ═════════════════════════
 const logEl = document.getElementById('log');
 const zt = t => new Date(S.start + t*1000).toISOString().substr(11,8);
-function log(cls, text, who, ac){
-  const div = document.createElement('div'); div.className = 'ln ' + cls;
+function log(cls, text, who, ac, ai){
+  // an AI controller transmitting (ai.js), or a crew talking to one: marked AI and shown quieter
+  if (aiCtx && (cls === 'atc' || cls === 'coord')) { aiCtx.said = true; who = 'AI ' + aiCtx.seat; }
+  const div = document.createElement('div'); div.className = 'ln ' + cls + (aiCtx || ai ? ' ai' : '');
   // a line about one aircraft (a tug's tow request): click it to select that aircraft and centre the map on it
   if (ac) { div.classList.add('go'); div.title = 'Show ' + ac.cs + ' on the map'; div.onclick = () => { if (!S.acs.includes(ac) || typeof select !== 'function') return; select(ac); if (typeof centreOn === 'function') centreOn(ac); }; }
   const tm = document.createElement('span'); tm.className = 'tm'; tm.textContent = zt(S.t).slice(0,5);
@@ -188,6 +190,7 @@ try { speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); } catch(e) {}
 function hash(s){ let h = 0; for (const c of String(s)) h = (h*31 + c.charCodeAt(0))|0; return Math.abs(h); }
 function say(text, who){
   if (!S.voice || who === 'atc') return;   // your own transmissions are only written, never spoken
+  if (aiCtx && !S.aiHear) return;   // the AI controllers' frequencies: heard only if you ask for them
   try {
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
     if (voices.length) u.voice = who === 'atc' ? voices[0] : voices[1 + hash(who) % Math.max(1, voices.length-1)] || voices[0];
@@ -204,9 +207,10 @@ function pilot(ac, text, again){
     (S.recalls ||= []).push({ at: S.t + rnd(8, 16), ac, text }); lastCallT = S.t; return;
   }
   if (!inCmd) lastCallT = S.t;
-  const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300);
+  const ai = !!aiCtx || aiOwns(ac), quiet = ai && !S.aiHear;
+  const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs, null, ai); setTimeout(() => quiet || say(line, ac.cs), 300);
 }
-function sys(text, bad){ log(bad ? 'bad' : 'sys', text); }
+function sys(text, bad){ if (aiCtx) return; log(bad ? 'bad' : 'sys', text); }   // an AI instruction that doesn't work is just not given
 // landline coordination with Sevilla / Casablanca (not on the frequency)
 function coord(text, who){ log('coord', text, who); say(text, 'tel:' + who); }
 // departures need a release from the next unit before take-off, unless the airport only asks for some (APT.needRel:
@@ -913,8 +917,9 @@ function commandRun(str){
   if (!ac || !S.acs.includes(ac)) { sys('Select a flight first, or start the command with its callsign.'); return; }
   if (toks.length === 1 && /^(REMOVE|DELETE|DEL)$/.test(toks[0])) { removeAc(ac); return; }   // works on any flight, yours or not
   if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
-  if (ac.state === 'PRE') { select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
-  select(ac);
+  if (!aiCtx && aiOwns(ac)) takeOver(ac);   // an instruction to a flight the AI is working: you take it back
+  if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
+  if (!aiCtx) select(ac);
   const said = [], reads = [];
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
@@ -1010,7 +1015,7 @@ function commandRun(str){
         continue;
       }
       if (ac.kind === 'DEP' && ac.freq === 'TWR') { ac.freq = 'RAD'; if (ac.need && /^(Airborne|Back on)/.test(ac.need)) ac.need = null; }
-      else if (ac.kind === 'DEP') { ac.handed = true; ac.need = null; }
+      else if (ac.kind === 'DEP') { ac.hoBy = aiCtx ? S.aiScore : S.score; ac.handed = true; ac.need = null; }
       else { ac.freq = 'TWR'; if (ac.need === 'Back on frequency') ac.need = null; }
       said.push(`contact ${unit[0]} ${unit[1]}`); reads.push(`${unit[1]}, ${ac.handed ? 'good day' : 'thanks'}`);
     } else if (t === 'TOW') {
@@ -1212,13 +1217,13 @@ function beginTakeoff(ac, v){ ac.state = 'TAKEOFF'; ac.cto = true; ac.ias = v ||
 function windLimit(ac, rw){ if (APT.windLimit) return APT.windLimit(ac, rw); const c = windComp(S.wx, crsOf(rw)); if (c.headG < -10) return 'tailwind out of limits'; if (c.crossG > (ac.perf.wake === 'L' ? 22 : 33)) return 'crosswind out of limits'; return null; }
 function goAround(ac, why){
   if (ac.state === 'MISSED' || (ac.gaT && S.t - ac.gaT < 30)) return;
-  const rw = landRw(ac);
+  const rw = landRw(ac), sc = SC(ac);   // counted to whoever was working it (Tower, usually) before Approach takes it back
   ac.state = 'MISSED'; ac.mode = 'HDG'; ac.tgtHdg = Math.round(crsOf(rw)); ac.turnDir = 0; ac.gaT = S.t;
   APT.gaEarly(ac, rw);
   { const F = finOf(ac); ac.missRoute = F && F.missed ? F.missed.slice() : null; ac.appId = null; ac.finI = null; }
   ac.reqExit = null; ac.vacDec = null;
   ac.tgtAlt = ac.cleared = APT.gaAlt; ac.via = false; ac.ctl = false; ac.app = null; ac.gaTurn = false; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.spdAssigned = false; ac.route = []; ac.freq = 'RAD';
-  ac.gaRwy = rw; S.score.ga++; ac.gaCount = (ac.gaCount||0) + 1;
+  ac.gaRwy = rw; sc.ga++; ac.gaCount = (ac.gaCount||0) + 1;
   if (why) pilot(ac, `going around, ${why}`);
   ac.need = 'Missed approach';
   if (ac.gaCount >= 2 && why) { // second weather/turbulence go-around: the crew elects to divert
@@ -1311,15 +1316,15 @@ function step(dt){
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
     stepNose(ac, dt);
     if (ac.rel) stepRelease(ac);
-    if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; S.score.pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
+    if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; SC(ac).pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
   }
   S.acs = S.acs.filter(ac => {
     if (ac.state === 'ONSTAND' && S.t > ac.doneAt) { if (S.sel === ac) S.sel = null; if (ac.stand) ac.stand.occ = null; return false; }
-    if (ac.divLanded) { S.score.div++; sys(`${ac.cs} has landed at ${ac.divLanded.name}.`); emit('divlanded', ac); if (S.sel === ac) S.sel = null; return false; }
+    if (ac.divLanded) { SC(ac).div++; sys(`${ac.cs} has landed at ${ac.divLanded.name}.`); emit('divlanded', ac); if (S.sel === ac) S.sel = null; return false; }
     if (ac.airborne && ac.state !== 'PRE' && Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]) > (ac.kind === 'DEP' ? APT.area.dep : ac.state === 'DIVERTING' ? APT.area.div : APT.area.arr)) {
-      if (ac.kind === 'DEP') { if (!ac.handed) { S.score.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else S.score.pts += 20; S.score.departed++; }
-      else { S.score.div++; S.score.pts -= ac.state === 'DIVERTING' ? 0 : 40; { const D = ac.state === 'DIVERTING' && divDest(ac); sys(D ? `${ac.cs} has left the area, flying on to ${D.name}.` : `${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); } }
+      if (ac.kind === 'DEP') { const sc = ac.handed ? (ac.hoBy || S.score) : SC(ac); if (!ac.handed) { sc.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else sc.pts += 20; sc.departed++; }
+      else { SC(ac).div++; SC(ac).pts -= ac.state === 'DIVERTING' ? 0 : 40; { const D = ac.state === 'DIVERTING' && divDest(ac); sys(D ? `${ac.cs} has left the area, flying on to ${D.name}.` : `${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); } }
       emit('exit', ac);
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       if (S.sel === ac) S.sel = null; return false;
@@ -1335,10 +1340,11 @@ function step(dt){
     if (APT.sepOk && APT.sepOk(a, b, d)) continue;   // independent parallel approaches or departures (Madrid)
     conf.add(a.cs); conf.add(b.cs);
     const key = [a.cs, b.cs].sort().join('|');
-    if (!S.conflicts.has(key)) { S.conflicts.add(key); S.score.los++; S.score.pts -= 50; sys(`Loss of separation: ${a.cs} and ${b.cs} (${d.toFixed(1)} NM, ${Math.round(Math.abs(a.alt-b.alt))} ft).`, true); }
+    if (!S.conflicts.has(key)) { S.conflicts.add(key); const mine = x => seatOf(x) && !aiOwns(x), sc = !mine(a) && !mine(b) && (aiOwns(a) || aiOwns(b)) ? S.aiScore : S.score; sc.los++; sc.pts -= 50; sys(`Loss of separation: ${a.cs} and ${b.cs} (${d.toFixed(1)} NM, ${Math.round(Math.abs(a.alt-b.alt))} ft).`, true); }
   }
   for (const k of [...S.conflicts]) { const [p,q] = k.split('|'); if (!conf.has(p) || !conf.has(q)) S.conflicts.delete(k); }
   S.conflictSet = conf;
+  if (typeof stepAI === 'function') stepAI(dt);   // the AI controllers (ai.js)
 }
 
 function stepAir(ac, dt){
@@ -1453,7 +1459,7 @@ function stepAir(ac, dt){
     const clearRock = APT.depClear(ac);
     if (ac.onSid && ac.mode === 'HDG' && clearRock && (ac.alt > 3500 || !crossesRock(ac, WP[exitRouteOf(ac)[0]].p))) { ac.onSid = false; ac.reqDct = true; ac.mode = 'NAV'; ac.route = exitRouteOf(ac).slice(); }
     if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && clearRock) { ac.reqDct = true; const fx = exitRouteOf(ac)[0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
-    if (ac.calledRad && !ac.reqClimb && !ac.need && ac.alt > sidTop(ac) - 400 && (ac.tgtAlt ?? 0) <= sidTop(ac)) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
+    if (ac.calledRad && !ac.handed && !ac.reqClimb && !ac.need && ac.alt > sidTop(ac) - 400 && (ac.tgtAlt ?? 0) <= sidTop(ac)) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
     if (ac.mode === 'NAV' && !ac.route.length) { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
     if (ac.calledRad && !ac.handed && dGBR > APT.handoffNM && !ac.askedHo) { ac.askedHo = true; ac.need = 'Ready for transfer'; }
   }
@@ -1473,15 +1479,15 @@ function stepAir(ac, dt){
   if (fin && ac.state !== 'MISSED') {
     const rw = ac.app, w = S.wx, F = finOf(ac);
     if (APT.xing && !ac.warned15 && fin.togo < 15 && S.xing.st === 'OPEN') { ac.warned15 = true; sys(`${ac.cs} is inside 15 NM: close Winston Churchill Avenue to pedestrians now.`); }
-    if (APT.xing && !ac.warned10 && fin.togo < 10) { ac.warned10 = true; if (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') { S.score.pts -= 15; sys(`${ac.cs} at 10 NM with the road still open (late closure).`, true); } }
+    if (APT.xing && !ac.warned10 && fin.togo < 10) { ac.warned10 = true; if (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') { SC(ac).pts -= 15; sys(`${ac.cs} at 10 NM with the road still open (late closure).`, true); } }
     if (!ac.checked && fin.togo < (F.decNM || 3.05) && fin.togo > (F.decMin || 1.5)) { // decision point (Gibraltar: Point X-Ray / Yankee)
       ac.checked = true; const dn = F.decName || `Point ${F.name}`;
       if (!appMinsOk(F, rw, w)) return goAround(ac, F.rnp ? 'not visual at minimums' : F.decFail || `not visual at ${dn}`);
-      if (ac.alt < (F.minAlt || 880)) { S.score.incidents++; S.score.pts -= 40; sys(`${ac.cs} crossed ${dn} below ${F.minText || '920 ft'}.`, true); }
+      if (ac.alt < (F.minAlt || 880)) { SC(ac).incidents++; SC(ac).pts -= 40; sys(`${ac.cs} crossed ${dn} below ${F.minText || '920 ft'}.`, true); }
       pilot(ac, F.decCall ? F.decCall(rw) : `${dn}, visual`); ac.freq = 'TWR';   // F.decCall: the airport's own words at this point (London City: established on the ILS)
       if (!ac.ctl) ac.need = F.decNeed || 'Visual, needs landing clearance';
     }
-    for (const g of F.gates || []) if (fin.togo < g.togo && !(ac.gatesDone ||= {})[g.at]) { ac.gatesDone[g.at] = true; if (ac.alt < g.min - 30) { S.score.incidents++; S.score.pts -= 30; sys(`${ac.cs} passed ${g.at} at ${Math.round(ac.alt)} ft, below the ${g.min} ft minimum.`, true); } }
+    for (const g of F.gates || []) if (fin.togo < g.togo && !(ac.gatesDone ||= {})[g.at]) { ac.gatesDone[g.at] = true; if (ac.alt < g.min - 30) { SC(ac).incidents++; SC(ac).pts -= 30; sys(`${ac.cs} passed ${g.at} at ${Math.round(ac.alt)} ft, below the ${g.min} ft minimum.`, true); } }
     if (!ac.shearChecked && fin.togo < 2) {
       ac.shearChecked = true;
       const ex = turbExcess(w);
@@ -1496,7 +1502,7 @@ function stepAir(ac, dt){
     { const blk = rwyBlocked(); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && (S.acs.some(o => o !== ac && onRunway(o, rw)) || (typeof vehOnRwy === 'function' && vehOnRwy(rw)))) return goAround(ac, typeof vehOnRwy === 'function' && vehOnRwy(rw) ? 'vehicle on the runway' : 'runway occupied');
-    if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { S.score.incidents++; S.score.pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
+    if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { SC(ac).incidents++; SC(ac).pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
     if (fin.togo < 1.5 && ac.alt > gpAlt(fin.togo, apk(ac)) + 400) return goAround(ac, 'unstable, too high');
     if (fin.togo < 0.7) { // short final: settle onto the extended centreline (the 09 SRA joins it on a curve)
       const R = rwyOf(rw), m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]);
@@ -1504,12 +1510,12 @@ function stepAir(ac, dt){
     }
     if (fin.togo < -0.12 && ac.alt < tdElev(rw) + 70) { // touchdown
       const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = ELEV; ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
-      ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } S.score.landed++; S.score.pts += 25; ac.need = null;
+      ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } SC(ac).landed++; SC(ac).pts += 25; ac.need = null;
       emit('landed', ac); planVac(ac);
     }
   }
-  { const Rz = APT.restricted; if (Rz && ac.alt < Rz.top && !(Rz.ok && Rz.ok(ac)) && inPoly([ac.x, ac.y], Rz.poly)) { if (!ac.infr) { ac.infr = true; S.score.infr++; S.score.pts -= 40; sys(Rz.msg(ac), true); } } else ac.infr = false; }
-  { const T = APT.terrain, hit = T && (T.check ? T.check(ac) : ac.alt < T.min && inPoly([ac.x, ac.y], T.poly)); if (hit) { if (!ac.terr) { ac.terr = true; S.score.incidents++; S.score.pts -= (ac.alt < (T.lowAt ? T.lowAt(hit) : T.low) ? 80 : 30); sys(T.msg(ac, hit), true); } } else ac.terr = false; }
+  { const Rz = APT.restricted; if (Rz && ac.alt < Rz.top && !(Rz.ok && Rz.ok(ac)) && inPoly([ac.x, ac.y], Rz.poly)) { if (!ac.infr) { ac.infr = true; SC(ac).infr++; SC(ac).pts -= 40; sys(Rz.msg(ac), true); } } else ac.infr = false; }
+  { const T = APT.terrain, hit = T && (T.check ? T.check(ac) : ac.alt < T.min && inPoly([ac.x, ac.y], T.poly)); if (hit) { if (!ac.terr) { ac.terr = true; SC(ac).incidents++; SC(ac).pts -= (ac.alt < (T.lowAt ? T.lowAt(hit) : T.low) ? 80 : 30); sys(T.msg(ac, hit), true); } } else ac.terr = false; }
 }
 
 // aircraft giving way in a ring (A waits for B, B for C, C for A) would wait for ever: the one with right of way in
@@ -1656,7 +1662,7 @@ function stepGround(ac, dt){
     if (ac.ias >= ac.perf.vr) {
       ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = ELEV + 10; ac.ias = ac.perf.vr;
       APT.liftoff(ac);
-      ac.tgtAlt = ac.cleared = sidTop(ac); ac.onSid = true; S.score.pts += 10;
+      ac.tgtAlt = ac.cleared = sidTop(ac); ac.onSid = true; SC(ac).pts += 10;
       emit('airborne', ac);
     }
   }
@@ -1664,7 +1670,7 @@ function stepGround(ac, dt){
   if (APT.xing && ac.onRwy && ac.gs > 1) {
     const m = mOf([ac.x, ac.y]), mp = ac.lastM ?? m; ac.lastM = m;
     if ((mp - XING_M)*(m - XING_M) < 0 && Math.abs(offOf([ac.x, ac.y])) < 30 && S.xing.st !== 'CLOSED') {
-      S.score.incidents++; S.score.pts -= 60; sys(`INCIDENT: ${ac.cs} crossed Winston Churchill Avenue with the barriers up.`, true);
+      SC(ac).incidents++; SC(ac).pts -= 60; sys(`INCIDENT: ${ac.cs} crossed Winston Churchill Avenue with the barriers up.`, true);
     }
   } else ac.lastM = undefined;
 }

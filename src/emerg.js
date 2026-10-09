@@ -120,7 +120,7 @@ function stepEmerg(dt){
   if (E.incursion && S.t >= E.incursion.until) { E.incursion = null; sys('The pedestrian has been escorted off the runway by the police: the crossing is clear.'); }
   if (E.ws && S.t - E.ws.t > 25*60) { E.ws = null; nextAtis(); renderAtis(); }
   if (E.inspectAfter && E.inspectAfter.cs && !E.inspectAfter.onRwy && !E.inspectAfter.airborne) { E.inspectAfter = null; block('runway inspection after the emergency landing', rnd(2.5, 4)); }
-  for (const ac of S.acs) if (ac.emerg && !ac.emerg.ack && !ac.emerg.late && S.t - ac.emerg.t > 60) { ac.emerg.late = true; S.score.pts -= 10; sys(`${ac.cs}'s ${ac.emerg.k} has not been acknowledged.`, true); }
+  for (const ac of S.acs) if (ac.emerg && !ac.emerg.ack && !ac.emerg.late && S.t - ac.emerg.t > 60) { ac.emerg.late = true; SC(ac).pts -= 10; sys(`${ac.cs}'s ${ac.emerg.k} has not been acknowledged.`, true); }
   if (E.rate && S.t >= E.next && S.running) {
     E.next = S.t + E.rate*rnd(0.7, 1.3);
     const w = S.wx, windy = (w.dir >= 40 && w.dir <= 140 && w.spd >= 15) || (w.gust || 0) >= 25;
@@ -131,30 +131,30 @@ function stepEmerg(dt){
 // hooks called from the command parser and the approach logic
 function emgAck(ac){
   if (!ac.emerg || ac.emerg.ack) return null;
-  ac.emerg.ack = true; if (!ac.emerg.late) S.score.pts += 10;
+  ac.emerg.ack = true; if (!ac.emerg.late) SC(ac).pts += 10;
   if (ac.need && /^(MAYDAY|PAN)/.test(ac.need)) ac.need = null;
   return `roger ${ac.emerg.k}, ${ac.emerg.k === 'MAYDAY' ? 'you are number one, ' : ''}runway ${S.rwy}, emergency services are standing by`;
 }
 function emgOnGA(ac){
   const I = S.emg && S.emg.incursion;
-  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; S.score.pts += 20; S.score.good = (S.score.good || 0) + 1; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
+  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; SC(ac).pts += 20; SC(ac).good = (SC(ac).good || 0) + 1; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
 }
 function emgBlockedFinal(ac, why){   // an arrival reaching short final with the runway closed goes around by itself
   const I = S.emg.incursion;
-  if (I && I.ac === ac.cs) { I.gaBy = 'crew'; S.score.pts -= 25; sys(`${ac.cs}'s crew saw the pedestrian on the runway and went around on their own.`, true); }
-  else if (ac.ctl) { S.score.pts -= 30; S.score.incidents++; sys(`${ac.cs} was still cleared to land on a closed runway and went around at short final.`, true); }
+  if (I && I.ac === ac.cs) { I.gaBy = 'crew'; SC(ac).pts -= 25; sys(`${ac.cs}'s crew saw the pedestrian on the runway and went around on their own.`, true); }
+  else if (ac.ctl) { SC(ac).pts -= 30; SC(ac).incidents++; sys(`${ac.cs} was still cleared to land on a closed runway and went around at short final.`, true); }
   return goAround(ac, I ? 'person on the runway' : 'runway closed');
 }
 function emgWS(ac){
   const W = S.emg && S.emg.ws;
   if (!W) return null;
-  if (!ac.wsTold) { ac.wsTold = true; S.score.pts += 5; }
+  if (!ac.wsTold) { ac.wsTold = true; SC(ac).pts += 5; }
   const ago = Math.max(1, Math.round((S.t - W.t)/60));
   return `windshear reported on final runway ${W.rw} by ${W.cs === ac.cs ? 'you' : 'a ' + (TYPES[W.by] ? TYPES[W.by].name : W.by)} ${ago} minute${ago === 1 ? '' : 's'} ago, ${W.text}`;
 }
 S.listeners.push((ev, ac) => {
   if (ev === 'landed' && ac && ac.emerg) {
-    S.score.pts += 40; S.emg.handled++;
+    SC(ac).pts += 40; if (!aiOwns(ac)) S.emg.handled++;
     sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'It will stop clear of the runway: the fire service will go to it, then a tug tows it in.' : /medical/.test(ac.emerg.why) ? 'The ambulance is meeting it on stand.' : ''}`);
     if (ac.emerg.k === 'MAYDAY' || S.emg.inspectAfter === 'bird') S.emg.inspectAfter = ac;
     if (ac.emerg.k === 'MAYDAY') ac.emgStop = true;   // it stops clear of the runway for the fire service, then is towed in (vehicles.js)

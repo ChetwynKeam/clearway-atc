@@ -1001,10 +1001,17 @@
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
       <button id="tgTalk" class="talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Hold to talk</button>
       <button id="tgSetup">Session</button>
+      <button id="tgSeats" title="Who works each position: you or an AI controller">Positions</button>
       <button id="tgFids" title="Today's arrivals and departures">Flights</button>
       
       <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
       <button id="tgFull" title="Full screen">Full screen</button>
+    </div>
+    <div class="seatpop" id="seatPop" hidden role="dialog" aria-label="Positions">
+      <div class="lbl">Who works each position</div>
+      <div class="seatgrid" id="seatPopGrid"></div>
+      <label class="aihear"><input type="checkbox" id="aiHear"> <span>Hear the AI controllers’ frequencies (with Voice on)</span></label>
+      <p class="fine">AI controllers give the same instructions you would and hand traffic to you at the usual points. Select one of their flights and press <b>Take over</b> (or just give it an instruction) to work it yourself. Only your flights count in your score.</p>
     </div>
     <div class="fids" id="fids" hidden role="dialog" aria-label="Flight information">
       <div class="fids-hd"><div><b id="fidsTitle">Flight information</b><span id="fidsClock"></span></div>
@@ -1095,6 +1102,9 @@
           </div>
           <label><span class="lbl">Emergencies</span><select id="emgSel"><option value="off">Off · routine flights only</option><option value="some" selected>Occasional · about every 20 minutes</option><option value="often">Frequent · about every 10 minutes</option></select></label>
         </div>
+        <h2>Positions</h2>
+        <p class="fine" style="margin-top:0">Work every position yourself, or hand some to an AI controller to share the load. They give the same instructions you would, on the frequency, and pass traffic to you at the normal hand-off points. You can change this during the session with <b>Positions</b> on the scope.</p>
+        <div class="seatgrid" id="seatGrid"></div>
         <div class="slotlist" id="slotList" aria-live="polite"></div>
         <label style="display:block;margin-top:12px"><span class="lbl">Live METAR (optional, overrides the weather)</span>
           <textarea id="wxPaste" rows="2" placeholder="LXGB 042020Z 24018G28KT 9999 FEW020 21/17 Q1016"></textarea></label>

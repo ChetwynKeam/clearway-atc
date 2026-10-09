@@ -27,7 +27,7 @@ const PAL = {
     ground: '#e4e9d6', grass: '#dde5cc', asphalt: '#9ba4ad', rwy: '#5d656e', concrete: '#c4cad1', apronLine: '#8a949e',
     bld: '#d9dde3', bldEdge: '#8b96a3', road: '#d3c9b8', paint: 'rgba(255,255,255,.95)', yellow: '#f5c400', closed: '#b9c0c7',
     acArr: '#fff1d6', acDep: '#ffffff', pre: 'rgba(80,92,108,.7)', tagBg: 'rgba(255,255,255,.9)', tagEdge: 'rgba(12,27,46,.18)',
-    xClosed: '#d62d2d', xOpen: '#12805c', xMid: '#b75f00', pv: '#12a46b', pvTxt: '#0d7a52', pvBg: 'rgba(255,255,255,.95)',
+    xClosed: '#d62d2d', xOpen: '#12805c', xMid: '#b75f00', pv: '#12a46b', pvTxt: '#0d7a52', pvBg: 'rgba(255,255,255,.95)', ai: '#0f8a7a',
     glow: 'source-over', flood: 0,
     rgb: { lab: '30,45,65', proc: '183,95,0', apt: '20,82,217', relief: '95,115,70', reliefFill: '120,140,90', reliefTxt: '70,85,50',
            town: '60,75,95', car: '60,70,85', r164: '200,50,40', hot: '192,24,122', rwyOut: '45,55,68' }
@@ -38,7 +38,7 @@ const PAL = {
     ground: '#162523', grass: '#14231f', asphalt: '#262e31', rwy: '#20272a', concrete: '#353f42', apronLine: '#4b585c',
     bld: '#0b1214', bldEdge: '#3c4a4c', road: '#2e2a26', paint: 'rgba(236,240,232,.86)', yellow: '#e7c23a', closed: '#1f2628',
     acArr: '#e9d7b0', acDep: '#d6e8f5', pre: 'rgba(160,190,190,.55)', tagBg: 'rgba(4,14,18,.72)', tagEdge: 'rgba(0,0,0,0)',
-    xClosed: '#ff5a5a', xOpen: '#4fd18b', xMid: '#ffc164', pv: '#7dffb0', pvTxt: '#7dffb0', pvBg: 'rgba(4,18,26,.92)',
+    xClosed: '#ff5a5a', xOpen: '#4fd18b', xMid: '#ffc164', pv: '#7dffb0', pvTxt: '#7dffb0', pvBg: 'rgba(4,18,26,.92)', ai: '#4fd1c5',
     glow: 'lighter', flood: 0.10,
     rgb: { lab: '207,227,226', proc: '255,200,120', apt: '124,199,255', relief: '190,205,170', reliefFill: '150,170,130', reliefTxt: '210,220,195',
            town: '160,190,190', car: '255,230,180', r164: '255,130,100', hot: '255,110,150', rwyOut: '225,238,238' }
@@ -577,7 +577,8 @@ function drawAc(ac){
   const lx = X + 16, ly = Y - 26;
   cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+8, Y-8); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
   cx.font = `500 11.5px ${FONT_D}`;
-  const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need ? ' ◆' : '');
+  const ai = aiOwns(ac);   // worked by an AI controller (ai.js): an AI mark, a dashed teal tag, no ◆
+  const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need && !ai ? ' ◆' : '');
   let l2, l3 = '';
   if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN';
     else if (towOn(ac)) l3 = 'TOW › ' + (ac.path && ac.towTgt ? ac.towTgt + ' › ' : '') + ac.tow.to.id; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
@@ -590,9 +591,11 @@ function drawAc(ac){
   const w = Math.max(cx.measureText(l1).width, cx.measureText(l2).width, l3 ? cx.measureText(l3).width : 0);
   const clr = clrOf(ac), ck = clr ? ` ✓ ${clr}` : '', ckW = clr ? cx.measureText(ck).width : 0, W1 = Math.max(w, cx.measureText(l1).width + ckW + 3);
   { cx.fillStyle = C.tagBg; cx.fillRect(lx-3, ly-11, W1+6, (l3 ? 3 : 2)*13 + 3);
-    cx.strokeStyle = clr ? C.clr : C.tagEdge; cx.lineWidth = clr ? 2 : 1; cx.strokeRect(lx-3.5, ly-11.5, W1+7, (l3 ? 3 : 2)*13 + 4); }
+    if (ai) cx.setLineDash([4, 3]);
+    cx.strokeStyle = clr ? C.clr : ai ? C.ai : C.tagEdge; cx.lineWidth = clr || ai ? 2 : 1; cx.strokeRect(lx-3.5, ly-11.5, W1+7, (l3 ? 3 : 2)*13 + 4); cx.setLineDash([]); }
   cx.fillStyle = col; cx.fillText(l1, lx, ly); cx.fillText(l2, lx, ly+13); if (l3) cx.fillText(l3, lx, ly+26);
   if (clr) { cx.fillStyle = C.clr; cx.font = `700 11.5px ${FONT_D}`; cx.fillText(ck, lx + cx.measureText(l1).width - 1, ly); }
+  if (ai) { cx.font = `700 9.5px ${FONT_D}`; const t = 'AI ' + seatOf(ac), tw = cx.measureText(t).width; cx.fillStyle = C.ai; cx.fillRect(lx + W1 - tw - 1, ly - 25, tw + 6, 12); cx.fillStyle = '#fff'; cx.fillText(t, lx + W1 - tw + 2, ly - 16); }
 }
 
 function stateLabel(ac){
@@ -702,7 +705,11 @@ function renderSel(){
   let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
-  if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
+  if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline${aiOwns(ac) ? ' ai' : ''}">◆ ${esc(ac.need)}</div>`;
+  // AI controllers (ai.js): who is working it, and the switch to take it back or hand it over
+  if (S.running && !EXERCISES[S.mode] && seatOf(ac)) { const k = seatOf(ac);
+    html += aiOwns(ac) ? `<div class="ailine"><span><b>AI ${AI_NAME[k]}</b> is working this flight${ac.aiWhy ? `<i>${esc(ac.aiWhy[0].toUpperCase() + ac.aiWhy.slice(1))}</i>` : ''}</span><button data-ai="take" class="go">Take over</button></div>`
+      : `<div class="ailine me"><span>You are working it as ${AI_NAME[k]}</span><button data-ai="give">Hand to AI</button></div>`; }
   if (ac.kind === 'ARR' && !['PRE', 'ONSTAND', 'DIVERTING', 'TOW'].includes(ac.state)) html += standLine(ac);
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
@@ -712,7 +719,8 @@ function renderSel(){
   if (ac.kind === 'DEP' && ac.state === 'PARKED' && ac.slotHold) html += `<div class="meta">Held on stand from the Flights board: the crew won’t call for start-up until you release it there.</div>`;
   else if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
-  const wireRm = () => { const r = el.querySelector('[data-rm]'); if (r) r.onclick = () => { if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
+  const wireRm = () => { el.querySelectorAll('[data-ai]').forEach(b => b.onclick = () => { if (b.dataset.ai === 'take') takeOver(ac); else handToAi(ac); renderSel(); renderStrips(true); });
+    const r = el.querySelector('[data-rm]'); if (r) r.onclick = () => { if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and ${ac.slotHold ? 'is holding outside your airspace until you release it on the Flights board' : `calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now`}.</p>`; wireRm(); return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–') + (ac.via && ac.app ? ' via procedure' : '')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
@@ -999,7 +1007,8 @@ document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains
 let stripSig = '';
 // one flight progress strip; doc is the document it goes in (the console, or the pop-out strip board)
 function makeStrip(ac, doc = document){
-  const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}${ac.state === 'DIVERTING' && !outOfCtl(ac) ? ' div' : ''}`;
+  const ai = aiOwns(ac);
+  const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need && !ai ? ' need' : ''}${ai ? ' ai' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}${ac.state === 'DIVERTING' && !outOfCtl(ac) ? ' div' : ''}`;
   d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
   d.querySelector('.cs').textContent = ac.cs;
   d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
@@ -1011,6 +1020,7 @@ function makeStrip(ac, doc = document){
   const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
   d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
   if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = doc.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
+  if (ai) { const k = doc.createElement('span'); k.className = 'aik'; k.textContent = 'AI ' + seatOf(ac); k.title = `Worked by the AI ${AI_NAME[seatOf(ac)]}: select it and Take over to work it yourself`; d.querySelector('.fq').append(' ', k); }
   if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
   if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
   else d.onclick = () => { tapSelect(ac); if (towAsk(ac) && !phoneMQ.matches) centreOn(ac); };   // a tow request: show me where it is
@@ -1033,8 +1043,9 @@ function centreOn(ac){
   if (phoneMQ.matches) setMTab('map');
 }
 function renderStrips(force){
-  const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
-  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
+  const mine = a => !!a.need && !aiOwns(a);   // waiting on you (not on an AI controller)
+  const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
+  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
   if (stripWin && stripWin.closed) closeStripBoard();
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
@@ -1042,7 +1053,7 @@ function renderStrips(force){
   for (const ac of list) el.appendChild(makeStrip(ac));
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
-  { const n = S.acs.filter(a => a.need).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
+  { const n = S.acs.filter(mine).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
   renderStripBoard(list);
 }
@@ -1107,7 +1118,7 @@ $('popStrips').onclick = openStripBoard;
 $('backStrips').onclick = () => { if (stripWin && !stripWin.closed) stripWin.close(); closeStripBoard(); };
 function renderScore(){
   const s = S.score;
-  $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>`;
+  $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>${S.running && !EXERCISES[S.mode] && AI_SEATS.some(k => S.seats[k] === 'AI') ? `<span class="ai" title="Seats worked by AI controllers (their flights don't count in your score)">AI <b>${AI_SEATS.filter(k => S.seats[k] === 'AI').join(' ')}</b></span>` : ''}`;
   const d = new Date(S.start + S.t*1000);
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
   $('clockz').textContent = 'local ' + new Date(d.getTime() + APT.utcOff*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');

@@ -913,6 +913,37 @@ body.embed > *:not(.embed-cv) { display: none !important; }
 .rcline button { font-size: 11.5px; padding: 3px 9px; }
 .rcline.ask span { color: var(--warn); font-weight: 600; }
 .rcline.on span { color: var(--alert); font-weight: 600; }
+/* AI controllers (ai.js): the seat picker, AI-worked flights on the strips, the flight panel and the log */
+.seatgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-top: 8px; }
+.seat { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; background: var(--panel); }
+.seat-n { display: flex; flex-direction: column; min-width: 0; }
+.seat-n b { font-size: 13px; font-weight: 600; color: var(--ink); }
+.seat-n span { font-size: 11.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seatgrid .seg { box-shadow: none; flex: none; }
+.seatgrid .seg button { border: 0; background: transparent; padding: 3px 10px; font: inherit; font-size: 12px; font-weight: 600; color: var(--dim); border-radius: 3px; cursor: pointer; }
+.seatgrid .seg button.on { background: var(--accent-soft); color: var(--accent-2); }
+.seatgrid .seg button[data-who="AI"].on { background: #0f8a7a; color: #fff; }
+.seatpop { position: absolute; top: 56px; left: 12px; width: min(460px, calc(100% - 24px)); z-index: 31; background: var(--panel); color: var(--ink); border: 1px solid var(--line-2); border-radius: 8px; box-shadow: 0 14px 40px rgba(5,15,30,.25); padding: 12px 14px; }
+.seatpop .seatgrid { grid-template-columns: 1fr 1fr; }
+.seatpop .aihear { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 12.5px; color: var(--ink-2); }
+.seatpop .fine { margin: 8px 0 0; font-size: 12px; color: var(--dim); }
+#tgSeats.on { background: #e6f5f2; border-color: #0f8a7a; color: #0b6b5f; }
+body.theme-dark #tgSeats.on { background: rgba(79,209,197,.14); border-color: #4fd1c5; color: #4fd1c5; }
+.app button.strip.ai { opacity: .78; }
+.app button.strip.ai .bar { background: repeating-linear-gradient(180deg, #0f8a7a 0 4px, transparent 4px 7px); }
+.strip .aik { display: inline-block; padding: 0 5px; border-radius: 4px; background: #0f8a7a; color: #fff; font-family: var(--font-label); font-weight: 700; font-size: 10.5px; letter-spacing: .03em; }
+body.theme-dark .strip .aik, body.theme-dark .seatgrid .seg button[data-who="AI"].on { background: #4fd1c5; color: #04201d; }
+.needline.ai { color: var(--dim); background: var(--panel-2); border-color: var(--line); }
+.ailine { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding: 5px 8px; border-radius: 4px; font-size: 12.5px; border: 1px dashed #0f8a7a; color: #0b6b5f; background: #f0faf8; }
+.ailine.me { border-color: var(--line); color: var(--dim); background: transparent; }
+.ailine button { padding: 2px 10px; font-size: 12px; }
+.ailine i { display: block; font-style: normal; opacity: .8; font-size: 11.5px; margin-top: 1px; }
+body.theme-dark .ailine:not(.me) { color: #4fd1c5; border-color: #4fd1c5; background: rgba(79,209,197,.07); }
+#log .ln.ai { opacity: .62; }
+#log .ln.ai .who { color: #0f8a7a; }
+body.theme-dark #log .ln.ai .who { color: #4fd1c5; }
+.hud-score .ai { border-color: #0f8a7a; color: #0b6b5f; }
+.hud-score .ai b { color: #0b6b5f; }
 
 /* ═════ accounts, pricing, feedback, airport requests (account.html / account.js) ═════ */
 .topbar .status .btn.ghost { box-shadow: none; padding: 9px 14px; font-size: 14px; }
@@ -2049,10 +2080,17 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
       <button id="tgTalk" class="talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Hold to talk</button>
       <button id="tgSetup">Session</button>
+      <button id="tgSeats" title="Who works each position: you or an AI controller">Positions</button>
       <button id="tgFids" title="Today's arrivals and departures">Flights</button>
       
       <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
       <button id="tgFull" title="Full screen">Full screen</button>
+    </div>
+    <div class="seatpop" id="seatPop" hidden role="dialog" aria-label="Positions">
+      <div class="lbl">Who works each position</div>
+      <div class="seatgrid" id="seatPopGrid"></div>
+      <label class="aihear"><input type="checkbox" id="aiHear"> <span>Hear the AI controllers’ frequencies (with Voice on)</span></label>
+      <p class="fine">AI controllers give the same instructions you would and hand traffic to you at the usual points. Select one of their flights and press <b>Take over</b> (or just give it an instruction) to work it yourself. Only your flights count in your score.</p>
     </div>
     <div class="fids" id="fids" hidden role="dialog" aria-label="Flight information">
       <div class="fids-hd"><div><b id="fidsTitle">Flight information</b><span id="fidsClock"></span></div>
@@ -2143,6 +2181,9 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           </div>
           <label><span class="lbl">Emergencies</span><select id="emgSel"><option value="off">Off · routine flights only</option><option value="some" selected>Occasional · about every 20 minutes</option><option value="often">Frequent · about every 10 minutes</option></select></label>
         </div>
+        <h2>Positions</h2>
+        <p class="fine" style="margin-top:0">Work every position yourself, or hand some to an AI controller to share the load. They give the same instructions you would, on the frequency, and pass traffic to you at the normal hand-off points. You can change this during the session with <b>Positions</b> on the scope.</p>
+        <div class="seatgrid" id="seatGrid"></div>
         <div class="slotlist" id="slotList" aria-live="polite"></div>
         <label style="display:block;margin-top:12px"><span class="lbl">Live METAR (optional, overrides the weather)</span>
           <textarea id="wxPaste" rows="2" placeholder="LXGB 042020Z 24018G28KT 9999 FEW020 21/17 Q1016"></textarea></label>
@@ -6409,8 +6450,10 @@ const PH = Object.assign({
 // ═════════════════════════ R/T log & speech ═════════════════════════
 const logEl = document.getElementById('log');
 const zt = t => new Date(S.start + t*1000).toISOString().substr(11,8);
-function log(cls, text, who, ac){
-  const div = document.createElement('div'); div.className = 'ln ' + cls;
+function log(cls, text, who, ac, ai){
+  // an AI controller transmitting (ai.js), or a crew talking to one: marked AI and shown quieter
+  if (aiCtx && (cls === 'atc' || cls === 'coord')) { aiCtx.said = true; who = 'AI ' + aiCtx.seat; }
+  const div = document.createElement('div'); div.className = 'ln ' + cls + (aiCtx || ai ? ' ai' : '');
   // a line about one aircraft (a tug's tow request): click it to select that aircraft and centre the map on it
   if (ac) { div.classList.add('go'); div.title = 'Show ' + ac.cs + ' on the map'; div.onclick = () => { if (!S.acs.includes(ac) || typeof select !== 'function') return; select(ac); if (typeof centreOn === 'function') centreOn(ac); }; }
   const tm = document.createElement('span'); tm.className = 'tm'; tm.textContent = zt(S.t).slice(0,5);
@@ -6426,6 +6469,7 @@ try { speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); } catch(e) {}
 function hash(s){ let h = 0; for (const c of String(s)) h = (h*31 + c.charCodeAt(0))|0; return Math.abs(h); }
 function say(text, who){
   if (!S.voice || who === 'atc') return;   // your own transmissions are only written, never spoken
+  if (aiCtx && !S.aiHear) return;   // the AI controllers' frequencies: heard only if you ask for them
   try {
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
     if (voices.length) u.voice = who === 'atc' ? voices[0] : voices[1 + hash(who) % Math.max(1, voices.length-1)] || voices[0];
@@ -6442,9 +6486,10 @@ function pilot(ac, text, again){
     (S.recalls ||= []).push({ at: S.t + rnd(8, 16), ac, text }); lastCallT = S.t; return;
   }
   if (!inCmd) lastCallT = S.t;
-  const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs); setTimeout(() => say(line, ac.cs), 300);
+  const ai = !!aiCtx || aiOwns(ac), quiet = ai && !S.aiHear;
+  const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs, null, ai); setTimeout(() => quiet || say(line, ac.cs), 300);
 }
-function sys(text, bad){ log(bad ? 'bad' : 'sys', text); }
+function sys(text, bad){ if (aiCtx) return; log(bad ? 'bad' : 'sys', text); }   // an AI instruction that doesn't work is just not given
 // landline coordination with Sevilla / Casablanca (not on the frequency)
 function coord(text, who){ log('coord', text, who); say(text, 'tel:' + who); }
 // departures need a release from the next unit before take-off, unless the airport only asks for some (APT.needRel:
@@ -7151,8 +7196,9 @@ function commandRun(str){
   if (!ac || !S.acs.includes(ac)) { sys('Select a flight first, or start the command with its callsign.'); return; }
   if (toks.length === 1 && /^(REMOVE|DELETE|DEL)$/.test(toks[0])) { removeAc(ac); return; }   // works on any flight, yours or not
   if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
-  if (ac.state === 'PRE') { select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
-  select(ac);
+  if (!aiCtx && aiOwns(ac)) takeOver(ac);   // an instruction to a flight the AI is working: you take it back
+  if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
+  if (!aiCtx) select(ac);
   const said = [], reads = [];
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
@@ -7248,7 +7294,7 @@ function commandRun(str){
         continue;
       }
       if (ac.kind === 'DEP' && ac.freq === 'TWR') { ac.freq = 'RAD'; if (ac.need && /^(Airborne|Back on)/.test(ac.need)) ac.need = null; }
-      else if (ac.kind === 'DEP') { ac.handed = true; ac.need = null; }
+      else if (ac.kind === 'DEP') { ac.hoBy = aiCtx ? S.aiScore : S.score; ac.handed = true; ac.need = null; }
       else { ac.freq = 'TWR'; if (ac.need === 'Back on frequency') ac.need = null; }
       said.push(`contact ${unit[0]} ${unit[1]}`); reads.push(`${unit[1]}, ${ac.handed ? 'good day' : 'thanks'}`);
     } else if (t === 'TOW') {
@@ -7450,13 +7496,13 @@ function beginTakeoff(ac, v){ ac.state = 'TAKEOFF'; ac.cto = true; ac.ias = v ||
 function windLimit(ac, rw){ if (APT.windLimit) return APT.windLimit(ac, rw); const c = windComp(S.wx, crsOf(rw)); if (c.headG < -10) return 'tailwind out of limits'; if (c.crossG > (ac.perf.wake === 'L' ? 22 : 33)) return 'crosswind out of limits'; return null; }
 function goAround(ac, why){
   if (ac.state === 'MISSED' || (ac.gaT && S.t - ac.gaT < 30)) return;
-  const rw = landRw(ac);
+  const rw = landRw(ac), sc = SC(ac);   // counted to whoever was working it (Tower, usually) before Approach takes it back
   ac.state = 'MISSED'; ac.mode = 'HDG'; ac.tgtHdg = Math.round(crsOf(rw)); ac.turnDir = 0; ac.gaT = S.t;
   APT.gaEarly(ac, rw);
   { const F = finOf(ac); ac.missRoute = F && F.missed ? F.missed.slice() : null; ac.appId = null; ac.finI = null; }
   ac.reqExit = null; ac.vacDec = null;
   ac.tgtAlt = ac.cleared = APT.gaAlt; ac.via = false; ac.ctl = false; ac.app = null; ac.gaTurn = false; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.spdAssigned = false; ac.route = []; ac.freq = 'RAD';
-  ac.gaRwy = rw; S.score.ga++; ac.gaCount = (ac.gaCount||0) + 1;
+  ac.gaRwy = rw; sc.ga++; ac.gaCount = (ac.gaCount||0) + 1;
   if (why) pilot(ac, `going around, ${why}`);
   ac.need = 'Missed approach';
   if (ac.gaCount >= 2 && why) { // second weather/turbulence go-around: the crew elects to divert
@@ -7549,15 +7595,15 @@ function step(dt){
     if (ac.state === 'PRE') stepPending(ac, dt); else if (ac.ground) stepGround(ac, dt); else stepAir(ac, dt);
     stepNose(ac, dt);
     if (ac.rel) stepRelease(ac);
-    if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; S.score.pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
+    if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; SC(ac).pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
   }
   S.acs = S.acs.filter(ac => {
     if (ac.state === 'ONSTAND' && S.t > ac.doneAt) { if (S.sel === ac) S.sel = null; if (ac.stand) ac.stand.occ = null; return false; }
-    if (ac.divLanded) { S.score.div++; sys(`${ac.cs} has landed at ${ac.divLanded.name}.`); emit('divlanded', ac); if (S.sel === ac) S.sel = null; return false; }
+    if (ac.divLanded) { SC(ac).div++; sys(`${ac.cs} has landed at ${ac.divLanded.name}.`); emit('divlanded', ac); if (S.sel === ac) S.sel = null; return false; }
     if (ac.airborne && ac.state !== 'PRE' && Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]) > (ac.kind === 'DEP' ? APT.area.dep : ac.state === 'DIVERTING' ? APT.area.div : APT.area.arr)) {
-      if (ac.kind === 'DEP') { if (!ac.handed) { S.score.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else S.score.pts += 20; S.score.departed++; }
-      else { S.score.div++; S.score.pts -= ac.state === 'DIVERTING' ? 0 : 40; { const D = ac.state === 'DIVERTING' && divDest(ac); sys(D ? `${ac.cs} has left the area, flying on to ${D.name}.` : `${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); } }
+      if (ac.kind === 'DEP') { const sc = ac.handed ? (ac.hoBy || S.score) : SC(ac); if (!ac.handed) { sc.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else sc.pts += 20; sc.departed++; }
+      else { SC(ac).div++; SC(ac).pts -= ac.state === 'DIVERTING' ? 0 : 40; { const D = ac.state === 'DIVERTING' && divDest(ac); sys(D ? `${ac.cs} has left the area, flying on to ${D.name}.` : `${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); } }
       emit('exit', ac);
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       if (S.sel === ac) S.sel = null; return false;
@@ -7573,10 +7619,11 @@ function step(dt){
     if (APT.sepOk && APT.sepOk(a, b, d)) continue;   // independent parallel approaches or departures (Madrid)
     conf.add(a.cs); conf.add(b.cs);
     const key = [a.cs, b.cs].sort().join('|');
-    if (!S.conflicts.has(key)) { S.conflicts.add(key); S.score.los++; S.score.pts -= 50; sys(`Loss of separation: ${a.cs} and ${b.cs} (${d.toFixed(1)} NM, ${Math.round(Math.abs(a.alt-b.alt))} ft).`, true); }
+    if (!S.conflicts.has(key)) { S.conflicts.add(key); const mine = x => seatOf(x) && !aiOwns(x), sc = !mine(a) && !mine(b) && (aiOwns(a) || aiOwns(b)) ? S.aiScore : S.score; sc.los++; sc.pts -= 50; sys(`Loss of separation: ${a.cs} and ${b.cs} (${d.toFixed(1)} NM, ${Math.round(Math.abs(a.alt-b.alt))} ft).`, true); }
   }
   for (const k of [...S.conflicts]) { const [p,q] = k.split('|'); if (!conf.has(p) || !conf.has(q)) S.conflicts.delete(k); }
   S.conflictSet = conf;
+  if (typeof stepAI === 'function') stepAI(dt);   // the AI controllers (ai.js)
 }
 
 function stepAir(ac, dt){
@@ -7691,7 +7738,7 @@ function stepAir(ac, dt){
     const clearRock = APT.depClear(ac);
     if (ac.onSid && ac.mode === 'HDG' && clearRock && (ac.alt > 3500 || !crossesRock(ac, WP[exitRouteOf(ac)[0]].p))) { ac.onSid = false; ac.reqDct = true; ac.mode = 'NAV'; ac.route = exitRouteOf(ac).slice(); }
     if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && clearRock) { ac.reqDct = true; const fx = exitRouteOf(ac)[0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
-    if (ac.calledRad && !ac.reqClimb && !ac.need && ac.alt > sidTop(ac) - 400 && (ac.tgtAlt ?? 0) <= sidTop(ac)) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
+    if (ac.calledRad && !ac.handed && !ac.reqClimb && !ac.need && ac.alt > sidTop(ac) - 400 && (ac.tgtAlt ?? 0) <= sidTop(ac)) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
     if (ac.mode === 'NAV' && !ac.route.length) { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
     if (ac.calledRad && !ac.handed && dGBR > APT.handoffNM && !ac.askedHo) { ac.askedHo = true; ac.need = 'Ready for transfer'; }
   }
@@ -7711,15 +7758,15 @@ function stepAir(ac, dt){
   if (fin && ac.state !== 'MISSED') {
     const rw = ac.app, w = S.wx, F = finOf(ac);
     if (APT.xing && !ac.warned15 && fin.togo < 15 && S.xing.st === 'OPEN') { ac.warned15 = true; sys(`${ac.cs} is inside 15 NM: close Winston Churchill Avenue to pedestrians now.`); }
-    if (APT.xing && !ac.warned10 && fin.togo < 10) { ac.warned10 = true; if (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') { S.score.pts -= 15; sys(`${ac.cs} at 10 NM with the road still open (late closure).`, true); } }
+    if (APT.xing && !ac.warned10 && fin.togo < 10) { ac.warned10 = true; if (S.xing.st === 'OPEN' || S.xing.st === 'OPENING') { SC(ac).pts -= 15; sys(`${ac.cs} at 10 NM with the road still open (late closure).`, true); } }
     if (!ac.checked && fin.togo < (F.decNM || 3.05) && fin.togo > (F.decMin || 1.5)) { // decision point (Gibraltar: Point X-Ray / Yankee)
       ac.checked = true; const dn = F.decName || `Point ${F.name}`;
       if (!appMinsOk(F, rw, w)) return goAround(ac, F.rnp ? 'not visual at minimums' : F.decFail || `not visual at ${dn}`);
-      if (ac.alt < (F.minAlt || 880)) { S.score.incidents++; S.score.pts -= 40; sys(`${ac.cs} crossed ${dn} below ${F.minText || '920 ft'}.`, true); }
+      if (ac.alt < (F.minAlt || 880)) { SC(ac).incidents++; SC(ac).pts -= 40; sys(`${ac.cs} crossed ${dn} below ${F.minText || '920 ft'}.`, true); }
       pilot(ac, F.decCall ? F.decCall(rw) : `${dn}, visual`); ac.freq = 'TWR';   // F.decCall: the airport's own words at this point (London City: established on the ILS)
       if (!ac.ctl) ac.need = F.decNeed || 'Visual, needs landing clearance';
     }
-    for (const g of F.gates || []) if (fin.togo < g.togo && !(ac.gatesDone ||= {})[g.at]) { ac.gatesDone[g.at] = true; if (ac.alt < g.min - 30) { S.score.incidents++; S.score.pts -= 30; sys(`${ac.cs} passed ${g.at} at ${Math.round(ac.alt)} ft, below the ${g.min} ft minimum.`, true); } }
+    for (const g of F.gates || []) if (fin.togo < g.togo && !(ac.gatesDone ||= {})[g.at]) { ac.gatesDone[g.at] = true; if (ac.alt < g.min - 30) { SC(ac).incidents++; SC(ac).pts -= 30; sys(`${ac.cs} passed ${g.at} at ${Math.round(ac.alt)} ft, below the ${g.min} ft minimum.`, true); } }
     if (!ac.shearChecked && fin.togo < 2) {
       ac.shearChecked = true;
       const ex = turbExcess(w);
@@ -7734,7 +7781,7 @@ function stepAir(ac, dt){
     { const blk = rwyBlocked(); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && (S.acs.some(o => o !== ac && onRunway(o, rw)) || (typeof vehOnRwy === 'function' && vehOnRwy(rw)))) return goAround(ac, typeof vehOnRwy === 'function' && vehOnRwy(rw) ? 'vehicle on the runway' : 'runway occupied');
-    if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { S.score.incidents++; S.score.pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
+    if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { SC(ac).incidents++; SC(ac).pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
     if (fin.togo < 1.5 && ac.alt > gpAlt(fin.togo, apk(ac)) + 400) return goAround(ac, 'unstable, too high');
     if (fin.togo < 0.7) { // short final: settle onto the extended centreline (the 09 SRA joins it on a curve)
       const R = rwyOf(rw), m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]);
@@ -7742,12 +7789,12 @@ function stepAir(ac, dt){
     }
     if (fin.togo < -0.12 && ac.alt < tdElev(rw) + 70) { // touchdown
       const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = ELEV; ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
-      ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } S.score.landed++; S.score.pts += 25; ac.need = null;
+      ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } SC(ac).landed++; SC(ac).pts += 25; ac.need = null;
       emit('landed', ac); planVac(ac);
     }
   }
-  { const Rz = APT.restricted; if (Rz && ac.alt < Rz.top && !(Rz.ok && Rz.ok(ac)) && inPoly([ac.x, ac.y], Rz.poly)) { if (!ac.infr) { ac.infr = true; S.score.infr++; S.score.pts -= 40; sys(Rz.msg(ac), true); } } else ac.infr = false; }
-  { const T = APT.terrain, hit = T && (T.check ? T.check(ac) : ac.alt < T.min && inPoly([ac.x, ac.y], T.poly)); if (hit) { if (!ac.terr) { ac.terr = true; S.score.incidents++; S.score.pts -= (ac.alt < (T.lowAt ? T.lowAt(hit) : T.low) ? 80 : 30); sys(T.msg(ac, hit), true); } } else ac.terr = false; }
+  { const Rz = APT.restricted; if (Rz && ac.alt < Rz.top && !(Rz.ok && Rz.ok(ac)) && inPoly([ac.x, ac.y], Rz.poly)) { if (!ac.infr) { ac.infr = true; SC(ac).infr++; SC(ac).pts -= 40; sys(Rz.msg(ac), true); } } else ac.infr = false; }
+  { const T = APT.terrain, hit = T && (T.check ? T.check(ac) : ac.alt < T.min && inPoly([ac.x, ac.y], T.poly)); if (hit) { if (!ac.terr) { ac.terr = true; SC(ac).incidents++; SC(ac).pts -= (ac.alt < (T.lowAt ? T.lowAt(hit) : T.low) ? 80 : 30); sys(T.msg(ac, hit), true); } } else ac.terr = false; }
 }
 
 // aircraft giving way in a ring (A waits for B, B for C, C for A) would wait for ever: the one with right of way in
@@ -7894,7 +7941,7 @@ function stepGround(ac, dt){
     if (ac.ias >= ac.perf.vr) {
       ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = ELEV + 10; ac.ias = ac.perf.vr;
       APT.liftoff(ac);
-      ac.tgtAlt = ac.cleared = sidTop(ac); ac.onSid = true; S.score.pts += 10;
+      ac.tgtAlt = ac.cleared = sidTop(ac); ac.onSid = true; SC(ac).pts += 10;
       emit('airborne', ac);
     }
   }
@@ -7902,7 +7949,7 @@ function stepGround(ac, dt){
   if (APT.xing && ac.onRwy && ac.gs > 1) {
     const m = mOf([ac.x, ac.y]), mp = ac.lastM ?? m; ac.lastM = m;
     if ((mp - XING_M)*(m - XING_M) < 0 && Math.abs(offOf([ac.x, ac.y])) < 30 && S.xing.st !== 'CLOSED') {
-      S.score.incidents++; S.score.pts -= 60; sys(`INCIDENT: ${ac.cs} crossed Winston Churchill Avenue with the barriers up.`, true);
+      SC(ac).incidents++; SC(ac).pts -= 60; sys(`INCIDENT: ${ac.cs} crossed Winston Churchill Avenue with the barriers up.`, true);
     }
   } else ac.lastM = undefined;
 }
@@ -7936,7 +7983,7 @@ const PAL = {
     ground: '#e4e9d6', grass: '#dde5cc', asphalt: '#9ba4ad', rwy: '#5d656e', concrete: '#c4cad1', apronLine: '#8a949e',
     bld: '#d9dde3', bldEdge: '#8b96a3', road: '#d3c9b8', paint: 'rgba(255,255,255,.95)', yellow: '#f5c400', closed: '#b9c0c7',
     acArr: '#fff1d6', acDep: '#ffffff', pre: 'rgba(80,92,108,.7)', tagBg: 'rgba(255,255,255,.9)', tagEdge: 'rgba(12,27,46,.18)',
-    xClosed: '#d62d2d', xOpen: '#12805c', xMid: '#b75f00', pv: '#12a46b', pvTxt: '#0d7a52', pvBg: 'rgba(255,255,255,.95)',
+    xClosed: '#d62d2d', xOpen: '#12805c', xMid: '#b75f00', pv: '#12a46b', pvTxt: '#0d7a52', pvBg: 'rgba(255,255,255,.95)', ai: '#0f8a7a',
     glow: 'source-over', flood: 0,
     rgb: { lab: '30,45,65', proc: '183,95,0', apt: '20,82,217', relief: '95,115,70', reliefFill: '120,140,90', reliefTxt: '70,85,50',
            town: '60,75,95', car: '60,70,85', r164: '200,50,40', hot: '192,24,122', rwyOut: '45,55,68' }
@@ -7947,7 +7994,7 @@ const PAL = {
     ground: '#162523', grass: '#14231f', asphalt: '#262e31', rwy: '#20272a', concrete: '#353f42', apronLine: '#4b585c',
     bld: '#0b1214', bldEdge: '#3c4a4c', road: '#2e2a26', paint: 'rgba(236,240,232,.86)', yellow: '#e7c23a', closed: '#1f2628',
     acArr: '#e9d7b0', acDep: '#d6e8f5', pre: 'rgba(160,190,190,.55)', tagBg: 'rgba(4,14,18,.72)', tagEdge: 'rgba(0,0,0,0)',
-    xClosed: '#ff5a5a', xOpen: '#4fd18b', xMid: '#ffc164', pv: '#7dffb0', pvTxt: '#7dffb0', pvBg: 'rgba(4,18,26,.92)',
+    xClosed: '#ff5a5a', xOpen: '#4fd18b', xMid: '#ffc164', pv: '#7dffb0', pvTxt: '#7dffb0', pvBg: 'rgba(4,18,26,.92)', ai: '#4fd1c5',
     glow: 'lighter', flood: 0.10,
     rgb: { lab: '207,227,226', proc: '255,200,120', apt: '124,199,255', relief: '190,205,170', reliefFill: '150,170,130', reliefTxt: '210,220,195',
            town: '160,190,190', car: '255,230,180', r164: '255,130,100', hot: '255,110,150', rwyOut: '225,238,238' }
@@ -8486,7 +8533,8 @@ function drawAc(ac){
   const lx = X + 16, ly = Y - 26;
   cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+8, Y-8); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
   cx.font = `500 11.5px ${FONT_D}`;
-  const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need ? ' ◆' : '');
+  const ai = aiOwns(ac);   // worked by an AI controller (ai.js): an AI mark, a dashed teal tag, no ◆
+  const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need && !ai ? ' ◆' : '');
   let l2, l3 = '';
   if (ac.ground) { l2 = `${ac.t}/${ac.perf.wake} ${stateLabel(ac)}`; if (ac.held) l3 = 'HOLD POSN';
     else if (towOn(ac)) l3 = 'TOW › ' + (ac.path && ac.towTgt ? ac.towTgt + ' › ' : '') + ac.tow.to.id; else if (ac.waiting) l3 = `GIVING WAY ${ac.waiting}`; }
@@ -8499,9 +8547,11 @@ function drawAc(ac){
   const w = Math.max(cx.measureText(l1).width, cx.measureText(l2).width, l3 ? cx.measureText(l3).width : 0);
   const clr = clrOf(ac), ck = clr ? ` ✓ ${clr}` : '', ckW = clr ? cx.measureText(ck).width : 0, W1 = Math.max(w, cx.measureText(l1).width + ckW + 3);
   { cx.fillStyle = C.tagBg; cx.fillRect(lx-3, ly-11, W1+6, (l3 ? 3 : 2)*13 + 3);
-    cx.strokeStyle = clr ? C.clr : C.tagEdge; cx.lineWidth = clr ? 2 : 1; cx.strokeRect(lx-3.5, ly-11.5, W1+7, (l3 ? 3 : 2)*13 + 4); }
+    if (ai) cx.setLineDash([4, 3]);
+    cx.strokeStyle = clr ? C.clr : ai ? C.ai : C.tagEdge; cx.lineWidth = clr || ai ? 2 : 1; cx.strokeRect(lx-3.5, ly-11.5, W1+7, (l3 ? 3 : 2)*13 + 4); cx.setLineDash([]); }
   cx.fillStyle = col; cx.fillText(l1, lx, ly); cx.fillText(l2, lx, ly+13); if (l3) cx.fillText(l3, lx, ly+26);
   if (clr) { cx.fillStyle = C.clr; cx.font = `700 11.5px ${FONT_D}`; cx.fillText(ck, lx + cx.measureText(l1).width - 1, ly); }
+  if (ai) { cx.font = `700 9.5px ${FONT_D}`; const t = 'AI ' + seatOf(ac), tw = cx.measureText(t).width; cx.fillStyle = C.ai; cx.fillRect(lx + W1 - tw - 1, ly - 25, tw + 6, 12); cx.fillStyle = '#fff'; cx.fillText(t, lx + W1 - tw + 2, ly - 16); }
 }
 
 function stateLabel(ac){
@@ -8611,7 +8661,11 @@ function renderSel(){
   let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
-  if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline">◆ ${esc(ac.need)}</div>`;
+  if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline${aiOwns(ac) ? ' ai' : ''}">◆ ${esc(ac.need)}</div>`;
+  // AI controllers (ai.js): who is working it, and the switch to take it back or hand it over
+  if (S.running && !EXERCISES[S.mode] && seatOf(ac)) { const k = seatOf(ac);
+    html += aiOwns(ac) ? `<div class="ailine"><span><b>AI ${AI_NAME[k]}</b> is working this flight${ac.aiWhy ? `<i>${esc(ac.aiWhy[0].toUpperCase() + ac.aiWhy.slice(1))}</i>` : ''}</span><button data-ai="take" class="go">Take over</button></div>`
+      : `<div class="ailine me"><span>You are working it as ${AI_NAME[k]}</span><button data-ai="give">Hand to AI</button></div>`; }
   if (ac.kind === 'ARR' && !['PRE', 'ONSTAND', 'DIVERTING', 'TOW'].includes(ac.state)) html += standLine(ac);
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
@@ -8621,7 +8675,8 @@ function renderSel(){
   if (ac.kind === 'DEP' && ac.state === 'PARKED' && ac.slotHold) html += `<div class="meta">Held on stand from the Flights board: the crew won’t call for start-up until you release it there.</div>`;
   else if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
-  const wireRm = () => { const r = el.querySelector('[data-rm]'); if (r) r.onclick = () => { if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
+  const wireRm = () => { el.querySelectorAll('[data-ai]').forEach(b => b.onclick = () => { if (b.dataset.ai === 'take') takeOver(ac); else handToAi(ac); renderSel(); renderStrips(true); });
+    const r = el.querySelector('[data-rm]'); if (r) r.onclick = () => { if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and ${ac.slotHold ? 'is holding outside your airspace until you release it on the Flights board' : `calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now`}.</p>`; wireRm(); return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–') + (ac.via && ac.app ? ' via procedure' : '')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
@@ -8908,7 +8963,8 @@ document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains
 let stripSig = '';
 // one flight progress strip; doc is the document it goes in (the console, or the pop-out strip board)
 function makeStrip(ac, doc = document){
-  const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need ? ' need' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}${ac.state === 'DIVERTING' && !outOfCtl(ac) ? ' div' : ''}`;
+  const ai = aiOwns(ac);
+  const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need && !ai ? ' need' : ''}${ai ? ' ai' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}${ac.state === 'DIVERTING' && !outOfCtl(ac) ? ' div' : ''}`;
   d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
   d.querySelector('.cs').textContent = ac.cs;
   d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
@@ -8920,6 +8976,7 @@ function makeStrip(ac, doc = document){
   const st = d.querySelector('.stt'); st.textContent = ac.need ? '◆ '+ac.need : stateLabel(ac);
   d.querySelector('.fq').textContent = ac.ground ? 'TWR' : ac.freq === 'TWR' ? 'TWR' : 'RAD';
   if (ac.kind === 'DEP' && ac.ground && ac.rel) { const r = doc.createElement('span'); r.className = 'rel ' + relCls(ac); r.textContent = { ok: 'REL', req: 'REL…', exp: 'REL ✕' }[relCls(ac)]; d.querySelector('.fq').append(' ', r); }
+  if (ai) { const k = doc.createElement('span'); k.className = 'aik'; k.textContent = 'AI ' + seatOf(ac); k.title = `Worked by the AI ${AI_NAME[seatOf(ac)]}: select it and Take over to work it yourself`; d.querySelector('.fq').append(' ', k); }
   if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
   if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
   else d.onclick = () => { tapSelect(ac); if (towAsk(ac) && !phoneMQ.matches) centreOn(ac); };   // a tow request: show me where it is
@@ -8942,8 +8999,9 @@ function centreOn(ac){
   if (phoneMQ.matches) setMTab('map');
 }
 function renderStrips(force){
-  const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (!!b.need - !!a.need) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
-  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
+  const mine = a => !!a.need && !aiOwns(a);   // waiting on you (not on an AI controller)
+  const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
+  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
   if (stripWin && stripWin.closed) closeStripBoard();
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
@@ -8951,7 +9009,7 @@ function renderStrips(force){
   for (const ac of list) el.appendChild(makeStrip(ac));
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
-  { const n = S.acs.filter(a => a.need).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
+  { const n = S.acs.filter(mine).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
   renderStripBoard(list);
 }
@@ -9016,7 +9074,7 @@ $('popStrips').onclick = openStripBoard;
 $('backStrips').onclick = () => { if (stripWin && !stripWin.closed) stripWin.close(); closeStripBoard(); };
 function renderScore(){
   const s = S.score;
-  $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>`;
+  $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>${S.running && !EXERCISES[S.mode] && AI_SEATS.some(k => S.seats[k] === 'AI') ? `<span class="ai" title="Seats worked by AI controllers (their flights don't count in your score)">AI <b>${AI_SEATS.filter(k => S.seats[k] === 'AI').join(' ')}</b></span>` : ''}`;
   const d = new Date(S.start + S.t*1000);
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
   $('clockz').textContent = 'local ' + new Date(d.getTime() + APT.utcOff*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
@@ -9308,7 +9366,7 @@ function stepEmerg(dt){
   if (E.incursion && S.t >= E.incursion.until) { E.incursion = null; sys('The pedestrian has been escorted off the runway by the police: the crossing is clear.'); }
   if (E.ws && S.t - E.ws.t > 25*60) { E.ws = null; nextAtis(); renderAtis(); }
   if (E.inspectAfter && E.inspectAfter.cs && !E.inspectAfter.onRwy && !E.inspectAfter.airborne) { E.inspectAfter = null; block('runway inspection after the emergency landing', rnd(2.5, 4)); }
-  for (const ac of S.acs) if (ac.emerg && !ac.emerg.ack && !ac.emerg.late && S.t - ac.emerg.t > 60) { ac.emerg.late = true; S.score.pts -= 10; sys(`${ac.cs}'s ${ac.emerg.k} has not been acknowledged.`, true); }
+  for (const ac of S.acs) if (ac.emerg && !ac.emerg.ack && !ac.emerg.late && S.t - ac.emerg.t > 60) { ac.emerg.late = true; SC(ac).pts -= 10; sys(`${ac.cs}'s ${ac.emerg.k} has not been acknowledged.`, true); }
   if (E.rate && S.t >= E.next && S.running) {
     E.next = S.t + E.rate*rnd(0.7, 1.3);
     const w = S.wx, windy = (w.dir >= 40 && w.dir <= 140 && w.spd >= 15) || (w.gust || 0) >= 25;
@@ -9319,30 +9377,30 @@ function stepEmerg(dt){
 // hooks called from the command parser and the approach logic
 function emgAck(ac){
   if (!ac.emerg || ac.emerg.ack) return null;
-  ac.emerg.ack = true; if (!ac.emerg.late) S.score.pts += 10;
+  ac.emerg.ack = true; if (!ac.emerg.late) SC(ac).pts += 10;
   if (ac.need && /^(MAYDAY|PAN)/.test(ac.need)) ac.need = null;
   return `roger ${ac.emerg.k}, ${ac.emerg.k === 'MAYDAY' ? 'you are number one, ' : ''}runway ${S.rwy}, emergency services are standing by`;
 }
 function emgOnGA(ac){
   const I = S.emg && S.emg.incursion;
-  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; S.score.pts += 20; S.score.good = (S.score.good || 0) + 1; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
+  if (I && I.ac === ac.cs && !I.gaBy) { I.gaBy = 'atc'; SC(ac).pts += 20; SC(ac).good = (SC(ac).good || 0) + 1; sys(`Good call: ${ac.cs} sent around clear of the pedestrian on the runway.`); }
 }
 function emgBlockedFinal(ac, why){   // an arrival reaching short final with the runway closed goes around by itself
   const I = S.emg.incursion;
-  if (I && I.ac === ac.cs) { I.gaBy = 'crew'; S.score.pts -= 25; sys(`${ac.cs}'s crew saw the pedestrian on the runway and went around on their own.`, true); }
-  else if (ac.ctl) { S.score.pts -= 30; S.score.incidents++; sys(`${ac.cs} was still cleared to land on a closed runway and went around at short final.`, true); }
+  if (I && I.ac === ac.cs) { I.gaBy = 'crew'; SC(ac).pts -= 25; sys(`${ac.cs}'s crew saw the pedestrian on the runway and went around on their own.`, true); }
+  else if (ac.ctl) { SC(ac).pts -= 30; SC(ac).incidents++; sys(`${ac.cs} was still cleared to land on a closed runway and went around at short final.`, true); }
   return goAround(ac, I ? 'person on the runway' : 'runway closed');
 }
 function emgWS(ac){
   const W = S.emg && S.emg.ws;
   if (!W) return null;
-  if (!ac.wsTold) { ac.wsTold = true; S.score.pts += 5; }
+  if (!ac.wsTold) { ac.wsTold = true; SC(ac).pts += 5; }
   const ago = Math.max(1, Math.round((S.t - W.t)/60));
   return `windshear reported on final runway ${W.rw} by ${W.cs === ac.cs ? 'you' : 'a ' + (TYPES[W.by] ? TYPES[W.by].name : W.by)} ${ago} minute${ago === 1 ? '' : 's'} ago, ${W.text}`;
 }
 S.listeners.push((ev, ac) => {
   if (ev === 'landed' && ac && ac.emerg) {
-    S.score.pts += 40; S.emg.handled++;
+    SC(ac).pts += 40; if (!aiOwns(ac)) S.emg.handled++;
     sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'It will stop clear of the runway: the fire service will go to it, then a tug tows it in.' : /medical/.test(ac.emerg.why) ? 'The ambulance is meeting it on stand.' : ''}`);
     if (ac.emerg.k === 'MAYDAY' || S.emg.inspectAfter === 'bird') S.emg.inspectAfter = ac;
     if (ac.emerg.k === 'MAYDAY') ac.emgStop = true;   // it stops clear of the runway for the fire service, then is towed in (vehicles.js)
@@ -9445,6 +9503,7 @@ function careerCheck(){
 // called every frame with the real seconds that passed while the sim ran
 function careerTick(dtr){
   if (!S.running || S.paused || !carCur) return;
+  if (typeof AI_SEATS !== 'undefined' && AI_SEATS.every(k => S.seats[k] === 'AI') && !EXERCISES[S.mode]) return;   // every seat on AI: you are only watching
   carCur.secs += dtr; carDirty = true;
 }
 function careerSync(){
@@ -9457,6 +9516,7 @@ function careerSync(){
   if (carDirty) { careerSave(CAR); carDirty = false; }
 }
 S.listeners.push((ev, d) => {
+  if (d && d.cs && typeof aiOwns === 'function' && aiOwns(d) && ev !== 'start') return;   // an AI controller's flight: not yours
   if (ev === 'landed' && carCur && d && d.app === '05' && APT.icao === 'LPMA') { carCur.l05 = (carCur.l05 || 0) + 1; carDirty = true; }
   if (ev === 'landed' && carCur && APT.icao === 'LOWI' && LOWI.isFoehn(S.wx)) { carCur.lfoehn = (carCur.lfoehn || 0) + 1; carDirty = true; }
   // Gatwick: a departure that got airborne between two landings fills a gap
@@ -10469,7 +10529,7 @@ function rcEnter(auto){
 function rcOff(done){
   const C = S.rc; if (!C) return; const v = C.v;
   v.onRwy = null; v.spd = v.T.kt; v.urgent = false;
-  if (done) { vcall(v, `runway ${C.rw} vacated at ${hpWords(C.hp)}, inspection complete, ${Math.random() < 0.15 ? 'one item of FOD picked up, ' : ''}runway is clear`); if (!C.auto) S.score.pts += 5; }
+  if (done) { vcall(v, `runway ${C.rw} vacated at ${hpWords(C.hp)}, inspection complete, ${Math.random() < 0.15 ? 'one item of FOD picked up, ' : ''}runway is clear`); if (!C.auto && S.seats.TWR !== 'AI') S.score.pts += 5; }
   else vcall(v, 'runway vacated');
   S.rc = null; sendHome(v, 3); renderAtisSoon(); emit('rcdone', done);
 }
@@ -10554,12 +10614,12 @@ function stepRadio(){
   if (C && C.st === 'READY' && C.asked != null && S.t - C.asked > 240) { C.asked = S.t; vcall(C.v, `still holding at ${hpWords(C.hp)} for the runway inspection`); }
   if (C && C.st === 'ON') for (const ac of S.acs) {
     if (!(ac.onRwy && (ac.rwyId || RWYS[0].id) === C.R.id) || ac.rcHit === C.t) continue;
-    if (ac.state === 'TAKEOFF' || ac.state === 'ROLLOUT') { ac.rcHit = C.t; S.score.incidents++; S.score.pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with Ops 1 on the runway.`, true); }
+    if (ac.state === 'TAKEOFF' || ac.state === 'ROLLOUT') { ac.rcHit = C.t; SC(ac).incidents++; SC(ac).pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with Ops 1 on the runway.`, true); }
   }
   // anything landing or taking off with a vehicle crossing
   for (const v of VEH.list) if (v.xing && v.onRwy && !v.gone) for (const ac of S.acs) {
     if (!(ac.onRwy && (ac.rwyId || RWYS[0].id) === v.onRwy) || ac.rcHit === v.xing || !(ac.state === 'TAKEOFF' || ac.state === 'ROLLOUT')) continue;
-    ac.rcHit = v.xing; S.score.incidents++; S.score.pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with ${radioName(v)} crossing the runway.`, true);
+    ac.rcHit = v.xing; SC(ac).incidents++; SC(ac).pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with ${radioName(v)} crossing the runway.`, true);
   }
   // the runway closed for an inspection (bird strike, debris, after an emergency): Ops 1 goes out and drives it
   if (S.emg && S.emg.rwyBlock && !C) opsCheck(S.rwy, 'runway inspection', true);
@@ -11983,6 +12043,536 @@ function slotTick(doc){
 }
 function slotTickAll(){ for (const d of slotDocs) slotTick(d); }
 if (document.getElementById('fidsSlot')) slotWire(document);
+
+// ═════════════════════════ AI controllers ═════════════════════════
+// Any of the four seats (Ground, Tower, Approach, Departure) can be worked by an AI controller instead of you, to share
+// the load. Who owns a flight follows where it is, the way a real unit hands traffic on: Ground from start-up to the
+// runway holding point and from vacating to the stand, Tower on and around the runway (line-up, take-off, landing,
+// crossings) and until a departure is transferred, Approach for arrivals until they are handed to Tower on final (and
+// after a go-around), Departure from Tower's transfer to the next unit. The AI gives the same instructions you would,
+// through the same command path, so they appear in the radio log (marked AI) and the aircraft read them back. It is
+// rule-based and deterministic: no network calls. Clicking or typing to an AI flight takes it back for that seat
+// (Take over); Hand to AI does the opposite. Only flights in your seats count towards your score and Career.
+var AI_SEATS = ['GND', 'TWR', 'APP', 'DEP'];
+var AI_NAME = { GND: 'Ground', TWR: 'Tower', APP: 'Approach', DEP: 'Departure' };
+var aiCtx = null;   // { seat, said } while an AI controller is transmitting
+S.seats = { GND: 'ME', TWR: 'ME', APP: 'ME', DEP: 'ME' };
+try { const s = JSON.parse(localStorage.getItem('cw-seats') || 'null'); if (s) for (const k of AI_SEATS) if (s[k] === 'AI') S.seats[k] = 'AI'; } catch(e) {}
+try { S.aiHear = localStorage.getItem('cw-ai-hear') === '1'; } catch(e) { S.aiHear = false; }
+S.aiScore = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+
+// the unit names each seat answers to at this airport
+function seatUnit(k){
+  const dep = APT.depRadar && APT.depRadar[0] !== APT.radar[0] ? APT.depRadar[0] : APT.radar[0];
+  return { GND: APT.gnd ? APT.gnd[0] : APT.tower[0].replace(/Tower$/, 'Ground'), TWR: APT.tower[0], APP: APT.radar[0], DEP: dep }[k];
+}
+// which seat a flight belongs to right now (null: pending, or transferred to the next unit)
+function seatOf(ac){
+  if (!ac || ac.state === 'PRE' || ac.handed) return null;
+  if (ac.ground) {
+    if (ac.hsAt || ac.onRwy) return 'TWR';   // holding short of a runway, crossing it, landing, lining up: Tower
+    if (ac.kind === 'DEP') return ['HOLDPT', 'LINEUP', 'LINEDUP', 'TAKEOFF'].includes(ac.state) || (ac.state === 'TAXI' && (ac.luq || ac.cto)) ? 'TWR' : 'GND';
+    return ['ROLLOUT', 'ROLLED'].includes(ac.state) ? 'TWR' : 'GND';
+  }
+  if (ac.kind === 'DEP') return ac.freq === 'TWR' ? 'TWR' : 'DEP';
+  return ac.freq === 'TWR' || ac.ctl ? 'TWR' : 'APP';
+}
+const aiActive = () => S.running && !EXERCISES[S.mode] && AI_SEATS.some(k => S.seats[k] === 'AI');
+// worked by an AI controller (its seat is AI, unless you took this one back; or you handed it to the AI)
+function aiOwns(ac){
+  if (!S.running || EXERCISES[S.mode]) return false;
+  const s = seatOf(ac); if (!s) return false;
+  if (ac.aiSeat === s) return true;
+  if (ac.meSeat === s) return false;
+  return S.seats[s] === 'AI';
+}
+// the score a flight's events count towards: yours, or the AI's (kept apart, never in your Career)
+function SC(ac){ return ac && aiOwns(ac) ? S.aiScore : S.score; }
+function takeOver(ac, quiet){
+  const s = seatOf(ac); if (!s) return;
+  ac.meSeat = s; ac.aiSeat = null;
+  if (!quiet) sys(`You have taken ${ac.cs} from the AI ${AI_NAME[s]}.`);
+}
+function handToAi(ac){
+  const s = seatOf(ac); if (!s) return;
+  ac.aiSeat = s; ac.meSeat = null;
+  sys(`${ac.cs} handed to the AI ${AI_NAME[s]}.`);
+}
+function setSeat(k, who, quiet){
+  if (S.seats[k] === who) return;
+  S.seats[k] = who;
+  try { localStorage.setItem('cw-seats', JSON.stringify(S.seats)); } catch(e) {}
+  for (const ac of S.acs) { if (ac.meSeat === k) ac.meSeat = null; if (ac.aiSeat === k) ac.aiSeat = null; }
+  if (!quiet && S.running) sys(who === 'AI' ? `An AI controller is working ${AI_NAME[k]} (${seatUnit(k)}).` : `You are working ${AI_NAME[k]} (${seatUnit(k)}).`);
+  renderSeats(); if (S.running) { renderSel(); renderStrips(true); }
+}
+
+// ── transmitting: the same command path as yours, without touching your selection or the command box
+function aiDo(seat, ac, cmd){
+  const sel = S.sel; aiCtx = { seat, said: false };
+  try { command(ac.cs + ' ' + cmd); } catch(e) {}
+  const ok = aiCtx.said; aiCtx = null;
+  S.sel = sel && S.acs.includes(sel) ? sel : null;
+  ac.aiNext = S.t + (ok ? 4 : 15);   // a refused instruction: try again a little later
+  return ok;
+}
+function aiVeh(seat, fn){ aiCtx = { seat, said: false }; try { fn(); } catch(e) {} aiCtx = null; }
+// a controller answers a call after a few seconds, not instantly (deterministic per flight and call)
+function aiDue(o, key, lo = 3, hi = 8){
+  const T = o.aiT ||= {};
+  if (!(key in T)) T[key] = S.t + lo + (hash((o.cs || '') + key) % ((hi - lo)*10 + 1))/10;
+  return S.t >= T[key];
+}
+const aiSince = (o, key) => o.aiT && key in o.aiT ? S.t - o.aiT[key] : 0;
+
+// ── runways
+const RX = {};   // each runway id: it and the runways crossing it
+function rwyCross(R){
+  if (RX[R.id]) return RX[R.id];
+  const end = Q => [Q.rm(0, 0), Q.rm(Q.len || RWY_M, 0)];
+  const [a, b] = end(R);
+  return RX[R.id] = new Set([R.id, ...RWYS.filter(Q => Q !== R && segSegM(a, b, ...end(Q)) < 30).map(Q => Q.id)]);
+}
+const sameRwy = (R, id) => rwyCross(R).has(id);
+// anything on the runway (or one crossing it), lined up on it, or a vehicle out there; skip: the flight asking
+function rwyBusy(R, skip, rolling){
+  for (const o of S.acs) {
+    if (o === skip) continue;
+    if (o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id) && !(rolling && o.state === 'TAKEOFF')) return o;
+    if (o.kind === 'DEP' && ['LINEUP', 'LINEDUP'].includes(o.state) && sameRwy(R, rwyOf(depRw(o)).id)) return o;
+  }
+  if (typeof VEH !== 'undefined' && VEH.list.some(v => v.onRwy && sameRwy(R, v.onRwy) && !v.gone)) return true;
+  return rwyBlocked() ? true : null;
+}
+// seconds to touchdown from this many track miles out, at the speeds arrivals fly here (slowing to the approach
+// speed for the last four miles): what spacing is judged on, so the closing-up on final is allowed for
+function etaD(d, ac){
+  const v = (ac && ac.perf && ac.perf.vapp) || 135, bands = [[4, v + 5], [10, 165], [20, 195], [1e9, 235]];
+  const cap = ac && ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 1e9;   // slowed down by Approach
+  let t = 0, lo = 0;
+  for (let [hi, kt] of bands) { if (hi > 4 && cap < 1e9) kt = cap; const seg = Math.max(0, Math.min(d, hi) - lo); t += seg/kt*3600; lo = hi; if (d <= hi) break; }
+  return t;
+}
+const eta = (ac, F) => etaD(ac.mode === 'FINAL' ? finalDist(ac) : estToGo(ac, F || (ac.app ? finOf(ac) : FINAL[landRw(ac)])), ac);
+// the nearest arrival to this runway (or one crossing it): miles, seconds, and whether it lands towards us
+function arrNear(R, skip){
+  let best = 99, bt = 1e9, opp = false, head = false;
+  for (const o of S.acs) {
+    if (o === skip || o.kind !== 'ARR' || !o.airborne || o.state === 'PRE' || o.state === 'MISSED' || o.state === 'DIVERTING' || o.handed) continue;
+    const rw = landRw(o), F = o.app ? finOf(o) : FINAL[rw]; if (!F || !sameRwy(R, rwyOf(rw).id)) continue;
+    const d = o.mode === 'FINAL' ? finalDist(o) : estToGo(o, F);
+    if (d < best) { best = d; bt = etaD(d, o);
+      // landing the other way, or its approach comes in head-on before turning in (Madeira's VOR to 05 from the north-east)
+      const dh = skip ? parseInt(depRw(skip), 10)*10 : NaN;
+      opp = rwyOf(rw) === R && rw !== (skip ? depRw(skip) : rw);
+      head = !opp && o.mode === 'FINAL' && d < 15 && dh === dh && Math.abs(((o.hdg - dh + 540) % 360) - 180) > 120; }
+  }
+  return { nm: best, eta: bt, opp, head };
+}
+// seconds for a departure from where it is to line up and be rolling away (Gibraltar: a backtrack first)
+function depSecs(ac){
+  let secs = 45;
+  if (ac.state === 'HOLDPT' || ac.state === 'TAXI') { try { const P = lineUpPath(ac, ac.hp); let L = dist(ac.x, ac.y, ...P[0]); for (let i = 1; i < P.length; i++) L += dist(...P[i-1], ...P[i]); secs += L*1852/(16*0.5144); } catch(e) { secs += 60; } }
+  else if (ac.state === 'LINEUP') secs += 20;
+  return secs;
+}
+// how long the next arrival must still be away for the departure to go: its line-up and roll plus a minute; landing
+// towards it (Innsbruck: land 26, depart 08) five minutes more, so it is well clear before they meet
+const clearS = ac => { const a = arrNear(rwyOf(depRw(ac)), ac); return depSecs(ac) + 110 + (a.opp ? 300 : a.head ? 150 : 0); };
+// how long a landing occupies the runway, learned from the landings so far (a backtrack at Gibraltar takes minutes)
+const occS = R => (S.aiOcc && S.aiOcc[R.id]) || (BIG_GROUND ? 75 : 150);
+// departures waiting for a runway (or one crossing it): Approach leaves them a gap (the landing ahead vacates, then
+// the departure lines up and rolls before the next one is close)
+function depGapS(R){
+  let g = 0;
+  for (const o of S.acs) if (o.kind === 'DEP' && o.ground && (['HOLDPT', 'LINEUP', 'LINEDUP'].includes(o.state) || (o.state === 'TAXI' && o.hp && HOLDS[o.hp])) && sameRwy(R, rwyOf(depRw(o)).id)) g = Math.max(g, occS(R) + clearS(o) + 15);
+  return g;
+}
+const WAKE_NM = { HH: 4, HM: 5, HL: 6, MH: 3, MM: 3, ML: 5, LH: 3, LM: 3, LL: 3 };
+// the time between two landings: wake (or radar) spacing plus a mile at the approach speed, or the runway occupancy
+const landGapS = (lead, trail, R) => Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25);
+// track miles to touchdown: along its route to the approach's start, then down the final
+function estToGo(ac, F){
+  if (!F) return 99;
+  if (ac.mode === 'FINAL') return finalDist(ac);
+  const rt = ac.mode === 'HOLD' ? [] : ac.route || [], entry = F.entry && WP[F.entry] ? F.entry : null;
+  let seq = rt;
+  if (entry) { const i2 = rt.indexOf(entry), iv = (F.via || []).map(x => rt.indexOf(x)).find(j => j >= 0); seq = i2 >= 0 ? rt.slice(0, i2 + 1) : iv != null ? [...rt.slice(0, iv + 1), entry] : [entry]; }
+  let p = [ac.x, ac.y], L = 0;
+  for (const id of seq) { const w = WP[id]; if (!w) continue; L += dist(...p, ...w.p); p = w.p; }
+  const q = onFinal({ x: p[0], y: p[1] }, F);
+  return L + (q ? Math.max(0, q.togo) : 0);
+}
+
+// ── Ground: start-up and push, taxi out, taxi in, tows, follow-me, vehicles on the taxiways
+function pushClear(ac){
+  const st = ac.stand; if (!st) return true;
+  const p = st.lp || st.p;
+  return !S.acs.some(o => o !== ac && o.ground && ((o.path && !['PARKED', 'ONSTAND'].includes(o.state) && dist(o.x, o.y, ...p) < 90*M2NM) || (o.state === 'PUSH' && dist(o.x, o.y, ...p) < 120*M2NM)));
+}
+// ── taxi routes like a controller would give them: not simply the shortest, but one that keeps clear of traffic coming
+// the other way along the same taxiway (head to head) and of aircraft stopped on it. The shortest still wins unless it
+// meets someone, and a way round is taken only if it is not much longer (1.8 times at most)
+function groundFlows(me){
+  const at = new Map(); for (const id in GN) at.set(GN[id].p[0] + ',' + GN[id].p[1], id);
+  const dir = new Set(), used = new Set(), blockE = new Set();
+  for (const o of S.acs) {
+    if (o === me || !o.ground || o.state === 'PRE' || o.onRwy || ['TAKEOFF', 'LINEUP', 'LINEDUP', 'ROLLOUT'].includes(o.state)) continue;
+    if (o.path && o.path.pts.length) {
+      let prev = null;
+      for (const p of o.path.pts) { const id = at.get(p[0] + ',' + p[1]); if (!id) continue;
+        if (prev && prev !== id) { dir.add(prev + '>' + id); for (const [v, e] of GN[prev].adj) if (v === id) used.add(e); }
+        prev = id; }
+    } else if (!['PARKED', 'ONSTAND'].includes(o.state)) {   // stopped out on the taxiways: pushed back, holding, waiting for a route
+      let be = null, bd = 40/1852;
+      for (const e of GE) { if (e.a[0] === 'R' || e.b[0] === 'R') continue; const A = GN[e.a].p, B = GN[e.b].p, dx = B[0] - A[0], dy = B[1] - A[1], L2 = dx*dx + dy*dy || 1e-12, f = clamp(((o.x - A[0])*dx + (o.y - A[1])*dy)/L2, 0, 1), d = dist(o.x, o.y, A[0] + dx*f, A[1] + dy*f); if (d < bd) { bd = d; be = e; } }
+      if (be) blockE.add(be);
+    }
+  }
+  return { dir, used, blockE };
+}
+const flowPen = F => e => (F.used.has(e) ? 6 : 1)*(F.blockE.has(e) ? 8 : 1);
+// the candidate to give (null: the plain shortest is fine), from routes { nodes, tws }; costs in NM, a head-on leg six times
+function pickRoute(cands, F){
+  const ok = cands.filter(r => r && r.nodes && r.nodes.length > 1);
+  for (const r of ok) { r.L = pathLen(r.nodes); let c = 0, head = 0;
+    for (let i = 1; i < r.nodes.length; i++) { const u = r.nodes[i-1], v = r.nodes[i], d = dist(...GN[u].p, ...GN[v].p);
+      if (F.dir.has(v + '>' + u)) { c += d*6; head += d; } else c += d;
+      for (const [w, e] of GN[u].adj) if (w === v && F.blockE.has(e) && i > 1 && i < r.nodes.length - 1) c += 0.3; }
+    r.cost = c; r.head = head; }
+  if (!ok.length) return null;
+  const short = ok.reduce((a, b) => b.L < a.L ? b : a), best = ok.reduce((a, b) => b.cost < a.cost ? b : a);
+  if (best === short || best.L > short.L*1.8 || best.cost > short.cost - 0.05 || best.nodes.join() === short.nodes.join()) return null;
+  return best;
+}
+const aiViaWords = v => v.length && v.every(t => /^[A-Z]{1,2}\d{0,2}$/.test(t) && PHON[t]) ? ' VIA ' + v.join(' ') : null;
+// the taxi instruction for ac: TAXI, or TAXI ... VIA ... round the traffic
+function aiTaxiCmd(ac){
+  try {
+    const F = groundFlows(ac), [from, face] = taxiStart(ac), pen = flowPen(F);
+    if (ac.kind === 'ARR') {
+      const st = ac.stand; if (!st) return 'TAXI';
+      const lead = brg(...st.lp, ...st.p), rt = q => (face != null && route(from, st.node, q, face, lead)) || route(from, st.node, q, face) || route(from, st.node, q);
+      const base = rt(); if (!base) return 'TAXI';
+      const cands = [base, rt(pen), ...[...new Set(base.tws)].filter(t => t !== 'APRON').slice(0, 4).map(tw => rt(e => e.tw === tw ? 6 : 1))];
+      const b = pickRoute(cands, F), w = b && aiViaWords(viaOf(b.tws, ac.exit));
+      if (w) { ac.aiWhy = `routed round ${b === cands[1] ? 'traffic' : 'traffic on ' + viaOf(base.tws, ac.exit).join(', ')}`; return 'TAXI STAND' + w; }
+      return 'TAXI';
+    }
+    let hp = ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac); if (APT.depHoldAs) hp = APT.depHoldAs(ac, hp);
+    if (!HOLDS[hp]) return 'TAXI';
+    const to = HOLDS[hp].node, ob = BIG_GROUND && face != null ? holdOut(hp) : null, rt = q => (ob != null && route(from, to, q, face, ob)) || route(from, to, q, face);
+    const cands = [...taxiOptions(ac, hp), rt(pen)];
+    const b = pickRoute(cands, F), w = b && aiViaWords(viaOf(b.tws, hp));
+    if (w) { ac.aiWhy = 'routed round traffic'; return `TAXI ${hp}` + w; }
+  } catch (e) {}
+  return 'TAXI';
+}
+function aiGround(ac){
+  const n = ac.need || '';
+  if (n === 'Request start-up' && ac.state === 'PARKED') {
+    if (!aiDue(ac, n, 5, 12)) return;
+    const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
+    if (sl && sl.ctot != null && nowMin() < sl.ctot - 20) return;   // its slot is a while off: it waits on stand
+    if (!pushClear(ac) && aiSince(ac, n) < 150) return;
+    if (!aiDo('GND', ac, 'PUSH')) aiDo('GND', ac, aiTaxiCmd(ac));
+    return;
+  }
+  if (n === 'Ready to taxi' && aiDue(ac, n, 3, 7)) return aiDo('GND', ac, aiTaxiCmd(ac));
+  if (n.startsWith('Holding at') && aiDue(ac, n, 4, 9)) return aiDo('GND', ac, aiTaxiCmd(ac));
+  if ((n === 'Request taxi' || n === 'Needs a stand') && aiDue(ac, n, 3, 7)) {
+    if (!ac.stand) aiDo('GND', ac, 'STAND AUTO');
+    return aiDo('GND', ac, ac.stand ? aiTaxiCmd(ac) : 'STAND AUTO TAXI');
+  }
+  if (n.startsWith('Request follow') && aiDue(ac, n, 3, 6)) return aiDo('GND', ac, ac.stand ? 'FOLLOW' : 'STAND AUTO FOLLOW');
+  if ((n === 'Request tow' || n.startsWith('Tug holding')) && aiDue(ac, n, 4, 10)) return aiDo('GND', ac, 'TOW');
+  // stopped nose to nose with someone coming the other way: send it round another way, if there is one
+  if (ac.path && (ac.state === 'TAXI' || ac.taxiIn) && !ac.held && !ac.hsAt && (ac.gs || 0) < 1) {
+    if (!ac.aiStop) ac.aiStop = S.t;
+    const nose = S.t - ac.aiStop > 15 && S.acs.find(o => o !== ac && o.ground && dist(o.x, o.y, ac.x, ac.y) < 200/1852 && Math.abs(angDiff(o.hdg, ac.hdg)) > 120 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40);
+    if (nose && aiDue(ac, 'round' + ac.aiStop, 1, 4)) { const c = aiTaxiCmd(ac); if (c !== 'TAXI') { aiDo('GND', ac, c); ac.aiWhy = `sent round ${nose.cs}`; } }
+  } else ac.aiStop = null;
+}
+
+// ── Tower: line-up and take-off, landing clearances, go-arounds, runway crossings, transfers, the road at Gibraltar
+function aiDepart(ac){
+  const rw = depRw(ac), R = rwyOf(rw), lined = ac.state === 'LINEDUP', why = t => { ac.aiWhy = t; };
+  if ((APT.toLimit && APT.toLimit(rw)) || S.wx.vis < 1000 || windLimit(ac, rw)) return why('weather or wind out of limits');
+  if (rwyBlocked()) return why('runway closed');
+  if (APT.xing && S.xing.st !== 'CLOSED') return why('the road is closing');
+  if (needRel(ac)) { const L = ac.rel; if (!L || L.st === 'EXP') { why('release requested'); return aiDo('TWR', ac, 'REL'); } if (L.st !== 'OK') return why('waiting for the release'); if (L.nb && S.t < L.nb - 20) return why('released not before ' + zt(L.nb).slice(0, 5)); }
+  const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
+  if (sl && sl.ctot != null && nowMin() < sl.ctot - 4) return why('waiting for its slot');
+  if (S.acs.some(o => o.state === 'MISSED' && o.airborne && S.t - (o.gaT || 0) < 150 && dist(o.x, o.y, ac.x, ac.y) < 10)) return why('a go-around climbing out');
+  // an arrival close by and low, not lined up behind it (Madeira's VOR to 05 passes over the field before turning in)
+  const dh = parseInt(rw, 10)*10, over = S.acs.find(o => o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.handed && o.alt < ELEV + 4000 && dist(o.x, o.y, ac.x, ac.y) < 6 + (o.gs || 180)*depSecs(ac)/3600 && Math.abs(((o.hdg - dh + 540) % 360) - 180) > 90);
+  if (over) return why(`${over.cs} passing overhead`);
+  const a = arrNear(R, ac), need = clearS(ac);
+  const last = S.aiDep && S.aiDep[R.id], gap = last ? (last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
+  const wait = last ? last.t + gap - S.t : 0, busy = rwyBusy(R, ac);
+  if (!busy && a.eta >= need && wait <= 0) { why(''); return aiDo('TWR', ac, 'CTO'); }
+  why(busy ? 'runway occupied' + (busy.cs ? ' by ' + busy.cs : '') : a.eta < need ? `arrival ${a.nm.toFixed(1)} NM out` : 'spacing behind the last departure');
+  // only the spacing behind the last departure stops it: line up and wait
+  if (!lined && ac.state === 'HOLDPT' && !rwyBusy(R, ac, true) && a.eta >= need + wait + 60 && wait > 0 && wait < 45) return aiDo('TWR', ac, 'LU');
+}
+// clear to land: nothing on the runway (a departure already rolling is fine) and nobody ahead still to land
+function landBlock(ac){
+  const R = rwyOf(landRw(ac));
+  if (rwyBlocked()) return 'runway closed';
+  if (APT.xing && S.xing.st !== 'CLOSED') return 'the road is closing';
+  const togo = finalDist(ac), ahead = S.acs.find(o => o !== ac && o.kind === 'ARR' && o.airborne && o.mode === 'FINAL' && o.app && o.state !== 'MISSED' && sameRwy(R, rwyOf(landRw(o)).id) && finalDist(o) < togo - 0.3);
+  if (ahead) return ahead.cs + ' to land first';
+  const b = rwyBusy(R, ac, true);
+  return b ? 'runway occupied' + (b.cs ? ' by ' + b.cs : '') : null;
+}
+function aiTower(ac){
+  const n = ac.need || '';
+  if (ac.ground) {
+    if (n.startsWith('Holding short') && ac.hsAt && aiDue(ac, n, 3, 7)) {
+      const R = rwyById(ac.hsAt), b = rwyBusy(R, ac), a = arrNear(R);
+      ac.aiWhy = b ? 'runway occupied' : a.eta <= 110 ? `arrival ${a.nm.toFixed(1)} NM out` : S.acs.some(o => o.state === 'TAKEOFF' && sameRwy(R, o.rwyId || RWYS[0].id)) ? 'departure rolling' : '';
+      if (!ac.aiWhy) aiDo('TWR', ac, 'CROSS');
+      return;
+    }
+    if (ac.kind === 'DEP' && (n === 'Ready for departure' || n === 'Lined up') && aiDue(ac, n, 3, 7)) aiDepart(ac);
+    return;
+  }
+  if (ac.kind === 'DEP') { if (n.startsWith('Airborne') && aiDue(ac, n, 2, 6)) aiDo('TWR', ac, 'HO'); return; }
+  // arrivals: cleared to land inside 5 NM once the runway is clear; sent around if it still isn't at about a mile
+  if (ac.mode !== 'FINAL' || !ac.app || ac.state === 'MISSED' || ac.ctl && !rwyBusy(rwyOf(landRw(ac)), ac, true)) return;
+  const togo = finalDist(ac), blk = landBlock(ac); ac.aiWhy = blk || '';
+  if (!ac.ctl && togo < 5 && !blk) { const ex = vacAround(ac); return aiDo('TWR', ac, ex ? 'CTL VAC ' + ex : 'CTL'); }
+  if (togo < 0.8 && (ac.ctl || blk) && ac.aiGa !== (ac.gaCount || 0)) { ac.aiGa = ac.gaCount || 0; return aiDo('TWR', ac, 'GA'); }
+}
+// an exit whose holding point has a departure waiting at it (or taxiing to it) would block the arrival's way off the
+// runway (and the departure can't go with it there): name another exit it can make, with the landing clearance
+function vacAround(ac){
+  const taken = e => S.acs.some(o => o !== ac && o.ground && (o.hp === e && ['HOLDPT', 'TAXI', 'LINEUP'].includes(o.state) || (HOLDS[e] && GN[HOLDS[e].node] && dist(o.x, o.y, ...GN[HOLDS[e].node].p) < 60*M2NM && !o.onRwy)));
+  let all; try { all = vacAll(ac); } catch(e) { return null; }
+  if (!all.some(taken)) return null;
+  let ch; try { ch = vacChoices(ac); } catch(e) { return null; }
+  return ch.find(e => !taken(e)) || null;
+}
+// Winston Churchill Avenue (Gibraltar): closed for anything landing, taking off or crossing, open again once quiet
+function aiRoad(){
+  const X = S.xing; if (!APT.xing) return;
+  const want = S.acs.some(o => o.onRwy || (o.kind === 'ARR' && o.airborne && o.app && o.state !== 'MISSED' && estToGo(o, finOf(o)) < 17) ||
+    (o.kind === 'DEP' && o.ground && (['HOLDPT', 'LINEUP', 'LINEDUP', 'TAKEOFF'].includes(o.state) || (o.state === 'TAXI' && o.hp))) || (o.kind === 'DEP' && o.ground && o.state === 'READY'));
+  if (want && (X.st === 'OPEN' || X.st === 'OPENING')) { aiVeh('TWR', () => { log('atc', 'Winston Churchill Avenue barriers, close the road for runway traffic', 'TOWER'); toggleXing(); }); S.aiRoadT = S.t; }
+  else if (!want && X.st === 'CLOSED' && S.t - (S.aiRoadT || 0) > 240 && !S.acs.some(o => o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && estToGo(o, o.app ? finOf(o) : FINAL[landRw(o)]) < 24)) aiVeh('TWR', () => { log('atc', 'Winston Churchill Avenue barriers, open the road', 'TOWER'); toggleXing(); });
+}
+function aiTowerVehicles(){
+  if (typeof VEH === 'undefined') return;
+  for (const v of vehAsking()) if (v.req.k === 'rwy' && aiDue(v, 'rwy' + v.req.t, 4, 9)) {
+    const R = v.req.R; if (rwyClearFor(R) && !rwyBusy(R) && arrNear(R).eta > 120) aiVeh('TWR', () => vehApprove(v));
+  }
+  const C = S.rc;
+  if (C && C.st === 'READY' && C.v.need && aiDue(C.v, 'enter' + C.t, 5, 10)) { if (!rwyBusy(C.R) && arrNear(C.R).eta > 300) aiVeh('TWR', () => command('OPS1 ENTER')); }
+  if (C && C.st === 'ON' && arrNear(C.R).nm < 4 && aiDue(C.v, 'vac' + C.t, 1, 3)) aiVeh('TWR', () => command('OPS1 VACATE'));
+}
+function aiGroundVehicles(){
+  if (typeof VEH === 'undefined') return;
+  for (const v of vehAsking()) if (v.req.k === 'twy' && aiDue(v, 'twy' + v.req.t, 4, 9)) aiVeh('GND', () => vehApprove(v));
+}
+
+// ── Approach: answer check-ins, sequence arrivals onto the approach with wake spacing (and a gap for departures),
+// stack the rest in the holds 1,000 ft apart, hand them to Tower on final, take go-arounds back, approve diversions
+const holdFixOf = ac => ac.mode === 'HOLD' && ac.hold ? ac.hold.name : (ac.route && ac.route.length ? ac.route[ac.route.length - 1] : 'pp');
+const holdFixP = ac => ac.mode === 'HOLD' && ac.hold ? ac.hold.c : ac.route && ac.route.length && WP[ac.route[ac.route.length - 1]] ? WP[ac.route[ac.route.length - 1]].p : [ac.x, ac.y];
+// the bottom of the stack: the approach altitude once it is near the fix where it waits (so it starts the approach
+// from the right height), its arrival altitude while still far out
+function stackBase(ac){
+  const F = FINAL[landRw(ac)], low = Math.max((F && F.alt) || APT.appAlt || 3000, APT.appAlt || 0);
+  return dist(ac.x, ac.y, ...holdFixP(ac)) < 22 ? low : Math.max(APT.inboundAlt ? APT.inboundAlt(ac.gate) : 7000, low);
+}
+// the others waiting at the same fix, or at one close by (New York's fixes are a few miles apart)
+const stackPeers = ac => { const fix = holdFixOf(ac), P = holdFixP(ac); return S.acs.filter(o => o !== ac && o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.app && !o.handed && (holdFixOf(o) === fix || dist(...holdFixP(o), ...P) < 14)); };
+const lvlOf = o => o.cleared ?? Math.round(o.alt/100)*100;
+function stackLevel(ac, base = stackBase(ac)){
+  const used = stackPeers(ac).map(lvlOf);
+  let lv = base; while (used.some(u => Math.abs(u - lv) < 900) && lv < 24000) lv += 1000;
+  return lv;
+}
+function aiSequence(list){
+  // nearest first, so a flight further out never jumps the queue; one held back holds back those behind it
+  const blocked = new Set();
+  list.sort((a, b) => (Math.round(estToGo(a, FINAL[landRw(a)])/2) - Math.round(estToGo(b, FINAL[landRw(b)])/2)) || (lvlOf(a) - lvlOf(b)));
+  for (const ac of list) {
+    const rw = landRw(ac), F = FINAL[rw], R = rwyOf(rw), n = ac.need || '';
+    if (S.t < (ac.aiNext || 0) || !F) continue;
+    if (ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75) { ac.aiWhy = 'climbing out after the go-around'; continue; }
+    let ok = !blocked.has(R.id) || !!ac.emerg;
+    ac.aiWhy = ok ? '' : 'in sequence behind the others';
+    if (ok && !ac.emerg) {
+      const e = eta(ac, F), gap = depGapS(R);
+      for (const o of S.acs) {
+        if (o === ac || o.kind !== 'ARR' || !o.airborne || !o.app || o.state === 'MISSED' || o.state === 'DIVERTING' || o.handed || !sameRwy(R, rwyOf(landRw(o)).id)) continue;
+        const oe = eta(o), lead = oe <= e ? o : ac, trail = lead === o ? ac : o, need = Math.max(landGapS(lead, trail, R), gap)*1.05;
+        if (Math.abs(oe - e) < need) { ok = false; ac.aiWhy = `spacing behind ${o.cs}${gap > landGapS(lead, trail, R) ? ', with a gap for a departure' : ''}`; break; }
+      }
+      // too close behind (or level with) one already on the approach: slow down to open the gap, rather than hold
+      if (!ok && ac.mode !== 'HOLD' && ac.state !== 'MISSED' && !ac.spdAssigned && ac.ias > 195 && aiDue(ac, 'spd', 3, 8)) aiDo('APP', ac, estToGo(ac, F) > 25 ? 'S210' : 'S180');
+    }
+    // others waiting lower down near its way in: they go first (it would descend through them)
+    const spaced = ok;   // only a flight held for spacing holds back those behind it
+    if (ok && !ac.emerg) { const ep = F.entry && WP[F.entry] ? WP[F.entry].p : F.pts[0], under = S.acs.find(o => o !== ac && o.kind === 'ARR' && o.airborne && !o.app && o.state !== 'PRE' && !o.handed && o.alt < ac.alt - 400 && (dist(o.x, o.y, ac.x, ac.y) < 10 || dist(o.x, o.y, ...ep) < 8));
+      if (under) { ok = false; ac.aiWhy = `waiting for ${under.cs} below to go first`; } }
+    // too high to start the approach from here: down to the approach altitude first
+    const high = ok && !ac.emerg && ac.alt > ELEV + estToGo(ac, F)*290 + 1000;
+    if (high) ac.aiWhy = 'descending before the approach';
+    // the descent on the approach would meet someone not on it (a departure climbing out, a flight in the hold)
+    if (ok && !high && !ac.emerg) { const clash = airNow().find(o => o !== ac && !(o.app && o.kind === 'ARR') && conflictWith(ac, o, (F.alt || APT.appAlt || 3000)) >= 0);
+      if (clash) { ok = false; ac.aiWhy = `waiting for ${clash.cs} to pass`; } }
+    if (ok && !high && !ac.aiLev && aiDue(ac, 'app' + (ac.gaCount || 0), 3, 7)) { if (aiDo('APP', ac, 'APP')) { ac.aiWhy = ''; continue; } }
+    if (!spaced) blocked.add(R.id);
+    // not yet: answer the call and keep it 1,000 ft clear of the others waiting at the same fix
+    if (ac.aiLev || (ac.state === 'MISSED' && !n)) continue;
+    const cur = lvlOf(ac), d = estToGo(ac, F), peers = stackPeers(ac), free = L => !peers.some(o => Math.abs(lvlOf(o) - L) < 900);
+    if (n === 'Initial call' || n === 'Missed approach' || n === 'Back on frequency') { if (aiDue(ac, n, 3, 7)) { const want = free(cur) && (n !== 'Initial call' || cur >= stackBase(ac)) ? cur : stackLevel(ac); aiDo('APP', ac, `A${Math.round((safeLevel(ac, [want, want + 1000, want + 2000, Math.ceil(ac.alt/1000)*1000]) ?? cur)/100)}`); } continue; }
+    if (S.t - (ac.aiStack || 0) < 25) continue;
+    // sharing a level with one nearer the runway (or not ours): move up out of its way
+    if (peers.some(o => Math.abs(lvlOf(o) - cur) < 900 && (!aiOwns(o) || estToGo(o, FINAL[landRw(o)]) < d))) { const lv = stackLevel(ac), to = safeLevel(ac, [lv, lv + 1000, lv + 2000]); ac.aiStack = S.t; if (to != null) aiDo('APP', ac, `A${Math.round(to/100)}`); continue; }
+    // lower levels free: step down, never through a level someone else holds at the same fix
+    let to = cur; const base = stackBase(ac);
+    while (to - 1000 >= base - 50 && free(to - 1000)) to -= 1000;
+    if (to < cur && cur - base >= 900) { const lv = safeLevel(ac, Array.from({ length: Math.round((cur - Math.max(to, base))/1000) }, (_, i) => Math.max(to, base) + i*1000)); if (lv != null && lv < cur) { ac.aiStack = S.t; aiDo('APP', ac, `A${Math.round(lv/100)}`); } }
+  }
+}
+function aiApproach(ac){
+  const n = ac.need || '';
+  if (ac.state === 'DIVERTING') return true;
+  if (ac.diverting && n.startsWith('Diverting') && aiDue(ac, n, 3, 7)) { aiDo('APP', ac, 'DCT ' + ac.diverting); return true; }
+  if (n === 'Unable approach') return true;   // holding for the weather; the crew will ask to divert
+  if (n === 'Request RNP approach' && aiDue(ac, n, 3, 6)) { aiDo('APP', ac, 'APP RNP'); return true; }
+  if (ac.app) {
+    // on the approach: transfer to Tower once established inside about 11 NM
+    if (ac.mode === 'FINAL' && finalDist(ac) < 11 && aiDue(ac, 'ho', 1, 4)) aiDo('APP', ac, ac.spdAssigned ? 'SN HO' : 'HO');
+    else if (n === 'Initial call' && aiDue(ac, n, 3, 7)) aiDo('APP', ac, 'IDENT');
+    return true;
+  }
+  return false;   // to be sequenced
+}
+
+// ── Departure: direct to the exit fix, further climb, transfer to the next unit
+function climbTop(){ return (APT.climbFL || 80)*100; }
+function aiDeparture(ac){
+  const n = ac.need || '';
+  if (n === 'Ready for transfer' && aiDue(ac, n, 2, 6)) return aiDo('DEP', ac, 'HO');
+  if (ac.aiLev) return;   // levelled off for traffic: the climb and the direct wait until it is clear
+  if (n.startsWith('Request direct') && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, 'DCT ' + n.split(' ').pop());
+  if (n === 'Request climb' && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, `C${Math.round(climbTop()/100)}`);
+}
+
+// ── a short look ahead (two minutes) for the radar seats: level off (or step up) whoever is climbing or descending
+// into another, to a level that is clear of everyone
+function project(a, t, lv){
+  const m = (a.gs || 0)/3600*t, h = (a.trk ?? a.hdg)*D2R, tgt = lv ?? a.tgtAlt ?? a.alt;
+  const vs = lv == null ? a.vs : Math.abs(lv - a.alt) < 100 ? 0 : lv > a.alt ? Math.max(1500, a.perf.climb) : -Math.max(2500, Math.abs(a.vs) || 0);
+  // the last 100 ft to a level take a while: a flight levelling off counts as not quite there yet
+  const alt = vs > 0 ? Math.min(tgt - (Math.abs(tgt - a.alt) > 30 ? 100 : 0), a.alt + vs*t/60) : vs < 0 ? Math.max(Math.min(tgt, a.alt) + (Math.abs(tgt - a.alt) > 30 ? 100 : 0), a.alt + vs*t/60) : a.alt;
+  return [a.x + Math.sin(h)*m, a.y + Math.cos(h)*m, alt];
+}
+// the first time (s, within two minutes) a and b come within 3.6 NM and 1,000 ft, or -1; lv: a flying to that level instead
+function conflictWith(a, b, lv){
+  for (let t = 0; t <= 120; t += 5) { const [x1, y1, z1] = project(a, t, lv), [x2, y2, z2] = project(b, t); if (Math.hypot(x1 - x2, y1 - y2) < 3.6 && Math.abs(z1 - z2) < 950) return t; }   // 1,000 ft apart, give or take a few feet
+  return -1;
+}
+// a flight cleared for the approach is descending to lv nearby: that level is its, not for holding at
+const appPathBusy = (ac, lv) => !ac.app && S.acs.some(o => o !== ac && o.kind === 'ARR' && o.airborne && o.app && o.mode !== 'FINAL' && o.state !== 'MISSED' && Math.abs((o.tgtAlt ?? o.alt) - lv) < 950 && o.alt > lv - 200 && dist(o.x, o.y, ac.x, ac.y) < 12);
+const airNow = () => S.acs.filter(a => a.airborne && a.state !== 'PRE' && a.alt > 500);   // handed-off ones still fly here
+// a level for ac that conflicts with nobody (null: none of the candidates works)
+function safeLevel(ac, cands){
+  const air = airNow().filter(o => o !== ac);
+  return cands.find(lv => lv >= 1000 && lv <= 24000 && !appPathBusy(ac, lv) && !air.some(o => conflictWith(ac, o, lv) >= 0)) ?? null;
+}
+// who gives way: a departure to an arrival, a go-around to one on the approach, a flight not yet cleared for the
+// approach to one that is; otherwise the later callsign
+const yieldRank = a => a.kind === 'DEP' ? 0 : a.state === 'MISSED' ? 1 : !a.app ? 2 : 3;
+const canMove = a => aiOwns(a) && a.mode !== 'FINAL' && !(a.kind === 'ARR' && a.app && a.state !== 'MISSED') && !(a.kind === 'DEP' && a.alt < ELEV + 2500) && ['APP', 'DEP', 'TWR'].includes(seatOf(a));
+function aiProbe(){
+  const air = airNow();
+  for (const ac of air) {
+    const s = seatOf(ac);
+    if (!canMove(ac) || S.t < (ac.aiNext || 0) || (s === 'TWR' && ac.kind !== 'DEP')) continue;
+    let hit = null;
+    for (const o of air) {
+      if (o === ac) continue;
+      const t = conflictWith(ac, o); if (t < 0) continue;
+      if (ac.app && o.app && o.kind === 'ARR' && t > 40) continue;   // both on the approach: the sequence spaced them
+      const mine = yieldRank(ac) < yieldRank(o) || (yieldRank(ac) === yieldRank(o) && ac.cs > o.cs);
+      if (!mine && canMove(o)) continue;   // the other gives way
+      hit = o; break;
+    }
+    if (hit) {
+      const now = Math.round(ac.alt/100)*100, floor = ac.kind === 'ARR' ? Math.max(APT.appAlt || 2000, 2000) : now;
+      const r1 = Math.ceil(ac.alt/1000)*1000, d1 = Math.floor(ac.alt/1000)*1000;
+      const cands = ac.kind === 'DEP' ? [now, d1, r1 + 1000, r1 + 2000] : [now, r1, r1 + 1000, d1, d1 - 1000, r1 + 2000].filter(l => l >= floor);
+      const lv = safeLevel(ac, cands);
+      if (lv != null && Math.abs(lv - (ac.tgtAlt ?? ac.alt)) >= 200) { if (aiDo(s, ac, `A${Math.round(lv/100)}`)) { ac.aiLev = { t: S.t, o: hit.cs }; ac.aiWhy = `kept clear of ${hit.cs}`; } }
+      else if (ac.aiLev) ac.aiLev.t = S.t;
+    } else if (ac.aiLev && S.t - ac.aiLev.t > 40) {
+      // clear again: back down the published profile, or on with the climb (if that is clear too)
+      if (ac.kind === 'ARR' && ac.app && ac.mode !== 'FINAL') { ac.aiLev = null; ac.aiWhy = ''; aiDo(s, ac, 'APP'); }
+      else if (ac.kind === 'DEP') { const top = ac.reqClimb ? climbTop() : sidTop(ac); if (safeLevel(ac, [top]) != null) { ac.aiLev = null; ac.aiWhy = ''; aiDo(s, ac, `C${Math.round(top/100)}`); } else ac.aiLev.t = S.t - 20; }
+      else { ac.aiLev = null; ac.aiWhy = ''; }
+    }
+  }
+}
+
+// ── every second: each AI seat works the flights it owns
+function stepAI(dt){
+  if (!aiActive()) return;
+  S.aiAcc = (S.aiAcc || 0) + dt; if (S.aiAcc < 1) return; S.aiAcc = 0;
+  const seq = [];
+  for (const ac of S.acs.slice()) {
+    if (!S.acs.includes(ac) || !aiOwns(ac) || S.t < (ac.aiNext || 0) || ac.lost) continue;
+    const s = seatOf(ac), n = ac.need || '';
+    if (ac.emerg && !ac.emerg.ack) { if (aiDue(ac, 'rog', 2, 5)) aiDo(s, ac, 'ROG'); continue; }
+    if (n === 'Say again' && ac.lastCmd) { if (aiDue(ac, n + ac.lastCmd, 2, 4)) aiDo(s, ac, ac.lastCmd); continue; }
+    if (n === 'Back on frequency' && ac.airborne && s !== 'APP') { if (aiDue(ac, n, 2, 5)) aiDo(s, ac, 'HO'); continue; }
+    if (s === 'GND') aiGround(ac);
+    else if (s === 'TWR') aiTower(ac);
+    else if (s === 'DEP') aiDeparture(ac);
+    else if (s === 'APP' && !aiApproach(ac)) seq.push(ac);
+  }
+  if (seq.length) aiSequence(seq);
+  // learn how long landings occupy each runway
+  for (const ac of S.acs) if (ac.aiTd && ac.ground && !ac.onRwy) { const id = ac.rwyId || RWYS[0].id, o = S.t - ac.aiTd; ac.aiTd = null; (S.aiOcc ||= {})[id] = S.aiOcc[id] ? S.aiOcc[id]*0.6 + o*0.4 : o; }
+  if (S.seats.APP === 'AI' || S.seats.DEP === 'AI' || S.seats.TWR === 'AI' || S.acs.some(a => a.aiSeat)) aiProbe();
+  if (S.seats.GND === 'AI') aiGroundVehicles();
+  if (S.seats.TWR === 'AI') { aiTowerVehicles(); aiRoad(); }
+  // the release for a departure taxiing out is Tower's to ask for
+  if (S.seats.TWR === 'AI') for (const ac of S.acs) {
+    if (ac.kind !== 'DEP' || !ac.ground || ac.cto || !['READY', 'TAXI'].includes(ac.state) || !needRel(ac) || (ac.rel && ac.rel.st !== 'EXP') || ac.meSeat === 'TWR') continue;
+    if (S.t >= (ac.aiNext || 0) && aiDue(ac, 'rel' + (ac.rel ? ac.rel.until : ''), 6, 14)) aiDo('TWR', ac, 'REL');
+  }
+}
+S.listeners.push((ev, ac) => {
+  if (ev === 'landed' && ac) ac.aiTd = S.t;
+  if (ev === 'takeoff' && ac) { (S.aiDep ||= {})[rwyOf(ac.depRwy || depRw(ac)).id] = { t: S.t, wake: ac.perf.wake }; for (const id of rwyCross(rwyOf(ac.depRwy || depRw(ac)))) S.aiDep[id] = S.aiDep[rwyOf(ac.depRwy || depRw(ac)).id]; }
+  if (ev === 'start') { S.aiDep = {}; S.aiOcc = {}; S.aiAcc = 0; S.aiRoadT = 0; S.aiScore = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+    const on = AI_SEATS.filter(k => S.seats[k] === 'AI');
+    if (EXERCISES[S.mode] && on.length) sys('Guided exercises are yours alone: the AI controllers sit this one out.');
+    else if (on.length) sys(`AI controllers on ${on.map(k => AI_NAME[k]).join(', ')}. You work ${AI_SEATS.filter(k => S.seats[k] !== 'AI').map(k => AI_NAME[k]).join(', ') || 'nothing: watch them'}. Click a flight and Take over to work it yourself.`); }
+});
+
+// ── the seat picker: in the session setup and under the Positions button on the scope
+function seatHtml(){
+  return AI_SEATS.map(k => `<div class="seat"><div class="seat-n"><b>${AI_NAME[k]}</b><span>${esc(seatUnit(k))}</span></div><div class="seg sm" role="group" aria-label="${AI_NAME[k]}"><button type="button" data-seat="${k}" data-who="ME" class="${S.seats[k] !== 'AI' ? 'on' : ''}">Me</button><button type="button" data-seat="${k}" data-who="AI" class="${S.seats[k] === 'AI' ? 'on' : ''}">AI</button></div></div>`).join('');
+}
+function renderSeats(){
+  for (const id of ['seatGrid', 'seatPopGrid']) { const el = document.getElementById(id); if (el) el.innerHTML = seatHtml(); }
+  const h = document.getElementById('aiHear'); if (h) h.checked = !!S.aiHear;
+  const b = document.getElementById('tgSeats'); if (b) { const n = AI_SEATS.filter(k => S.seats[k] === 'AI').length; b.classList.toggle('on', n > 0); b.textContent = n ? `Positions · ${n} AI` : 'Positions'; }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-seat]'); if (b) { setSeat(b.dataset.seat, b.dataset.who); return; }
+  const t = e.target.closest && e.target.closest('#tgSeats'); if (t) { const p = document.getElementById('seatPop'); if (p) { p.hidden = !p.hidden; renderSeats(); } return; }
+  const p = document.getElementById('seatPop'); if (p && !p.hidden && !(e.target.closest && e.target.closest('#seatPop'))) p.hidden = true;
+});
+document.addEventListener('change', e => { if (e.target && e.target.id === 'aiHear') { S.aiHear = e.target.checked; try { localStorage.setItem('cw-ai-hear', S.aiHear ? '1' : '0'); } catch(_) {} } });
+renderSeats();
+window.__ai = { seatOf, aiOwns, setSeat, takeOver, handToAi };
 
 // ═════════════════════════ voice: spoken commands and accented pilots ═════════════════════════
 // Speech in: the browser's speech recogniser hears standard phraseology ("Speedbird four niner two, turn left heading
