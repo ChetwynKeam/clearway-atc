@@ -744,7 +744,9 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 /* departure release (Sevilla / Casablanca) */
 .standline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 6px 0 2px; padding: 5px 8px; border-radius: 6px; background: var(--panel-2); font: 500 12px/1.4 var(--font-data); color: var(--ink-2); }
 .standline b { color: var(--ink); } .standline.none b { color: var(--warn); } .standline .pref { flex: 1; color: var(--ink-3, var(--ink-2)); }
-.standline select { font: inherit; max-width: 160px; }
+.standline select { font: inherit; max-width: 160px; } .standline .pick { display: inline-flex; gap: 6px; align-items: center; }
+.standline button.auto { font: inherit; font-size: 11px; font-weight: 600; line-height: 1; padding: 4px 8px; border-radius: 5px; border: 1px solid var(--line-2); background: var(--panel); color: var(--accent); cursor: pointer; }
+.standline button.auto:hover:not(:disabled) { background: var(--accent); color: #fff; } .standline button.auto:disabled { opacity: .45; cursor: default; }
 .strip .rte.nostand { color: var(--warn); }
 .relline { font: 500 12px/1.4 var(--font-data); padding: 5px 8px; border-radius: 6px; margin: 6px 0 2px; background: var(--panel-2); color: var(--ink-2); }
 .relline.ok { color: var(--ok); } .relline.req { color: var(--warn); } .relline.exp { color: var(--alert); }
@@ -5484,7 +5486,10 @@ function commandRun(str){
       // assign the stand (gate) an arrival is to park on; on its own, the first free one in its airline's usual area
       if (['ONSTAND', 'DIVERTING'].includes(ac.state)) { sys(`${ac.cs} ${ac.state === 'ONSTAND' ? 'is already parked' : 'is diverting'}.`); continue; }
       const sw = APT.standWord || 'stand', id = toks[i+1] && !/^(TAXI|VIA)$/.test(toks[i+1]) ? toks[++i] : null;
-      let st = id ? STANDS.find(x => x.id.toUpperCase() === id) : ac.stand || standChoices(ac).find(x => !x.occ && prefArea(ac).has(x)) || freeStand(ac);
+      // STAND AUTO (the Auto button): the sim picks, the same way as a bare STAND, but a stand outside the airline's
+      // usual area is swapped for a free one inside it when there is one
+      const auto = id === 'AUTO' && !STANDS.some(x => x.id.toUpperCase() === 'AUTO'), pick = () => standChoices(ac).find(x => !x.occ && prefArea(ac).has(x)) || freeStand(ac);
+      let st = auto ? (ac.stand && prefArea(ac).has(ac.stand) ? ac.stand : pick() || ac.stand) : id ? STANDS.find(x => x.id.toUpperCase() === id) : ac.stand || pick();
       if (!st) { sys(id ? `There is no ${sw} ${id}.` : `No free ${sw} for ${ac.cs}.`); continue; }
       if (st.occ && st.occ !== ac) { sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is occupied (${st.occ.cs}).`); continue; }
       if (!standRoom(st, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for ${sw} ${st.id} with ${standBy(st, ac).cs} next to it.`); continue; }
@@ -6838,6 +6843,7 @@ function renderSel(){
   el.onmouseover = e => { const bt = e.target.closest && e.target.closest('button[data-c^="VAC "]'); vacHover = bt && !bt.disabled ? { ac: S.sel, ex: bt.dataset.c.slice(4) } : null; };
   el.onmouseleave = () => { vacHover = null; };
   { const sp = $('iStand'); if (sp) sp.onchange = () => sp.value && command(`${ac.cs} STAND ${sp.value}`); }
+  { const sa = $('iStandAuto'); if (sa) sa.onclick = () => command(`${ac.cs} STAND AUTO`); }
   el.querySelectorAll('button[data-c]').forEach(bt => bt.onclick = () => { const c = bt.dataset.c; if (c === 'POP:push') openPushPop(ac, bt); else if (c === 'POP:taxi') openTaxiPop(ac, bt); else if (c === 'POP:holdin') openHoldInPop(ac, bt); else if (c === 'POP:tow') openTowPop(ac, bt); else command(ac.cs+' '+c); });
   const keyCmd = (id, pre) => { const i = $(id); if (i) i.onkeydown = e => { if (e.key === 'Enter' && i.value.trim()) command(`${ac.cs} ${pre}${i.value.trim()}`); }; };
   keyCmd('iH','H'); keyCmd('iA','A'); keyCmd('iS','S');
@@ -6850,7 +6856,7 @@ function standLine(ac){
   const opt = s => `<option value="${s.id}"${ac.stand === s ? ' selected' : ''}>${s.id}${pa.has(s) ? '' : ' · ' + grp(s)}</option>`;
   const mine = ch.filter(s => pa.has(s)), rest = ch.filter(s => !pa.has(s)), locked = ac.taxiIn;
   return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b><span class="pref">prefers ${esc(pa.name)}</span>
-    <select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}</select></div>`;
+    <span class="pick"><select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}</select><button id="iStandAuto" class="auto" title="Let the sim pick a free ${sw} that fits, in its airline's usual area first"${locked ? ' disabled' : ''}>Auto</button></span></div>`;
 }
 // ── clearance pop-outs (push direction, taxi routing) ──
 function drawPreview(pv){
@@ -10296,7 +10302,7 @@ function phraseToCmd(raw){
   const hpm = s.match(/ taxi .*?holding point (\S+)(?: (\d{1,2}))? /), hpId = hpm && ((PHONW[hpm[1]] || (hpm[1].length === 1 ? hpm[1].toUpperCase() : '')) + (hpm[2] || ''));
   const toHold = hpId && (IHPS[hpId] && !HOLDS[hpId] || (ac && ac.kind === 'ARR' && holdPt(hpId))) ? hpId : null;
   // an arrival given its stand without a taxi clearance: "stand 5", "gate bravo two three"
-  if (ac && ac.kind === 'ARR' && !/ taxi /.test(s) && (m = s.match(/ (?:stand|gate) (.*)/))) { const id = heardStand(m[1]); if (id) out.push('STAND ' + id); }
+  if (ac && ac.kind === 'ARR' && !/ taxi /.test(s) && (m = s.match(/ (?:stand|gate) (.*)/))) { const id = heardStand(m[1]); if (id) out.push('STAND ' + id); else if (/^(auto|any)\b/.test(m[1])) out.push('STAND AUTO'); }
   if (toHold) out.push('TAXI ' + toHold);
   // an arrival clear of the runway: "taxi to stand 5", "taxi to gate bravo two three via kilo"
   else if (ac && ac.kind === 'ARR' && / taxi /.test(s)) {
@@ -11694,7 +11700,7 @@ S.listeners.push((ev, d) => {
 const st = (cs, ...l) => { const a = A(cs); return !!a && l.includes(a.state); };
 const sn = cs => seen[cs] || {};
 // an arrival stops once it is clear of the runway and asks for taxi
-const standFirst = cs => `Arrivals don't get a ${APT.standWord || 'stand'} by themselves: pick one in the <b>${(APT.standWord || 'stand').replace(/^./, c => c.toUpperCase())}</b> list on its panel (its airline's usual area is listed first), or type <code>${cs} STAND</code> for the first free one there. `;
+const standFirst = cs => `Arrivals don't get a ${APT.standWord || 'stand'} by themselves: pick one in the <b>${(APT.standWord || 'stand').replace(/^./, c => c.toUpperCase())}</b> list on its panel (its airline's usual area is listed first), press <b>Auto</b> to let the sim pick one, or type <code>${cs} STAND</code> (or <code>${cs} STAND AUTO</code>) for the first free one there. `;
 const taxiInStep = (cs, p, h = 'Taxi it to its stand') => ({ h, p: standFirst(cs) + (p || `Once it is clear of the runway it stops and asks for taxi. Press <b>Taxi to stand</b> or type <code>${cs} TAXI</code>. To send it to another stand, add the stand (<code>${cs} TAXI 4</code>); to choose the route, add <code>VIA</code> and the taxiways.`),
   cmd: [`${cs} STAND`, `${cs} TAXI`], ok: () => { const a = A(cs); return !!a && (!!a.taxiIn || a.kind === 'DEP') || !!sn(cs).onstand; }, wait: () => { const a = A(cs); return !!a && !a.vacated; } });
 const roadShut = () => S.xing.st === 'CLOSING' || S.xing.st === 'CLOSED';

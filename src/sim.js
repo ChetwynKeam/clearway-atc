@@ -1045,7 +1045,10 @@ function commandRun(str){
       // assign the stand (gate) an arrival is to park on; on its own, the first free one in its airline's usual area
       if (['ONSTAND', 'DIVERTING'].includes(ac.state)) { sys(`${ac.cs} ${ac.state === 'ONSTAND' ? 'is already parked' : 'is diverting'}.`); continue; }
       const sw = APT.standWord || 'stand', id = toks[i+1] && !/^(TAXI|VIA)$/.test(toks[i+1]) ? toks[++i] : null;
-      let st = id ? STANDS.find(x => x.id.toUpperCase() === id) : ac.stand || standChoices(ac).find(x => !x.occ && prefArea(ac).has(x)) || freeStand(ac);
+      // STAND AUTO (the Auto button): the sim picks, the same way as a bare STAND, but a stand outside the airline's
+      // usual area is swapped for a free one inside it when there is one
+      const auto = id === 'AUTO' && !STANDS.some(x => x.id.toUpperCase() === 'AUTO'), pick = () => standChoices(ac).find(x => !x.occ && prefArea(ac).has(x)) || freeStand(ac);
+      let st = auto ? (ac.stand && prefArea(ac).has(ac.stand) ? ac.stand : pick() || ac.stand) : id ? STANDS.find(x => x.id.toUpperCase() === id) : ac.stand || pick();
       if (!st) { sys(id ? `There is no ${sw} ${id}.` : `No free ${sw} for ${ac.cs}.`); continue; }
       if (st.occ && st.occ !== ac) { sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is occupied (${st.occ.cs}).`); continue; }
       if (!standRoom(st, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for ${sw} ${st.id} with ${standBy(st, ac).cs} next to it.`); continue; }

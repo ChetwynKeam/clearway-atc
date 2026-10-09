@@ -148,7 +148,7 @@ function phraseToCmd(raw){
   const hpm = s.match(/ taxi .*?holding point (\S+)(?: (\d{1,2}))? /), hpId = hpm && ((PHONW[hpm[1]] || (hpm[1].length === 1 ? hpm[1].toUpperCase() : '')) + (hpm[2] || ''));
   const toHold = hpId && (IHPS[hpId] && !HOLDS[hpId] || (ac && ac.kind === 'ARR' && holdPt(hpId))) ? hpId : null;
   // an arrival given its stand without a taxi clearance: "stand 5", "gate bravo two three"
-  if (ac && ac.kind === 'ARR' && !/ taxi /.test(s) && (m = s.match(/ (?:stand|gate) (.*)/))) { const id = heardStand(m[1]); if (id) out.push('STAND ' + id); }
+  if (ac && ac.kind === 'ARR' && !/ taxi /.test(s) && (m = s.match(/ (?:stand|gate) (.*)/))) { const id = heardStand(m[1]); if (id) out.push('STAND ' + id); else if (/^(auto|any)\b/.test(m[1])) out.push('STAND AUTO'); }
   if (toHold) out.push('TAXI ' + toHold);
   // an arrival clear of the runway: "taxi to stand 5", "taxi to gate bravo two three via kilo"
   else if (ac && ac.kind === 'ARR' && / taxi /.test(s)) {

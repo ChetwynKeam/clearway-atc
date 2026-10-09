@@ -719,7 +719,9 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 /* departure release (Sevilla / Casablanca) */
 .standline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 6px 0 2px; padding: 5px 8px; border-radius: 6px; background: var(--panel-2); font: 500 12px/1.4 var(--font-data); color: var(--ink-2); }
 .standline b { color: var(--ink); } .standline.none b { color: var(--warn); } .standline .pref { flex: 1; color: var(--ink-3, var(--ink-2)); }
-.standline select { font: inherit; max-width: 160px; }
+.standline select { font: inherit; max-width: 160px; } .standline .pick { display: inline-flex; gap: 6px; align-items: center; }
+.standline button.auto { font: inherit; font-size: 11px; font-weight: 600; line-height: 1; padding: 4px 8px; border-radius: 5px; border: 1px solid var(--line-2); background: var(--panel); color: var(--accent); cursor: pointer; }
+.standline button.auto:hover:not(:disabled) { background: var(--accent); color: #fff; } .standline button.auto:disabled { opacity: .45; cursor: default; }
 .strip .rte.nostand { color: var(--warn); }
 .relline { font: 500 12px/1.4 var(--font-data); padding: 5px 8px; border-radius: 6px; margin: 6px 0 2px; background: var(--panel-2); color: var(--ink-2); }
 .relline.ok { color: var(--ok); } .relline.req { color: var(--warn); } .relline.exp { color: var(--alert); }
