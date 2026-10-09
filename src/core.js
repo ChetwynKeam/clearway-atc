@@ -24,6 +24,8 @@ const add = (p, h, d) => [p[0]+Math.sin(h*D2R)*d, p[1]+Math.cos(h*D2R)*d];
 // ═════════════════════════ taxiway graph and procedures (filled in by the airport profile) ═════════════════════════
 const GN = {}, GE = [];
 function gn(id, m, off){ TAXI_MEMO.clear(); GN[id] = { id, m, off, p: rm(m, off), adj: [] }; }
+// an edge's e.k (default 1) weights its length in the route searches: a link only taken when asked for (Manchester's
+// crossovers between parallel lines) costs more
 function ge(a, b, tw){ TAXI_MEMO.clear(); const e = { a, b, tw, len: dist(...GN[a].p, ...GN[b].p) }; GE.push(e); GN[a].adj.push([b, e]); GN[b].adj.push([a, e]); }
 let kN = 0;
 // a chain of points becomes graph nodes joined by edges carrying the taxiway designator
@@ -53,7 +55,7 @@ function route(from, to, pen, face, outB){
   while (h.length) {
     const [d, u] = heapPop(h); if (done.has(u)) continue;
     if (u === to) { found = true; break; } done.add(u);
-    for (const [v, e] of GN[u].adj) { if (v !== to && v[0] === 'R') continue; const nd = d + e.len*(pen ? pen(e) : 1), o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, [u, e]); heapPush(h, [nd, v]); } }
+    for (const [v, e] of GN[u].adj) { if (v !== to && v[0] === 'R') continue; const nd = d + e.len*(e.k || 1)*(pen ? pen(e) : 1), o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, [u, e]); heapPush(h, [nd, v]); } }
   }
   let r = null;
   if (found) { const nodes = [to], tws = []; let c = to; while (c !== from) { const [u, e] = prev.get(c); nodes.unshift(u); tws.unshift(e.tw); c = u; } r = { nodes, tws }; }
@@ -83,7 +85,7 @@ function facingSteps(k, u, from_, inB, hist, d, pen, ok, push){
     const b = legBrg(u, v, inB);
     if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START) || !hairOk(hist, b)) continue;
     // keyed by the node before u too, so a junction reached two ways keeps both pasts (they turn on differently)
-    push(v + '|' + u + '|' + from_, [v, u, b, histOn(hist, b, e.len)], d + e.len*(pen ? pen(e) : 1), k, e);
+    push(v + '|' + u + '|' + from_, [v, u, b, histOn(hist, b, e.len)], d + e.len*(e.k || 1)*(pen ? pen(e) : 1), k, e);
   }
 }
 function routeFacing(from, to, pen, face, outB){
@@ -129,7 +131,7 @@ function routesFrom(from, targets, face){
     }
     if (u !== from && u[0] === 'R') continue;          // a runway-edge node is only ever an end point
     if (facing) { facingSteps(k, u, from_, inB, hist, d, null, ok, push); continue; }
-    for (const [v, e] of GN[u].adj) if (ok(v)) push(v, [v, u, inB], d + e.len, k, e);
+    for (const [v, e] of GN[u].adj) if (ok(v)) push(v, [v, u, inB], d + e.len*(e.k || 1), k, e);
   }
   for (const t of want) if (!out.has(t)) { out.set(t, null); TAXI_MEMO.set(ck(t), null); }
   return out;

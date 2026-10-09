@@ -173,9 +173,9 @@ const AD = {
 };
 // Which lines are painted: where the profile has the real OpenStreetMap centrelines (osmLines, London City) those alone,
 // so the taxi graph's own straight links don't draw a second, slightly different line beside them; elsewhere every graph
-// edge and fillet. Painted edge lines are Gibraltar's (AD 2.9, edgeLines) and only run along plain taxiways, never the
+// edge and fillet, except the unpainted links (e.bare: Manchester's crossovers between parallel lines). Painted edge lines are Gibraltar's (AD 2.9, edgeLines) and only run along plain taxiways, never the
 // runway links or apron taxilanes where they would cut across the fillets and stands; the blue edge lights follow the same set.
-const LINE_KEYS = Object.keys(AD.twys).filter(k => !AD.osmLines || (AD.twyExtra || []).some(e => e[0] === k));
+const LINE_KEYS = Object.keys(AD.twys).filter(k => (!AD.osmLines || (AD.twyExtra || []).some(e => e[0] === k)) && !(/^e\d+$/.test(k) && GE[+k.slice(1)].bare));
 const EDGE_KEYS = LINE_KEYS.filter(k => AD.twys[k].every(([, o]) => Math.abs(o) > RHW + 25) && !(/^e\d+$/.test(k) && GE[+k.slice(1)].tw === 'APRON'));
 // ── taxiway designators and intermediate holding points, shared by every airport ──
 // Designators come from the taxi graph: one sign at the middle of each stretch of a named taxiway and more along long
@@ -219,10 +219,14 @@ function leadLine(pts){   // [m, off] in a runway frame, from the runway centrel
 }
 // yellow ground paint: over the pale street map a thin dark casing goes underneath so the line still reads
 // (draw strokes the paths and leaves the colour and width alone)
-function groundLines(w, draw){
+function groundLines(w, draw, col){
   if (mapImagery() && C.name !== 'dark') { cx.save(); cx.strokeStyle = 'rgba(30,34,40,.55)'; cx.lineWidth = w + 1.6; draw(); cx.restore(); }
-  cx.strokeStyle = C.yellow; cx.lineWidth = w; draw();
+  cx.strokeStyle = col || C.yellow; cx.lineWidth = w; draw();
 }
+// the coloured lines of a lane painted with three (Manchester's NA, NB and Z: blue and orange either side of the yellow
+// centre line); every other line is yellow
+const LINE_COL = { b: '#2f7fe0', o: '#f08a1c' };
+const lineCol = k => { const e = /^e\d+$/.test(k) && GE[+k.slice(1)]; return (e && LINE_COL[e.line]) || null; };
 // ── taxiway pavement at its published width, laid over the street map ──
 // AD.pave per airport: w = default width (m), by = widths per taxiway (0: not paved, e.g. grass), edge = 'faa' for the
 // FAA continuous double yellow edge marking. lines: [{ pts: screen points, w }],
@@ -233,13 +237,17 @@ function paveWidth(tw){ const P = AD.pave || {}, b = P.by || {}; return tw in b 
 function clipOut(blds){ if (!blds.length) return; cx.beginPath(); cx.rect(0, 0, W, H);
   for (const b of blds) { if (b.every(q => q[0] < 0) || b.every(q => q[0] > W) || b.every(q => q[1] < 0) || b.every(q => q[1] > H)) continue; b.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...q)); cx.closePath(); }
   cx.clip('evenodd'); }
-// every taxiway graph edge as a screen segment [x1, y1, x2, y2], leaving out those wholly off the screen
+// every painted taxiway graph edge as a screen segment [x1, y1, x2, y2, colour (null: yellow)], leaving out those wholly
+// off the screen and the unpainted links (e.bare)
 function edgeSegs(){
   const out = [];
-  for (const e of GE) { const a = GN[e.a].p, b = GN[e.b].p, x1 = sx(a[0]), y1 = sy(a[1]), x2 = sx(b[0]), y2 = sy(b[1]);
-    if (Math.max(x1, x2) < -20 || Math.min(x1, x2) > W + 20 || Math.max(y1, y2) < -20 || Math.min(y1, y2) > H + 20) continue; out.push([x1, y1, x2, y2]); }
+  for (const e of GE) { if (e.bare) continue; const a = GN[e.a].p, b = GN[e.b].p, x1 = sx(a[0]), y1 = sy(a[1]), x2 = sx(b[0]), y2 = sy(b[1]);
+    if (Math.max(x1, x2) < -20 || Math.min(x1, x2) > W + 20 || Math.max(y1, y2) < -20 || Math.min(y1, y2) > H + 20) continue; out.push([x1, y1, x2, y2, LINE_COL[e.line] || null]); }
   return out;
 }
+// the taxi graph's lines painted on the ground: yellow, the blue and orange lines of three-line lanes in their colours
+function paintEdgeLines(w){ const segs = edgeSegs();
+  for (const col of [null, ...Object.values(LINE_COL)]) groundLines(w, () => { for (const [x1, y1, x2, y2, c] of segs) if (c === col) { cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke(); } }, col); }
 function drawPavement(lines, blds, mpx){
   const P = AD.pave || {}, byW = new Map();
   // one opaque path per width, so where stretches overlap at a junction the shading never shows a darker patch
@@ -434,7 +442,7 @@ function drawAirport(){
     for (const m of AD.paag || []) for (const o of [-14, 0, 14]) { const [X,Y] = c(m,o); cx.beginPath(); cx.arc(X, Y, Math.max(1.5, 3*mpx), 0, 7); cx.stroke(); }
     // taxiway centre and edge lines (solid yellow edges, AD 2.9)
     cx.save(); cx.beginPath(); cx.rect(0, 0, W, H); AD.rwyPoly.forEach(([m,o],k) => cx[k?'lineTo':'moveTo'](...c(m, o*1.02))); cx.closePath(); cx.clip('evenodd');   // taxi lines stop at the runway edge
-    groundLines(lw(0.3), () => { for (const k of LINE_KEYS) { path(AD.twys[k], false); cx.stroke(); } });
+    for (const col of [null, ...Object.values(LINE_COL)]) groundLines(lw(0.3), () => { for (const k of LINE_KEYS) if (lineCol(k) === col) { path(AD.twys[k], false); cx.stroke(); } }, col);
     cx.strokeStyle = C.yellow; cx.globalAlpha = 0.55; cx.lineWidth = lw(0.25);
     if (AD.edgeLines) for (const k of EDGE_KEYS) { const pts = AD.twys[k]; for (const s of [-9, 9]) { const off = pts.map(([m,o],i) => { const v = i ? [m - pts[i-1][0], o - pts[i-1][1]] : [pts[1][0]-m, pts[1][1]-o]; const L = Math.hypot(...v) || 1; return [m - v[1]/L*s, o + v[0]/L*s]; }); path(off, false); cx.stroke(); } }
     cx.globalAlpha = 1;
