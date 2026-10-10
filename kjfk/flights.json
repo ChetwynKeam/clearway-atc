@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-10T08:41:22Z",
+ "updated": "2026-10-10T08:53:49Z",
  "source": "avionio.com",
  "days": {
   "2026-10-10": {
@@ -23,7 +23,7 @@
      "place": "Los Angeles",
      "flight": "DL960",
      "sched": "05:05",
-     "status": "Estimated",
+     "status": "Landed",
      "expected": "00:09"
     },
     {
@@ -45,7 +45,7 @@
      "flight": "AV42",
      "sched": "05:20",
      "status": "Estimated",
-     "expected": "04:54"
+     "expected": "04:53"
     },
     {
      "place": "San Salvador",
@@ -80,21 +80,21 @@
      "flight": "B666",
      "sched": "05:47",
      "status": "Estimated",
-     "expected": "01:52"
+     "expected": "03:42"
     },
     {
      "place": "Salt Lake City",
      "flight": "DL1909",
      "sched": "05:47",
      "status": "Estimated",
-     "expected": "01:54"
+     "expected": "03:51"
     },
     {
      "place": "Portland",
      "flight": "AS336",
      "sched": "05:59",
      "status": "Estimated",
-     "expected": "00:44"
+     "expected": "03:08"
     },
     {
      "place": "Burbank",
@@ -122,7 +122,7 @@
      "flight": "AA10",
      "sched": "06:04",
      "status": "Estimated",
-     "expected": "03:24"
+     "expected": "00:58"
     },
     {
      "place": "San Diego",
@@ -157,21 +157,21 @@
      "flight": "AA2996",
      "sched": "06:15",
      "status": "Estimated",
-     "expected": "01:42"
+     "expected": "03:46"
     },
     {
      "place": "San Diego",
      "flight": "DL709",
      "sched": "06:18",
      "status": "Estimated",
-     "expected": "01:33"
+     "expected": "03:55"
     },
     {
      "place": "Portland",
      "flight": "DL2139",
      "sched": "06:21",
      "status": "Estimated",
-     "expected": "03:40"
+     "expected": "04:52"
     },
     {
      "place": "Louisville",
@@ -185,14 +185,14 @@
      "flight": "DL670",
      "sched": "06:25",
      "status": "Estimated",
-     "expected": "05:07"
+     "expected": "05:45"
     },
     {
      "place": "San Francisco",
      "flight": "AA276",
      "sched": "06:30",
      "status": "Estimated",
-     "expected": "06:08"
+     "expected": "03:40"
     },
     {
      "place": "Salt Lake City",
@@ -213,7 +213,7 @@
      "flight": "B6264",
      "sched": "06:35",
      "status": "Estimated",
-     "expected": "05:39"
+     "expected": "05:56"
     },
     {
      "place": "Memphis",
@@ -233,7 +233,7 @@
      "place": "Ithaca",
      "flight": "9E5265",
      "sched": "06:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -248,7 +248,7 @@
      "flight": "AA954",
      "sched": "06:55",
      "status": "Estimated",
-     "expected": "06:58"
+     "expected": "06:57"
     },
     {
      "place": "Honolulu",
@@ -276,7 +276,7 @@
      "flight": "AS40",
      "sched": "06:57",
      "status": "Estimated",
-     "expected": "06:47"
+     "expected": "06:49"
     },
     {
      "place": "Georgetown",
@@ -304,7 +304,7 @@
      "flight": "DL676",
      "sched": "07:05",
      "status": "Estimated",
-     "expected": "02:18"
+     "expected": "04:37"
     },
     {
      "place": "Los Angeles",
@@ -353,7 +353,7 @@
      "flight": "AS22",
      "sched": "07:24",
      "status": "Estimated",
-     "expected": "06:11"
+     "expected": "06:47"
     },
     {
      "place": "Buffalo",
@@ -402,7 +402,7 @@
      "flight": "DL650",
      "sched": "07:28",
      "status": "Estimated",
-     "expected": "05:54"
+     "expected": "06:28"
     },
     {
      "place": "Los Angeles",
@@ -437,7 +437,7 @@
      "flight": "B6604",
      "sched": "07:35",
      "status": "Estimated",
-     "expected": "06:52"
+     "expected": "06:56"
     },
     {
      "place": "Cleveland",
@@ -458,7 +458,7 @@
      "flight": "JJ8180",
      "sched": "07:45",
      "status": "Estimated",
-     "expected": "07:28"
+     "expected": "07:27"
     },
     {
      "place": "Detroit",
@@ -528,7 +528,7 @@
      "flight": "DL667",
      "sched": "08:04",
      "status": "Estimated",
-     "expected": "06:04"
+     "expected": "07:15"
     },
     {
      "place": "Burlington",
@@ -563,7 +563,7 @@
      "flight": "B61224",
      "sched": "08:29",
      "status": "Estimated",
-     "expected": "07:58"
+     "expected": "08:03"
     },
     {
      "place": "Atlanta",
@@ -605,7 +605,7 @@
      "flight": "B6616",
      "sched": "08:35",
      "status": "Estimated",
-     "expected": "06:19"
+     "expected": "07:32"
     },
     {
      "place": "Abu Dhabi",
@@ -633,7 +633,7 @@
      "flight": "AT202",
      "sched": "08:50",
      "status": "Estimated",
-     "expected": "08:36"
+     "expected": "08:38"
     },
     {
      "place": "Dubai",
@@ -1130,6 +1130,13 @@
     {
      "place": "Los Angeles",
      "flight": "AA171",
+     "sched": "06:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "New York",
+     "flight": "AA224R",
      "sched": "06:00",
      "status": "Scheduled",
      "expected": ""
@@ -2139,13 +2146,6 @@
      "place": "Hong Kong",
      "flight": "CX841",
      "sched": "10:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Aruba",
-     "flight": "B657",
-     "sched": "10:05",
      "status": "Scheduled",
      "expected": ""
     }
