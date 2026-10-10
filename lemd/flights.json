@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-10T13:27:36Z",
+ "updated": "2026-10-10T13:40:06Z",
  "source": "avionio.com",
  "days": {
   "2026-10-10": {
@@ -45,7 +45,7 @@
      "flight": "IB1238",
      "sched": "15:00",
      "status": "Landed",
-     "expected": "14:40"
+     "expected": "14:39"
     },
     {
      "place": "Munich",
@@ -59,7 +59,7 @@
      "flight": "IB1328",
      "sched": "15:00",
      "status": "Landed",
-     "expected": "14:41"
+     "expected": "14:40"
     },
     {
      "place": "Barcelona",
@@ -115,14 +115,14 @@
      "flight": "AV16",
      "sched": "15:20",
      "status": "Estimated",
-     "expected": "15:25"
+     "expected": "15:24"
     },
     {
      "place": "Casablanca",
      "flight": "IB1356",
      "sched": "15:20",
      "status": "Landed",
-     "expected": "15:02"
+     "expected": "15:01"
     },
     {
      "place": "Lisbon",
@@ -157,14 +157,14 @@
      "flight": "IB792",
      "sched": "15:30",
      "status": "Estimated",
-     "expected": "15:29"
+     "expected": "15:27"
     },
     {
      "place": "Palma de Mallorca",
      "flight": "FR2054",
      "sched": "15:45",
-     "status": "Estimated",
-     "expected": "15:23"
+     "status": "Landed",
+     "expected": "15:09"
     },
     {
      "place": "Casablanca",
@@ -227,7 +227,7 @@
      "flight": "FR2083",
      "sched": "16:10",
      "status": "Estimated",
-     "expected": "16:05"
+     "expected": "16:06"
     },
     {
      "place": "Tangier",
@@ -255,7 +255,7 @@
      "flight": "UX6024",
      "sched": "16:10",
      "status": "Estimated",
-     "expected": "15:52"
+     "expected": "15:55"
     },
     {
      "place": "Barcelona",
@@ -269,7 +269,7 @@
      "flight": "IB616",
      "sched": "16:15",
      "status": "Estimated",
-     "expected": "15:48"
+     "expected": "15:47"
     },
     {
      "place": "Santiago",
@@ -297,14 +297,14 @@
      "flight": "FR499",
      "sched": "16:30",
      "status": "Estimated",
-     "expected": "16:51"
+     "expected": "16:55"
     },
     {
      "place": "Paris",
      "flight": "IB574",
      "sched": "16:30",
      "status": "Estimated",
-     "expected": "16:12"
+     "expected": "16:13"
     },
     {
      "place": "Doha",
@@ -318,7 +318,7 @@
      "flight": "AF1800",
      "sched": "16:45",
      "status": "Estimated",
-     "expected": "16:29"
+     "expected": "16:36"
     },
     {
      "place": "Manchester",
@@ -514,7 +514,7 @@
      "flight": "DGJ567",
      "sched": "17:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "17:18"
     },
     {
      "place": "Fuerteventura",
@@ -695,8 +695,8 @@
      "place": "Zurich",
      "flight": "LX2032",
      "sched": "18:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:31"
     },
     {
      "place": "Valencia",
@@ -758,8 +758,8 @@
      "place": "Tenerife",
      "flight": "I21546",
      "sched": "18:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:21"
     },
     {
      "place": "Malaga",
@@ -1059,8 +1059,8 @@
      "place": "Sibiu",
      "flight": "W43825",
      "sched": "20:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:03"
     },
     {
      "place": "Tenerife",
@@ -1128,13 +1128,6 @@
    ],
    "dep": [
     {
-     "place": "Amsterdam",
-     "flight": "EY4351",
-     "sched": "15:00",
-     "status": "Estimated",
-     "expected": "15:00"
-    },
-    {
      "place": "London",
      "flight": "UX1015",
      "sched": "15:00",
@@ -1149,17 +1142,24 @@
      "expected": "15:15"
     },
     {
+     "place": "Amsterdam",
+     "flight": "UX1093",
+     "sched": "15:00",
+     "status": "Estimated",
+     "expected": "16:16"
+    },
+    {
      "place": "Porto",
      "flight": "UX1143",
      "sched": "15:00",
      "status": "Estimated",
-     "expected": "15:22"
+     "expected": "15:25"
     },
     {
      "place": "Malaga",
      "flight": "UX5039",
      "sched": "15:00",
-     "status": "Estimated",
+     "status": "Departed",
      "expected": "15:15"
     },
     {
@@ -1187,8 +1187,8 @@
      "place": "Tenerife",
      "flight": "UX9048",
      "sched": "15:05",
-     "status": "Estimated",
-     "expected": "15:34"
+     "status": "Departed",
+     "expected": "15:24"
     },
     {
      "place": "Barcelona",
@@ -1209,7 +1209,7 @@
      "flight": "UX1083",
      "sched": "15:10",
      "status": "Estimated",
-     "expected": "15:37"
+     "expected": "15:32"
     },
     {
      "place": "Alicante",
@@ -1244,7 +1244,7 @@
      "flight": "UX1061",
      "sched": "15:15",
      "status": "Estimated",
-     "expected": "15:15"
+     "expected": "15:27"
     },
     {
      "place": "Valencia",
@@ -1265,7 +1265,7 @@
      "flight": "UX1173",
      "sched": "15:20",
      "status": "Estimated",
-     "expected": "15:54"
+     "expected": "15:50"
     },
     {
      "place": "Dubai",
@@ -1481,8 +1481,8 @@
      "place": "San Juan",
      "flight": "IB379",
      "sched": "15:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:45"
     },
     {
      "place": "Santander",
@@ -1642,15 +1642,15 @@
      "place": "Paris",
      "flight": "IB579",
      "sched": "16:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:18"
     },
     {
      "place": "Geneva",
      "flight": "YW1279",
      "sched": "16:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:20"
     },
     {
      "place": "Geneva",
@@ -1677,14 +1677,21 @@
      "place": "Gran Canaria",
      "flight": "I21621",
      "sched": "16:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:10"
     },
     {
      "place": "Milan",
      "flight": "IB675",
      "sched": "16:10",
      "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Luxor",
+     "flight": "NE8034",
+     "sched": "16:10",
+     "status": "Estimated",
      "expected": ""
     }
    ]
