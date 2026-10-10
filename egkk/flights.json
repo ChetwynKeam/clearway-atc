@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-10T21:05:33Z",
+ "updated": "2026-10-10T21:25:15Z",
  "source": "avionio.com",
  "days": {
   "2026-10-10": {
@@ -31,21 +31,21 @@
      "flight": "U28150",
      "sched": "22:05",
      "status": "Landed",
-     "expected": "22:10"
+     "expected": "21:56"
     },
     {
      "place": "Pula",
      "flight": "U28606",
      "sched": "22:05",
-     "status": "Estimated",
-     "expected": "21:38"
+     "status": "Landed",
+     "expected": "21:36"
     },
     {
      "place": "Valencia",
      "flight": "VY8946",
      "sched": "22:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "23:42"
     },
     {
      "place": "Malaga",
@@ -66,21 +66,21 @@
      "flight": "U28448",
      "sched": "22:20",
      "status": "Estimated",
-     "expected": "22:22"
+     "expected": "22:23"
     },
     {
      "place": "Akureyri",
      "flight": "U28850",
      "sched": "22:20",
-     "status": "Estimated",
-     "expected": "21:32"
+     "status": "Landed",
+     "expected": "21:30"
     },
     {
      "place": "Istanbul",
      "flight": "W95730",
      "sched": "22:20",
      "status": "Estimated",
-     "expected": "22:22"
+     "expected": "22:23"
     },
     {
      "place": "Malta",
@@ -157,7 +157,7 @@
      "flight": "U28600",
      "sched": "22:45",
      "status": "Estimated",
-     "expected": "22:50"
+     "expected": "22:49"
     },
     {
      "place": "Tenerife",
@@ -206,7 +206,7 @@
      "flight": "U28604",
      "sched": "23:00",
      "status": "Estimated",
-     "expected": "22:33"
+     "expected": "22:32"
     },
     {
      "place": "Marrakech",
@@ -227,7 +227,7 @@
      "flight": "U28330",
      "sched": "23:05",
      "status": "Estimated",
-     "expected": "22:42"
+     "expected": "22:41"
     },
     {
      "place": "Sevilla",
@@ -248,7 +248,7 @@
      "flight": "A02745",
      "sched": "23:15",
      "status": "Estimated",
-     "expected": "22:58"
+     "expected": "22:57"
     },
     {
      "place": "Izmir",
@@ -339,7 +339,7 @@
      "flight": "A02657",
      "sched": "23:50",
      "status": "Estimated",
-     "expected": "23:31"
+     "expected": "23:40"
     },
     {
      "place": "Lanzarote",
@@ -369,14 +369,14 @@
      "flight": "BA2231",
      "sched": "22:15",
      "status": "Estimated",
-     "expected": "22:32"
+     "expected": "22:33"
     },
     {
      "place": "Reykjavik",
      "flight": "FI5471",
      "sched": "22:30",
      "status": "Estimated",
-     "expected": "22:49"
+     "expected": "23:04"
     },
     {
      "place": "Dubai",
@@ -416,7 +416,7 @@
      "flight": "BY4665",
      "sched": "00:20",
      "status": "Estimated",
-     "expected": "00:15"
+     "expected": "00:19"
     },
     {
      "place": "Antalya",
@@ -430,7 +430,7 @@
      "flight": "U28742",
      "sched": "00:25",
      "status": "Estimated",
-     "expected": "00:16"
+     "expected": "00:18"
     },
     {
      "place": "Palma de Mallorca",
@@ -444,7 +444,7 @@
      "flight": "U28226",
      "sched": "00:35",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:13"
     },
     {
      "place": "Dalaman",
@@ -486,14 +486,14 @@
      "flight": "U28188",
      "sched": "01:10",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:07"
     },
     {
      "place": "Kerkyra",
      "flight": "U28212",
      "sched": "01:10",
      "status": "Estimated",
-     "expected": ""
+     "expected": "00:58"
     },
     {
      "place": "Larnaca",
@@ -513,7 +513,7 @@
      "place": "Alicante",
      "flight": "U28120",
      "sched": "01:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -521,21 +521,21 @@
      "flight": "U28558",
      "sched": "01:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:52"
     },
     {
      "place": "Fuerteventura",
      "flight": "U28044",
      "sched": "01:30",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:28"
     },
     {
      "place": "Rhodes",
      "flight": "BY4661",
      "sched": "01:35",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:18"
     },
     {
      "place": "Tenerife",
@@ -556,14 +556,14 @@
      "flight": "U28124",
      "sched": "01:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:22"
     },
     {
      "place": "Sharm el-Sheikh",
      "flight": "U28740",
      "sched": "01:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "02:25"
     },
     {
      "place": "Sharm el-Sheikh",
@@ -741,6 +741,13 @@
      "expected": ""
     },
     {
+     "place": "Krakow/Balice",
+     "flight": "W62007",
+     "sched": "07:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Antigua",
      "flight": "BA2256",
      "sched": "07:50",
@@ -779,13 +786,6 @@
      "place": "Sharjah",
      "flight": "G9265",
      "sched": "08:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR114",
-     "sched": "09:25",
      "status": "Scheduled",
      "expected": ""
     }
