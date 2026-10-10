@@ -1,66 +1,10 @@
 {
- "updated": "2026-10-10T01:54:45Z",
+ "updated": "2026-10-10T02:07:02Z",
  "source": "avionio.com",
  "days": {
   "2026-10-10": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Ibiza",
-     "flight": "U28106",
-     "sched": "02:00",
-     "status": "Landed",
-     "expected": "01:33"
-    },
-    {
-     "place": "Tirana",
-     "flight": "W95702",
-     "sched": "02:00",
-     "status": "Landed",
-     "expected": "01:57"
-    },
-    {
-     "place": "Lyon",
-     "flight": "U28433",
-     "sched": "02:02",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Hurghada",
-     "flight": "U28746",
-     "sched": "02:15",
-     "status": "Landed",
-     "expected": "02:21"
-    },
-    {
-     "place": "Athens",
-     "flight": "U28186",
-     "sched": "02:30",
-     "status": "Landed",
-     "expected": "02:23"
-    },
-    {
-     "place": "Hurghada",
-     "flight": "BY813",
-     "sched": "02:35",
-     "status": "Unknown",
-     "expected": ""
-    },
-    {
-     "place": "Tenerife",
-     "flight": "U28038",
-     "sched": "02:40",
-     "status": "Estimated",
-     "expected": "02:23"
-    },
-    {
-     "place": "Agadir",
-     "flight": "U28804",
-     "sched": "02:45",
-     "status": "Estimated",
-     "expected": "02:53"
-    },
     {
      "place": "Islamabad",
      "flight": "BA2160",
@@ -108,7 +52,7 @@
      "flight": "MU201",
      "sched": "06:40",
      "status": "Estimated",
-     "expected": "06:37"
+     "expected": "06:38"
     },
     {
      "place": "Doha",
@@ -122,14 +66,14 @@
      "flight": "KQ108",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:57"
+     "expected": "06:58"
     },
     {
      "place": "Mauritius",
      "flight": "MK42",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:29"
+     "expected": "06:31"
     },
     {
      "place": "Orlando",
@@ -164,7 +108,7 @@
      "flight": "BY53",
      "sched": "07:25",
      "status": "Estimated",
-     "expected": "06:42"
+     "expected": "06:39"
     },
     {
      "place": "Geneva",
@@ -199,7 +143,7 @@
      "flight": "BY65",
      "sched": "07:50",
      "status": "Estimated",
-     "expected": "07:07"
+     "expected": "07:05"
     },
     {
      "place": "Belfast",
@@ -234,7 +178,7 @@
      "flight": "TS382",
      "sched": "07:55",
      "status": "Estimated",
-     "expected": "07:03"
+     "expected": "07:00"
     },
     {
      "place": "Bergen",
@@ -290,14 +234,14 @@
      "flight": "UM724",
      "sched": "08:33",
      "status": "Estimated",
-     "expected": "08:36"
+     "expected": "08:40"
     },
     {
      "place": "Tampa",
      "flight": "BA2166",
      "sched": "08:40",
      "status": "Estimated",
-     "expected": "08:03"
+     "expected": "08:00"
     },
     {
      "place": "Oslo",
@@ -332,7 +276,7 @@
      "flight": "G9265",
      "sched": "08:45",
      "status": "Estimated",
-     "expected": "08:39"
+     "expected": "08:41"
     },
     {
      "place": "Inverness",
@@ -556,13 +500,13 @@
      "flight": "BA2038",
      "sched": "10:40",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:24"
     },
     {
      "place": "Toronto",
      "flight": "TS122",
      "sched": "10:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -828,6 +772,13 @@
      "place": "Dublin",
      "flight": "FR142",
      "sched": "20:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "U28150",
+     "sched": "22:05",
      "status": "Scheduled",
      "expected": ""
     }
@@ -1674,6 +1625,61 @@
      "expected": ""
     }
    ]
+  },
+  "2026-10-11": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Dublin",
+     "flight": "FR112",
+     "sched": "08:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR114",
+     "sched": "09:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR1111",
+     "sched": "10:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR116",
+     "sched": "11:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Shannon",
+     "flight": "FR1182",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR118",
+     "sched": "14:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR120",
+     "sched": "17:10",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": []
   }
  }
 }
