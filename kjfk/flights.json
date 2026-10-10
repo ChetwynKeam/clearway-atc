@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-10T05:26:28Z",
+ "updated": "2026-10-10T05:40:45Z",
  "source": "avionio.com",
  "days": {
   "2026-10-10": {
@@ -94,7 +94,7 @@
      "flight": "B61524",
      "sched": "05:11",
      "status": "Estimated",
-     "expected": "00:00"
+     "expected": "01:26"
     },
     {
      "place": "Sao Paulo",
@@ -150,14 +150,14 @@
      "flight": "DL1909",
      "sched": "05:47",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:49"
     },
     {
      "place": "Portland",
      "flight": "AS336",
      "sched": "05:59",
      "status": "Estimated",
-     "expected": "04:10"
+     "expected": "04:44"
     },
     {
      "place": "Burbank",
@@ -185,7 +185,7 @@
      "flight": "AA10",
      "sched": "06:04",
      "status": "Estimated",
-     "expected": "00:58"
+     "expected": "03:22"
     },
     {
      "place": "San Diego",
@@ -227,7 +227,7 @@
      "flight": "DL709",
      "sched": "06:18",
      "status": "Estimated",
-     "expected": "01:25"
+     "expected": "01:33"
     },
     {
      "place": "Portland",
@@ -248,14 +248,14 @@
      "flight": "DL670",
      "sched": "06:25",
      "status": "Estimated",
-     "expected": "01:27"
+     "expected": "01:30"
     },
     {
      "place": "San Francisco",
      "flight": "AA276",
      "sched": "06:30",
      "status": "Estimated",
-     "expected": "01:14"
+     "expected": "03:42"
     },
     {
      "place": "Salt Lake City",
@@ -276,7 +276,7 @@
      "flight": "B6264",
      "sched": "06:35",
      "status": "Estimated",
-     "expected": "01:29"
+     "expected": "01:32"
     },
     {
      "place": "Memphis",
@@ -346,7 +346,7 @@
      "flight": "B61966",
      "sched": "07:00",
      "status": "Estimated",
-     "expected": "01:27"
+     "expected": "01:21"
     },
     {
      "place": "Seattle",
@@ -444,7 +444,7 @@
      "flight": "FI721",
      "sched": "07:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "06:46"
     },
     {
      "place": "Washington",
@@ -499,7 +499,7 @@
      "place": "Vancouver",
      "flight": "B6604",
      "sched": "07:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -997,7 +997,7 @@
      "flight": "TK3",
      "sched": "10:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:57"
     },
     {
      "place": "Boston",
@@ -1075,13 +1075,6 @@
      "sched": "11:30",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Fort Lauderdale",
-     "flight": "B61002",
-     "sched": "11:35",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -1090,21 +1083,21 @@
      "flight": "AF11",
      "sched": "01:00",
      "status": "Estimated",
-     "expected": "01:28"
+     "expected": "01:26"
     },
     {
      "place": "Guangzhou",
      "flight": "CZ600",
      "sched": "01:10",
      "status": "Departed",
-     "expected": "01:14"
+     "expected": "01:17"
     },
     {
      "place": "Quito",
      "flight": "2K7397",
      "sched": "01:15",
-     "status": "Estimated",
-     "expected": "01:28"
+     "status": "Departed",
+     "expected": "01:32"
     },
     {
      "place": "Doha",
@@ -1194,22 +1187,22 @@
      "place": "Guayaquil",
      "flight": "2K7393",
      "sched": "02:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:15"
     },
     {
      "place": "Panama City",
      "flight": "CM807",
      "sched": "02:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:37"
     },
     {
      "place": "Fort Worth",
      "flight": "AS2613",
      "sched": "02:27",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:44"
     },
     {
      "place": "San Salvador",
@@ -1229,6 +1222,13 @@
      "place": "San Salvador",
      "flight": "AV671",
      "sched": "03:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Guatemala City",
+     "flight": "LR653",
+     "sched": "03:40",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2117,13 +2117,6 @@
     {
      "place": "Phoenix",
      "flight": "B6135",
-     "sched": "10:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Saint Lucia",
-     "flight": "B61681",
      "sched": "10:00",
      "status": "Scheduled",
      "expected": ""
