@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-10T00:09:24Z",
+ "updated": "2026-10-10T00:38:15Z",
  "source": "avionio.com",
  "days": {
   "2026-10-10": {
@@ -241,14 +241,14 @@
      "flight": "EK11",
      "sched": "07:20",
      "status": "Estimated",
-     "expected": "07:06"
+     "expected": "07:05"
     },
     {
      "place": "Montego Bay",
      "flight": "BY53",
      "sched": "07:25",
      "status": "Estimated",
-     "expected": "06:50"
+     "expected": "06:48"
     },
     {
      "place": "Geneva",
@@ -283,7 +283,7 @@
      "flight": "BY65",
      "sched": "07:50",
      "status": "Estimated",
-     "expected": "07:11"
+     "expected": "07:12"
     },
     {
      "place": "Belfast",
@@ -318,7 +318,7 @@
      "flight": "TS382",
      "sched": "07:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:20"
     },
     {
      "place": "Bergen",
@@ -433,6 +433,13 @@
      "expected": ""
     },
     {
+     "place": "Frankfurt",
+     "flight": "DE4123",
+     "sched": "09:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Madrid",
      "flight": "UX1013",
      "sched": "09:00",
@@ -443,6 +450,13 @@
      "place": "Malaga",
      "flight": "VY6614",
      "sched": "09:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "BA1481",
+     "sched": "09:10",
      "status": "Scheduled",
      "expected": ""
     },
@@ -524,9 +538,51 @@
      "expected": ""
     },
     {
+     "place": "Tangier",
+     "flight": "3O101",
+     "sched": "10:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Budapest",
+     "flight": "W62221",
+     "sched": "10:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faro",
+     "flight": "LS3124",
+     "sched": "10:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Menorca",
+     "flight": "U28032",
+     "sched": "10:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Orlando",
      "flight": "BA2038",
      "sched": "10:40",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Toronto",
+     "flight": "TS122",
+     "sched": "10:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malta",
+     "flight": "KM116",
+     "sched": "10:55",
      "status": "Scheduled",
      "expected": ""
     },
@@ -646,6 +702,13 @@
      "place": "Dublin",
      "flight": "FR120",
      "sched": "18:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zhengzhou",
+     "flight": "CZ653",
+     "sched": "18:30",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1040,8 +1103,8 @@
      "place": "Barcelona",
      "flight": "U28055",
      "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:25"
     },
     {
      "place": "Preveza/Lefkada",
@@ -1100,9 +1163,37 @@
      "expected": ""
     },
     {
+     "place": "Porto",
+     "flight": "A02666",
+     "sched": "07:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Thessaloniki",
+     "flight": "A02740",
+     "sched": "07:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Istanbul",
+     "flight": "TK1930",
+     "sched": "07:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Milan",
      "flight": "U28303",
      "sched": "07:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "U28075",
+     "sched": "08:05",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1264,6 +1355,153 @@
      "place": "Dublin",
      "flight": "FR143",
      "sched": "21:30",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-10-11": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Dublin",
+     "flight": "FR112",
+     "sched": "08:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR114",
+     "sched": "09:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR1111",
+     "sched": "10:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR116",
+     "sched": "11:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Shannon",
+     "flight": "FR1182",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR118",
+     "sched": "14:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR120",
+     "sched": "17:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR122",
+     "sched": "18:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cork",
+     "flight": "FR7721",
+     "sched": "19:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR126",
+     "sched": "21:05",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Dublin",
+     "flight": "FR113",
+     "sched": "08:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR115",
+     "sched": "09:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR1112",
+     "sched": "11:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR117",
+     "sched": "12:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Shannon",
+     "flight": "FR1183",
+     "sched": "13:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR119",
+     "sched": "14:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR121",
+     "sched": "17:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR123",
+     "sched": "19:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cork",
+     "flight": "FR7722",
+     "sched": "20:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR127",
+     "sched": "21:35",
      "status": "Scheduled",
      "expected": ""
     }
