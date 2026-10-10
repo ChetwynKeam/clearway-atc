@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-10T08:06:22Z",
+ "updated": "2026-10-10T08:26:54Z",
  "source": "avionio.com",
  "days": {
   "2026-10-10": {
@@ -248,7 +248,7 @@
      "flight": "U28418",
      "sched": "10:45",
      "status": "Estimated",
-     "expected": "10:24"
+     "expected": "10:27"
     },
     {
      "place": "Bordeaux",
@@ -304,7 +304,7 @@
      "flight": "U28294",
      "sched": "11:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:40"
     },
     {
      "place": "Pisa",
@@ -332,7 +332,7 @@
      "flight": "U28782",
      "sched": "11:10",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:50"
     },
     {
      "place": "Cancun",
@@ -345,7 +345,7 @@
      "place": "Cologne/Bonn",
      "flight": "EW472",
      "sched": "11:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -380,8 +380,8 @@
      "place": "Dublin",
      "flight": "FR1111",
      "sched": "11:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:30"
     },
     {
      "place": "Rimini",
@@ -471,8 +471,8 @@
      "place": "Milan",
      "flight": "U28302",
      "sched": "12:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:13"
     },
     {
      "place": "Belfast",
@@ -527,14 +527,14 @@
      "place": "Alicante",
      "flight": "BY4631",
      "sched": "12:30",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Palma de Mallorca",
      "flight": "EC8096",
      "sched": "12:30",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -583,7 +583,7 @@
      "place": "Rome",
      "flight": "U28324",
      "sched": "12:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -604,14 +604,14 @@
      "place": "Stockholm",
      "flight": "D84455",
      "sched": "12:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Almeria",
      "flight": "U28004",
      "sched": "12:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -688,7 +688,7 @@
      "place": "Kerkyra",
      "flight": "U28208",
      "sched": "13:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -723,7 +723,7 @@
      "place": "Kefallinia",
      "flight": "U28196",
      "sched": "13:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -838,7 +838,7 @@
      "flight": "QR330",
      "sched": "09:00",
      "status": "Estimated",
-     "expected": "09:16"
+     "expected": "09:18"
     },
     {
      "place": "Menorca",
@@ -921,8 +921,8 @@
      "place": "Zurich",
      "flight": "LX431",
      "sched": "09:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:44"
     },
     {
      "place": "Santiago de Compostela",
@@ -985,7 +985,7 @@
      "flight": "FR115",
      "sched": "09:45",
      "status": "Estimated",
-     "expected": "10:28"
+     "expected": "10:24"
     },
     {
      "place": "Sharjah",
@@ -1005,36 +1005,36 @@
      "place": "Naples",
      "flight": "EC8357",
      "sched": "09:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:55"
     },
     {
      "place": "Porto",
      "flight": "EC8527",
      "sched": "09:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:15"
     },
     {
      "place": "Copenhagen",
      "flight": "D83511",
      "sched": "10:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:16"
     },
     {
      "place": "Faro",
      "flight": "EC8529",
      "sched": "10:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:51"
     },
     {
      "place": "Madrid",
      "flight": "UX1014",
      "sched": "10:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:17"
     },
     {
      "place": "Antigua",
@@ -1047,15 +1047,15 @@
      "place": "Singapore",
      "flight": "SQ309",
      "sched": "10:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:21"
     },
     {
      "place": "Kos",
      "flight": "BY4684",
      "sched": "10:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:31"
     },
     {
      "place": "Cork",
@@ -1534,6 +1534,13 @@
      "expected": ""
     },
     {
+     "place": "Bastia",
+     "flight": "U28461",
+     "sched": "13:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Dublin",
      "flight": "FR117",
      "sched": "13:15",
@@ -1548,8 +1555,22 @@
      "expected": ""
     },
     {
+     "place": "Palma de Mallorca",
+     "flight": "EC8097",
+     "sched": "13:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Cancun",
      "flight": "BA2203",
+     "sched": "13:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Krakow/Balice",
+     "flight": "U28821",
      "sched": "13:25",
      "status": "Scheduled",
      "expected": ""
@@ -1558,27 +1579,6 @@
      "place": "Tenerife",
      "flight": "U28035",
      "sched": "13:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "EC8354",
-     "sched": "14:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Lanzarote",
-     "flight": "U28125",
-     "sched": "14:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Izmir",
-     "flight": "U28571",
-     "sched": "14:10",
      "status": "Scheduled",
      "expected": ""
     }
