@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-10T16:04:51Z",
+ "updated": "2026-10-10T16:25:28Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-10": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Lisboa",
-     "flight": "EJU7625",
-     "sched": "15:10",
-     "status": "Arrived",
-     "expected": "15:15"
-    },
-    {
-     "place": "Paris Orly",
-     "flight": "TO7696",
-     "sched": "15:20",
-     "status": "Arrived",
-     "expected": "14:54"
-    },
     {
      "place": "London Gatwick",
      "flight": "EZY8519",
@@ -100,8 +86,8 @@
      "place": "Nantes",
      "flight": "TO7840",
      "sched": "17:40",
-     "status": "Estimated",
-     "expected": "17:10"
+     "status": "Arrived",
+     "expected": "17:07"
     },
     {
      "place": "Basel",
@@ -122,28 +108,28 @@
      "flight": "EJU1745",
      "sched": "18:25",
      "status": "Estimated",
-     "expected": "19:20"
+     "expected": "20:05"
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8521",
      "sched": "18:30",
      "status": "Estimated",
-     "expected": "18:25"
+     "expected": "18:10"
     },
     {
      "place": "Lisboa",
      "flight": "TP1691",
      "sched": "18:35",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:20"
     },
     {
      "place": "Amsterdam",
      "flight": "HV6629",
      "sched": "18:40",
      "status": "Estimated",
-     "expected": "20:00"
+     "expected": "19:30"
     },
     {
      "place": "Katowice",
@@ -232,20 +218,6 @@
    ],
    "dep": [
     {
-     "place": "Edinburgh",
-     "flight": "FR6673",
-     "sched": "15:00",
-     "status": "Departed",
-     "expected": "14:58"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7624",
-     "sched": "15:10",
-     "status": "Departed",
-     "expected": "15:11"
-    },
-    {
      "place": "Paris Beauvais",
      "flight": "FR399",
      "sched": "15:50",
@@ -284,28 +256,28 @@
      "place": "Frankfurt",
      "flight": "4Y703",
      "sched": "17:05",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "17:10"
     },
     {
      "place": "Berlin Brandenburg",
      "flight": "EJU5334",
      "sched": "17:15",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Dusseldorf",
      "flight": "EW9601",
      "sched": "17:20",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Munich",
      "flight": "4Y705",
      "sched": "17:25",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
@@ -319,14 +291,14 @@
      "place": "Stockholm Arlanda",
      "flight": "SK2902",
      "sched": "17:40",
-     "status": "Boarding",
+     "status": "Final Call",
      "expected": ""
     },
     {
      "place": "Dusseldorf",
      "flight": "DE1415",
      "sched": "17:55",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
@@ -355,7 +327,7 @@
      "flight": "EJU1746",
      "sched": "18:55",
      "status": "Estimated",
-     "expected": "20:00"
+     "expected": "20:35"
     },
     {
      "place": "Brussels",
