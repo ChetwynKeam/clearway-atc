@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-11T05:26:43Z",
+ "updated": "2026-10-11T05:40:40Z",
  "source": "avionio.com",
  "days": {
   "2026-10-11": {
@@ -30,8 +30,8 @@
      "place": "Tupelo",
      "flight": "B69002",
      "sched": "01:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "23:43"
     },
     {
      "place": "Baltimore/Washington",
@@ -51,7 +51,7 @@
      "place": "San Salvador",
      "flight": "AV670",
      "sched": "02:05",
-     "status": "Estimated",
+     "status": "Cancelled",
      "expected": ""
     },
     {
@@ -213,14 +213,14 @@
      "flight": "AA10",
      "sched": "06:04",
      "status": "Estimated",
-     "expected": "05:00"
+     "expected": "00:44"
     },
     {
      "place": "San Diego",
      "flight": "B61190",
      "sched": "06:04",
      "status": "Estimated",
-     "expected": "04:13"
+     "expected": "04:52"
     },
     {
      "place": "Bogota",
@@ -276,7 +276,7 @@
      "flight": "B6264",
      "sched": "06:30",
      "status": "Estimated",
-     "expected": "01:18"
+     "expected": "01:19"
     },
     {
      "place": "Salt Lake City",
@@ -339,14 +339,14 @@
      "flight": "CI5320",
      "sched": "06:58",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:30"
     },
     {
      "place": "Georgetown",
      "flight": "B61966",
      "sched": "07:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:30"
     },
     {
      "place": "Seattle",
@@ -366,8 +366,8 @@
      "place": "Las Vegas",
      "flight": "AA1356",
      "sched": "07:11",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:36"
     },
     {
      "place": "Syracuse",
@@ -401,8 +401,8 @@
      "place": "Los Angeles",
      "flight": "B6454",
      "sched": "07:23",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:17"
     },
     {
      "place": "Buffalo",
@@ -457,8 +457,8 @@
      "place": "Los Angeles",
      "flight": "AA30",
      "sched": "07:29",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:25"
     },
     {
      "place": "Boston",
@@ -976,7 +976,7 @@
      "flight": "TK3",
      "sched": "10:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:42"
     },
     {
      "place": "Boston",
@@ -1082,13 +1082,6 @@
      "sched": "11:50",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Anchorage",
-     "flight": "QF7583",
-     "sched": "11:55",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -1097,7 +1090,7 @@
      "flight": "AF11",
      "sched": "01:00",
      "status": "Estimated",
-     "expected": "01:27"
+     "expected": "01:25"
     },
     {
      "place": "Guangzhou",
@@ -1110,8 +1103,8 @@
      "place": "Quito",
      "flight": "2K7397",
      "sched": "01:15",
-     "status": "Estimated",
-     "expected": "01:29"
+     "status": "Departed",
+     "expected": "01:38"
     },
     {
      "place": "Taipei",
@@ -1215,15 +1208,15 @@
      "place": "Beijing",
      "flight": "CA982",
      "sched": "02:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:23"
     },
     {
      "place": "Guayaquil",
      "flight": "2K7393",
      "sched": "02:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:15"
     },
     {
      "place": "Tel Aviv-Yafo",
@@ -1236,15 +1229,15 @@
      "place": "Shanghai",
      "flight": "CA1078",
      "sched": "02:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:30"
     },
     {
      "place": "Panama City",
      "flight": "CM807",
      "sched": "02:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:36"
     },
     {
      "place": "Fort Worth",
