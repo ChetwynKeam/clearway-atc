@@ -1,98 +1,7 @@
 {
- "updated": "2026-10-11T21:54:06Z",
+ "updated": "2026-10-11T22:05:46Z",
  "source": "gibraltarairport.gi",
  "days": {
-  "2026-10-11": {
-   "utcOffsetMin": 120,
-   "arr": [
-    {
-     "place": "Bristol",
-     "flight": "EZY2759",
-     "sched": "10:00",
-     "status": "Arrived",
-     "expected": "09:44"
-    },
-    {
-     "place": "Manchester",
-     "flight": "EZY2267",
-     "sched": "10:35",
-     "status": "Arrived",
-     "expected": "10:03"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "EZY8791",
-     "sched": "10:40",
-     "status": "Arrived",
-     "expected": "10:13"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EZY6671",
-     "sched": "11:00",
-     "status": "Arrived",
-     "expected": "10:24"
-    },
-    {
-     "place": "London Heathrow",
-     "flight": "BA490",
-     "sched": "10:55",
-     "status": "Arrived",
-     "expected": "10:34"
-    },
-    {
-     "place": "London Heathrow",
-     "flight": "BA492",
-     "sched": "15:05",
-     "status": "Arrived",
-     "expected": ""
-    }
-   ],
-   "dep": [
-    {
-     "place": "Bristol",
-     "flight": "EZY2760",
-     "sched": "10:35",
-     "status": "Departed",
-     "expected": "10:29"
-    },
-    {
-     "place": "Manchester",
-     "flight": "EZY2268",
-     "sched": "11:10",
-     "status": "Departed",
-     "expected": "11:24"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "EZY8792",
-     "sched": "11:25",
-     "status": "Departed",
-     "expected": "11:33"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EZY6672",
-     "sched": "11:35",
-     "status": "Departed",
-     "expected": "11:42"
-    },
-    {
-     "place": "London Heathrow",
-     "flight": "BA491",
-     "sched": "11:40",
-     "status": "Departed",
-     "expected": "11:51"
-    },
-    {
-     "place": "London Heathrow",
-     "flight": "BA493",
-     "sched": "15:55",
-     "status": "Departed",
-     "expected": ""
-    }
-   ]
-  },
   "2026-10-12": {
    "utcOffsetMin": 120,
    "arr": [
@@ -585,6 +494,83 @@
      "place": "London Heathrow",
      "flight": "BA493",
      "sched": "15:55",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-10-19": {
+   "utcOffsetMin": 120,
+   "arr": [
+    {
+     "place": "Manchester",
+     "flight": "EZY2267",
+     "sched": "10:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "EZY8791",
+     "sched": "10:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Heathrow",
+     "flight": "BA490",
+     "sched": "11:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Heathrow",
+     "flight": "BA492",
+     "sched": "16:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "EZY8793",
+     "sched": "19:15",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Manchester",
+     "flight": "EZY2268",
+     "sched": "10:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "EZY8792",
+     "sched": "11:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Heathrow",
+     "flight": "BA491",
+     "sched": "12:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Heathrow",
+     "flight": "BA493",
+     "sched": "17:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "EZY8794",
+     "sched": "19:55",
      "status": "Scheduled",
      "expected": ""
     }
