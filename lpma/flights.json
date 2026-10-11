@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-11T07:41:49Z",
+ "updated": "2026-10-11T07:54:03Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-11": {
@@ -37,15 +37,15 @@
      "place": "Porto Santo",
      "flight": "NT4933",
      "sched": "08:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:50"
     },
     {
      "place": "Lisboa",
      "flight": "EJU7621",
      "sched": "09:00",
-     "status": "Estimated",
-     "expected": "08:35"
+     "status": "Arrived",
+     "expected": "08:38"
     },
     {
      "place": "Porto",
@@ -58,7 +58,7 @@
      "place": "Nantes",
      "flight": "EJU4731",
      "sched": "09:15",
-     "status": "Estimated",
+     "status": "Arrived",
      "expected": "08:45"
     },
     {
@@ -358,13 +358,6 @@
    ],
    "dep": [
     {
-     "place": "Shannon",
-     "flight": "FR6675",
-     "sched": "06:45",
-     "status": "Departed",
-     "expected": "06:42"
-    },
-    {
      "place": "Porto Santo",
      "flight": "NT4932",
      "sched": "07:30",
@@ -375,29 +368,29 @@
      "place": "Lisboa",
      "flight": "FR089",
      "sched": "08:45",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Porto",
      "flight": "TP1702",
      "sched": "08:45",
-     "status": "Estimated",
-     "expected": "09:05"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1686",
      "sched": "09:25",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Paris Ch. de Gaulle",
      "flight": "EJU4602",
      "sched": "09:25",
-     "status": "Estimated",
-     "expected": "09:25"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Lisboa",
