@@ -1,25 +1,87 @@
 {
- "updated": "2026-10-11T16:54:45Z",
+ "updated": "2026-10-11T17:06:06Z",
  "source": "avionio.com",
  "days": {
   "2026-10-11": {
    "utcOffsetMin": 120,
    "arr": [
     {
+     "place": "Kalamata",
+     "flight": "VO221",
+     "sched": "13:30",
+     "status": "Landed",
+     "expected": "13:44"
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS105",
+     "sched": "13:55",
+     "status": "Landed",
+     "expected": "13:56"
+    },
+    {
+     "place": "Exeter",
+     "flight": "ALE67",
+     "sched": "14:18",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6609",
+     "sched": "15:45",
+     "status": "Estimated",
+     "expected": "16:41"
+    },
+    {
      "place": "Vienna",
      "flight": "OS107",
      "sched": "18:10",
-     "status": "Estimated",
+     "status": "Landed",
      "expected": "18:10"
     }
    ],
    "dep": [
+    {
+     "place": "Kalamata",
+     "flight": "VO220",
+     "sched": "06:35",
+     "status": "Departed",
+     "expected": "06:40"
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "14:35",
+     "status": "Departed",
+     "expected": "14:39"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "16:30",
+     "status": "Departed",
+     "expected": "17:36"
+    },
     {
      "place": "Vienna",
      "flight": "OS108",
      "sched": "18:50",
      "status": "Estimated",
      "expected": "18:59"
+    }
+   ]
+  },
+  "2026-10-10": {
+   "utcOffsetMin": 120,
+   "arr": [],
+   "dep": [
+    {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "16:35",
+     "status": "Departed",
+     "expected": "16:44"
     }
    ]
   }
