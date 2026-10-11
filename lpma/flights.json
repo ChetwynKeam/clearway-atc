@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-11T17:39:59Z",
+ "updated": "2026-10-11T17:53:24Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-11": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Hannover",
-     "flight": "X32830",
-     "sched": "16:35",
-     "status": "Arrived",
-     "expected": "16:56"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "EJU7965",
-     "sched": "16:40",
-     "status": "Arrived",
-     "expected": "16:18"
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "X32806",
-     "sched": "16:40",
-     "status": "Arrived",
-     "expected": "16:32"
-    },
     {
      "place": "Katowice",
      "flight": "W61029",
@@ -114,8 +93,8 @@
      "place": "Porto",
      "flight": "EJU6835",
      "sched": "20:40",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:10"
     },
     {
      "place": "Lisboa",
@@ -147,27 +126,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Prague",
-     "flight": "QS1171",
-     "sched": "16:40",
-     "status": "Departed",
-     "expected": "17:16"
-    },
-    {
-     "place": "Vienna",
-     "flight": "OS488",
-     "sched": "16:40",
-     "status": "Departed",
-     "expected": "16:53"
-    },
-    {
-     "place": "Warsaw",
-     "flight": "W61536",
-     "sched": "16:45",
-     "status": "Departed",
-     "expected": "17:01"
-    },
     {
      "place": "Frankfurt",
      "flight": "4Y703",
@@ -235,21 +193,21 @@
      "place": "Hannover",
      "flight": "X32831",
      "sched": "19:00",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Porto Santo",
      "flight": "NT4936",
      "sched": "19:00",
-     "status": "Final Call",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8522",
      "sched": "19:30",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -257,7 +215,7 @@
      "flight": "TP1692",
      "sched": "19:35",
      "status": "Estimated",
-     "expected": "20:10"
+     "expected": "20:00"
     },
     {
      "place": "Porto",
