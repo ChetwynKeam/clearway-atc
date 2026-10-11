@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-11T12:31:46Z",
+ "updated": "2026-10-11T12:51:50Z",
  "source": "avionio.com",
  "days": {
   "2026-10-11": {
@@ -58,8 +58,8 @@
      "place": "Milan",
      "flight": "AZ238",
      "sched": "15:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:45"
     },
     {
      "place": "Amsterdam",
@@ -151,29 +151,22 @@
      "place": "Ibiza",
      "flight": "CJ8461",
      "sched": "13:15",
-     "status": "Estimated",
-     "expected": "13:15"
-    },
-    {
-     "place": "Milan",
-     "flight": "CJ7301",
-     "sched": "13:20",
-     "status": "Estimated",
+     "status": "Departed",
      "expected": "13:20"
     },
     {
      "place": "Barcelona",
      "flight": "CJ8759",
      "sched": "13:20",
-     "status": "Estimated",
+     "status": "Departed",
      "expected": "13:20"
     },
     {
      "place": "Berlin",
      "flight": "CJ8493",
      "sched": "13:25",
-     "status": "Estimated",
-     "expected": "13:33"
+     "status": "Departed",
+     "expected": "13:32"
     },
     {
      "place": "Milan",
@@ -214,15 +207,15 @@
      "place": "Palma de Mallorca",
      "flight": "CJ8483",
      "sched": "14:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:22"
     },
     {
      "place": "Zurich",
      "flight": "LX457",
      "sched": "14:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:32"
     },
     {
      "place": "Nice",
@@ -256,6 +249,13 @@
      "place": "Guernsey",
      "flight": "GR407",
      "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "BA7305",
+     "sched": "15:40",
      "status": "Scheduled",
      "expected": ""
     }
