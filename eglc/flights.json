@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-11T06:08:07Z",
+ "updated": "2026-10-11T06:32:13Z",
  "source": "avionio.com",
  "days": {
   "2026-10-11": {
@@ -83,9 +83,44 @@
      "expected": ""
     },
     {
+     "place": "Luxembourg",
+     "flight": "LG4595",
+     "sched": "14:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Guernsey",
+     "flight": "GR406",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "CJ8705",
+     "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "CJ8729",
+     "sched": "15:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Milan",
      "flight": "AZ238",
      "sched": "15:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "CJ8474",
+     "sched": "16:30",
      "status": "Scheduled",
      "expected": ""
     },
@@ -109,37 +144,16 @@
      "sched": "17:55",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "AZ220",
-     "sched": "18:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Zurich",
-     "flight": "LX466",
-     "sched": "18:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "BA7306",
-     "sched": "20:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "AZ224",
-     "sched": "20:55",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
+    {
+     "place": "Amsterdam",
+     "flight": "BA8453",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
     {
      "place": "Milan",
      "flight": "BA7301",
@@ -207,15 +221,7 @@
   },
   "2026-10-12": {
    "utcOffsetMin": 60,
-   "arr": [
-    {
-     "place": "Zurich",
-     "flight": "LX450",
-     "sched": "07:25",
-     "status": "Scheduled",
-     "expected": ""
-    }
-   ],
+   "arr": [],
    "dep": [
     {
      "place": "Zurich",

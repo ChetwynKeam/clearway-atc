@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-11T06:08:04Z",
+ "updated": "2026-10-11T06:32:11Z",
  "source": "gibraltarairport.gi",
  "days": {
   "2026-10-11": {
@@ -13,6 +13,13 @@
      "expected": "09:42"
     },
     {
+     "place": "London Gatwick",
+     "flight": "EZY8791",
+     "sched": "10:40",
+     "status": "Estimated",
+     "expected": "10:17"
+    },
+    {
      "place": "Manchester",
      "flight": "EZY2267",
      "sched": "10:35",
@@ -20,25 +27,18 @@
      "expected": "10:31"
     },
     {
-     "place": "London Gatwick",
-     "flight": "EZY8791",
-     "sched": "10:40",
-     "status": "Scheduled",
-     "expected": ""
+     "place": "Birmingham",
+     "flight": "EZY6671",
+     "sched": "11:00",
+     "status": "Estimated",
+     "expected": "10:32"
     },
     {
      "place": "London Heathrow",
      "flight": "BA490",
      "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EZY6671",
-     "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:35"
     },
     {
      "place": "London Heathrow",
@@ -67,21 +67,21 @@
      "place": "London Gatwick",
      "flight": "EZY8792",
      "sched": "11:25",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     },
     {
      "place": "Birmingham",
      "flight": "EZY6672",
      "sched": "11:35",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     },
     {
      "place": "London Heathrow",
      "flight": "BA491",
      "sched": "11:40",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     },
     {
