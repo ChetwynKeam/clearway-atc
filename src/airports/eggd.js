@@ -5,7 +5,7 @@
 // aprons and buildings (eggd-ground.js). Positions are lat/lon (WGS84); bearings are TRUE unless named "mag" (variation
 // 0.5°E: magnetic = true − 0.5). Summary of the charts: airports/eggd/README.md.
 // Bristol is a one-runway airport on Broadfield Down, 622 ft up, 7 NM south-west of the city: runway 09/27, taxiway Z
-// along the aprons, and every arrival route ends at the BRI hold overhead the field.
+// along the aprons, and every STAR ends at the BRI hold overhead the field (arrivals are vectored off it before then).
 // Plain data plus a few small functions, like egkk.js; eggd-engine.js turns it into the engine's globals.
 
 const EGGD = (() => {

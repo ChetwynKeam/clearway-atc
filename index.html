@@ -3485,7 +3485,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <tr><td>East</td><td>ICTAM 1B</td><td>SAWPE, ASHUM, POMAX</td></tr>
         <tr><td>South and south-west</td><td>TOJAQ 2B, DAWLY 1B</td><td>EXMOR</td></tr>
       </table></div>
-      <p>Every STAR ends at <b>BRI</b>, the beacon over the airfield, at FL70: the hold is inbound 089°, left turns, from 3,000 ft to FL100. Clear the approach with <code>APP</code>. The arrival is vectored round a downwind and base to the intermediate fix: <b>ELROV</b> for the ILS 27, <b>EMPAS</b> for the ILS 09, both at 2,500 ft. Arrivals already on the approach side, like those from the east for 27, go straight to the base. Each arrival calls at <b>four miles</b>: hand it to the Tower with <code>HO</code> and clear it with <code>CTL</code> before then. The missed approach climbs straight ahead to 3,000 ft and returns to BRI.</p>
+      <p>Every STAR ends at <b>BRI</b>, the beacon over the airfield, at FL70: the hold is inbound 089°, left turns, from 3,000 ft to FL100. Arrivals only go to BRI to hold (<code>HOLD BRI</code>): they leave the STAR at the fix before it and are vectored round a downwind and base to the intermediate fix: <b>ELROV</b> for the ILS 27, <b>EMPAS</b> for the ILS 09, both at 2,500 ft. Arrivals already on the approach side, like those from the east for 27, go straight to the base. Clear the approach with <code>APP</code>. Each arrival calls at <b>four miles</b>: hand it to the Tower with <code>HO</code> and clear it with <code>CTL</code> before then. The missed approach climbs straight ahead to 3,000 ft and returns to BRI.</p>
     </section>
 
     <section id="bd-airspace" data-apt="EGGD" data-track="ap"><h2><span class="n">05</span>Airspace and weather</h2>
@@ -7195,7 +7195,7 @@ if (typeof module !== 'undefined') module.exports = EGLL;
 // aprons and buildings (eggd-ground.js). Positions are lat/lon (WGS84); bearings are TRUE unless named "mag" (variation
 // 0.5°E: magnetic = true − 0.5). Summary of the charts: airports/eggd/README.md.
 // Bristol is a one-runway airport on Broadfield Down, 622 ft up, 7 NM south-west of the city: runway 09/27, taxiway Z
-// along the aprons, and every arrival route ends at the BRI hold overhead the field.
+// along the aprons, and every STAR ends at the BRI hold overhead the field (arrivals are vectored off it before then).
 // Plain data plus a few small functions, like egkk.js; eggd-engine.js turns it into the engine's globals.
 
 const EGGD = (() => {
