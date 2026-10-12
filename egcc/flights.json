@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-12T03:34:59Z",
+ "updated": "2026-10-12T03:59:43Z",
  "source": "avionio.com",
  "days": {
   "2026-10-12": {
@@ -51,7 +51,7 @@
      "place": "Duesseldorf",
      "flight": "EW9340",
      "sched": "07:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -100,8 +100,8 @@
      "place": "Marseille",
      "flight": "FR3119",
      "sched": "07:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:50"
     },
     {
      "place": "Rome",
@@ -437,7 +437,7 @@
      "flight": "KU113",
      "sched": "11:30",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:49"
     },
     {
      "place": "Reykjavik",
@@ -645,6 +645,13 @@
     {
      "place": "Jeddah",
      "flight": "SV123",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gibraltar",
+     "flight": "U22268",
      "sched": "12:55",
      "status": "Scheduled",
      "expected": ""
@@ -1124,15 +1131,15 @@
      "place": "Kerkyra",
      "flight": "U22063",
      "sched": "05:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "05:30"
     },
     {
      "place": "Palma de Mallorca",
      "flight": "U22019",
      "sched": "05:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "05:40"
     },
     {
      "place": "Marrakech",
@@ -2421,6 +2428,13 @@
      "expected": ""
     },
     {
+     "place": "Zurich",
+     "flight": "LX390",
+     "sched": "08:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Belfast",
      "flight": "RK192",
      "sched": "08:35",
@@ -2459,6 +2473,13 @@
      "place": "Cork",
      "flight": "FR768",
      "sched": "09:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Munich",
+     "flight": "LH2500",
+     "sched": "09:50",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2554,6 +2575,13 @@
      "expected": ""
     },
     {
+     "place": "Zurich",
+     "flight": "LX394",
+     "sched": "13:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Goteborg",
      "flight": "FR3089",
      "sched": "13:25",
@@ -2585,34 +2613,6 @@
      "place": "Riga",
      "flight": "FR4097",
      "sched": "13:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Sevilla",
-     "flight": "FR4371",
-     "sched": "14:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Alicante",
-     "flight": "FR4028",
-     "sched": "14:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malta",
-     "flight": "FR5210",
-     "sched": "14:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Barcelona",
-     "flight": "FR6597",
-     "sched": "14:40",
      "status": "Scheduled",
      "expected": ""
     }
@@ -2759,16 +2759,16 @@
      "expected": ""
     },
     {
-     "place": "Belfast",
-     "flight": "RK193",
+     "place": "Zurich",
+     "flight": "LX391",
      "sched": "09:00",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Carcassonne",
-     "flight": "FR36",
-     "sched": "09:05",
+     "place": "Belfast",
+     "flight": "RK193",
+     "sched": "09:00",
      "status": "Scheduled",
      "expected": ""
     }
