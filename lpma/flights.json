@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-12T12:13:59Z",
+ "updated": "2026-10-12T12:53:26Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-12": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Lisboa",
-     "flight": "FR088",
-     "sched": "11:35",
-     "status": "Arrived",
-     "expected": "11:47"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "EZY8519",
-     "sched": "11:35",
-     "status": "Arrived",
-     "expected": "11:33"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1687",
-     "sched": "11:40",
-     "status": "Arrived",
-     "expected": "11:39"
-    },
     {
      "place": "Ponta Delgada",
      "flight": "S4160",
@@ -65,15 +44,15 @@
      "place": "Lisboa",
      "flight": "TP1689",
      "sched": "13:10",
-     "status": "Estimated",
-     "expected": "13:20"
+     "status": "Arrived",
+     "expected": "13:25"
     },
     {
      "place": "Faro",
      "flight": "TP1717",
      "sched": "13:20",
-     "status": "Estimated",
-     "expected": "13:10"
+     "status": "Arrived",
+     "expected": "13:16"
     },
     {
      "place": "Helsinki Vantaa",
@@ -86,8 +65,8 @@
      "place": "Liverpool",
      "flight": "LS3225",
      "sched": "14:00",
-     "status": "Estimated",
-     "expected": "13:35"
+     "status": "Arrived",
+     "expected": "13:34"
     },
     {
      "place": "Porto",
@@ -100,8 +79,8 @@
      "place": "Bristol",
      "flight": "LS1825",
      "sched": "15:10",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:55"
     },
     {
      "place": "Hamburg",
@@ -295,27 +274,6 @@
    ],
    "dep": [
     {
-     "place": "Gran Canaria",
-     "flight": "NT4073",
-     "sched": "11:15",
-     "status": "Departed",
-     "expected": "11:29"
-    },
-    {
-     "place": "Bristol",
-     "flight": "EZY2878",
-     "sched": "11:25",
-     "status": "Departed",
-     "expected": "11:51"
-    },
-    {
-     "place": "Manchester",
-     "flight": "LS852",
-     "sched": "11:35",
-     "status": "Departed",
-     "expected": "11:37"
-    },
-    {
      "place": "Birmingham",
      "flight": "LS1226",
      "sched": "11:55",
@@ -326,8 +284,8 @@
      "place": "London Gatwick",
      "flight": "EZY8520",
      "sched": "12:25",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "13:12"
     },
     {
      "place": "Lisboa",
@@ -340,22 +298,22 @@
      "place": "Madrid",
      "flight": "IB560",
      "sched": "13:20",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "13:23"
     },
     {
      "place": "London Luton",
      "flight": "EZY2472",
      "sched": "13:25",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Ponta Delgada",
      "flight": "S4163",
      "sched": "13:25",
-     "status": "Final Call",
-     "expected": ""
+     "status": "Departed",
+     "expected": "13:39"
     },
     {
      "place": "Lisboa",
@@ -368,21 +326,21 @@
      "place": "London Stansted",
      "flight": "LS1446",
      "sched": "13:55",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1690",
      "sched": "14:15",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP3834",
      "sched": "14:20",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
