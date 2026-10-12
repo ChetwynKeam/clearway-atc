@@ -525,7 +525,7 @@ const APT = {
     ];
     if (turbExcess(w) > 0) out.push('Moderate turbulence and windshear reported on final.');
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
-    if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+    if (E && E.rwyBlock) out.push(`Runway ${blockRw()} closed: ${E.rwyBlock.why}. ${parallelEnd(blockRw()) ? `Arrivals expect runway ${parallelEnd(blockRw())}, departures continue on the other runway.` : "Expect delays."}`);
     if (!minsOk(w, S.rwy)) out.push('Visibility below the ILS minima. Expect holding at ROSUN, MIRSI or DAYNE.');
     out.push(c === 'west' ? 'Runway 23R is crossed by taxiing traffic for 23L: hold short unless cleared to cross.' : 'Runway 05L is crossed by traffic vacating 05R: hold short unless cleared to cross.');
     out.push('Hot spots: hold Juliett 1 faces the 23R approach; complex junctions at Delta, Echo and Papa by the fire station.');

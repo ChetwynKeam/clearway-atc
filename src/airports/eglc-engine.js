@@ -351,7 +351,7 @@ const APT = {
     ];
     if (turbExcess(w) > 0) out.push('Moderate turbulence and windshear reported on final.');
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
-    if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+    if (E && E.rwyBlock) out.push(`Runway ${blockRw()} closed: ${E.rwyBlock.why}. ${parallelEnd(blockRw()) ? `Arrivals expect runway ${parallelEnd(blockRw())}, departures continue on the other runway.` : "Expect delays."}`);
     if (!minsOk(w, S.rwy)) out.push('Visibility below the approach ban. Expect holding.');
     out.push('Departures: release from London Control is required before take-off. Initial climb 3,000 feet.');
     out.push(`Acknowledge receipt of information ${L} and advise aircraft type on first contact.`);

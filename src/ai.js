@@ -169,6 +169,8 @@ function shutOpenFor(ac){
 // waiting), so the hold empties in a steady stream at the minimum spacing
 function holdGap(R, gap){
   if (!gap) return 0;
+  // a departure already on the runway (lined up, or lining up) gets its gap now: it can't wait out three landings there
+  if (S.acs.some(o => o.kind === 'DEP' && o.ground && o.onRwy && (o.state === 'LINEUP' || o.state === 'LINEDUP') && sameRwy(R, rwyOf(depRw(o)).id))) return gap;
   const held = S.acs.filter(o => o.kind === 'ARR' && o.airborne && o.mode === 'HOLD' && !o.app && sameRwy(R, rwyOf(landRw(o)).id)).length;
   if (held < 2) return gap;
   const n = (S.aiRun || {})[R.id] || 0;

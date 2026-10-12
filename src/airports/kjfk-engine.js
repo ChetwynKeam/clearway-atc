@@ -501,7 +501,7 @@ const APT = {
     ];
     if (turbExcess(w) > 0) out.push('Low level windshear advisories in effect.');
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
-    if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+    if (E && E.rwyBlock) out.push(`Runway ${blockRw()} closed: ${E.rwyBlock.why}. ${parallelEnd(blockRw()) ? `Arrivals expect runway ${parallelEnd(blockRw())}, departures continue on the other runway.` : "Expect delays."}`);
     if (!minsOk(w, S.rwy)) out.push('Visibility below ILS minimums. Expect holding.');
     out.push('Readback all runway hold short instructions. Departures to Boston and the Washington area: expect a call for release.');
     out.push(`Advise on initial contact you have information ${phonetic(L)}.`);
