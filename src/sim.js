@@ -126,6 +126,12 @@ for (const h of APT.ihps || []) {
 const holdPt = id => HOLDS[id] ? { id, node: HOLDS[id].node, rwy: true } : IHPS[id] ? { id, node: IHPS[id].node, rwy: false } : null;
 // something on the pavement of the runway that rw names (either direction)
 const onRunway = (o, rw) => o.onRwy && (o.rwyId || RWYS[0].id) === rwyOf(rw).id;
+// multiple line-ups: departures lined up (or lining up) on the same runway at different points, the one furthest down
+// the runway going first. luM: how far down the runway, in the take-off direction, one is or enters (metres)
+const luM = o => { const rw = depRw(o), R = rwyOf(rw), dir = rw === R.lo ? 1 : -1, H = HOLDS[o.hp];
+  return dir*R.mOf(!o.onRwy && H && GN[H.rwy] ? GN[H.rwy].p : [o.x, o.y]); };
+const luOthers = ac => S.acs.filter(o => o !== ac && o.kind === 'DEP' && o.ground && (o.state === 'LINEUP' || o.state === 'LINEDUP' || o.luq) && depRw(o) === depRw(ac));
+const NUM_WORD = ['zero', 'one', 'two', 'three', 'four', 'five'];
 // runways in use for landing or departure: taxiing traffic holds short of these until cleared to cross
 const rwysInUse = () => APT.activeRwys ? APT.activeRwys() : [S.rwy, depRw()];
 const depRwys = () => APT.depRwys ? APT.depRwys() : [depRw()];
@@ -882,7 +888,10 @@ const hasLines = tw => (LINED ||= new Set(GE.filter(e => e.line).map(e => e.tw))
 function readVia(toks, i, via){
   for (;;) {
     const t = toks[i+1];
-    if (t && /^[A-Z]{1,2}\d{0,2}$/.test(t) && PHON[t]) via.push(toks[++i]);
+    // Heathrow's links: LINK56, LINK 56 or L56 (when there is no taxiway L56)
+    const lk = t === 'LINK' && /^\d+$/.test(toks[i+2] || '') ? 'LINK' + toks[i+2] : /^L\d+$/.test(t || '') && !PHON[t] ? 'LINK' + t.slice(1) : null;
+    if (t && (/^[A-Z]{1,2}\d{0,2}$/.test(t) || /^LINK\d+$/.test(t)) && PHON[t]) via.push(toks[++i]);
+    else if (lk && PHON[lk]) { via.push(lk); i += t === 'LINK' ? 2 : 1; }
     else if (t && LINE_WORDS[t] && via.length && hasLines(via[via.length-1])) { via.line = [via[via.length-1], LINE_WORDS[t]]; i++; if (toks[i+1] === 'LINE') i++; }
     else return i;
   }
@@ -1143,15 +1152,20 @@ function commandRun(str){
       if (ac.state !== 'HOLDPT' && !luTaxi(ac)) { sys(`${ac.cs} is not at${ac.state === 'TAXI' ? ', or taxiing to,' : ''} a holding point${ac.state === 'TAXI' && (ac.holdAt || (ac.path && ac.path.ihp)) ? ' for the runway: taxi it on to one first' : ''}.`); continue; }
       if (ac.luq || (ac.cto && ac.state === 'TAXI')) { sys(`${ac.cs} is already cleared onto the runway.`); continue; }
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
-      if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)))) sys('Careful: the runway is occupied.', true);
+      const others = luOthers(ac), me = luM(ac), near = others.find(o => Math.abs(luM(o) - me) < 300);
+      if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)) && !others.includes(o))) sys('Careful: the runway is occupied.', true);
+      else if (near) sys(`Careful: ${near.cs} is lined up at about the same point as ${ac.cs}.`, true);
       else if (typeof vehOnRwy === 'function' && vehOnRwy(depRw(ac))) sys(`Careful: ${radioName(vehOnRwy(depRw(ac)))} is on the runway.`, true);
       if (APT.xing && S.xing.st !== 'CLOSED' && ((S.rwy === RW_LO && HOLDS[ac.hp].m > XING_M) || (S.rwy === RW_HI && HOLDS[ac.hp].m < XING_M))) sys('The backtrack crosses Winston Churchill Avenue: close the road first.', true);
       if (luTaxi(ac)) { ac.luq = true; ac.path.thru = true; }   // still taxiing: it rolls straight on through the holding point
       else startLineUp(ac);
-      { const [sa, ra] = PH.lineUp(ac, ac.hp); said.push(sa); reads.push(ra); }
+      { const [sa, ra] = PH.lineUp(ac, ac.hp), n = others.length ? 1 + others.filter(o => luM(o) > me).length : 0;   // others lined up too: its place in the sequence
+        said.push(sa + (n ? `, number ${NUM_WORD[n] || n} for departure` : '')); reads.push(ra + (n ? `, number ${NUM_WORD[n] || n}` : '')); }
     } else if (t === 'CTO') {
       if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state) && !luTaxi(ac)) { sys(`${ac.cs} is not ready for takeoff${ac.state === 'TAXI' && (ac.holdAt || (ac.path && ac.path.ihp)) ? ': taxi it on to the runway holding point first' : ''}.`); continue; }
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
+      { const me = luM(ac), ahead = luOthers(ac).find(o => o.onRwy && luM(o) > me + 50);   // one lined up further down the runway goes first
+        if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
       if (S.wx.vis < 1000) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
