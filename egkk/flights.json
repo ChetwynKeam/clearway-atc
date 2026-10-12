@@ -1,136 +1,10 @@
 {
- "updated": "2026-10-12T19:57:52Z",
+ "updated": "2026-10-12T20:08:57Z",
  "source": "avionio.com",
  "days": {
   "2026-10-12": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Copenhagen",
-     "flight": "D83520",
-     "sched": "20:00",
-     "status": "Landed",
-     "expected": "20:09"
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR122",
-     "sched": "20:00",
-     "status": "Landed",
-     "expected": "19:43"
-    },
-    {
-     "place": "Madrid",
-     "flight": "I21863",
-     "sched": "20:00",
-     "status": "Landed",
-     "expected": "20:04"
-    },
-    {
-     "place": "Jersey",
-     "flight": "U2878",
-     "sched": "20:00",
-     "status": "Landed",
-     "expected": "20:15"
-    },
-    {
-     "place": "Milan",
-     "flight": "U28376",
-     "sched": "20:05",
-     "status": "Landed",
-     "expected": "20:04"
-    },
-    {
-     "place": "Oslo",
-     "flight": "DY1310",
-     "sched": "20:10",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Chania",
-     "flight": "U28226",
-     "sched": "20:15",
-     "status": "Landed",
-     "expected": "20:23"
-    },
-    {
-     "place": "Bergen",
-     "flight": "DY1318",
-     "sched": "20:20",
-     "status": "Landed",
-     "expected": "19:54"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "U28697",
-     "sched": "20:20",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Barcelona",
-     "flight": "VY7828",
-     "sched": "20:20",
-     "status": "Landed",
-     "expected": "19:56"
-    },
-    {
-     "place": "Porto",
-     "flight": "TP1330",
-     "sched": "20:25",
-     "status": "Landed",
-     "expected": "20:12"
-    },
-    {
-     "place": "Jersey",
-     "flight": "A02525",
-     "sched": "20:30",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Alesund",
-     "flight": "DY1338",
-     "sched": "20:35",
-     "status": "Landed",
-     "expected": "20:19"
-    },
-    {
-     "place": "Nice",
-     "flight": "U28426",
-     "sched": "20:45",
-     "status": "Landed",
-     "expected": "20:21"
-    },
-    {
-     "place": "Ibiza",
-     "flight": "A02683",
-     "sched": "20:55",
-     "status": "Estimated",
-     "expected": "20:37"
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR126",
-     "sched": "20:55",
-     "status": "Landed",
-     "expected": "20:39"
-    },
-    {
-     "place": "Glasgow",
-     "flight": "U2835",
-     "sched": "20:55",
-     "status": "Estimated",
-     "expected": "20:48"
-    },
-    {
-     "place": "Malta",
-     "flight": "U29001",
-     "sched": "20:57",
-     "status": "Estimated",
-     "expected": ""
-    },
     {
      "place": "Inverness",
      "flight": "U2850",
@@ -199,7 +73,7 @@
      "flight": "U28474",
      "sched": "21:35",
      "status": "Estimated",
-     "expected": "21:30"
+     "expected": "21:29"
     },
     {
      "place": "Malaga",
@@ -569,8 +443,8 @@
      "place": "Milan",
      "flight": "U28310",
      "sched": "23:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "00:36"
     },
     {
      "place": "Porto",
@@ -638,109 +512,11 @@
    ],
    "dep": [
     {
-     "place": "Ahmedabad",
-     "flight": "AI160",
-     "sched": "20:00",
-     "status": "Estimated",
-     "expected": "20:19"
-    },
-    {
-     "place": "Lyon",
-     "flight": "EC8434",
-     "sched": "20:00",
-     "status": "Departed",
-     "expected": "20:10"
-    },
-    {
-     "place": "Cologne/Bonn",
-     "flight": "EW475",
-     "sched": "20:00",
-     "status": "Departed",
-     "expected": "20:17"
-    },
-    {
-     "place": "Barcelona",
-     "flight": "VY7821",
-     "sched": "20:10",
-     "status": "Departed",
-     "expected": "20:24"
-    },
-    {
-     "place": "Geneva",
-     "flight": "DS8497",
-     "sched": "20:15",
-     "status": "Estimated",
-     "expected": "21:45"
-    },
-    {
-     "place": "Malaga",
-     "flight": "EC8077",
-     "sched": "20:15",
-     "status": "Estimated",
-     "expected": "20:19"
-    },
-    {
-     "place": "Sevilla",
-     "flight": "VY6016",
-     "sched": "20:15",
-     "status": "Estimated",
-     "expected": "20:31"
-    },
-    {
-     "place": "Lisbon",
-     "flight": "EC8515",
-     "sched": "20:25",
-     "status": "Estimated",
-     "expected": "20:40"
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR123",
-     "sched": "20:40",
-     "status": "Estimated",
-     "expected": "20:54"
-    },
-    {
-     "place": "Madrid",
-     "flight": "I21864",
-     "sched": "20:40",
-     "status": "Estimated",
-     "expected": "20:49"
-    },
-    {
-     "place": "Copenhagen",
-     "flight": "D83521",
-     "sched": "20:45",
-     "status": "Estimated",
-     "expected": "21:03"
-    },
-    {
-     "place": "Oslo",
-     "flight": "DY1311",
-     "sched": "20:50",
-     "status": "Estimated",
-     "expected": "22:09"
-    },
-    {
-     "place": "Dalaman",
-     "flight": "XQ3691",
-     "sched": "20:50",
-     "status": "Estimated",
-     "expected": "21:03"
-    },
-    {
-     "place": "Porto",
-     "flight": "EC8527",
-     "sched": "20:55",
-     "status": "Estimated",
-     "expected": "21:04"
-    },
-    {
      "place": "Bergen",
      "flight": "DY1319",
      "sched": "21:00",
-     "status": "Estimated",
-     "expected": "21:13"
+     "status": "Departed",
+     "expected": "21:00"
     },
     {
      "place": "Barcelona",
@@ -774,15 +550,15 @@
      "place": "Dubai",
      "flight": "EK10",
      "sched": "21:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "22:00"
     },
     {
      "place": "Glasgow",
      "flight": "U2836",
      "sched": "21:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "22:00"
     },
     {
      "place": "Freetown",
@@ -857,7 +633,7 @@
      "flight": "BY5141",
      "sched": "00:35",
      "status": "Estimated",
-     "expected": ""
+     "expected": "00:12"
     },
     {
      "place": "Dalaman",
@@ -891,7 +667,7 @@
      "place": "Alicante",
      "flight": "U28120",
      "sched": "01:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -905,7 +681,7 @@
      "place": "Heraklion",
      "flight": "U28218",
      "sched": "01:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -913,7 +689,7 @@
      "flight": "U28752",
      "sched": "01:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "01:46"
     },
     {
      "place": "Tirana",
@@ -940,7 +716,7 @@
      "place": "Paphos",
      "flight": "LS3160",
      "sched": "02:30",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -968,7 +744,7 @@
      "place": "Punta Cana",
      "flight": "BA2204",
      "sched": "06:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -982,6 +758,132 @@
      "place": "Addis Ababa",
      "flight": "ET718",
      "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Beijing",
+     "flight": "CA851",
+     "sched": "06:35",
+     "status": "Estimated",
+     "expected": "06:30"
+    },
+    {
+     "place": "Shanghai",
+     "flight": "MU201",
+     "sched": "06:40",
+     "status": "Estimated",
+     "expected": "06:32"
+    },
+    {
+     "place": "Doha",
+     "flight": "QR329",
+     "sched": "06:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Orlando",
+     "flight": "BA2036",
+     "sched": "06:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Nairobi",
+     "flight": "KQ108",
+     "sched": "06:50",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Shanghai",
+     "flight": "CA847",
+     "sched": "06:55",
+     "status": "Estimated",
+     "expected": "06:43"
+    },
+    {
+     "place": "Singapore",
+     "flight": "SQ312",
+     "sched": "06:55",
+     "status": "Estimated",
+     "expected": "06:27"
+    },
+    {
+     "place": "Montego Bay",
+     "flight": "BY45",
+     "sched": "07:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dubai",
+     "flight": "EK11",
+     "sched": "07:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cancun",
+     "flight": "BY39",
+     "sched": "07:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR112",
+     "sched": "07:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "EC8302",
+     "sched": "08:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tampa",
+     "flight": "BA2166",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Sharjah",
+     "flight": "G9265",
+     "sched": "08:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR114",
+     "sched": "09:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Singapore",
+     "flight": "SQ314",
+     "sched": "09:30",
+     "status": "Estimated",
+     "expected": "09:04"
+    },
+    {
+     "place": "Cork",
+     "flight": "FR7721",
+     "sched": "09:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cape Town",
+     "flight": "N0796",
+     "sched": "10:55",
      "status": "Scheduled",
      "expected": ""
     }
