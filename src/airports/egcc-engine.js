@@ -153,7 +153,7 @@ function depHold(ac){
   const rw = depRw(ac), from = fromNode(ac), ks = endHolds(rw).length ? endHolds(rw) : Object.keys(HOLDS).filter(k => luOk(k, rw));
   if (ks.length < 2 || !from) return ks[0];
   const rs = routesFrom(from, ks.map(k => HOLDS[k].node)); let best = ks[0], bl = Infinity;
-  ks.forEach((k, i) => { const r = rs[i], L = r ? pathLen(r.nodes) : Infinity; if (L < bl) { bl = L; best = k; } });
+  ks.forEach(k => { const r = rs.get(HOLDS[k].node), L = r ? pathLen(r.nodes) : Infinity; if (L < bl) { bl = L; best = k; } });
   return best;
 }
 // nose-in stands: the tug pushes the tail back onto the taxilane, then 40 m along it the way the tail points

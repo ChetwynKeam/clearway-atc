@@ -1101,7 +1101,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
-        <a class="pill" href="#egcc"><b>New</b>Manchester is open: land on one runway, depart from the other across it</a>
+        <a class="pill" href="#egll"><b>New</b>London Heathrow is open: four stacks, two runways and the 15:00 alternation</a>
         <h1>Real airports. Real charts. <em>Your frequency.</em></h1>
         <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic is either the real flights in the air right now or a weekly airline timetable, tracked from origin to destination.</p>
         <div class="ctas">
@@ -1197,6 +1197,18 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real inbound comes within range, it becomes your flight to bring in.</span></li>
         <li><b>The weather outside</b><span>The live METAR sets the runway and the ATIS. A new report mid-session flashes the ATIS warning, just as it would on shift.</span></li>
       </ol>
+    </div>
+  </div></div>
+  <div class="section feat-ap" data-apt="EGLL"><div class="wrap">
+    <div class="fa-grid">
+      <div class="fa-shot"><img loading="lazy" src="shots/egll-tower.jpg" width="1216" height="772" alt="London Heathrow in the simulator, over the street map"><span class="fa-tag">LIVE · EGLL TOWER</span></div>
+      <div>
+        <div class="eyebrow">New airport</div>
+        <h2>London Heathrow, the busiest two runways in Europe.</h2>
+        <p>One runway lands, the other departs, and they swap at 15:00 every day so the towns under the approaches get a break. Four holding stacks at Bovingdon, Lambourne, Biggin and Ockham, CAT III ILS on all four runway ends, 24 SIDs that all stop at 6,000 ft, 252 stands at five terminals, and Terminal 5 departures taxiing the length of the airport while Terminal 4 arrivals cross the departure runway.</p>
+        <div class="kv"><span>RWY <b>2 · parallel</b></span><span>Length <b>3,902 m</b></span><span>Elev <b>83 ft</b></span><span>Approach <b>ILS CAT III</b></span></div>
+        <div class="ctas"><a class="btn primary" href="#sim">Open the position</a><a class="btn" href="#egll">Airport briefing</a></div>
+      </div>
     </div>
   </div></div>
   <div class="section feat-ap" data-apt="EGCC"><div class="wrap">
@@ -1320,7 +1332,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   <footer class="footer2"><div class="wrap">
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
     <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a><a href="#pricing">Pricing</a><a href="#request">Request an airport</a></div>
-    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a><a href="#kjfk">New York JFK · KJFK</a><a href="#egkk">London Gatwick · EGKK</a><a href="#lemd">Madrid-Barajas · LEMD</a><a href="#egcc">Manchester · EGCC</a></div>
+    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a><a href="#kjfk">New York JFK · KJFK</a><a href="#egkk">London Gatwick · EGKK</a><a href="#lemd">Madrid-Barajas · LEMD</a><a href="#egcc">Manchester · EGCC</a><a href="#egll">London Heathrow · EGLL</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span><a href="#terms">Terms</a><a href="#privacy">Privacy</a></div>
   </div></footer>
 </section>
@@ -1892,6 +1904,92 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </div></div>
   <footer class="footer"><div class="wrap"><span>Clearway · Manchester EGCC</span><span>Opened as Ringway in 1938; its second runway, opened in 2001, was the first full-length runway built in the UK for twenty years.</span></div></footer>
 </section>
+<section class="page" id="page-egll" data-page="egll" hidden>
+  <div class="aphead">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#airports">Airports</a><span>›</span><span>UK &amp; Ireland</span><span>›</span><b>London Heathrow</b></nav>
+      <div class="ap-grid">
+        <div>
+          <div class="ap-id"><span class="icao">EGLL</span><span class="iata">LHR</span><span class="badge live">Open now</span><span class="badge new">New</span></div>
+          <h1>London Heathrow</h1>
+          <p class="lede">The busiest airport in Europe, on two parallel runways at the western edge of London. Heathrow works in segregated mode: one runway for landings, the other for take-offs, swapped at 15:00 every day so the towns under the approaches get a break. You work Heathrow Director, Tower and Ground combined, from the Bovingdon, Lambourne, Biggin and Ockham stacks to 252 stands at Terminals 2 to 5.</p>
+          <div class="kv"><span>Director <b>119.730</b></span><span>Tower <b>118.505</b></span><span>Ground <b>121.905</b></span><span>TA <b>6,000 ft</b></span><span>Charts <b>UK AIP</b></span></div>
+          <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
+        </div>
+        <div class="ap-shot"><img loading="lazy" src="shots/egll-tower.jpg" width="1216" height="772" alt="London Heathrow aerodrome in the simulator, over the street map"><span class="fa-tag">AERODROME · MAPPED TO SCALE</span></div>
+      </div>
+    </div>
+    <div class="wrap"><div class="facts">
+      <div><b>2</b><span>Parallel runways, 1,415 m apart: one lands, the other departs</span></div>
+      <div><b>3,902 m</b><span>Runway 09L/27R; runway 09R/27L is 3,660 m. Both are 50 m wide</span></div>
+      <div><b>15:00</b><span>Runway alternation: the landing runway swaps every afternoon, westerly or easterly</span></div>
+      <div><b>4</b><span>Holding stacks: Bovingdon, Lambourne, Biggin and Ockham, from 7,000 ft</span></div>
+      <div><b>6,000 ft</b><span>Transition altitude: every SID stops at 6,000 ft</span></div>
+      <div><b>252</b><span>Stands, at Terminals 2, 3, 4 and 5, the remote stands and the cargo area</span></div>
+    </div></div>
+  </div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">What makes it Heathrow</div><h2>Built from the UK AIP.</h2></div>
+      <p>The runways, holding points, arrivals, departures, stacks and approaches come from the UK AIP charts for EGLL: the aerodrome and ground movement charts, the aircraft parking charts, the standard departure and arrival charts with their coding tables, the holding charts and the ILS/DME and RNP approach charts for all four runway ends. The taxiway, stand and building layout follows OpenStreetMap, checked against the ground movement charts, and each stand takes only the aircraft it is built for.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 10h26M3 22h26"/><path d="M8 16h16" stroke-dasharray="3 2"/></svg><h3>Segregated mode and alternation</h3><p>The landing and departure runways swap at 15:00 every day, westerly or easterly: one week the northern runway (27R or 09L) lands until 15:00 and the southern one (27L or 09R) after, the next week the other way round, as the real programme does.</p><div class="src">AD 2.21 noise abatement · runway alternation</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><ellipse cx="9" cy="10" rx="6" ry="3"/><ellipse cx="23" cy="10" rx="6" ry="3"/><ellipse cx="9" cy="22" rx="6" ry="3"/><ellipse cx="23" cy="22" rx="6" ry="3"/></svg><h3>Four stacks</h3><p>Arrivals from the north-west hold at Bovingdon, from the north-east at Lambourne, from the south-east at Biggin and from the south-west at Ockham, from 7,000 ft upwards, 1,000 ft apart. Eighteen STARs feed them.</p><div class="src">STAR charts 7-1 to 7-17 · holding charts 7-18 and 7-19</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26L16 6"/><path d="M20 26h8" stroke-dasharray="2 2"/></svg><h3>CAT III on every runway end</h3><p>ILS/DME approaches to 27R, 27L, 09L and 09R, joined from IVLAR, NEKSA, ABAVI and BENPA at 3,000 ft. Heathrow lands in fog that closes most airports: low visibility procedures slow the flow, they don't stop it.</p><div class="src">IAC 8-1 to 8-8</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26l10-10 6 6 8-14"/><path d="M22 8h6v6"/></svg><h3>24 departures, stopped at 6,000 ft</h3><p>Compton, MAXIT and MODMI, Brookmans Park, UMLAT and ULTIB, Detling, GOGSI and GASGU: a SID for each route off each runway end, all stopping at 6,000 ft under the London TMA with no release. London Control takes them higher.</p><div class="src">SID charts 6-1 to 6-6</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 16h28"/><path d="M10 6v20M22 6v20" stroke-dasharray="3 2"/></svg><h3>Real taxi routes</h3><p>Alpha and Bravo round the Central Area, the Link taxiways, the cross-field routes to Terminal 4 and the long taxi from Terminal 5 to the 27L holding points. 74 runway-holding positions, and Terminal 4 traffic crossing the departure runway at its ends.</p><div class="src">Ground movement charts</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h8v16H3zM13 8h8v16h-8zM23 12h6v12h-6z"/></svg><h3>Five terminal areas</h3><p>British Airways, Iberia and Vueling at Terminal 5, oneworld and Virgin at Terminal 3, SkyTeam and the Gulf and Asian airlines at Terminal 4, Star Alliance at Terminal 2. Stands are sized: an A380 only fits where an A380 can go.</p><div class="src">Aircraft parking charts · stands from OpenStreetMap</div></div>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Three positions, one console</div><h2>From the stacks to the stand.</h2></div>
+      <p>Heathrow Director, Tower and Ground are combined on one position. Scroll out for the four stacks round London, and scroll in for the runways, the Central Area and the stands.</p>
+    </div>
+    <div class="positions">
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/egll-radar.jpg" width="1216" height="772" alt="Heathrow approach radar in the simulator"></div><div class="body"><div class="freq">HEATHROW DIRECTOR · 119.730</div><h3>Approach</h3><p>Arrivals check in on their STAR towards one of the four stacks. Descend them into the stack, take them out in turn onto the ILS for the landing runway, and keep the final full. Departures check in climbing to 6,000 ft: climb them and hand them to London Control.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/egll-runway.jpg" width="1216" height="772" alt="The runways at Heathrow in the simulator"></div><div class="body"><div class="freq">HEATHROW TOWER · 118.505</div><h3>Tower</h3><p>One controller lands, one departs. Clear the landings on one runway and the take-offs from the other, and cross the Terminal 4 traffic over the departure runway between take-offs.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/egll-ground.jpg" width="1216" height="772" alt="The Terminal 5 stands at Heathrow in the simulator"></div><div class="body"><div class="freq">HEATHROW GROUND · 121.905</div><h3>Ground</h3><p>Clear each departure with its SID and push it off the stand, then taxi it to the right end of the departure runway. Arrivals stop clear of the runway and ask for taxi to a stand at their airline's terminal.</p></div></div>
+    </div>
+  </div></div>
+
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now at Heathrow</div><h2>Work today’s real traffic at EGLL.</h2><p>Pick Live now in the session setup and the position opens at the current time with Heathrow's real flights, live aircraft positions over London and the current METAR.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>Heathrow's arrivals and departures for the next few hours, from avionio’s public LHR boards, refreshed every 15 minutes.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Heathrow inbound comes within range, it becomes your flight.</span></li>
+        <li><b>The weather outside</b><span>The live EGLL METAR sets the runway direction, the ATIS and the QNH.</span></li>
+      </ol>
+    </div>
+  </div></div>
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
+      <p>Each scenario is a METAR the simulation reads for wind, visibility, cloud and QNH. You can also switch on Live METAR to use the current EGLL report, or paste one yourself.</p>
+    </div>
+    <div class="scen" data-scen></div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="sources">
+      <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
+        <p class="note">The runways, holding points, procedures, fixes, stacks and the Heathrow frequencies come from the UK AIP charts for EGLL. Heathrow really splits delivery, ground, tower and the approach between many positions; here they are one. The SIDs are flown as their published routes, the London Control frequencies are representative, the night quota period and mixed-mode trials are not modelled, and airline terminals are approximate. Stand numbers follow OpenStreetMap and the parking charts. The timetable is built from a real day of Heathrow's boards, thinned to about 40 movements an hour. In Live now sessions the flights come from avionio’s public LHR arrivals and departures boards and aircraft positions from the adsb.lol and adsb.fi networks; once a flight is yours it follows your instructions, not its real track. This is a training game and is not for real-world navigation. It is not affiliated with Heathrow Airport, NATS or any airline.</p></div>
+      <ul>
+        <li><b>Aerodrome, ground movement and parking charts</b>The two runways, 74 holding points, the taxiways and 252 stands.</li>
+        <li><b>SID charts</b>The 24 departures off 27R, 27L, 09R and 09L.</li>
+        <li><b>STAR and holding charts</b>The eighteen arrivals and the Bovingdon, Lambourne, Biggin and Ockham stacks.</li>
+        <li><b>Approach charts</b>The ILS/DME to all four runway ends, their intermediate fixes, glidepaths and missed approaches.</li>
+        <li><b>OpenStreetMap</b>Taxiway, apron, stand and building geometry and the street map under the scope.</li>
+        <li><b>Live now</b>Heathrow flights from avionio.com; live aircraft positions from adsb.lol and adsb.fi.</li>
+      </ul>
+    </div>
+  </div></div>
+  <footer class="footer"><div class="wrap"><span>Clearway · London Heathrow EGLL</span><span>Opened as London Airport in 1946 on the site of the Great West Aerodrome; its two runways are what is left of six.</span></div></footer>
+</section>
 <section class="page" id="page-lemd" data-page="lemd" hidden>
   <div class="aphead">
     <div class="wrap">
@@ -2136,6 +2234,12 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <div class="sub">LEMD · RWY 14L/32R 14R/32L 18L/36R 18R/36L · ELEV 1998 ft · ILS · TA 13000 · Approach 127.505 · Tower 118.155 / 118.980 · Ground 121.980</div>
         <p style="margin-top:14px">You hold all three positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Madrid flights from the current time with the live METAR. Bring arrivals off their STARs onto two parallel ILS approaches, and work departures from three terminal areas onto two departure runways.</p>
         </div>
+        <div data-only="EGLL">
+        <div class="eyebrow">Position briefing</div>
+        <h1>Heathrow Director, Tower &amp; Ground</h1>
+        <div class="sub">EGLL · RWY 09L/27R 09R/27L · ELEV 83 ft · ILS CAT III · TA 6000 · Director 119.730 · Tower 118.505 · Ground 121.905</div>
+        <p style="margin-top:14px">You hold all three positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the timetable, or pick <b>Live now</b> to work today’s real Heathrow flights from the current time with the live METAR. Bring arrivals out of the four stacks onto the ILS to the landing runway, and work the departures from five terminal areas to the other runway.</p>
+        </div>
         <div data-only="EGCC">
         <div class="eyebrow">Position briefing</div>
         <h1>Manchester Radar, Tower &amp; Ground</h1>
@@ -2216,6 +2320,11 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <li>Terminal 4 departures use 36L, Terminal 4S departures 36R. No releases are needed. Traffic between Terminals 4 and 4S crosses 18R/36L: clear it with <code>CROSS</code>.</li>
           <li>Type commands in the bar under the scope, for example <code>IBE3162 APP 32L</code> or <code>IBE3402 TAXI Z2</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
+        <ul data-only="EGLL">
+          <li>One runway lands, the other departs. Westerly: land 27R and depart 27L, or the reverse. Easterly: land 09L and depart 09R, or the reverse. The runways swap at 15:00 (the week decides which comes first); the simulator switches at 15:00 by itself; the runway buttons override it.</li>
+          <li>Departures enter the runway at its far end: 27L at November 1 or Sierra 1, 27R at Alpha 1 or Alpha 2. No releases are needed. Traffic to and from Terminal 4 crosses the southern runway: clear it with <code>CROSS</code>.</li>
+          <li>Type commands in the bar under the scope, for example <code>BAW478 PUSH</code> or <code>VIR4 A70 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
+        </ul>
         <ul data-only="EGCC">
           <li>Two runways, one job each. Westerly: land 23R, depart 23L. Easterly: land 05R, depart 05L. The runway buttons switch the configuration.</li>
           <li>Westerly departures cross runway 1 on their way out, easterly arrivals on their way in: they stop at the runway-holding position and call. Clear them with <code>CROSS</code> between the landings. No releases are needed.</li>
@@ -2232,7 +2341,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span><span data-only="KJFK">Data from FAA terminal procedures for KJFK.</span><span data-only="EGKK">Data from UK AIP AD 2 EGKK.</span><span data-only="EGCC">Data from UK AIP AD 2 EGCC.</span><span data-only="LEMD">Data from AIP España AD 2 LEMD.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span><span data-only="KJFK">Data from FAA terminal procedures for KJFK.</span><span data-only="EGKK">Data from UK AIP AD 2 EGKK.</span><span data-only="EGCC">Data from UK AIP AD 2 EGCC.</span><span data-only="EGLL">Data from UK AIP AD 2 EGLL.</span><span data-only="LEMD">Data from AIP España AD 2 LEMD.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>
@@ -3133,6 +3242,88 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       </ul>
     </section>
 
+    <section id="hl-position" data-apt="EGLL" data-track="ap"><h2><span class="n">01</span>Your position at Heathrow</h2>
+      <p>You are <b>Heathrow Director (119.730)</b>, <b>Heathrow Tower (118.505)</b> and <b>Heathrow Ground (121.905)</b> combined. Arrivals check in with Director on their STAR towards one of the four stacks. You hand them to the Tower once they are established on the ILS. Departures call Ground ready to start and push, go to the Tower at the holding point, to <b>London Control</b> once airborne. The ATIS is <b>Heathrow Information</b> on 128.080.</p>
+      <p>Heathrow works to UK rules, like Gatwick and Manchester:</p>
+      <ul>
+        <li>The <b>transition altitude is 6,000 ft</b>. Every SID stops at 6,000 ft under the London TMA, and arrivals are given flight levels down to the stack, whose lowest level is FL70 (7,000 ft when the pressure is low).</li>
+        <li>UK phraseology: "cleared to land", "line up and wait", "cross runway 27L", and a <b>"four miles"</b> call from each arrival before you clear it to land.</li>
+        <li><b>No releases.</b> The SIDs are agreed with London Control in advance.</li>
+      </ul>
+      <div class="callout"><div class="lbl">Segregated mode and the 15:00 alternation</div><p>Heathrow lands on one runway and departs from the other. The runways swap every afternoon at 15:00, in a <b>westerly</b> (27R and 27L) and an <b>easterly</b> (09L and 09R) alike: one week the northern runway lands until 15:00 and the southern one after it, the next week the other way round, so the towns under each approach get half a day's break. The simulator makes the switch at 15:00 by itself and tells you; the runway buttons in the ATIS panel override it. Land three arrivals on each runway in one session with no loss of separation for the <b>Runway alternation</b> badge.</p></div>
+    </section>
+
+    <section id="hl-aerodrome" data-apt="EGLL" data-track="ap"><h2><span class="n">02</span>The aerodrome</h2>
+      <figure class="fig"><canvas data-fig="aerodrome" aria-label="London Heathrow aerodrome diagram with the two runways, taxiways and terminals"></canvas><figcaption>The aerodrome as drawn in the simulator: the northern runway (09L/27R) and the southern runway (09R/27L) 1,415 m apart, Terminals 2 and 3 in the Central Area between them, Terminal 5 at the west end and Terminal 4 and the cargo area south of the southern runway. Taxiways and stands from OpenStreetMap, checked against the ground movement charts.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Length</th><th>Use</th></tr>
+        <tr><td>09L/27R (northern)</td><td>3,902 × 50 m</td><td>Lands or departs, swapping at 15:00 in either direction</td></tr>
+        <tr><td>09R/27L (southern)</td><td>3,660 × 50 m</td><td>Departs or lands, swapping at 15:00 in either direction</td></tr>
+      </table></div>
+      <h3>Terminals and stands</h3>
+      <p>British Airways, Iberia and Vueling use Terminal 5 and its satellites; Virgin Atlantic and the oneworld long-haul airlines Terminal 3; SkyTeam, Qatar Airways, Etihad and many Asian and African airlines Terminal 4; Star Alliance and the rest Terminal 2. When a terminal is full the arrival is given a stand at the next one. Every stand has a maximum size: an A380 only fits on the stands built for it, and a wide stand is not wasted on an A320 while a smaller one is free.</p>
+      <h3>Crossing the southern runway</h3>
+      <p>Terminal 4 and the cargo area are south of the southern runway, everything else north of it. Traffic between them crosses the southern runway, mostly at its east end on the link between <b>November 1</b> and <b>Sierra 1</b>, behind the departures lining up there. It stops at the runway-holding position and calls; clear it with <code>CROSS</code> between two departures, never in front of one.</p>
+    </section>
+
+    <section id="hl-ground" data-apt="EGLL" data-track="ap"><h2><span class="n">03</span>Ground and departures</h2>
+      <h3>Clearance, start-up and push</h3>
+      <p>At Heathrow, Delivery (121.980) gives the clearance and Ground the start and push. The simulator does it in one call: press <b>Push</b> or type <code>PUSH</code>.</p>
+      <div class="rt">
+        <div><span class="w">GND</span><span class="a">Speedbird four seven eight, cleared to Barcelona via MAXIT One Golf departure, runway 27L, climb altitude 6,000 feet, squawk 4632, start-up and push back approved, facing east, QNH 1014</span></div>
+        <div><span class="w">BAW478</span><span class="p">Cleared Barcelona, MAXIT One Golf, runway 27L, altitude 6,000 feet, squawk 4632, start and push approved facing east, QNH 1014, Speedbird four seven eight</span></div>
+      </div>
+      <h3>Holding points</h3>
+      <p>Departures use the full length of the runway, from its far end. Runway <b>27L</b> departures enter at <b>November 1</b> from the Central Area and Terminal 5 or <b>Sierra 1</b> from Terminal 4. Runway <b>27R</b> departures enter at <b>Alpha 1</b> or <b>Alpha 2</b>. Runway <b>09R</b> departures enter at <b>November 11</b> or <b>Sierra 11</b>. From Terminal 5 to the 27L holding points is the whole length of the airport, east along Alpha or Bravo. The <b>Taxi…</b> box lists the routes and shows each one on the scope.</p>
+      <h3>The SIDs</h3>
+      <div class="tbl"><table>
+        <tr><th>Route</th><th>27R</th><th>27L</th><th>09R</th><th>09L</th></tr>
+        <tr><td>West (Compton)</td><td>CPT 3F</td><td>CPT 3G</td><td>CPT 5J</td><td>CPT 4K</td></tr>
+        <tr><td>South (MAXIT, MODMI)</td><td>MAXIT 1F</td><td>MAXIT 1G</td><td>MODMI 1J</td><td>MODMI 1K</td></tr>
+        <tr><td>South-west (GOGSI, GASGU)</td><td>GOGSI 2F</td><td>GOGSI 2G</td><td>GASGU 2J</td><td>GASGU 2K</td></tr>
+        <tr><td>South-east (Detling)</td><td>DET 2F</td><td>DET 2G</td><td>DET 1J</td><td>DET 1K</td></tr>
+        <tr><td>North-east (Brookmans Park)</td><td>BPK 7F</td><td>BPK 7G</td><td>BPK 6J</td><td>BPK 5K</td></tr>
+        <tr><td>North (UMLAT, ULTIB)</td><td>UMLAT 1F</td><td>UMLAT 1G</td><td>ULTIB 1J</td><td>ULTIB 1K</td></tr>
+      </table></div>
+      <p>Every SID stops at <b>6,000 ft</b>. Once airborne, send each departure to London Control with <code>HO</code>; when it asks for more, climb it with <code>A150</code> and hand it on.</p>
+    </section>
+
+    <section id="hl-arrivals" data-apt="EGLL" data-track="ap"><h2><span class="n">04</span>Arrivals, the stacks and the ILS</h2>
+      <div class="tbl"><table>
+        <tr><th>From</th><th>STARs</th><th>Stack</th></tr>
+        <tr><td>North, north-west, the Atlantic</td><td>NUGRA 2H, FITBO 2H, HON 2H, SIRIC 1Z, LAM 1Z</td><td><b>Bovingdon (BNN)</b>, north-west, right-hand</td></tr>
+        <tr><td>North-east, Scandinavia</td><td>LOGAN 2H, BARMI 1H</td><td><b>Lambourne (LAM)</b>, north-east, left-hand</td></tr>
+        <tr><td>South-east, Europe</td><td>ALESO 1H, TANET 1Z, LAM 1X, OCK 1Z</td><td><b>Biggin (BIG)</b>, south-east, right-hand</td></tr>
+        <tr><td>South-west, south, the west</td><td>OTMET 1H, ROXOG 1H, HAZEL 1H, SIRIC 1H, TOBID 1X, BIG 1Z, LAM 1Y</td><td><b>Ockham (OCK)</b>, south-west, right-hand</td></tr>
+      </table></div>
+      <p>Each stack starts at <b>7,000 ft</b>, with arrivals stacked 1,000 ft apart above it. Clear the approach with <code>APP</code>: from the stack the arrival is vectored round a downwind and base to the intermediate fix at <b>3,000 ft</b>, <b>IVLAR</b> for 27R, <b>NEKSA</b> for 27L, <b>ABAVI</b> for 09L and <b>BENPA</b> for 09R. All four ILS are CAT III. Each arrival calls at <b>four miles</b>: hand it to the Tower with <code>HO</code> and clear it with <code>CTL</code> before then.</p>
+      <p>Arrivals on the northern runway turn off to the left onto Alpha, towards the Central Area and Terminal 5, at the rapid exits such as <b>Alpha 10 West</b>, <b>Alpha 9 West</b> and <b>Alpha 8</b>. Arrivals on the southern runway turn off north for the Central Area or south for Terminal 4. Pick the exit with <code>VAC</code> while the arrival is still rolling. Arrivals for Terminal 4 off the northern runway stop at the southern runway and need a <code>CROSS</code>.</p>
+    </section>
+
+    <section id="hl-airspace" data-apt="EGLL" data-track="ap"><h2><span class="n">05</span>Airspace and weather</h2>
+      <p>Heathrow sits 83 ft above sea level in the Thames Valley, 13 miles west of central London. The westerly final runs over the city itself, from IVLAR above the Isle of Dogs past Battersea, Richmond and Hounslow; the easterly final over Windsor. London City, Gatwick, Northolt and the other London airports are close by, and their traffic is not simulated.</p>
+      <p>Atlantic westerlies keep the westerly in use about seven days in ten. Fronts bring low cloud and drizzle, still autumn and winter mornings bring fog in the Thames Valley, and gales bring gusty crosswinds and windshear on short final. In fog Heathrow keeps landing in CAT III, with wider spacing on final.</p>
+    </section>
+
+    <section id="hl-exercises" data-apt="EGLL" data-track="ap"><h2><span class="n">06</span>Guided exercises</h2>
+      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. Complete all three for the <b>Heathrow endorsement</b> badge.</p>
+      <div class="exgrid">
+        <div class="ex"><div class="nm">1 · Push from Terminal 5 and depart 27L</div><p>A British Airways A320 on stand 518 for Barcelona. Clear and push it, taxi it the length of the airport to November 1, take off on the MAXIT 1G and hand it to London Control.</p><button class="btn primary" data-ex="hdep">Start exercise</button></div>
+        <div class="ex"><div class="nm">2 · From the Bovingdon stack to the ILS 27R</div><p>A Virgin Atlantic A350-1000 from New York. Descend it into the Bovingdon stack, clear the ILS 27R, land it and taxi it to Terminal 3.</p><button class="btn primary" data-ex="harr">Start exercise</button></div>
+        <div class="ex"><div class="nm">3 · Land 27R, cross 27L to Terminal 4, depart 27L</div><p>A Qatar Airways 777 from Doha and two departures for Frankfurt and Amsterdam. Get the departures away off 27L, land the arrival on 27R and cross it over 27L to Terminal 4.</p><button class="btn primary" data-ex="hmix">Start exercise</button></div>
+      </div>
+    </section>
+
+    <section id="hl-limits" data-apt="EGLL" data-track="ap"><h2><span class="n">07</span>What is simplified at Heathrow</h2>
+      <ul>
+        <li>Director, Tower, Ground and Delivery are one position.</li>
+        <li>Only segregated mode: the night quota period and mixed-mode trials are not modelled.</li>
+        <li>Arrivals are vectored out of the stack onto a standard downwind and base rather than tactically.</li>
+        <li>The London Control sector frequencies are representative, and airline terminals are approximate.</li>
+        <li>The timetable is a real day of Heathrow's boards thinned to about 40 movements an hour; the real airport handles about 85.</li>
+      </ul>
+    </section>
+
     <section id="md-position" data-apt="LEMD" data-track="ap"><h2><span class="n">01</span>Your position at Madrid</h2>
       <p>You are <b>Madrid Approach (127.505)</b>, <b>Barajas Tower</b> and <b>Barajas Ground (121.980)</b> combined. Arrivals check in with Approach on their STAR. You hand them to the Tower once they are established on the ILS. Departures call Ground ready to start and push, go to the Tower at the holding point, to <b>Madrid Departure</b> once airborne, and then to <b>Madrid Control</b>. The ATIS is <b>Barajas Information</b> on 118.255.</p>
       <p>Madrid works to Spanish rules, close to ICAO's:</p>
@@ -3217,7 +3408,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <li>Timetable traffic is thinned to about thirty movements an hour at the peak. Live now uses today's real flights and positions.</li>
       </ul>
     </section>
-<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span><span data-apt="LOWI">Innsbruck endorsement based on AIP Austria AD 2 LOWI. Not for real-world navigation.</span><span data-apt="KJFK">New York JFK endorsement based on the FAA terminal procedures for KJFK. Not for real-world navigation.</span><span data-apt="EGKK">London Gatwick endorsement based on UK AIP AD 2 EGKK. Not for real-world navigation.</span><span data-apt="LEMD">Madrid-Barajas endorsement based on AIP España AD 2 LEMD. Not for real-world navigation.</span><span data-apt="EGCC">Manchester endorsement based on UK AIP AD 2 EGCC. Not for real-world navigation.</span></div></footer>
+<footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span><span data-apt="LOWI">Innsbruck endorsement based on AIP Austria AD 2 LOWI. Not for real-world navigation.</span><span data-apt="KJFK">New York JFK endorsement based on the FAA terminal procedures for KJFK. Not for real-world navigation.</span><span data-apt="EGKK">London Gatwick endorsement based on UK AIP AD 2 EGKK. Not for real-world navigation.</span><span data-apt="LEMD">Madrid-Barajas endorsement based on AIP España AD 2 LEMD. Not for real-world navigation.</span><span data-apt="EGCC">Manchester endorsement based on UK AIP AD 2 EGCC. Not for real-world navigation.</span><span data-apt="EGLL">London Heathrow endorsement based on UK AIP AD 2 EGLL. Not for real-world navigation.</span></div></footer>
 </section>
 <!-- ═════════════════════ PRICING ═════════════════════ -->
 <section class="page" id="page-pricing" data-page="pricing" hidden>
@@ -3368,7 +3559,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 
 <script>
 const AIRPORT = 'LEMD';
-const SITE = {"LXGB": "../", "LPMA": "../lpma/", "EGLC": "../eglc/", "LOWI": "../lowi/", "KJFK": "../kjfk/", "EGKK": "../egkk/", "LEMD": "../lemd/", "EGCC": "../egcc/"};
+const SITE = {"LXGB": "../", "LPMA": "../lpma/", "EGLC": "../eglc/", "LOWI": "../lowi/", "KJFK": "../kjfk/", "EGKK": "../egkk/", "LEMD": "../lemd/", "EGCC": "../egcc/", "EGLL": "../egll/"};
 const SITE_HOST = 'LXGB';
 const CW_CFG = {"enabled": false, "feedback": true, "api": "https://clearway-atc.vercel.app/api", "supabase_url": "https://aqwdnicarvfpclqwljxe.supabase.co", "supabase_anon_key": "sb_publishable_dFOE16aBVYg8FUgElz5SPA_sJD0CuF3", "currency": "£", "prices": {"a1": 4.99, "a3": 9.99, "a5": 14.99, "a10": 24.99, "all": 29.99, "early": 4.99}, "trial_days": 2, "contact_email": "", "analytics_token": "", "legal_date": "5 October 2026", "offer": {"percent": 30, "months": 3, "label": "Launch offer"}, "commission": 25, "upgrade_offer": {"percent": 50, "months": 3, "days": 30}, "releases": [{"icao": "KJFK", "date": "2026-10-05", "code": "NEWKJFK"}], "site": "https://www.clearway-atc.co.uk/"};
 const GEO = {"land":[[[[-7.5,38.0],[0.0,38.0],[0.0,43.0],[-7.5,43.0],[-7.5,38.0]]]],"coast":[],"borders":[],"towns":[["MADRID",-3.7038,40.4168],["ALCALA DE HENARES",-3.364,40.482],["TORREJON",-3.4977,40.4554],["GETAFE",-3.7323,40.3083],["GUADALAJARA",-3.1667,40.6333],["TOLEDO",-4.0273,39.8628],["SEGOVIA",-4.1184,40.9429],["AVILA",-4.7003,40.6565],["ARANJUEZ",-3.6024,40.0311],["ALCOBENDAS",-3.6418,40.5475],["COSLADA",-3.5613,40.4237],["TRES CANTOS",-3.7085,40.6007],["COLMENAR VIEJO",-3.7656,40.659],["MOSTOLES",-3.8649,40.3223],["LEGANES",-3.7635,40.3272],["FUENLABRADA",-3.7941,40.2842],["VALDEMORO",-3.6739,40.1908],["ARGANDA",-3.4382,40.3008],["CUENCA",-2.1374,40.0704],["TALAVERA",-4.8303,39.9635],["VALLADOLID",-4.7245,41.6523]],"airports":[["LETO",-3.4459,40.4967],["LEGT",-3.7239,40.2944],["LECU",-3.7856,40.3706],["LEVD",-4.8519,41.7061]]};
@@ -3381,7 +3572,7 @@ const GEO = {"land":[[[[-7.5,38.0],[0.0,38.0],[0.0,43.0],[-7.5,43.0],[-7.5,38.0]
 
 // ═════════════════════════ geometry ═════════════════════════
 const D2R = Math.PI/180, R2D = 180/Math.PI;
-const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553], LOWI: [47.2602, 11.3439], KJFK: [40.639925, -73.778939], EGKK: [51 + 8/60 + 53/3600, -(11/60 + 25/3600)], LEMD: [40 + 28/60 + 20/3600, -(3 + 33/60 + 39/3600)], EGCC: [53 + 21/60 + 13/3600, -(2 + 16/60 + 30/3600)] };
+const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553], LOWI: [47.2602, 11.3439], KJFK: [40.639925, -73.778939], EGKK: [51 + 8/60 + 53/3600, -(11/60 + 25/3600)], LEMD: [40 + 28/60 + 20/3600, -(3 + 33/60 + 39/3600)], EGCC: [53 + 21/60 + 13/3600, -(2 + 16/60 + 30/3600)], EGLL: [51 + 28/60 + 39/3600, -(27/60 + 41/3600)] };
 const [LAT0, LON0] = AIRPORT_ORIGIN[AIRPORT], COSL = Math.cos(LAT0*D2R);
 const M2NM = 1/1852;
 const dms = (d, m, s=0) => d + m/60 + s/3600;
@@ -5080,7 +5271,8 @@ function refreshShut(){
   for (const s of on) for (const e of s.under) if (covers(s, s.ownOcc, e)) e.closed = true;
 }
 function standBy(st, ac){ for (const [o, d] of st.nb || []) { const a = o.ownOcc; if (a && a !== ac && d < (spanOf(a) + spanOf(ac))/2) return a; } return null; }
-const standRoom = (st, ac) => !standBy(st, ac);
+// a stand with a published size (st.maxSpan, Heathrow) takes nothing wider
+const standRoom = (st, ac) => !standBy(st, ac) && !(st.maxSpan && spanOf(ac) > st.maxSpan + 1);
 const standFree = (s, ac) => !s.occ && standRoom(s, ac);
 const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => s.occ === ac || standFree(s, ac)).sort((a, b) => pa.has(b) - pa.has(a)); };
 function assignStand(ac, st){
@@ -5824,6 +6016,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
+  if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && S.t < (S.liveWait || 0)) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
   if (APT.xing) {
@@ -7702,9 +7895,11 @@ const BADGES = [
   { id: 'sidebyside', ap: 'LEMD', name: 'Side by side',     d: 'Land five arrivals on each runway of a parallel pair at Madrid in one session.', ic: 'M7 21L10 3M14 21L17 3M3 21h18' },
   { id: 'barajas',  ap: 'LEMD', name: 'Barajas endorsement', d: 'Complete the three Madrid-Barajas guided exercises.',   ic: 'M2 16c4-4 8-6 10-6s6 2 10 6M2 20h20M6 16v4M12 10v10M18 16v4' },
   { id: 'twoways',  ap: 'EGCC', name: 'One lands, one leaves', d: 'Land ten arrivals and get ten departures away in one Manchester session, with no loss of separation.', ic: 'M3 9l18-4M3 19l18-4M7 3l3 4M14 21l3-4' },
-  { id: 'ringway',  ap: 'EGCC', name: 'Ringway endorsement', d: 'Complete the three Manchester guided exercises.',       ic: 'M3 21h18M5 21V10l7-5 7 5v11M9 21v-5h6v5M12 5V2' }
+  { id: 'ringway',  ap: 'EGCC', name: 'Ringway endorsement', d: 'Complete the three Manchester guided exercises.',       ic: 'M3 21h18M5 21V10l7-5 7 5v11M9 21v-5h6v5M12 5V2' },
+  { id: 'alternation', ap: 'EGLL', name: 'Runway alternation', d: 'Land at least three arrivals on each runway (27R or 09L, and 27L or 09R) in one Heathrow session, across the 15:00 runway switch, with no loss of separation.', ic: 'M7 21V3M17 21V3M4 7l3-4 3 4M14 17l3 4 3-4' },
+  { id: 'heathrow', ap: 'EGLL', name: 'Heathrow endorsement', d: 'Complete the three London Heathrow guided exercises.', ic: 'M2 21h20M4 21V12h5v9M10 21V8h4v13M15 21v-6h5v6M12 8V3' }
 ];
-const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester' };
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester', EGLL: 'London Heathrow' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -7737,6 +7932,7 @@ function careerCheck(){
     if (s.ap === 'KJFK' && (s.rwyx || 0) >= 10 && !s.incidents) careerAward('crossing');
     if (s.ap === 'EGKK' && (s.gaps || 0) >= 10) careerAward('gapfiller');
     if (s.ap === 'EGCC' && s.landed >= 10 && s.departed >= 10 && !s.los) careerAward('twoways');
+    if (s.ap === 'EGLL' && s.lrw && (s.lrw['27R'] || 0) + (s.lrw['09L'] || 0) >= 3 && (s.lrw['27L'] || 0) + (s.lrw['09R'] || 0) >= 3 && !s.los) careerAward('alternation');
     if (s.ap === 'LEMD' && s.lrw && [['32L', '32R'], ['18R', '18L']].some(([a, b]) => (s.lrw[a] || 0) >= 5 && (s.lrw[b] || 0) >= 5)) careerAward('sidebyside');
   }
   if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
@@ -7747,6 +7943,7 @@ function careerCheck(){
   if (['gdep','garr','gmix'].every(k => CAR.ex[k])) careerAward('gatwick');
   if (['ldep','larr','lmix'].every(k => CAR.ex[k])) careerAward('barajas');
   if (['rdep','rarr','rmix'].every(k => CAR.ex[k])) careerAward('ringway');
+  if (['hdep','harr','hmix'].every(k => CAR.ex[k])) careerAward('heathrow');
   if (T.secs >= 3600) careerAward('hour');
   if (T.secs >= 36000) careerAward('ten');
   if (T.mov >= 100) careerAward('century');
@@ -7773,8 +7970,8 @@ S.listeners.push((ev, d) => {
   // Gatwick: a departure that got airborne between two landings fills a gap
   if (APT.icao === 'EGKK' && carCur && ev === 'airborne' && d && d.kind === 'DEP' && carCur.land1) carCur.depGap = true;
   if (APT.icao === 'EGKK' && carCur && ev === 'landed') { if (carCur.depGap) { carCur.gaps = (carCur.gaps || 0) + 1; carDirty = true; } carCur.land1 = true; carCur.depGap = false; }
-  // Madrid: landings on each runway, for Side by side
-  if (APT.icao === 'LEMD' && carCur && ev === 'landed' && d && d.app) { (carCur.lrw ||= {})[d.app] = (carCur.lrw[d.app] || 0) + 1; carDirty = true; }
+  // Madrid and Heathrow: landings on each runway, for Side by side and Runway alternation
+  if ((APT.icao === 'LEMD' || APT.icao === 'EGLL') && carCur && ev === 'landed' && d && d.app) { (carCur.lrw ||= {})[d.app] = (carCur.lrw[d.app] || 0) + 1; carDirty = true; }
   if (ev === 'rwyx' && carCur) { carCur.rwyx = (carCur.rwyx || 0) + 1; carDirty = true; }
   if (ev === 'start') {
     careerSync();
@@ -7790,7 +7987,7 @@ function careerExercise(ex){ if (!CAR.ex[ex]) { CAR.ex[ex] = Date.now(); carDirt
 const fmtHrs = s => s < 3600 ? `${Math.round(s/60)} min` : `${(s/3600).toFixed(s < 36000 ? 1 : 0)} h`;
 const MODE_NAME = { live: 'Live now', liveplus: 'Live now +', real: 'Timetable', summer: 'Summer', event: 'Event', custom: 'Custom', dep: 'Exercise 1', arr: 'Exercise 2', lev: 'Exercise 3',
   mdep: 'Exercise 1', marr: 'Exercise 2', mwind: 'Exercise 3', cdep: 'Exercise 1', carr: 'Exercise 2', ceast: 'Exercise 3', idep: 'Exercise 1', iarr: 'Exercise 2', ifoehn: 'Exercise 3', kdep: 'Exercise 1', karr: 'Exercise 2', kcross: 'Exercise 3',
-  gdep: 'Exercise 1', garr: 'Exercise 2', gmix: 'Exercise 3' };
+  gdep: 'Exercise 1', garr: 'Exercise 2', gmix: 'Exercise 3', hdep: 'Exercise 1', harr: 'Exercise 2', hmix: 'Exercise 3' };
 function renderCareer(){
   careerSync();
   const T = carTotals(CAR), L = CAR.sessions.slice().reverse();
@@ -11762,11 +11959,11 @@ function cwInit(){
 setTimeout(cwInit, 0);
 
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 // an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
 const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
@@ -11816,7 +12013,7 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD and EGCC are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD, EGCC and EGLL are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
 // ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
@@ -11826,7 +12023,7 @@ const AIRPORTS_NET = [
   { icao:'KJFK', ll:[40.640, -73.779], iata:'JFK', name:'New York JFK', ctry:'United States', region:'North America', rwys:['04L/22R','04R/22L','13L/31R','13R/31L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'Four runways in two parallel pairs on Jamaica Bay, arrivals crossing the departure runway, the Kennedy Five and FAA phraseology.' },
   { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'dev', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
-  { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'plan', pos:['APP','TWR','GND'], diff:5, blurb:'Four holding stacks, runway alternation and a heavy wake mix on two parallel runways.' },
+  { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'The busiest two-runway airport in Europe. Four holding stacks, segregated mode with the 15:00 runway alternation, five terminals and a heavy wake mix, with Terminal 4 arrivals crossing the departure runway.' },
   { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'The world’s busiest single runway, in mixed mode: fit every departure into the gaps between arrivals from the TIMBA and WILLO holds. The old 08L/26R is now a taxiway.' },
   { icao:'LEMD', ll:[40.472, -3.561], iata:'MAD', name:'Madrid-Barajas', ctry:'Spain', region:'Europe', rwys:['14L/32R','14R/32L','18L/36R','18R/36L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'Four runways at once: parallel ILS approaches to 32L and 32R, departures off 36L and 36R, a north and a south flow, and arrivals crossing 18R/36L between Terminals 4 and 4S.' },
   { icao:'EGCC', ll:[53.354, -2.275], iata:'MAN', name:'Manchester', ctry:'United Kingdom', region:'UK & Ireland', rwys:['05L/23R','05R/23L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'Two parallel runways in segregated mode: land on one, depart from the other across it. Arrivals from the ROSUN, MIRSI and DAYNE holds, SIDs that stop at 5,000 ft, the Pennines to the east.' },
@@ -12291,6 +12488,13 @@ const SCEN_TEXT = { LPMA: {
   fog: 'Fog on the Cheshire Plain, below the CAT I minima. Hold the arrivals at ROSUN, MIRSI and DAYNE, plan diversions to Liverpool and Leeds Bradford, and keep the departures waiting.',
   storm: 'An Atlantic gale gusting into the forties across both runways. Turbulence and windshear on short final: expect go-arounds.',
   calm: 'High pressure, light and variable wind and haze. A quiet day to learn the two-runway flow.'
+}, EGLL: {
+  west: 'The usual westerly. Land on one of 27R and 27L and depart from the other, swapping at 15:00 for the people under the approach. Every SID stops at 6,000 ft.',
+  east: 'An easterly. Arrivals fly the final over Windsor to 09L or 09R, swapping at 15:00 like the westerly, and departures leave from the other runway.',
+  rain: 'London drizzle and a 300 ft cloud base. Keep the spacing on final wide and expect a go-around or two to 6,000 ft.',
+  fog: 'Thames Valley fog: low visibility procedures. Heathrow lands in CAT III, so the flow goes on, slower and with wider spacing.',
+  storm: 'A south-westerly gale gusting into the forties. Windshear on short final, go-arounds and the stacks filling up.',
+  calm: 'High pressure, light and variable wind and haze. A quiet morning to learn the two-runway flow.'
 }, LXGB: {
   fair: 'A gentle westerly and good visibility. Learn the flow: road closures, backtracks and the SRA to runway 27.',
   levanter: 'The easterly gale and its banner cloud. Runway 09, approaches through RIPRA, and turbulence curling off the Rock.',
@@ -12364,6 +12568,7 @@ const ENDORSE = {
   LOWI: { name: 'Innsbruck', ex: ['idep', 'iarr', 'ifoehn'], badge: 'valley', p: 'The offset LOC/DME East from RTT, circling to 08, departures down the valley against the arrivals, minimum vectoring altitudes and föhn.' },
   EGKK: { name: 'London Gatwick', ex: ['gdep', 'garr', 'gmix'], badge: 'gatwick', p: 'One runway in mixed mode, RNAV SIDs with their own stop altitudes, arrivals from the TIMBA and WILLO holds onto the ILS, rapid exits and two terminals.' },
   LEMD: { name: 'Madrid-Barajas', ex: ['ldep', 'larr', 'lmix'], badge: 'barajas', p: 'Four runways at once: independent parallel ILS approaches, two departure runways, the north and south flows, RNAV SIDs to 13,000 ft and the 18R/36L crossing between Terminals 4 and 4S.' },
+  EGLL: { name: 'London Heathrow', ex: ['hdep', 'harr', 'hmix'], badge: 'heathrow', p: 'Segregated mode on two parallel runways and the 15:00 alternation, arrivals from the Bovingdon, Lambourne, Biggin and Ockham stacks, Terminal 5 departures taxiing the length of the airport and Terminal 4 arrivals crossing the departure runway.' },
   EGCC: { name: 'Manchester', ex: ['rdep', 'rarr', 'rmix'], badge: 'ringway', p: 'Two parallel runways in segregated mode: departures across runway 1 to runway 2, arrivals from the ROSUN, MIRSI and DAYNE holds onto the ILS, SIDs that stop at 5,000 ft and hand-offs to Scottish Control.' },
   KJFK: { name: 'New York JFK', ex: ['kdep', 'karr', 'kcross'], badge: 'kennedy', p: 'Four runways in two parallel pairs, the Kennedy Five, ILS approaches, runway crossings, calls for release on flow-restricted routes and FAA phraseology.' }
 };
@@ -12394,7 +12599,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });
@@ -12557,7 +12762,7 @@ function renderCoach(){
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
   if (done) careerExercise(coach.ex);
   el.innerHTML = done
-    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises', LOWI: 'i-exercises', KJFK: 'k-exercises', EGKK: 'g-exercises', LEMD: 'md-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
+    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises', LOWI: 'i-exercises', KJFK: 'k-exercises', EGKK: 'g-exercises', LEMD: 'md-exercises', EGCC: 'mc-exercises', EGLL: 'hl-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;
   el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
     const c = b.dataset.c;

@@ -551,7 +551,8 @@ function refreshShut(){
   for (const s of on) for (const e of s.under) if (covers(s, s.ownOcc, e)) e.closed = true;
 }
 function standBy(st, ac){ for (const [o, d] of st.nb || []) { const a = o.ownOcc; if (a && a !== ac && d < (spanOf(a) + spanOf(ac))/2) return a; } return null; }
-const standRoom = (st, ac) => !standBy(st, ac);
+// a stand with a published size (st.maxSpan, Heathrow) takes nothing wider
+const standRoom = (st, ac) => !standBy(st, ac) && !(st.maxSpan && spanOf(ac) > st.maxSpan + 1);
 const standFree = (s, ac) => !s.occ && standRoom(s, ac);
 const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => s.occ === ac || standFree(s, ac)).sort((a, b) => pa.has(b) - pa.has(a)); };
 function assignStand(ac, st){
@@ -1295,6 +1296,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
+  if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && S.t < (S.liveWait || 0)) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
   if (APT.xing) {
