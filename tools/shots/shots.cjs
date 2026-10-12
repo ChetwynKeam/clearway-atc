@@ -16,6 +16,7 @@ const AIRPORTS = [
   { k: 'egkk', twr: 1.3, gnd: 1.5, file: 'london-gatwick-atc.html', mins: 40, hour: '12' },
   { k: 'lemd', twr: 1, gnd: 1.3, file: 'madrid-atc.html', mins: 40, hour: '12' },
   { k: 'egcc', twr: 1.1, gnd: 1.4, file: 'manchester-atc.html', mins: 40, hour: '12' },
+  { k: 'egll', twr: 0.9, gnd: 1.3, file: 'london-heathrow-atc.html', mins: 40, hour: '12' },
 ];
 fs.mkdirSync(OUT, { recursive: true });
 const jpg = p => ({ path: path.join(OUT, p), type: 'jpeg', quality: 84 });
