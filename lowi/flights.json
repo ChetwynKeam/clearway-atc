@@ -1,58 +1,16 @@
 {
- "updated": "2026-10-12T07:07:46Z",
+ "updated": "2026-10-12T07:33:28Z",
  "source": "avionio.com",
  "days": {
-  "2026-10-11": {
-   "utcOffsetMin": 120,
-   "arr": [
-    {
-     "place": "Vienna",
-     "flight": "OS105",
-     "sched": "13:55",
-     "status": "Landed",
-     "expected": "13:56"
-    },
-    {
-     "place": "Exeter",
-     "flight": "ALE67",
-     "sched": "14:18",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "HV6609",
-     "sched": "15:45",
-     "status": "Estimated",
-     "expected": "16:41"
-    },
-    {
-     "place": "Vienna",
-     "flight": "OS107",
-     "sched": "18:10",
-     "status": "Landed",
-     "expected": "18:10"
-    }
-   ],
-   "dep": [
-    {
-     "place": "Vienna",
-     "flight": "OS108",
-     "sched": "18:50",
-     "status": "Departed",
-     "expected": "18:54"
-    }
-   ]
-  },
   "2026-10-12": {
    "utcOffsetMin": 120,
    "arr": [
     {
-     "place": "Vienna",
-     "flight": "OS101",
-     "sched": "07:40",
-     "status": "Landed",
-     "expected": "07:36"
+     "place": "Duesseldorf",
+     "flight": "DGJ567",
+     "sched": "16:18",
+     "status": "Scheduled",
+     "expected": ""
     }
    ],
    "dep": [
@@ -83,6 +41,19 @@
      "sched": "08:20",
      "status": "Departed",
      "expected": "08:17"
+    }
+   ]
+  },
+  "2026-10-11": {
+   "utcOffsetMin": 120,
+   "arr": [],
+   "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
+     "status": "Departed",
+     "expected": "18:54"
     }
    ]
   }
