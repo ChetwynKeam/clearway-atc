@@ -1,9 +1,9 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 // an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
 const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
@@ -53,7 +53,7 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD, EGCC and EGLL are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD, EGCC, EGLL and EGGD are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
 // ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
@@ -64,6 +64,7 @@ const AIRPORTS_NET = [
   { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'dev', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
   { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'The busiest two-runway airport in Europe. Four holding stacks, segregated mode with the 15:00 runway alternation, five terminals and a heavy wake mix, with Terminal 4 arrivals crossing the departure runway.' },
+  { icao:'EGGD', ll:[51.383, -2.719], iata:'BRS', name:'Bristol', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:3, blurb:'One runway on a hilltop 600 ft up, with a parallel taxiway and three aprons. Arrivals from the BRI hold over the field, conventional SIDs that stop at 6,000 ft, and hill fog on Broadfield Down.' },
   { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'The world’s busiest single runway, in mixed mode: fit every departure into the gaps between arrivals from the TIMBA and WILLO holds. The old 08L/26R is now a taxiway.' },
   { icao:'LEMD', ll:[40.472, -3.561], iata:'MAD', name:'Madrid-Barajas', ctry:'Spain', region:'Europe', rwys:['14L/32R','14R/32L','18L/36R','18R/36L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'Four runways at once: parallel ILS approaches to 32L and 32R, departures off 36L and 36R, a north and a south flow, and arrivals crossing 18R/36L between Terminals 4 and 4S.' },
   { icao:'EGCC', ll:[53.354, -2.275], iata:'MAN', name:'Manchester', ctry:'United Kingdom', region:'UK & Ireland', rwys:['05L/23R','05R/23L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'Two parallel runways in segregated mode: land on one, depart from the other across it. Arrivals from the ROSUN, MIRSI and DAYNE holds, SIDs that stop at 5,000 ft, the Pennines to the east.' },
@@ -535,6 +536,13 @@ const SCEN_TEXT = { LPMA: {
   fog: 'Thames Valley fog: low visibility procedures. Heathrow lands in CAT III, so the flow goes on, slower and with wider spacing.',
   storm: 'A south-westerly gale gusting into the forties. Windshear on short final, go-arounds and the stacks filling up.',
   calm: 'High pressure, light and variable wind and haze. A quiet morning to learn the two-runway flow.'
+}, EGGD: {
+  west: 'The usual south-westerly. Land 27 off the ILS from the east, and fit each departure from the three aprons in between the arrivals.',
+  east: 'An easterly. Runway 09: arrivals come in over Weston-super-Mare from EMPAS, departures taxi west along Zulu and Golf to Golf X-ray.',
+  low: 'Hill fog on Broadfield Down: a 200 ft cloud base, right on the ILS 27 minima. Keep the spacing wide: some arrivals will go around to the BRI hold.',
+  fog: 'Thick fog, below the CAT I minima. Hold the arrivals at BRI, plan diversions to Cardiff and Exeter, and keep the departures waiting.',
+  storm: 'An Atlantic gale gusting into the forties across runway 27. Turbulence and windshear on short final over the hills: expect go-arounds.',
+  calm: 'High pressure, light and variable wind. A quiet day to learn the flow on one runway.'
 }, LXGB: {
   fair: 'A gentle westerly and good visibility. Learn the flow: road closures, backtracks and the SRA to runway 27.',
   levanter: 'The easterly gale and its banner cloud. Runway 09, approaches through RIPRA, and turbulence curling off the Rock.',
@@ -609,6 +617,7 @@ const ENDORSE = {
   EGKK: { name: 'London Gatwick', ex: ['gdep', 'garr', 'gmix'], badge: 'gatwick', p: 'One runway in mixed mode, RNAV SIDs with their own stop altitudes, arrivals from the TIMBA and WILLO holds onto the ILS, rapid exits and two terminals.' },
   LEMD: { name: 'Madrid-Barajas', ex: ['ldep', 'larr', 'lmix'], badge: 'barajas', p: 'Four runways at once: independent parallel ILS approaches, two departure runways, the north and south flows, RNAV SIDs to 13,000 ft and the 18R/36L crossing between Terminals 4 and 4S.' },
   EGLL: { name: 'London Heathrow', ex: ['hdep', 'harr', 'hmix'], badge: 'heathrow', p: 'Segregated mode on two parallel runways and the 15:00 alternation, arrivals from the Bovingdon, Lambourne, Biggin and Ockham stacks, Terminal 5 departures taxiing the length of the airport and Terminal 4 arrivals crossing the departure runway.' },
+  EGGD: { name: 'Bristol', ex: ['bdep', 'barr', 'bmix'], badge: 'lulsgate', p: 'One runway with a parallel taxiway on a hilltop: arrivals from the BRI hold onto the ILS, conventional SIDs that stop at 6,000 ft, the Link Charlie hot spot and departures fitted between the landings.' },
   EGCC: { name: 'Manchester', ex: ['rdep', 'rarr', 'rmix'], badge: 'ringway', p: 'Two parallel runways in segregated mode: departures across runway 1 to runway 2, arrivals from the ROSUN, MIRSI and DAYNE holds onto the ILS, SIDs that stop at 5,000 ft and hand-offs to Scottish Control.' },
   KJFK: { name: 'New York JFK', ex: ['kdep', 'karr', 'kcross'], badge: 'kennedy', p: 'Four runways in two parallel pairs, the Kennedy Five, ILS approaches, runway crossings, calls for release on flow-restricted routes and FAA phraseology.' }
 };
@@ -639,7 +648,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : ap === 'EGGD' ? '2.6 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });
@@ -802,7 +811,7 @@ function renderCoach(){
   const bars = L.map((_, j) => `<i class="${j < coach.i ? 'done' : j === coach.i ? 'cur' : ''}"></i>`).join('');
   if (done) careerExercise(coach.ex);
   el.innerHTML = done
-    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises', LOWI: 'i-exercises', KJFK: 'k-exercises', EGKK: 'g-exercises', LEMD: 'md-exercises', EGCC: 'mc-exercises', EGLL: 'hl-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
+    ? `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · complete</div><h4>Well controlled.</h4><div class="steps">${bars}</div><p>Score <b>${S.score.pts}</b> points, ${S.score.incidents} incidents. Try the next exercise, or open a full session with real traffic.</p><div class="row"><a class="btn primary" href="#training" data-hash="${({ LPMA: 'm-exercises', EGLC: 'c-exercises', LOWI: 'i-exercises', KJFK: 'k-exercises', EGKK: 'g-exercises', LEMD: 'md-exercises', EGCC: 'mc-exercises', EGLL: 'hl-exercises', EGGD: 'bd-exercises' })[APT.icao] || 't-exercises'}">Next exercise</a><button class="btn" data-c="session">Full session</button><button class="btn" data-c="hide">Close</button></div>`
     : `<div class="lbl">${esc(EXERCISES[coach.ex].name)} · step ${coach.i + 1} of ${n}</div><h4>${s.h}</h4><div class="steps">${bars}</div><p>${s.p}</p><div class="row">${canDo(s) ? `<button class="btn" data-c="do">Do it for me</button>` : ''}${s.road ? `<button class="btn" data-c="road">Press it for me</button>` : ''}<button class="btn" data-c="hide">Hide</button></div>`;
   el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
     const c = b.dataset.c;
