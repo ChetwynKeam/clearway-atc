@@ -27,6 +27,7 @@ jobs:
           q LEMD 40.440,-3.610,40.540,-3.530
           q EGCC 53.330,-2.330,53.385,-2.225
           q EGLL 51.452,-0.512,51.492,-0.400
+          q EGGD 51.366,-2.752,51.398,-2.688
           ls -la
       - name: Publish to vehicles-data branch
         run: |
