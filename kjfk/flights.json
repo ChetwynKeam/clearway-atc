@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-12T02:29:17Z",
+ "updated": "2026-10-12T02:46:17Z",
  "source": "avionio.com",
  "days": {
   "2026-10-11": {
@@ -23,8 +23,8 @@
      "place": "Frankfurt",
      "flight": "LH8160",
      "sched": "22:00",
-     "status": "Cancelled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "22:10"
     },
     {
      "place": "Aruba",
@@ -44,22 +44,22 @@
      "place": "Reykjavik",
      "flight": "FI619",
      "sched": "22:05",
-     "status": "Estimated",
-     "expected": "21:56"
+     "status": "Landed",
+     "expected": "21:57"
     },
     {
      "place": "Raleigh/Durham",
      "flight": "9E5219",
      "sched": "22:09",
      "status": "Estimated",
-     "expected": ""
+     "expected": "23:01"
     },
     {
      "place": "Athens",
      "flight": "N0501",
      "sched": "22:10",
      "status": "Estimated",
-     "expected": "22:03"
+     "expected": "22:14"
     },
     {
      "place": "Los Angeles",
@@ -93,7 +93,7 @@
      "place": "Miami",
      "flight": "DL1811",
      "sched": "22:20",
-     "status": "Estimated",
+     "status": "Landed",
      "expected": "20:24"
     },
     {
@@ -108,7 +108,7 @@
      "flight": "YX5702",
      "sched": "22:22",
      "status": "Estimated",
-     "expected": "21:36"
+     "expected": "22:32"
     },
     {
      "place": "Fort Worth",
@@ -121,8 +121,8 @@
      "place": "London",
      "flight": "BA183",
      "sched": "22:25",
-     "status": "Estimated",
-     "expected": "22:25"
+     "status": "Landed",
+     "expected": "15:00"
     },
     {
      "place": "Orlando",
@@ -164,7 +164,7 @@
      "flight": "N0401",
      "sched": "22:30",
      "status": "Estimated",
-     "expected": "22:28"
+     "expected": "22:34"
     },
     {
      "place": "Doha",
@@ -202,6 +202,13 @@
      "expected": "19:33"
     },
     {
+     "place": "Boston",
+     "flight": "DL5702",
+     "sched": "22:47",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Austin",
      "flight": "DL1643",
      "sched": "22:49",
@@ -220,14 +227,14 @@
      "flight": "VS25",
      "sched": "22:50",
      "status": "Estimated",
-     "expected": "22:53"
+     "expected": "22:54"
     },
     {
      "place": "Tokyo",
      "flight": "NH160",
      "sched": "22:55",
      "status": "Landed",
-     "expected": "10:16"
+     "expected": "16:10"
     },
     {
      "place": "Miami",
@@ -395,14 +402,14 @@
      "flight": "B6924",
      "sched": "23:57",
      "status": "Estimated",
-     "expected": "21:34"
+     "expected": "19:13"
     },
     {
      "place": "San Francisco",
      "flight": "AA148",
      "sched": "23:59",
      "status": "Estimated",
-     "expected": "18:52"
+     "expected": "21:19"
     },
     {
      "place": "Guayaquil",
@@ -682,7 +689,7 @@
      "flight": "DL1065",
      "sched": "00:11",
      "status": "Estimated",
-     "expected": "19:17"
+     "expected": "21:39"
     },
     {
      "place": "Guayaquil",
@@ -710,7 +717,7 @@
      "flight": "DL363",
      "sched": "00:35",
      "status": "Estimated",
-     "expected": "19:34"
+     "expected": "21:59"
     },
     {
      "place": "Quito",
@@ -738,14 +745,14 @@
      "flight": "BW17",
      "sched": "01:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "00:53"
     },
     {
      "place": "Panama City",
      "flight": "CM804",
      "sched": "01:00",
      "status": "Estimated",
-     "expected": "00:38"
+     "expected": "00:37"
     },
     {
      "place": "San Salvador",
@@ -766,7 +773,7 @@
      "flight": "KJ587",
      "sched": "01:35",
      "status": "Estimated",
-     "expected": "23:38"
+     "expected": "00:20"
     },
     {
      "place": "Guatemala City",
@@ -1306,13 +1313,6 @@
      "sched": "08:49",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Dubai",
-     "flight": "EK203",
-     "sched": "08:50",
-     "status": "Estimated",
-     "expected": "08:42"
     }
    ],
    "dep": [
@@ -1395,7 +1395,7 @@
     },
     {
      "place": "Taipei",
-     "flight": "BR31",
+     "flight": "BR031",
      "sched": "01:25",
      "status": "Scheduled",
      "expected": ""
@@ -1516,6 +1516,13 @@
      "place": "San Salvador",
      "flight": "AV671",
      "sched": "03:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brussels",
+     "flight": "KJ587",
+     "sched": "03:55",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2034,20 +2041,6 @@
      "place": "Cancun",
      "flight": "DL621",
      "sched": "08:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Santo Domingo",
-     "flight": "DL1917",
-     "sched": "08:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Atlanta",
-     "flight": "DL2227",
-     "sched": "08:35",
      "status": "Scheduled",
      "expected": ""
     }
