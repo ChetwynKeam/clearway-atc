@@ -83,6 +83,23 @@ def seo(icao, A):
     if A['page'] == 'index.html': tags.append('<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False) + '</script>')
     if SUBS.get('analytics_token'): tags.append(f'<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon=\'{{"token": "{SUBS["analytics_token"]}"}}\'></script>')
     return '\n'.join(tags)
+# installable app (Chrome "Install Clearway", Android "Add to home screen"): one app for the whole site, opening at the
+# home page, with a shortcut to every airport's simulator. Icons come from tools/app_icons.py; src/sw.js is the
+# service worker (pages network-first with an offline fallback; live data, sign-in and payments never cached).
+def manifest():
+    icons = [dict(src=f'icons/{n}-{z}.png', sizes=f'{z}x{z}', type='image/png', purpose=pu) for n, pu in (('icon', 'any'), ('maskable', 'maskable')) for z in (192, 512)]
+    name = lambda k, A: A['title'].split(' · ')[0] if ' · ' in A['title'] else 'Gibraltar'
+    short = [dict(name=f'{name(k, A)} ({k})', short_name=name(k, A), description=f'Open the {name(k, A)} simulator',
+                  url=('./' if A['page'] == 'index.html' else A['page'].rsplit('/', 1)[0] + '/') + '#sim', icons=[icons[0]]) for k, A in AIRPORTS.items()]
+    return json.dumps(dict(id='./', name='Clearway ATC Simulator', short_name='Clearway', description=AIRPORTS[HOST]['desc'],
+                           start_url='./', scope='./', display='standalone', orientation='any', background_color='#0b2a4a', theme_color='#0b2a4a',
+                           lang='en-GB', categories=['games', 'education', 'simulation'], icons=icons, shortcuts=short), indent=1, ensure_ascii=False) + '\n'
+def pwa(icao):
+    up = '../' * AIRPORTS[icao]['page'].count('/')
+    return (f'<link rel="manifest" href="{up}manifest.webmanifest">\n<link rel="apple-touch-icon" href="{up}icons/apple-touch-icon.png">\n'
+            '<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Clearway">\n'
+            f"<script>if ('serviceWorker' in navigator && window.top === window && (location.protocol === 'https:' || location.hostname === 'localhost'))"
+            f" addEventListener('load', () => navigator.serviceWorker.register('{up}sw.js', {{ scope: '{up or './'}' }}).catch(() => {{}}));</script>")
 def page(icao, A):
     prof = '\n'.join(r(n) for n in A['profile'])
     others = [(k, B['data']) for k, B in AIRPORTS.items() if k != icao and B.get('data')] if icao == HOST else []
@@ -94,6 +111,7 @@ def page(icao, A):
     out = f'''<meta charset="utf-8">
 <title>{A['title']}</title>
 <link rel="icon" type="image/svg+xml" href="{fav}">
+@@PWA@@
 <meta name="description" content="{A['desc']}">
 {seo(icao, A)}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -135,8 +153,9 @@ const AP_DATA = {ap_data};
 '''
     (root/'dist').mkdir(exist_ok=True)
     # the claude.ai artifact is a private preview: no paywall there
-    (root/'dist'/A['artifact']).write_text(out.replace('@@SITE@@', json.dumps(links(icao, True))).replace('@@CWCFG@@', cwcfg(False)))
+    (root/'dist'/A['artifact']).write_text(out.replace('@@SITE@@', json.dumps(links(icao, True))).replace('@@CWCFG@@', cwcfg(False)).replace('@@PWA@@\n', ''))
     out = out.replace('@@SITE@@', json.dumps(links(icao, False))).replace('@@CWCFG@@', cwcfg(True))
+    out = out.replace('@@PWA@@', pwa(icao))
     head, body = out.split('<style>', 1)
     standalone = ('<!doctype html>\n<html lang="en">\n<head>\n' + head.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">')
                   + '<style>' + body.replace('</style>', '</style>\n</head>\n<body>', 1) + '</body>\n</html>\n')
@@ -144,3 +163,5 @@ const AP_DATA = {ap_data};
     (root/'dist'/A['page']).write_text(standalone)
     print(icao, len(out))
 for k, A in AIRPORTS.items(): page(k, A)
+(root/'dist'/'manifest.webmanifest').write_text(manifest())
+(root/'dist'/'sw.js').write_text(r('sw.js'))
