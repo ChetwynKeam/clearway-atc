@@ -469,8 +469,10 @@ const APT = {
   view: { app: [0, 0, 80], twr: [0, -0.4, 4.2], gnd: [mOf(EN(-200, -650)), offOf(EN(-200, -650)), 5200, 3600] },
   minsOk,
   // the landing runway and the departure runway: S.rwy lands, S.depRwy departs
-  splitRwy: true, rwyFor, depFor, configOf,
-  rwyConfigs: ['west', 'west2', 'east', 'east2'].map(c => ({ key: c, name: CFG[c].name, land: CFG[c].land, lands: [CFG[c].land], deps: [CFG[c].dep] })),
+  splitRwy: true, rwyFor, depFor, configOf: rw => isEast(configOf(rw)) ? 'E' : 'W',
+  // the Flow buttons pick the direction only: the alternation picks which runway lands (read when the panel is drawn)
+  rwyConfigs: [false, true].map(east => ({ key: east ? 'E' : 'W', name: east ? 'Easterly' : 'Westerly',
+    get land(){ return altLandNow(east); }, get lands(){ return [this.land]; }, get deps(){ return [parallelOf(this.land)]; } })),
   depRwyOf, landRwyOf,
   activeRwys: () => [landOf(), depOf()],
   depRwys: () => [depOf(), landOf()],
