@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-12T13:26:52Z",
+ "updated": "2026-10-12T13:55:44Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-12": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Ponta Delgada",
-     "flight": "S4160",
-     "sched": "12:25",
-     "status": "Arrived",
-     "expected": "12:34"
-    },
-    {
-     "place": "Madrid",
-     "flight": "IB559",
-     "sched": "12:40",
-     "status": "Arrived",
-     "expected": "12:19"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7623",
-     "sched": "12:45",
-     "status": "Estimated",
-     "expected": "15:05"
-    },
     {
      "place": "London Luton",
      "flight": "EZY2471",
@@ -93,8 +72,8 @@
      "place": "Lisboa",
      "flight": "EJU7625",
      "sched": "15:50",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:55"
     },
     {
      "place": "Prague",
@@ -115,7 +94,7 @@
      "flight": "EW9600",
      "sched": "16:00",
      "status": "Estimated",
-     "expected": "16:40"
+     "expected": "16:35"
     },
     {
      "place": "London Stansted",
@@ -163,15 +142,15 @@
      "place": "London Gatwick",
      "flight": "EZY8521",
      "sched": "18:00",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:10"
     },
     {
      "place": "London Gatwick",
      "flight": "BA2718",
      "sched": "18:05",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:55"
     },
     {
      "place": "Vilnius",
@@ -274,20 +253,6 @@
    ],
    "dep": [
     {
-     "place": "London Gatwick",
-     "flight": "EZY8520",
-     "sched": "12:25",
-     "status": "Departed",
-     "expected": "13:12"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1688",
-     "sched": "12:40",
-     "status": "Departed",
-     "expected": "12:57"
-    },
-    {
      "place": "Madrid",
      "flight": "IB560",
      "sched": "13:20",
@@ -313,7 +278,7 @@
      "flight": "EJU7624",
      "sched": "13:50",
      "status": "Estimated",
-     "expected": "15:40"
+     "expected": "15:55"
     },
     {
      "place": "London Stansted",
@@ -326,42 +291,42 @@
      "place": "Lisboa",
      "flight": "TP1690",
      "sched": "14:15",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "14:29"
     },
     {
      "place": "Lisboa",
      "flight": "TP3834",
      "sched": "14:20",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "14:24"
     },
     {
      "place": "Liverpool",
      "flight": "LS3226",
      "sched": "14:50",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Helsinki Vantaa",
      "flight": "DK1309",
      "sched": "15:00",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "FR384",
      "sched": "15:00",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Porto",
      "flight": "TP1704",
      "sched": "15:05",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
