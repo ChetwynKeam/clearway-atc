@@ -52,6 +52,13 @@ for (const [k, [node, rwy, on, m, off, dirs, end, tw]] of Object.entries(G.holds
 }
 // the runway-holding positions: a path point there stops the aircraft until cleared onto or across the runway
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
+// each holding position's axis: the unit vector along the taxiway towards the runway (from the mapped link to it)
+const HOLD_AXIS = {};
+for (const [k, H] of Object.entries(HOLDS)) {
+  if (HOLD_AXIS[H.node] || !GN[H.node]) continue;
+  const p = GN[H.node].p, hl = G.hlink[k] || [], q = hl.length ? rm(...hl[hl.length - 1]) : GN[H.rwy].p, L = dist(...p, ...q) || 1;
+  HOLD_AXIS[H.node] = [(q[0] - p[0])/L, (q[1] - p[1])/L];
+}
 // stands (AD 2-EGGD-2-2): the Main Apron in front of the terminal (1-6, 21-26), the East Apron (7-20) and the West Apron
 // (28-40). Bristol has no air bridges: every stand is a walk-out or coach stand, all of them "terminal" stands here.
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line]) => { const p = EN(e, n);
@@ -204,10 +211,12 @@ function drawEggd(){
       groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     // taxiway centrelines, stopping at the runway edges
     paintEdgeLines(lw(0.35));
-    // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
-    for (const [id, rid] of Object.entries(G.hs)) {
-      const n = GN[id]; if (!n) continue; const m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
-      for (const [d, dash] of [[0.9, false], [0.3, false], [-0.3, true], [-0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([R.rm(m - 11, o + s*d), R.rm(m + 11, o + s*d)], false); cx.stroke(); }
+    // runway holding positions (pattern A): two solid lines on the taxiway side and two dashed on the runway side, across
+    // the taxiway (GX is on G where it runs alongside the runway, so it isn't simply parallel to it)
+    cx.strokeStyle = C.yellow;
+    for (const [id, [u, v]] of Object.entries(HOLD_AXIS)) {
+      const n = GN[id]; if (!n) continue; const at = (a, b) => [n.p[0] + (v*a + u*b)*M2NM, n.p[1] + (-u*a + v*b)*M2NM];   // a across, b along
+      for (const [d, dash] of [[-0.9, false], [-0.3, false], [0.3, true], [0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([at(-11, d), at(11, d)], false); cx.stroke(); }
       cx.setLineDash([]);
     }
     // stand lead-in lines and numbers
@@ -254,9 +263,8 @@ const RADAR_REF = ARP;
 const GATES = Object.keys(EGGD.DIR);
 const STAR_OF = g => EGGD.STARS[EGGD.DIR[g].star];
 const starFrom = g => { const pts = STAR_OF(g).pts.map(p => p[0]); return pts.slice(pts.indexOf(EGGD.DIR[g].entry)); };
-// the STAR hold (7-10): BRI, over the field. It stays on every arrival route (STAR, BRI, then the vectors to the final)
-// and is the missed approach's hold, so the approach controller (and the AI one) can hold there; arrivals from the
-// approach side are vectored straight to the base instead.
+// the STAR hold (7-10): BRI, over the field, where the STARs end. Arrivals are vectored off the STAR before it (below)
+// and only go there to hold (HOLD BRI) or after a missed approach.
 for (const [id, h] of Object.entries(EGGD.HOLDS_AIR)) WP[id].hold = { inb: Math.round(h.inb), min: h.min, left: h.turn === 'L' };
 const ENTRY = Object.fromEntries(GATES.map(g => [g, WP[EGGD.DIR[g].entry].p]));
 // the level an arrival is picked up at (Cardiff Radar or London Control have brought it down) and its level before that
@@ -280,8 +288,7 @@ for (const [rw, I] of Object.entries(EGGD.ILS)) {
 }
 
 // ── to the intermediate fix: a downwind and base laid out beside the final (hidden points, the vectors Bristol Radar
-// gives), so an arrival with no instructions still gets there. From BRI, over the field, the downwind goes on the side
-// the arrival came from.
+// gives), so an arrival with no instructions still gets there. The downwind is on the side the arrival comes from.
 const FEED_ALT = {};
 function feeder(rw, from, side){
   const I = EGGD.ILS[rw], thr = THR[rw], out = norm(crsOf(rw) + 180), dIF = dist(...thr, ...WP[I.ifx].p);
@@ -300,12 +307,12 @@ function feeder(rw, from, side){
 // which side of the final a gate's arrivals come from (the fix before BRI), and how far out along the final it is
 const relOf = (id, rw) => { const p = WP[id].p, out = norm(crsOf(rw) + 180), thr = THR[rw], ux = Math.sin(out*D2R), uy = Math.cos(out*D2R);
   return { along: (p[0] - thr[0])*ux + (p[1] - thr[1])*uy, right: (p[0] - thr[0])*uy - (p[1] - thr[1])*ux }; };
-// an arrival from the approach side (the STAR's fix before BRI already beyond the intermediate fix) is vectored from there
-// to the base; the rest fly the STAR to BRI, then the downwind on the side they came from
+// Bristol Radar vectors arrivals off the STAR before BRI (over the field), which is only flown when holding: from the
+// STAR's fix before BRI, an arrival already beyond the intermediate fix goes to the base, the rest to a downwind on the
+// side they came from. BRI stays a charted hold (WP.BRI.hold) and the missed approach's.
 const ARR_ROUTE = Object.fromEntries(GATES.map(g => [g, Object.fromEntries(['09', '27'].map(rw => {
-  const star = starFrom(g), pre = star[star.length - 2], dIF = dist(...THR[rw], ...WP[EGGD.ILS[rw].ifx].p);
-  if (pre && relOf(pre, rw).along > dIF + 3) return [rw, [...star.slice(0, -1), ...feeder(rw, pre)]];
-  return [rw, [...star, ...feeder(rw, 'BRI', pre && relOf(pre, rw).right >= 0 ? 1 : -1)]];
+  const star = starFrom(g), pre = star[star.length - 2];
+  return [rw, pre ? [...star.slice(0, -1), ...feeder(rw, pre)] : [...star, ...feeder(rw, 'BRI')]];
 }))]));
 const HOLD_AT = Object.fromEntries(GATES.map(g => [g, STAR_OF(g).pts[STAR_OF(g).pts.length - 1][0]]));
 

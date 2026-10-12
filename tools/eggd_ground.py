@@ -23,6 +23,27 @@ for e in E:
     if e['type'] == 'node': NODE[e['id']] = en(e['lat'], e['lon'])
 ways = [e for e in E if e['type'] == 'way']
 def tagged(w, *k): return w.get('tags', {}).get('aeroway') in k
+# AD 2-EGGD-2-2 (W3 512308.65N 0024307.88W, W4 512304.89N 0024307.52W): OSM maps the West Apron's eastern lane, between
+# stands 31-33 and 28-30, about 17 m east of where the chart puts it. Move it back, and redraw the two fillets from
+# taxiway Z to its foot (each from the Z node the same distance along as before the move, as a smooth quarter-turn).
+def _lane_fix(a, b, dx):
+    lane = next((w for w in ways if tagged(w, 'taxiway', 'taxilane') and 'geometry' in w and
+                 math.dist(NODE[w['nodes'][0]], a) < 4 and math.dist(NODE[w['nodes'][-1]], b) < 4), None)
+    if not lane: return
+    foot = lane['nodes'][0]
+    for n in lane['nodes']: NODE[n] = (NODE[n][0] + dx, NODE[n][1])
+    zway = next(w for w in ways if w.get('tags', {}).get('ref') == 'Z' and tagged(w, 'taxiway'))
+    F, k = NODE[foot], 0
+    for w in ways:
+        if w is lane or not tagged(w, 'taxiway', 'taxilane') or foot not in (w['nodes'][0], w['nodes'][-1]): continue
+        z0 = w['nodes'][0] if w['nodes'][-1] == foot else w['nodes'][-1]
+        zt = min(zway['nodes'], key=lambda n: abs(NODE[n][0] - (NODE[z0][0] + dx)) + 5*abs(NODE[n][1] - NODE[z0][1]))
+        P0 = NODE[zt]; C = (F[0], P0[1]); mids = []
+        for i in range(1, 8):
+            t = i/8; k += 1; nid = -(9000 + k)
+            NODE[nid] = ((1-t)**2*P0[0] + 2*(1-t)*t*C[0] + t*t*F[0], (1-t)**2*P0[1] + 2*(1-t)*t*C[1] + t*t*F[1]); mids.append(nid)
+        w['nodes'] = [zt] + mids + [foot]
+_lane_fix((48, 189), (39, 329), -17.5)
 # AD 2-EGGD-2-1: the OSM runway way, the thresholds and their elevations (ft). The pavement east of the 27 threshold
 # is mapped as a displaced-threshold way (joined in).
 RWYS = [
@@ -301,23 +322,47 @@ def crosses(a, b, skip):
             Lab = math.dist(a, b)
             if 6 < tt*Lab < Lab - 6: return True
     return False
-# AD 2-EGGD-2-2 gives coordinates for most stands; OSM maps each stand as a lead-in line (open way) and a stand box
-# (closed way), and a few of its numbers are one stand out (35/36, 37-40). Each AIP stand takes the mapped lead-in line
-# that ends within 20 m of its coordinates, whatever its OSM number; the stands the AIP has still "to be surveyed"
-# (5-12, 14-16) keep their OSM lines; a stand with neither is a point at its AIP coordinates. The MARS alternatives
-# (26L/26R, 28E/W, 31E/W, 33E/W, E1-E3, W1-W8 and OSM's 32L/32R) are left out: each is drawn as its main stand.
-AIP_STANDS = {m[0]: P(m[1], m[2]) for m in re.findall(r'\b(\d{1,2})\s+(\d{6}\.\d{2}N)\s+(\d{7}\.\d{2}W)', open(STANDS_TXT).read())}
+# AD 2-EGGD-2-2 gives coordinates for most stands, and they are where the nose stops (the T-bar): every stand with
+# coordinates stops there. OSM's stand lines agree with them on the Main Apron's 1-3 and the far west 38-40, but on the
+# West Apron they show the layout before it was re-marked (lines 25-30 m east of the chart's, the W3/W4 lane mapped
+# ~15 m east) and on 17-20 and 22-25 they end 11-14 m away. So a stand with coordinates is drawn as the chart has it: a
+# straight lead-in from its lane to the T-bar, along the stand's heading. The heading is the chart's (AIP_HDG) on the
+# West Apron, otherwise that of the mapped line through the T-bar. Drive-through lines with two stop marks (28, 31, 33:
+# W and E) take the E mark, entered from the west. The stands the AIP has still "to be surveyed" (5-12, 14-16, the East
+# Apron) keep their OSM lines, which match the chart there. The MARS alternatives (26L/26R, 28W, 31W, 33W, E1-E3,
+# W1-W8) are left out: each is drawn as its main stand.
+AIP_ALL = {m[0]: P(m[1], m[2]) for m in re.findall(r'\b(\d{1,2}[EW]?)\s+(\d{6}\.\d{2}N)\s+(\d{7}\.\d{2}W)', open(STANDS_TXT).read())}
+AIP_STANDS = {k: v for k, v in AIP_ALL.items() if re.match(r'^\d{1,2}$', k)}
+for k in ('28', '31', '33'): AIP_STANDS[k] = AIP_ALL[k + 'E']
+# true headings into the stand from the chart (AD 2-EGGD-2-2, West Apron): 28-31 and 33 east off the lanes (along
+# taxiway Z's line, 087°), 32 west off the W3/W4 lane, 34-36 west-north-west off W1, 37 north-west from Z; and 17 and
+# 18 (East Apron, not mapped) north off Z like 19 and 20
+AIP_HDG = {'17': 356.5, '18': 356.5, '28': 87, '29': 87, '30': 87, '31': 87, '33': 87, '32': 267, '34': 297, '35': 285, '36': 285, '37': 312}
 lines = []
 for w in ways:
     if not tagged(w, 'parking_position') or w['nodes'][0] == w['nodes'][-1]: continue
     pts = [NODE[n] for n in w['nodes']]
     if len(pts) >= 2: lines.append((w.get('tags', {}).get('ref'), pts))
-pp, used = {}, set()
+def seg_near(p):
+    """the mapped stand line segment nearest p: (distance, a, b)"""
+    best = None
+    for r, q in lines:
+        for i in range(len(q) - 1):
+            a, b = q[i], q[i+1]; ex, ey = b[0]-a[0], b[1]-a[1]; LL = ex*ex + ey*ey or 1
+            u = max(0, min(1, ((p[0]-a[0])*ex + (p[1]-a[1])*ey)/LL)); d = math.dist(p, (a[0] + ex*u, a[1] + ey*u))
+            if best is None or d < best[0]: best = (d, a, b)
+    return best
+pp, used, AIPHD = {}, set(), {}
 for sid, ap in AIP_STANDS.items():
-    d, k = min((min(math.dist(ap, q[0]), math.dist(ap, q[-1])), k) for k, (r, q) in enumerate(lines))
-    if d < 20: q = lines[k][1]; used.add(k)
-    else: q = [ap]
-    pp[sid] = (q, sum(math.dist(q[i], q[i+1]) for i in range(len(q)-1)))
+    if sid in AIP_HDG: AIPHD[sid] = AIP_HDG[sid]
+    else:
+        d, a, b = seg_near(ap)
+        if d < 15:   # the mapped line's direction, pointing at whichever of its ends is nearer the T-bar
+            if math.dist(a, ap) < math.dist(b, ap): a, b = b, a
+            AIPHD[sid] = math.degrees(math.atan2(b[0]-a[0], b[1]-a[1])) % 360
+    pp[sid] = ([ap], 0)
+    for k, (r, q) in enumerate(lines):
+        if min(math.dist(ap, q[0]), math.dist(ap, q[-1])) < 20: used.add(k)
 for k, (r, q) in enumerate(lines):
     if k in used or not r or not re.match(r'^\d{1,2}$', r) or r in pp: continue
     pp[r] = (q, sum(math.dist(q[i], q[i+1]) for i in range(len(q)-1)))
@@ -364,6 +409,12 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0
             else:
                 dv = (q[0][0]-p[0], q[0][1]-p[1]); Ld = math.hypot(*dv)
                 hit = ray_hit(p, (dv[0]/Ld, dv[1]/Ld)) if Ld > 5 else None
+    elif sid in AIPHD:
+        # the chart's stand: back from the T-bar along its heading to the first lane
+        p = q[0]; hd = AIPHD[sid]; b_ = math.radians(hd + 180)
+        hit = ray_hit(p, (math.sin(b_), math.cos(b_)), 200)
+        if hit:
+            t_, e_, i_, u_ = hit; q0, q1 = segpts_of(e_, i_); line = [(q0[0] + (q1[0]-q0[0])*u_, q0[1] + (q1[1]-q0[1])*u_), p]
     else:
         p = q[0]; hit = None; hd = None
     if not hit:
