@@ -112,7 +112,13 @@ const holdOut = hp => { const L = holdLink(hp), H = HOLDS[hp]; return brg(...GN[
 const IHPS = {};
 for (const h of APT.ihps || []) {
   const node = h.node || splitAt('IHP_' + h.id, h.at, h.tw); if (!node || !GN[node]) continue;
-  const tw = h.tw || (GN[node].adj[0] && GN[node].adj[0][1].tw), nb = GN[node].adj.filter(([, e]) => e.tw === tw).map(([v]) => GN[v].p);
+  const tw = h.tw || (GN[node].adj[0] && GN[node].adj[0][1].tw);
+  // the line runs across the straightest way through the node: a spur joining there (Heathrow's A4 at PLUTO) would skew it
+  let nb = h.tw ? null : (() => { const adj = GN[node].adj; let best = null;
+    for (let i = 0; i < adj.length; i++) for (let j = i + 1; j < adj.length; j++) { const d = Math.abs(angDiff(brg(...GN[node].p, ...GN[adj[i][0]].p), brg(...GN[node].p, ...GN[adj[j][0]].p)));
+      if (d > 150 && (!best || d > best.d)) best = { d, nb: [GN[adj[i][0]].p, GN[adj[j][0]].p] }; }
+    return best && best.nb; })();
+  nb ||= GN[node].adj.filter(([, e]) => e.tw === tw).map(([v]) => GN[v].p);
   const dir = nb.length > 1 ? brg(...nb[0], ...nb[1]) : nb.length ? brg(...GN[node].p, ...nb[0]) : 0;
   IHPS[h.id] = { id: h.id, node, tw, dir };
 }
