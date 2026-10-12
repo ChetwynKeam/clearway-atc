@@ -714,7 +714,7 @@ function opsCheck(rw, why, auto){
 }
 function rcAtHold(){
   const C = S.rc; if (!C) return; C.st = 'READY'; C.t = S.t; C.v.v = 0; C.v.hdg = brg(...GN[HOLDS[C.hp].node].p, ...C.R.rm(holdM(C.R, C.hp), 0));
-  if (C.auto || rwyBlocked()) { vcall(C.v, `at holding point ${hpWords(C.hp)}, entering the closed runway ${C.rw} for the inspection`); rcEnter(true); return; }
+  if (C.auto || rwyBlocked(C.rw)) { vcall(C.v, `at holding point ${hpWords(C.hp)}, entering the closed runway ${C.rw} for the inspection`); rcEnter(true); return; }
   C.v.need = 'Request to enter runway'; C.asked = S.t;
   vcall(C.v, `at holding point ${hpWords(C.hp)}, request to enter runway ${C.rw} for a ${C.why}`);
   renderAtisSoon();
@@ -815,7 +815,7 @@ function stepRadio(){
   const C = S.rc;
   if (S.rtow && S.running) {   // not in the Academy exercises
     if (S.rcNext == null) S.rcNext = S.t + rnd(12, 30)*60;
-    if (!C && S.t >= S.rcNext) { S.rcNext = S.t + rnd(70, 130)*60; if (!rwyBlocked()) opsCheck(S.rwy, 'routine runway inspection'); }
+    if (!C && S.t >= S.rcNext) { S.rcNext = S.t + rnd(70, 130)*60; if (!rwyBlocked(S.rwy)) opsCheck(S.rwy, 'routine runway inspection'); }
   }
   if (C && C.st === 'READY' && C.asked != null && S.t - C.asked > 240) { C.asked = S.t; vcall(C.v, `still holding at ${hpWords(C.hp)} for the runway inspection`); }
   if (C && C.st === 'ON') for (const ac of S.acs) {
@@ -828,7 +828,7 @@ function stepRadio(){
     ac.rcHit = v.xing; SC(ac).incidents++; SC(ac).pts -= 60; sys(`INCIDENT: ${ac.cs} ${ac.state === 'TAKEOFF' ? 'took off' : 'landed'} with ${radioName(v)} crossing the runway.`, true);
   }
   // the runway closed for an inspection (bird strike, debris, after an emergency): Ops 1 goes out and drives it
-  if (S.emg && S.emg.rwyBlock && !C) opsCheck(S.rwy, 'runway inspection', true);
+  if (S.emg && S.emg.rwyBlock && !C) opsCheck(blockRw(), 'runway inspection', true);
   stepFire();
 }
 

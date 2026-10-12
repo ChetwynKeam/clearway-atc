@@ -90,7 +90,11 @@ const emit = (ev, data) => { for (const f of S.listeners) try { f(ev, data); } c
 // Airports with two departure runways at once (Madrid) pick one per aircraft (APT.depRwyOf), and two landing runways
 // (APT.landRwyOf): pass the aircraft where there is one.
 const depRw = ac => (ac && APT.depRwyOf && APT.depRwyOf(ac)) || S.depRwy || S.rwy;
-const landRw = ac => (ac && ac.app) || (ac && APT.landRwyOf && APT.landRwyOf(ac)) || S.rwy;
+// a parallel runway: 27L for 27R (another pavement with an approach of its own), or null
+const parallelEnd = rw => { const m = /^(\d\d)([LRC])$/.exec(rw || ''); if (!m) return null; for (const s of 'LRC') { const p = m[1] + s; if (p !== rw && FINAL[p] && rwyOf(p).id !== rwyOf(rw).id) return p; } return null; };
+// the runway an arrival expects: its approach's, else the airport's; while that one is closed, its parallel if there is one
+const openRw = rw => { const B = S.emg && S.emg.rwyBlock; if (!B || B.id == null || !rw || rwyOf(rw).id !== B.id) return rw; const p = parallelEnd(rw); return p || rw; };
+const landRw = ac => (ac && ac.app) || openRw((ac && APT.landRwyOf && APT.landRwyOf(ac)) || S.rwy);
 // ── runways. A one-runway airport is described by its profile's globals (rm, mOf, offOf, RU, RW_LO/RW_HI, TURN_W/E);
 // an airport with several runways (New York JFK) lists them in APT.runways, each with its own frame along the runway
 // (metres from its low end, offset to the left), so landing and departing traffic can use different pavements.
@@ -726,7 +730,10 @@ function vacatePath(ac){
   const R = rwyById(ac.rwyId), m = R.mOf([ac.x, ac.y]), dir = Math.sin(ac.hdg*D2R)*R.RU[0] + Math.cos(ac.hdg*D2R)*R.RU[1] >= 0 ? 1 : -1;
   // no stand yet: the crew heads for the exit and side of the airport it usually parks on
   planStand(ac); const st = ac.stand || freeStand(ac);
-  const prefs = APT.vacPrefs(st, ac);
+  // (only exits with a mapped turn-off: a runway it doesn't normally land on, Manchester's 23L, has holding points
+  // that are entries only)
+  let prefs = APT.vacPrefs(st, ac).filter(e => FIL[e]);
+  if (!prefs.length) prefs = Object.keys(FIL).filter(k => HOLDS[k] && HOLDS[k].on === R.id);
   if (ac.reqExit && !prefs.includes(ac.reqExit) && !(APT.vacExits && APT.vacExits(ac).includes(ac.reqExit))) ac.reqExit = null;
   const pts = [];
   const filM = (e, d) => FIL[e][d > 0 ? 'W' : 'E'][0][0];
@@ -1014,7 +1021,7 @@ function commandRun(str){
       reads.push(`hold ${ac.hold.name}`);
     } else if (t === 'CTL') {
       if (ac.kind !== 'ARR' || !air) { sys(`${ac.cs} is not on approach.`); continue; }
-      { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): you can't clear ${ac.cs} to land. Hold it or send it around.`, true); continue; } }
+      { const blk = rwyBlocked(landRw(ac)); if (blk) { sys(`Runway ${landRw(ac)} is closed (${blk}): you can't clear ${ac.cs} to land. Hold it or send it around.`, true); continue; } }
       const rw = landRw(ac); ac.ctl = true; ac.need = null; ac.freq = 'TWR';
       { const [sa, ra] = PH.ctl(ac, rw); said.push(sa); reads.push(ra); }
       if (APT.xing && (S.xing.st === 'OPEN' || S.xing.st === 'OPENING')) sys('Winston Churchill Avenue is still open.');
@@ -1169,7 +1176,7 @@ function commandRun(str){
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
       if (S.wx.vis < 1000) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
-      { const blk = rwyBlocked(); if (blk) { sys(`Runway ${S.rwy} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
+      { const blk = rwyBlocked(depRw(ac)); if (blk) { sys(`Runway ${depRw(ac)} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
       if (needRel(ac)) { const R = ac.rel, who = relUnit(ac);
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
@@ -1223,12 +1230,13 @@ function commandRun(str){
   renderSel(); renderStrips(true);
 }
 function willIntercept(ac, F){
-  const probe = { x: ac.x, y: ac.y }; let prev = null;
+  // on the heading it has just been given ("H240 APP 27L"), or the one it is flying
+  const probe = { x: ac.x, y: ac.y }, h = ac.mode === 'HDG' && ac.tgtHdg != null ? ac.tgtHdg : ac.hdg; let prev = null;
   for (let d = 0; d < 30; d += 0.25) {
-    probe.x = ac.x + Math.sin(ac.hdg*D2R)*d; probe.y = ac.y + Math.cos(ac.hdg*D2R)*d;
+    probe.x = ac.x + Math.sin(h*D2R)*d; probe.y = ac.y + Math.cos(h*D2R)*d;
     const q = onFinal(probe, F);
-    if (q.togo > 3.2 && q.togo < 25 && Math.abs(q.xte) < 0.45 && Math.abs(angDiff(ac.hdg, q.crs)) < 70) return true;
-    if (prev && Math.sign(prev.xte) !== Math.sign(q.xte) && q.togo > 3.2 && q.togo < 25 && Math.abs(angDiff(ac.hdg, q.crs)) < 70) return true;
+    if (q.togo > 3.2 && q.togo < 25 && Math.abs(q.xte) < 0.45 && Math.abs(angDiff(h, q.crs)) < 70) return true;
+    if (prev && Math.sign(prev.xte) !== Math.sign(q.xte) && q.togo > 3.2 && q.togo < 25 && Math.abs(angDiff(h, q.crs)) < 70) return true;
     prev = q;
   }
   return false;
@@ -1522,7 +1530,7 @@ function stepAir(ac, dt){
       if (Math.random() < p) { if (S.emg && (!S.emg.ws || S.t - S.emg.ws.t > 300)) shearReport(ac, rw); return goAround(ac, APT.shearWhy(rw)); }
     }
     if (fin.togo < 0.9 && !ac.ctl && !ac.warnedCtl) { ac.warnedCtl = true; pilot(ac, `short final runway ${rw}, request landing clearance`); ac.need = 'Short final, no clearance'; }
-    { const blk = rwyBlocked(); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
+    { const blk = rwyBlocked(rw); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && (S.acs.some(o => o !== ac && onRunway(o, rw)) || (typeof vehOnRwy === 'function' && vehOnRwy(rw)))) return goAround(ac, typeof vehOnRwy === 'function' && vehOnRwy(rw) ? 'vehicle on the runway' : 'runway occupied');
     if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { SC(ac).incidents++; SC(ac).pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }

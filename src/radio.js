@@ -55,7 +55,7 @@ function atisText(){
   ];
   if (turbExcess(w) > 0) out.push(`Warning: surface wind exceeds the Special Procedures turbulence limit. Expect moderate to severe turbulence and windshear on final${S.rwy === '09' ? ' in the lee of the Rock' : ''}.`);
   if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
-  if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+  if (E && E.rwyBlock) out.push(`Runway ${blockRw()} closed: ${E.rwyBlock.why}. ${parallelEnd(blockRw()) ? `Arrivals expect runway ${parallelEnd(blockRw())}.` : 'Expect delays.'}`);
   if (!sraMinsOk(w)) out.push('Weather below SRA minima.');
   out.push('Winston Churchill Avenue is closed to traffic for all runway movements.');
   out.push('Departures: release from Sevilla or Casablanca is required before take-off.');
