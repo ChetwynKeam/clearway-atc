@@ -1,52 +1,10 @@
 {
- "updated": "2026-10-12T13:56:23Z",
+ "updated": "2026-10-12T14:15:56Z",
  "source": "avionio.com",
  "days": {
   "2026-10-12": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Zurich",
-     "flight": "WK284",
-     "sched": "14:05",
-     "status": "Landed",
-     "expected": "14:02"
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR506",
-     "sched": "14:15",
-     "status": "Landed",
-     "expected": "14:33"
-    },
-    {
-     "place": "Lanzarote",
-     "flight": "FR4756",
-     "sched": "14:20",
-     "status": "Landed",
-     "expected": "13:59"
-    },
-    {
-     "place": "Dublin",
-     "flight": "EA3284",
-     "sched": "14:25",
-     "status": "Landed",
-     "expected": "14:27"
-    },
-    {
-     "place": "Isle of Man",
-     "flight": "U2234",
-     "sched": "14:35",
-     "status": "Landed",
-     "expected": "14:30"
-    },
-    {
-     "place": "Beziers",
-     "flight": "FR6010",
-     "sched": "14:40",
-     "status": "Landed",
-     "expected": "14:10"
-    },
     {
      "place": "Fuerteventura",
      "flight": "LS1828",
@@ -156,21 +114,21 @@
      "place": "Belfast",
      "flight": "U2230",
      "sched": "16:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Knock",
      "flight": "FR8203",
      "sched": "17:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:00"
     },
     {
      "place": "Amsterdam",
      "flight": "KL1081",
      "sched": "17:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -219,14 +177,14 @@
      "place": "Porto",
      "flight": "U22876",
      "sched": "18:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Prague",
      "flight": "U22936",
      "sched": "18:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -240,7 +198,7 @@
      "place": "Tivat",
      "flight": "U22752",
      "sched": "18:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -282,7 +240,7 @@
      "place": "Funchal",
      "flight": "LS1826",
      "sched": "19:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -370,6 +328,13 @@
      "expected": ""
     },
     {
+     "place": "Newcastle",
+     "flight": "U2242",
+     "sched": "22:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Berlin",
      "flight": "U22934",
      "sched": "22:30",
@@ -398,9 +363,23 @@
      "expected": ""
     },
     {
+     "place": "Glasgow",
+     "flight": "U2210",
+     "sched": "23:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Dalaman",
      "flight": "LS1818",
      "sched": "23:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Antalya",
+     "flight": "LS1810",
+     "sched": "23:25",
      "status": "Scheduled",
      "expected": ""
     },
@@ -421,67 +400,11 @@
    ],
    "dep": [
     {
-     "place": "Dalaman",
-     "flight": "LS1817",
-     "sched": "14:05",
-     "status": "Estimated",
-     "expected": "14:22"
-    },
-    {
-     "place": "Knock",
-     "flight": "FR8202",
-     "sched": "14:10",
-     "status": "Estimated",
-     "expected": "14:14"
-    },
-    {
-     "place": "Inverness",
-     "flight": "U2245",
-     "sched": "14:15",
-     "status": "Estimated",
-     "expected": "14:24"
-    },
-    {
-     "place": "Sharm el-Sheikh",
-     "flight": "BY226",
-     "sched": "14:25",
-     "status": "Estimated",
-     "expected": "14:45"
-    },
-    {
-     "place": "Izmir",
-     "flight": "LS1865",
-     "sched": "14:25",
-     "status": "Estimated",
-     "expected": "14:38"
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR507",
-     "sched": "14:40",
-     "status": "Estimated",
-     "expected": "15:10"
-    },
-    {
-     "place": "Dublin",
-     "flight": "EI3285",
-     "sched": "14:55",
-     "status": "Estimated",
-     "expected": "14:55"
-    },
-    {
-     "place": "Zurich",
-     "flight": "WK285",
-     "sched": "14:55",
-     "status": "Estimated",
-     "expected": "15:05"
-    },
-    {
      "place": "Girona",
      "flight": "FR9336",
      "sched": "15:10",
      "status": "Estimated",
-     "expected": "15:25"
+     "expected": "15:11"
     },
     {
      "place": "Geneva",
@@ -755,6 +678,13 @@
    "utcOffsetMin": 60,
    "arr": [
     {
+     "place": "Barcelona",
+     "flight": "U22706",
+     "sched": "00:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Larnaca",
      "flight": "LS1856",
      "sched": "00:10",
@@ -765,6 +695,13 @@
      "place": "Krakow/Balice",
      "flight": "FR5518",
      "sched": "00:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Marrakech",
+     "flight": "U22796",
+     "sched": "00:50",
      "status": "Scheduled",
      "expected": ""
     },
