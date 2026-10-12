@@ -63,6 +63,8 @@ const NUMW = { zero:0, one:1, two:2, three:3, tree:3, four:4, fower:4, five:5, f
 const PHONW = { alpha:'A', alfa:'A', bravo:'B', charlie:'C', delta:'D', echo:'E', foxtrot:'F', golf:'G', hotel:'H', india:'I', juliet:'J', juliett:'J', kilo:'K', lima:'L', mike:'M', november:'N', oscar:'O', papa:'P', quebec:'Q', romeo:'R', sierra:'S', tango:'T', uniform:'U', victor:'V', whiskey:'W', whisky:'W', xray:'X', 'x-ray':'X', yankee:'Y', zulu:'Z' };
 function normSpeech(raw){
   let s = ' ' + raw.toLowerCase().replace(/[,.;:!?]/g, ' ').replace(/-/g, ' ').replace(/\s+/g, ' ') + ' ';
+  // "23L" or "23 l" as the recogniser writes it -> "23 left"
+  s = s.replace(/ (\d{1,2}) ?([lrc]) /g, (m, n, d) => ` ${n} ${{ l: 'left', r: 'right', c: 'center' }[d]} `).replace(/ centre /g, ' center ').replace(/ i l s /g, ' ils ');
   s = s.replace(/ x ray /g, ' xray ').replace(/ take off /g, ' takeoff ').replace(/ line up /g, ' lineup ').replace(/ push back /g, ' pushback ')
        .replace(/ start up /g, ' startup ').replace(/ go around /g, ' goaround ').replace(/ flight level /g, ' fl ').replace(/ royal air maroc /g, ' royalairmaroc ')
        .replace(/ swiss ambulance /g, ' swissambulance ').replace(/ feet | ft /g, ' ').replace(/ degrees /g, ' ').replace(/ knots /g, ' ');
@@ -135,7 +137,8 @@ function phraseToCmd(raw){
   if (/ (no speed restriction|resume normal speed) /.test(s)) out.push('SN');
   else if ((m = s.match(/ speed (\d{2,3}) /))) out.push('S' + m[1]);
   if ((m = s.match(/ direct( to)? (\S+) /))) { const f = fixFrom(m[2]); if (f) out.push('DCT ' + f); }
-  if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) { const r = heardRwy(s); out.push('APP' + (r ? ' ' + r : '')); }
+  // "cleared ILS approach runway two three left", "cleared ILS two three left", "cleared approach runway 23L"
+  if (/ (approach|ils) /.test(s) && !/ (contact|monitor) /.test(s)) { const r = heardRwy(s, / (?:runway|ils) (\d{1,2})( left| right| center)? /); out.push('APP' + (r ? ' ' + r : '')); }
   if (APT.rnp && out.length && out[out.length-1].startsWith('APP') && / (rnp|r n p|rmp) /.test(s)) out[out.length-1] += / (yankee|yankees|y) /.test(s) ? ' RNPY' : / (zulu|z) /.test(s) ? ' RNPZ' : ' RNP';
   if (/ cleared to land /.test(s)) out.push('CTL');
   if (/ goaround /.test(s)) out.push('GA');
@@ -169,6 +172,7 @@ function phraseToCmd(raw){
       out.push(cmd);
     }
   }
+  if (/ follow (the )?(car|follow me|followme|vehicle) /.test(s)) out.push('FOLLOW');
   if (/ tow approved /.test(s) || / approved tow /.test(s)) out.push('TOW');
   if (/ lineup /.test(s)) out.push('LU');
   if (/ cross runway /.test(s)) { const r = heardRwy(s, / cross runway (\d{1,2})( left| right| center)? /); out.push('CROSS' + (r ? ' ' + r : '')); }
@@ -232,8 +236,13 @@ function handleHeard(text){
   setTimeout(() => setHeard(''), 6000);
 }
 if (!SR) { ptt.disabled = true; ptt.title = 'This browser has no speech recognition. Chrome, Edge and Safari support spoken commands.'; }
-ptt.addEventListener('pointerdown', e => { e.preventDefault(); startTalk(); });
-ptt.addEventListener('pointerup', stopTalk); ptt.addEventListener('pointerleave', stopTalk); ptt.addEventListener('pointercancel', stopTalk);
+// a long press on a phone must not select text, open the callout menu or scroll: the finger stays on the button until lifted
+ptt.addEventListener('pointerdown', e => { e.preventDefault(); try { ptt.setPointerCapture(e.pointerId); } catch(_) {} startTalk(); });
+ptt.addEventListener('pointerup', stopTalk); ptt.addEventListener('pointercancel', stopTalk);
+ptt.addEventListener('lostpointercapture', stopTalk);
+ptt.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+ptt.addEventListener('contextmenu', e => e.preventDefault());
+ptt.addEventListener('selectstart', e => e.preventDefault());
 // hold T to talk (when not typing)
 document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim' || e.repeat) return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === 't' || e.key === 'T') { e.preventDefault(); startTalk(); } });
 document.addEventListener('keyup', e => { if (e.key === 't' || e.key === 'T') stopTalk(); });

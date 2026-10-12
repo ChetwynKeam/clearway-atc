@@ -694,8 +694,9 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 .slot.ARR { border-left: 3px solid var(--arr); } .slot.DEP { border-left: 3px solid var(--dep); }
 
 /* push-to-talk and the speech transcript */
-.toolbar .talk { display: inline-flex; align-items: center; gap: 6px; }
-.toolbar .talk svg { width: 14px; height: 14px; }
+.toolbar .talk { display: inline-flex; align-items: center; justify-content: center; min-width: 38px;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+.toolbar .talk svg { width: 18px; height: 18px; pointer-events: none; }
 .app .toolbar .talk.on { background: #d62d2d; border-color: #d62d2d; color: #fff; }
 .heard { position: absolute; left: 50%; transform: translateX(-50%); bottom: 48px; max-width: min(640px, calc(100% - 24px)); padding: 7px 14px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line-2); box-shadow: var(--shadow-2); font-family: var(--font-data); font-size: 13px; color: var(--ink); z-index: 3; pointer-events: none; }
 .heard.ok { border-color: var(--ok); } .heard.bad { border-color: var(--alert); color: var(--alert); }
@@ -2077,7 +2078,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
       <button id="tgProc" class="on">Procedures</button>
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
-      <button id="tgTalk" class="talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Hold to talk</button>
+      <button id="tgTalk" class="talk" aria-label="Hold to talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
       <button id="tgSetup">Session</button>
       <button id="tgSeats" title="Who works each position: you or an AI controller">Positions</button>
       <button id="tgFids" title="Today's arrivals and departures">Flights</button>
@@ -2287,7 +2288,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <h3>The side panel</h3>
       <p>The <b>ATIS</b> block shows the current information letter (click it to read the full broadcast), the runway selector, the METAR and tiles for wind, head and crosswind on the runway in use, visibility and cloud, QNH, approach minima and temperature. Below it is what the airport needs on top: the <b>road crossing</b> control at Gibraltar, the <b>anemometer</b> readings and wind-limit state at Madeira. The <b>selected flight</b> card has the buttons that make sense for that aircraft right now. The <b>strips</b> are sorted with the flights waiting on you first. When the ATIS changes a red <b>ATIS</b> warning flashes by the runway until you click it, and the <b>Flights</b> button opens the day's arrivals and departures board.</p>
       <h3>The command line</h3>
-      <p>Type a callsign (or just its digits, such as <code>8901</code>) followed by one or more instructions, then press Enter. With a flight selected you can leave the callsign out. Press <kbd>/</kbd> to jump to the command line, <kbd>Tab</kbd> to cycle flights and <kbd>Space</kbd> to pause. With <b>Voice</b> on you hear the pilots, tugs and other stations (your own instructions stay written in the log, not read aloud), and <b>Hold to talk</b> lets you say the instruction in standard phraseology instead.</p>
+      <p>Type a callsign (or just its digits, such as <code>8901</code>) followed by one or more instructions, then press Enter. With a flight selected you can leave the callsign out. Press <kbd>/</kbd> to jump to the command line, <kbd>Tab</kbd> to cycle flights and <kbd>Space</kbd> to pause. With <b>Voice</b> on you hear the pilots, tugs and other stations (your own instructions stay written in the log, not read aloud), and the <b>microphone</b> button (hold it, or hold <kbd>T</kbd>) lets you say the instruction in standard phraseology instead.</p>
       <h3>On a phone or tablet</h3>
       <p>On a narrow screen the scope sits on top and a tab bar along the bottom chooses one panel under it: <b>Flight</b> (the selected aircraft and its buttons), <b>Strips</b> (with a red count of flights waiting on you), <b>ATIS</b>, <b>Radio</b> (the message log) or <b>Scope</b> for the map on its own. Tap an aircraft or a strip and the Flight panel opens. On a tablet held upright Flight and Strips sit side by side, and on a phone turned on its side the panel moves to the right of the scope.</p>
     </section>
@@ -2308,6 +2309,46 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <p>Click the information letter in the ATIS panel to read the full broadcast, and press <b>Broadcast it</b> to hear it. It carries the runway, the approach in use, wind, visibility, cloud, temperature, QNH, the transition level, turbulence, windshear and wind-limit warnings, any runway closure and the local reminders, such as the road at Gibraltar and the departure release. When it changes, a red ATIS button flashes until you click it.</p>
     </section>
 
+    <section id="t-cmdcard" data-track="core"><h2><span class="n">11</span>Command card</h2>
+      <p>Every main instruction three ways: <b>type</b> it in the command line, <b>say</b> it while holding the microphone button (or <kbd>T</kbd>), or <b>tap</b> the button on the selected flight's card. Start typed and spoken commands with the callsign, or select the flight first and leave it out. Runways are said digit by digit with left, right or centre (“runway two three left”); the examples use Manchester and Gibraltar, and the buttons show the runways, exits and stands of the airport you are at.</p>
+      <h3>In the air</h3>
+      <div class="tbl cmdcard"><table>
+        <tr><th>Instruction</th><th>Type</th><th>Say</th><th>Tap</th></tr>
+        <tr><td>Turn or fly a heading</td><td class="mono">L200 · R090 · H270</td><td>“turn left heading two zero zero”</td><td><b>Heading</b> box, then Enter</td></tr>
+        <tr><td>Climb or descend</td><td class="mono">A40 · A80</td><td>“descend altitude four thousand”, “climb flight level eight zero”</td><td><b>Altitude ×100</b> box</td></tr>
+        <tr><td>Speed</td><td class="mono">S180 · SN</td><td>“speed one eight zero”, “no speed restriction”</td><td><b>Speed</b> box</td></tr>
+        <tr><td>Direct to a fix</td><td class="mono">DCT MIRSI</td><td>“direct MIRSI”</td><td><b>Direct to…</b> list</td></tr>
+        <tr><td>Hold</td><td class="mono">HOLD MIRSI</td><td>“hold at MIRSI”</td><td><b>Hold</b></td></tr>
+        <tr><td>Cleared for the ILS (or SRA, VOR)</td><td class="mono">APP 23L</td><td>“cleared ILS approach runway two three left”</td><td><b>ILS 23L</b></td></tr>
+        <tr><td>Cleared for an RNP approach</td><td class="mono">APP RNP · APP 05 RNPY</td><td>“cleared RNP yankee approach runway zero five”</td><td><b>RNP</b> buttons</td></tr>
+        <tr><td>Vacate at an exit (after the approach clearance)</td><td class="mono">VAC B2</td><td>“vacate via bravo two”</td><td>The exit buttons</td></tr>
+        <tr><td>Hand to Tower or the next unit</td><td class="mono">HO · HO 118.625</td><td>“contact tower one one eight decimal six two five”</td><td><b>To Tower</b> · <b>To …</b></td></tr>
+        <tr><td>Cleared to land</td><td class="mono">CTL</td><td>“runway two three right, cleared to land”</td><td><b>Cleared to land</b></td></tr>
+        <tr><td>Go around</td><td class="mono">GA</td><td>“go around”</td><td><b>Go around</b></td></tr>
+        <tr><td>Squawk ident</td><td class="mono">IDENT</td><td>“squawk ident”</td><td>Type or say it</td></tr>
+        <tr><td>Acknowledge a MAYDAY or PAN</td><td class="mono">ROG</td><td>“roger mayday”</td><td><b>Roger MAYDAY</b></td></tr>
+        <tr><td>Pass the windshear report</td><td class="mono">WS</td><td>“windshear …”</td><td><b>Pass windshear</b></td></tr>
+      </table></div>
+      <h3>On the ground</h3>
+      <div class="tbl cmdcard"><table>
+        <tr><th>Instruction</th><th>Type</th><th>Say</th><th>Tap</th></tr>
+        <tr><td>Start-up and push back</td><td class="mono">PUSH · PUSH E</td><td>“start up and push back approved, facing east”</td><td><b>Start &amp; push…</b></td></tr>
+        <tr><td>Pull back onto the stand</td><td class="mono">PULL</td><td>“pull forward”</td><td><b>Pull back to stand …</b></td></tr>
+        <tr><td>Request the departure release</td><td class="mono">REL</td><td>“request release”</td><td><b>Request release</b></td></tr>
+        <tr><td>Taxi to a holding point</td><td class="mono">TAXI A · TAXI A VIA B</td><td>“taxi to holding point alpha via bravo”</td><td><b>Taxi…</b> (route picker)</td></tr>
+        <tr><td>Hold position / continue</td><td class="mono">HP · RES</td><td>“hold position”, “continue taxi”</td><td>Type or say it</td></tr>
+        <tr><td>Cross a runway</td><td class="mono">CROSS 05L</td><td>“cross runway zero five left”</td><td><b>Cross runway 05L</b></td></tr>
+        <tr><td>Line up</td><td class="mono">LU</td><td>“runway two three right, line up and wait”</td><td><b>Line up</b></td></tr>
+        <tr><td>Cleared for take-off</td><td class="mono">CTO</td><td>“runway two three right, cleared for takeoff”</td><td><b>Cleared take-off</b></td></tr>
+        <tr><td>Assign an arrival's stand</td><td class="mono">STAND 5 · STAND AUTO</td><td>“stand five”, “stand auto”</td><td>Stand list · <b>Auto</b></td></tr>
+        <tr><td>Taxi an arrival to its stand</td><td class="mono">TAXI · TAXI 5 VIA K</td><td>“taxi to stand five via kilo”</td><td><b>Taxi to stand …</b></td></tr>
+        <tr><td>Follow the follow-me car</td><td class="mono">FOLLOW</td><td>“follow the car”</td><td><b>Follow car to …</b></td></tr>
+        <tr><td>Approve a tow</td><td class="mono">TOW</td><td>“tow approved”</td><td><b>Approve tow</b></td></tr>
+        <tr><td>Remove a stuck flight</td><td class="mono">REMOVE</td><td>Type it</td><td><b>Remove</b></td></tr>
+      </table></div>
+      <p>Commands chain into one transmission: type <code>BAW492 L180 A40 S200</code>, or say “Speedbird four niner two, turn left heading one eight zero, descend altitude four thousand, speed two hundred”. The full list, with the vehicle and runway-check commands, is in the command reference below.</p>
+    </section>
+
     <section id="t-commands" data-track="core"><h2><span class="n">11</span>Command reference</h2>
       <div class="tbl"><table>
         <tr><th>Command</th><th>Meaning</th><th>Example</th></tr>
@@ -2316,7 +2357,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <tr><td class="mono">S### / SN</td><td>Assign speed, or remove the restriction</td><td class="mono">S180</td></tr>
         <tr><td class="mono">DCT fix</td><td>Proceed direct to a fix</td><td class="mono">DCT UPMUP</td></tr>
         <tr><td class="mono">HOLD [fix]</td><td>Hold at a fix, or at present position</td><td class="mono">HOLD UPMUP</td></tr>
-        <tr><td class="mono">APP [runway]</td><td>Clear the approach: the SRA at Gibraltar, the VOR approach at Madeira</td><td class="mono">APP 27 · APP 05</td></tr>
+        <tr><td class="mono">APP [runway]</td><td>Clear the approach: the SRA at Gibraltar, the VOR approach at Madeira, the ILS at most others</td><td class="mono">APP 27 · APP 23L</td></tr>
         <tr><td class="mono">HO [freq]</td><td>Transfer: Radar or Approach ↔ Tower, then the next unit (Sevilla 132.6 or Casablanca 125.5 from Gibraltar, Lisboa 132.255 from Madeira). A wrong frequency sends the crew away and back</td><td class="mono">HO 132.6</td></tr>
         <tr><td class="mono">CTL</td><td>Cleared to land</td><td class="mono">CTL</td></tr>
         <tr><td class="mono">GA</td><td>Go around</td><td class="mono">GA</td></tr>
@@ -10701,6 +10742,8 @@ const NUMW = { zero:0, one:1, two:2, three:3, tree:3, four:4, fower:4, five:5, f
 const PHONW = { alpha:'A', alfa:'A', bravo:'B', charlie:'C', delta:'D', echo:'E', foxtrot:'F', golf:'G', hotel:'H', india:'I', juliet:'J', juliett:'J', kilo:'K', lima:'L', mike:'M', november:'N', oscar:'O', papa:'P', quebec:'Q', romeo:'R', sierra:'S', tango:'T', uniform:'U', victor:'V', whiskey:'W', whisky:'W', xray:'X', 'x-ray':'X', yankee:'Y', zulu:'Z' };
 function normSpeech(raw){
   let s = ' ' + raw.toLowerCase().replace(/[,.;:!?]/g, ' ').replace(/-/g, ' ').replace(/\s+/g, ' ') + ' ';
+  // "23L" or "23 l" as the recogniser writes it -> "23 left"
+  s = s.replace(/ (\d{1,2}) ?([lrc]) /g, (m, n, d) => ` ${n} ${{ l: 'left', r: 'right', c: 'center' }[d]} `).replace(/ centre /g, ' center ').replace(/ i l s /g, ' ils ');
   s = s.replace(/ x ray /g, ' xray ').replace(/ take off /g, ' takeoff ').replace(/ line up /g, ' lineup ').replace(/ push back /g, ' pushback ')
        .replace(/ start up /g, ' startup ').replace(/ go around /g, ' goaround ').replace(/ flight level /g, ' fl ').replace(/ royal air maroc /g, ' royalairmaroc ')
        .replace(/ swiss ambulance /g, ' swissambulance ').replace(/ feet | ft /g, ' ').replace(/ degrees /g, ' ').replace(/ knots /g, ' ');
@@ -10773,7 +10816,8 @@ function phraseToCmd(raw){
   if (/ (no speed restriction|resume normal speed) /.test(s)) out.push('SN');
   else if ((m = s.match(/ speed (\d{2,3}) /))) out.push('S' + m[1]);
   if ((m = s.match(/ direct( to)? (\S+) /))) { const f = fixFrom(m[2]); if (f) out.push('DCT ' + f); }
-  if (/ approach /.test(s) && !/ (contact|monitor) /.test(s)) { const r = heardRwy(s); out.push('APP' + (r ? ' ' + r : '')); }
+  // "cleared ILS approach runway two three left", "cleared ILS two three left", "cleared approach runway 23L"
+  if (/ (approach|ils) /.test(s) && !/ (contact|monitor) /.test(s)) { const r = heardRwy(s, / (?:runway|ils) (\d{1,2})( left| right| center)? /); out.push('APP' + (r ? ' ' + r : '')); }
   if (APT.rnp && out.length && out[out.length-1].startsWith('APP') && / (rnp|r n p|rmp) /.test(s)) out[out.length-1] += / (yankee|yankees|y) /.test(s) ? ' RNPY' : / (zulu|z) /.test(s) ? ' RNPZ' : ' RNP';
   if (/ cleared to land /.test(s)) out.push('CTL');
   if (/ goaround /.test(s)) out.push('GA');
@@ -10807,6 +10851,7 @@ function phraseToCmd(raw){
       out.push(cmd);
     }
   }
+  if (/ follow (the )?(car|follow me|followme|vehicle) /.test(s)) out.push('FOLLOW');
   if (/ tow approved /.test(s) || / approved tow /.test(s)) out.push('TOW');
   if (/ lineup /.test(s)) out.push('LU');
   if (/ cross runway /.test(s)) { const r = heardRwy(s, / cross runway (\d{1,2})( left| right| center)? /); out.push('CROSS' + (r ? ' ' + r : '')); }
@@ -10870,8 +10915,13 @@ function handleHeard(text){
   setTimeout(() => setHeard(''), 6000);
 }
 if (!SR) { ptt.disabled = true; ptt.title = 'This browser has no speech recognition. Chrome, Edge and Safari support spoken commands.'; }
-ptt.addEventListener('pointerdown', e => { e.preventDefault(); startTalk(); });
-ptt.addEventListener('pointerup', stopTalk); ptt.addEventListener('pointerleave', stopTalk); ptt.addEventListener('pointercancel', stopTalk);
+// a long press on a phone must not select text, open the callout menu or scroll: the finger stays on the button until lifted
+ptt.addEventListener('pointerdown', e => { e.preventDefault(); try { ptt.setPointerCapture(e.pointerId); } catch(_) {} startTalk(); });
+ptt.addEventListener('pointerup', stopTalk); ptt.addEventListener('pointercancel', stopTalk);
+ptt.addEventListener('lostpointercapture', stopTalk);
+ptt.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+ptt.addEventListener('contextmenu', e => e.preventDefault());
+ptt.addEventListener('selectstart', e => e.preventDefault());
 // hold T to talk (when not typing)
 document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim' || e.repeat) return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === 't' || e.key === 'T') { e.preventDefault(); startTalk(); } });
 document.addEventListener('keyup', e => { if (e.key === 't' || e.key === 'T') stopTalk(); });
