@@ -89,9 +89,9 @@ function rwyCross(R){
 }
 const sameRwy = (R, id) => rwyCross(R).has(id);
 // anything on the runway (or one crossing it), lined up on it, or a vehicle out there; skip: the flight asking
-function rwyBusy(R, skip, rolling){
+function rwyBusy(R, skip, rolling, ok){
   for (const o of S.acs) {
-    if (o === skip) continue;
+    if (o === skip || (ok && ok(o))) continue;
     if (o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id) && !(rolling && o.state === 'TAKEOFF')) return o;
     if (o.kind === 'DEP' && ['LINEUP', 'LINEDUP'].includes(o.state) && sameRwy(R, rwyOf(depRw(o)).id)) return o;
   }
@@ -297,7 +297,10 @@ function aiDepart(ac){
   if (over) return why(`${over.cs} passing overhead`);
   const a = arrNear(R, ac), need = clearS(ac);
   const last = S.aiDep && S.aiDep[R.id], gap = last ? (last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
-  const wait = last ? last.t + gap - S.t : 0, busy = rwyBusy(R, ac);
+  // a departure lined up behind this one (further back up the runway: multiple line-ups) doesn't stop it going
+  // (not one already cleared to go: it rolls first)
+  const me = luM(ac), behind = o => o.kind === 'DEP' && !o.cto && (o.state === 'LINEUP' || o.state === 'LINEDUP') && depRw(o) === rw && luM(o) < me - 50;
+  const wait = last ? last.t + gap - S.t : 0, busy = rwyBusy(R, ac, false, behind);
   // a hold close to the field with someone in it: the departure stops its climb 1,000 ft below the lowest, or waits
   let cap = capUnderStack(ac);
   if (cap === -1 && !lined) return why('waiting for the hold over the field to climb clear');
@@ -309,6 +312,10 @@ function aiDepart(ac){
   const rolling = S.acs.some(o => o !== ac && o.state === 'TAKEOFF' && o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id));
   const lineNeed = 45 + 110 + (a.opp ? 300 : a.head ? 150 : 0);
   if (!lined && ac.state === 'HOLDPT' && (wait > 0 || rolling) && luBehind(ac, R) && a.eta >= Math.max(wait, rolling ? 30 : 0) + lineNeed + 30) { ac.aiWhy = 'lining up behind the departure'; return aiDo('TWR', ac, 'LU'); }
+  // multiple line-ups: one or two already lined up further down the runway (an intersection departure ahead), this one
+  // lines up behind them to go next, if the next arrival leaves room for them all
+  const ahead = luOthers(ac);
+  if (!lined && ac.state === 'HOLDPT' && ahead.length && ahead.length < 3 && ahead.every(o => o.onRwy && luM(o) > me + 300) && !rwyBusy(R, ac, true, o => ahead.includes(o)) && a.eta >= wait + lineNeed + 220*ahead.length + 60) { ac.aiWhy = `lining up behind ${ahead[0].cs}`; return aiDo('TWR', ac, 'LU'); }
 }
 // free to line up on: nothing on the runway (or one crossing it) but a departure already rolling away, past the point
 // where this one enters, on the same runway
