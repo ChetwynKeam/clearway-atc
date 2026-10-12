@@ -607,7 +607,7 @@ const APT = {
     if (w.vis < 600) out.push('Low visibility procedures in force.');
     if (turbExcess(w) > 0) out.push('Moderate turbulence and windshear reported on final.');
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
-    if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+    if (E && E.rwyBlock) out.push(`Runway ${blockRw()} closed: ${E.rwyBlock.why}. ${parallelEnd(blockRw()) ? `Arrivals expect runway ${parallelEnd(blockRw())}, departures continue on the other runway.` : "Expect delays."}`);
     if (!minsOk(w, S.rwy)) out.push('Visibility below the ILS minima. Expect holding at Bovingdon, Lambourne, Biggin or Ockham.');
     out.push('Runway alternation in progress: the landing runway changes at 15:00.');
     out.push('Traffic for Terminal 4 and the cargo area crosses the southern runway: hold short unless cleared to cross.');

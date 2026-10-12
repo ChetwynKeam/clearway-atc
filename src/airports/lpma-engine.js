@@ -304,7 +304,7 @@ const APT = {
     const lim = lpmaLimit('land', S.rwy); if (lim) out.push(`Warning: wind limits exceeded for runway ${S.rwy}, ${lim}. Expect holding at PILIM.`);
     if (turbExcess(w) > 0) out.push('Moderate to severe turbulence and windshear on final.');
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
-    if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+    if (E && E.rwyBlock) out.push(`Runway ${blockRw()} closed: ${E.rwyBlock.why}. ${parallelEnd(blockRw()) ? `Arrivals expect runway ${parallelEnd(blockRw())}, departures continue on the other runway.` : "Expect delays."}`);
     if (!minsOk(w, S.rwy)) out.push(rnpMinsOk(w, S.rwy) ? 'Weather below the circling minima.' : 'Weather below the circling and RNP minima.');
     out.push('Departures: release from Lisboa Control is required before take-off.');
     out.push(`Acknowledge receipt of information ${L} and advise aircraft type on first contact.`);

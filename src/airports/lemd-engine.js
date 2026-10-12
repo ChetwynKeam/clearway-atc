@@ -516,7 +516,7 @@ const APT = {
     out.push('Independent parallel approaches in progress.');
     if (turbExcess(w) > 0 || w.cb) out.push('Windshear and moderate turbulence reported on final.');
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
-    if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
+    if (E && E.rwyBlock) out.push(`Runway ${blockRw()} closed: ${E.rwyBlock.why}. ${parallelEnd(blockRw()) ? `Arrivals expect runway ${parallelEnd(blockRw())}, departures continue on the other runway.` : "Expect delays."}`);
     if (!minsOk(w, S.rwy)) out.push(`Visibility below the ILS minima. Expect holding at ${c === 'north' ? 'FAFEQ or RUDBI' : 'RILKO or LULER'}.`);
     out.push('Runway 18R/36L is crossed between Terminals 4 and 4S: hold short unless cleared to cross.');
     out.push(`Acknowledge receipt of information ${L} and advise aircraft type and stand on first contact.`);
