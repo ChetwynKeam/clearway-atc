@@ -7,8 +7,8 @@
 // buildings (egll-ground.js). Positions are lat/lon (WGS84); variation 1.2°E. Summary of the charts: airports/egll/README.md.
 // Heathrow has two parallel runways 1,415 m apart, run in segregated mode: one lands, the other departs. In the westerly
 // (about 70% of the year) the runways alternate at 15:00 every day and week by week, so that the towns under the
-// approaches get a break: one week 27R lands until 15:00 and 27L after, the next the other way round. In the easterly
-// arrivals land on 09L and departures leave from 09R. The terminals sit between the runways (2 and 3 in the Central
+// approaches get a break: one week 27R lands until 15:00 and 27L after, the next the other way round. The easterly
+// alternates the same way, 09L and 09R. The terminals sit between the runways (2 and 3 in the Central
 // Area, 5 at the west end) and to the south (4, and the cargo area): their traffic crosses the southern runway.
 // Plain data plus a few small functions, like egcc.js; egll-engine.js turns it into the engine's globals.
 
@@ -79,20 +79,23 @@ const EGLL = (() => {
     thr: { '09L': P('512839.00N', '0002906.05W'), '27R': P('512839.63N', '0002559.74W'), '09R': P('512753.25N', '0002856.41W'), '27L': P('512753.83N', '0002602.68W') },
     elev: { '09L': 79, '27R': 78, '09R': 75, '27L': 77 }
   };
-  // segregated mode: one runway lands, the other departs. The westerly alternates (two configurations), the easterly
-  // lands 09L and departs 09R. Keyed by the configuration; the engine finds one from the landing runway.
+  // segregated mode: one runway lands, the other departs. Both directions alternate at 15:00, so there are two
+  // configurations each way. Keyed by the configuration; the engine finds one from the landing runway.
   const CONFIGS = {
     west:  { land: '27R', dep: '27L', name: 'West 27R' },
     west2: { land: '27L', dep: '27R', name: 'West 27L' },
-    east:  { land: '09L', dep: '09R', name: 'Easterly' }
+    east:  { land: '09L', dep: '09R', name: 'East 09L' },
+    east2: { land: '09R', dep: '09L', name: 'East 09R' }
   };
-  // the westerly alternation (Heathrow's published runway alternation programme): the landing runway changes at 15:00
-  // local; week A lands 27R until 15:00 and 27L after, week B the reverse. Weeks counted from the Monday of 2026-01-05.
+  // runway alternation (Heathrow's published programme): the landing runway changes at 15:00 local in both directions;
+  // week A lands on the northern runway (27R or 09L) until 15:00 and the southern one (27L or 09R) after, week B the
+  // reverse. Weeks counted from the Monday of 2026-01-05.
   const ALT_SWITCH = 15*60;
-  const altLand = (ms, utcOffMin = 60) => {
+  const altLand = (ms, utcOffMin = 60, east = false) => {
     const t = new Date(ms + utcOffMin*60000), wk = Math.floor((Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()) - Date.UTC(2026, 0, 5))/(7*864e5));
     const pm = t.getUTCHours()*60 + t.getUTCMinutes() >= ALT_SWITCH, a = ((wk % 2) + 2) % 2 === 0;
-    return a !== pm ? '27R' : '27L';
+    const north = a !== pm;
+    return east ? (north ? '09L' : '09R') : (north ? '27R' : '27L');
   };
 
   // ── STARs (7-1..7-17). Every one ends at one of the four London holds at FL70; Heathrow Director vectors the
@@ -348,7 +351,7 @@ const EGLL = (() => {
   };
   const WX_PRESETS = {
     west:  { name: 'Westerly: land 27R, depart 27L',                        short: 'Westerly',  metar: 'EGLL 121150Z 24012KT 9999 FEW025 SCT040 15/09 Q1014' },
-    east:  { name: 'Easterly: land 09L, depart 09R',                        short: 'Easterly',  metar: 'EGLL 121150Z 08011KT 9999 SCT032 12/05 Q1027' },
+    east:  { name: 'Easterly: land 09L or 09R in turn',                     short: 'Easterly',  metar: 'EGLL 121150Z 08011KT 9999 SCT032 12/05 Q1027' },
     rain:  { name: 'Thames Valley rain and low cloud',                      short: 'Low cloud', metar: 'EGLL 121150Z 22016KT 3500 RA BR BKN004 OVC009 13/12 Q0999' },
     fog:   { name: 'Thick fog: RVR 50 m, below even the CAT III minima',    short: 'Fog',       metar: 'EGLL 120650Z 00000KT 0050 R27R/0050N FG VV000 06/06 Q1025' },
     storm: { name: 'Atlantic gale: gusty crosswind and turbulence',         short: 'Storm',     metar: 'EGLL 121150Z 22030G46KT 9999 -SHRA FEW014 BKN028 12/07 Q0983' },

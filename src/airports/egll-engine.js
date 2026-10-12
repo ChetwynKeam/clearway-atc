@@ -3,7 +3,7 @@
 // egll-ground.js (metres east and north of the ARP). Heathrow has two parallel runways 1,415 m apart, 09L/27R (north) and
 // 09R/27L (south), with the terminals between them (2, 3 and 5) and south of the southern runway (4 and the cargo area).
 // The runways are run in segregated mode: one lands, the other departs. In the westerly they swap at 15:00 every day
-// (runway alternation, egll.js altLand); in the easterly arrivals land on 09L and departures leave from 09R. S.rwy is the
+// in both directions (runway alternation, egll.js altLand): 27R/27L or 09L/09R land in turn. S.rwy is the
 // landing runway, S.depRwy the departure runway. Traffic to and from Terminal 4 and the cargo area crosses the southern
 // runway; a departure taxied to a holding point on the landing runway departs from it (as when one runway is closed).
 Object.assign(TYPES, EGLL.TYPES);
@@ -46,11 +46,12 @@ const TURN_W = R0.TURN_W, TURN_E = R0.TURN_E, TURN_END = R0.TURN_END, TURN_PAD =
 const RWYS_BY_END = rw => RWY_LIST.find(R => R.lo === rw || R.hi === rw) || R0;
 
 // ═════════════════════════ runway directions ═════════════════════════
-// three configurations: the westerly with 27R landing (27L departing), the westerly alternated (27L landing, 27R
-// departing) and the easterly (09L landing, 09R departing). Each is found from its landing runway.
+// four configurations, two each way for the alternation: 27R landing (27L departing) or 27L landing (27R departing),
+// 09L landing (09R departing) or 09R landing (09L departing). Each is found from its landing runway.
 const CFG = EGLL.CONFIGS;
-const configOf = rw => rw === '27L' ? 'west2' : rw === '27R' ? 'west' : 'east';
+const configOf = rw => ({ '27R': 'west', '27L': 'west2', '09L': 'east', '09R': 'east2' })[rw] || 'west';
 const cfgNow = () => configOf(S.rwy);
+const isEast = c => c === 'east' || c === 'east2';
 const landOf = (c = cfgNow()) => CFG[c].land, depOf = (c = cfgNow()) => CFG[c].dep;
 
 // ═════════════════════════ taxiways, holding points, stands (egll-ground.js) ═════════════════════════
@@ -415,20 +416,20 @@ function clockMs(){
   const d = +((document.getElementById('daySel') || {}).value || 0), h = +((document.getElementById('hourSel') || {}).value || 12);
   return Date.UTC(2026, 9, 5 + d, Math.floor(h));
 }
-const westLand = () => { const t = clockMs(); return t == null ? '27R' : EGLL.altLand(t, APT.utcOff*60); };
-// the direction: westerly preferred (noise); easterly when the tailwind on 27 would exceed 5 kt. In the westerly the
+// the alternation's landing runway for this time, westerly or easterly
+const altLandNow = east => { const t = clockMs(); return t == null ? (east ? '09L' : '27R') : EGLL.altLand(t, APT.utcOff*60, east); };
+// the direction: westerly preferred (noise); easterly when the tailwind on 27 would exceed 5 kt. Either way the
 // landing runway is the alternation's.
 function rwyFor(w){
-  const west = () => { const land = westLand(); return { land, dep: parallelOf(land) }; };
-  if (w.vrb || w.spd < 4) return west();
-  return windComp(w, crsOf('27R')).headG > -5 ? west() : { land: '09L', dep: '09R' };
+  const east = !(w.vrb || w.spd < 4) && windComp(w, crsOf('27R')).headG <= -5, land = altLandNow(east);
+  return { land, dep: parallelOf(land) };
 }
 const depFor = rw => CFG[configOf(rw)].dep;
-// the runway alternation at 15:00 local: in the westerly the landing and departure runways swap
+// the runway alternation at 15:00 local: the landing and departure runways swap, in either direction
 let altWas = null;
 function stepAlternation(){
-  if (!S.running || EXERCISES[S.mode] || cfgNow() === 'east') { altWas = null; return; }
-  const want = westLand();
+  if (!S.running || EXERCISES[S.mode]) { altWas = null; return; }
+  const want = altLandNow(isEast(cfgNow()));
   if (altWas && want !== altWas && want !== S.rwy) {
     sys(`Runway alternation, 15:00: runway ${want} for landing, ${parallelOf(want)} for departure.`);
     setRwy(want);
@@ -469,7 +470,7 @@ const APT = {
   minsOk,
   // the landing runway and the departure runway: S.rwy lands, S.depRwy departs
   splitRwy: true, rwyFor, depFor, configOf,
-  rwyConfigs: ['west', 'west2', 'east'].map(c => ({ key: c, name: CFG[c].name, land: CFG[c].land, lands: [CFG[c].land], deps: [CFG[c].dep] })),
+  rwyConfigs: ['west', 'west2', 'east', 'east2'].map(c => ({ key: c, name: CFG[c].name, land: CFG[c].land, lands: [CFG[c].land], deps: [CFG[c].dep] })),
   depRwyOf, landRwyOf,
   activeRwys: () => [landOf(), depOf()],
   depRwys: () => [depOf(), landOf()],
@@ -552,7 +553,7 @@ const APT = {
   },
   atisPanel(w){
     const c = cfgNow(), cw = Math.abs(windComp(w, crsOf(S.rwy)).crossG), bad = !minsOk(w, S.rwy), r = rwyFor(w);
-    return `<div class="warnline${bad ? ' bad' : ''}">${CFG[c].name}: ${flowText(c)}${configOf(r.land) === 'east' && c !== 'east' ? ' (wind favours the easterly)' : c === 'east' && configOf(r.land) !== 'east' ? ' (wind favours the westerly)' : ''} · ${bad ? 'below the ILS minima' : 'ILS approaches'} · crosswind ${Math.round(cw)} kt. ${c === 'east' ? 'Departures enter 09R at November 11 or Sierra 11.' : 'Runway alternation at 15:00.'} Terminal 4 traffic crosses the southern runway.</div>`;
+    return `<div class="warnline${bad ? ' bad' : ''}">${CFG[c].name}: ${flowText(c)}${isEast(configOf(r.land)) && !isEast(c) ? ' (wind favours the easterly)' : isEast(c) && !isEast(configOf(r.land)) ? ' (wind favours the westerly)' : ''} · ${bad ? 'below the ILS minima' : 'ILS approaches'} · crosswind ${Math.round(cw)} kt. ${({ east: 'Departures enter 09R at November 11 or Sierra 11.', east2: 'Departures enter 09L at Alfa 13.' })[c] || ''} Runway alternation at 15:00. Terminal 4 traffic crosses the southern runway.</div>`;
   },
   atisLines({ w, L, E, wind, vis, cloud }){
     const c = cfgNow();
@@ -567,7 +568,7 @@ const APT = {
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
     if (E && E.rwyBlock) out.push(`Runway ${S.rwy} closed: ${E.rwyBlock.why}. Expect delays.`);
     if (!minsOk(w, S.rwy)) out.push('Visibility below the ILS minima. Expect holding at Bovingdon, Lambourne, Biggin or Ockham.');
-    if (c !== 'east') out.push('Runway alternation in progress: the landing runway changes at 15:00.');
+    out.push('Runway alternation in progress: the landing runway changes at 15:00.');
     out.push('Traffic for Terminal 4 and the cargo area crosses the southern runway: hold short unless cleared to cross.');
     out.push(`Acknowledge receipt of information ${L} and advise aircraft type and stand on first contact.`);
     return out;

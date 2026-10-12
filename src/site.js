@@ -530,7 +530,7 @@ const SCEN_TEXT = { LPMA: {
   calm: 'High pressure, light and variable wind and haze. A quiet day to learn the two-runway flow.'
 }, EGLL: {
   west: 'The usual westerly. Land on one of 27R and 27L and depart from the other, swapping at 15:00 for the people under the approach. Every SID stops at 6,000 ft.',
-  east: 'An easterly. Land 09L and depart 09R, the Cranford arrangement: arrivals fly the final over Windsor and Terminal 4 departures cross 09L.',
+  east: 'An easterly. Arrivals fly the final over Windsor to 09L or 09R, swapping at 15:00 like the westerly, and departures leave from the other runway.',
   rain: 'London drizzle and a 300 ft cloud base. Keep the spacing on final wide and expect a go-around or two to 6,000 ft.',
   fog: 'Thames Valley fog: low visibility procedures. Heathrow lands in CAT III, so the flow goes on, slower and with wider spacing.',
   storm: 'A south-westerly gale gusting into the forties. Windshear on short final, go-arounds and the stacks filling up.',

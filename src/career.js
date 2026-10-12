@@ -29,7 +29,7 @@ const BADGES = [
   { id: 'barajas',  ap: 'LEMD', name: 'Barajas endorsement', d: 'Complete the three Madrid-Barajas guided exercises.',   ic: 'M2 16c4-4 8-6 10-6s6 2 10 6M2 20h20M6 16v4M12 10v10M18 16v4' },
   { id: 'twoways',  ap: 'EGCC', name: 'One lands, one leaves', d: 'Land ten arrivals and get ten departures away in one Manchester session, with no loss of separation.', ic: 'M3 9l18-4M3 19l18-4M7 3l3 4M14 21l3-4' },
   { id: 'ringway',  ap: 'EGCC', name: 'Ringway endorsement', d: 'Complete the three Manchester guided exercises.',       ic: 'M3 21h18M5 21V10l7-5 7 5v11M9 21v-5h6v5M12 5V2' },
-  { id: 'alternation', ap: 'EGLL', name: 'Runway alternation', d: 'Land at least three arrivals on 27R and three on 27L in one Heathrow session, across the 15:00 runway switch, with no loss of separation.', ic: 'M7 21V3M17 21V3M4 7l3-4 3 4M14 17l3 4 3-4' },
+  { id: 'alternation', ap: 'EGLL', name: 'Runway alternation', d: 'Land at least three arrivals on each runway (27R or 09L, and 27L or 09R) in one Heathrow session, across the 15:00 runway switch, with no loss of separation.', ic: 'M7 21V3M17 21V3M4 7l3-4 3 4M14 17l3 4 3-4' },
   { id: 'heathrow', ap: 'EGLL', name: 'Heathrow endorsement', d: 'Complete the three London Heathrow guided exercises.', ic: 'M2 21h20M4 21V12h5v9M10 21V8h4v13M15 21v-6h5v6M12 8V3' }
 ];
 const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester', EGLL: 'London Heathrow' };
@@ -65,7 +65,7 @@ function careerCheck(){
     if (s.ap === 'KJFK' && (s.rwyx || 0) >= 10 && !s.incidents) careerAward('crossing');
     if (s.ap === 'EGKK' && (s.gaps || 0) >= 10) careerAward('gapfiller');
     if (s.ap === 'EGCC' && s.landed >= 10 && s.departed >= 10 && !s.los) careerAward('twoways');
-    if (s.ap === 'EGLL' && s.lrw && (s.lrw['27R'] || 0) >= 3 && (s.lrw['27L'] || 0) >= 3 && !s.los) careerAward('alternation');
+    if (s.ap === 'EGLL' && s.lrw && (s.lrw['27R'] || 0) + (s.lrw['09L'] || 0) >= 3 && (s.lrw['27L'] || 0) + (s.lrw['09R'] || 0) >= 3 && !s.los) careerAward('alternation');
     if (s.ap === 'LEMD' && s.lrw && [['32L', '32R'], ['18R', '18L']].some(([a, b]) => (s.lrw[a] || 0) >= 5 && (s.lrw[b] || 0) >= 5)) careerAward('sidebyside');
   }
   if (['dep','arr','lev'].every(k => CAR.ex[k])) careerAward('graduate');
