@@ -1,0 +1,186 @@
+{
+ "id": "./",
+ "name": "Clearway ATC Simulator",
+ "short_name": "Clearway",
+ "description": "Clearway: browser-based air traffic control simulation at real airports: Gibraltar (LXGB), Madeira (LPMA), London City (EGLC), Innsbruck (LOWI), New York JFK (KJFK), London Gatwick (EGKK), Madrid-Barajas (LEMD), Manchester (EGCC), London Heathrow (EGLL) and Bristol (EGGD).",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#0b2a4a",
+ "theme_color": "#0b2a4a",
+ "lang": "en-GB",
+ "categories": [
+  "games",
+  "education",
+  "simulation"
+ ],
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/maskable-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "shortcuts": [
+  {
+   "name": "Gibraltar (LXGB)",
+   "short_name": "Gibraltar",
+   "description": "Open the Gibraltar simulator",
+   "url": "./#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "Madeira (LPMA)",
+   "short_name": "Madeira",
+   "description": "Open the Madeira simulator",
+   "url": "lpma/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "London City (EGLC)",
+   "short_name": "London City",
+   "description": "Open the London City simulator",
+   "url": "eglc/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "Innsbruck (LOWI)",
+   "short_name": "Innsbruck",
+   "description": "Open the Innsbruck simulator",
+   "url": "lowi/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "New York JFK (KJFK)",
+   "short_name": "New York JFK",
+   "description": "Open the New York JFK simulator",
+   "url": "kjfk/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "London Gatwick (EGKK)",
+   "short_name": "London Gatwick",
+   "description": "Open the London Gatwick simulator",
+   "url": "egkk/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "Madrid-Barajas (LEMD)",
+   "short_name": "Madrid-Barajas",
+   "description": "Open the Madrid-Barajas simulator",
+   "url": "lemd/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "Manchester (EGCC)",
+   "short_name": "Manchester",
+   "description": "Open the Manchester simulator",
+   "url": "egcc/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "London Heathrow (EGLL)",
+   "short_name": "London Heathrow",
+   "description": "Open the London Heathrow simulator",
+   "url": "egll/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "Bristol (EGGD)",
+   "short_name": "Bristol",
+   "description": "Open the Bristol simulator",
+   "url": "eggd/#sim",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  }
+ ]
+}
