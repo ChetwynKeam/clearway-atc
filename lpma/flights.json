@@ -1,17 +1,10 @@
 {
- "updated": "2026-10-12T11:31:00Z",
+ "updated": "2026-10-12T11:50:09Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-12": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Manchester",
-     "flight": "LS851",
-     "sched": "10:35",
-     "status": "Arrived",
-     "expected": "10:20"
-    },
     {
      "place": "Bristol",
      "flight": "EZY2877",
@@ -58,8 +51,8 @@
      "place": "Ponta Delgada",
      "flight": "S4160",
      "sched": "12:25",
-     "status": "Estimated",
-     "expected": "12:30"
+     "status": "Arrived",
+     "expected": "12:34"
     },
     {
      "place": "Madrid",
@@ -87,7 +80,7 @@
      "flight": "LS1445",
      "sched": "13:05",
      "status": "Estimated",
-     "expected": "12:45"
+     "expected": "12:40"
     },
     {
      "place": "Lisboa",
@@ -121,8 +114,8 @@
      "place": "Porto",
      "flight": "TP1703",
      "sched": "14:15",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:00"
     },
     {
      "place": "Bristol",
@@ -164,14 +157,14 @@
      "flight": "EW9600",
      "sched": "16:00",
      "status": "Estimated",
-     "expected": "15:50"
+     "expected": "16:25"
     },
     {
      "place": "London Stansted",
      "flight": "FR389",
      "sched": "16:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:20"
     },
     {
      "place": "Budapest",
@@ -191,8 +184,8 @@
      "place": "Leipzig",
      "flight": "DI6578",
      "sched": "16:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:55"
     },
     {
      "place": "London Luton",
@@ -226,8 +219,8 @@
      "place": "Vilnius",
      "flight": "GW3311",
      "sched": "18:15",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:30"
     },
     {
      "place": "Brussels",
@@ -323,13 +316,6 @@
    ],
    "dep": [
     {
-     "place": "Paris Orly",
-     "flight": "TO7691",
-     "sched": "10:30",
-     "status": "Departed",
-     "expected": "10:37"
-    },
-    {
      "place": "Munich",
      "flight": "DE1573",
      "sched": "10:50",
@@ -368,21 +354,21 @@
      "place": "London Gatwick",
      "flight": "EZY8520",
      "sched": "12:25",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1688",
      "sched": "12:40",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Madrid",
      "flight": "IB560",
      "sched": "13:20",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -494,8 +480,8 @@
      "place": "Dusseldorf",
      "flight": "EW9601",
      "sched": "17:00",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:15"
     },
     {
      "place": "Budapest",
