@@ -82,8 +82,22 @@ for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line]) => { const p = EN(e, n), rem = term === 'R' || term === 'C' || term === 'E';
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: rem ? 'remote' : 'civil', occ: null, noLead: !line, h0: hdg,
     line: line ? line.map(([e, n]) => EN(e, n)) : null }; });
-STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
 const marsBase = id => id.replace(/[LR]$/, '');
+// a MARS stand's three lead-in lines are painted parallel: OpenStreetMap often has the L and R lines a few degrees off,
+// drawn to a common point on the taxilane. Each line keeps its taxilane end and length and turns onto the centre line's
+// heading (or the halves' mean heading where there is no centre line); the stand turns with it.
+{ const groups = new Map();
+  for (const s of STANDS) if (s.line && s.h0 != null) { const b = marsBase(s.id); if (!groups.has(b)) groups.set(b, []); groups.get(b).push(s); }
+  for (const g of groups.values()) {
+    if (g.length < 2) continue;
+    const c = g.find(s => !/[LR]$/.test(s.id)), ref = c ? c.h0 : Math.atan2(g.reduce((a, s) => a + Math.sin(s.h0*D2R), 0), g.reduce((a, s) => a + Math.cos(s.h0*D2R), 0))*R2D;
+    for (const s of g) {
+      const d = ((ref - s.h0 + 540) % 360) - 180; if (Math.abs(d) < 0.5 || Math.abs(d) > 15) continue;
+      const o = s.line[0], rot = q => { const r = dist(...o, ...q), b = brg(...o, ...q) + d; return add(o, b, r); };
+      s.line = s.line.map((q, i) => i ? rot(q) : q); s.p = rot(s.p); s.h0 = (s.h0 + d + 360) % 360;
+    }
+  } }
+STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
 // the mapped stand line ends where the nose stops: the stand's point is the aircraft's middle, set back from that end by
 // the stop-bar distance of the largest aircraft the stand takes (as at Madrid and Manchester)
 { const at = new Map();
@@ -226,6 +240,22 @@ const leadPts = () => LEADS || (LEADS = (() => { const seen = new Set(), out = [
   for (const k in FIL) { const f = FIL[k].W, key = HOLDS[k].on + JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
     const R = rwyById(HOLDS[k].on); out.push(leadLine(f).map(p => R.rm(...p))); }
   return out; })());
+// where a holding position line at offset o from runway R, near m, crosses the taxiways: [from, to] along the runway
+// for each, overlapping ones joined
+function holdSpan(R, m, o){
+  const IMG = mapImagery(), iv = [];
+  for (const e of GE) {
+    if (e.tw === 'APRON') continue; const pa = GN[e.a].p, pb = GN[e.b].p, oa = R.offOf(pa), ob = R.offOf(pb);
+    if ((oa - o)*(ob - o) > 0 || oa === ob) continue;
+    const t = (o - oa)/(ob - oa), ma = R.mOf(pa), mb = R.mOf(pb), mx = ma + (mb - ma)*t; if (Math.abs(mx - m) > 60) continue;
+    const sin = Math.abs(ob - oa)/Math.hypot(mb - ma, ob - oa), half = (IMG ? paveWidth(e.tw) : 23)/2/Math.max(sin, 0.3);
+    iv.push([mx - half, mx + half]);
+  }
+  if (!iv.length) return [[m - 11, m + 11]];
+  iv.sort((a, b) => a[0] - b[0]); const out = [iv[0].slice()];
+  for (const [a, b] of iv.slice(1)) { const L = out[out.length - 1]; if (a <= L[1] + 1) L[1] = Math.max(L[1], b); else out.push([a, b]); }
+  return out;
+}
 function drawEgll(){
   const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
   const P2 = p => [sx(p[0]), sy(p[1])];
@@ -280,9 +310,12 @@ function drawEgll(){
     // taxiway centrelines, stopping at the runway edges
     paintEdgeLines(lw(0.35));
     // runway holding positions (pattern A): two solid and two dashed lines across the taxiway, parallel to the runway
+    // painted from edge to edge of the pavement they cross: an angled taxiway (A4) is wider along the runway than
+    // across itself, and where two taxiways meet at the holding position (a fillet beside the straight) both are covered
+    cx.strokeStyle = C.yellow; cx.lineWidth = lw(0.3);
     for (const [id, rid] of Object.entries(G.hs)) {
       const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
-      for (const [d, dash] of [[0.9, false], [0.3, false], [-0.3, true], [-0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([R.rm(m - 11, o + s*d), R.rm(m + 11, o + s*d)], false); cx.stroke(); }
+      for (const [d, dash] of [[0.9, false], [0.3, false], [-0.3, true], [-0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); for (const [a, b] of holdSpan(R, m, o + s*d)) { pathP([R.rm(a, o + s*d), R.rm(b, o + s*d)], false); cx.stroke(); } }
       cx.setLineDash([]);
     }
     // stand lead-in lines and numbers
@@ -333,38 +366,44 @@ const ENTRY_ALT = Object.fromEntries(GATES.map(g => [g, DIR[g].alt]));
 const PRE_ALT = Object.fromEntries(GATES.map(g => [g, DIR[g].alt + 12000]));
 const HOLD_AT = Object.fromEntries(GATES.map(g => [g, STAR_OF(g).pts[STAR_OF(g).pts.length - 1][0]]));
 
-// ── approaches: the ILS localiser from 3 NM outside the intermediate fix and the 3° glidepath from 3,000 ft. The
-// approach controller's "four miles" check: an arrival not visual goes around there.
+// ── approaches. The charts give the ILS from the intermediate fix (about 10 NM, 3,000 ft) and the final approach point
+// (D7.5, 2,500 ft), but Heathrow Director joins the localiser further out: about 14 NM from touchdown at 4,000 ft
+// (well east over London for the 27s), the continuous descent approach meeting the 3° glidepath at about 12 NM. The
+// final starts 3 NM before that joining point. The approach controller's "four miles" check: an arrival not visual
+// goes around there.
+const JOIN_NM = 14, JOIN_ALT = 4000;
 const FINAL = {};
 for (const [rw, I] of Object.entries(EGLL.ILS)) {
   const thr = THR[rw], out = norm(crsOf(rw) + 180), dIF = dist(...thr, ...WP[I.ifx].p), elev = THR_ELEV[rw], low = Math.round((elev + 1000)/100)*100;
-  const F = { pts: [add(thr, out, dIF + 3), add(thr, out, dIF), thr], alts: [I.ifAlt, I.ifAlt, elev + 50], elev, entry: I.ifx, entryName: I.ifx, name: 'ILS ' + rw, alt: I.ifAlt,
+  const J = 'J' + rw; WP[J] = { id: J, p: add(thr, out, JOIN_NM), hide: true, note: `${JOIN_NM} mile final ${rw}` };
+  const F = { pts: [add(thr, out, JOIN_NM + 3), WP[J].p, add(thr, out, dIF), thr], alts: [JOIN_ALT, JOIN_ALT, Math.round(elev + 50 + dIF*318), elev + 50], elev,
+    entry: J, entryName: `a ${JOIN_NM} mile final`, name: 'ILS ' + rw, alt: JOIN_ALT,
     decName: 'four miles', decNM: 4, decMin: 2.6, minAlt: low, minText: `${low.toLocaleString('en-GB')} ft`,
     mins: I.mins, minRate: 300, missed: [I.missed[0]], missAlt: I.missed[1],
     phrase: r => `cleared ILS approach runway ${r}`, read: r => `cleared ILS ${r}`,
     decCall: r => `${APT.tower[0]}, four miles, ILS runway ${r}`, decNeed: 'Four miles, needs landing clearance', decFail: 'not visual at the decision height' };
   F.cum = new Array(F.pts.length).fill(0); for (let i = F.pts.length - 2; i >= 0; i--) F.cum[i] = F.cum[i+1] + dist(...F.pts[i], ...F.pts[i+1]);
-  const meet = (I.ifAlt - elev - 50)/318;                    // 3° = 318 ft per NM
-  F.prof = [[0, elev + 50], [meet, I.ifAlt], [F.cum[0] + 1, I.ifAlt]];
+  const meet = (JOIN_ALT - elev - 50)/318;                   // 3° = 318 ft per NM
+  F.prof = [[0, elev + 50], [meet, JOIN_ALT], [F.cum[0] + 1, JOIN_ALT]];
   FINAL[rw] = F;
 }
-// ── from the stack to the intermediate fix: a downwind and base laid out beside the final (hidden points, the vectors
+// ── from the stack to the joining point: a downwind and base laid out beside the final (hidden points, the vectors
 // Heathrow Director gives), so an arrival with no instructions still gets there
 const FEED_ALT = {};
 function feeder(rw, from){
-  const I = EGLL.ILS[rw], thr = THR[rw], out = norm(crsOf(rw) + 180), dIF = dist(...thr, ...WP[I.ifx].p);
+  const thr = THR[rw], out = norm(crsOf(rw) + 180), J = 'J' + rw;
   const f = WP[from].p, dx = f[0] - thr[0], dy = f[1] - thr[1], ux = Math.sin(out*D2R), uy = Math.cos(out*D2R);
   const along = dx*ux + dy*uy, right = dx*uy - dy*ux, s = right >= 0 ? 1 : -1;
   const pt = (a, l) => add(add(thr, out, a), out + 90, l);
-  // the downwind 1,000 ft above the intermediate fix, the base at its altitude. The two runways' finals are 0.8 NM
-  // apart, so each runway's downwind is laid out on its own side.
-  const tag = `${rw}${s > 0 ? 'R' : 'L'}`, mk = (k, p, note) => { WP[tag + k] = { id: tag + k, p, hide: true, note }; FEED_ALT[tag + k] = I.ifAlt + (k === 'B' ? 0 : 1000); return tag + k; };
-  if (along > dIF + 3 && Math.abs(right) < 2.5) return [I.ifx];
-  const base = mk('B', pt(dIF + 4, s*3.5), `base for ${rw}`);
-  if (along > dIF + 3) return [base, I.ifx];
-  const dw2 = mk('D', pt(dIF + 3, s*8), `downwind for ${rw}`);
-  if (along > 1) return [dw2, base, I.ifx];
-  return [mk('A', pt(1, s*8), `downwind for ${rw}`), dw2, base, I.ifx];
+  // the downwind 1,000 ft above the joining altitude, the base at it. The two runways' finals are 0.8 NM apart, so
+  // each runway's downwind is laid out on its own side.
+  const tag = `${rw}${s > 0 ? 'R' : 'L'}`, mk = (k, p, note) => { WP[tag + k] = { id: tag + k, p, hide: true, note }; FEED_ALT[tag + k] = JOIN_ALT + (k === 'B' ? 0 : 1000); return tag + k; };
+  if (along > JOIN_NM + 3 && Math.abs(right) < 2.5) return [J];
+  const base = mk('B', pt(JOIN_NM + 4, s*3.5), `base for ${rw}`);
+  if (along > JOIN_NM + 3) return [base, J];
+  const dw2 = mk('D', pt(JOIN_NM + 3, s*8), `downwind for ${rw}`);
+  if (along > 1) return [dw2, base, J];
+  return [mk('A', pt(1, s*8), `downwind for ${rw}`), dw2, base, J];
 }
 const RWY_ENDS4 = ['27R', '27L', '09L', '09R'];
 const ARR_ROUTE = Object.fromEntries(GATES.map(g => [g, Object.fromEntries(RWY_ENDS4.map(rw => {
@@ -453,7 +492,7 @@ function standAt(ac, t){
 }
 const flowText = c => `land ${CFG[c].land}, depart ${CFG[c].dep}`;
 const APT = {
-  arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT, IVLAR: 3000, NEKSA: 3000, ABAVI: 3000, BENPA: 3000 },   // STAR levels, then the downwind, base and IF
+  arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT, ...Object.fromEntries(Object.keys(FINAL).map(rw => ['J' + rw, JOIN_ALT])) },   // STAR levels, then the downwind, base and joining point
   icao: 'EGLL', name: 'London Heathrow', coordName: 'Heathrow', radarName: 'LHR', utcOff: 1,
   radar: [EGLL.UNITS.app.name, EGLL.UNITS.app.freq], depRadar: ['London Control', EGLL.CTR.w[1]],
   tower: [EGLL.UNITS.twr.name, EGLL.UNITS.twr.freq],
