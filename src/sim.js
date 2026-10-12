@@ -991,6 +991,7 @@ function commandRun(str){
     } else if (t === 'HOLD' && air) {
       const fix = toks[i+1] && WP[toks[i+1]] ? toks[++i] : null;
       if (ac.via) viaStop(ac, said, reads);
+      if (ac.app && ac.kind === 'ARR') { ac.app = null; ac.appId = null; ac.finI = null; ac.ctl = false; ac.askedApp = false; }   // holding cancels the approach clearance
       ac.mode = 'HOLD'; ac.state = 'HOLDING';
       ac.hold = fix ? { c: WP[fix].p, inb: (WP[fix].hold||{}).inb ?? brg(ac.x, ac.y, ...WP[fix].p), ph: 'in', name: fix, left: !!(WP[fix].hold||{}).left } : { c: [ac.x, ac.y], inb: ac.hdg, ph: 'turn1', name: 'present position', t: 0 };
       said.push(`hold at ${ac.hold.name}, ${ac.hold.left ? 'left' : 'right'} hand pattern${fix ? ', inbound track '+hdg3(ac.hold.inb) : ''}, expect further clearance in one zero minutes`);
