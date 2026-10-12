@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-12T22:42:14Z",
+ "updated": "2026-10-12T22:56:13Z",
  "source": "avionio.com",
  "days": {
   "2026-10-13": {
@@ -58,15 +58,15 @@
      "place": "Sao Paulo",
      "flight": "CA898",
      "sched": "00:45",
-     "status": "Estimated",
-     "expected": "00:36"
+     "status": "Landed",
+     "expected": "00:37"
     },
     {
      "place": "Tenerife",
      "flight": "I21586",
      "sched": "00:55",
      "status": "Estimated",
-     "expected": "00:48"
+     "expected": "00:45"
     },
     {
      "place": "Gran Canaria",
@@ -79,8 +79,8 @@
      "place": "Palma de Mallorca",
      "flight": "FR2054",
      "sched": "01:00",
-     "status": "Estimated",
-     "expected": "00:48"
+     "status": "Landed",
+     "expected": "00:46"
     },
     {
      "place": "Palma de Mallorca",
@@ -122,7 +122,7 @@
      "flight": "IB118",
      "sched": "03:10",
      "status": "Estimated",
-     "expected": "03:32"
+     "expected": "03:31"
     },
     {
      "place": "Cairo",
@@ -360,7 +360,7 @@
      "flight": "DL62",
      "sched": "06:20",
      "status": "Estimated",
-     "expected": "05:54"
+     "expected": "05:56"
     },
     {
      "place": "Liege",
@@ -381,7 +381,7 @@
      "flight": "IB348",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:16"
+     "expected": "06:21"
     },
     {
      "place": "Washington",
@@ -436,8 +436,8 @@
      "place": "Doha",
      "flight": "QR147",
      "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:52"
     },
     {
      "place": "Santander",
@@ -500,7 +500,7 @@
      "flight": "UA260",
      "sched": "08:05",
      "status": "Estimated",
-     "expected": "06:41"
+     "expected": "00:54"
     },
     {
      "place": "Marseille",
@@ -611,8 +611,8 @@
      "place": "Toronto",
      "flight": "AC824",
      "sched": "08:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:27"
     },
     {
      "place": "Ibiza",
@@ -867,6 +867,13 @@
      "expected": ""
     },
     {
+     "place": "Istanbul",
+     "flight": "TK1857",
+     "sched": "10:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Boston",
      "flight": "IB346",
      "sched": "10:30",
@@ -968,7 +975,7 @@
      "place": "Beijing",
      "flight": "CA3031",
      "sched": "11:40",
-     "status": "Estimated",
+     "status": "Unknown",
      "expected": ""
     },
     {
@@ -1010,8 +1017,8 @@
      "place": "Santa Cruz",
      "flight": "OB776",
      "sched": "12:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:24"
     },
     {
      "place": "Gran Canaria",
@@ -1369,13 +1376,6 @@
      "sched": "16:30",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Buenos Aires",
-     "flight": "AR1132",
-     "sched": "17:10",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -1383,8 +1383,8 @@
      "place": "Bogota",
      "flight": "AY5389",
      "sched": "00:05",
-     "status": "Estimated",
-     "expected": "00:13"
+     "status": "Departed",
+     "expected": "00:14"
     },
     {
      "place": "Buenos Aires",
@@ -1397,15 +1397,15 @@
      "place": "Istanbul",
      "flight": "QR8264",
      "sched": "00:05",
-     "status": "Estimated",
-     "expected": "00:14"
+     "status": "Departed",
+     "expected": "00:26"
     },
     {
      "place": "Marrakech",
      "flight": "FR6791",
      "sched": "00:10",
      "status": "Estimated",
-     "expected": "00:20"
+     "expected": "00:23"
     },
     {
      "place": "Gran Canaria",
@@ -1432,15 +1432,15 @@
      "place": "Palma de Mallorca",
      "flight": "WT332",
      "sched": "01:30",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Quito",
      "flight": "UX137",
      "sched": "01:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "01:55"
     },
     {
      "place": "Milan",
