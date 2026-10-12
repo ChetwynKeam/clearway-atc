@@ -15,7 +15,10 @@ const pob = ac => ac.perf.wake === 'L' ? Math.round(rnd(3, 9)) : ac.t === 'AT76'
 function emgInit(level){
   S.emg = { level, rate: EMG_RATE[level] || 0, next: S.t + rnd(7, 13)*60, rwyBlock: null, incursion: null, ws: null, inspectAfter: null, handled: 0 };
 }
-const rwyBlocked = () => S.emg && (S.emg.rwyBlock ? S.emg.rwyBlock.why : S.emg.incursion ? 'a pedestrian on the runway at the crossing' : null);
+// closed: the runway in use when it happened (an airport with parallels keeps the others open); rw: the runway asked
+// about (any runway when left out)
+const rwyBlocked = rw => S.emg && (S.emg.rwyBlock ? (!rw || S.emg.rwyBlock.id == null || rwyOf(rw).id === S.emg.rwyBlock.id ? S.emg.rwyBlock.why : null) : S.emg.incursion ? 'a pedestrian on the runway at the crossing' : null);
+const blockRw = () => S.emg && S.emg.rwyBlock && S.emg.rwyBlock.rw || S.rwy;
 const onFinalNear = (ac, nm) => ac.airborne && ac.kind === 'ARR' && ac.mode === 'FINAL' && ac.app && ac.state !== 'MISSED' && finalDist(ac) < nm;
 function finalDist(ac){ const F = finOf(ac); return F ? onFinal(ac, F).togo : 99; }
 
@@ -38,9 +41,9 @@ function makeReturn(ac){
   S.score.pts += 0;
 }
 function block(why, mins){
-  const E = S.emg; E.rwyBlock = { why, until: S.t + mins*60 };
-  sys(`Runway ${S.rwy} CLOSED: ${why}. About ${Math.round(mins)} minutes. Send arrivals around or hold them, and hold departures.`, true);
-  for (const a of S.acs) if (a.ctl && a.airborne && a.mode === 'FINAL') sys(`${a.cs} is cleared to land on a closed runway: send it around.`, true);
+  const E = S.emg, rw = S.rwy, par = parallelEnd(rw); E.rwyBlock = { why, until: S.t + mins*60, rw, id: rwyOf(rw).id };
+  sys(`Runway ${rw} CLOSED: ${why}. About ${Math.round(mins)} minutes. ${par ? `Runway ${par} stays open: move the arrivals on to it (APP ${par}), or hold them.` : 'Send arrivals around or hold them, and hold departures.'}`, true);
+  for (const a of S.acs) if (a.ctl && a.airborne && a.mode === 'FINAL' && rwyBlocked(landRw(a))) sys(`${a.cs} is cleared to land on a closed runway: send it around${par ? ` or move it to ${par}` : ''}.`, true);
   nextAtis(); renderAtis(); emit('rwyblock', why);
 }
 
@@ -115,8 +118,8 @@ function shearReport(ac, rw){
 }
 function stepEmerg(dt){
   const E = S.emg; if (!E) return;
-  if (E.rwyBlock && S.t >= E.rwyBlock.until && !(typeof vehOnRwy === 'function' && vehOnRwy(S.rwy))) {   // the inspection car off the runway first
-    E.rwyBlock = null; sys(`Runway ${S.rwy} inspection complete: the runway is open again.`); nextAtis(); renderAtis(); emit('rwyopen'); }
+  if (E.rwyBlock && S.t >= E.rwyBlock.until && !(typeof vehOnRwy === 'function' && vehOnRwy(blockRw()))) {   // the inspection car off the runway first
+    const rw = blockRw(); E.rwyBlock = null; sys(`Runway ${rw} inspection complete: the runway is open again.`); nextAtis(); renderAtis(); emit('rwyopen'); }
   if (E.incursion && S.t >= E.incursion.until) { E.incursion = null; sys('The pedestrian has been escorted off the runway by the police: the crossing is clear.'); }
   if (E.ws && S.t - E.ws.t > 25*60) { E.ws = null; nextAtis(); renderAtis(); }
   if (E.inspectAfter && E.inspectAfter.cs && !E.inspectAfter.onRwy && !E.inspectAfter.airborne) { E.inspectAfter = null; block('runway inspection after the emergency landing', rnd(2.5, 4)); }
@@ -167,8 +170,9 @@ function drawRwyBlock(){
   const E = S.emg; if (!E || (!E.rwyBlock && !E.incursion)) return;
   const pulse = E.still ? 1 : 0.55 + 0.45*Math.sin(performance.now()/220);
   cx.save(); cx.strokeStyle = C.conf; cx.lineWidth = 3; cx.globalAlpha = pulse;
-  if (E.rwyBlock) for (const m of [RWY_M*0.18, RWY_M*0.5, RWY_M*0.82]) {
-    const c0 = rm(m, 0), X = sx(c0[0]), Y = sy(c0[1]), k = Math.max(7, 30*M2NM*V.scale);   // never smaller than a few pixels
+  const BR = E.rwyBlock && E.rwyBlock.id != null ? rwyById(E.rwyBlock.id) : RWYS[0], bl = BR.len || RWY_M;
+  if (E.rwyBlock) for (const m of [bl*0.18, bl*0.5, bl*0.82]) {
+    const c0 = BR.rm(m, 0), X = sx(c0[0]), Y = sy(c0[1]), k = Math.max(7, 30*M2NM*V.scale);   // never smaller than a few pixels
     cx.beginPath(); cx.moveTo(X - k, Y - k*0.5); cx.lineTo(X + k, Y + k*0.5); cx.moveTo(X - k, Y + k*0.5); cx.lineTo(X + k, Y - k*0.5); cx.stroke();
   }
   if (E.incursion && APT.xing) { const p = rm(xingM(4), 4); cx.fillStyle = C.conf; cx.beginPath(); cx.arc(sx(p[0]), sy(p[1]), 6, 0, 7); cx.fill(); }
