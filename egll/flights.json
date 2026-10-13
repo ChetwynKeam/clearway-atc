@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-13T21:09:04Z",
+ "updated": "2026-10-13T21:37:30Z",
  "source": "avionio.com",
  "days": {
   "2026-10-13": {
@@ -9,15 +9,15 @@
      "place": "Berlin",
      "flight": "BA997",
      "sched": "22:00",
-     "status": "Estimated",
+     "status": "Landed",
      "expected": "21:40"
     },
     {
      "place": "Lisbon",
      "flight": "TP1358",
      "sched": "22:00",
-     "status": "Estimated",
-     "expected": "21:40"
+     "status": "Landed",
+     "expected": "21:41"
     },
     {
      "place": "Palma de Mallorca",
@@ -30,22 +30,22 @@
      "place": "Venice",
      "flight": "BA609",
      "sched": "22:10",
-     "status": "Estimated",
-     "expected": "21:55"
+     "status": "Landed",
+     "expected": "21:53"
     },
     {
      "place": "Frankfurt",
      "flight": "LH922",
      "sched": "22:10",
      "status": "Estimated",
-     "expected": "21:54"
+     "expected": "21:55"
     },
     {
      "place": "Madrid",
      "flight": "BA465",
      "sched": "22:15",
-     "status": "Estimated",
-     "expected": "21:54"
+     "status": "Landed",
+     "expected": "21:51"
     },
     {
      "place": "Istanbul",
@@ -73,7 +73,7 @@
      "flight": "EI388",
      "sched": "22:40",
      "status": "Estimated",
-     "expected": "22:10"
+     "expected": "22:09"
     },
     {
      "place": "Munich",
@@ -108,7 +108,7 @@
      "flight": "TP1366",
      "sched": "22:55",
      "status": "Estimated",
-     "expected": "22:42"
+     "expected": "22:41"
     }
    ],
    "dep": [
@@ -151,7 +151,7 @@
      "place": "Bahrain",
      "flight": "GF6",
      "sched": "22:05",
-     "status": "Estimated",
+     "status": "Departed",
      "expected": "22:19"
     },
     {
@@ -290,7 +290,7 @@
      "flight": "QF219",
      "sched": "05:05",
      "status": "Estimated",
-     "expected": "03:45"
+     "expected": "04:13"
     },
     {
      "place": "Lagos",
@@ -374,7 +374,7 @@
      "flight": "DL30",
      "sched": "06:05",
      "status": "Estimated",
-     "expected": "22:23"
+     "expected": "22:30"
     },
     {
      "place": "Bridgetown",
@@ -401,14 +401,14 @@
      "place": "Accra",
      "flight": "BA78",
      "sched": "06:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Toronto",
      "flight": "BA92",
      "sched": "06:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -416,13 +416,13 @@
      "flight": "AA50",
      "sched": "06:20",
      "status": "Estimated",
-     "expected": "03:40"
+     "expected": "04:44"
     },
     {
      "place": "Washington",
      "flight": "BA216",
      "sched": "06:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -436,15 +436,15 @@
      "place": "New York",
      "flight": "VS4",
      "sched": "06:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "New York",
      "flight": "AA100",
      "sched": "06:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "23:56"
     },
     {
      "place": "Bandar Seri Begawan",
@@ -542,7 +542,7 @@
      "flight": "BA52",
      "sched": "06:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "06:40"
     },
     {
      "place": "Chicago",
@@ -583,7 +583,7 @@
      "place": "Chicago",
      "flight": "BA294",
      "sched": "06:50",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -633,13 +633,20 @@
      "flight": "BA138",
      "sched": "07:00",
      "status": "Estimated",
-     "expected": "05:46"
+     "expected": "06:15"
+    },
+    {
+     "place": "Addis Ababa",
+     "flight": "ET700",
+     "sched": "07:00",
+     "status": "Estimated",
+     "expected": ""
     },
     {
      "place": "Abu Dhabi",
      "flight": "EY61",
      "sched": "07:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -667,7 +674,7 @@
      "place": "Atlanta",
      "flight": "VS104",
      "sched": "07:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -793,7 +800,7 @@
      "place": "Miami",
      "flight": "VS6",
      "sched": "08:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -884,7 +891,7 @@
      "place": "Kigali",
      "flight": "WB710",
      "sched": "09:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1017,7 +1024,7 @@
      "place": "Nairobi",
      "flight": "KQ2100",
      "sched": "09:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1294,6 +1301,13 @@
      "expected": ""
     },
     {
+     "place": "New York",
+     "flight": "VS138",
+     "sched": "12:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Calgary",
      "flight": "WS2",
      "sched": "12:05",
@@ -1462,6 +1476,13 @@
      "expected": ""
     },
     {
+     "place": "Montego Bay",
+     "flight": "VS166",
+     "sched": "14:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "San Diego",
      "flight": "BA272",
      "sched": "14:20",
@@ -1511,6 +1532,20 @@
      "expected": ""
     },
     {
+     "place": "Mumbai",
+     "flight": "BA134",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Los Angeles",
+     "flight": "VS142",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Milan",
      "flight": "BA585",
      "sched": "15:15",
@@ -1521,6 +1556,20 @@
      "place": "Hong Kong",
      "flight": "CX257",
      "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Los Angeles",
+     "flight": "BA268",
+     "sched": "15:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Mexico City",
+     "flight": "BA242",
+     "sched": "15:30",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1693,6 +1742,13 @@
      "expected": ""
     },
     {
+     "place": "Seoul",
+     "flight": "VS209",
+     "sched": "18:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Zurich",
      "flight": "LX338",
      "sched": "19:20",
@@ -1716,6 +1772,13 @@
     {
      "place": "Milan",
      "flight": "BA587",
+     "sched": "19:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tokyo",
+     "flight": "BA6",
      "sched": "19:50",
      "status": "Scheduled",
      "expected": ""
