@@ -1,25 +1,23 @@
 {
- "updated": "2026-10-13T22:06:09Z",
+ "updated": "2026-10-13T22:38:25Z",
  "source": "avionio.com",
  "days": {
-  "2026-10-12": {
+  "2026-10-14": {
    "utcOffsetMin": 120,
    "arr": [
     {
-     "place": "Duesseldorf",
-     "flight": "DGJ567",
-     "sched": "16:18",
-     "status": "Landed",
-     "expected": "16:26"
-    },
-    {
      "place": "Vienna",
-     "flight": "OS107",
-     "sched": "18:10",
-     "status": "Landed",
-     "expected": "18:07"
+     "flight": "OS101",
+     "sched": "07:40",
+     "status": "Scheduled",
+     "expected": ""
     }
    ],
+   "dep": []
+  },
+  "2026-10-12": {
+   "utcOffsetMin": 120,
+   "arr": [],
    "dep": [
     {
      "place": "Vienna",
@@ -32,29 +30,7 @@
   },
   "2026-10-13": {
    "utcOffsetMin": 120,
-   "arr": [
-    {
-     "place": "Vienna",
-     "flight": "OS101",
-     "sched": "07:40",
-     "status": "Landed",
-     "expected": "07:33"
-    },
-    {
-     "place": "London",
-     "flight": "U28695",
-     "sched": "11:05",
-     "status": "Landed",
-     "expected": "10:44"
-    },
-    {
-     "place": "Vienna",
-     "flight": "OS107",
-     "sched": "18:10",
-     "status": "Landed",
-     "expected": "18:11"
-    }
-   ],
+   "arr": [],
    "dep": [
     {
      "place": "Vienna",
@@ -64,18 +40,18 @@
      "expected": "08:16"
     },
     {
-     "place": "London",
-     "flight": "U28696",
-     "sched": "12:00",
-     "status": "Departed",
-     "expected": "12:13"
-    },
-    {
      "place": "Cologne/Bonn",
      "flight": "DGJ567",
      "sched": "12:00",
      "status": "Departed",
      "expected": "12:03"
+    },
+    {
+     "place": "London",
+     "flight": "U28696",
+     "sched": "12:00",
+     "status": "Departed",
+     "expected": "12:13"
     },
     {
      "place": "Vienna",
