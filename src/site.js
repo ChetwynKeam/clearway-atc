@@ -1,14 +1,14 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
 const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
-// Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
+// Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live, #resume.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
 const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 // an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
 const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
 const IS_HOST = APT.icao === SITE_HOST, EMBED = location.hash.startsWith('#embed');
-const SIM_HASH = /^(sim|ex\/|wx\/|live$)/;
+const SIM_HASH = /^(sim|ex\/|wx\/|live$|resume$)/;
 const otherPage = h => IS_HOST || EMBED || SIM_HASH.test(h) ? null : SITE[SITE_HOST] + '#' + (h || HOME_RT);
 const isApRoute = r => Object.values(AP_ROUTE).includes(r);
 // the airport a block of the site belongs to: its data-apt, or the airport briefing page it sits on
@@ -40,6 +40,8 @@ function fromHash(){
   // from the host page's Academy, scenario cards and Live now links: #ex/<key>, #wx/<preset>, #live
   if (h.startsWith('ex/')) { const k = h.slice(3); if (EXERCISES[k]) { history.replaceState(null, '', '#sim'); return startExercise(k); } }
   if (h.startsWith('wx/')) { const k = h.slice(3); history.replaceState(null, '', '#sim'); return WX_PRESETS[k] ? openScenario(k) : go('sim'); }
+  // from the home page's Continue last stint (stint.js, which loads after this)
+  if (h === 'resume') { history.replaceState(null, '', '#sim'); go('sim'); setTimeout(stintContinue); return; }
   if (h === 'live') { history.replaceState(null, '', '#sim'); go('sim'); const sel = $('trafficSel'); if (!S.running) { sel.value = 'live'; sel.dispatchEvent(new Event('change')); } return; }
   if (ROUTES.includes(h)) return go(h);
   const el = h && document.getElementById(h);

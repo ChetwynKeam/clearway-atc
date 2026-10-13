@@ -134,8 +134,7 @@ function routePts(ids, v){
   for (let i = ids.length - 2; i >= 0; i--) {
     if (edgeKind(ids[i], ids[i+1]) !== 'x') continue;
     const R = VX.get(ids[i] + '|' + ids[i+1]), off = p => Math.abs(R.offOf(p)), X = { k: 'rwy', R, tw: twAt(ids[i]) };
-    const nx = pts[i+1], cb0 = nx.cb;
-    nx.cb = w => { if (w.onRwy === R.id) { w.onRwy = null; if (!w.xAuto) vcall(w, `runway ${rwN(R)} vacated`); w.xing = null; w.xAuto = false; } if (cb0) cb0(w); };
+    (pts[i+1].cb ||= []).unshift(['xclear', R]);
     let k = i, sp, at;
     if (off(pts[k]) >= HOLD_OFF) { sp = pts[k].slice(); at = k + 1; }
     else {
@@ -147,6 +146,13 @@ function routePts(ids, v){
   }
   return pts;
 }
+// what a vehicle does on reaching a point of its route (p.cb: a list of [name, arg], so a saved stint keeps it): clear of
+// the runway it crossed, Ops 1 at the runway's holding point, or off the runway after its inspection
+const VEH_AT = {
+  xclear: (w, R) => { if (w.onRwy === R.id) { w.onRwy = null; if (!w.xAuto) vcall(w, `runway ${rwN(R)} vacated`); w.xing = null; w.xAuto = false; } },
+  rcHold: () => rcAtHold(),
+  rcOff: (w, done) => rcOff(done)
+};
 // callsigns, given when a vehicle first calls ("Fuel 3")
 const VCS = { bus: 'BUS', steps: 'STEPS', bags: 'BAGGAGE', belt: 'LOADER', cater: 'CATERING', fuel: 'FUEL', gpu: 'POWER', lav: 'SERVICE', water: 'WATER', tug: 'TUG', van: 'ENGINEER', fire: 'FIRE', amb: 'AMBULANCE', ops: 'OPS', follow: 'FOLLOW', crew: 'CREW' };
 function vehCs(v){ if (v.cs) return v.cs; const p = VCS[v.type] || 'VEHICLE'; let n = 1; while (VEH.list.some(w => w.cs === p + n && !w.gone)) n++; return v.cs = p + n; }
@@ -306,8 +312,14 @@ function driveTo(v, p, h, urgent){
 function sendHome(v, wait = 0){
   const n = baseFor(v.type, [v.x, v.y]); if (!n) { v.gone = true; return; }
   v.job = null; v.home = true; v.leaveAt = S.t + wait; v.pts = []; v.endH = null; v.req = null;
-  v.go = () => { const a = vgNear([v.x, v.y], 400), r = a && vroute(a, n); v.pts = r ? routePts(r, v) : [VG[n].p.slice()]; v.parked = false; };
+  v.go = ['home', n];
 }
+// what a vehicle does when it sets off (v.go: [name, arg], so a saved stint keeps it): home to its base node, or on
+// to the next aircraft's nose for a push
+const VEH_GO = {
+  home: (v, n) => { const a = vgNear([v.x, v.y], 400), r = a && vroute(a, n); v.pts = r ? routePts(r, v) : [VG[n].p.slice()]; v.parked = false; },
+  tug: (v, ac) => { const s = slotAt(ac, 'tug'); driveTo(v, s.p, s.h); }
+};
 // a vehicle out of its base at node n, heading off for point p
 function dispatch(type, p, h, job, urgent){
   const n = baseFor(type, p); if (!n) return null;
@@ -441,7 +453,7 @@ function nextTow(v){
   const [ac, j] = best;
   if (j.v && j.v !== v) { j.v.ac = null; j.v.job = null; sendHome(j.v, 0); }   // the one on its way from base turns back
   j.started = true; j.v = v; Object.assign(v, { job: j, ac, home: false, leaveAt: S.t + rnd(15, 30), pts: [], endH: null });
-  v.go = () => { const s = slotAt(ac, 'tug'); driveTo(v, s.p, s.h); };
+  v.go = ['tug', ac];
   return true;
 }
 
@@ -497,7 +509,7 @@ function giveWay(v, dt){
   v.waitOn = null; v.waitT = 0; return null;
 }
 function driveStep(v, dt){
-  if (v.leaveAt != null) { if (S.t < v.leaveAt) return; v.leaveAt = null; v.go && v.go(); v.go = null; }
+  if (v.leaveAt != null) { if (S.t < v.leaveAt) return; v.leaveAt = null; const g = v.go; v.go = null; if (g) VEH_GO[g[0]](v, g[1]); }
   if (v.req) { v.v = 0; return; }   // stopped, asking
   if (!v.pts.length) { if (v.home) v.gone = true; else if (!v.parked) { v.parked = true; v.v = 0; if (v.endH != null) v.hdg = v.endH; } return; }
   const tgt = v.pts[0], d = dist(v.x, v.y, ...tgt), last = v.pts.length === 1;
@@ -511,7 +523,7 @@ function driveStep(v, dt){
   if (mv <= 0) return;
   const want = brg(v.x, v.y, ...tgt), rate = Math.max(30, v.v*0.5144/6*R2D);
   v.hdg = norm(v.hdg + clamp(angDiff(v.hdg, want), -rate*dt, rate*dt));
-  if (d <= mv || (d < 3*VM && Math.abs(angDiff(v.hdg, want)) > 100)) { v.x = tgt[0]; v.y = tgt[1]; if (tgt.stop && !tgt.stop.ok) { v.v = 0; vehAsk(v, tgt.stop); return; } v.pts.shift(); if (!v.pts.length && v.endH != null && !v.home) v.hdg = v.endH; if (tgt.cb) tgt.cb(v); }
+  if (d <= mv || (d < 3*VM && Math.abs(angDiff(v.hdg, want)) > 100)) { v.x = tgt[0]; v.y = tgt[1]; if (tgt.stop && !tgt.stop.ok) { v.v = 0; vehAsk(v, tgt.stop); return; } v.pts.shift(); if (!v.pts.length && v.endH != null && !v.home) v.hdg = v.endH; if (tgt.cb) for (const [k, a] of tgt.cb) VEH_AT[k](v, a); }
   else { v.x += Math.sin(v.hdg*D2R)*mv; v.y += Math.cos(v.hdg*D2R)*mv; }
   if (v.T.carts) { const t = v.trail, p = t[0]; if (!p || dist(...p, v.x, v.y) > 0.8*VM) { t.unshift([v.x, v.y]); if (t.length > 40) t.pop(); } }
 }
@@ -706,7 +718,7 @@ function opsCheck(rw, why, auto){
   const v = newVeh('ops', VG[base].p, 0, { cs: 'OPS1' });
   const r = vroute(base, 't:' + HOLDS[hp].node, true);
   v.pts = r ? routePts(r, v) : [GN[HOLDS[hp].node].p]; const end = v.pts[v.pts.length - 1] = GN[HOLDS[hp].node].p.slice();
-  end.cb = () => rcAtHold();
+  end.cb = [['rcHold']];
   if (r && r.length > 1) v.hdg = brg(...VG[r[0]].p, ...VG[r[1]].p);
   S.rc = { v, R, rw: rwyName(R.id), hp, st: 'OUT', auto: !!auto, why: why || 'routine runway inspection', t: S.t };
   v.need = null; renderAtisSoon();
@@ -723,7 +735,7 @@ function rcPath(C){
   const R = C.R, L = rLen(R), mE = holdM(R, C.hp), dir = mE < L/2 ? 1 : -1, far = dir > 0 ? L - 45 : 45, s1 = 9*(KEEP_LEFT ? 1 : -1)*dir;
   const P = (m, o) => R.rm(m, o);
   const pts = [P(mE + dir*12, s1), P(far, s1), P(far + dir*25, 0), P(far, -s1), P(mE + dir*18, -s1), P(mE, 0), GN[HOLDS[C.hp].node].p.slice()];
-  pts[pts.length - 1].cb = () => rcOff(true);
+  pts[pts.length - 1].cb = [['rcOff', true]];
   return pts;
 }
 function rcEnter(auto){
@@ -746,7 +758,7 @@ function rcVacate(){
   const hs = rcHolds(R).map(h => [h, holdM(R, h)]).sort((a, b) => (Math.abs(a[1] - m) + ((a[1] - m)*ahead < -30 ? 400 : 0)) - (Math.abs(b[1] - m) + ((b[1] - m)*ahead < -30 ? 400 : 0)));
   if (!hs.length) return false;
   const [h, hm] = hs[0]; C.hp = h; C.st = 'OFF';
-  const out = GN[HOLDS[h].node].p.slice(); out.cb = () => rcOff(false);
+  const out = GN[HOLDS[h].node].p.slice(); out.cb = [['rcOff', false]];
   v.pts = [R.rm(hm, 0), out];
   return true;
 }

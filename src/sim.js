@@ -594,6 +594,26 @@ const P = (m, off=0) => rm(m, off);
 // turn radius that fits the lead-in from the taxiway onto a stand: about 70% of the lead-in's length, no tighter than 8 m
 const standInR = (pts, st) => pts.length > 1 ? Math.max(8, dist(...pts[pts.length-2], ...st.p)*1852*0.7) : 8;
 function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; if (p.tight) q.tight = true; if (p.ext) q.ext = true; return q; }), spd, onDone, ...opts }; }
+// what an aircraft does at the end of a ground path. onDone is [name, args] (a closure can't be saved with a stint:
+// stint.js), args holding what the path was for: the stand, the holding point, the tow's destination
+const PATH_DONE = {
+  vacated: ac => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); },
+  holdIn: (ac, { hold }) => atHoldIn(ac, hold),
+  onStand: (ac, { st }) => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); },
+  linedUp: (ac, a, v) => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; },
+  atIhp: (ac, { ihp }) => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); },
+  atHp: (ac, { hp }, v) => { ac.state = 'HOLDPT'; if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); },
+  pushed: ac => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); },
+  pulled: (ac, { st }) => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); },
+  // a tow: pushed back off the stand first (towOn), then towed along its route at a tug's pace
+  towOn: (ac, { pts, done, o }) => { ac.towNext = null; setPath(ac, pts, TOW_KT, done, o); },
+  towHeld: (ac, { hold, H }) => { ac.path = null; ac.gs = 0; ac.towNode = hold.node; ac.towHold = H; ac.towTgt = null; ac.need = `Tug holding at ${H}`;
+    log('plt', `${APT.tower[0]}, tug with ${ac.cs} holding at ${H}`, 'TUG', ac); say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} holding at ${hpWords(hold.id)}`, 'tug'); if (S.sel === ac && renderSel) renderSel(); },
+  // on the stand: if it came in at an angle, the tug swings it round square before it is left there
+  towIn: (ac, a) => { const to = a.to; if (to.hdg != null && Math.abs(angDiff(ac.hdg, to.hdg)) > 8) ac.towAlign = { h: to.hdg, done: ['towPark', a] }; else PATH_DONE.towPark(ac, a); },
+  towPark: (ac, { to, was, then }) => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; ac.towWas = ac.towTgt = null; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); }
+};
+const runDone = (ac, d, v) => typeof d === 'function' ? d(v) : d && PATH_DONE[d[0]](ac, d[1] || {}, v);
 function taxiFrom(ac){ return taxiStart(ac)[0]; }
 // where a taxi route starts, and the way the aircraft is facing there (null: on its stand, not pushed, free to leave
 // either way). Out on the taxiways it is the node it is at, or the one ahead of it on the taxiway it is on, never the
@@ -813,7 +833,7 @@ function planStand(ac){
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
-  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); });
+  setPath(ac, pts, 16, ['vacated']);
 }
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
@@ -835,9 +855,9 @@ function taxiIn(ac, st, via, hold){
   else if (pts.length > 1 && (dist(ac.x, ac.y, ...pts[0]) < 0.01 || (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90))) pts.shift();   // already there, or passed it
   ac.taxiIn = true; ac.need = null; ac.held = false; ac.holdAt = null; ac.taxiVia = viaOf(r.tws, ac.exit);
   // to a holding point: it stops there and waits for the next taxi instruction
-  if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, () => atHoldIn(ac, hold)); else atHoldIn(ac, hold, true); return ac.taxiVia; }
+  if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, ['holdIn', { hold }]); else atHoldIn(ac, hold, true); return ac.taxiVia; }
   pts.push(st.p);
-  setPath(ac, pts, 15, () => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); }, { inR: standInR(pts, st) });
+  setPath(ac, pts, 15, ['onStand', { st }], { inR: standInR(pts, st) });
   return ac.taxiVia;
 }
 function atHoldIn(ac, hold, quiet){
@@ -867,7 +887,7 @@ function startLineUp(ac, v){
   const pts = lineUpPath(ac, ac.hp), R = holdRwy(ac.hp), c = crsOf(depRw(ac)), e = pts[pts.length-1];
   const dir = Math.sin(c*D2R)*R.RU[0] + Math.cos(c*D2R)*R.RU[1] >= 0 ? 1 : -1;
   pts.push(R.rm(R.mOf(e) + dir*10, 0), R.rm(R.mOf(e) + dir*Math.max(35, taxiR(ac)*2), 0));
-  setPath(ac, pts, 18, v => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; }, { fine: true, roll: !!ac.cto });
+  setPath(ac, pts, 18, ['linedUp'], { fine: true, roll: !!ac.cto });
   return back;
 }
 
@@ -1061,16 +1081,12 @@ function commandRun(str){
       ac.need = null; ac.towHold = null; ac.towNode = null; ac.held = false; ac.towTgt = hold ? hold.id : null;
       const H = hold && hold.id.replace(/~\d+$/, ''), vw = via.length ? ', via ' + via.join(' ') : '';
       // pushed back off the stand first, where it is on one; then towed along its route at a tug's pace
-      const tow = (pts, onDone) => {
-        const go = () => setPath(ac, raw ? raw.map((p, k) => { const q = [p[0], p[1]]; if (k) q.tight = true; return q; }) : plan.pts, TOW_KT, onDone, raw ? {} : { inR: plan.inR });
-        if (plan && plan.push) { ac.towNext = plan.pts; setPath(ac, plan.push, 3, () => { ac.towNext = null; go(); }, { reverse: true }); } else go();
+      const tow = onDone => {
+        const pts = raw ? raw.map((p, k) => { const q = [p[0], p[1]]; if (k) q.tight = true; return q; }) : plan.pts, o = raw ? {} : { inR: plan.inR };
+        if (plan && plan.push) { ac.towNext = plan.pts; setPath(ac, plan.push, 3, ['towOn', { pts, done: onDone, o }], { reverse: true }); } else setPath(ac, pts, TOW_KT, onDone, o);
       };
-      if (hold) tow(null, () => { ac.path = null; ac.gs = 0; ac.towNode = hold.node; ac.towHold = H; ac.towTgt = null; ac.need = `Tug holding at ${H}`;
-        log('plt', `${APT.tower[0]}, tug with ${ac.cs} holding at ${H}`, 'TUG', ac); say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} holding at ${hpWords(hold.id)}`, 'tug'); if (S.sel === ac && renderSel) renderSel(); });
-      else { const was = ac.towWas, then = ac.tow.then;
-        // on the stand: if it came in at an angle, the tug swings it round square before it is left there
-        const park = () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; ac.towWas = ac.towTgt = null; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); };
-        tow(null, () => { if (to.hdg != null && Math.abs(angDiff(ac.hdg, to.hdg)) > 8) ac.towAlign = { h: to.hdg, done: park }; else park(); }); }
+      if (hold) tow(['towHeld', { hold, H }]);
+      else tow(['towIn', { to, was: ac.towWas, then: ac.tow.then }]);
       const what = hold ? `tow to holding point ${H}${vw}, hold there` : `${heldAt && !ac.emgTow ? 'continue tow' : 'tow approved'} to ${towDest(to)}${vw}`;
       log('atc', `Tug with ${ac.cs}, ${what}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
       say(`Tug with ${spoken(ac.cs)}, ${hold ? `tow to holding point ${hpWords(hold.id)}${via.length ? ', via ' + via.map(t => PHON[t] || t).join(', ') : ''}, hold there` : `${heldAt && !ac.emgTow ? 'continue tow' : 'tow approved'} to ${towDest(to)}${via.length ? ', via ' + via.map(t => PHON[t] || t).join(', ') : ''}`}`, 'atc');
@@ -1081,7 +1097,7 @@ function commandRun(str){
       const dir = pushDir(ac, toks[i+1]); if (dir) i++;
       const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac));
       ac.pushPts = pushPath(ac, face);
-      setPath(ac, ac.pushPts, 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
+      setPath(ac, ac.pushPts, 3, ['pushed'], { reverse: true });
       const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
       { const [sa, ra] = PH.push(ac, dn, face); said.push(sa); reads.push(ra); }
     } else if (t === 'PULL' || t === 'PULLBACK') {
@@ -1090,7 +1106,7 @@ function commandRun(str){
       const st = ac.stand, pp = ac.pushPts || pushPath(ac, ac.face || pushFace(ac));
       const got = ac.state === 'READY' || !ac.path ? pp.length : Math.max(0, pp.length - ac.path.pts.length);   // push points already reached
       ac.state = 'PULL'; ac.need = null; ac.pushed = false; ac.held = false;
-      setPath(ac, [...pp.slice(0, got).reverse(), st.p], 4, () => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); }, { tug: true });
+      setPath(ac, [...pp.slice(0, got).reverse(), st.p], 4, ['pulled', { st }], { tug: true });
       { const [sa, ra] = PH.pull(ac, st); said.push(sa); reads.push(ra); }
     } else if ((t === 'STAND' || t === 'GATE') && ac.kind === 'ARR') {
       // assign the stand (gate) an arrival is to park on; on its own, the first free one in its airline's usual area
@@ -1137,8 +1153,8 @@ function commandRun(str){
       if (ac.pushed && !ac.leftStand && pts.length > 1 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90) pts.shift();
       if (ac.state === 'PARKED') { ac.pushed = false; pts.unshift(ac.stand.lp); }
       ac.state = 'TAXI'; ac.need = null; ac.leftStand = true; ac.held = false; ac.holdAt = null;
-      if (ihp) { ac.luq = false; ac.cto = false; setPath(ac, pts, 15, () => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); }, { ihp: ihp.id }); }
-      else setPath(ac, pts, 15, v => { ac.state = 'HOLDPT'; if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); }, { thru: !!(ac.cto || ac.luq) });
+      if (ihp) { ac.luq = false; ac.cto = false; setPath(ac, pts, 15, ['atIhp', { ihp }], { ihp: ihp.id }); }
+      else setPath(ac, pts, 15, ['atHp', { hp }], { thru: !!(ac.cto || ac.luq) });
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       const vw = viaOf(rt.tws, hp); if (via.line && vw.includes(via.line[0])) vw.line = via.line;
       { const [sa, ra] = ihp ? PH.taxiHold(ac, ihp, vw) : PH.taxi(ac, hp, vw); said.push(sa); reads.push(ra); }
@@ -1338,7 +1354,7 @@ function step(dt){
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') {
-      if (ac.towAlign && !ac.path) { const A = ac.towAlign, e = angDiff(ac.hdg, A.h); ac.hdg = norm(ac.hdg + clamp(e, -8*dt, 8*dt)); if (Math.abs(e) <= 8*dt) { ac.hdg = A.h; ac.towAlign = null; A.done(); } }
+      if (ac.towAlign && !ac.path) { const A = ac.towAlign, e = angDiff(ac.hdg, A.h); ac.hdg = norm(ac.hdg + clamp(e, -8*dt, 8*dt)); if (Math.abs(e) <= 8*dt) { ac.hdg = A.h; ac.towAlign = null; runDone(ac, A.done); } }
       // a tow on the runway pavement (several runways: the one it is on, within its ends, not on the line beyond them)
       if (RWYS.length > 1) { const q = [ac.x, ac.y], R = RWYS.find(R => Math.abs(R.offOf(q)) < 35 && R.mOf(q) > -60 && R.mOf(q) < R.len + 60); ac.onRwy = !!R; ac.rwyId = R ? R.id : RWYS[0].id; }
       else { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
@@ -1635,7 +1651,7 @@ function stepGround(ac, dt){
       // crossing a runway: on it from the holding position on one side to the one on the other
       if (p.hs && p.hs === ac.xing) { if (ac.xcross) emit('rwyx', ac); ac.xing = null; ac.xcross = null; ac.onRwy = false; ac.xok = (ac.xok || []).filter(r => r !== p.hs); }
       else if (p.hs && ac.path.pts.length && hsEnters([p, ...ac.path.pts], 0)) { ac.xing = ac.xcross = p.hs; if (activeRwy(p.hs)) { ac.onRwy = true; ac.rwyId = p.hs; } if (ac.hsAt === p.hs) { ac.hsAt = null; if (ac.need && ac.need.startsWith('Holding short')) ac.need = null; } }
-      if (!ac.path.pts.length) { const cb = ac.path.onDone, v0 = ac.path.thru || ac.path.roll ? ac.gs : 0; ac.path = null; ac.gs = 0; cb && cb(v0); }
+      if (!ac.path.pts.length) { const cb = ac.path.onDone, v0 = ac.path.thru || ac.path.roll ? ac.gs : 0; ac.path = null; ac.gs = 0; cb && runDone(ac, cb, v0); }
     };
     if (v <= 0) {}
     else if (ac.path.reverse) {   // pushed by the tug: straight back along the push line

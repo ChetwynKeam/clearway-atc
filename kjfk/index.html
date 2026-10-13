@@ -838,6 +838,18 @@ button.atis-letter:hover { background: var(--amber-soft); }
 .badge.new::before { display: none; }
 .apline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
 .apline a { font-size: 13px; }
+/* Continue last stint (stint.js): in the session setup and on the home page */
+.stint, .stint-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.stint { margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--accent); border-radius: var(--r); background: var(--accent-soft); }
+body.theme-dark .stint { border-color: var(--phos-2); background: var(--panel-2); }
+.stint-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.stint-txt b { font-size: 15px; }
+.stint-d { font-size: 13px; color: var(--ink-2); }
+.stint-bt { display: flex; flex-wrap: wrap; gap: 8px; }
+.stint-bt .btn { padding: 7px 13px; font-size: 14px; }
+#stintHome { padding: 16px 0 0; }
+.stint-home { display: grid; gap: 8px; }
+.stint-row { padding: 12px 16px; border: 1px solid var(--line-2); border-left: 3px solid var(--accent); border-radius: var(--r); background: var(--panel); box-shadow: var(--shadow-1); }
 .hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 20px; }
 .hubcard { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow-1); min-width: 0; }
 .hubcard.here { border-color: var(--phos-2, #8fb0ff); }
@@ -1102,6 +1114,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 <main>
 <!-- ═════════════════════ PLATFORM HOME ═════════════════════ -->
 <section class="page" id="page-home" data-page="home">
+  <div id="stintHome" hidden></div>
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
@@ -2307,6 +2320,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     <div class="overlay" id="setup">
       <div class="card">
         <div class="apline" id="setupAp"></div>
+        <div class="stint" id="stintBox" hidden></div>
         <div data-only="LXGB">
         <div class="eyebrow">Position briefing</div>
         <h1>Gibraltar Radar &amp; Tower</h1>
@@ -5394,6 +5408,26 @@ const P = (m, off=0) => rm(m, off);
 // turn radius that fits the lead-in from the taxiway onto a stand: about 70% of the lead-in's length, no tighter than 8 m
 const standInR = (pts, st) => pts.length > 1 ? Math.max(8, dist(...pts[pts.length-2], ...st.p)*1852*0.7) : 8;
 function setPath(ac, pts, spd, onDone, opts={}){ ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; if (p.tight) q.tight = true; if (p.ext) q.ext = true; return q; }), spd, onDone, ...opts }; }
+// what an aircraft does at the end of a ground path. onDone is [name, args] (a closure can't be saved with a stint:
+// stint.js), args holding what the path was for: the stand, the holding point, the tow's destination
+const PATH_DONE = {
+  vacated: ac => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); },
+  holdIn: (ac, { hold }) => atHoldIn(ac, hold),
+  onStand: (ac, { st }) => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); },
+  linedUp: (ac, a, v) => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; },
+  atIhp: (ac, { ihp }) => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); },
+  atHp: (ac, { hp }, v) => { ac.state = 'HOLDPT'; if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); },
+  pushed: ac => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); },
+  pulled: (ac, { st }) => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); },
+  // a tow: pushed back off the stand first (towOn), then towed along its route at a tug's pace
+  towOn: (ac, { pts, done, o }) => { ac.towNext = null; setPath(ac, pts, TOW_KT, done, o); },
+  towHeld: (ac, { hold, H }) => { ac.path = null; ac.gs = 0; ac.towNode = hold.node; ac.towHold = H; ac.towTgt = null; ac.need = `Tug holding at ${H}`;
+    log('plt', `${APT.tower[0]}, tug with ${ac.cs} holding at ${H}`, 'TUG', ac); say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} holding at ${hpWords(hold.id)}`, 'tug'); if (S.sel === ac && renderSel) renderSel(); },
+  // on the stand: if it came in at an angle, the tug swings it round square before it is left there
+  towIn: (ac, a) => { const to = a.to; if (to.hdg != null && Math.abs(angDiff(ac.hdg, to.hdg)) > 8) ac.towAlign = { h: to.hdg, done: ['towPark', a] }; else PATH_DONE.towPark(ac, a); },
+  towPark: (ac, { to, was, then }) => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; ac.towWas = ac.towTgt = null; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); }
+};
+const runDone = (ac, d, v) => typeof d === 'function' ? d(v) : d && PATH_DONE[d[0]](ac, d[1] || {}, v);
 function taxiFrom(ac){ return taxiStart(ac)[0]; }
 // where a taxi route starts, and the way the aircraft is facing there (null: on its stand, not pushed, free to leave
 // either way). Out on the taxiways it is the node it is at, or the one ahead of it on the taxiway it is on, never the
@@ -5613,7 +5647,7 @@ function planStand(ac){
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
-  setPath(ac, pts, 16, () => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); });
+  setPath(ac, pts, 16, ['vacated']);
 }
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
@@ -5635,9 +5669,9 @@ function taxiIn(ac, st, via, hold){
   else if (pts.length > 1 && (dist(ac.x, ac.y, ...pts[0]) < 0.01 || (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90))) pts.shift();   // already there, or passed it
   ac.taxiIn = true; ac.need = null; ac.held = false; ac.holdAt = null; ac.taxiVia = viaOf(r.tws, ac.exit);
   // to a holding point: it stops there and waits for the next taxi instruction
-  if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, () => atHoldIn(ac, hold)); else atHoldIn(ac, hold, true); return ac.taxiVia; }
+  if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, ['holdIn', { hold }]); else atHoldIn(ac, hold, true); return ac.taxiVia; }
   pts.push(st.p);
-  setPath(ac, pts, 15, () => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); }, { inR: standInR(pts, st) });
+  setPath(ac, pts, 15, ['onStand', { st }], { inR: standInR(pts, st) });
   return ac.taxiVia;
 }
 function atHoldIn(ac, hold, quiet){
@@ -5667,7 +5701,7 @@ function startLineUp(ac, v){
   const pts = lineUpPath(ac, ac.hp), R = holdRwy(ac.hp), c = crsOf(depRw(ac)), e = pts[pts.length-1];
   const dir = Math.sin(c*D2R)*R.RU[0] + Math.cos(c*D2R)*R.RU[1] >= 0 ? 1 : -1;
   pts.push(R.rm(R.mOf(e) + dir*10, 0), R.rm(R.mOf(e) + dir*Math.max(35, taxiR(ac)*2), 0));
-  setPath(ac, pts, 18, v => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; }, { fine: true, roll: !!ac.cto });
+  setPath(ac, pts, 18, ['linedUp'], { fine: true, roll: !!ac.cto });
   return back;
 }
 
@@ -5861,16 +5895,12 @@ function commandRun(str){
       ac.need = null; ac.towHold = null; ac.towNode = null; ac.held = false; ac.towTgt = hold ? hold.id : null;
       const H = hold && hold.id.replace(/~\d+$/, ''), vw = via.length ? ', via ' + via.join(' ') : '';
       // pushed back off the stand first, where it is on one; then towed along its route at a tug's pace
-      const tow = (pts, onDone) => {
-        const go = () => setPath(ac, raw ? raw.map((p, k) => { const q = [p[0], p[1]]; if (k) q.tight = true; return q; }) : plan.pts, TOW_KT, onDone, raw ? {} : { inR: plan.inR });
-        if (plan && plan.push) { ac.towNext = plan.pts; setPath(ac, plan.push, 3, () => { ac.towNext = null; go(); }, { reverse: true }); } else go();
+      const tow = onDone => {
+        const pts = raw ? raw.map((p, k) => { const q = [p[0], p[1]]; if (k) q.tight = true; return q; }) : plan.pts, o = raw ? {} : { inR: plan.inR };
+        if (plan && plan.push) { ac.towNext = plan.pts; setPath(ac, plan.push, 3, ['towOn', { pts, done: onDone, o }], { reverse: true }); } else setPath(ac, pts, TOW_KT, onDone, o);
       };
-      if (hold) tow(null, () => { ac.path = null; ac.gs = 0; ac.towNode = hold.node; ac.towHold = H; ac.towTgt = null; ac.need = `Tug holding at ${H}`;
-        log('plt', `${APT.tower[0]}, tug with ${ac.cs} holding at ${H}`, 'TUG', ac); say(`${APT.tower[0]}, tug with ${spoken(ac.cs)} holding at ${hpWords(hold.id)}`, 'tug'); if (S.sel === ac && renderSel) renderSel(); });
-      else { const was = ac.towWas, then = ac.tow.then;
-        // on the stand: if it came in at an angle, the tug swings it round square before it is left there
-        const park = () => { ac.state = was === 'ONSTAND' ? 'ONSTAND' : 'PARKED'; ac.stand = to; ac.hdg = to.hdg; ac.onRwy = false; ac.tow = then || null; ac.towCross = false; ac.leftStand = false; ac.pushed = false; ac.towWas = ac.towTgt = null; sys(`${ac.cs} is ${to.area === 'hangar' ? 'in ' + to.name : 'on ' + (APT.standWord || 'stand') + ' ' + to.id}.`); };
-        tow(null, () => { if (to.hdg != null && Math.abs(angDiff(ac.hdg, to.hdg)) > 8) ac.towAlign = { h: to.hdg, done: park }; else park(); }); }
+      if (hold) tow(['towHeld', { hold, H }]);
+      else tow(['towIn', { to, was: ac.towWas, then: ac.tow.then }]);
       const what = hold ? `tow to holding point ${H}${vw}, hold there` : `${heldAt && !ac.emgTow ? 'continue tow' : 'tow approved'} to ${towDest(to)}${vw}`;
       log('atc', `Tug with ${ac.cs}, ${what}${cross ? ', cross runway ' + S.rwy + ' at Charlie, report vacated' : ''}`, 'TOWER');
       say(`Tug with ${spoken(ac.cs)}, ${hold ? `tow to holding point ${hpWords(hold.id)}${via.length ? ', via ' + via.map(t => PHON[t] || t).join(', ') : ''}, hold there` : `${heldAt && !ac.emgTow ? 'continue tow' : 'tow approved'} to ${towDest(to)}${via.length ? ', via ' + via.map(t => PHON[t] || t).join(', ') : ''}`}`, 'atc');
@@ -5881,7 +5911,7 @@ function commandRun(str){
       const dir = pushDir(ac, toks[i+1]); if (dir) i++;
       const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac));
       ac.pushPts = pushPath(ac, face);
-      setPath(ac, ac.pushPts, 3, () => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); }, { reverse: true });
+      setPath(ac, ac.pushPts, 3, ['pushed'], { reverse: true });
       const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
       { const [sa, ra] = PH.push(ac, dn, face); said.push(sa); reads.push(ra); }
     } else if (t === 'PULL' || t === 'PULLBACK') {
@@ -5890,7 +5920,7 @@ function commandRun(str){
       const st = ac.stand, pp = ac.pushPts || pushPath(ac, ac.face || pushFace(ac));
       const got = ac.state === 'READY' || !ac.path ? pp.length : Math.max(0, pp.length - ac.path.pts.length);   // push points already reached
       ac.state = 'PULL'; ac.need = null; ac.pushed = false; ac.held = false;
-      setPath(ac, [...pp.slice(0, got).reverse(), st.p], 4, () => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); }, { tug: true });
+      setPath(ac, [...pp.slice(0, got).reverse(), st.p], 4, ['pulled', { st }], { tug: true });
       { const [sa, ra] = PH.pull(ac, st); said.push(sa); reads.push(ra); }
     } else if ((t === 'STAND' || t === 'GATE') && ac.kind === 'ARR') {
       // assign the stand (gate) an arrival is to park on; on its own, the first free one in its airline's usual area
@@ -5937,8 +5967,8 @@ function commandRun(str){
       if (ac.pushed && !ac.leftStand && pts.length > 1 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90) pts.shift();
       if (ac.state === 'PARKED') { ac.pushed = false; pts.unshift(ac.stand.lp); }
       ac.state = 'TAXI'; ac.need = null; ac.leftStand = true; ac.held = false; ac.holdAt = null;
-      if (ihp) { ac.luq = false; ac.cto = false; setPath(ac, pts, 15, () => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); }, { ihp: ihp.id }); }
-      else setPath(ac, pts, 15, v => { ac.state = 'HOLDPT'; if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); }, { thru: !!(ac.cto || ac.luq) });
+      if (ihp) { ac.luq = false; ac.cto = false; setPath(ac, pts, 15, ['atIhp', { ihp }], { ihp: ihp.id }); }
+      else setPath(ac, pts, 15, ['atHp', { hp }], { thru: !!(ac.cto || ac.luq) });
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       const vw = viaOf(rt.tws, hp); if (via.line && vw.includes(via.line[0])) vw.line = via.line;
       { const [sa, ra] = ihp ? PH.taxiHold(ac, ihp, vw) : PH.taxi(ac, hp, vw); said.push(sa); reads.push(ra); }
@@ -6138,7 +6168,7 @@ function step(dt){
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') {
-      if (ac.towAlign && !ac.path) { const A = ac.towAlign, e = angDiff(ac.hdg, A.h); ac.hdg = norm(ac.hdg + clamp(e, -8*dt, 8*dt)); if (Math.abs(e) <= 8*dt) { ac.hdg = A.h; ac.towAlign = null; A.done(); } }
+      if (ac.towAlign && !ac.path) { const A = ac.towAlign, e = angDiff(ac.hdg, A.h); ac.hdg = norm(ac.hdg + clamp(e, -8*dt, 8*dt)); if (Math.abs(e) <= 8*dt) { ac.hdg = A.h; ac.towAlign = null; runDone(ac, A.done); } }
       // a tow on the runway pavement (several runways: the one it is on, within its ends, not on the line beyond them)
       if (RWYS.length > 1) { const q = [ac.x, ac.y], R = RWYS.find(R => Math.abs(R.offOf(q)) < 35 && R.mOf(q) > -60 && R.mOf(q) < R.len + 60); ac.onRwy = !!R; ac.rwyId = R ? R.id : RWYS[0].id; }
       else { ac.onRwy = Math.abs(offOf([ac.x, ac.y])) < 35; ac.rwyId = RWYS[0].id; }
@@ -6435,7 +6465,7 @@ function stepGround(ac, dt){
       // crossing a runway: on it from the holding position on one side to the one on the other
       if (p.hs && p.hs === ac.xing) { if (ac.xcross) emit('rwyx', ac); ac.xing = null; ac.xcross = null; ac.onRwy = false; ac.xok = (ac.xok || []).filter(r => r !== p.hs); }
       else if (p.hs && ac.path.pts.length && hsEnters([p, ...ac.path.pts], 0)) { ac.xing = ac.xcross = p.hs; if (activeRwy(p.hs)) { ac.onRwy = true; ac.rwyId = p.hs; } if (ac.hsAt === p.hs) { ac.hsAt = null; if (ac.need && ac.need.startsWith('Holding short')) ac.need = null; } }
-      if (!ac.path.pts.length) { const cb = ac.path.onDone, v0 = ac.path.thru || ac.path.roll ? ac.gs : 0; ac.path = null; ac.gs = 0; cb && cb(v0); }
+      if (!ac.path.pts.length) { const cb = ac.path.onDone, v0 = ac.path.thru || ac.path.roll ? ac.gs : 0; ac.path = null; ac.gs = 0; cb && runDone(ac, cb, v0); }
     };
     if (v <= 0) {}
     else if (ac.path.reverse) {   // pushed by the tug: straight back along the push line
@@ -7677,7 +7707,7 @@ $('tgSpeed').onclick = e => {
 };
 $('tgVoice').onclick = e => { S.voice = !S.voice; e.currentTarget.classList.toggle('on', S.voice); e.currentTarget.setAttribute('aria-pressed', S.voice); loadVoices(); if (!S.voice) try { speechSynthesis.cancel(); } catch(_) {} };
 $('tgSetup').onclick = () => openSetup();
-function openSetup(){ S.paused = true; $('tgPause').textContent = 'Resume'; $('startBtn').textContent = S.running ? 'Apply weather and resume' : 'Open the position'; $('setup').hidden = false; try { renderSlots(); } catch(_) {} }
+function openSetup(){ S.paused = true; $('tgPause').textContent = 'Resume'; $('startBtn').textContent = S.running ? 'Apply weather and resume' : 'Open the position'; $('setup').hidden = false; try { renderSlots(); } catch(_) {} if (typeof stintRender === 'function') stintRender(); }
 
 let drag = null; const pointers = new Map();
 cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [e.offsetX, e.offsetY]); drag = { x: e.offsetX, y: e.offsetY, cx: V.cx, cy: V.cy, moved: false, d0: null, s0: V.scale }; });
@@ -8494,8 +8524,7 @@ function routePts(ids, v){
   for (let i = ids.length - 2; i >= 0; i--) {
     if (edgeKind(ids[i], ids[i+1]) !== 'x') continue;
     const R = VX.get(ids[i] + '|' + ids[i+1]), off = p => Math.abs(R.offOf(p)), X = { k: 'rwy', R, tw: twAt(ids[i]) };
-    const nx = pts[i+1], cb0 = nx.cb;
-    nx.cb = w => { if (w.onRwy === R.id) { w.onRwy = null; if (!w.xAuto) vcall(w, `runway ${rwN(R)} vacated`); w.xing = null; w.xAuto = false; } if (cb0) cb0(w); };
+    (pts[i+1].cb ||= []).unshift(['xclear', R]);
     let k = i, sp, at;
     if (off(pts[k]) >= HOLD_OFF) { sp = pts[k].slice(); at = k + 1; }
     else {
@@ -8507,6 +8536,13 @@ function routePts(ids, v){
   }
   return pts;
 }
+// what a vehicle does on reaching a point of its route (p.cb: a list of [name, arg], so a saved stint keeps it): clear of
+// the runway it crossed, Ops 1 at the runway's holding point, or off the runway after its inspection
+const VEH_AT = {
+  xclear: (w, R) => { if (w.onRwy === R.id) { w.onRwy = null; if (!w.xAuto) vcall(w, `runway ${rwN(R)} vacated`); w.xing = null; w.xAuto = false; } },
+  rcHold: () => rcAtHold(),
+  rcOff: (w, done) => rcOff(done)
+};
 // callsigns, given when a vehicle first calls ("Fuel 3")
 const VCS = { bus: 'BUS', steps: 'STEPS', bags: 'BAGGAGE', belt: 'LOADER', cater: 'CATERING', fuel: 'FUEL', gpu: 'POWER', lav: 'SERVICE', water: 'WATER', tug: 'TUG', van: 'ENGINEER', fire: 'FIRE', amb: 'AMBULANCE', ops: 'OPS', follow: 'FOLLOW', crew: 'CREW' };
 function vehCs(v){ if (v.cs) return v.cs; const p = VCS[v.type] || 'VEHICLE'; let n = 1; while (VEH.list.some(w => w.cs === p + n && !w.gone)) n++; return v.cs = p + n; }
@@ -8666,8 +8702,14 @@ function driveTo(v, p, h, urgent){
 function sendHome(v, wait = 0){
   const n = baseFor(v.type, [v.x, v.y]); if (!n) { v.gone = true; return; }
   v.job = null; v.home = true; v.leaveAt = S.t + wait; v.pts = []; v.endH = null; v.req = null;
-  v.go = () => { const a = vgNear([v.x, v.y], 400), r = a && vroute(a, n); v.pts = r ? routePts(r, v) : [VG[n].p.slice()]; v.parked = false; };
+  v.go = ['home', n];
 }
+// what a vehicle does when it sets off (v.go: [name, arg], so a saved stint keeps it): home to its base node, or on
+// to the next aircraft's nose for a push
+const VEH_GO = {
+  home: (v, n) => { const a = vgNear([v.x, v.y], 400), r = a && vroute(a, n); v.pts = r ? routePts(r, v) : [VG[n].p.slice()]; v.parked = false; },
+  tug: (v, ac) => { const s = slotAt(ac, 'tug'); driveTo(v, s.p, s.h); }
+};
 // a vehicle out of its base at node n, heading off for point p
 function dispatch(type, p, h, job, urgent){
   const n = baseFor(type, p); if (!n) return null;
@@ -8801,7 +8843,7 @@ function nextTow(v){
   const [ac, j] = best;
   if (j.v && j.v !== v) { j.v.ac = null; j.v.job = null; sendHome(j.v, 0); }   // the one on its way from base turns back
   j.started = true; j.v = v; Object.assign(v, { job: j, ac, home: false, leaveAt: S.t + rnd(15, 30), pts: [], endH: null });
-  v.go = () => { const s = slotAt(ac, 'tug'); driveTo(v, s.p, s.h); };
+  v.go = ['tug', ac];
   return true;
 }
 
@@ -8857,7 +8899,7 @@ function giveWay(v, dt){
   v.waitOn = null; v.waitT = 0; return null;
 }
 function driveStep(v, dt){
-  if (v.leaveAt != null) { if (S.t < v.leaveAt) return; v.leaveAt = null; v.go && v.go(); v.go = null; }
+  if (v.leaveAt != null) { if (S.t < v.leaveAt) return; v.leaveAt = null; const g = v.go; v.go = null; if (g) VEH_GO[g[0]](v, g[1]); }
   if (v.req) { v.v = 0; return; }   // stopped, asking
   if (!v.pts.length) { if (v.home) v.gone = true; else if (!v.parked) { v.parked = true; v.v = 0; if (v.endH != null) v.hdg = v.endH; } return; }
   const tgt = v.pts[0], d = dist(v.x, v.y, ...tgt), last = v.pts.length === 1;
@@ -8871,7 +8913,7 @@ function driveStep(v, dt){
   if (mv <= 0) return;
   const want = brg(v.x, v.y, ...tgt), rate = Math.max(30, v.v*0.5144/6*R2D);
   v.hdg = norm(v.hdg + clamp(angDiff(v.hdg, want), -rate*dt, rate*dt));
-  if (d <= mv || (d < 3*VM && Math.abs(angDiff(v.hdg, want)) > 100)) { v.x = tgt[0]; v.y = tgt[1]; if (tgt.stop && !tgt.stop.ok) { v.v = 0; vehAsk(v, tgt.stop); return; } v.pts.shift(); if (!v.pts.length && v.endH != null && !v.home) v.hdg = v.endH; if (tgt.cb) tgt.cb(v); }
+  if (d <= mv || (d < 3*VM && Math.abs(angDiff(v.hdg, want)) > 100)) { v.x = tgt[0]; v.y = tgt[1]; if (tgt.stop && !tgt.stop.ok) { v.v = 0; vehAsk(v, tgt.stop); return; } v.pts.shift(); if (!v.pts.length && v.endH != null && !v.home) v.hdg = v.endH; if (tgt.cb) for (const [k, a] of tgt.cb) VEH_AT[k](v, a); }
   else { v.x += Math.sin(v.hdg*D2R)*mv; v.y += Math.cos(v.hdg*D2R)*mv; }
   if (v.T.carts) { const t = v.trail, p = t[0]; if (!p || dist(...p, v.x, v.y) > 0.8*VM) { t.unshift([v.x, v.y]); if (t.length > 40) t.pop(); } }
 }
@@ -9066,7 +9108,7 @@ function opsCheck(rw, why, auto){
   const v = newVeh('ops', VG[base].p, 0, { cs: 'OPS1' });
   const r = vroute(base, 't:' + HOLDS[hp].node, true);
   v.pts = r ? routePts(r, v) : [GN[HOLDS[hp].node].p]; const end = v.pts[v.pts.length - 1] = GN[HOLDS[hp].node].p.slice();
-  end.cb = () => rcAtHold();
+  end.cb = [['rcHold']];
   if (r && r.length > 1) v.hdg = brg(...VG[r[0]].p, ...VG[r[1]].p);
   S.rc = { v, R, rw: rwyName(R.id), hp, st: 'OUT', auto: !!auto, why: why || 'routine runway inspection', t: S.t };
   v.need = null; renderAtisSoon();
@@ -9083,7 +9125,7 @@ function rcPath(C){
   const R = C.R, L = rLen(R), mE = holdM(R, C.hp), dir = mE < L/2 ? 1 : -1, far = dir > 0 ? L - 45 : 45, s1 = 9*(KEEP_LEFT ? 1 : -1)*dir;
   const P = (m, o) => R.rm(m, o);
   const pts = [P(mE + dir*12, s1), P(far, s1), P(far + dir*25, 0), P(far, -s1), P(mE + dir*18, -s1), P(mE, 0), GN[HOLDS[C.hp].node].p.slice()];
-  pts[pts.length - 1].cb = () => rcOff(true);
+  pts[pts.length - 1].cb = [['rcOff', true]];
   return pts;
 }
 function rcEnter(auto){
@@ -9106,7 +9148,7 @@ function rcVacate(){
   const hs = rcHolds(R).map(h => [h, holdM(R, h)]).sort((a, b) => (Math.abs(a[1] - m) + ((a[1] - m)*ahead < -30 ? 400 : 0)) - (Math.abs(b[1] - m) + ((b[1] - m)*ahead < -30 ? 400 : 0)));
   if (!hs.length) return false;
   const [h, hm] = hs[0]; C.hp = h; C.st = 'OFF';
-  const out = GN[HOLDS[h].node].p.slice(); out.cb = () => rcOff(false);
+  const out = GN[HOLDS[h].node].p.slice(); out.cb = [['rcOff', false]];
   v.pts = [R.rm(hm, 0), out];
   return true;
 }
@@ -12258,14 +12300,14 @@ setTimeout(cwInit, 0);
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
 const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
-// Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live.
+// Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live, #resume.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
 const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 // an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
 const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
 const IS_HOST = APT.icao === SITE_HOST, EMBED = location.hash.startsWith('#embed');
-const SIM_HASH = /^(sim|ex\/|wx\/|live$)/;
+const SIM_HASH = /^(sim|ex\/|wx\/|live$|resume$)/;
 const otherPage = h => IS_HOST || EMBED || SIM_HASH.test(h) ? null : SITE[SITE_HOST] + '#' + (h || HOME_RT);
 const isApRoute = r => Object.values(AP_ROUTE).includes(r);
 // the airport a block of the site belongs to: its data-apt, or the airport briefing page it sits on
@@ -12297,6 +12339,8 @@ function fromHash(){
   // from the host page's Academy, scenario cards and Live now links: #ex/<key>, #wx/<preset>, #live
   if (h.startsWith('ex/')) { const k = h.slice(3); if (EXERCISES[k]) { history.replaceState(null, '', '#sim'); return startExercise(k); } }
   if (h.startsWith('wx/')) { const k = h.slice(3); history.replaceState(null, '', '#sim'); return WX_PRESETS[k] ? openScenario(k) : go('sim'); }
+  // from the home page's Continue last stint (stint.js, which loads after this)
+  if (h === 'resume') { history.replaceState(null, '', '#sim'); go('sim'); setTimeout(stintContinue); return; }
   if (h === 'live') { history.replaceState(null, '', '#sim'); go('sim'); const sel = $('trafficSel'); if (!S.running) { sel.value = 'live'; sel.dispatchEvent(new Event('change')); } return; }
   if (ROUTES.includes(h)) return go(h);
   const el = h && document.getElementById(h);
@@ -13182,6 +13226,191 @@ Object.assign(COACH, {
       wait: () => { const a = A('DAL401'); return !a || !a.need || S.acs.some(o => o !== a && onRunway(o, '22R')); } }
   ]
 });
+
+// ═════════════════════════ saved stint ═════════════════════════
+// The stint you are working is saved on this device as you play (every 10 s, and when the page is hidden or closed),
+// one per airport, so the next visit can carry on where you left off: the website's home page and the airport's
+// session setup offer "Continue last stint". Not for Live now (the real flights have moved on by the next visit) or
+// the Academy's guided exercises. A saved stint is the whole session: every aircraft where it was and what it was
+// doing, the schedule still to come, the vehicles, emergencies, slots, AI seats, score and the message log.
+const STINT_V = 1, STINT_PRE = 'cw-stint-', STINT_KEY = STINT_PRE + APT.icao;
+const stintSaveable = () => S.running && !isLiveMode(S.mode) && !EXERCISES[S.mode];
+// session state that is not part of the stint: the page's own wiring and the controller's display preferences
+const STINT_SKIP = new Set(['listeners', 'view', 'paused', 'running', 'preview', 'voice', 'voiceAt', 'fromVoice', 'aiHear', 'showProc', 'liveWait']);
+
+// ── the saved graph: aircraft refer to each other, to stands, vehicles and holding points. Objects that belong to the
+// airport (stands, aircraft types, waypoints, taxiway nodes, runways, jet bridges) are saved by name; an object used in
+// more than one place is saved once and referred to ($r), so it is still one object when it comes back.
+function stintGlobals(){
+  const G = new Map(), reg = (tag, o) => { if (o && typeof o === 'object' && !G.has(o)) G.set(o, tag); };
+  const each = (name, X) => { if (X) for (const k of Object.keys(X)) reg(name + ':' + k, X[k]); };
+  STANDS.forEach(s => reg('ST:' + s.id, s)); HANGARS.forEach(h => reg('HG:' + h.id, h));
+  each('TY', TYPES); each('VT', VTYPES); each('WP', WP); each('HO', HOLDS); each('IH', IHPS); each('FI', FINAL); each('GN', GN);
+  each('GE', GE); each('RW', RWYS); each('EN', ENTRY); each('AP', AP); each('BR', VEH.bridges); each('VG', VG); each('WX', WX_PRESETS);
+  reg('APT', APT); each('APT', APT);
+  return G;
+}
+function stintEncode(root){
+  const G = stintGlobals(), seen = new Map(), R = [], ids = new Map();
+  const skip = o => !o || typeof o !== 'object' || G.has(o) || (typeof Node !== 'undefined' && o instanceof Node);
+  const kids = o => o instanceof Map ? [...o.keys(), ...o.values()] : o instanceof Set ? [...o] : Object.keys(o).map(k => o[k]);
+  const walk = o => { if (skip(o)) return; const n = seen.get(o) || 0; seen.set(o, n + 1); if (!n) for (const v of kids(o)) walk(v); };
+  walk(root);
+  const encA = v => { const e = enc(v); return e === undefined ? null : e; };
+  const body = o => {
+    if (o instanceof Set) return { $set: [...o].map(encA) };
+    if (o instanceof Map) return { $map: [...o].map(([k, v]) => [encA(k), encA(v)]) };
+    if (Array.isArray(o)) {
+      const a = o.map(encA), x = Object.keys(o).filter(k => !/^\d+$/.test(k)); if (!x.length) return a;
+      const p = {}; for (const k of x) { const e = enc(o[k]); if (e !== undefined) p[k] = e; } return { $a: a, p };   // a path point's flags (hs, tight, ext)
+    }
+    const out = o instanceof Aircraft ? { $c: 'ac' } : {};
+    for (const k of Object.keys(o)) { const e = enc(o[k]); if (e !== undefined) out[k] = e; }
+    return out;
+  };
+  function enc(o){
+    if (o === undefined || typeof o === 'function' || typeof o === 'symbol') return undefined;
+    if (typeof o === 'number') return Number.isFinite(o) ? o : { $n: String(o) };
+    if (o === null || typeof o !== 'object') return o;
+    if (G.has(o)) return { $g: G.get(o) };
+    if (typeof Node !== 'undefined' && o instanceof Node) return undefined;
+    if (seen.get(o) > 1) { if (ids.has(o)) return { $r: ids.get(o) }; const i = R.length; ids.set(o, i); R.push(null); R[i] = body(o); return { $r: i }; }
+    return body(o);
+  }
+  return { root: enc(root), R };
+}
+function stintDecode(pk){
+  const G = new Map([...stintGlobals()].map(([o, t]) => [t, o])), out = [], made = [];
+  const shell = e => Array.isArray(e) || e.$a ? [] : e.$set ? new Set() : e.$map ? new Map() : e.$c === 'ac' ? Object.create(Aircraft.prototype) : {};
+  const fill = (o, e) => {
+    if (Array.isArray(e)) { for (const v of e) o.push(dec(v)); return o; }
+    if (e.$a) { for (const v of e.$a) o.push(dec(v)); Object.assign(o, Object.fromEntries(Object.entries(e.p).map(([k, v]) => [k, dec(v)]))); return o; }
+    if (e.$set) { for (const v of e.$set) o.add(dec(v)); return o; }
+    if (e.$map) { for (const [k, v] of e.$map) o.set(dec(k), dec(v)); return o; }
+    for (const k of Object.keys(e)) if (k !== '$c') o[k] = dec(e[k]);
+    return o;
+  };
+  function dec(e){
+    if (e === null || typeof e !== 'object') return e;
+    if (!Array.isArray(e)) {
+      if ('$n' in e) return Number(e.$n);
+      if ('$g' in e) { if (!G.has(e.$g)) throw new Error('not in this version of the airport: ' + e.$g); return G.get(e.$g); }
+      if ('$r' in e) { const i = e.$r; if (!made[i]) { made[i] = true; out[i] = shell(pk.R[i]); fill(out[i], pk.R[i]); } return out[i]; }
+    }
+    return fill(shell(e), e);
+  }
+  return dec(pk.root);
+}
+
+// ── saving
+function stintState(){
+  const s = {}; for (const k of Object.keys(S)) if (!STINT_SKIP.has(k)) s[k] = S[k];
+  return {
+    S: s, sqk, lastCallT, view: { cx: V.cx, cy: V.cy, scale: V.scale, name: V.name },
+    stands: STANDS.filter(t => t.ownOcc).map(t => [t, t.ownOcc]), hangars: HANGARS.filter(h => h.occ).map(h => [h, h.occ]),
+    veh: { list: VEH.list, n: VEH.n, tick: VEH.tick, nextRoam: VEH.nextRoam, nextFire: VEH.nextFire, cap: VEH.cap, ends: VEH.bridges.map(B => B.end) },
+    far: { list: FAR.list, done: FAR.done }, slot: { ...SLOT }, car: carCur, custom: CUSTOM.src
+  };
+}
+// a few words for the "Continue last stint" prompts
+function stintMeta(){
+  return { v: STINT_V, ap: APT.icao, name: APT.name, at: Date.now(), mode: S.mode, day: S.day, hour: S.hour, t: Math.round(S.t), start: S.start,
+    n: S.acs.filter(a => !a.handed && a.state !== 'PRE').length, pts: S.score.pts, rwy: S.rwy, ai: AI_SEATS.filter(k => S.seats && S.seats[k] === 'AI') };
+}
+let stintLastT = null, stintFull = false;
+function stintSave(){
+  if (!stintSaveable() || S.t === stintLastT) return;
+  let txt;
+  try {
+    const log = [...logEl.children].slice(-150).map(d => d.outerHTML.replace(/ class="ln ([^"]*?)\bgo\b/, ' class="ln $1')).join('');
+    txt = JSON.stringify({ meta: stintMeta(), data: stintEncode(stintState()), log });
+  } catch (e) { console.warn('Stint not saved:', e); return; }
+  const put = () => { localStorage.setItem(STINT_KEY, txt); return true; };
+  try { put(); stintLastT = S.t; stintFull = false; return; } catch (e) {}
+  // the device's storage is full: make room by dropping the stints saved longest ago at other airports
+  try { for (const m of stintList().filter(m => m.ap !== APT.icao).sort((a, b) => a.at - b.at)) { localStorage.removeItem(STINT_PRE + m.ap); try { put(); stintLastT = S.t; return; } catch (_) {} } } catch (e) {}
+  if (!stintFull) { stintFull = true; sys('This stint is too big to save on this device, so it can’t be continued next time.', true); }
+}
+setInterval(stintSave, 10000);
+addEventListener('pagehide', stintSave);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') stintSave(); });
+
+// ── the saved stints on this device: every airport's (one each), newest first
+function stintRead(ap){ try { const j = JSON.parse(localStorage.getItem(STINT_PRE + ap) || 'null'); return j && j.meta && j.meta.v === STINT_V ? j : null; } catch (e) { return null; } }
+function stintList(){
+  const L = [];
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(STINT_PRE)) { const j = stintRead(k.slice(STINT_PRE.length)); if (j) L.push(j.meta); } } } catch (e) {}
+  return L.sort((a, b) => b.at - a.at);
+}
+function stintDrop(ap){ try { localStorage.removeItem(STINT_PRE + ap); } catch (e) {} if (ap === APT.icao) stintLastT = null; stintRender(); }
+
+// ── continuing: the position opens exactly as it was saved
+function stintContinue(){
+  const j = stintRead(APT.icao); if (!j) return false;
+  if (S.running) { sys('A session is already open. Use New session first to continue your last stint.', true); return false; }
+  if (!cwGate()) return false;   // continuing needs a plan that includes this airport, like opening a position (account.js)
+  let D;
+  try { D = stintDecode(j.data); }
+  catch (e) { console.warn('Stint not restored:', e); stintDrop(APT.icao); sys('Your last stint could not be continued: the simulator has changed since it was saved. Open a new position below.', true); return false; }
+  resetSession();
+  vehInit();
+  Object.assign(S, D.S); S.running = true; S.paused = false; S.liveWait = 0; S.preview = null;
+  sqk = D.sqk; lastCallT = D.lastCallT ?? -99;
+  for (const [t, ac] of D.stands) t.occ = ac;
+  for (const [h, ac] of D.hangars) h.occ = ac;
+  Object.assign(VEH, { list: D.veh.list, n: D.veh.n, tick: D.veh.tick, nextRoam: D.veh.nextRoam, nextFire: D.veh.nextFire, cap: D.veh.cap });
+  VEH.bridges.forEach((B, i) => { if (D.veh.ends[i]) B.end = D.veh.ends[i]; });
+  FAR.list = D.far.list; FAR.done = D.far.done;
+  for (const k of Object.keys(SLOT)) delete SLOT[k]; Object.assign(SLOT, D.slot);
+  CUSTOM.src = D.custom || CUSTOM.src;
+  // the career entry carries on (the copy already in the career list, so it isn't counted twice)
+  carCur = D.car ? CAR.sessions.find(x => x.at === D.car.at && x.ap === D.car.ap) || D.car : null;
+  logEl.innerHTML = j.log || ''; logEl.scrollTop = logEl.scrollHeight;
+  // the setup panel shows what is running (its pickers are locked while a session is open)
+  const ts = $('trafficSel'); if ([...ts.options].some(o => o.value === S.mode)) ts.value = S.mode;
+  if (S.day != null) daySel.value = S.day; renderSlots(); if (S.hour != null) hourSel.value = Math.floor(S.hour);
+  $('tgSpeed').textContent = S.speed + '×'; $('tgPause').textContent = 'Pause';
+  $('setup').hidden = true;
+  if (typeof go === 'function') go('sim');
+  V.cx = D.view.cx; V.cy = D.view.cy; V.scale = D.view.scale; V.name = D.view.name;
+  if (typeof renderSeats === 'function') renderSeats();
+  if (typeof slotRender === 'function') slotRender();
+  stintLastT = S.t;
+  const m = j.meta; sys(`Stint continued from ${stintAgo(m.at)}: ${zt(S.t)}Z, ${m.n} aircraft on your frequencies, ${S.score.pts} points so far.`);
+  renderAtis(); renderSel(); renderStrips(true); renderScore();
+  return true;
+}
+
+// ── the prompts
+const stintAgo = at => { const m = Math.round((Date.now() - at)/60e3); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 48*60 ? `${Math.round(m/60)} h ago` : `${Math.round(m/1440)} days ago`; };
+function stintLine(m){
+  const mode = (typeof MODE_NAME !== 'undefined' && MODE_NAME[m.mode]) || m.mode, clock = new Date(m.start + m.t*1000).toISOString().substr(11, 5);
+  const day = m.day != null && DAYS[m.day] ? DAYS[m.day] + ' ' : '';
+  return `${esc(mode)} · ${esc(day)}${clock}Z · ${Math.round(m.t/60)} min in · ${m.n} aircraft · ${m.pts} pts · saved ${stintAgo(m.at)}`;
+}
+function stintRender(){
+  // the session setup: this airport's stint, while no session is open
+  const box = $('stintBox'), mine = stintRead(APT.icao);
+  if (box) {
+    box.hidden = !mine || S.running;
+    if (mine && !S.running) {
+      box.innerHTML = `<div class="stint-txt"><span class="lbl">Continue last stint?</span><b>${esc(mine.meta.name)} · runway ${esc(mine.meta.rwy)}</b><span class="stint-d">${stintLine(mine.meta)}</span></div>
+        <div class="stint-bt"><button type="button" class="btn primary sm" data-stint="go">Continue stint</button><button type="button" class="btn sm" data-stint="drop">Start fresh</button></div>`;
+      box.querySelector('[data-stint=go]').onclick = stintContinue;
+      box.querySelector('[data-stint=drop]').onclick = () => stintDrop(APT.icao);
+    }
+  }
+  // the website's home page: every airport's, newest first
+  const home = $('stintHome'); if (!home) return;
+  const L = stintList().filter(m => SITE[m.ap]);
+  home.hidden = !L.length;
+  home.innerHTML = L.length ? `<div class="wrap"><div class="stint-home">${L.map(m => `<div class="stint-row"><div class="stint-txt"><span class="lbl">Continue last stint?</span><b>${esc(m.name)} · ${esc(m.ap)}</b><span class="stint-d">${stintLine(m)}</span></div>
+    <div class="stint-bt"><a class="btn primary sm" href="${SITE[m.ap]}#resume">Continue stint</a><button type="button" class="btn sm" data-drop="${esc(m.ap)}">Start fresh</button></div></div>`).join('')}</div></div>` : '';
+  home.querySelectorAll('[data-drop]').forEach(b => b.onclick = () => stintDrop(b.dataset.drop));
+}
+stintRender();
+S.listeners.push(ev => { if (ev === 'start') stintRender(); });
+window.__stint = { save: stintSave, read: stintRead, cont: stintContinue, encode: stintEncode, decode: stintDecode, state: stintState };
 
 </script>
 </body>
