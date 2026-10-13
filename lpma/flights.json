@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-13T17:00:31Z",
+ "updated": "2026-10-13T17:14:55Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-13": {
@@ -65,29 +65,22 @@
      "place": "Geneva",
      "flight": "EZS1469",
      "sched": "17:45",
-     "status": "Estimated",
-     "expected": "18:00"
+     "status": "Arrived",
+     "expected": "18:02"
     },
     {
      "place": "Nantes",
      "flight": "EJU4731",
      "sched": "17:55",
-     "status": "Estimated",
-     "expected": "17:50"
+     "status": "Arrived",
+     "expected": "17:55"
     },
     {
      "place": "Paris Ch. de Gaulle",
      "flight": "EJU4601",
      "sched": "18:15",
      "status": "Estimated",
-     "expected": "18:15"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1691",
-     "sched": "18:35",
-     "status": "Estimated",
-     "expected": "19:00"
+     "expected": "18:10"
     },
     {
      "place": "London Gatwick",
@@ -97,11 +90,18 @@
      "expected": "20:05"
     },
     {
+     "place": "Lisboa",
+     "flight": "TP1691",
+     "sched": "18:35",
+     "status": "Estimated",
+     "expected": "19:05"
+    },
+    {
      "place": "London Gatwick",
      "flight": "EZY8521",
      "sched": "18:45",
      "status": "Estimated",
-     "expected": "18:45"
+     "expected": "18:50"
     },
     {
      "place": "Porto",
@@ -142,8 +142,8 @@
      "place": "Lisboa",
      "flight": "TP1693",
      "sched": "21:05",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "21:25"
     },
     {
      "place": "Porto",
@@ -154,13 +154,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Milan Malpensa",
-     "flight": "FR6671",
-     "sched": "16:05",
-     "status": "Departed",
-     "expected": "16:17"
-    },
     {
      "place": "Lisboa",
      "flight": "EJU7624",
@@ -186,8 +179,8 @@
      "place": "Oslo",
      "flight": "DY1785",
      "sched": "17:10",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "18:07"
     },
     {
      "place": "Berlin Brandenburg",
@@ -200,22 +193,22 @@
      "place": "Frankfurt",
      "flight": "X32807",
      "sched": "17:30",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "17:59"
     },
     {
      "place": "Dusseldorf",
      "flight": "X32853",
      "sched": "17:35",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "18:09"
     },
     {
      "place": "Munich",
      "flight": "X32847",
      "sched": "18:05",
-     "status": "Estimated",
-     "expected": "18:30"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Geneva",
@@ -228,14 +221,14 @@
      "place": "Stuttgart",
      "flight": "X32811",
      "sched": "18:15",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
      "place": "Katowice",
      "flight": "ENT5992",
      "sched": "18:25",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
