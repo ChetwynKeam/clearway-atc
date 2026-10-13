@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-13T03:35:27Z",
+ "updated": "2026-10-13T03:58:33Z",
  "source": "avionio.com",
  "days": {
   "2026-10-13": {
@@ -38,6 +38,13 @@
      "flight": "U27367",
      "sched": "08:15",
      "status": "Cancelled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "U29007",
+     "sched": "08:23",
+     "status": "Scheduled",
      "expected": ""
     },
     {
@@ -340,8 +347,8 @@
      "place": "Tenerife",
      "flight": "LS1883",
      "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:15"
     },
     {
      "place": "Palma de Mallorca",
