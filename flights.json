@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-13T09:31:44Z",
+ "updated": "2026-10-13T09:49:35Z",
  "source": "gibraltarairport.gi",
  "days": {
   "2026-10-13": {
@@ -16,8 +16,8 @@
      "place": "London Gatwick",
      "flight": "EZY8791",
      "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "11:31"
     },
     {
      "place": "London Heathrow",
@@ -29,18 +29,18 @@
    ],
    "dep": [
     {
-     "place": "London Gatwick",
-     "flight": "EZY8792",
-     "sched": "11:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "London Heathrow",
      "flight": "BA491",
      "sched": "12:00",
      "status": "On time",
      "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "EZY8792",
+     "sched": "11:35",
+     "status": "Estimated",
+     "expected": "12:15"
     },
     {
      "place": "London Heathrow",
