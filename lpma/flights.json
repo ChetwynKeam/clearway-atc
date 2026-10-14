@@ -1,17 +1,10 @@
 {
- "updated": "2026-10-14T11:09:34Z",
+ "updated": "2026-10-14T11:40:52Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-14": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Munich",
-     "flight": "4Y704",
-     "sched": "10:35",
-     "status": "Arrived",
-     "expected": "10:28"
-    },
     {
      "place": "London Gatwick",
      "flight": "EZY8519",
@@ -58,8 +51,8 @@
      "place": "Madrid",
      "flight": "IB559",
      "sched": "12:55",
-     "status": "Estimated",
-     "expected": "12:35"
+     "status": "Arrived",
+     "expected": "12:32"
     },
     {
      "place": "Lisboa",
@@ -79,22 +72,22 @@
      "place": "Ponta Delgada",
      "flight": "S4160",
      "sched": "14:00",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:00"
     },
     {
      "place": "Porto",
      "flight": "TP1703",
      "sched": "14:15",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:05"
     },
     {
      "place": "Edinburgh",
      "flight": "FR6674",
      "sched": "15:25",
      "status": "Estimated",
-     "expected": "15:35"
+     "expected": "15:40"
     },
     {
      "place": "Lisboa",
@@ -107,8 +100,8 @@
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "16:20",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:10"
     },
     {
      "place": "Paris Orly",
@@ -128,8 +121,8 @@
      "place": "Katowice",
      "flight": "W61029",
      "sched": "17:00",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:20"
     },
     {
      "place": "Bordeaux",
@@ -225,25 +218,11 @@
    ],
    "dep": [
     {
-     "place": "Zurich",
-     "flight": "WK265",
-     "sched": "10:20",
-     "status": "Departed",
-     "expected": "10:25"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "HV6630",
-     "sched": "10:25",
-     "status": "Departed",
-     "expected": "10:32"
-    },
-    {
      "place": "Munich",
      "flight": "4Y705",
      "sched": "11:25",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "12:19"
     },
     {
      "place": "London Gatwick",
@@ -256,21 +235,21 @@
      "place": "London Luton",
      "flight": "EZY2472",
      "sched": "12:05",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "12:14"
     },
     {
      "place": "London Gatwick",
      "flight": "BA2717",
      "sched": "12:10",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "12:28"
     },
     {
      "place": "Lisboa",
      "flight": "TP1688",
      "sched": "12:40",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -355,7 +334,7 @@
      "flight": "W61030",
      "sched": "17:40",
      "status": "Estimated",
-     "expected": "18:25"
+     "expected": "17:55"
     },
     {
      "place": "Bordeaux",
