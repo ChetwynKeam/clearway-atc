@@ -1,50 +1,15 @@
 {
- "updated": "2026-10-14T14:58:14Z",
+ "updated": "2026-10-14T15:25:02Z",
  "source": "avionio.com",
  "days": {
   "2026-10-14": {
    "utcOffsetMin": 60,
    "arr": [
     {
-     "place": "Berlin",
-     "flight": "CJ7026",
-     "sched": "15:05",
-     "status": "Landed",
-     "expected": "14:47"
-    },
-    {
-     "place": "Madrid",
-     "flight": "CJ3273",
-     "sched": "15:15",
-     "status": "Landed",
-     "expected": "15:16"
-    },
-    {
-     "place": "Zurich",
-     "flight": "CJ8766",
-     "sched": "15:30",
-     "status": "Estimated",
-     "expected": "15:43"
-    },
-    {
-     "place": "Milan",
-     "flight": "AZ238",
-     "sched": "15:45",
-     "status": "Landed",
-     "expected": "15:50"
-    },
-    {
-     "place": "Malaga",
-     "flight": "CJ8488",
-     "sched": "15:45",
-     "status": "Estimated",
-     "expected": "16:34"
-    },
-    {
      "place": "Belfast",
      "flight": "CJ8753",
      "sched": "16:00",
-     "status": "Estimated",
+     "status": "Landed",
      "expected": "15:46"
     },
     {
@@ -52,14 +17,21 @@
      "flight": "CJ3280",
      "sched": "16:20",
      "status": "Estimated",
-     "expected": "16:17"
+     "expected": "16:16"
     },
     {
      "place": "Amsterdam",
      "flight": "CJ8454",
      "sched": "16:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "16:10"
+    },
+    {
+     "place": "Newquay",
+     "flight": "MCK309",
+     "sched": "16:35",
+     "status": "Estimated",
+     "expected": "16:35"
     },
     {
      "place": "Ibiza",
@@ -80,7 +52,7 @@
      "flight": "CJ8725",
      "sched": "16:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "16:32"
     },
     {
      "place": "Glasgow",
@@ -94,7 +66,7 @@
      "flight": "CJ4467",
      "sched": "17:20",
      "status": "Estimated",
-     "expected": ""
+     "expected": "16:49"
     },
     {
      "place": "Amsterdam",
@@ -108,28 +80,28 @@
      "flight": "LX464",
      "sched": "17:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "17:20"
     },
     {
      "place": "Berlin",
      "flight": "CJ8494",
      "sched": "17:40",
      "status": "Estimated",
-     "expected": ""
+     "expected": "17:32"
     },
     {
      "place": "Rotterdam",
      "flight": "CJ4457",
      "sched": "17:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Milan",
      "flight": "BA7304",
      "sched": "17:55",
-     "status": "Estimated",
-     "expected": "17:55"
+     "status": "Landed",
+     "expected": "18:13"
     },
     {
      "place": "Frankfurt",
@@ -137,44 +109,37 @@
      "sched": "17:55",
      "status": "Estimated",
      "expected": ""
-    }
-   ],
-   "dep": [
-    {
-     "place": "Belfast",
-     "flight": "CJ8756",
-     "sched": "15:00",
-     "status": "Departed",
-     "expected": "15:09"
     },
     {
-     "place": "Rotterdam",
-     "flight": "CJ4456",
-     "sched": "15:15",
-     "status": "Departed",
-     "expected": "15:13"
+     "place": "Belfast",
+     "flight": "CJ8757",
+     "sched": "18:15",
+     "status": "Estimated",
+     "expected": ""
     },
     {
      "place": "Luxembourg",
-     "flight": "LG4596",
-     "sched": "15:20",
+     "flight": "LG4601",
+     "sched": "18:15",
      "status": "Estimated",
-     "expected": "15:20"
+     "expected": ""
     },
     {
-     "place": "Amsterdam",
-     "flight": "CJ8455",
-     "sched": "15:30",
+     "place": "Isle of Man",
+     "flight": "LM677",
+     "sched": "18:15",
      "status": "Estimated",
-     "expected": "15:33"
+     "expected": ""
     },
     {
-     "place": "Edinburgh",
-     "flight": "CJ8706",
-     "sched": "15:50",
+     "place": "Dublin",
+     "flight": "CJ4469",
+     "sched": "18:20",
      "status": "Estimated",
-     "expected": "15:50"
-    },
+     "expected": ""
+    }
+   ],
+   "dep": [
     {
      "place": "Zurich",
      "flight": "CJ8767",
@@ -200,22 +165,22 @@
      "place": "Milan",
      "flight": "CJ7305",
      "sched": "16:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:40"
     },
     {
      "place": "Amsterdam",
      "flight": "CJ8459",
      "sched": "17:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:00"
     },
     {
      "place": "Glasgow",
      "flight": "CJ8724",
      "sched": "17:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:18"
     },
     {
      "place": "Amsterdam",
@@ -249,6 +214,41 @@
      "place": "Amsterdam",
      "flight": "KL992",
      "sched": "17:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bologna",
+     "flight": "H5313",
+     "sched": "18:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX465",
+     "sched": "18:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "CJ4468",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "CJ8708",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rotterdam",
+     "flight": "CJ4458",
+     "sched": "18:20",
      "status": "Scheduled",
      "expected": ""
     }
