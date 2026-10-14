@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-14T10:11:18Z",
+ "updated": "2026-10-14T10:41:06Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-14": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Luxembourg",
-     "flight": "LG771",
-     "sched": "09:10",
-     "status": "Arrived",
-     "expected": "08:55"
-    },
-    {
-     "place": "Zurich",
-     "flight": "WK264",
-     "sched": "09:30",
-     "status": "Arrived",
-     "expected": "09:30"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "HV6629",
-     "sched": "09:35",
-     "status": "Arrived",
-     "expected": "09:18"
-    },
     {
      "place": "Munich",
      "flight": "4Y704",
@@ -51,8 +30,8 @@
      "place": "London Luton",
      "flight": "EZY2471",
      "sched": "11:35",
-     "status": "Estimated",
-     "expected": "11:10"
+     "status": "Arrived",
+     "expected": "11:07"
     },
     {
      "place": "Lisboa",
@@ -72,8 +51,8 @@
      "place": "Lisboa",
      "flight": "EJU7623",
      "sched": "12:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:20"
     },
     {
      "place": "Madrid",
@@ -246,20 +225,6 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1686",
-     "sched": "09:25",
-     "status": "Departed",
-     "expected": "09:22"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7622",
-     "sched": "09:35",
-     "status": "Departed",
-     "expected": "09:44"
-    },
-    {
      "place": "Luxembourg",
      "flight": "LG772",
      "sched": "10:00",
@@ -284,28 +249,28 @@
      "place": "Munich",
      "flight": "4Y705",
      "sched": "11:25",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8520",
      "sched": "11:45",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "London Luton",
      "flight": "EZY2472",
      "sched": "12:05",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
      "place": "London Gatwick",
      "flight": "BA2717",
      "sched": "12:10",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
