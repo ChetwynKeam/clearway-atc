@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-14T02:06:13Z",
+ "updated": "2026-10-14T02:39:02Z",
  "source": "avionio.com",
  "days": {
   "2026-10-14": {
@@ -9,15 +9,15 @@
      "place": "Hannover",
      "flight": "5H403",
      "sched": "04:00",
-     "status": "Estimated",
-     "expected": "03:26"
+     "status": "Landed",
+     "expected": "03:27"
     },
     {
      "place": "Dakar",
      "flight": "IB922",
      "sched": "04:05",
-     "status": "Estimated",
-     "expected": "03:49"
+     "status": "Landed",
+     "expected": "03:39"
     },
     {
      "place": "Guadalajara",
@@ -38,14 +38,14 @@
      "flight": "QY8342",
      "sched": "04:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "05:33"
     },
     {
      "place": "Asuncion",
      "flight": "UX24",
      "sched": "04:55",
-     "status": "Estimated",
-     "expected": "04:09"
+     "status": "Landed",
+     "expected": "03:55"
     },
     {
      "place": "Mexico City",
@@ -87,14 +87,14 @@
      "flight": "UX158",
      "sched": "05:05",
      "status": "Estimated",
-     "expected": "04:35"
+     "expected": "04:36"
     },
     {
      "place": "Lima",
      "flight": "UX176",
      "sched": "05:10",
      "status": "Landed",
-     "expected": "02:22"
+     "expected": "03:59"
     },
     {
      "place": "Santa Cruz",
@@ -178,7 +178,7 @@
      "flight": "IB118",
      "sched": "05:45",
      "status": "Estimated",
-     "expected": "05:45"
+     "expected": "05:44"
     },
     {
      "place": "Fortaleza",
@@ -192,7 +192,7 @@
      "flight": "IB304",
      "sched": "05:50",
      "status": "Estimated",
-     "expected": "05:22"
+     "expected": "05:23"
     },
     {
      "place": "Paris",
@@ -212,7 +212,7 @@
      "place": "Barcelona",
      "flight": "QY8430",
      "sched": "06:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -604,7 +604,7 @@
      "place": "Sofia",
      "flight": "FB471",
      "sched": "09:10",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -745,7 +745,7 @@
      "flight": "DL126",
      "sched": "09:35",
      "status": "Estimated",
-     "expected": "03:03"
+     "expected": "06:13"
     },
     {
      "place": "Brussels",
@@ -927,7 +927,7 @@
      "flight": "IB326",
      "sched": "10:15",
      "status": "Estimated",
-     "expected": "09:24"
+     "expected": "09:38"
     },
     {
      "place": "Washington",
@@ -997,7 +997,7 @@
      "flight": "IB346",
      "sched": "10:30",
      "status": "Estimated",
-     "expected": ""
+     "expected": "09:52"
     },
     {
      "place": "San Sebastian",
@@ -1126,6 +1126,13 @@
      "expected": ""
     },
     {
+     "place": "A Coruna",
+     "flight": "YW1112",
+     "sched": "10:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Melilla",
      "flight": "YW2291",
      "sched": "10:40",
@@ -1151,7 +1158,7 @@
      "flight": "IB272",
      "sched": "10:45",
      "status": "Estimated",
-     "expected": "10:27"
+     "expected": "10:30"
     },
     {
      "place": "Valencia",
@@ -1165,7 +1172,7 @@
      "flight": "IB130",
      "sched": "10:50",
      "status": "Estimated",
-     "expected": "10:18"
+     "expected": "10:20"
     },
     {
      "place": "San Jose",
@@ -1198,6 +1205,13 @@
     {
      "place": "Tenerife",
      "flight": "NT6062",
+     "sched": "11:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Almeria",
+     "flight": "YW1030",
      "sched": "11:00",
      "status": "Scheduled",
      "expected": ""
@@ -1270,7 +1284,7 @@
      "flight": "E9802",
      "sched": "11:20",
      "status": "Estimated",
-     "expected": "11:21"
+     "expected": "11:34"
     },
     {
      "place": "Santo Domingo",
@@ -1336,30 +1350,16 @@
      "expected": ""
     },
     {
-     "place": "London",
-     "flight": "W95355",
+     "place": "Asturias",
+     "flight": "UX7402",
      "sched": "11:40",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Dublin",
-     "flight": "FR10",
-     "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "FR189",
-     "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "London",
-     "flight": "FR347",
-     "sched": "11:50",
+     "flight": "W95355",
+     "sched": "11:40",
      "status": "Scheduled",
      "expected": ""
     }
@@ -1779,13 +1779,6 @@
      "expected": ""
     },
     {
-     "place": "Berlin",
-     "flight": "AA8615",
-     "sched": "07:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "Dublin",
      "flight": "AA8803",
      "sched": "07:30",
@@ -1823,6 +1816,13 @@
     {
      "place": "Milan",
      "flight": "IB671",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Berlin",
+     "flight": "IB781",
      "sched": "07:30",
      "status": "Scheduled",
      "expected": ""
