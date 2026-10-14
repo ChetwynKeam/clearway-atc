@@ -922,6 +922,8 @@ body.theme-dark #tgSeats.on { background: rgba(79,209,197,.14); border-color: #4
 body.theme-dark .strip .aik, body.theme-dark .seatgrid .seg button[data-who="AI"].on { background: #4fd1c5; color: #04201d; }
 .needline.ai { color: var(--dim); background: var(--panel-2); border-color: var(--line); }
 .ailine { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding: 5px 8px; border-radius: 4px; font-size: 12.5px; border: 1px dashed #0f8a7a; color: #0b6b5f; background: #f0faf8; }
+.ordline { margin-top: 8px; padding: 4px 8px; border-radius: 4px; font-size: 12.5px; color: var(--ink-2); border: 1px solid var(--line); background: var(--panel-2); }
+.ordline b { color: var(--ink); }
 .ailine.me { border-color: var(--line); color: var(--dim); background: transparent; }
 .ailine button { padding: 2px 10px; font-size: 12px; }
 .ailine i { display: block; font-style: normal; opacity: .8; font-size: 11.5px; margin-top: 1px; }
