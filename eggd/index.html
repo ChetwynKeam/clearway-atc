@@ -10822,13 +10822,19 @@ function rwyBusy(R, skip, rolling, ok){
 // seconds to touchdown from this many track miles out, at the speeds arrivals fly here (slowing to the approach
 // speed for the last four miles): what spacing is judged on, so the closing-up on final is allowed for
 function etaD(d, ac){
-  const v = (ac && ac.perf && ac.perf.vapp) || 135, bands = [[4, v + 5], [10, 165], [20, 195], [1e9, 235]];
+  // (further out it flies faster over the ground the higher it is: the indicated speed at that height, and what it is
+  // making now if more, as it comes in from the cruise; in the hold it leaves at the holding speed)
+  const v = (ac && ac.perf && ac.perf.vapp) || 135, hi = ac ? 1 + 0.017*Math.max(0, ac.alt - ELEV)/1000 : 1;
+  const far = ac && ac.mode !== 'HOLD' && ac.airborne ? clamp(ac.gs || 0, 235, 300) : 235;
+  const bands = [[4, v + 5], [10, 168], [20, 215], [1e9, far]];
   const cap = ac && ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 1e9;   // slowed down by Approach
   let t = 0, lo = 0;
-  for (let [hi, kt] of bands) { if (hi > 4 && cap < 1e9) kt = cap; const seg = Math.max(0, Math.min(d, hi) - lo); t += seg/kt*3600; lo = hi; if (d <= hi) break; }
+  for (let [top, kt] of bands) { if (top > 4 && cap < 1e9) kt = Math.min(kt, cap*(top > 20 ? hi : 1)); const seg = Math.max(0, Math.min(d, top) - lo); t += seg/kt*3600; lo = top; if (d <= top) break; }
   return t;
 }
-const eta = (ac, F) => etaD(ac.mode === 'FINAL' ? finalDist(ac) : estToGo(ac, F || (ac.app ? finOf(ac) : FINAL[landRw(ac)])), ac);
+// (plus the turn back towards the way in: from the hold's outbound leg most of the way round, a minute at rate one)
+const turnS = (ac, F) => { if (ac.mode === 'FINAL' || ac.ground) return 0; const nx = nextFixP(ac, F); return nx ? Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...nx)))/3*0.6 : 0; };
+const eta = (ac, F) => { F = F || (ac.app ? finOf(ac) : FINAL[landRw(ac)]); return etaD(ac.mode === 'FINAL' ? finalDist(ac) : estToGo(ac, F), ac) + turnS(ac, F); };
 // the nearest arrival to this runway (or one crossing it): miles, seconds, and whether it lands towards us
 function arrNear(R, skip){
   let best = 99, bt = 1e9, opp = false, head = false;
@@ -10900,6 +10906,14 @@ function holdGap(R, gap){
 const WAKE_NM = { HH: 4, HM: 5, HL: 6, MH: 3, MM: 3, ML: 5, LH: 3, LM: 3, LL: 3 };
 // the time between two landings: wake (or radar) spacing plus a mile at the approach speed, or the runway occupancy
 const landGapS = (lead, trail, R) => Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25);
+// where it is heading next on its way in: the first fix of the route estToGo measures, else the start of the final
+function nextFixP(ac, F){
+  if (!F) return null;
+  const rt = ac.route || [], entry = F.entry && WP[F.entry] ? F.entry : null;
+  const id = rt.find(x => WP[x]) || entry;
+  if (entry && rt.length && rt.indexOf(entry) < 0 && !(F.via || []).some(x => rt.includes(x))) return WP[entry].p;
+  return id && WP[id] ? WP[id].p : F.pts[0];
+}
 // track miles to touchdown: along its route to the approach's start, then down the final
 function estToGo(ac, F){
   if (!F) return 99;
@@ -11199,7 +11213,7 @@ function spacingFor(ac, F, R){
   const e = eta(ac, F), gap = holdGap(R, depGapS(R));
   for (const o of S.acs) {
     if (o === ac || o.kind !== 'ARR' || !o.airborne || !o.app || o.state === 'MISSED' || o.state === 'DIVERTING' || o.handed || !sameRwy(R, rwyOf(landRw(o)).id)) continue;
-    const oe = eta(o), lead = oe <= e ? o : ac, trail = lead === o ? ac : o, need = Math.max(landGapS(lead, trail, R), gap)*1.05;
+    const oe = eta(o), lead = oe <= e ? o : ac, trail = lead === o ? ac : o, need = Math.max(landGapS(lead, trail, R), gap)*relK(lead, trail, ac, e);
     if (Math.abs(oe - e) < need) return `spacing behind ${o.cs}${gap > landGapS(lead, trail, R) ? ', with a gap for a departure' : ''}`;
   }
   return null;
@@ -11217,22 +11231,45 @@ function waitsUnder(ac){
   return S.acs.find(o => o !== ac && o.kind === 'ARR' && o.airborne && !o.app && o.state !== 'PRE' && !o.handed && o.alt < ac.alt - 400 && (dist(o.x, o.y, ac.x, ac.y) < 10 || dist(o.x, o.y, ...ep) < 8)) || null;
 }
 const waitsFor = ac => ac.emerg ? null : stackBelow(ac) || waitsUnder(ac);
+// the spacing a release is judged on: a little under the minimum when the one sent in is behind and still a long way
+// out (Approach then trims its speed to fit it in exactly, as the estimates are never perfect, and a gap left open
+// is lost for good), the minimum and a little over otherwise
+const relK = (lead, trail, ac, e) => (trail === ac ? e : trail.mode === 'FINAL' ? 0 : eta(trail)) > 360 ? 0.85 : 1.05;
+function planLandings(list){
+  const plan = new Map(), byR = {};
+  for (const ac of list) {
+    const F = FINAL[landRw(ac)];
+    if (!F || ac.emerg || ac.state === 'DIVERTING' || (ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75) || waitsFor(ac)) continue;
+    const R = rwyOf(landRw(ac)); (byR[R.id] ||= { R, c: [] }).c.push([ac, eta(ac, F)]);
+  }
+  for (const id in byR) {
+    const { R, c } = byR[id], gap = holdGap(R, depGapS(R));
+    const taken = S.acs.filter(o => o.kind === 'ARR' && o.airborne && o.app && o.state !== 'MISSED' && o.state !== 'DIVERTING' && !o.handed && sameRwy(R, rwyOf(landRw(o)).id)).map(o => ({ t: eta(o), ac: o }));
+    // while there are holds to empty, one still on its way in from further out than the stacks waits its turn (it
+    // would take a slot a long way ahead and close in on those released after it)
+    const far = Math.max(-1, ...c.filter(([a]) => a.mode === 'HOLD').map(([, e]) => e));
+    c.sort((a, b) => (a[0].aiQ ?? 1e12) - (b[0].aiQ ?? 1e12) || a[1] - b[1]);
+    for (const [a, e] of c) if (far >= 0 && a.mode !== 'HOLD' && e > far + 60) plan.set(a, { wait: e - far, n: c.length, after: null });
+    for (const [ac, e] of c) {
+      if (plan.has(ac)) continue;
+      const need = (a, b) => Math.max(landGapS(a, b, R), gap)*relK(a, b, ac, e);
+      const fits = t => taken.every(s => s.t <= t ? t - s.t >= need(s.ac, ac) - 0.5 : s.t - t >= need(ac, s.ac) - 0.5);
+      const t = [e, ...taken.map(s => s.t + need(s.ac, ac)), Math.max(e, ...taken.map(s => s.t + need(s.ac, ac)))].filter(t => t >= e).sort((a, b) => a - b).find(fits);
+      const ahead = taken.filter(s => s.t <= t).sort((a, b) => b.t - a.t);
+      taken.push({ t, ac }); plan.set(ac, { wait: t - e, n: ahead.length + 1, after: ahead[0] && ahead[0].ac });
+    }
+  }
+  return plan;
+}
 function aiSequence(list){
   // soonest first
   list.sort((a, b) => (Math.round(eta(a, FINAL[landRw(a)])/10) - Math.round(eta(b, FINAL[landRw(b)])/10)) || (lvlOf(a) - lvlOf(b)));
-  // first come, first served: only the arrival due first is sent in, or the one it is waiting for (the bottom of its
-  // stack, someone below on its way in). One due later (still far out, or at a far stack) would take the gap those
-  // waiting nearer need, and they would then sit in the hold while it closed in on them. So the holds empty one behind
-  // the other at the minimum spacing
-  const first = {};
-  for (const ac of list) {
-    const F = FINAL[landRw(ac)];
-    if (!F || ac.emerg || (ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75)) continue;
-    const R = rwyOf(landRw(ac)), e = eta(ac, F);
-    if (!first[R.id] || e < first[R.id].e) first[R.id] = { e, ac };
-  }
-  const may = new Set();
-  for (const id in first) { let a = first[id].ac; for (let k = 0; a && k < 12 && !may.has(a); k++) { may.add(a); a = waitsFor(a); } }
+  // the landing plan for each runway, like an arrival manager: the slots of those already cleared, then the ones free
+  // to go (the bottom of each stack, anyone with nobody under its way in) in the order they joined the holds, so every
+  // stack gets its turn, each in the first slot it can reach. One due later fills a gap ahead of them only where it
+  // delays none of them. A flight goes when its slot comes up (it would land in it flying the normal speeds)
+  for (const ac of list) if (ac.mode === 'HOLD' && ac.aiQ == null) ac.aiQ = S.t;
+  const plan = planLandings(list);
   for (const ac of list) {
     const rw = landRw(ac), F = FINAL[rw], R = rwyOf(rw), n = ac.need || '';
     if (S.t < (ac.aiNext || 0) || !F) continue;
@@ -11244,7 +11281,8 @@ function aiSequence(list){
       const dg = depGapS(R), gap = holdGap(R, dg); ac.aiGapRun = dg ? (gap ? 0 : 1) : null;
       const why = spacingFor(ac, F, R);
       if (why) { ok = false; ac.aiWhy = why; }
-      else if (first[R.id] && !may.has(ac)) { ok = false; ac.aiWhy = 'in sequence behind the others'; }
+      // (still a long way out, beyond the holds: its slot is kept for it, but it is cleared once it is closer in)
+      else if (plan.has(ac) && (plan.get(ac).wait > 10 || (ac.mode !== 'HOLD' && eta(ac, F) > 900))) { ok = false; const P = plan.get(ac); ac.aiWhy = P.after ? `number ${P.n}, after ${P.after.cs}` : `number ${P.n}`; }
       // too close behind (or level with) one already on the approach: slow down to open the gap, rather than hold
       if (!ok && ac.mode !== 'HOLD' && ac.state !== 'MISSED' && !ac.spdAssigned && ac.ias > 195 && aiDue(ac, 'spd', 3, 8)) aiDo('APP', ac, estToGo(ac, F) > 25 ? 'S210' : 'S180');
     }
@@ -11337,9 +11375,18 @@ function aiApproach(ac){
     const L = appLeader(ac), R = rwyOf(landRw(ac)), gap = L ? eta(ac) - eta(L) : 1e9, need = L ? landGapS(L, ac, R) : 0, togo = estToGo(ac, finOf(ac));
     if (L && !ac.emerg) {
       const slow = Math.max(160, (ac.perf.vapp || 135) + 15);
-      if (gap < need*0.6 && ac.mode !== 'FINAL' && togo > 15 && aiDue(ac, 'rehold', 2, 4)) { const hf = holdFixFor(ac); if (hf) { ac.aiWhy = `too close behind ${L.cs}: back to the hold`; aiDo('APP', ac, holdCmd(ac, hf)); return true; } }
-      if (gap < need*1.05 && togo > 5 && (!ac.spdAssigned || ac.tgtSpd > slow + 5) && aiDue(ac, 'slow' + L.cs, 2, 4)) { ac.aiWhy = `slowing behind ${L.cs}`; aiDo('APP', ac, 'S' + slow); }
+      // (only if slowing right down can't make the gap up before the approach speed at 4 miles)
+      const absorb = Math.max(0, togo - 4)*3600*(1/slow - 1/(ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 220));
+      if (gap < need*0.6 && need - gap > absorb && ac.mode !== 'FINAL' && togo > 15 && aiDue(ac, 'rehold', 2, 4)) { const hf = holdFixFor(ac); if (hf) { ac.aiWhy = `too close behind ${L.cs}: back to the hold`; aiDo('APP', ac, holdCmd(ac, hf)); return true; } }
+      // just enough to make the gap up before the slow-down to the approach speed at 4 miles (a little at a time,
+      // not straight back to the slowest), and back to normal speed once it has more than it needs
+      if (gap < need*1.05 && togo > 5 && aiDue(ac, 'slow' + L.cs, 2, 4)) {
+        const D = Math.max(1, togo - 4), v0 = ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 220, short = need*1.05 - gap;
+        const v = [210, 200, 190, 180, 170, 160].filter(v => v >= slow && v < v0 - 5).find(v => D*3600*(1/v - 1/v0) >= short) || slow;
+        if (v < v0 - 5) { ac.aiWhy = `slowing behind ${L.cs}`; aiDo('APP', ac, 'S' + v); }
+      } else if (ac.spdAssigned && gap > need*1.3 && togo > 6 && aiDue(ac, 'fast' + L.cs, 3, 6)) { ac.aiWhy = ''; aiDo('APP', ac, 'SN'); }
     }
+    else if (!L && ac.spdAssigned && togo > 6 && aiDue(ac, 'fast', 3, 6)) aiDo('APP', ac, 'SN');   // nobody ahead any more
     // on the approach: transfer to Tower once established inside about 11 NM (still slowed if it is close behind)
     if (ac.mode === 'FINAL' && finalDist(ac) < 11 && aiDue(ac, 'ho', 1, 4)) aiDo('APP', ac, ac.spdAssigned && gap > need*1.1 ? 'SN HO' : 'HO');
     else if (n === 'Initial call' && aiDue(ac, n, 3, 7)) aiDo('APP', ac, 'IDENT');
