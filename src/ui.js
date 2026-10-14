@@ -749,7 +749,8 @@ function renderSel(){
       if (needRel(ac)) html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
       // taxiing to the runway, it can be cleared on before it reaches the holding point, and won't stop there
       const onTaxi = luTaxi(ac), cleared = onTaxi && (ac.luq || ac.cto);
-      html += b('LU', ac.luq && onTaxi ? 'Lining up' : 'Line up', ac.state === 'HOLDPT' || (onTaxi && !cleared), ac.luq && onTaxi ? 'on' : '')
+      html += (ac.luAfter ? b('LU', `Line up behind ${ac.luAfter.cs}`, false, 'on')   // a conditional line-up, waiting for the traffic
+        : b('LU', ac.luq && onTaxi ? 'Lining up' : 'Line up', ac.state === 'HOLDPT' || (onTaxi && !cleared), ac.luq && onTaxi ? 'on' : ''))
         + b('CTO', 'Cleared take-off', (['HOLDPT','LINEUP','LINEDUP'].includes(ac.state) && !(ac.state === 'LINEUP' && ac.cto)) || (onTaxi && !ac.cto), ac.cto && (onTaxi || ac.state === 'LINEUP') ? 'on' : relOk ? 'go' : '');
     } else {
       // the runway exits offered come from the airport's profile
@@ -765,7 +766,7 @@ function renderSel(){
       html += b('TAXI', (ac.taxiIn && !ac.following ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn && !!ac.stand, ac.taxiIn && !ac.following ? 'on' : ac.vacated && ac.stand && !ac.followV ? 'go' : '');
       html += b('POP:holdin', 'Taxi to holding point…', canIn);
     }
-    if (xingAhead(ac) >= 0) { const r = rwyName(ac.path.pts[xingAhead(ac)].hs); html += b('CROSS ' + r, 'Cross runway ' + r, true, ac.hsAt ? 'go' : ''); }
+    if (xingAhead(ac) >= 0) { const r = rwyName(ac.path.pts[xingAhead(ac)].hs); html += ac.xAfter ? b('CROSS ' + r, `Cross behind ${ac.xAfter.o.cs}`, false, 'on') : b('CROSS ' + r, 'Cross runway ' + r, true, ac.hsAt ? 'go' : ''); }
     html += b(ac.held ? 'RES' : 'HP', ac.held ? 'Continue taxi' : 'Hold position', !!ac.path && ac.state !== 'TAKEOFF');
     html += `</div>`;
   }
@@ -925,7 +926,7 @@ function openTaxiPop(ac, anchor){
   const all = []; groups.forEach(g => g.opts.forEach((o, k) => all.push({ hp: g.hp, o, rec: g.hp === rec && k === 0 })));
   // intermediate holding points along the taxiways (London City T1-T9, Innsbruck L1/B1): taxi there and wait
   const ihp = ihpOptions(...taxiStart(ac)); ihp.forEach(a => all.push(a));
-  const H = (hp, o) => { const pts = [...pre, ...o.nodes.map(id => GN[id].p)]; if (ac.pushed && !ac.leftStand && pts.length > 2 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[2]))) < 90) pts.splice(1, 1); return pts; };
+  const H = (hp, o) => { const pts = [...pre, ...o.nodes.map(id => GN[id].p)]; if (ac.pushed && !ac.leftStand && pts.length > 2 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[2]))) < 90) pts.splice(1, 1); return straightCross(pts); };
   const len = o => Math.round(o.len / M2NM / 10) * 10;
   showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${depRw(ac)}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
     <p class="hint">Pick a holding point and the routing. Hover to preview it on the scope. ${APT.taxiHint(depRw(ac))}</p>
@@ -962,7 +963,7 @@ function ihpGroup(all, opts){
 function openHoldInPop(ac, anchor){
   const [from, face] = ac.path ? [ac.vacNode || taxiFrom(ac), null] : taxiStart(ac), all = ihpOptions(from, face, true);
   if (!all.length) { sys(`There are no holding points to taxi ${ac.cs} to.`); return; }
-  const H = o => [[ac.x, ac.y], ...o.nodes.map(id => GN[id].p)];
+  const H = o => straightCross([[ac.x, ac.y], ...o.nodes.map(id => GN[id].p)]);
   showPop(ac, anchor, `<div class="lbl">Taxi to a holding point</div><h4>${ac.cs} <span>${ac.taxiIn ? 'taxiing in' : 'clear of the runway'} · ${ac.t}</span></h4>
     <p class="hint">It taxis to the holding point by the shortest route and waits there. Give it its stand afterwards. Hover to preview the route.</p>
     ${ihpGroup(all, all)}

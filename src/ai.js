@@ -314,6 +314,12 @@ function aiDepart(ac){
   const rolling = S.acs.some(o => o !== ac && o.state === 'TAKEOFF' && o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id));
   const lineNeed = 45 + 110 + (a.opp ? 300 : a.head ? 150 : 0);
   if (!lined && ac.state === 'HOLDPT' && (wait > 0 || rolling) && luBehind(ac, R) && a.eta >= Math.max(wait, rolling ? 30 : 0) + lineNeed + 30) { ac.aiWhy = 'lining up behind the departure'; return aiDo('TWR', ac, 'LU'); }
+  // an aircraft crossing the runway well away from this one's entry: line up meanwhile, ready to go once it is across
+  if (!lined && ac.state === 'HOLDPT' && !ac.luAfter && busy && !rwyBusy(R, ac, false, o => xFar(o, ac) || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + 30) { ac.aiWhy = 'lining up while traffic crosses'; return aiDo('TWR', ac, 'LU'); }
+  // conditional line-up: a landing aircraft rolling out the same way, or a departure rolling, is all that is on the
+  // runway: line up behind it (it waits at the holding point until the traffic has gone by), if the next arrival leaves room
+  const tr = !lined && ac.state === 'HOLDPT' && !ac.luAfter && luTraffic(ac);
+  if (tr && tr.o.onRwy && !rwyBusy(R, ac, true, o => o === tr.o || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + (tr.kind === 'landing' ? 60 : 30)) { ac.aiWhy = `lining up behind the ${tr.kind} ${tr.o.cs}`; return aiDo('TWR', ac, 'LU'); }
   // multiple line-ups: one or two already lined up further down the runway (an intersection departure ahead), this one
   // lines up behind them to go next, if the next arrival leaves room for them all
   const ahead = luOthers(ac);
@@ -346,6 +352,12 @@ function aiTower(ac){
   if (ac.ground) {
     if (n.startsWith('Holding short') && ac.hsAt && aiDue(ac, n, 3, 7)) {
       const R = rwyById(ac.hsAt), b = rwyBusy(R, ac), a = arrNear(R);
+      // only one aircraft still to go past the crossing (landing, rolling out, departing): cross behind it, if the
+      // arrival after it leaves room. Traffic already past the crossing doesn't stop it
+      const k = ac.path ? ac.path.pts.findIndex(p => p.hs === ac.hsAt) : -1, tx = xTraffic(R.id, R.mOf(k >= 0 ? ac.path.pts[k] : [ac.x, ac.y]), ac);
+      const mine = o => (o.onRwy ? (o.rwyId || RWYS[0].id) : rwyOf(depRw(o)).id) === R.id;
+      if (tx.length <= 1 && !rwyBusy(R, ac, false, o => mine(o) && (o === tx[0] || !tx.includes(o))) && (tx.length ? arrNear(R, tx[0]) : a).eta > (tx.length ? 170 : 110)) {
+        ac.aiWhy = tx.length ? `crossing behind ${tx[0].cs}` : ''; aiDo('TWR', ac, 'CROSS'); return; }
       ac.aiWhy = b ? 'runway occupied' : a.eta <= 110 ? `arrival ${a.nm.toFixed(1)} NM out` : S.acs.some(o => o.state === 'TAKEOFF' && sameRwy(R, o.rwyId || RWYS[0].id)) ? 'departure rolling' : '';
       if (!ac.aiWhy) aiDo('TWR', ac, 'CROSS');
       return;
