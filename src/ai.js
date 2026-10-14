@@ -324,23 +324,23 @@ function aiDepart(ac){
   // already lined up, with the next arrival closing in: go now while it can still be airborne before that one is at
   // the threshold, rather than sit on the runway and send it round (and the one after it, and so on)
   const go = lined && !a.opp && !a.head ? Math.min(need, depSecs(ac) + 60) : need;
-  if (!busy && a.eta >= go && wait <= 0) { why(''); ac.aiCap = cap; return aiDo('TWR', ac, 'CTO'); }
+  if (!busy && a.eta >= go && wait <= 0 && (lined || !luFull(ac))) { why(''); ac.aiCap = cap; return aiDo('TWR', ac, 'CTO'); }
   why(busy ? 'runway occupied' + (busy.cs ? ' by ' + busy.cs : '') : a.eta < need ? `arrival ${a.nm.toFixed(1)} NM out` : 'spacing behind the last departure');
   // the one ahead is rolling (or just gone): line up and wait behind it, ready to go once the spacing allows, if the next
   // arrival leaves room for that. Lined up, it needs about 45 s to be rolling away instead of the taxi on
   const rolling = S.acs.some(o => o !== ac && o.state === 'TAKEOFF' && o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id));
   const lineNeed = 45 + 110 + (a.opp ? 300 : a.head ? 150 : 0);
-  if (!lined && ac.state === 'HOLDPT' && (wait > 0 || rolling) && luBehind(ac, R) && a.eta >= Math.max(wait, rolling ? 30 : 0) + lineNeed + 30) { ac.aiWhy = 'lining up behind the departure'; return aiDo('TWR', ac, 'LU'); }
+  if (!lined && ac.state === 'HOLDPT' && !luFull(ac) && (wait > 0 || rolling) && luBehind(ac, R) && a.eta >= Math.max(wait, rolling ? 30 : 0) + lineNeed + 30) { ac.aiWhy = 'lining up behind the departure'; return aiDo('TWR', ac, 'LU'); }
   // an aircraft crossing the runway well away from this one's entry: line up meanwhile, ready to go once it is across
-  if (!lined && ac.state === 'HOLDPT' && !ac.luAfter && busy && !rwyBusy(R, ac, false, o => xFar(o, ac) || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + 30) { ac.aiWhy = 'lining up while traffic crosses'; return aiDo('TWR', ac, 'LU'); }
+  if (!lined && ac.state === 'HOLDPT' && !ac.luAfter && !luFull(ac) && busy && !rwyBusy(R, ac, false, o => xFar(o, ac) || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + 30) { ac.aiWhy = 'lining up while traffic crosses'; return aiDo('TWR', ac, 'LU'); }
   // conditional line-up: a landing aircraft rolling out the same way, or a departure rolling, is all that is on the
   // runway: line up behind it (it waits at the holding point until the traffic has gone by), if the next arrival leaves room
-  const tr = !lined && ac.state === 'HOLDPT' && !ac.luAfter && luTraffic(ac);
+  const tr = !lined && ac.state === 'HOLDPT' && !ac.luAfter && !luFull(ac) && luTraffic(ac);
   if (tr && tr.o.onRwy && !rwyBusy(R, ac, true, o => o === tr.o || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + (tr.kind === 'landing' ? 60 : 30)) { ac.aiWhy = `lining up behind the ${tr.kind} ${tr.o.cs}`; return aiDo('TWR', ac, 'LU'); }
   // multiple line-ups: one or two already lined up further down the runway (an intersection departure ahead), this one
   // lines up behind them to go next, if the next arrival leaves room for them all
   const ahead = luOthers(ac);
-  if (!lined && ac.state === 'HOLDPT' && ahead.length && ahead.length < 3 && ahead.every(o => o.onRwy && luM(o) > me + 300) && !rwyBusy(R, ac, true, o => ahead.includes(o)) && a.eta >= wait + lineNeed + 220*ahead.length + 60) { ac.aiWhy = `lining up behind ${ahead[0].cs}`; return aiDo('TWR', ac, 'LU'); }
+  if (!lined && ac.state === 'HOLDPT' && ahead.length && !luFull(ac) && ahead.every(o => o.onRwy && luM(o) > me + 300) && !rwyBusy(R, ac, true, o => ahead.includes(o)) && a.eta >= wait + lineNeed + 220*ahead.length + 60) { ac.aiWhy = `lining up behind ${ahead[0].cs}`; return aiDo('TWR', ac, 'LU'); }
 }
 // free to line up on: nothing on the runway (or one crossing it) but a departure already rolling away, past the point
 // where this one enters, on the same runway
