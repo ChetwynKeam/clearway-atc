@@ -314,6 +314,10 @@ function aiDepart(ac){
   const rolling = S.acs.some(o => o !== ac && o.state === 'TAKEOFF' && o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id));
   const lineNeed = 45 + 110 + (a.opp ? 300 : a.head ? 150 : 0);
   if (!lined && ac.state === 'HOLDPT' && (wait > 0 || rolling) && luBehind(ac, R) && a.eta >= Math.max(wait, rolling ? 30 : 0) + lineNeed + 30) { ac.aiWhy = 'lining up behind the departure'; return aiDo('TWR', ac, 'LU'); }
+  // conditional line-up: a landing aircraft rolling out the same way, or a departure rolling, is all that is on the
+  // runway: line up behind it (it waits at the holding point until the traffic has gone by), if the next arrival leaves room
+  const tr = !lined && ac.state === 'HOLDPT' && !ac.luAfter && luTraffic(ac);
+  if (tr && tr.o.onRwy && !rwyBusy(R, ac, true, o => o === tr.o || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + (tr.kind === 'landing' ? 60 : 30)) { ac.aiWhy = `lining up behind the ${tr.kind} ${tr.o.cs}`; return aiDo('TWR', ac, 'LU'); }
   // multiple line-ups: one or two already lined up further down the runway (an intersection departure ahead), this one
   // lines up behind them to go next, if the next arrival leaves room for them all
   const ahead = luOthers(ac);
