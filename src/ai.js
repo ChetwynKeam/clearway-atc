@@ -307,7 +307,10 @@ function aiDepart(ac){
   let cap = capUnderStack(ac);
   if (cap === -1 && !lined) return why('waiting for the hold over the field to climb clear');
   if (cap === -1) cap = Math.ceil((ELEV + 1000)/1000)*1000;   // lined up already: off the runway, low
-  if (!busy && a.eta >= need && wait <= 0) { why(''); ac.aiCap = cap; return aiDo('TWR', ac, 'CTO'); }
+  // already lined up, with the next arrival closing in: go now while it can still be airborne before that one is at
+  // the threshold, rather than sit on the runway and send it round (and the one after it, and so on)
+  const go = lined && !a.opp && !a.head ? Math.min(need, depSecs(ac) + 60) : need;
+  if (!busy && a.eta >= go && wait <= 0) { why(''); ac.aiCap = cap; return aiDo('TWR', ac, 'CTO'); }
   why(busy ? 'runway occupied' + (busy.cs ? ' by ' + busy.cs : '') : a.eta < need ? `arrival ${a.nm.toFixed(1)} NM out` : 'spacing behind the last departure');
   // the one ahead is rolling (or just gone): line up and wait behind it, ready to go once the spacing allows, if the next
   // arrival leaves room for that. Lined up, it needs about 45 s to be rolling away instead of the taxi on
@@ -347,6 +350,18 @@ function landBlock(ac){
   const b = rwyBusy(R, ac, true);
   return b ? 'runway occupied' + (b.cs ? ' by ' + b.cs : '') : null;
 }
+// seconds from the holding position (path point k) across runway R and clear of it on the far side, from a standstill
+function crossSecs(ac, R, k){
+  const P = ac.path ? ac.path.pts : []; if (k < 0) return 40;
+  let m = 0, j = k + 1; for (; j < P.length; j++) { m += dist(...P[j-1], ...P[j])/M2NM; if (P[j].hs === R.id) break; }
+  if (j >= P.length) m = Math.max(m, 150);
+  return 12 + m/(Math.min(ac.path.spd || 15, ac.state === 'TOW' ? 8 : 15)*0.514);
+}
+// seconds until traffic o on (or landing on) runway R has gone past the point m metres along it
+function passSecs(o, R, m){
+  if (o.airborne) return etaD(finalDist(o), o) + Math.abs(m - (landRw(o) === R.lo ? 0 : R.len || 3000))/35;   // rolling out from the threshold
+  return Math.abs(m - R.mOf([o.x, o.y]))/Math.max((o.gs || 0)*0.514, o.kind === 'DEP' ? 20 : 12);
+}
 function aiTower(ac){
   const n = ac.need || '';
   if (ac.ground) {
@@ -356,7 +371,11 @@ function aiTower(ac){
       // arrival after it leaves room. Traffic already past the crossing doesn't stop it
       const k = ac.path ? ac.path.pts.findIndex(p => p.hs === ac.hsAt) : -1, tx = xTraffic(R.id, R.mOf(k >= 0 ? ac.path.pts[k] : [ac.x, ac.y]), ac);
       const mine = o => (o.onRwy ? (o.rwyId || RWYS[0].id) : rwyOf(depRw(o)).id) === R.id;
-      if (tx.length <= 1 && !rwyBusy(R, ac, false, o => mine(o) && (o === tx[0] || !tx.includes(o))) && (tx.length ? arrNear(R, tx[0]) : a).eta > (tx.length ? 170 : 110)) {
+      // the gap has to hold the whole crossing (a tow at walking pace takes far longer than a taxiing jet), after the
+      // traffic it crosses behind has gone past, with time to spare to clear the next arrival to land
+      const xs = crossSecs(ac, R, k), need = tx.length ? Math.max(170, passSecs(tx[0], R, k >= 0 ? R.mOf(ac.path.pts[k]) : R.mOf([ac.x, ac.y])) + xs + 50) : Math.max(110, xs + 60);
+      if (!roomPast(ac, R.id)) { ac.aiWhy = 'no room past the runway'; return; }
+      if (tx.length <= 1 && !rwyBusy(R, ac, false, o => mine(o) && (o === tx[0] || !tx.includes(o))) && (tx.length ? arrNear(R, tx[0]) : a).eta > need) {
         ac.aiWhy = tx.length ? `crossing behind ${tx[0].cs}` : ''; aiDo('TWR', ac, 'CROSS'); return; }
       ac.aiWhy = b ? 'runway occupied' : a.eta <= 110 ? `arrival ${a.nm.toFixed(1)} NM out` : S.acs.some(o => o.state === 'TAKEOFF' && sameRwy(R, o.rwyId || RWYS[0].id)) ? 'departure rolling' : '';
       if (!ac.aiWhy) aiDo('TWR', ac, 'CROSS');
