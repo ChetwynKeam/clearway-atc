@@ -559,6 +559,36 @@ function planLandings(list){
   }
   return plan;
 }
+// the landing order on each runway, for the selected-flight panel: every arrival from the moment it shows on the
+// scope (far out, not yet on frequency) to touchdown. Those cleared for the approach in the order they will land;
+// the rest after them in the slots they can reach, holds in the order they were joined, the others by when they are
+// due (the same plan AI Approach works to). Worked out at most once a second
+function landOrder(ac){
+  if (!ac || ac.kind !== 'ARR' || !ac.airborne || ac.state === 'DIVERTING' || ac.handed) return null;
+  if (!S.landOrd || S.landOrd.t !== Math.floor(S.t) || S.landOrd.n !== S.acs.length) {
+    const ord = new Map(), byR = {};
+    for (const o of S.acs) {
+      if (o.kind !== 'ARR' || !o.airborne || o.state === 'DIVERTING' || o.handed) continue;
+      if (o.mode === 'HOLD' && o.aiQ == null) o.aiQ = S.t;   // (held by you as well: the holds go in turn)
+      const rw = landRw(o), F = o.app ? finOf(o) : FINAL[rw]; if (!F) continue;
+      const R = rwyOf(rw); let e; try { e = eta(o, F); } catch (er) { continue; } if (!isFinite(e)) continue;
+      (byR[R.id] ||= []).push({ o, rw, e, fixed: !!o.app && o.state !== 'MISSED' });
+    }
+    for (const id in byR) {
+      const L = byR[id], R = rwyById(id), taken = L.filter(x => x.fixed).map(x => ({ t: x.e, x }));
+      const rest = L.filter(x => !x.fixed).sort((a, b) => (a.o.aiQ ?? 1e12) - (b.o.aiQ ?? 1e12) || a.e - b.e);
+      for (const x of rest) {
+        const need = (a, b) => landGapS(a, b, R);
+        const fits = t => taken.every(s => s.t <= t ? t - s.t >= need(s.x.o, x.o) - 0.5 : s.t - t >= need(x.o, s.x.o) - 0.5);
+        const t = [x.e, ...taken.map(s => s.t + need(s.x.o, x.o)), Math.max(x.e, ...taken.map(s => s.t + need(s.x.o, x.o)))].filter(t => t >= x.e).sort((a, b) => a - b).find(fits);
+        taken.push({ t: t ?? x.e, x });
+      }
+      taken.sort((a, b) => a.t - b.t).forEach((s, i) => ord.set(s.x.o, { rw: s.x.rw, n: i + 1, after: i ? taken[i - 1].x.o : null }));
+    }
+    S.landOrd = { t: Math.floor(S.t), n: S.acs.length, ord };
+  }
+  return S.landOrd.ord.get(ac) || null;
+}
 function aiSequence(list){
   // soonest first
   list.sort((a, b) => (Math.round(eta(a, FINAL[landRw(a)])/10) - Math.round(eta(b, FINAL[landRw(b)])/10)) || (lvlOf(a) - lvlOf(b)));
@@ -580,7 +610,7 @@ function aiSequence(list){
       const why = spacingFor(ac, F, R);
       if (why) { ok = false; ac.aiWhy = why; }
       // (still a long way out, beyond the holds: its slot is kept for it, but it is cleared once it is closer in)
-      else if (plan.has(ac) && (plan.get(ac).wait > 10 || (ac.mode !== 'HOLD' && eta(ac, F) > 900))) { ok = false; const P = plan.get(ac); ac.aiWhy = P.after ? `number ${P.n}, after ${P.after.cs}` : `number ${P.n}`; }
+      else if (plan.has(ac) && (plan.get(ac).wait > 10 || (ac.mode !== 'HOLD' && eta(ac, F) > 900))) { ok = false; const P = plan.get(ac); ac.aiWhy = 'holding until its slot comes up'; }
       // too close behind (or level with) one already on the approach: slow down to open the gap, rather than hold
       if (!ok && ac.mode !== 'HOLD' && ac.state !== 'MISSED' && !ac.spdAssigned && ac.ias > 195 && aiDue(ac, 'spd', 3, 8)) aiDo('APP', ac, estToGo(ac, F) > 25 ? 'S210' : 'S180');
     }

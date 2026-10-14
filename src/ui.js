@@ -706,6 +706,8 @@ function renderSel(){
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline${aiOwns(ac) ? ' ai' : ''}">◆ ${esc(ac.need)}</div>`;
+  // its place in the landing order (ai.js), from the moment it shows on the scope until it lands
+  { const L = typeof landOrder === 'function' && landOrder(ac); if (L) html += `<div class="ordline"><b>${L.rw}</b>, number ${L.n}${L.after ? `, after ${L.after.cs}` : ' to land'}</div>`; }
   // AI controllers (ai.js): who is working it, and the switch to take it back or hand it over
   if (S.running && !EXERCISES[S.mode] && seatOf(ac)) { const k = seatOf(ac);
     html += aiOwns(ac) ? `<div class="ailine"><span><b>AI ${AI_NAME[k]}</b> is working this flight${ac.aiWhy ? `<i>${esc(ac.aiWhy[0].toUpperCase() + ac.aiWhy.slice(1))}</i>` : ''}</span><button data-ai="take" class="go">Take over</button></div>`
