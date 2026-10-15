@@ -61,6 +61,18 @@ const landOf = (c = cfgNow()) => CFG[c].land, depOf = (c = cfgNow()) => modeNow(
 
 // ═════════════════════════ taxiways, holding points, stands (egll-ground.js) ═════════════════════════
 const inF0 = (e, n) => { const p = EN(e, n); return [mOf(p), offOf(p)]; };
+// where two taxiways cross a runway in an X (N4E over S4W, N5E/N5W over S5W, S7 by N7, N2E by S1), the mapped junction
+// node sits on the centreline a little way off the real crossing point, so both lines ran past the crossing out to it
+// and back: an aircraft would have to turn right round on the runway to go straight over, and the route searches only
+// ever crossed at the ends. The node moves to the point where the lines meet, and the spur goes
+{ const at = new Map(); for (const e of G.edges) for (const [k, end] of [[0, 'a'], [1, 'b']]) (at.get(e[k]) || at.set(e[k], []).get(e[k])).push([e, end]);
+  const near = (p, q) => Math.abs(p[0] - q[0]) < 0.5 && Math.abs(p[1] - q[1]) < 0.5;
+  for (const nd of G.nodes) { const es = at.get(nd[0]); if (!/^x/.test(nd[0]) || !es || es.length < 2) continue;
+    const mids = es.map(([e, end]) => end === 'a' ? e[3] : e[3].slice().reverse());
+    let k = 0; while (mids.every(m => m.length > k) && mids.every(m => near(m[k], mids[0][k]))) k++;
+    if (!k) continue;
+    [nd[1], nd[2]] = mids[0][k - 1];
+    es.forEach(([e, end], i) => { const m = mids[i].slice(k); e[3] = end === 'a' ? m : m.reverse(); }); } }
 for (const [id, e, n] of G.nodes) gn(id, ...inF0(e, n));
 for (const [id, e, n] of G.rnodes) gn(id, ...inF0(e, n));
 for (const [a, b, tw, mid, line] of G.edges) { const k = GE.length; chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw); markLine(k, line); }
@@ -233,10 +245,12 @@ function exitFor(ac, name){
   const ks = Object.keys(HOLDS).filter(k => (HOLDS[k].ref === name || HOLDS[k].tw === name) && HOLDS[k].on === R.id && (HOLDS[k].m - m)*dir > 20);
   return ks.sort((a, b) => (Math.sign(HOLDS[b].off) === R.side) - (Math.sign(HOLDS[a].off) === R.side) || (HOLDS[a].m - HOLDS[b].m)*dir)[0] || null;
 }
-// an arrival for Terminal 4 or the cargo area (south of the south runway) vacates the south runway on its south side
-function vacPrefsFor(ac){
+// an arrival for Terminal 4 or the cargo area (south of the south runway) vacates the south runway on its south side:
+// its stand, or (none given yet) its airline's terminal
+function vacPrefsFor(ac, st){
   const rw = ac && (ac.app || landRw(ac)) || S.rwy, ks = exitsFor(rw), R = RWYS_BY_END(rw);
-  const south = ac && ac.stand && R === RWY_LIST[1] && ['4', 'C'].includes(ac.stand.term);
+  const term = (st || (ac && ac.stand) || {}).term || (ac && ac.cs && termOf(ac));
+  const south = R === RWY_LIST[1] && ['4', 'C'].includes(term);
   return south ? [...ks.filter(k => Math.sign(HOLDS[k].off) !== R.side), ...ks.filter(k => Math.sign(HOLDS[k].off) === R.side)] : ks;
 }
 
@@ -556,7 +570,7 @@ const APT = {
   rolledCall: 'request taxi',
   vacExits: ac => { const rw = ac.app || landRw(ac), R = RWYS_BY_END(rw), m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1;
     return exitsFor(rw).filter(k => (HOLDS[k].m - m)*dir > 30).slice(0, 4); },
-  vacPrefs: (st, ac) => vacPrefsFor(ac),
+  vacPrefs: (st, ac) => vacPrefsFor(ac, st),
   exitFor,
   lineUpWords: hp => 'line up and wait',
   terrain: { name: 'the City towers', poly: CITY, min: 2000, low: 1500, msg: ac => `${ac.cs} is over the City of London at ${Math.round(ac.alt)} ft (the Shard 1,016 ft, minimum 2,000 ft)${ac.alt < 1500 ? ', TERRAIN' : ''}.` },

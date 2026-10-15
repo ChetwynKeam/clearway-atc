@@ -5496,6 +5496,60 @@ const hsEnters = (pts, k) => { const p = pts[k], q = pts[k+1]; if (!p.hs || !q) 
 // the next runway on the path that the aircraft needs a crossing clearance for (index into its path, or -1)
 const xingAhead = ac => ac.path ? ac.path.pts.findIndex((p, i) => p.hs && i < ac.path.pts.length - 1 && p.hs !== ac.xing && hsEnters(ac.path.pts, i) && activeRwy(p.hs) && !(ac.xok || []).includes(p.hs)) : -1;
 const pathLen = nodes => nodes.slice(1).reduce((L, id, i) => L + dist(...GN[nodes[i]].p, ...GN[id].p), 0);
+// ── runway crossings. Where taxiways cross a runway (several at a big airport: Heathrow's southern runway has six), a
+// ground controller doesn't send every aircraft over the same one: the routing depends on which end departures line up
+// at, where landings roll out, and who is already waiting at each. XCORR: per runway, its crossing places (the taxiway
+// edges over it, grouped within 150 m along it), and each such edge's place
+let XCORR = null, XCORR_N = 0;
+function xCorridors(){
+  if (XCORR && XCORR_N === GE.length) return XCORR;
+  XCORR = { list: [], of: new Map() }; XCORR_N = GE.length;
+  for (const e of GE) for (const R of RWYS) {
+    const a = GN[e.a].p, b = GN[e.b].p, oa = R.offOf(a), ob = R.offOf(b);
+    if (Math.sign(oa) === Math.sign(ob) || Math.abs(oa) > 300 || Math.abs(ob) > 300) continue;
+    const m = (R.mOf(a) + R.mOf(b))/2;
+    let c = XCORR.list.find(c => c.R === R && Math.abs(c.m - m) < 150); if (!c) XCORR.list.push(c = { R, m });
+    XCORR.of.set(e, c);
+  }
+  return XCORR;
+}
+// the crossing places a route goes over, in order
+function xsOn(r){ const X = xCorridors(), out = [];
+  for (let i = 1; i < r.nodes.length; i++) for (const [v, e] of GN[r.nodes[i-1]].adj) if (v === r.nodes[i]) { const c = X.of.get(e); if (c && !out.includes(c)) out.push(c); break; }
+  return out; }
+// about how long a crossing there would hold the aircraft up (s): at the end departures line up at, behind the queue
+// (and through their holding points); where landings are still rolling fast, for a gap between them; anywhere,
+// about a minute for each aircraft already waiting there or planned through it ahead of this one
+function xWait(ac, c){
+  const R = c.R; let w = 0;
+  if (R.len != null && activeRwy(R.id)) {
+    const from = rw => rw === R.lo ? c.m : R.len - c.m;   // metres from the end a movement on rw starts at
+    if (depRwys().some(rw => rwyOf(rw) === R && from(rw) < 600)) w += 150;
+    else if (rwysInUse().some(rw => rwyOf(rw) === R && !depRwys().includes(rw) && from(rw) < 2400)) w += 45;
+    else w += 20;
+  }
+  for (const o of S.acs) { if (o === ac || !o.ground) continue;
+    const near = Math.abs(R.offOf([o.x, o.y])) < 350 && Math.abs(R.mOf([o.x, o.y]) - c.m) < 250;
+    if (o.hsAt === R.id && near) w += 60;
+    else if (o.kind === 'DEP' && near && ['HOLDPT', 'LINEUP', 'LINEDUP'].includes(o.state)) w += 60;
+    else if (o.xc && o.xc.some(x => x.c === c && Math.sign(R.offOf([o.x, o.y])) === x.side && Math.abs(R.offOf([o.x, o.y])) > 60)) w += 45; }
+  return w;
+}
+// the route to take of those over each crossing place of the runways the shortest one crosses: the quickest once the
+// waits are counted (taxiing at about 15 kt). rt(pen) finds a route with a cost multiplier per edge; the shortest is rt()
+function xBest(ac, rt){
+  const base = rt(); if (!base || !BIG_GROUND) return base;
+  const xs = xsOn(base); if (!xs.length) return base;
+  const X = xCorridors(), score = r => pathLen(r.nodes)*1852/7.7 + xsOn(r).reduce((s, c) => s + xWait(ac, c), 0);
+  let best = base, bs = score(base);
+  for (const c0 of xs) for (const c of X.list) { if (c.R !== c0.R || c === c0) continue;
+    const r = rt(e => { const x = X.of.get(e); return x && x.R === c.R && x !== c ? 1000 : 1; });
+    if (!r || !xsOn(r).includes(c)) continue;
+    const s = score(r); if (s < bs - 15) { best = r; bs = s; } }
+  return best;
+}
+// note the crossings on ac's new route (others count it as waiting there until it is across)
+const xNote = (ac, r) => { ac.xc = r ? xsOn(r).map(c => ({ c, side: Math.sign(c.R.offOf([ac.x, ac.y])) })) : null; };
 // a point on a runway-end turning pad: the aircraft goes round it slowly and tight, staying on the pad
 const padPt = (R, m, o) => { const q = R.rm(m, o); q.tight = true; return q; };
 function lineUpPath(ac, hp){
@@ -5538,7 +5592,9 @@ function vacChoices(ac){
   const P = vacPos(ac); if (!P) return [];
   const all = vacAll(ac).map(e => [e, exitCheck(ac, e)]).filter(([, c]) => c && c.ok);
   if (!P.R.ends) { const ok = all.map(([e]) => e); return APT.vacExits ? APT.vacExits(ac).filter(e => ok.includes(e)) : ok; }
-  const side = all.filter(([e]) => P.R.side == null || Math.sign(HOLDS[e].off) === P.R.side);
+  // the side its stand is on (the airport's first choice of exit): Heathrow's Terminal 4 is south of the southern runway
+  const first = (APT.vacPrefs(ac.stand || null, ac) || []).find(e => HOLDS[e] && HOLDS[e].on === P.R.id), sd = first ? Math.sign(HOLDS[first].off) : P.R.side;
+  const side = all.filter(([e]) => sd == null || Math.sign(HOLDS[e].off) === sd);
   return (side.length ? side : all).sort((a, b) => a[1].ahead - b[1].ahead).slice(0, 4).map(([e]) => e);
 }
 // the way it would go: from where it is (or will touch down) along the runway, off at the exit, to the holding point
@@ -5659,10 +5715,11 @@ function taxiIn(ac, st, via, hold){
     from = ac.vacNode; face = dist(...q, ...v) > 1e-6 ? brg(...q, ...v) : ac.hdg; }
   else [from, face] = taxiStart(ac);
   // onto a stand: arriving the way its lead-in turns off, if there is such a route
-  const pen = viaPen(via);
-  const r = (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face)
+  const rt = pen => (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face)
     // no way round from where it stopped (it can't stay on the runway's exit): the tight turn, rather than a jam
-    || (ac.vacated || rolling ? route(from, hold ? hold.node : st.node, pen) : null); if (!r) return null;
+    || (ac.vacated || rolling ? route(from, hold ? hold.node : st.node, pen) : null);
+  // no taxiways named: over the runway crossing that suits the traffic, not always the shortest way
+  const r = via && via.length ? rt(viaPen(via)) : xBest(ac, rt); if (!r) return null; xNote(ac, r);
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
   const pts = r.nodes.map(id => GN[id].p);
   if (rolling) pts.splice(0, 1, ...ac.path.pts.filter(p => !p.ext));
