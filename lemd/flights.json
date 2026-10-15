@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-15T23:20:35Z",
+ "updated": "2026-10-15T23:48:23Z",
  "source": "avionio.com",
  "days": {
   "2026-10-16": {
@@ -17,14 +17,14 @@
      "flight": "FR2514",
      "sched": "01:15",
      "status": "Landed",
-     "expected": "01:12"
+     "expected": "01:05"
     },
     {
      "place": "Craiova",
      "flight": "BOH111",
      "sched": "01:20",
-     "status": "Estimated",
-     "expected": "01:23"
+     "status": "Landed",
+     "expected": "01:20"
     },
     {
      "place": "Craiova",
@@ -45,7 +45,7 @@
      "flight": "5H403",
      "sched": "04:00",
      "status": "Estimated",
-     "expected": "03:22"
+     "expected": "03:21"
     },
     {
      "place": "Dakar",
@@ -65,7 +65,7 @@
      "place": "Milan",
      "flight": "QY8340",
      "sched": "04:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -79,7 +79,7 @@
      "place": "Cologne/Bonn",
      "flight": "QY8342",
      "sched": "04:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -115,7 +115,7 @@
      "flight": "UX58",
      "sched": "05:00",
      "status": "Estimated",
-     "expected": "05:01"
+     "expected": "04:54"
     },
     {
      "place": "Paris",
@@ -129,7 +129,7 @@
      "flight": "UX122",
      "sched": "05:05",
      "status": "Estimated",
-     "expected": "04:41"
+     "expected": "04:44"
     },
     {
      "place": "Johannesburg",
@@ -164,14 +164,14 @@
      "flight": "UX46",
      "sched": "05:10",
      "status": "Estimated",
-     "expected": "04:33"
+     "expected": "04:36"
     },
     {
      "place": "Bogota",
      "flight": "IB156",
      "sched": "05:15",
      "status": "Estimated",
-     "expected": "05:00"
+     "expected": "04:58"
     },
     {
      "place": "Charlotte",
@@ -206,7 +206,7 @@
      "flight": "IB268",
      "sched": "05:35",
      "status": "Estimated",
-     "expected": "05:06"
+     "expected": "05:08"
     },
     {
      "place": "Brussels",
@@ -234,28 +234,28 @@
      "flight": "IB124",
      "sched": "05:40",
      "status": "Estimated",
-     "expected": "05:11"
+     "expected": "05:12"
     },
     {
      "place": "Rio de Janeiro",
      "flight": "IB118",
      "sched": "05:45",
      "status": "Estimated",
-     "expected": "05:07"
+     "expected": "05:05"
     },
     {
      "place": "Fortaleza",
      "flight": "IB150",
      "sched": "05:50",
      "status": "Estimated",
-     "expected": "05:26"
+     "expected": "05:23"
     },
     {
      "place": "Mexico City",
      "flight": "IB304",
      "sched": "05:50",
      "status": "Estimated",
-     "expected": "05:29"
+     "expected": "05:30"
     },
     {
      "place": "Santo Domingo",
@@ -311,7 +311,7 @@
      "flight": "PU502",
      "sched": "06:45",
      "status": "Estimated",
-     "expected": "06:43"
+     "expected": "06:45"
     },
     {
      "place": "Montreal",
@@ -325,7 +325,7 @@
      "flight": "IB348",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:52"
+     "expected": "07:20"
     },
     {
      "place": "Leipzig/Halle",
@@ -374,7 +374,7 @@
      "flight": "QR147",
      "sched": "07:35",
      "status": "Estimated",
-     "expected": "07:45"
+     "expected": "07:42"
     },
     {
      "place": "Chengdu",
@@ -403,6 +403,13 @@
      "sched": "07:45",
      "status": "Estimated",
      "expected": "07:28"
+    },
+    {
+     "place": "Vigo",
+     "flight": "IB474",
+     "sched": "07:45",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "A Coruna",
@@ -556,7 +563,7 @@
      "flight": "MU709",
      "sched": "08:40",
      "status": "Estimated",
-     "expected": "08:06"
+     "expected": "08:10"
     },
     {
      "place": "Rome",
@@ -836,7 +843,7 @@
      "flight": "AA68",
      "sched": "09:45",
      "status": "Estimated",
-     "expected": "05:42"
+     "expected": "01:37"
     },
     {
      "place": "Edinburgh",
@@ -982,7 +989,7 @@
      "place": "San Juan",
      "flight": "IB380",
      "sched": "10:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1220,7 +1227,7 @@
      "place": "Sao Paulo",
      "flight": "JJ8076",
      "sched": "12:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1383,13 +1390,6 @@
      "sched": "13:20",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Chicago",
-     "flight": "AA126",
-     "sched": "13:30",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -1426,7 +1426,7 @@
      "flight": "UX39",
      "sched": "01:40",
      "status": "Estimated",
-     "expected": "01:40"
+     "expected": "01:58"
     },
     {
      "place": "Bogota",
@@ -1446,8 +1446,8 @@
      "place": "Barcelona",
      "flight": "WT224",
      "sched": "02:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:40"
     },
     {
      "place": "Bogota",
@@ -1460,8 +1460,8 @@
      "place": "Karlsruhe/Baden-Baden",
      "flight": "AEG472",
      "sched": "02:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "02:48"
     },
     {
      "place": "Billund",
