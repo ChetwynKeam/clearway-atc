@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-15T17:01:33Z",
+ "updated": "2026-10-15T17:27:39Z",
  "source": "avionio.com",
  "days": {
   "2026-10-15": {
@@ -24,21 +24,21 @@
      "flight": "GR678",
      "sched": "18:30",
      "status": "Estimated",
-     "expected": "18:06"
+     "expected": "18:04"
     },
     {
      "place": "Copenhagen",
      "flight": "SK541",
      "sched": "18:30",
      "status": "Estimated",
-     "expected": "18:22"
+     "expected": "18:20"
     },
     {
      "place": "Cork",
      "flight": "FR768",
      "sched": "18:40",
      "status": "Estimated",
-     "expected": "18:40"
+     "expected": "18:33"
     },
     {
      "place": "Hamburg",
@@ -49,17 +49,17 @@
     },
     {
      "place": "Kerry",
-     "flight": "RK6958",
+     "flight": "FR6958",
      "sched": "18:55",
-     "status": "Estimated",
-     "expected": "18:53"
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Abu Dhabi",
      "flight": "EY75",
      "sched": "19:00",
      "status": "Estimated",
-     "expected": "18:32"
+     "expected": "18:31"
     },
     {
      "place": "Reus",
@@ -108,14 +108,14 @@
      "flight": "FR37",
      "sched": "19:10",
      "status": "Estimated",
-     "expected": "19:01"
+     "expected": "18:56"
     },
     {
      "place": "Dubai",
      "flight": "EK19",
      "sched": "19:15",
      "status": "Estimated",
-     "expected": "19:08"
+     "expected": "19:07"
     },
     {
      "place": "Aberdeen",
@@ -129,7 +129,7 @@
      "flight": "LM597",
      "sched": "19:20",
      "status": "Estimated",
-     "expected": ""
+     "expected": "19:07"
     },
     {
      "place": "Belfast",
@@ -185,27 +185,27 @@
      "flight": "RK4051",
      "sched": "20:10",
      "status": "Estimated",
-     "expected": "19:53"
+     "expected": "19:54"
     },
     {
      "place": "Doha",
      "flight": "QR23",
      "sched": "20:15",
      "status": "Estimated",
-     "expected": "20:06"
+     "expected": "20:07"
     },
     {
      "place": "Barcelona",
      "flight": "VY8748",
      "sched": "20:15",
      "status": "Estimated",
-     "expected": ""
+     "expected": "20:02"
     },
     {
      "place": "Dublin",
      "flight": "EA3328",
      "sched": "20:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -283,7 +283,7 @@
      "flight": "TK1915",
      "sched": "21:50",
      "status": "Estimated",
-     "expected": ""
+     "expected": "21:46"
     },
     {
      "place": "Geneva",
@@ -303,8 +303,8 @@
      "place": "Milan",
      "flight": "FR3219",
      "sched": "21:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "21:55"
     },
     {
      "place": "Amsterdam",
@@ -339,7 +339,7 @@
      "flight": "FR9077",
      "sched": "22:25",
      "status": "Estimated",
-     "expected": "22:16"
+     "expected": "22:12"
     },
     {
      "place": "Dublin",
@@ -472,7 +472,7 @@
      "flight": "U22208",
      "sched": "23:25",
      "status": "Estimated",
-     "expected": "22:55"
+     "expected": "23:01"
     },
     {
      "place": "Antalya",
@@ -492,7 +492,7 @@
      "place": "Heraklion",
      "flight": "LS908",
      "sched": "23:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -513,7 +513,7 @@
      "place": "Dalaman",
      "flight": "XQ3506",
      "sched": "23:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -579,7 +579,7 @@
      "flight": "FR6838",
      "sched": "18:15",
      "status": "Estimated",
-     "expected": "18:40"
+     "expected": "18:24"
     },
     {
      "place": "Frankfurt",
@@ -669,29 +669,29 @@
      "place": "Agadir",
      "flight": "BY732",
      "sched": "19:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:25"
     },
     {
      "place": "Guernsey",
      "flight": "GR679",
      "sched": "19:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:05"
     },
     {
      "place": "Paris",
      "flight": "U22109",
      "sched": "19:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:55"
     },
     {
      "place": "Copenhagen",
      "flight": "SK542",
      "sched": "19:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:35"
     },
     {
      "place": "Palma de Mallorca",
@@ -1175,6 +1175,13 @@
      "expected": ""
     },
     {
+     "place": "Bahrain",
+     "flight": "GF5",
+     "sched": "07:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Vienna",
      "flight": "FR694",
      "sched": "07:20",
@@ -1224,9 +1231,23 @@
      "expected": ""
     },
     {
+     "place": "New York",
+     "flight": "VS128",
+     "sched": "08:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Dublin",
      "flight": "FR562",
      "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Atlanta",
+     "flight": "VS110",
+     "sched": "08:50",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1248,7 +1269,7 @@
      "place": "Singapore",
      "flight": "SQ302",
      "sched": "09:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1719,37 +1740,16 @@
      "sched": "22:45",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Malaga",
-     "flight": "FR3241",
-     "sched": "22:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Paris",
-     "flight": "FR3725",
-     "sched": "23:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Girona",
-     "flight": "FR3213",
-     "sched": "23:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Alicante",
-     "flight": "FR4075",
-     "sched": "23:40",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
+    {
+     "place": "Dalaman",
+     "flight": "XQ3507",
+     "sched": "00:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
     {
      "place": "Alicante",
      "flight": "FR4007",
