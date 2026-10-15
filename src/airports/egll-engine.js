@@ -52,7 +52,12 @@ const CFG = EGLL.CONFIGS;
 const configOf = rw => ({ '27R': 'west', '27L': 'west2', '09L': 'east', '09R': 'east2' })[rw] || 'west';
 const cfgNow = () => configOf(S.rwy);
 const isEast = c => c === 'east' || c === 'east2';
-const landOf = (c = cfgNow()) => CFG[c].land, depOf = (c = cfgNow()) => CFG[c].dep;
+// the alternation's period now (egll.js altPlan): 'day' (one lands, the other departs), 'dual' (06:00 to 07:00: both
+// land, departures from the morning's departure runway) or 'night' (23:30 to 06:00: one runway for everything)
+let MODE_AT = null, MODE = 'day';
+const modeNow = () => { const t = clockMs(); if (t == null) return 'day'; const k = Math.floor(t/60000);
+  if (k !== MODE_AT) { MODE_AT = k; MODE = EGLL.altPlan(t).mode; } return MODE; };
+const landOf = (c = cfgNow()) => CFG[c].land, depOf = (c = cfgNow()) => modeNow() === 'night' && c === cfgNow() ? CFG[c].land : CFG[c].dep;
 
 // ═════════════════════════ taxiways, holding points, stands (egll-ground.js) ═════════════════════════
 const inF0 = (e, n) => { const p = EN(e, n); return [mOf(p), offOf(p)]; };
@@ -172,7 +177,12 @@ function depRwyOf(ac){
   if (ac.hp && HOLDS[ac.hp] && HOLDS[ac.hp].on === RWYS_BY_END(land).id && HOLDS[ac.hp].on !== RWYS_BY_END(dep).id) return land;
   return dep;
 }
-const landRwyOf = ac => landOf();
+// 06:00 to 07:00 both runways land: arrivals from the northern stacks (Bovingdon, Lambourne) to the northern runway,
+// from the southern ones (Biggin, Ockham) to the southern runway
+const NORTH_RWY = new Set(['27R', '09L']), NORTH_STACK = new Set(['BNN', 'LAM']);
+const landRwyOf = ac => { const land = landOf();
+  if (modeNow() !== 'dual' || !ac || ac.kind !== 'ARR') return land;
+  return NORTH_STACK.has(HOLD_AT[ac.gate]) === NORTH_RWY.has(land) ? land : parallelOf(land); };
 
 // departure entries: the holding points at the departure end of the aircraft's runway, nearest by taxi route (one
 // multi-target search, routesFrom)
@@ -455,25 +465,30 @@ function clockMs(){
   const d = +((document.getElementById('daySel') || {}).value || 0), h = +((document.getElementById('hourSel') || {}).value || 12);
   return Date.UTC(2026, 9, 5 + d, Math.floor(h));
 }
-// the alternation's landing runway for this time, westerly or easterly
-const altLandNow = east => { const t = clockMs(); return t == null ? (east ? '09L' : '27R') : EGLL.altLand(t, APT.utcOff*60, east); };
-// the direction: westerly preferred (noise); easterly when the tailwind on 27 would exceed 5 kt. Either way the
-// landing runway is the alternation's.
-function rwyFor(w){
-  const east = !(w.vrb || w.spd < 4) && windComp(w, crsOf('27R')).headG <= -5, land = altLandNow(east);
-  return { land, dep: parallelOf(land) };
-}
-const depFor = rw => CFG[configOf(rw)].dep;
-// the runway alternation at 15:00 local: the landing and departure runways swap, in either direction
+// the alternation's plan for this time (egll.js altPlan). tail: which way has more than 5 kt of tailwind
+const tailOf = w => { const calm = w.vrb || w.spd < 4; return { 27: !calm && windComp(w, crsOf('27R')).headG <= -5, '09': !calm && windComp(w, crsOf('09L')).headG <= -5 }; };
+const planNow = tail => { const t = clockMs(); if (t != null) return EGLL.altPlan(t, tail);
+  const land = tail[27] ? '09L' : '27R'; return { mode: 'day', land, dep: parallelOf(land), lands: [land] }; };
+// the landing runway this time, westerly or easterly (the Flow buttons)
+const altLandNow = east => planNow({ 27: east, '09': !east }).land;
+// the direction: westerly preferred (noise); easterly when the tailwind on 27 would exceed 5 kt (at night the week's
+// runway, flown the other way round when the wind needs it). Either way the landing runway is the alternation's.
+function rwyFor(w){ const P = planNow(tailOf(w)); return { land: P.land, dep: P.dep }; }
+const depFor = rw => modeNow() === 'night' ? rw : CFG[configOf(rw)].dep;
+// the alternation as the clock runs (UK local time): 06:00 both runways land, 07:00 one lands and one departs, 15:00
+// they swap, 23:30 one runway for everything until 06:00. By day the direction stays as it is; at night the wind picks it
 let altWas = null;
 function stepAlternation(){
   if (!S.running || EXERCISES[S.mode]) { altWas = null; return; }
-  const want = altLandNow(isEast(cfgNow()));
-  if (altWas && want !== altWas && want !== S.rwy) {
-    sys(`Runway alternation, 15:00: runway ${want} for landing, ${parallelOf(want)} for departure.`);
-    setRwy(want);
+  const east = isEast(cfgNow()), P = modeNow() === 'night' ? planNow(tailOf(S.wx)) : planNow({ 27: east, '09': !east }), key = P.mode + P.land;
+  if (altWas && key !== altWas) {
+    if (P.land !== S.rwy) setRwy(P.land);
+    else if (S.depRwy !== depFor(S.rwy)) { S.depRwy = depFor(S.rwy); nextAtis(false); renderAtis(); emit('rwy', S.rwy); }
+    sys(P.mode === 'night' ? `Night-time runway alternation: runway ${P.land} for landing and departure until 06:00.`
+      : P.mode === 'dual' ? `06:00, the arrivals rush: both runways for landing until 07:00, departures from ${P.dep}.`
+      : `Runway alternation${altWas.startsWith('dual') ? ', 07:00' : ''}: runway ${P.land} for landing, ${P.dep} for departure.`);
   }
-  altWas = want;
+  altWas = key;
 }
 // central London's towers (the City and Canary Wharf, up to 1,016 ft at the Shard): the 27 approaches cross them high
 const CITY = [[51.520, -0.115], [51.520, -0.065], [51.512, -0.010], [51.498, -0.005], [51.497, -0.030], [51.503, -0.090], [51.505, -0.115]].map(LL);
@@ -493,7 +508,8 @@ function standAt(ac, t){
 const flowText = c => `land ${CFG[c].land}, depart ${CFG[c].dep}`;
 const APT = {
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT, ...Object.fromEntries(Object.keys(FINAL).map(rw => ['J' + rw, JOIN_ALT])) },   // STAR levels, then the downwind, base and joining point
-  icao: 'EGLL', name: 'London Heathrow', coordName: 'Heathrow', radarName: 'LHR', utcOff: 1,
+  icao: 'EGLL', name: 'London Heathrow', coordName: 'Heathrow', radarName: 'LHR',
+  get utcOff(){ const t = clockMs(); return EGLL.londonOff(t == null ? Date.now() : t)/60; },   // BST or GMT
   radar: [EGLL.UNITS.app.name, EGLL.UNITS.app.freq], depRadar: ['London Control', EGLL.CTR.w[1]],
   tower: [EGLL.UNITS.twr.name, EGLL.UNITS.twr.freq],
   gnd: [EGLL.UNITS.gnd.name, EGLL.UNITS.gnd.freq],
@@ -511,9 +527,9 @@ const APT = {
   splitRwy: true, rwyFor, depFor, configOf: rw => isEast(configOf(rw)) ? 'E' : 'W',
   // the Flow buttons pick the direction only: the alternation picks which runway lands (read when the panel is drawn)
   rwyConfigs: [false, true].map(east => ({ key: east ? 'E' : 'W', name: east ? 'Easterly' : 'Westerly',
-    get land(){ return altLandNow(east); }, get lands(){ return [this.land]; }, get deps(){ return [parallelOf(this.land)]; } })),
+    get land(){ return altLandNow(east); }, get lands(){ const P = planNow({ 27: east, '09': !east }); return P.lands; }, get deps(){ return [depFor(this.land)]; } })),
   depRwyOf, landRwyOf,
-  activeRwys: () => [landOf(), depOf()],
+  activeRwys: () => [landOf(), depOf()],   // the same runway twice at night
   depRwys: () => [depOf(), landOf()],
   appRwys: () => [landOf(), parallelOf(landOf())],
   // segregated parallel runways 1,415 m apart: a departure off one and an arrival on (or going around from) the other
