@@ -6,10 +6,10 @@
 // approaches 8-1 to 8-8 and the RNP approaches' coding (8-9 to 8-13), and OpenStreetMap for the taxiways, stands, aprons and
 // buildings (egll-ground.js). Positions are lat/lon (WGS84); variation 1.2°E. Summary of the charts: airports/egll/README.md.
 // Heathrow has two parallel runways 1,415 m apart, run in segregated mode: one lands, the other departs. In the westerly
-// (about 70% of the year) the runways alternate at 15:00 every day and week by week, so that the towns under the
-// approaches get a break: one week 27R lands until 15:00 and 27L after, the next the other way round. The easterly
-// alternates the same way, 09L and 09R. The terminals sit between the runways (2 and 3 in the Central
-// Area, 5 at the west end) and to the south (4, and the cargo area): their traffic crosses the southern runway.
+// (about 70% of the year) the runways alternate at 15:00 local every day and week by week, so that the towns under the
+// approaches get a break: one week 27L lands until 15:00 and 27R after, the next the other way round (altPlan). The
+// easterly alternates the same way, 09R and 09L. Both runways land from 06:00 to 07:00; at night one runway does it
+// all. The terminals sit between the runways (2 and 3 in the Central Area, 5 at the west end) and to the south (4, and the cargo area): their traffic crosses the southern runway.
 // Plain data plus a few small functions, like egcc.js; egll-engine.js turns it into the engine's globals.
 
 const EGLL = (() => {
@@ -87,16 +87,32 @@ const EGLL = (() => {
     east:  { land: '09L', dep: '09R', name: 'East 09L' },
     east2: { land: '09R', dep: '09L', name: 'East 09R' }
   };
-  // runway alternation (Heathrow's published programme): the landing runway changes at 15:00 local in both directions;
-  // week A lands on the northern runway (27R or 09L) until 15:00 and the southern one (27L or 09R) after, week B the
-  // reverse. Weeks counted from the Monday of 2026-01-05.
-  const ALT_SWITCH = 15*60;
-  const altLand = (ms, utcOffMin = 60, east = false) => {
-    const t = new Date(ms + utcOffMin*60000), wk = Math.floor((Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()) - Date.UTC(2026, 0, 5))/(7*864e5));
-    const pm = t.getUTCHours()*60 + t.getUTCMinutes() >= ALT_SWITCH, a = ((wk % 2) + 2) % 2 === 0;
-    const north = a !== pm;
-    return east ? (north ? '09L' : '09R') : (north ? '27R' : '27L');
+  // runway alternation (Heathrow's Runway Alternation Programme 2026), in UK local time (BST from the last Sunday in
+  // March to the last Sunday in October, else GMT). Weeks run from Monday 06:00 (the night before still follows the
+  // week before), counted from the week commencing 5 January 2026.
+  // - Day (06:00 to the last departure, about 23:30): one runway lands, the other departs, swapping at 15:00. Even
+  //   weeks land on the southern runway (27L / 09R) until 15:00 and the northern one (27R / 09L) after, odd weeks the
+  //   reverse (5 Jan: 27L then 27R; 12 Oct: 27L then 27R; 19 Oct: 27R then 27L).
+  // - 06:00 to 07:00, the arrivals rush: both runways take arrivals; departures use the morning's departure runway.
+  // - Night (23:30 to 06:00): one runway does everything, on a four-week cycle: 27R, 09R, 27L, 09L (primary), each
+  //   flown the other way round (the secondary) when the wind needs it.
+  const londonOff = ms => { const y = new Date(ms).getUTCFullYear(), lastSun = mo => { const d = new Date(Date.UTC(y, mo + 1, 0, 1)); d.setUTCDate(d.getUTCDate() - d.getUTCDay()); return d.getTime(); };
+    return ms >= lastSun(2) && ms < lastSun(9) ? 60 : 0; };
+  const ALT_SWITCH = 15*60, DUAL = [6*60, 7*60], NIGHT_FROM = 23*60 + 30, NIGHT_TO = 6*60;
+  const NIGHT_RWY = ['27R', '09R', '27L', '09L'], OTHER_END = { '27R': '09L', '09L': '27R', '27L': '09R', '09R': '27L' };
+  // tail: { 27: true when 27 has more than 5 kt of tailwind, '09': the same for 09 }
+  const altPlan = (ms, tail = {}) => {
+    const L = ms + londonOff(ms)*60000, t = new Date(L), mins = t.getUTCHours()*60 + t.getUTCMinutes();
+    const wk = Math.floor((L - 6*3600e3 - Date.UTC(2026, 0, 5))/(7*864e5)), mod = n => ((wk % n) + n) % n;
+    if (mins >= NIGHT_FROM || mins < NIGHT_TO) {
+      let rw = NIGHT_RWY[mod(4)]; if (tail[rw.slice(0, 2)]) rw = OTHER_END[rw];
+      return { mode: 'night', land: rw, dep: rw, lands: [rw] };
+    }
+    const east = !!tail[27], pm = mins >= ALT_SWITCH, north = (mod(2) === 0) === pm;
+    const land = east ? (north ? '09L' : '09R') : (north ? '27R' : '27L'), dep = { '27R': '27L', '27L': '27R', '09L': '09R', '09R': '09L' }[land];
+    return mins < DUAL[1] ? { mode: 'dual', land, dep, lands: [land, dep] } : { mode: 'day', land, dep, lands: [land] };
   };
+  const altLand = (ms, utcOffMin, east = false) => altPlan(ms, { 27: east }).land;
 
   // ── STARs (7-1..7-17). Every one ends at one of the four London holds at FL70; Heathrow Director vectors the
   // arrivals from the bottom of the stacks onto the ILS. Alt = level constraint (feet).
@@ -342,7 +358,7 @@ const EGLL = (() => {
     { cs: 'QTR9', t: 'A35K', k: 'ARR', o: 'OTHH' }, { cs: 'BAW1442', t: 'A320', k: 'DEP', d: 'EGPF' }, { cs: 'SAS1501', t: 'A20N', k: 'ARR', o: 'EKCH' },
     { cs: 'BAW282', t: 'B789', k: 'DEP', d: 'KLAX' }, { cs: 'AFR1381', t: 'A320', k: 'ARR', o: 'LFPG' }, { cs: 'IBE3171', t: 'A21N', k: 'DEP', d: 'LEMD' }
   ];
-  // the Academy endorsement: the westerly with 27R landing and 27L departing (week A morning)
+  // the Academy endorsement: the westerly with 27R landing and 27L departing (an odd week's morning)
   const EXERCISES = {
     dep: { name: 'Heathrow 1 · Push from Terminal 5 and depart 27L', wx: 'west', rwy: '27R', sched: [{ cs: 'BAW478', t: 'A320', k: 'DEP', d: 'LEBL', m: 0, stand: '518' }] },
     arr: { name: 'Heathrow 2 · From the Bovingdon stack to the ILS 27R', wx: 'west', rwy: '27R', sched: [{ cs: 'VIR4', t: 'A35K', k: 'ARR', o: 'KJFK', m: 0 }] },
@@ -482,7 +498,7 @@ const EGLL = (() => {
 
   return {
     icao: 'EGLL', iata: 'LHR', name: 'London Heathrow', city: 'London', country: 'United Kingdom', arp: P('512839N', '0002741W'), elev: 83,
-    FIX, NAV, RWY, CONFIGS, altLand, STARS, HOLDS_AIR, ILS, SIDS, DIR, PLACE_DIR, dirFor, UNITS, CTR, TA, TZ, ALTERNATES,
+    FIX, NAV, RWY, CONFIGS, altLand, altPlan, londonOff, STARS, HOLDS_AIR, ILS, SIDS, DIR, PLACE_DIR, dirFor, UNITS, CTR, TA, TZ, ALTERNATES,
     TIMETABLE, LONG_STAY, EXTRA, EXERCISES, WX_PRESETS, TEL, AIRLINE_ICAO, AIRLINE_TYPE, TERMINAL_OF, TYPES, PLACES, AIRPORTS,
     data: { metar: 'egll/metar.txt', flights: 'egll/flights.json' },
     features: { roadCrossing: false, sra: false, ils: true, rnavSids: true, singleRunway: false, parallelRunways: true }
