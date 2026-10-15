@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-15T14:48:09Z",
+ "updated": "2026-10-15T15:23:28Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-15": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Dublin",
-     "flight": "FR364",
-     "sched": "13:50",
-     "status": "Arrived",
-     "expected": "13:40"
-    },
-    {
-     "place": "Manchester",
-     "flight": "FR007",
-     "sched": "14:15",
-     "status": "Arrived",
-     "expected": "14:00"
-    },
     {
      "place": "Porto",
      "flight": "EJU6833",
@@ -44,8 +30,8 @@
      "place": "Lisboa",
      "flight": "TP3831",
      "sched": "15:35",
-     "status": "Estimated",
-     "expected": "16:10"
+     "status": "Arrived",
+     "expected": "16:06"
     },
     {
      "place": "Vienna",
@@ -58,22 +44,22 @@
      "place": "Prague",
      "flight": "QS1170",
      "sched": "15:55",
-     "status": "Estimated",
-     "expected": "15:45"
+     "status": "Arrived",
+     "expected": "15:51"
     },
     {
      "place": "Hamburg",
      "flight": "DI6506",
      "sched": "16:05",
-     "status": "Estimated",
-     "expected": "15:50"
+     "status": "Arrived",
+     "expected": "15:59"
     },
     {
      "place": "Warsaw",
      "flight": "W61535",
      "sched": "16:05",
-     "status": "Estimated",
-     "expected": "15:40"
+     "status": "Arrived",
+     "expected": "15:43"
     },
     {
      "place": "Nuremberg",
@@ -87,7 +73,7 @@
      "flight": "DE1414",
      "sched": "16:30",
      "status": "Estimated",
-     "expected": "17:00"
+     "expected": "16:45"
     },
     {
      "place": "Frankfurt",
@@ -101,7 +87,7 @@
      "flight": "DE1572",
      "sched": "16:55",
      "status": "Estimated",
-     "expected": "17:00"
+     "expected": "16:30"
     },
     {
      "place": "Paris Orly",
@@ -149,8 +135,8 @@
      "place": "Lisboa",
      "flight": "EJU7627",
      "sched": "19:45",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:55"
     },
     {
      "place": "Porto Santo",
@@ -205,13 +191,6 @@
    "dep": [
     {
      "place": "Lisboa",
-     "flight": "EJU7624",
-     "sched": "13:45",
-     "status": "Departed",
-     "expected": "13:57"
-    },
-    {
-     "place": "Lisboa",
      "flight": "TP1690",
      "sched": "14:25",
      "status": "Departed",
@@ -242,8 +221,8 @@
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "16:10",
-     "status": "",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:11"
     },
     {
      "place": "Faro",
@@ -256,7 +235,7 @@
      "place": "Frankfurt",
      "flight": "DE1571",
      "sched": "16:30",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
@@ -270,14 +249,14 @@
      "place": "Vienna",
      "flight": "OS488",
      "sched": "16:40",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Warsaw",
      "flight": "W61536",
      "sched": "16:45",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
