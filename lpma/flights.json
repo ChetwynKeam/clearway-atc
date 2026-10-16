@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-16T10:11:02Z",
+ "updated": "2026-10-16T10:40:17Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-16": {
@@ -24,7 +24,7 @@
      "flight": "EJU9333",
      "sched": "10:30",
      "status": "Estimated",
-     "expected": "12:05"
+     "expected": "12:30"
     },
     {
      "place": "Manchester",
@@ -58,22 +58,15 @@
      "place": "Lisboa",
      "flight": "FR385",
      "sched": "11:00",
-     "status": "Estimated",
-     "expected": "11:10"
+     "status": "Arrived",
+     "expected": "11:08"
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8519",
      "sched": "11:25",
-     "status": "Estimated",
+     "status": "Arrived",
      "expected": "11:15"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1687",
-     "sched": "11:40",
-     "status": "Estimated",
-     "expected": "11:50"
     },
     {
      "place": "London Luton",
@@ -81,6 +74,13 @@
      "sched": "11:40",
      "status": "Estimated",
      "expected": "11:40"
+    },
+    {
+     "place": "Lisboa",
+     "flight": "TP1687",
+     "sched": "11:40",
+     "status": "Estimated",
+     "expected": "11:50"
     },
     {
      "place": "London Gatwick",
@@ -142,8 +142,8 @@
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "14:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:05"
     },
     {
      "place": "London Gatwick",
@@ -157,7 +157,7 @@
      "flight": "AY1731",
      "sched": "15:50",
      "status": "Estimated",
-     "expected": "15:50"
+     "expected": "15:55"
     },
     {
      "place": "Porto",
@@ -170,8 +170,8 @@
      "place": "Prague",
      "flight": "QS1170",
      "sched": "15:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:10"
     },
     {
      "place": "Budapest",
@@ -253,34 +253,6 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1686",
-     "sched": "09:25",
-     "status": "Departed",
-     "expected": "09:20"
-    },
-    {
-     "place": "Porto Santo",
-     "flight": "NT4934",
-     "sched": "09:25",
-     "status": "Departed",
-     "expected": "09:29"
-    },
-    {
-     "place": "Paris Orly",
-     "flight": "TO7691",
-     "sched": "09:30",
-     "status": "Departed",
-     "expected": "09:26"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7622",
-     "sched": "09:35",
-     "status": "Departed",
-     "expected": "10:35"
-    },
-    {
      "place": "Amsterdam",
      "flight": "HV6630",
      "sched": "10:30",
@@ -312,35 +284,35 @@
      "place": "Gran Canaria",
      "flight": "NT4073",
      "sched": "11:30",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Manchester",
      "flight": "LS1722",
      "sched": "11:35",
-     "status": "Estimated",
-     "expected": "11:50"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Amsterdam",
      "flight": "EJU7966",
      "sched": "11:45",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Bristol",
      "flight": "LS1826",
      "sched": "11:45",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8520",
      "sched": "12:05",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -354,8 +326,8 @@
      "place": "Birmingham",
      "flight": "LS1226",
      "sched": "12:30",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:30"
     },
     {
      "place": "Lisboa",
@@ -460,7 +432,7 @@
      "flight": "W62398",
      "sched": "17:05",
      "status": "Estimated",
-     "expected": "17:35"
+     "expected": "17:05"
     },
     {
      "place": "Brussels",
