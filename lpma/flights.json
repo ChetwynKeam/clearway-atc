@@ -1,38 +1,10 @@
 {
- "updated": "2026-10-16T15:09:32Z",
+ "updated": "2026-10-16T15:39:50Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-16": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Porto",
-     "flight": "EJU6833",
-     "sched": "14:15",
-     "status": "Arrived",
-     "expected": "14:21"
-    },
-    {
-     "place": "Porto",
-     "flight": "TP1703",
-     "sched": "14:15",
-     "status": "Arrived",
-     "expected": "13:51"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7625",
-     "sched": "14:20",
-     "status": "Arrived",
-     "expected": "15:17"
-    },
-    {
-     "place": "Ponta Delgada",
-     "flight": "S4160",
-     "sched": "14:20",
-     "status": "Arrived",
-     "expected": "14:12"
-    },
     {
      "place": "Frankfurt",
      "flight": "4Y702",
@@ -58,8 +30,8 @@
      "place": "Porto",
      "flight": "FR366",
      "sched": "15:55",
-     "status": "Estimated",
-     "expected": "16:00"
+     "status": "Arrived",
+     "expected": "16:04"
     },
     {
      "place": "Prague",
@@ -72,15 +44,15 @@
      "place": "Budapest",
      "flight": "W62397",
      "sched": "16:25",
-     "status": "Estimated",
+     "status": "Arrived",
      "expected": "16:25"
     },
     {
      "place": "Brussels",
      "flight": "TB1563",
      "sched": "16:30",
-     "status": "Estimated",
-     "expected": "16:15"
+     "status": "Arrived",
+     "expected": "16:13"
     },
     {
      "place": "Gran Canaria",
@@ -148,13 +120,6 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1690",
-     "sched": "14:15",
-     "status": "Departed",
-     "expected": "14:51"
-    },
-    {
      "place": "Dublin",
      "flight": "FR363",
      "sched": "14:45",
@@ -172,8 +137,8 @@
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "15:00",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:10"
     },
     {
      "place": "Ponta Delgada",
@@ -193,21 +158,21 @@
      "place": "Frankfurt",
      "flight": "4Y703",
      "sched": "15:45",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:08"
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8522",
      "sched": "16:10",
-     "status": "Final Call",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:23"
     },
     {
      "place": "Helsinki Vantaa",
      "flight": "AY1732",
      "sched": "16:40",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -221,7 +186,7 @@
      "place": "Brussels Charleroi",
      "flight": "FR397",
      "sched": "16:45",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
