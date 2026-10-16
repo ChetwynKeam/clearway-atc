@@ -1,37 +1,16 @@
 {
- "updated": "2026-10-16T09:39:09Z",
+ "updated": "2026-10-16T10:11:03Z",
  "source": "avionio.com",
  "days": {
   "2026-10-16": {
    "utcOffsetMin": 60,
    "arr": [
     {
-     "place": "Dublin",
-     "flight": "CJ4463",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:05"
-    },
-    {
-     "place": "Rotterdam",
-     "flight": "CJ4451",
-     "sched": "10:45",
-     "status": "Estimated",
-     "expected": "10:44"
-    },
-    {
-     "place": "Zurich",
-     "flight": "CJ8764",
-     "sched": "10:55",
-     "status": "Estimated",
-     "expected": "11:15"
-    },
-    {
      "place": "Luxembourg",
      "flight": "LG4593",
      "sched": "11:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:01"
     },
     {
      "place": "Glasgow",
@@ -44,8 +23,8 @@
      "place": "Milan",
      "flight": "BA7302",
      "sched": "11:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:56"
     },
     {
      "place": "Palma de Mallorca",
@@ -86,8 +65,8 @@
      "place": "Milan",
      "flight": "AZ226",
      "sched": "12:55",
-     "status": "Estimated",
-     "expected": "12:55"
+     "status": "Cancelled",
+     "expected": ""
     },
     {
      "place": "Ibiza",
@@ -100,46 +79,39 @@
      "place": "Edinburgh",
      "flight": "CJ8715",
      "sched": "13:10",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Nice",
      "flight": "CJ8476",
      "sched": "13:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Amsterdam",
-     "flight": "BA8460",
+     "flight": "CJ8460",
      "sched": "13:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Florence",
+     "flight": "CJ8472",
+     "sched": "13:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Berlin",
+     "flight": "BA7026",
+     "sched": "14:20",
      "status": "Scheduled",
      "expected": ""
     }
    ],
    "dep": [
-    {
-     "place": "Berlin",
-     "flight": "CJ7027",
-     "sched": "10:00",
-     "status": "Departed",
-     "expected": "10:08"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL984",
-     "sched": "10:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Nice",
-     "flight": "CJ8477",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "10:58"
-    },
     {
      "place": "Amsterdam",
      "flight": "CJ8489",
@@ -165,22 +137,22 @@
      "place": "Luxembourg",
      "flight": "LG4594",
      "sched": "11:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:35"
     },
     {
      "place": "San Sebastian",
      "flight": "CJ7335",
      "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:45"
     },
     {
      "place": "Zurich",
      "flight": "CJ8765",
      "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:52"
     },
     {
      "place": "Belfast",
@@ -221,6 +193,41 @@
      "place": "Rotterdam",
      "flight": "CJ4454",
      "sched": "13:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "CJ8453",
+     "sched": "13:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "AZ227",
+     "sched": "13:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "AZ227",
+     "sched": "13:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "CJ4464",
+     "sched": "13:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "CJ8716",
+     "sched": "14:05",
      "status": "Scheduled",
      "expected": ""
     }
