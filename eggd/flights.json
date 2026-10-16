@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-16T00:14:24Z",
+ "updated": "2026-10-16T00:51:36Z",
  "source": "avionio.com",
  "days": {
   "2026-10-16": {
@@ -9,22 +9,22 @@
      "place": "Dalaman",
      "flight": "BY837",
      "sched": "01:10",
-     "status": "Estimated",
-     "expected": "01:24"
+     "status": "Landed",
+     "expected": "01:22"
     },
     {
      "place": "Bodrum",
      "flight": "U22854",
      "sched": "02:10",
      "status": "Estimated",
-     "expected": "02:00"
+     "expected": "01:59"
     },
     {
      "place": "Hurghada",
      "flight": "U22914",
      "sched": "02:25",
      "status": "Estimated",
-     "expected": "02:23"
+     "expected": "02:22"
     },
     {
      "place": "Dublin",
@@ -51,6 +51,13 @@
      "place": "Faro",
      "flight": "EC7507",
      "sched": "08:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "KL1075",
+     "sched": "08:50",
      "status": "Scheduled",
      "expected": ""
     },
@@ -354,8 +361,8 @@
      "place": "Barcelona",
      "flight": "U22703",
      "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:10"
     },
     {
      "place": "Glasgow",
@@ -697,6 +704,48 @@
      "sched": "19:05",
      "status": "Scheduled",
      "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "FR5186",
+     "sched": "20:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gdansk",
+     "flight": "FR8255",
+     "sched": "21:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Krakow/Balice",
+     "flight": "FR5518",
+     "sched": "21:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR508",
+     "sched": "22:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Palma de Mallorca",
+     "flight": "FR7728",
+     "sched": "23:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Girona",
+     "flight": "FR9335",
+     "sched": "23:30",
+     "status": "Scheduled",
+     "expected": ""
     }
    ],
    "dep": [
@@ -825,8 +874,63 @@
      "sched": "17:35",
      "status": "Scheduled",
      "expected": ""
+    },
+    {
+     "place": "Girona",
+     "flight": "FR9336",
+     "sched": "18:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR509",
+     "sched": "19:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "FR5187",
+     "sched": "21:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gdansk",
+     "flight": "FR8254",
+     "sched": "21:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR512",
+     "sched": "22:20",
+     "status": "Scheduled",
+     "expected": ""
     }
    ]
+  },
+  "2026-10-18": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Sofia",
+     "flight": "FR4130",
+     "sched": "00:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR513",
+     "sched": "00:55",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": []
   }
  }
 }
