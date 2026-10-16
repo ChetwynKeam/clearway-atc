@@ -1,38 +1,10 @@
 {
- "updated": "2026-10-16T07:44:16Z",
+ "updated": "2026-10-16T08:12:38Z",
  "source": "avionio.com",
  "days": {
   "2026-10-16": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Dublin",
-     "flight": "FR504",
-     "sched": "08:05",
-     "status": "Landed",
-     "expected": "07:50"
-    },
-    {
-     "place": "Alicante",
-     "flight": "EC5527",
-     "sched": "08:35",
-     "status": "Landed",
-     "expected": "08:09"
-    },
-    {
-     "place": "Faro",
-     "flight": "EC7507",
-     "sched": "08:45",
-     "status": "Estimated",
-     "expected": "08:21"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL1075",
-     "sched": "08:50",
-     "status": "Estimated",
-     "expected": "08:40"
-    },
     {
      "place": "Krakow/Balice",
      "flight": "FR5518",
@@ -100,8 +72,8 @@
      "place": "Beziers",
      "flight": "FR6010",
      "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:55"
     },
     {
      "place": "Dublin",
@@ -114,7 +86,7 @@
      "place": "Geneva",
      "flight": "U22884",
      "sched": "11:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -163,14 +135,14 @@
      "place": "Malaga",
      "flight": "U22716",
      "sched": "12:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Faro",
      "flight": "U22874",
      "sched": "12:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -184,7 +156,7 @@
      "place": "Alicante",
      "flight": "LS1806",
      "sched": "12:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -268,7 +240,7 @@
      "place": "Catania",
      "flight": "U22846",
      "sched": "13:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -282,8 +254,8 @@
      "place": "Bucharest",
      "flight": "FR5342",
      "sched": "13:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:35"
     },
     {
      "place": "Belfast",
@@ -433,6 +405,13 @@
      "expected": ""
     },
     {
+     "place": "Newcastle",
+     "flight": "U2240",
+     "sched": "16:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Tenerife",
      "flight": "LS1884",
      "sched": "16:40",
@@ -449,6 +428,13 @@
     {
      "place": "Palma de Mallorca",
      "flight": "FR7728",
+     "sched": "17:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Toulouse",
+     "flight": "U22784",
      "sched": "17:30",
      "status": "Scheduled",
      "expected": ""
@@ -512,20 +498,6 @@
    ],
    "dep": [
     {
-     "place": "Barcelona",
-     "flight": "FR3161",
-     "sched": "08:05",
-     "status": "Departed",
-     "expected": "08:03"
-    },
-    {
-     "place": "Cork",
-     "flight": "EA3841",
-     "sched": "08:35",
-     "status": "Estimated",
-     "expected": "08:35"
-    },
-    {
      "place": "Amsterdam",
      "flight": "EC5530",
      "sched": "09:15",
@@ -558,14 +530,14 @@
      "flight": "FR5517",
      "sched": "09:45",
      "status": "Estimated",
-     "expected": "10:41"
+     "expected": "10:45"
     },
     {
      "place": "Porto",
      "flight": "FR1331",
      "sched": "09:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:05"
     },
     {
      "place": "Larnaca",
