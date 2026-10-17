@@ -1,408 +1,114 @@
 {
- "updated": "2026-10-17T09:37:32Z",
+ "updated": "2026-10-17T10:04:34Z",
  "source": "avionio.com",
  "days": {
   "2026-10-17": {
    "utcOffsetMin": 60,
    "arr": [
     {
-     "place": "Montreal",
-     "flight": "AC864",
-     "sched": "10:00",
-     "status": "Landed",
-     "expected": "08:03"
-    },
-    {
-     "place": "Naples",
-     "flight": "BA531",
-     "sched": "10:00",
-     "status": "Landed",
-     "expected": "09:38"
-    },
-    {
-     "place": "Bucharest",
-     "flight": "BA879",
-     "sched": "10:00",
-     "status": "Landed",
-     "expected": "09:52"
-    },
-    {
-     "place": "Salt Lake City",
-     "flight": "DL50",
-     "sched": "10:00",
-     "status": "Landed",
-     "expected": "00:42"
-    },
-    {
-     "place": "Mumbai",
-     "flight": "VS359",
-     "sched": "10:00",
-     "status": "Landed",
-     "expected": "09:35"
-    },
-    {
-     "place": "Cincinnati",
-     "flight": "BA120",
-     "sched": "10:05",
-     "status": "Landed",
-     "expected": "06:31"
-    },
-    {
-     "place": "Pittsburgh",
-     "flight": "BA170",
-     "sched": "10:05",
-     "status": "Landed",
-     "expected": "10:02"
-    },
-    {
-     "place": "Santiago",
-     "flight": "BA250",
-     "sched": "10:10",
-     "status": "Landed",
-     "expected": "03:09"
-    },
-    {
-     "place": "Lisbon",
-     "flight": "BA509",
-     "sched": "10:10",
-     "status": "Landed",
-     "expected": "10:00"
-    },
-    {
-     "place": "Stockholm",
-     "flight": "BA779",
-     "sched": "10:10",
-     "status": "Estimated",
-     "expected": "10:18"
-    },
-    {
-     "place": "Dublin",
-     "flight": "BA825",
-     "sched": "10:10",
-     "status": "Landed",
-     "expected": "09:47"
-    },
-    {
-     "place": "Los Angeles",
-     "flight": "UA923",
-     "sched": "10:10",
-     "status": "Estimated",
-     "expected": "00:33"
-    },
-    {
-     "place": "Mumbai",
-     "flight": "AI129",
-     "sched": "10:15",
-     "status": "Landed",
-     "expected": "10:01"
-    },
-    {
-     "place": "Los Angeles",
-     "flight": "BA282",
-     "sched": "10:15",
-     "status": "Estimated",
-     "expected": "10:14"
-    },
-    {
-     "place": "Toronto",
-     "flight": "BA98",
-     "sched": "10:15",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Brussels",
-     "flight": "SN2093",
-     "sched": "10:15",
-     "status": "Estimated",
-     "expected": "10:10"
-    },
-    {
-     "place": "Philadelphia",
-     "flight": "AA728",
-     "sched": "10:20",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Dublin",
-     "flight": "EI156",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:09"
-    },
-    {
-     "place": "Lisbon",
-     "flight": "TP1356",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:55"
-    },
-    {
-     "place": "New York",
-     "flight": "UA146",
-     "sched": "10:25",
-     "status": "Landed",
-     "expected": "03:38"
-    },
-    {
-     "place": "Phoenix",
-     "flight": "AA194",
-     "sched": "10:30",
-     "status": "Landed",
-     "expected": "00:41"
-    },
-    {
-     "place": "Paris",
-     "flight": "AF1580",
-     "sched": "10:30",
-     "status": "Estimated",
-     "expected": "10:35"
-    },
-    {
-     "place": "Athens",
-     "flight": "BA641",
-     "sched": "10:30",
-     "status": "Estimated",
-     "expected": "10:27"
-    },
-    {
-     "place": "Istanbul",
-     "flight": "BA721",
-     "sched": "10:30",
-     "status": "Estimated",
-     "expected": "10:07"
-    },
-    {
-     "place": "New York",
-     "flight": "BA182",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:26"
-    },
-    {
-     "place": "Denver",
-     "flight": "BA218",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:10"
-    },
-    {
-     "place": "Rome",
-     "flight": "BA565",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:15"
-    },
-    {
-     "place": "Larnaca",
-     "flight": "BA711",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:22"
-    },
-    {
-     "place": "Madrid",
-     "flight": "IB715",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:18"
-    },
-    {
-     "place": "Geneva",
-     "flight": "BA743",
-     "sched": "10:40",
-     "status": "Estimated",
-     "expected": "10:25"
-    },
-    {
-     "place": "Washington",
-     "flight": "UA924",
-     "sched": "10:40",
-     "status": "Landed",
-     "expected": "04:03"
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "VL904",
-     "sched": "10:40",
-     "status": "Estimated",
-     "expected": "10:43"
-    },
-    {
-     "place": "Cape Town",
-     "flight": "VS479",
-     "sched": "10:40",
-     "status": "Estimated",
-     "expected": "10:15"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL1005",
-     "sched": "10:45",
-     "status": "Estimated",
-     "expected": "10:36"
-    },
-    {
-     "place": "Chicago",
-     "flight": "AA54",
-     "sched": "10:50",
-     "status": "Landed",
-     "expected": "06:40"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "BA1441",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "10:41"
-    },
-    {
-     "place": "Nashville",
-     "flight": "BA222",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "10:41"
-    },
-    {
-     "place": "Washington",
-     "flight": "BA292",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "10:48"
-    },
-    {
-     "place": "Brussels",
-     "flight": "VS506",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Fort Worth",
-     "flight": "BA192",
-     "sched": "10:55",
-     "status": "Landed",
-     "expected": "09:58"
-    },
-    {
-     "place": "Cairo",
-     "flight": "BA399",
-     "sched": "10:55",
-     "status": "Estimated",
-     "expected": "10:34"
-    },
-    {
-     "place": "Atlanta",
-     "flight": "DL32",
-     "sched": "10:59",
-     "status": "Landed",
-     "expected": "03:16"
-    },
-    {
      "place": "Belfast",
      "flight": "BA1391",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": "10:58"
+     "expected": "11:02"
     },
     {
      "place": "San Francisco",
      "flight": "BA284",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": "10:41"
+     "expected": "10:48"
     },
     {
      "place": "Paris",
      "flight": "BA301",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:03"
     },
     {
      "place": "Tirana",
      "flight": "BA379",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": "10:45"
+     "expected": "10:49"
     },
     {
      "place": "Brussels",
      "flight": "BA385",
      "sched": "11:00",
-     "status": "Estimated",
-     "expected": "10:41"
+     "status": "Landed",
+     "expected": "10:46"
     },
     {
      "place": "Los Angeles",
      "flight": "AA134",
      "sched": "11:05",
-     "status": "Estimated",
-     "expected": "05:51"
+     "status": "Landed",
+     "expected": "00:47"
     },
     {
      "place": "Amsterdam",
      "flight": "BA431",
      "sched": "11:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:09"
     },
     {
      "place": "San Francisco",
      "flight": "UA948",
      "sched": "11:10",
-     "status": "Estimated",
-     "expected": "08:45"
+     "status": "Landed",
+     "expected": "01:25"
     },
     {
      "place": "Toronto",
      "flight": "VS148",
      "sched": "11:10",
-     "status": "Cancelled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "10:42"
     },
     {
      "place": "Athens",
      "flight": "A3600",
      "sched": "11:15",
      "status": "Estimated",
-     "expected": "11:22"
+     "expected": "11:24"
     },
     {
      "place": "Las Vegas",
      "flight": "BA270",
      "sched": "11:15",
-     "status": "Estimated",
-     "expected": "10:21"
+     "status": "Landed",
+     "expected": "01:28"
     },
     {
      "place": "Chicago",
      "flight": "BA296",
      "sched": "11:15",
-     "status": "Estimated",
-     "expected": "10:46"
+     "status": "Landed",
+     "expected": "10:35"
     },
     {
      "place": "Dublin",
      "flight": "EI158",
      "sched": "11:15",
      "status": "Estimated",
-     "expected": "11:01"
+     "expected": "11:05"
     },
     {
      "place": "Beirut",
      "flight": "ME201",
      "sched": "11:15",
      "status": "Estimated",
-     "expected": "11:00"
+     "expected": "11:02"
     },
     {
      "place": "Newcastle",
      "flight": "BA1327",
      "sched": "11:20",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:09"
     },
     {
      "place": "Nice",
@@ -423,21 +129,21 @@
      "flight": "VS106",
      "sched": "11:20",
      "status": "Estimated",
-     "expected": "10:48"
+     "expected": "10:54"
     },
     {
      "place": "Vienna",
      "flight": "OS333",
      "sched": "11:25",
      "status": "Estimated",
-     "expected": "11:14"
+     "expected": "11:15"
     },
     {
      "place": "Delhi",
      "flight": "AI111",
      "sched": "11:30",
      "status": "Estimated",
-     "expected": "11:08"
+     "expected": "11:19"
     },
     {
      "place": "San Diego",
@@ -451,28 +157,28 @@
      "flight": "BA417",
      "sched": "11:30",
      "status": "Estimated",
-     "expected": "11:15"
+     "expected": "11:19"
     },
     {
      "place": "Duesseldorf",
      "flight": "EW9464",
      "sched": "11:30",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:24"
     },
     {
      "place": "Saint Louis",
      "flight": "BA220",
      "sched": "11:35",
      "status": "Estimated",
-     "expected": "09:25"
+     "expected": "10:44"
     },
     {
      "place": "Los Angeles",
      "flight": "BA280",
      "sched": "11:35",
      "status": "Estimated",
-     "expected": "10:29"
+     "expected": "11:25"
     },
     {
      "place": "Lyon",
@@ -492,7 +198,7 @@
      "place": "Houston",
      "flight": "UA5",
      "sched": "11:35",
-     "status": "Estimated",
+     "status": "Landed",
      "expected": "02:42"
     },
     {
@@ -500,49 +206,49 @@
      "flight": "BA252",
      "sched": "11:40",
      "status": "Estimated",
-     "expected": "11:04"
+     "expected": "11:08"
     },
     {
      "place": "Istanbul",
      "flight": "TK1989",
      "sched": "11:40",
      "status": "Estimated",
-     "expected": "11:28"
+     "expected": "11:25"
     },
     {
      "place": "Jersey",
      "flight": "BA1347",
      "sched": "11:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:19"
     },
     {
      "place": "Atlanta",
      "flight": "BA226",
      "sched": "11:45",
      "status": "Estimated",
-     "expected": "11:26"
+     "expected": "11:19"
     },
     {
      "place": "Calgary",
      "flight": "AC850",
      "sched": "11:50",
      "status": "Estimated",
-     "expected": "03:21"
+     "expected": "09:50"
     },
     {
      "place": "Toronto",
      "flight": "AC858",
      "sched": "11:50",
      "status": "Estimated",
-     "expected": "09:47"
+     "expected": "10:54"
     },
     {
      "place": "Glasgow",
      "flight": "BA1477",
      "sched": "11:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:37"
     },
     {
      "place": "Marseille",
@@ -563,21 +269,21 @@
      "flight": "FI450",
      "sched": "11:55",
      "status": "Estimated",
-     "expected": "11:22"
+     "expected": "11:24"
     },
     {
      "place": "Chicago",
      "flight": "UA938",
      "sched": "11:55",
      "status": "Estimated",
-     "expected": "04:19"
+     "expected": "07:50"
     },
     {
      "place": "Aberdeen",
      "flight": "BA1303",
      "sched": "12:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:39"
     },
     {
      "place": "Manchester",
@@ -598,7 +304,7 @@
      "flight": "BA813",
      "sched": "12:00",
      "status": "Estimated",
-     "expected": "11:28"
+     "expected": "11:34"
     },
     {
      "place": "Dublin",
@@ -612,14 +318,14 @@
      "flight": "VS138",
      "sched": "12:05",
      "status": "Estimated",
-     "expected": "11:24"
+     "expected": "11:31"
     },
     {
      "place": "Calgary",
      "flight": "WS2",
      "sched": "12:05",
      "status": "Estimated",
-     "expected": "10:04"
+     "expected": "11:08"
     },
     {
      "place": "Charlotte",
@@ -633,7 +339,7 @@
      "flight": "BA36",
      "sched": "12:10",
      "status": "Estimated",
-     "expected": "11:30"
+     "expected": "11:37"
     },
     {
      "place": "Milan",
@@ -654,14 +360,14 @@
      "flight": "BA367",
      "sched": "12:15",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:53"
     },
     {
      "place": "Prague",
      "flight": "BA851",
      "sched": "12:15",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:11"
     },
     {
      "place": "San Francisco",
@@ -682,7 +388,7 @@
      "flight": "BA991",
      "sched": "12:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:11"
     },
     {
      "place": "Dubai",
@@ -794,7 +500,7 @@
      "flight": "TP1352",
      "sched": "12:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:53"
     },
     {
      "place": "Fort Worth",
@@ -843,7 +549,7 @@
      "flight": "BA407",
      "sched": "12:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:31"
     },
     {
      "place": "Malaga",
@@ -864,7 +570,7 @@
      "flight": "SK531",
      "sched": "12:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:36"
     },
     {
      "place": "Portland",
@@ -962,7 +668,7 @@
      "flight": "BA525",
      "sched": "13:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "13:05"
     },
     {
      "place": "Algiers",
@@ -1003,7 +709,7 @@
      "place": "Copenhagen",
      "flight": "SK503",
      "sched": "13:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1269,7 +975,7 @@
      "place": "Brindisi",
      "flight": "BA539",
      "sched": "14:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1501,7 +1207,7 @@
      "flight": "RJ111",
      "sched": "15:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "14:58"
     },
     {
      "place": "Seattle",
@@ -1514,7 +1220,7 @@
      "place": "Athens",
      "flight": "A3602",
      "sched": "15:30",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1929,316 +1635,330 @@
      "sched": "17:10",
      "status": "Scheduled",
      "expected": ""
-    }
-   ],
-   "dep": [
-    {
-     "place": "Nice",
-     "flight": "BA328",
-     "sched": "10:00",
-     "status": "Estimated",
-     "expected": "10:04"
     },
     {
-     "place": "Zakynthos Island",
-     "flight": "BA662",
-     "sched": "10:00",
+     "place": "Abuja",
+     "flight": "P47576",
+     "sched": "17:10",
      "status": "Estimated",
-     "expected": "10:20"
+     "expected": ""
     },
     {
-     "place": "Bahrain",
-     "flight": "GF2",
-     "sched": "10:00",
-     "status": "Estimated",
-     "expected": "10:04"
-    },
-    {
-     "place": "Jeddah",
-     "flight": "SV110",
-     "sched": "10:00",
-     "status": "Estimated",
-     "expected": "10:23"
-    },
-    {
-     "place": "Houston",
-     "flight": "UA879",
-     "sched": "10:00",
-     "status": "Estimated",
-     "expected": "10:27"
-    },
-    {
-     "place": "Boston",
-     "flight": "AA109",
-     "sched": "10:05",
-     "status": "Estimated",
-     "expected": "10:31"
-    },
-    {
-     "place": "Phoenix",
-     "flight": "AA195",
-     "sched": "10:05",
-     "status": "Estimated",
-     "expected": "10:31"
-    },
-    {
-     "place": "Nassau",
-     "flight": "BA253",
-     "sched": "10:10",
-     "status": "Estimated",
-     "expected": "10:55"
-    },
-    {
-     "place": "Paris",
-     "flight": "BA306",
-     "sched": "10:10",
-     "status": "Estimated",
-     "expected": "10:05"
-    },
-    {
-     "place": "Cairo",
-     "flight": "BA396",
-     "sched": "10:10",
-     "status": "Estimated",
-     "expected": "10:02"
-    },
-    {
-     "place": "Milan",
-     "flight": "BA572",
-     "sched": "10:10",
-     "status": "Estimated",
-     "expected": "10:11"
-    },
-    {
-     "place": "Istanbul",
-     "flight": "BA700",
-     "sched": "10:10",
-     "status": "Estimated",
-     "expected": "10:30"
-    },
-    {
-     "place": "Calgary",
-     "flight": "AC851",
-     "sched": "10:15",
-     "status": "Estimated",
-     "expected": "10:28"
-    },
-    {
-     "place": "New York",
-     "flight": "BA175",
-     "sched": "10:15",
-     "status": "Estimated",
-     "expected": "10:25"
-    },
-    {
-     "place": "Milan",
-     "flight": "BA572",
-     "sched": "10:15",
+     "place": "Madrid",
+     "flight": "IB721",
+     "sched": "17:15",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Venice",
-     "flight": "BA602",
-     "sched": "10:15",
-     "status": "Estimated",
-     "expected": "10:30"
-    },
-    {
-     "place": "Thira",
-     "flight": "BA688",
-     "sched": "10:15",
-     "status": "Estimated",
-     "expected": "10:26"
-    },
-    {
-     "place": "Helsinki",
-     "flight": "AY1332",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:41"
-    },
-    {
-     "place": "Delhi",
-     "flight": "BA143",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:20"
-    },
-    {
-     "place": "Prague",
-     "flight": "BA852",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:39"
-    },
-    {
-     "place": "Warsaw",
-     "flight": "LO282",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:39"
-    },
-    {
-     "place": "Copenhagen",
-     "flight": "SK502",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:40"
-    },
-    {
-     "place": "New York",
-     "flight": "UA17",
-     "sched": "10:25",
-     "status": "Estimated",
-     "expected": "10:45"
-    },
-    {
-     "place": "New York",
-     "flight": "AA101",
-     "sched": "10:30",
-     "status": "Estimated",
-     "expected": "10:49"
-    },
-    {
      "place": "Rome",
-     "flight": "AZ203",
-     "sched": "10:30",
+     "flight": "BA553",
+     "sched": "17:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rhodes",
+     "flight": "BA653",
+     "sched": "17:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Thessaloniki",
+     "flight": "BA673",
+     "sched": "17:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "EI172",
+     "sched": "17:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Seoul",
+     "flight": "KE907",
+     "sched": "17:20",
      "status": "Estimated",
-     "expected": "10:42"
+     "expected": "16:25"
+    },
+    {
+     "place": "Aberdeen",
+     "flight": "BA1311",
+     "sched": "17:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Athens",
+     "flight": "BA631",
+     "sched": "17:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Marrakech",
+     "flight": "BA713",
+     "sched": "17:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paphos",
+     "flight": "BA899",
+     "sched": "17:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dubrovnik",
+     "flight": "BA839",
+     "sched": "17:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Munich",
+     "flight": "BA935",
+     "sched": "17:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cork",
+     "flight": "EI722",
+     "sched": "17:35",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Los Angeles",
-     "flight": "BA283",
-     "sched": "10:30",
+     "flight": "VS24",
+     "sched": "17:35",
+     "status": "Estimated",
+     "expected": "17:28"
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "BA1453",
+     "sched": "17:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Beijing",
+     "flight": "CA937",
+     "sched": "17:40",
+     "status": "Estimated",
+     "expected": "17:27"
+    },
+    {
+     "place": "Frankfurt",
+     "flight": "VL916",
+     "sched": "17:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Mumbai",
+     "flight": "6E1",
+     "sched": "17:45",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Casablanca",
+     "flight": "AT806",
+     "sched": "17:45",
      "status": "Scheduled",
      "expected": ""
     },
     {
      "place": "Larnaca",
-     "flight": "BA706",
-     "sched": "10:30",
-     "status": "Estimated",
-     "expected": "10:49"
-    },
-    {
-     "place": "Palma de Mallorca",
-     "flight": "BA470",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:50"
-    },
-    {
-     "place": "Barcelona",
-     "flight": "BA476",
-     "sched": "10:35",
-     "status": "Cancelled",
+     "flight": "BA705",
+     "sched": "17:45",
+     "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Chania",
-     "flight": "BA656",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:49"
+     "place": "Lisbon",
+     "flight": "TP1350",
+     "sched": "17:45",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
-     "place": "Oslo",
-     "flight": "SK804",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:55"
+     "place": "Manchester",
+     "flight": "BA1369",
+     "sched": "17:50",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
-     "place": "San Francisco",
-     "flight": "UA900",
-     "sched": "10:35",
-     "status": "Estimated",
-     "expected": "10:57"
+     "place": "Amsterdam",
+     "flight": "KL1013",
+     "sched": "17:50",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
-     "place": "Delhi",
-     "flight": "VS302",
-     "sched": "10:40",
-     "status": "Estimated",
-     "expected": "10:40"
-    },
-    {
-     "place": "San Francisco",
-     "flight": "BA285",
-     "sched": "10:45",
-     "status": "Estimated",
-     "expected": "10:55"
-    },
-    {
-     "place": "Toulouse",
-     "flight": "BA374",
-     "sched": "10:45",
-     "status": "Estimated",
-     "expected": "10:45"
-    },
-    {
-     "place": "Detroit",
-     "flight": "DL17",
-     "sched": "10:45",
-     "status": "Estimated",
-     "expected": "10:50"
-    },
-    {
-     "place": "Madrid",
-     "flight": "IB714",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "11:10"
-    },
-    {
-     "place": "Malta",
-     "flight": "KM101",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "11:10"
-    },
-    {
-     "place": "Munich",
-     "flight": "LH2473",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "11:09"
+     "place": "Zurich",
+     "flight": "LX326",
+     "sched": "17:50",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Rome",
-     "flight": "BA552",
-     "sched": "10:55",
-     "status": "Estimated",
-     "expected": "11:15"
+     "flight": "BA555",
+     "sched": "18:00",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
-     "place": "Salt Lake City",
-     "flight": "DL51",
-     "sched": "10:55",
+     "place": "Doha",
+     "flight": "QR1",
+     "sched": "18:00",
      "status": "Estimated",
-     "expected": "10:53"
+     "expected": ""
     },
     {
-     "place": "Miami",
-     "flight": "VS5",
-     "sched": "10:55",
-     "status": "Estimated",
-     "expected": "10:55"
+     "place": "Santiago de Compostela",
+     "flight": "VY7112",
+     "sched": "18:00",
+     "status": "Scheduled",
+     "expected": ""
     },
+    {
+     "place": "Jersey",
+     "flight": "BA1353",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Marseille",
+     "flight": "BA351",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Thira",
+     "flight": "BA691",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Beijing",
+     "flight": "CZ673",
+     "sched": "18:05",
+     "status": "Estimated",
+     "expected": "17:43"
+    },
+    {
+     "place": "Delhi",
+     "flight": "6E3",
+     "sched": "18:10",
+     "status": "Estimated",
+     "expected": "17:16"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "BA437",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Pisa",
+     "flight": "BA613",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Hong Kong",
+     "flight": "CX239",
+     "sched": "18:10",
+     "status": "Estimated",
+     "expected": "17:44"
+    },
+    {
+     "place": "Mumbai",
+     "flight": "BA198",
+     "sched": "18:15",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Madrid",
+     "flight": "IB723",
+     "sched": "18:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "BA307",
+     "sched": "18:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "BA479",
+     "sched": "18:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Venice",
+     "flight": "BA607",
+     "sched": "18:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Shannon",
+     "flight": "EI386",
+     "sched": "18:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Seoul",
+     "flight": "KE503",
+     "sched": "18:20",
+     "status": "Estimated",
+     "expected": "17:41"
+    },
+    {
+     "place": "Male",
+     "flight": "BA60",
+     "sched": "18:25",
+     "status": "Estimated",
+     "expected": "17:44"
+    }
+   ],
+   "dep": [
     {
      "place": "Fort Worth",
      "flight": "AA21",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": "11:26"
+     "expected": "11:14"
     },
     {
      "place": "New York",
      "flight": "BA185",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": "11:17"
+     "expected": "11:28"
     },
     {
      "place": "Amsterdam",
@@ -2252,35 +1972,35 @@
      "flight": "BA838",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": "11:20"
+     "expected": "11:19"
     },
     {
      "place": "Kuala Lumpur",
      "flight": "MH3",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": "11:00"
+     "expected": "11:28"
     },
     {
      "place": "Paris",
      "flight": "BA304",
      "sched": "11:05",
      "status": "Estimated",
-     "expected": "11:05"
+     "expected": "11:24"
     },
     {
      "place": "Ibiza",
      "flight": "BA450",
      "sched": "11:05",
      "status": "Estimated",
-     "expected": "11:20"
+     "expected": "11:25"
     },
     {
      "place": "Knock",
      "flight": "EI915",
      "sched": "11:05",
      "status": "Estimated",
-     "expected": "11:25"
+     "expected": "11:22"
     },
     {
      "place": "Brussels",
@@ -2294,42 +2014,42 @@
      "flight": "UA959",
      "sched": "11:05",
      "status": "Estimated",
-     "expected": "11:29"
+     "expected": "11:28"
     },
     {
      "place": "Austin",
      "flight": "BA191",
      "sched": "11:10",
      "status": "Estimated",
-     "expected": "11:20"
+     "expected": "11:25"
     },
     {
      "place": "Bridgetown",
      "flight": "BA255",
      "sched": "11:10",
      "status": "Estimated",
-     "expected": "11:10"
+     "expected": "11:33"
     },
     {
      "place": "Chicago",
      "flight": "BA295",
      "sched": "11:10",
      "status": "Estimated",
-     "expected": "11:20"
+     "expected": "11:25"
     },
     {
      "place": "Hamburg",
      "flight": "BA964",
      "sched": "11:10",
      "status": "Estimated",
-     "expected": "11:32"
+     "expected": "11:38"
     },
     {
      "place": "Atlanta",
      "flight": "VS103",
      "sched": "11:15",
      "status": "Estimated",
-     "expected": "11:15"
+     "expected": "11:35"
     },
     {
      "place": "Singapore",
@@ -2350,7 +2070,7 @@
      "flight": "TP1367",
      "sched": "11:20",
      "status": "Estimated",
-     "expected": "12:15"
+     "expected": "12:05"
     },
     {
      "place": "New York",
@@ -2364,7 +2084,7 @@
      "flight": "BA1446",
      "sched": "11:25",
      "status": "Estimated",
-     "expected": "11:45"
+     "expected": "11:48"
     },
     {
      "place": "Heraklion",
@@ -2378,56 +2098,56 @@
      "flight": "UA26",
      "sched": "11:25",
      "status": "Estimated",
-     "expected": "11:46"
+     "expected": "11:47"
     },
     {
      "place": "Paris",
      "flight": "AF1581",
      "sched": "11:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:30"
     },
     {
      "place": "Barcelona",
      "flight": "BA488",
      "sched": "11:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:30"
     },
     {
      "place": "Athens",
      "flight": "BA634",
      "sched": "11:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:30"
     },
     {
      "place": "Madrid",
      "flight": "IB716",
      "sched": "11:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:30"
     },
     {
      "place": "Frankfurt",
      "flight": "VL905",
      "sched": "11:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:00"
     },
     {
      "place": "New York",
      "flight": "BA173",
      "sched": "11:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:45"
     },
     {
      "place": "San Diego",
      "flight": "BA265",
      "sched": "11:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:45"
     },
     {
      "place": "Los Angeles",
@@ -2440,50 +2160,50 @@
      "place": "Seattle",
      "flight": "VS105",
      "sched": "11:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:02"
     },
     {
      "place": "Nice",
      "flight": "BA330",
      "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:06"
     },
     {
      "place": "New York",
      "flight": "DL2",
      "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:27"
     },
     {
      "place": "Amsterdam",
      "flight": "KL1006",
      "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:07"
     },
     {
      "place": "Rome",
      "flight": "BA554",
      "sched": "11:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:50"
     },
     {
      "place": "Kerkyra",
      "flight": "BA644",
      "sched": "11:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:10"
     },
     {
      "place": "Zurich",
      "flight": "BA734",
      "sched": "11:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:11"
     },
     {
      "place": "New York",
@@ -3707,6 +3427,279 @@
      "place": "Krakow/Balice",
      "flight": "BA872",
      "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Doha",
+     "flight": "QR8",
+     "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "New York",
+     "flight": "UA941",
+     "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "BA1436",
+     "sched": "16:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Austin",
+     "flight": "BA187",
+     "sched": "16:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faro",
+     "flight": "BA516",
+     "sched": "16:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Prague",
+     "flight": "BA860",
+     "sched": "16:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Boston",
+     "flight": "VS157",
+     "sched": "16:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Helsinki",
+     "flight": "AY1336",
+     "sched": "16:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Atlanta",
+     "flight": "BA227",
+     "sched": "16:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Phoenix",
+     "flight": "BA289",
+     "sched": "16:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Derry",
+     "flight": "LM656",
+     "sched": "16:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "San Francisco",
+     "flight": "UA939",
+     "sched": "16:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "BA832",
+     "sched": "16:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "New York",
+     "flight": "DL4",
+     "sched": "16:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Fort Worth",
+     "flight": "AA81",
+     "sched": "16:25",
+     "status": "Cancelled",
+     "expected": ""
+    },
+    {
+     "place": "Baltimore/Washington",
+     "flight": "BA229",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Madrid",
+     "flight": "BA464",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Munich",
+     "flight": "LH2477",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rome",
+     "flight": "AZ207",
+     "sched": "16:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Seattle",
+     "flight": "BA49",
+     "sched": "16:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zagreb",
+     "flight": "BA848",
+     "sched": "16:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Athens",
+     "flight": "A3603",
+     "sched": "16:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "New York",
+     "flight": "BA113",
+     "sched": "16:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "BA576",
+     "sched": "16:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Seoul",
+     "flight": "OZ522",
+     "sched": "16:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Delhi",
+     "flight": "BA137",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Pittsburgh",
+     "flight": "BA171",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Split",
+     "flight": "OU491",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Washington",
+     "flight": "UA925",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Aberdeen",
+     "flight": "BA1314",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Belfast",
+     "flight": "BA1402",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "BA576",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kuwait",
+     "flight": "KU102",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Istanbul",
+     "flight": "TK1986",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "EI169",
+     "sched": "16:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dubai",
+     "flight": "EK30",
+     "sched": "16:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Montego Bay",
+     "flight": "VS165",
+     "sched": "16:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Los Angeles",
+     "flight": "AA137",
+     "sched": "16:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brussels",
+     "flight": "BA388",
+     "sched": "16:55",
      "status": "Scheduled",
      "expected": ""
     }
