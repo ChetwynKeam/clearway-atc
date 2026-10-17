@@ -1,38 +1,10 @@
 {
- "updated": "2026-10-17T18:40:02Z",
+ "updated": "2026-10-17T19:05:05Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-17": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Geneva",
-     "flight": "EZS1469",
-     "sched": "17:40",
-     "status": "Arrived",
-     "expected": "17:22"
-    },
-    {
-     "place": "Nantes",
-     "flight": "TO7840",
-     "sched": "17:40",
-     "status": "Arrived",
-     "expected": "17:30"
-    },
-    {
-     "place": "Basel",
-     "flight": "EZS1283",
-     "sched": "17:45",
-     "status": "Arrived",
-     "expected": "18:03"
-    },
-    {
-     "place": "Brussels",
-     "flight": "SN3827",
-     "sched": "17:50",
-     "status": "Arrived",
-     "expected": "17:48"
-    },
     {
      "place": "London Gatwick",
      "flight": "EZY8521",
@@ -55,18 +27,18 @@
      "expected": "19:09"
     },
     {
-     "place": "Porto",
-     "flight": "FR6049",
-     "sched": "19:45",
-     "status": "Estimated",
-     "expected": "19:45"
-    },
-    {
      "place": "Lisboa",
      "flight": "EJU7627",
      "sched": "19:45",
      "status": "Arrived",
      "expected": "19:21"
+    },
+    {
+     "place": "Porto",
+     "flight": "FR6049",
+     "sched": "19:45",
+     "status": "Arrived",
+     "expected": "19:44"
     },
     {
      "place": "Lyon St. Exupery",
@@ -79,15 +51,15 @@
      "place": "Manchester",
      "flight": "LS851",
      "sched": "19:55",
-     "status": "Estimated",
-     "expected": "19:30"
+     "status": "Arrived",
+     "expected": "19:37"
     },
     {
      "place": "London Stansted",
      "flight": "LS1445",
      "sched": "20:00",
      "status": "Estimated",
-     "expected": "19:50"
+     "expected": "20:00"
     },
     {
      "place": "Porto Santo",
@@ -101,7 +73,7 @@
      "flight": "FR385",
      "sched": "20:40",
      "status": "Estimated",
-     "expected": "20:30"
+     "expected": "20:20"
     },
     {
      "place": "Katowice",
@@ -137,37 +109,9 @@
      "sched": "23:25",
      "status": "",
      "expected": ""
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "FR6674",
-     "sched": "23:40",
-     "status": "",
-     "expected": ""
     }
    ],
    "dep": [
-    {
-     "place": "Frankfurt",
-     "flight": "DE1571",
-     "sched": "17:40",
-     "status": "Departed",
-     "expected": "18:33"
-    },
-    {
-     "place": "Stockholm Arlanda",
-     "flight": "SK2902",
-     "sched": "17:40",
-     "status": "Departed",
-     "expected": "17:45"
-    },
-    {
-     "place": "Dusseldorf",
-     "flight": "DE1415",
-     "sched": "17:55",
-     "status": "Departed",
-     "expected": "18:00"
-    },
     {
      "place": "Basel",
      "flight": "EZS1284",
@@ -221,28 +165,28 @@
      "place": "Lisboa",
      "flight": "TP1692",
      "sched": "19:35",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Porto",
      "flight": "FR6050",
      "sched": "20:10",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Lyon St. Exupery",
      "flight": "EJU4486",
      "sched": "20:20",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "EJU7628",
      "sched": "20:35",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
@@ -256,7 +200,7 @@
      "place": "Manchester",
      "flight": "LS852",
      "sched": "20:50",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
