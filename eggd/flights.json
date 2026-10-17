@@ -1,38 +1,10 @@
 {
- "updated": "2026-10-17T12:46:09Z",
+ "updated": "2026-10-17T13:15:28Z",
  "source": "avionio.com",
  "days": {
   "2026-10-17": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Palma de Mallorca",
-     "flight": "LS1872",
-     "sched": "13:05",
-     "status": "Estimated",
-     "expected": "13:56"
-    },
-    {
-     "place": "Malaga",
-     "flight": "LS1808",
-     "sched": "13:35",
-     "status": "Estimated",
-     "expected": "14:37"
-    },
-    {
-     "place": "Madrid",
-     "flight": "U22708",
-     "sched": "13:45",
-     "status": "Estimated",
-     "expected": "15:07"
-    },
-    {
-     "place": "Bari",
-     "flight": "U22850",
-     "sched": "13:55",
-     "status": "Estimated",
-     "expected": "13:41"
-    },
     {
      "place": "Istanbul",
      "flight": "PC1196",
@@ -114,14 +86,14 @@
      "place": "Edinburgh",
      "flight": "U2218",
      "sched": "15:50",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Belfast",
      "flight": "U2226",
      "sched": "15:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -150,7 +122,7 @@
      "flight": "FR624",
      "sched": "16:10",
      "status": "Estimated",
-     "expected": "16:10"
+     "expected": "16:09"
     },
     {
      "place": "Heraklion",
@@ -184,8 +156,8 @@
      "place": "Copenhagen",
      "flight": "FR746",
      "sched": "16:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:45"
     },
     {
      "place": "Reus",
@@ -206,7 +178,7 @@
      "flight": "U22904",
      "sched": "17:50",
      "status": "Estimated",
-     "expected": "17:42"
+     "expected": "17:44"
     },
     {
      "place": "Palma de Mallorca",
@@ -307,6 +279,13 @@
      "expected": ""
     },
     {
+     "place": "Glasgow",
+     "flight": "U2210",
+     "sched": "22:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Antalya",
      "flight": "LS1810",
      "sched": "22:40",
@@ -349,6 +328,20 @@
      "expected": ""
     },
     {
+     "place": "Naples",
+     "flight": "U22844",
+     "sched": "23:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rhodes",
+     "flight": "LS1876",
+     "sched": "23:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Girona",
      "flight": "FR9335",
      "sched": "23:30",
@@ -372,76 +365,6 @@
    ],
    "dep": [
     {
-     "place": "Malaga",
-     "flight": "FR8123",
-     "sched": "13:05",
-     "status": "Departed",
-     "expected": "13:21"
-    },
-    {
-     "place": "Belfast",
-     "flight": "U2225",
-     "sched": "13:05",
-     "status": "Estimated",
-     "expected": "13:20"
-    },
-    {
-     "place": "Paphos",
-     "flight": "BY6676",
-     "sched": "13:15",
-     "status": "Estimated",
-     "expected": "14:08"
-    },
-    {
-     "place": "Paris",
-     "flight": "U22773",
-     "sched": "13:15",
-     "status": "Estimated",
-     "expected": "13:19"
-    },
-    {
-     "place": "Barcelona",
-     "flight": "FR3161",
-     "sched": "13:20",
-     "status": "Departed",
-     "expected": "13:25"
-    },
-    {
-     "place": "Zakynthos Island",
-     "flight": "U22807",
-     "sched": "13:25",
-     "status": "Estimated",
-     "expected": "13:25"
-    },
-    {
-     "place": "Hurghada",
-     "flight": "U22913",
-     "sched": "13:25",
-     "status": "Estimated",
-     "expected": "13:25"
-    },
-    {
-     "place": "Alicante",
-     "flight": "EC5528",
-     "sched": "13:30",
-     "status": "Estimated",
-     "expected": "13:23"
-    },
-    {
-     "place": "Sharm el-Sheikh",
-     "flight": "U22911",
-     "sched": "13:30",
-     "status": "Estimated",
-     "expected": "13:30"
-    },
-    {
-     "place": "Dalaman",
-     "flight": "LS1817",
-     "sched": "13:50",
-     "status": "Estimated",
-     "expected": "14:11"
-    },
-    {
      "place": "Rhodes",
      "flight": "LS1875",
      "sched": "14:05",
@@ -459,15 +382,15 @@
      "place": "Zakynthos Island",
      "flight": "LS1897",
      "sched": "14:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:19"
     },
     {
      "place": "Fuerteventura",
      "flight": "U22719",
      "sched": "14:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:50"
     },
     {
      "place": "Thessaloniki",
@@ -744,6 +667,13 @@
      "place": "Dublin",
      "flight": "FR513",
      "sched": "00:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gran Canaria",
+     "flight": "U22736",
+     "sched": "01:05",
      "status": "Scheduled",
      "expected": ""
     },
