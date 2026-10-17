@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-17T14:34:40Z",
+ "updated": "2026-10-17T15:01:17Z",
  "source": "avionio.com",
  "days": {
   "2026-10-17": {
@@ -37,17 +37,51 @@
      "place": "Amsterdam",
      "flight": "HV6609",
      "sched": "15:50",
-     "status": "Estimated",
-     "expected": "15:55"
+     "status": "Landed",
+     "expected": "16:04"
     }
    ],
    "dep": [
+    {
+     "place": "Dortmund",
+     "flight": "STQ111",
+     "sched": "11:00",
+     "status": "Departed",
+     "expected": "11:25"
+    },
+    {
+     "place": "London",
+     "flight": "U28696",
+     "sched": "12:35",
+     "status": "Departed",
+     "expected": "13:12"
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "14:35",
+     "status": "Departed",
+     "expected": "14:33"
+    },
     {
      "place": "Amsterdam",
      "flight": "HV6610",
      "sched": "16:35",
      "status": "Estimated",
-     "expected": "16:35"
+     "expected": "16:50"
+    }
+   ]
+  },
+  "2026-10-16": {
+   "utcOffsetMin": 120,
+   "arr": [],
+   "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
+     "status": "Departed",
+     "expected": "18:55"
     }
    ]
   }
