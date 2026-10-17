@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-17T20:09:56Z",
+ "updated": "2026-10-17T20:35:31Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-17": {
@@ -79,8 +79,8 @@
      "place": "Paris Beauvais",
      "flight": "FR400",
      "sched": "23:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "23:10"
     },
     {
      "place": "Porto",
@@ -91,20 +91,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "London Gatwick",
-     "flight": "EZY8522",
-     "sched": "19:10",
-     "status": "Departed",
-     "expected": "19:18"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "HV6630",
-     "sched": "19:30",
-     "status": "Departed",
-     "expected": "20:20"
-    },
     {
      "place": "Lisboa",
      "flight": "TP1692",
@@ -144,14 +130,14 @@
      "place": "Manchester",
      "flight": "LS852",
      "sched": "20:50",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "21:30"
     },
     {
      "place": "Katowice",
      "flight": "ENT7122",
      "sched": "21:40",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
@@ -165,7 +151,7 @@
      "place": "Lisboa",
      "flight": "FR384",
      "sched": "22:00",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     }
    ]
