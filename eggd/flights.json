@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-17T05:08:45Z",
+ "updated": "2026-10-17T05:37:01Z",
  "source": "avionio.com",
  "days": {
   "2026-10-17": {
@@ -23,7 +23,7 @@
      "place": "Jersey",
      "flight": "LM581",
      "sched": "08:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -31,7 +31,7 @@
      "flight": "FR4441",
      "sched": "08:35",
      "status": "Estimated",
-     "expected": "08:35"
+     "expected": "08:29"
     },
     {
      "place": "Faro",
@@ -66,7 +66,7 @@
      "flight": "XQ584",
      "sched": "09:35",
      "status": "Estimated",
-     "expected": "09:18"
+     "expected": "09:17"
     },
     {
      "place": "Belfast",
@@ -237,15 +237,15 @@
      "expected": ""
     },
     {
-     "place": "Alicante",
-     "flight": "LS1806",
+     "place": "Amsterdam",
+     "flight": "EC5531",
      "sched": "12:50",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Amsterdam",
-     "flight": "U25531",
+     "place": "Alicante",
+     "flight": "LS1806",
      "sched": "12:50",
      "status": "Scheduled",
      "expected": ""
@@ -363,6 +363,13 @@
      "expected": ""
     },
     {
+     "place": "Larnaca",
+     "flight": "U22904",
+     "sched": "17:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Barcelona",
      "flight": "FR3160",
      "sched": "18:30",
@@ -425,21 +432,21 @@
      "flight": "BY6680",
      "sched": "06:00",
      "status": "Estimated",
-     "expected": "06:13"
+     "expected": "06:10"
     },
     {
      "place": "Tenerife",
      "flight": "LS1891",
      "sched": "06:00",
-     "status": "Estimated",
-     "expected": "06:14"
+     "status": "Departed",
+     "expected": "06:13"
     },
     {
      "place": "Malaga",
      "flight": "U22715",
      "sched": "06:00",
      "status": "Estimated",
-     "expected": "06:00"
+     "expected": "05:53"
     },
     {
      "place": "Rome",
@@ -452,14 +459,14 @@
      "place": "Bari",
      "flight": "FR9626",
      "sched": "06:05",
-     "status": "Estimated",
-     "expected": "06:03"
+     "status": "Departed",
+     "expected": "05:59"
     },
     {
      "place": "Tenerife",
      "flight": "U22731",
      "sched": "06:05",
-     "status": "Estimated",
+     "status": "Departed",
      "expected": "06:05"
     },
     {
@@ -509,7 +516,7 @@
      "flight": "FR8224",
      "sched": "06:20",
      "status": "Estimated",
-     "expected": "06:35"
+     "expected": "06:24"
     },
     {
      "place": "Lanzarote",
@@ -571,15 +578,15 @@
      "place": "Alicante",
      "flight": "LS1805",
      "sched": "06:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:20"
     },
     {
      "place": "Belfast",
      "flight": "U2223",
      "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:00"
     },
     {
      "place": "Barcelona",
@@ -592,29 +599,29 @@
      "place": "Heraklion",
      "flight": "U22813",
      "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:00"
     },
     {
      "place": "Split",
      "flight": "U22891",
      "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:00"
     },
     {
      "place": "Venice",
      "flight": "U22831",
      "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:10"
     },
     {
      "place": "Bari",
      "flight": "U22849",
      "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:10"
     },
     {
      "place": "Malaga",
@@ -785,8 +792,71 @@
      "expected": ""
     },
     {
+     "place": "Dublin",
+     "flight": "EA3281",
+     "sched": "12:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "U22717",
+     "sched": "12:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Palma de Mallorca",
+     "flight": "U22711",
+     "sched": "12:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Antalya",
+     "flight": "LS1809",
+     "sched": "12:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "U2217",
+     "sched": "12:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faro",
+     "flight": "U22871",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kos",
+     "flight": "BY6616",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Exeter",
+     "flight": "GR642",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Malaga",
      "flight": "FR8123",
+     "sched": "13:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Belfast",
+     "flight": "U2225",
      "sched": "13:05",
      "status": "Scheduled",
      "expected": ""
