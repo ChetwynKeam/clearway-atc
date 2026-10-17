@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-17T15:49:59Z",
+ "updated": "2026-10-17T16:13:17Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-17": {
@@ -37,15 +37,15 @@
      "place": "Dusseldorf",
      "flight": "EW9600",
      "sched": "16:25",
-     "status": "Estimated",
-     "expected": "17:05"
+     "status": "Arrived",
+     "expected": "17:02"
     },
     {
      "place": "Berlin Brandenburg",
      "flight": "EJU5333",
      "sched": "16:35",
-     "status": "Estimated",
-     "expected": "16:55"
+     "status": "Arrived",
+     "expected": "16:51"
     },
     {
      "place": "Munich",
@@ -83,18 +83,18 @@
      "expected": "17:25"
     },
     {
-     "place": "Geneva",
-     "flight": "EZS1469",
-     "sched": "17:40",
-     "status": "Estimated",
-     "expected": "17:20"
-    },
-    {
      "place": "Nantes",
      "flight": "TO7840",
      "sched": "17:40",
      "status": "Estimated",
      "expected": "17:30"
+    },
+    {
+     "place": "Geneva",
+     "flight": "EZS1469",
+     "sched": "17:40",
+     "status": "Estimated",
+     "expected": "17:20"
     },
     {
      "place": "Basel",
@@ -212,8 +212,8 @@
      "place": "Porto",
      "flight": "TP1705",
      "sched": "23:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "23:45"
     },
     {
      "place": "Edinburgh",
@@ -224,20 +224,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Edinburgh",
-     "flight": "FR6673",
-     "sched": "15:00",
-     "status": "Departed",
-     "expected": "15:13"
-    },
-    {
-     "place": "Poznan",
-     "flight": "ENT7102",
-     "sched": "15:00",
-     "status": "Departed",
-     "expected": "15:00"
-    },
     {
      "place": "Lisboa",
      "flight": "EJU7624",
@@ -256,8 +242,8 @@
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "15:55",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:59"
     },
     {
      "place": "London Gatwick",
@@ -270,7 +256,7 @@
      "place": "Prague",
      "flight": "QS1171",
      "sched": "16:40",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
@@ -278,14 +264,14 @@
      "flight": "4Y703",
      "sched": "17:05",
      "status": "Estimated",
-     "expected": "17:15"
+     "expected": "17:30"
     },
     {
      "place": "Berlin Brandenburg",
      "flight": "EJU5334",
      "sched": "17:15",
-     "status": "Estimated",
-     "expected": "17:35"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Dusseldorf",
@@ -298,7 +284,7 @@
      "place": "Munich",
      "flight": "4Y705",
      "sched": "17:25",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
@@ -312,7 +298,7 @@
      "place": "Stockholm Arlanda",
      "flight": "SK2902",
      "sched": "17:40",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
