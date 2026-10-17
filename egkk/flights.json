@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-17T23:01:44Z",
+ "updated": "2026-10-17T23:17:32Z",
  "source": "avionio.com",
  "days": {
   "2026-10-18": {
@@ -52,14 +52,14 @@
      "flight": "A02673",
      "sched": "00:35",
      "status": "Estimated",
-     "expected": "00:16"
+     "expected": "00:15"
     },
     {
      "place": "Chania",
      "flight": "U28226",
      "sched": "00:35",
      "status": "Estimated",
-     "expected": "00:48"
+     "expected": "00:49"
     },
     {
      "place": "Dalaman",
@@ -87,7 +87,7 @@
      "flight": "W95804",
      "sched": "01:05",
      "status": "Estimated",
-     "expected": "00:59"
+     "expected": "01:00"
     },
     {
      "place": "Antalya",
@@ -101,7 +101,7 @@
      "flight": "U28188",
      "sched": "01:10",
      "status": "Estimated",
-     "expected": "01:16"
+     "expected": "01:17"
     },
     {
      "place": "Kerkyra",
@@ -121,8 +121,8 @@
      "place": "Paphos",
      "flight": "U28656",
      "sched": "01:20",
-     "status": "Estimated",
-     "expected": "00:57"
+     "status": "Diverted",
+     "expected": ""
     },
     {
      "place": "Alicante",
@@ -199,14 +199,14 @@
      "flight": "U28554",
      "sched": "02:30",
      "status": "Estimated",
-     "expected": "02:40"
+     "expected": "02:39"
     },
     {
      "place": "Marrakech",
      "flight": "U28710",
      "sched": "02:45",
      "status": "Estimated",
-     "expected": "02:09"
+     "expected": "02:10"
     },
     {
      "place": "Rhodes",
@@ -234,7 +234,7 @@
      "flight": "BY4655",
      "sched": "04:30",
      "status": "Estimated",
-     "expected": ""
+     "expected": "04:18"
     },
     {
      "place": "Lagos",
@@ -255,7 +255,7 @@
      "flight": "BA2204",
      "sched": "06:30",
      "status": "Estimated",
-     "expected": "06:34"
+     "expected": "06:39"
     },
     {
      "place": "Guangzhou",
@@ -297,7 +297,7 @@
      "flight": "BA2036",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:31"
+     "expected": "06:28"
     },
     {
      "place": "Punta Cana",
@@ -311,14 +311,14 @@
      "flight": "KQ108",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:37"
+     "expected": "06:40"
     },
     {
      "place": "Mauritius",
      "flight": "MK42",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "05:57"
+     "expected": "06:13"
     },
     {
      "place": "Basel/Mulhouse",
@@ -339,7 +339,7 @@
      "flight": "SQ312",
      "sched": "06:55",
      "status": "Estimated",
-     "expected": "06:23"
+     "expected": "06:35"
     },
     {
      "place": "Shanghai",
@@ -405,6 +405,20 @@
      "expected": ""
     },
     {
+     "place": "Guernsey",
+     "flight": "GR600",
+     "sched": "07:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Jersey",
+     "flight": "U2882",
+     "sched": "08:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Barcelona",
      "flight": "EC8058",
      "sched": "08:15",
@@ -422,6 +436,13 @@
      "place": "Zurich",
      "flight": "LX430",
      "sched": "08:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Belfast",
+     "flight": "U2894",
+     "sched": "08:30",
      "status": "Scheduled",
      "expected": ""
     },
@@ -454,9 +475,30 @@
      "expected": ""
     },
     {
+     "place": "Oslo",
+     "flight": "DY1302",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Goteborg",
+     "flight": "D85260",
+     "sched": "08:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Sharjah",
      "flight": "G9265",
      "sched": "08:45",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Inverness",
+     "flight": "U2846",
+     "sched": "08:50",
      "status": "Scheduled",
      "expected": ""
     },
@@ -468,9 +510,30 @@
      "expected": ""
     },
     {
+     "place": "Porto",
+     "flight": "EC8526",
+     "sched": "09:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faro",
+     "flight": "U28528",
+     "sched": "09:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Dublin",
      "flight": "FR114",
      "sched": "09:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Saint Lucia",
+     "flight": "BA2158",
+     "sched": "09:50",
      "status": "Scheduled",
      "expected": ""
     },
@@ -778,9 +841,254 @@
      "expected": ""
     },
     {
+     "place": "Thessaloniki",
+     "flight": "U28243",
+     "sched": "06:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Milan",
      "flight": "U28301",
      "sched": "06:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Naples",
+     "flight": "U28339",
+     "sched": "06:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malta",
+     "flight": "U28761",
+     "sched": "06:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Podgorica",
+     "flight": "W95761",
+     "sched": "06:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dalaman",
+     "flight": "A02790",
+     "sched": "06:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Sevilla",
+     "flight": "U28005",
+     "sched": "06:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gran Canaria",
+     "flight": "A02708",
+     "sched": "06:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dubrovnik",
+     "flight": "A02720",
+     "sched": "06:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Lanzarote",
+     "flight": "U28121",
+     "sched": "06:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Murcia",
+     "flight": "U28045",
+     "sched": "06:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Mykonos",
+     "flight": "U28189",
+     "sched": "06:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Pisa",
+     "flight": "U28315",
+     "sched": "06:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Enfidha",
+     "flight": "U28853",
+     "sched": "06:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Menorca",
+     "flight": "U28027",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "U28113",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Split",
+     "flight": "U28595",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "VY6615",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Marrakech",
+     "flight": "A02810",
+     "sched": "06:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Palma de Mallorca",
+     "flight": "U28083",
+     "sched": "06:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Heraklion",
+     "flight": "A02752",
+     "sched": "06:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faro",
+     "flight": "U28533",
+     "sched": "06:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gibraltar",
+     "flight": "U28791",
+     "sched": "06:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paphos",
+     "flight": "BY4756",
+     "sched": "06:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zakynthos Island",
+     "flight": "U28203",
+     "sched": "06:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kalamata",
+     "flight": "A02744",
+     "sched": "06:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Preveza/Lefkada",
+     "flight": "E4427",
+     "sched": "06:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Valencia",
+     "flight": "VY8947",
+     "sched": "06:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Palermo",
+     "flight": "U28321",
+     "sched": "06:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Menorca",
+     "flight": "LS3151",
+     "sched": "07:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Catania",
+     "flight": "U28285",
+     "sched": "07:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "U28289",
+     "sched": "07:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Olbia",
+     "flight": "U28343",
+     "sched": "07:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Inverness",
+     "flight": "U2849",
+     "sched": "07:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Larnaca",
+     "flight": "A02784",
+     "sched": "07:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "U28109",
+     "sched": "07:05",
      "status": "Scheduled",
      "expected": ""
     },
