@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-17T07:17:29Z",
+ "updated": "2026-10-17T07:52:30Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-17": {
@@ -16,15 +16,15 @@
      "place": "Lisboa",
      "flight": "TP1685",
      "sched": "08:20",
-     "status": "Estimated",
-     "expected": "08:05"
+     "status": "Arrived",
+     "expected": "08:10"
     },
     {
      "place": "Porto",
      "flight": "EJU6863",
      "sched": "08:30",
-     "status": "Estimated",
-     "expected": "08:25"
+     "status": "Arrived",
+     "expected": "08:26"
     },
     {
      "place": "Lisboa",
@@ -45,14 +45,7 @@
      "flight": "EJU7621",
      "sched": "09:00",
      "status": "Estimated",
-     "expected": "10:35"
-    },
-    {
-     "place": "Zurich",
-     "flight": "WK264",
-     "sched": "09:10",
-     "status": "Estimated",
-     "expected": "09:00"
+     "expected": "10:40"
     },
     {
      "place": "Luxembourg",
@@ -60,6 +53,13 @@
      "sched": "09:10",
      "status": "Estimated",
      "expected": "08:45"
+    },
+    {
+     "place": "Zurich",
+     "flight": "WK264",
+     "sched": "09:10",
+     "status": "Estimated",
+     "expected": "09:00"
     },
     {
      "place": "Paris Ch. de Gaulle",
@@ -156,8 +156,8 @@
      "place": "London Gatwick",
      "flight": "BA2716",
      "sched": "12:20",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:35"
     },
     {
      "place": "Ponta Delgada",
@@ -438,14 +438,14 @@
      "place": "Porto",
      "flight": "TP1702",
      "sched": "08:35",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Porto",
      "flight": "EJU6864",
      "sched": "09:00",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
@@ -474,7 +474,7 @@
      "flight": "EJU7622",
      "sched": "09:40",
      "status": "Estimated",
-     "expected": "11:10"
+     "expected": "11:15"
     },
     {
      "place": "Paris Ch. de Gaulle",
