@@ -1,38 +1,10 @@
 {
- "updated": "2026-10-17T17:59:04Z",
+ "updated": "2026-10-17T18:14:19Z",
  "source": "avionio.com",
  "days": {
   "2026-10-17": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Palma de Mallorca",
-     "flight": "U22712",
-     "sched": "18:20",
-     "status": "Landed",
-     "expected": "18:28"
-    },
-    {
-     "place": "Barcelona",
-     "flight": "FR3160",
-     "sched": "18:30",
-     "status": "Landed",
-     "expected": "18:19"
-    },
-    {
-     "place": "Malaga",
-     "flight": "U22718",
-     "sched": "18:40",
-     "status": "Estimated",
-     "expected": "18:59"
-    },
-    {
-     "place": "Faro",
-     "flight": "U22872",
-     "sched": "18:50",
-     "status": "Estimated",
-     "expected": "19:03"
-    },
     {
      "place": "Malaga",
      "flight": "FR8122",
@@ -52,7 +24,7 @@
      "flight": "EC7267",
      "sched": "20:25",
      "status": "Estimated",
-     "expected": ""
+     "expected": "20:40"
     },
     {
      "place": "Barcelona",
@@ -73,7 +45,7 @@
      "flight": "FR8255",
      "sched": "21:30",
      "status": "Estimated",
-     "expected": "21:30"
+     "expected": "21:25"
     },
     {
      "place": "Zakynthos Island",
@@ -94,14 +66,14 @@
      "flight": "BY6617",
      "sched": "22:05",
      "status": "Estimated",
-     "expected": "22:10"
+     "expected": "22:09"
     },
     {
      "place": "Dublin",
      "flight": "FR508",
      "sched": "22:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "22:05"
     },
     {
      "place": "Amsterdam",
@@ -135,7 +107,7 @@
      "place": "Almeria",
      "flight": "LS1852",
      "sched": "22:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -218,27 +190,6 @@
    ],
    "dep": [
     {
-     "place": "Porto",
-     "flight": "U22875",
-     "sched": "18:30",
-     "status": "Departed",
-     "expected": "18:35"
-    },
-    {
-     "place": "Girona",
-     "flight": "FR9336",
-     "sched": "18:55",
-     "status": "Estimated",
-     "expected": "18:55"
-    },
-    {
-     "place": "Palma de Mallorca",
-     "flight": "LS1899",
-     "sched": "18:55",
-     "status": "Estimated",
-     "expected": "19:08"
-    },
-    {
      "place": "Faro",
      "flight": "U22873",
      "sched": "19:00",
@@ -270,15 +221,15 @@
      "place": "Newcastle",
      "flight": "U2241",
      "sched": "19:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:48"
     },
     {
      "place": "Malaga",
      "flight": "EC7004",
      "sched": "19:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:04"
     },
     {
      "place": "Palma de Mallorca",
@@ -408,7 +359,7 @@
      "place": "Sharm el-Sheikh",
      "flight": "U22912",
      "sched": "01:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -422,7 +373,7 @@
      "place": "Hurghada",
      "flight": "U22914",
      "sched": "01:50",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -637,6 +588,13 @@
     }
    ],
    "dep": [
+    {
+     "place": "Montpellier",
+     "flight": "BQ2303",
+     "sched": "02:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
     {
      "place": "Ibiza",
      "flight": "FR8264",
