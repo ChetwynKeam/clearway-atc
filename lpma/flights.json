@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-18T15:21:43Z",
+ "updated": "2026-10-18T15:49:35Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-18": {
@@ -41,18 +41,18 @@
      "expected": "15:54"
     },
     {
-     "place": "Warsaw",
-     "flight": "W61535",
-     "sched": "16:05",
-     "status": "Estimated",
-     "expected": "16:45"
-    },
-    {
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "16:05",
      "status": "Arrived",
      "expected": "16:02"
+    },
+    {
+     "place": "Warsaw",
+     "flight": "W61535",
+     "sched": "16:05",
+     "status": "Estimated",
+     "expected": "16:55"
     },
     {
      "place": "Hannover",
@@ -65,15 +65,15 @@
      "place": "Amsterdam",
      "flight": "EJU7965",
      "sched": "16:40",
-     "status": "Estimated",
-     "expected": "16:25"
+     "status": "Arrived",
+     "expected": "16:29"
     },
     {
      "place": "Frankfurt",
      "flight": "X32806",
      "sched": "16:40",
-     "status": "Estimated",
-     "expected": "16:20"
+     "status": "Arrived",
+     "expected": "16:21"
     },
     {
      "place": "Katowice",
@@ -83,18 +83,18 @@
      "expected": "16:50"
     },
     {
-     "place": "Dusseldorf",
-     "flight": "DE1414",
-     "sched": "17:05",
-     "status": "Estimated",
-     "expected": "16:50"
-    },
-    {
      "place": "Munich",
      "flight": "X32846",
      "sched": "17:05",
      "status": "Estimated",
      "expected": "17:05"
+    },
+    {
+     "place": "Dusseldorf",
+     "flight": "DE1414",
+     "sched": "17:05",
+     "status": "Estimated",
+     "expected": "16:45"
     },
     {
      "place": "Gdansk",
@@ -107,8 +107,8 @@
      "place": "Gran Canaria",
      "flight": "NT4072",
      "sched": "17:45",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:40"
     },
     {
      "place": "Amsterdam",
@@ -129,14 +129,14 @@
      "flight": "EZY8521",
      "sched": "18:20",
      "status": "Estimated",
-     "expected": "19:40"
+     "expected": "19:05"
     },
     {
      "place": "Lisboa",
      "flight": "TP1691",
      "sched": "18:35",
      "status": "Estimated",
-     "expected": "18:35"
+     "expected": "18:45"
     },
     {
      "place": "Porto",
@@ -190,13 +190,6 @@
    ],
    "dep": [
     {
-     "place": "Ponta Delgada",
-     "flight": "S4163",
-     "sched": "14:40",
-     "status": "Departed",
-     "expected": "15:10"
-    },
-    {
      "place": "Porto",
      "flight": "EJU6834",
      "sched": "14:45",
@@ -221,42 +214,42 @@
      "place": "Faro",
      "flight": "TP1716",
      "sched": "15:40",
-     "status": "Final Call",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:38"
     },
     {
      "place": "Lisboa",
      "flight": "FR384",
      "sched": "15:45",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:24"
     },
     {
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "15:50",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:19"
     },
     {
      "place": "Frankfurt",
      "flight": "DE1571",
      "sched": "16:15",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:45"
     },
     {
      "place": "Manchester",
      "flight": "FR006",
      "sched": "16:25",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:33"
     },
     {
      "place": "Vienna",
      "flight": "OS488",
      "sched": "16:40",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
@@ -270,21 +263,21 @@
      "place": "Frankfurt",
      "flight": "4Y703",
      "sched": "16:55",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Amsterdam",
      "flight": "EJU7966",
      "sched": "17:15",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Dusseldorf",
      "flight": "X32853",
      "sched": "17:25",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -333,8 +326,8 @@
      "place": "Hannover",
      "flight": "X32831",
      "sched": "19:00",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:20"
     },
     {
      "place": "Porto Santo",
@@ -347,8 +340,8 @@
      "place": "London Gatwick",
      "flight": "EZY8522",
      "sched": "19:30",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:40"
     },
     {
      "place": "Lisboa",
