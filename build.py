@@ -135,6 +135,7 @@ const AP_DATA = {ap_data};
 {r('shapes.js')}
 {r('ui.js')}
 {r('emerg.js')}
+{r('flow.js')}
 {r('career.js')}
 {r('ground.js')}
 {veh}

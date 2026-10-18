@@ -686,7 +686,9 @@ const PATH_DONE = {
   vacated: ac => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); },
   holdIn: (ac, { hold }) => atHoldIn(ac, hold),
   onStand: (ac, { st }) => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); },
-  linedUp: (ac, a, v) => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; },
+  linedUp: (ac, a, v) => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.vacq) { const [ex, back] = ac.vacq; ac.vacq = null; depVacate(ac, ex, back); } else if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; },
+  // a departure taken off the runway again (VAC): clear of the exit's holding point, it waits for a taxi instruction
+  depOff: (ac, { ex }) => { ac.depVac = null; ac.onRwy = false; ac.xing = null; ac.holdAt = ex; ac.need = `Holding at ${ex.replace(/~\d+$/, '')}`; pilot(ac, `runway vacated via ${exitWord(ex)}, holding`); emit('depoff', ac); },
   atIhp: (ac, { ihp }) => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); },
   atHp: (ac, { hp }, v) => { ac.state = 'HOLDPT'; if (ac.luAfter) { ac.gs = ac.ias = 0; return; } if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); },
   pushed: ac => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); },
@@ -980,6 +982,41 @@ function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
   setPath(ac, pts, 16, ['vacated']);
 }
+// ── a departure leaving the runway again (VAC): the exits ahead of it, the nearest free one first (on the side it came
+// from, if there is one); with none ahead, on a runway with turning pads, round the pad at the end and back to the
+// nearest one behind (never a 180 on the runway itself). Only the airport's own exits and holding points, never one with traffic waiting at it.
+// [{ e, back }] in order of preference
+function depExits(ac){
+  const R = rwyOf(depRw(ac)), dir = depRw(ac) === R.lo ? 1 : -1, side = d => d > 0 ? 'W' : 'E';
+  const at = ac.state === 'LINEUP' && ac.path && ac.path.pts.length ? ac.path.pts[ac.path.pts.length-1] : [ac.x, ac.y], m = R.mOf(at);
+  const home = HOLDS[ac.hp] ? Math.sign(HOLDS[ac.hp].off || 0) : 0;
+  const busy = e => S.acs.some(o => o !== ac && o.ground && ((o.hp === e && (['HOLDPT', 'LINEUP'].includes(o.state) || (o.state === 'TAXI' && !o.holdAt))) || dist(o.x, o.y, ...GN[HOLDS[e].node].p) < 70*M2NM)) ? 1 : 0;
+  const can = (e, d) => (HOLDS[e].on ?? RWYS[0].id) === R.id && FIL[e] && FIL[e][side(d)] && FIL[e][side(d)].length && GN[HOLDS[e].node] && GN[HOLDS[e].rwy];
+  const order = (L, from, d) => L.map(e => ({ e, a: (FIL[e][side(d)][0][0] - from)*d, b: busy(e), s: home && Math.sign(HOLDS[e].off || 0) !== home ? 1 : 0 })).filter(x => x.a > 20)
+    .sort((x, y) => x.b - y.b || x.s - y.s || x.a - y.a);
+  const keys = Object.keys(HOLDS), ahead = order(keys.filter(e => can(e, dir)), m, dir).map(x => ({ e: x.e, back: false }));
+  const pad = !ahead.length && !R.ends && R.TURN_END && (dir > 0 ? R.TURN_E : R.TURN_W) && (dir > 0 ? R.TURN_E : R.TURN_W).length;
+  const back = pad ? order(keys.filter(e => can(e, -dir)), dir > 0 ? R.TURN_END.E : R.TURN_END.W, -dir).map(x => ({ e: x.e, back: true })) : [];
+  return ahead.length ? ahead : back;
+}
+// along the centreline at taxi speed (round the turning pad first when it backtracks), off through the exit's fillet
+// and past its holding point until the whole aircraft is clear, a little way along the route back to its own holding
+// point (it stops short of any other runway)
+function depVacate(ac, ex, back){
+  const R = rwyOf(depRw(ac)), dir = depRw(ac) === R.lo ? 1 : -1, H = HOLDS[ex], pts = [];
+  if (back) for (const [mm, o] of dir > 0 ? R.TURN_E : R.TURN_W) pts.push(padPt(R, mm, o));
+  pts.push(...filIn(ex, (back ? -dir : dir) > 0 ? 'W' : 'E'), GN[H.rwy].p, ...holdLink(ex).reverse(), GN[H.node].p);
+  // (off by its own holding point: along the way back towards the apron instead)
+  const own = HOLDS[ac.hp] && HOLDS[ac.hp].node, to = own && own !== H.node ? own : ac.stand && ac.stand.node, r = to && (route(H.node, to, undefined, vacFace(ex)) || route(H.node, to)), need = ((ac.perf.len || 40) + 20)/1852;
+  if (r) for (let i = 1, D = 0; i < r.nodes.length - 1 && D < need; i++) {
+    const a = GN[r.nodes[i-1]].p, n = GN[r.nodes[i]], L = dist(...a, ...n.p);
+    if (n.p.hs || /^R/.test(n.id)) break;
+    if (D + L > need) { const k = (need - D)/L, q = [a[0] + (n.p[0]-a[0])*k, a[1] + (n.p[1]-a[1])*k]; q.ext = true; pts.push(q); break; }
+    pts.push(n.p); D += L;
+  }
+  Object.assign(ac, { state: 'TAXI', depVac: ex, xing: ac.rwyId, need: null, holdAt: null, held: false, cto: false, luq: false, luAfter: null });
+  setPath(ac, pts, 20, ['depOff', { ex }]);
+}
 // TAXI for an arrival that has vacated: to its planned stand, or another (st), by the shortest route or via named taxiways
 function taxiIn(ac, st, via, hold){
   // still rolling off (or re-routed while taxiing in): carry on to the vacate stop point, then on from there
@@ -1039,7 +1076,7 @@ function startLineUp(ac, v){
 
 // a departure taxiing to its runway holding point (not an intermediate one): it can be cleared to line up or take off
 // before it gets there, and rolls straight on through the holding point
-const luTaxi = ac => ac.kind === 'DEP' && ac.state === 'TAXI' && !!ac.path && !ac.path.ihp && !ac.holdAt && !!ac.hp && !!HOLDS[ac.hp];
+const luTaxi = ac => ac.kind === 'DEP' && ac.state === 'TAXI' && !!ac.path && !ac.path.ihp && !ac.holdAt && !ac.depVac && !!ac.hp && !!HOLDS[ac.hp];
 
 // ═════════════════════════ commands ═════════════════════════
 // a flight handed to the next unit is shown in its own colour and can't be selected or instructed
@@ -1286,6 +1323,7 @@ function commandRun(str){
       { const [sa, ra] = hold ? PH.taxiHold(ac, hold, vw) : PH.taxiIn(ac, st, vw); said.push(sa); reads.push(ra); }
     } else if (t === 'TAXI') {
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
+      if (ac.depVac) { sys(`${ac.cs} is still vacating the runway: give it its taxi once it is clear.`); continue; }
       const ihp = toks[i+1] && IHPS[toks[i+1]] && !HOLDS[toks[i+1]] ? IHPS[toks[++i]] : null;   // an intermediate holding point on the way
       let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
       if (APT.depHoldAs) hp = APT.depHoldAs(ac, hp);   // a name with a holding point each side of the runway: the side departures use
@@ -1331,6 +1369,7 @@ function commandRun(str){
       else if (near) sys(`Careful: ${near.cs} is lined up at about the same point as ${ac.cs}.`, true);
       else if (typeof vehOnRwy === 'function' && vehOnRwy(depRw(ac))) sys(`Careful: ${radioName(vehOnRwy(depRw(ac)))} is on the runway.`, true);
       if (APT.xing && S.xing.st !== 'CLOSED' && ((S.rwy === RW_LO && HOLDS[ac.hp].m > XING_M) || (S.rwy === RW_HI && HOLDS[ac.hp].m < XING_M))) sys('The backtrack crosses Winston Churchill Avenue: close the road first.', true);
+      { const fs = typeof flowStop === 'function' && flowStop(ac); if (fs) sys(`Careful: ${fs.who} has stopped ${flowWhat(fs)} until ${flowEnd(fs)}Z: ${ac.cs} will wait on the runway.`, true); }
       if (tr && !tr.passed) { ac.luAfter = tr.o; ac.need = null; }   // conditional: it lines up once the traffic has gone by
       else if (luTaxi(ac)) { ac.luq = true; ac.path.thru = true; }   // still taxiing: it rolls straight on through the holding point
       else startLineUp(ac);
@@ -1340,6 +1379,8 @@ function commandRun(str){
     } else if (t === 'CTO') {
       if (!['HOLDPT','LINEUP','LINEDUP'].includes(ac.state) && !luTaxi(ac)) { sys(`${ac.cs} is not ready for takeoff${ac.state === 'TAXI' && (ac.holdAt || (ac.path && ac.path.ihp)) ? ': taxi it on to the runway holding point first' : ''}.`); continue; }
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
+      // a departure stop from the next unit: the controller knows, so it isn't given
+      { const fs = typeof flowStop === 'function' && flowStop(ac); if (fs) { sys(`${fs.who} has stopped ${flowWhat(fs)} until ${flowEnd(fs)}Z (${fs.why}): ${ac.cs} can't go yet. Hold it${ac.onRwy ? ', or vacate the runway (VAC)' : ''}.`, true); continue; } }
       { const f = (ac.state === 'HOLDPT' || luTaxi(ac)) && luFull(ac); if (f) { sys(`${f}: no more than two at once, each from its own holding point.`, true); continue; } }
       { const me = luM(ac), ahead = luOthers(ac).find(o => o.onRwy && luM(o) > me + 50);   // one lined up further down the runway goes first
         if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
@@ -1348,7 +1389,7 @@ function commandRun(str){
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(depRw(ac)); if (blk) { sys(`Runway ${depRw(ac)} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
       if (needRel(ac)) { const R = ac.rel, who = relUnit(ac);
-        if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : ': request one with REL first'}.`, true); continue; }
+        if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : R && R.st === 'CXL' ? ': it was cancelled, request a new one with REL once departures resume' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
       const sid = sidName(ac.gate, depRw(ac)), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
       ac.cto = true; ac.need = null; ac.depRwy = depRw(ac); ac.luAfter = null;
@@ -1356,6 +1397,16 @@ function commandRun(str){
       else if (ac.path && (ac.state === 'TAXI' || ac.state === 'LINEUP')) { ac.path.thru = true; if (ac.state === 'LINEUP') ac.path.roll = true; }   // rolling: straight on into the take-off
       { const [sa, ra] = PH.cto(ac, sid, chg); said.push(sa); reads.push(ra); }
       if (ac.state === 'LINEDUP') beginTakeoff(ac);
+    } else if (t === 'VAC' && ac.kind === 'DEP') {
+      // a departure on the runway that can't go (a departure stop, a closure): off again by an exit ahead of it
+      if (air || !['LINEUP', 'LINEDUP'].includes(ac.state) || ac.vacq) { sys(`${ac.cs} is ${ac.vacq || ac.depVac ? 'already vacating' : ac.state === 'TAKEOFF' ? 'rolling' : 'not lined up on the runway'}.`); continue; }
+      const ch = depExits(ac), tok = toks[i+1], named = tok && Object.keys(HOLDS).some(k => k === tok || k.replace(/~\d+$/, '') === tok);
+      const X = named ? ch.find(x => x.e === tok || x.e.replace(/~\d+$/, '') === tok) : ch[0], ex = X && X.e; if (named) i++;
+      if (!ex) { sys(named ? `${tok} is not an exit ahead of ${ac.cs} it can use.` : `No free exit ahead of ${ac.cs} on runway ${depRw(ac)}.`); continue; }
+      const fs = typeof flowStop === 'function' && flowStop(ac), tell = fs && ac.flowTold !== fs.id ? flowTell(ac) : null, cx = ac.cto;
+      ac.cto = false; ac.luq = false; ac.luAfter = null; ac.depRwy = null;
+      if (ac.state === 'LINEUP') { ac.vacq = [ex, X.back]; if (ac.path) ac.path.roll = false; } else depVacate(ac, ex, X.back);
+      said.push(`${tell ? tell[0] + ', ' : ''}${cx ? 'cancel takeoff clearance, ' : ''}${X.back ? 'backtrack, ' : ''}vacate the runway via ${exitWord(ex)}, report vacated`); reads.push(`${tell ? tell[1] + ', ' : ''}${X.back ? 'backtrack, ' : ''}vacating via ${exitWord(ex)}, wilco`);
     } else if (t === 'VAC') {
       // VAC [exit]: on the runway, vacate now (by that exit); on an approach, the exit to plan the landing roll for
       const rolling = ac.state === 'ROLLED' || ac.state === 'ROLLOUT' || (ac.state === 'VACATING' && ac.onRwy);
@@ -1385,7 +1436,19 @@ function commandRun(str){
       if (ac.kind !== 'DEP' || air || !needRel(ac)) { sys(`${ac.cs} doesn't need a departure release.`); continue; }
       if (ac.rel && ac.rel.st === 'REQ') { sys(`Release for ${ac.cs} already requested: ${relUnit(ac)} will call back.`); continue; }
       if (ac.rel && ac.rel.st === 'OK') { sys(`${ac.cs} is already released until ${zt(ac.rel.until).slice(0,5)}.`); continue; }
+      { const fs = typeof flowStop === 'function' && flowStop(ac); if (fs) { coord(`${relUnit(ac)}, ${APT.coordName}, request release ${ac.cs}`, APT.coordName.toUpperCase()); coord(`${APT.coordName}, ${fs.who}, negative, ${flowWhat(fs)} stopped until ${flowEnd(fs)}`, fs.who.toUpperCase()); continue; } }
       requestRelease(ac);
+    } else if (t === 'CXL' || t === 'CANCEL') {
+      // cancel a line-up or take-off clearance it hasn't acted on yet (not once it is rolling)
+      if (ac.kind !== 'DEP' || air || !(ac.cto || ac.luq || ac.luAfter) || ac.state === 'TAKEOFF') { sys(`${ac.cs} has no ${ac.state === 'TAKEOFF' ? 'clearance left to cancel: it is rolling' : 'line-up or take-off clearance to cancel'}.`); continue; }
+      const what = ac.cto ? 'takeoff clearance' : 'line up';
+      ac.cto = false; ac.luq = false; ac.luAfter = null; ac.depRwy = null;
+      if (ac.path) { ac.path.roll = false; if (ac.state === 'TAXI') ac.path.thru = false; }
+      const where = ac.state === 'LINEUP' || ac.state === 'LINEDUP' ? 'line up and wait' : `hold at holding point ${PHON[ac.hp] || ac.hp}`;
+      said.push(`hold position, cancel ${what}, I say again, cancel ${what}, ${where}`); reads.push(`cancelling ${what}, ${ac.state === 'LINEUP' || ac.state === 'LINEDUP' ? 'lining up and waiting' : 'holding at ' + (PHON[ac.hp] || ac.hp)}`);
+    } else if (t === 'DLY' || t === 'DELAY') {
+      const r = typeof flowTell === 'function' && flowTell(ac); if (!r) { sys(`${ac.cs} isn't held by a departure stop.`); continue; }
+      said.push(r[0]); reads.push(r[1]);
     } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
@@ -1503,7 +1566,7 @@ function step(dt){
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
   }
 
-  stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt);
+  stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt); if (S.flow) stepFlow();
   if (typeof stepVehicles === 'function') stepVehicles(dt);
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
