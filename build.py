@@ -132,6 +132,7 @@ const GEO = {r(A['geo']).strip()};
 {prof}
 const AP_DATA = {ap_data};
 {r('sim.js')}
+{r('shapes.js')}
 {r('ui.js')}
 {r('emerg.js')}
 {r('career.js')}
