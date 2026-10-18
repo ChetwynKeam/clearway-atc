@@ -6882,44 +6882,67 @@ const acFam = t => { for (const [re, f] of AC_FAM_RE) if (re.test(t || '')) retu
 // the size the family's icon is drawn at when zoomed out (half of the en-route icon is about 9 px)
 const AC_ICON_K = { a380: 1.25, b747: 1.22, b777: 1.15, a350: 1.15, a340: 1.15, a330: 1.15, b787: 1.15, b767: 1.08, b757: 1.03, a400: 1.05, ejet: .94, crj: .9, erj: .9, atr: .9, dash8: .9, bizs: .8, bizl: .85, falcon: .82, single: .75 };
 
-// build one type's outline as Path2Ds, centred on mid-length (acMid), nose up at -len/2
+// finishing details per family: nb how blunt the nose is (0 pointed, 1 round), wl winglet/sharklet length (m, 0 square
+// tip), ftf flap-track fairings per wing (the canoes behind the trailing edge)
+const AC_DET = {
+  a320: { nb: .62, wl: 1.4, ftf: 3 }, b737: { nb: .42, wl: 1.6, ftf: 3 }, a220: { nb: .55, wl: .8, ftf: 3 }, b757: { nb: .45, wl: 1.5, ftf: 3 },
+  b767: { nb: .5, wl: 1.6, ftf: 3 }, a330: { nb: .6, wl: 1.8, ftf: 4 }, a340: { nb: .6, wl: 1.8, ftf: 4 }, a350: { nb: .55, ftf: 4 },
+  b787: { nb: .5, ftf: 3 }, b777: { nb: .55, ftf: 3 }, b747: { nb: .58, ftf: 4 }, a380: { nb: .7, wl: .8, ftf: 5 },
+  ejet: { nb: .5, wl: 1.1, ftf: 2 }, crj: { nb: .45, wl: .9, ftf: 2 }, erj: { nb: .4, ftf: 1 }, atr: { nb: .5 }, dash8: { nb: .45 },
+  a400: { nb: .7 }, bizs: { nb: .4, wl: .6 }, bizl: { nb: .42, wl: .9, ftf: 1 }, falcon: { nb: .42, wl: .7, ftf: 1 }, single: { nb: .7 }
+};
+// build one type's outline as Path2Ds, centred on mid-length (acMid), nose up at -len/2. The wing and tailplane are
+// built for the right side only and drawn twice, mirrored.
 function buildShape(fam, span, len){
-  const F = AC_FAM[fam], kx = span/F.ref[0], h = F.fw/2, Y0 = len/2, b = span/2, W = F.wing, tanD = d => Math.tan(d*D2R);
-  const frame = new Path2D(), wings = new Path2D(), under = new Path2D(), over = new Path2D(), fin = new Path2D(), win = new Path2D(), props = [];
-  // the left side is traced backwards, so both sides wind the same way as the fuselage and the nonzero fill joins them
-  const mirror = (path, pts) => { for (const s of [1, -1]) { const q = s > 0 ? pts : pts.slice().reverse(); path.moveTo(s*q[0][0], q[0][1] - Y0); for (const [x, y] of q.slice(1)) path.lineTo(s*x, y - Y0); path.closePath(); } };
-  // fuselage: ogive nose, parallel cabin, tail cone tapering to the APU
-  const te = F.tail != null ? F.tail : 0.3;
-  frame.moveTo(0, -Y0);
-  frame.bezierCurveTo(h*0.55, -Y0, h, F.nose*0.45 - Y0, h, F.nose - Y0); frame.lineTo(h, len - F.cone - Y0); frame.quadraticCurveTo(h, len - F.cone*0.3 - Y0, te, len - Y0);
-  frame.lineTo(-te, len - Y0); frame.quadraticCurveTo(-h, len - F.cone*0.3 - Y0, -h, len - F.cone - Y0); frame.lineTo(-h, F.nose - Y0); frame.bezierCurveTo(-h, F.nose*0.45 - Y0, -h*0.55, -Y0, 0, -Y0);
-  frame.closePath();
-  // wing
-  const yLE = W.le*len, sw = tanD(W.sw), tc = W.tc*kx, rk = W.rake && span >= W.rake[2] ? W.rake : null;
+  const F = AC_FAM[fam], D = AC_DET[fam] || {}, kx = span/F.ref[0], h = F.fw/2, Y0 = len/2, b = span/2, W = F.wing, tanD = d => Math.tan(d*D2R);
+  const body = new Path2D(), half = new Path2D(), under = new Path2D(), over = new Path2D(), intake = new Path2D(), hinge = new Path2D(), fin = new Path2D(), win = new Path2D(), props = [];
+  const M = (p, x, y) => p.moveTo(x, y - Y0), Ln = (p, x, y) => p.lineTo(x, y - Y0), Q = (p, cx1, cy1, x, y) => p.quadraticCurveTo(cx1, cy1 - Y0, x, y - Y0);
+  // fuselage: ogive nose, parallel cabin, tail cone tapering to the APU exhaust
+  const te = F.tail != null ? F.tail : 0.3, nb = D.nb != null ? D.nb : .55;
+  body.moveTo(0, -Y0);
+  body.bezierCurveTo(h*nb, -Y0, h, F.nose*0.32 - Y0, h, F.nose - Y0); Ln(body, h, len - F.cone); body.bezierCurveTo(h, len - F.cone*0.45 - Y0, te*1.6, len - F.cone*0.12 - Y0, te, len - Y0);
+  Ln(body, -te, len); body.bezierCurveTo(-te*1.6, len - F.cone*0.12 - Y0, -h, len - F.cone*0.45 - Y0, -h, len - F.cone - Y0); Ln(body, -h, F.nose); body.bezierCurveTo(-h, F.nose*0.32 - Y0, -h*nb, -Y0, 0, -Y0);
+  body.closePath();
+  // wing: leading edge (with raked tips), trailing edge straight across inboard of the kink, fillets into the body
+  const yLE = W.le*len, sw = tanD(W.sw), tc = W.tc*kx, rk = W.rake && span >= W.rake[2] ? W.rake : null, wl = rk ? 0 : (D.wl || 0)*kx;
   const leAt = x => { const y = yLE + (x - h)*sw; return rk && x > b - rk[0] ? y + (x - (b - rk[0]))*(tanD(W.sw + rk[1]) - sw) : y; };
-  const wpts = [[h*0.9, yLE]];
-  if (rk) wpts.push([b - rk[0], leAt(b - rk[0])]);
-  wpts.push([b, leAt(b)], [b, leAt(b) + tc*(rk ? 0.55 : 1)]);
-  if (W.kink) { const xk = h + W.kink*(b - h), yk = leAt(xk) + W.kc*kx; if (rk) wpts.push([b - rk[0], leAt(b - rk[0]) + tc]); wpts.push([xk, yk], [h*0.9, yk]); }
-  else { if (rk) wpts.push([b - rk[0], leAt(b - rk[0]) + tc]); wpts.push([h*0.9, yLE + W.rc*kx]); }
-  mirror(frame, wpts); mirror(wings, wpts);
-  // tailplane
-  const T = F.ht, yT = T.le*len, ts = T.span*kx/2, tst = tanD(T.sw);
-  const tpts = [[0, yT], [ts, yT + ts*tst], [ts, yT + ts*tst + T.tc*kx], [0, yT + T.rc*kx]];
-  mirror(frame, tpts);
-  // fin seen from above: a narrow ridge on the centreline (ahead of the tailplane only, on a T-tail)
+  const xk = W.kink ? h + W.kink*(b - h) : h, rc = W.kink ? W.kc*kx + (xk - h)*sw : W.rc*kx, yk = yLE + rc;
+  const tipTE = leAt(b) + tc*(rk ? 0.55 : 1), xr = rk ? b - rk[0] : b, yr = rk ? leAt(xr) + tc : tipTE;
+  const teAt = x => x <= xk ? yk : x >= xr ? yr + (x - xr)/(b - xr || 1)*(tipTE - yr) : yk + (x - xk)/(xr - xk)*(yr - yk);
+  const chordAt = x => teAt(x) - leAt(x), g = Math.min(rc*0.16, b*0.08), fa = rc*0.22, fb = rc*0.32;
+  M(half, h - 0.05, yLE - fa); Q(half, h, yLE, h + g, yLE + g*sw);
+  if (rk) Ln(half, xr, leAt(xr));
+  if (wl) { Ln(half, b - wl, leAt(b - wl)); Q(half, b - wl*0.15, leAt(b - wl*0.15), b, leAt(b) + tc*0.35); Ln(half, b, tipTE); }
+  else { Ln(half, b, leAt(b)); Ln(half, b, tipTE); }
+  if (rk) Ln(half, xr, yr);
+  Ln(half, xk, yk); Ln(half, h + g, yk); Q(half, h, yk, h - 0.05, yk + fb); half.closePath();
+  // flap-track fairings: canoes under the wing, sticking out behind the trailing edge
+  for (let i = 0; i < (D.ftf || 0); i++) {
+    const x = h + (b - h)*(0.2 + 0.62*i/Math.max(1, (D.ftf || 1) - 1)*((D.ftf || 1) > 1 ? 1 : 0)), c = chordAt(x), w = Math.max(0.35, c*0.09), y = teAt(x);
+    M(half, x + w/2, y - c*0.25); Q(half, x + w/2, y + c*0.18, x, y + c*0.22); Q(half, x - w/2, y + c*0.18, x - w/2, y - c*0.25); half.closePath();   // wound like the wing, so they join it
+  }
+  // flap and aileron hinge line, seen at close range
+  for (let i = 0; i <= 12; i++) { const x = h + g + (b*0.94 - h - g)*i/12, y = leAt(x) + chordAt(x)*0.74; i ? Ln(hinge, x, y) : M(hinge, x, y); }
+  // tailplane with a fillet at the root
+  const T = F.ht, yT = T.le*len, ts = T.span*kx/2, tst = tanD(T.sw), trc = T.rc*kx, ttc = T.tc*kx, hr = T.t ? 0.2 : Math.max(0.3, te*2);
+  M(half, 0, yT - trc*0.3); Q(half, hr, yT, hr + trc*0.15, yT + trc*0.15*tst); Ln(half, ts, yT + ts*tst); Q(half, ts + ttc*0.15, yT + ts*tst + ttc*0.5, ts, yT + ts*tst + ttc);
+  Ln(half, hr, yT + trc); Ln(half, 0, yT + trc); half.closePath();
+  // fin seen from above: a narrow ridge with its dorsal fillet (only ahead of the tailplane on a T-tail)
   const fy = F.fin*len, ft = Math.max(0.3, F.fw*0.1), fe = T.t ? yT + 0.3 : len - 0.4;
-  fin.moveTo(0, fy - Y0); fin.lineTo(ft/2, fy + (fe - fy)*0.35 - Y0); fin.lineTo(ft/2, fe - Y0); fin.lineTo(-ft/2, fe - Y0); fin.lineTo(-ft/2, fy + (fe - fy)*0.35 - Y0); fin.closePath();
-  // engines
-  const pod = (path, x, y, l, d) => { const r = d/2; path.moveTo(x - r, y + r*0.8 - Y0); path.quadraticCurveTo(x - r, y - Y0, x - r*0.85, y - Y0); path.lineTo(x + r*0.85, y - Y0); path.quadraticCurveTo(x + r, y - Y0, x + r, y + r*0.8 - Y0);
-    path.lineTo(x + r*0.6, y + l - Y0); path.lineTo(x - r*0.6, y + l - Y0); path.closePath(); };
-  for (const e of F.eng || []) for (const s of [1, -1]) { const x = s*(e.s*b), y = leAt(Math.abs(x)) - e.fwd; pod(W.high ? over : under, x, y, e.l, e.d); if (e.prop) props.push([x, y - 0.25 - Y0, e.prop]); }
-  for (const e of F.rear || []) for (const s of e.x ? [1, -1] : [1]) pod(over, s*e.x, e.y*len, e.l, e.d);
+  M(fin, 0, fy - (fe - fy)*0.25); Q(fin, ft/2, fy + (fe - fy)*0.15, ft/2, fy + (fe - fy)*0.4); Ln(fin, ft/2, fe); Ln(fin, -ft/2, fe); Ln(fin, -ft/2, fy + (fe - fy)*0.4); Q(fin, -ft/2, fy + (fe - fy)*0.15, 0, fy - (fe - fy)*0.25); fin.closePath();
+  // engines: intake lip, fan cowl, tapering to the nozzle
+  const pod = (p, x, y, l, d) => { const r = d/2;
+    M(p, x - r*0.9, y); Ln(p, x + r*0.9, y); Q(p, x + r*1.02, y + l*0.12, x + r, y + l*0.35); Q(p, x + r*0.95, y + l*0.8, x + r*0.55, y + l);
+    Ln(p, x - r*0.55, y + l); Q(p, x - r*0.95, y + l*0.8, x - r, y + l*0.35); Q(p, x - r*1.02, y + l*0.12, x - r*0.9, y); p.closePath();
+    intake.ellipse(x, y + l*0.02 - Y0, r*0.85, Math.max(0.12, r*0.14), 0, 0, Math.PI*2); };
+  for (const e of F.eng || []) { const x = e.s*b, y = leAt(x) - e.fwd; pod(W.high ? over : under, x, y, e.l, e.d); if (e.prop) props.push([x, y - 0.25 - Y0, e.prop], [-x, y - 0.25 - Y0, e.prop]); }
+  const centre = new Path2D();
+  for (const e of F.rear || []) pod(e.x ? over : centre, e.x, e.y*len, e.l, e.d);
   if (F.noseProp) props.push([0, -0.2 - Y0, F.noseProp]);
   // flight-deck windows
-  const wy = F.nose*0.55, ww = h*0.62;
+  const wy = F.nose*0.6, ww = h*0.7;
   win.moveTo(-ww, wy - Y0); win.quadraticCurveTo(0, wy - F.nose*0.16 - Y0, ww, wy - Y0); win.lineTo(ww*0.8, wy + F.nose*0.1 - Y0); win.quadraticCurveTo(0, wy - F.nose*0.04 - Y0, -ww*0.8, wy + F.nose*0.1 - Y0); win.closePath();
-  return { frame, wings, under, over, fin, win, props, tip: [b, leAt(b) + tc*0.5 - Y0], size: Math.max(span, len), high: !!W.high };
+  return { body, half, under, over, centre, intake, hinge, fin, win, props, h, tip: [b, leAt(b) + tc*0.5 - Y0], size: Math.max(span, len), high: !!W.high };
 }
 const SHAPES = new Map();
 function acShape(t, span, len){
@@ -6927,20 +6950,36 @@ function acShape(t, span, len){
   let s = SHAPES.get(k); if (!s) { s = buildShape(fam, span, len); SHAPES.set(k, s); }
   return s;
 }
-// draw a shape at m px per metre. o: { line: outline colour, lw: outline px, shadow: fill only, detail: windows and shading }
+// draw a shape at m px per metre. o: { line: outline colour, lw: outline px, shadow: fill only, detail: windows, shading
+// and hinge lines, spin: propellers turning }
 function drawShape(sh, X, Y, hdg, m, col, o){
   cx.save(); cx.translate(X, Y); cx.rotate(hdg*D2R); cx.scale(m, m);
   cx.lineJoin = 'round';
-  const outline = p => { if (!o.shadow && o.line) { cx.strokeStyle = o.line; cx.lineWidth = 2*o.lw/m; cx.stroke(p); } cx.fillStyle = col; cx.fill(p); };
+  const both = f => { f(); cx.scale(-1, 1); f(); cx.scale(-1, 1); };
+  const line = o.shadow ? null : o.line, lw = 2*o.lw/m;
+  const stroke = p => { cx.strokeStyle = line; cx.lineWidth = lw; cx.stroke(p); }, fill = (p, c) => { cx.fillStyle = c || col; cx.fill(p); };
+  // every outline first and every fill after, so only the outside edge of the whole aircraft shows
   // engines under a low wing first, so the wing covers their back and only the intakes show ahead of it
-  outline(sh.under); if (!o.shadow) { cx.fillStyle = 'rgba(20,28,40,.16)'; cx.fill(sh.under); }
-  outline(sh.frame);
+  if (line) both(() => stroke(sh.under)); both(() => fill(sh.under));
+  if (!o.shadow) { both(() => fill(sh.under, 'rgba(20,28,40,.16)')); both(() => fill(sh.intake, 'rgba(14,20,30,.55)')); }
+  if (line) { stroke(sh.body); both(() => stroke(sh.half)); }
+  both(() => fill(sh.half)); fill(sh.body);
   if (!o.shadow) {
-    if (o.detail) { cx.fillStyle = 'rgba(20,28,40,.06)'; cx.fill(sh.wings); }
-    cx.fillStyle = 'rgba(20,28,40,.22)'; cx.fill(sh.fin);
-    if (o.detail) { cx.fillStyle = 'rgba(14,22,34,.75)'; cx.fill(sh.win); }
+    if (o.detail) {
+      both(() => fill(sh.half, 'rgba(20,28,40,.05)'));
+      // the fuselage as a cylinder: shaded at the sides, a highlight along the crown
+      if (!sh.grad) { const g = cx.createLinearGradient(-sh.h, 0, sh.h, 0);
+        g.addColorStop(0, 'rgba(10,18,30,.24)'); g.addColorStop(.2, 'rgba(10,18,30,.05)'); g.addColorStop(.42, 'rgba(255,255,255,.28)'); g.addColorStop(.6, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(10,18,30,.2)'); sh.grad = g; }
+      fill(sh.body, sh.grad); fill(sh.body, 'rgba(0,0,0,0)');
+      cx.strokeStyle = 'rgba(20,28,40,.28)'; cx.lineWidth = 0.7/m; both(() => cx.stroke(sh.hinge));
+      fill(sh.win, 'rgba(14,22,34,.78)');
+    }
+    fill(sh.fin, 'rgba(20,28,40,.24)');
   }
-  outline(sh.over); if (!o.shadow) { cx.fillStyle = 'rgba(20,28,40,.16)'; cx.fill(sh.over); }
+  // engines on top: rear-mounted, or hung on a high wing
+  if (line) { both(() => stroke(sh.over)); stroke(sh.centre); }
+  both(() => fill(sh.over)); fill(sh.centre);
+  if (!o.shadow) { both(() => fill(sh.over, 'rgba(20,28,40,.18)')); fill(sh.centre, 'rgba(20,28,40,.18)'); }
   if (!o.shadow && sh.props.length) {
     cx.strokeStyle = 'rgba(20,24,30,.8)'; cx.lineWidth = Math.max(0.25, 1.1/m);
     cx.beginPath(); for (const [x, y, d] of sh.props) { cx.moveTo(x - d/2, y); cx.lineTo(x + d/2, y); } cx.stroke();
