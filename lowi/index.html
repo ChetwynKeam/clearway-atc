@@ -11334,7 +11334,7 @@ function aiGround(ac){
     if (!aiDue(ac, n, 5, 12)) return;
     const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
     if (sl && sl.ctot != null && nowMin() < sl.ctot - 20) return;   // its slot is a while off: it waits on stand
-    { const fs = flowStop(ac); if (fs && fs.until - S.t > 300) { ac.aiWhy = `departures stopped until ${flowEnd(fs)}`; return; } }   // a long departure stop: it waits on stand too
+    { const fs = flowStop(ac); if (fs && fs.until - S.t > 300) { ac.aiWhy = `departures stopped until ${flowEnd(fs)}`; return; } if (/^departures stopped/.test(ac.aiWhy || '')) ac.aiWhy = ''; }   // a long departure stop: it waits on stand too
     if (!pushClear(ac) && aiSince(ac, n) < 150) return;
     if (!aiDo('GND', ac, 'PUSH')) aiDo('GND', ac, aiTaxiCmd(ac));
     return;
@@ -11343,7 +11343,7 @@ function aiGround(ac){
   if (n === 'Asking for the delay' && aiDue(ac, n + ac.flowTold, 3, 7)) return aiDo('GND', ac, 'DLY');
   // off the runway again in a departure stop: back to the holding point once it is nearly over
   if (n.startsWith('Holding at') && ac.kind === 'DEP' && flowStop(ac) && flowStop(ac).until - S.t > 150) { ac.aiWhy = `departures stopped until ${flowEnd(flowStop(ac))}`; return; }
-  if (n.startsWith('Holding at') && aiDue(ac, n, 4, 9)) return aiDo('GND', ac, aiTaxiCmd(ac));
+  if (n.startsWith('Holding at') && aiDue(ac, n, 4, 9)) { if (/^departures stopped/.test(ac.aiWhy || '')) ac.aiWhy = ''; return aiDo('GND', ac, aiTaxiCmd(ac)); }
   if ((n === 'Request taxi' || n === 'Needs a stand') && aiDue(ac, n, 3, 7)) {
     if (!ac.stand) aiDo('GND', ac, 'STAND AUTO');
     return aiDo('GND', ac, ac.stand ? aiTaxiCmd(ac) : 'STAND AUTO TAXI');
