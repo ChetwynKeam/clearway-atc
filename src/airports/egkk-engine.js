@@ -322,9 +322,12 @@ const sraMinsOk = w => minsOk(w, '26L');
 // ═════════════════════════ engine hooks ═════════════════════════
 // the terminal an airline uses; easyJet spills over to the other terminal when its own is full
 const termOf = ac => EGKK.TERMINAL_OF[ac.cs.slice(0, 3)] || (isBiz(ac) ? 'W' : 'S');
+// any free stand of the terminal that takes it, the smallest that fits first (a narrowbody leaves the widebody stands
+// free), picked at random across the whole terminal
 function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
-  return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
+  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
+  return best[Math.floor(Math.random()*best.length)] || null;
 }
 const APT = {
   lineSay: { b: 'West', r: 'East' },   // taxilane S's side lines are S West and S East (VIA S WEST, VIA S EAST)

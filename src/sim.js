@@ -596,6 +596,24 @@ for (const t of STANDS) {
     get(){ if (own) return own; for (const [o, d] of t.nb) { const a = o.ownOcc; if (a && d < (spanOf(a) + 36)/2) return a; } return null; } });
   Object.defineProperty(t, 'ownOcc', { get: () => own });
 }
+// stand sizes. Where the airport doesn't publish them (Heathrow does), each stand takes the widest aircraft that fits the
+// room around it: its wingspan at most 1.12 times the sideways gap to the next stand along (a MARS centre, such as 231,
+// not counting its own halves 231L and 231R), and with its wings and body clear of every taxiway centreline that isn't a
+// dual-function one (wings 10 m, body 6 m). Narrowbodies (36 m) fit everywhere; a 787 never sits on a narrowbody stand.
+{ const base = id => { const m = /^(.*\d)[LRAB]$/.exec(id); return m && STANDS.some(s => s.id === m[1]) ? m[1] : id; };
+  const TIERS = [[80, 73], [65, 74], [61, 64], [52, 55], [48, 48], [36, 40]];   // span, length
+  const lanes = GE.filter(e => !e.bare && !/^R/.test(e.a) && !/^R/.test(e.b) && dist(...GN[e.a].p, ...GN[e.b].p) > 1e-7 && !(APT.dualLane && APT.dualLane(e)));
+  for (const s of STANDS) { if (!s.p || s.hdg == null || s.maxSpan || s.area === 'hangar') continue;
+    const u = dirv(s.hdg); let lat = Infinity;
+    for (const o of STANDS) { if (o === s || !o.p || base(o.id) === s.id || base(s.id) === o.id) continue;   // a MARS centre and its halves overlap; the two halves don't
+      const dx = (o.p[0] - s.p[0])/M2NM, dy = (o.p[1] - s.p[1])/M2NM, al = dx*u[0] + dy*u[1], la = Math.abs(dx*u[1] - dy*u[0]);
+      if (Math.abs(al) < 35 && la > 12) lat = Math.min(lat, la); }
+    const near = lanes.filter(e => segDistM(s.p, GN[e.a].p, GN[e.b].p) < 120);
+    const clear = ([sp, len]) => { const n = add(s.p, s.hdg, len/2*M2NM), t = add(s.p, s.hdg + 180, len/2*M2NM), wl = add(s.p, s.hdg - 90, sp/2*M2NM), wr = add(s.p, s.hdg + 90, sp/2*M2NM);
+      return near.every(e => { const a = GN[e.a].p, b = GN[e.b].p; return segSegM(wl, wr, a, b) >= 10 && segSegM(n, t, a, b) >= 6; }); };
+    const fit = TIERS.find(T => T[0] <= Math.max(36, lat*1.12) && clear(T));
+    s.maxSpan = fit ? fit[0] : 36;
+  } }
 // the aircraft on or due at a stand next to st that leaves ac no room there (null: none)
 // dual-function taxiways (APT.dualLanes; Manchester's D between D9 and D10, NC, and LINK5 through stand 74: taxiway
 // or stand): while an aircraft is parked on a stand, the taxiway edges its wings or body cover (within 12 m of the
@@ -606,7 +624,7 @@ const DUAL = [];
 if (APT.dualLanes) for (const s of STANDS) {
   if (!s.p || s.hdg == null) continue;
   const big = { perf: { len: 76, span: 80 } };   // the most any aircraft could cover
-  s.under = GE.filter(e => !e.bare && dist(...GN[e.a].p, ...GN[e.b].p) > 1e-7 && covers(s, big, e));
+  s.under = GE.filter(e => !e.bare && dist(...GN[e.a].p, ...GN[e.b].p) > 1e-7 && (!APT.dualLane || APT.dualLane(e)) && covers(s, big, e));
   if (s.under.length) DUAL.push(s);
 }
 // called by the route searches: the closures as they stand now (the route memo is dropped when they change)
@@ -619,7 +637,7 @@ function refreshShut(){
   for (const s of on) for (const e of s.under) if (covers(s, s.ownOcc, e)) e.closed = true;
 }
 function standBy(st, ac){ for (const [o, d] of st.nb || []) { const a = o.ownOcc; if (a && a !== ac && d < (spanOf(a) + spanOf(ac))/2) return a; } return null; }
-// a stand with a published size (st.maxSpan, Heathrow) takes nothing wider
+// a stand takes nothing wider than its size (st.maxSpan: published at Heathrow, from the room around it elsewhere)
 const standRoom = (st, ac) => !standBy(st, ac) && !(st.maxSpan && spanOf(ac) > st.maxSpan + 1);
 const standFree = (s, ac) => !s.occ && standRoom(s, ac);
 const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => s.occ === ac || standFree(s, ac)).sort((a, b) => pa.has(b) - pa.has(a)); };
@@ -711,7 +729,9 @@ function taxiStart(ac){
   return ahead ? [ahead.id, brg(...p, ...GN[ahead.id].p)] : [ends.sort((x, y) => x.d - y.d)[0].id, h];
 }
 // outB (optional): the way it must be able to carry on from `to` (onto a runway holding point's link), if it can
-const routeAc = (ac, to, pen, outB) => { const [from, face] = taxiStart(ac); return (outB != null && face != null && route(from, to, pen, face, outB)) || route(from, to, pen, face); };
+// face (the way it points) is dropped only when no route goes forward from there: it turns round where it is rather than
+// stay stuck at the end of a taxilane
+const routeAc = (ac, to, pen, outB) => { const [from, face] = taxiStart(ac); return (outB != null && face != null && route(from, to, pen, face, outB)) || route(from, to, pen, face) || (face != null && route(from, to, pen)) || null; };
 function taxiRoute(ac, hp, via){
   if (via && via.length) { const o = !via.line && (taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v)))); if (o) return o;
     if (BIG_GROUND || via.line) { const r = routeAc(ac, HOLDS[hp].node, viaPen(via), holdOut(hp)); if (r) return r; } }   // big airports (or a line to keep to): keep to the named taxiways
@@ -724,7 +744,7 @@ function taxiOptions(ac, hp){
   if (BIG_GROUND) {
     // arriving at the holding point able to carry on along its link onto the runway (Madrid ZW2), where it can
     const ob = face != null ? holdOut(hp) : null, rt = pen => (ob != null && route(from, to, pen, face, ob)) || route(from, to, pen, face);
-    const best = rt(); if (!best) return [];
+    const best = rt() || (face != null && route(from, to)); if (!best) return [];   // no way forward: turn round
     const res = [], seen = new Set(), L0 = pathLen(best.nodes);
     const add = r => { if (!r) return; r.len = pathLen(r.nodes); r.via = viaOf(r.tws, hp); const k = r.via.join(''); if (seen.has(k) || r.len > L0*1.8) return; seen.add(k); res.push(r); };
     add(best);
@@ -740,7 +760,7 @@ function taxiOptions(ac, hp){
       vis.add(v); nodes.push(v); tws.push(e.tw); dfs(v, nodes, tws, len + e.len, vis, b, histOn(hist, b, e.len)); nodes.pop(); tws.pop(); vis.delete(v); }
   })(from, [from], [], 0, new Set([from]), face, face == null ? [] : [[face, 0]]);
   // the only way round is a loop back through a junction already passed (a block to go round): the shortest such
-  if (!out.length) { const r = route(from, to, undefined, face); if (r) out.push({ ...r, len: pathLen(r.nodes) }); }
+  if (!out.length) { const r = route(from, to, undefined, face) || (face != null && route(from, to)); if (r) out.push({ ...r, len: pathLen(r.nodes) }); }   // or, with no way forward, turn round
   out.sort((a, b) => a.len - b.len);
   const res = [];
   for (const r of out) { r.via = viaOf(r.tws, hp); const k = r.via.join(''); if (seen.has(k)) continue; seen.add(k); if (r.len > out[0].len*2.2 && res.length) continue; res.push(r); if (res.length === 3) break; }

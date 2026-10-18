@@ -927,7 +927,8 @@ function openTaxiPop(ac, anchor){
   const pre = ac.state === 'PARKED' ? [ac.stand.lp] : [[ac.x, ac.y]];
   const all = []; groups.forEach(g => g.opts.forEach((o, k) => all.push({ hp: g.hp, o, rec: g.hp === rec && k === 0 })));
   // intermediate holding points along the taxiways (London City T1-T9, Innsbruck L1/B1): taxi there and wait
-  const ihp = ihpOptions(...taxiStart(ac)); ihp.forEach(a => all.push(a));
+  // (only those it can carry on from towards its runway: not one it would reach facing into a dead end)
+  const ihp = ihpOptions(...taxiStart(ac)).filter(a => goesOn(a.o.nodes, HOLDS[rec].node)); ihp.forEach(a => all.push(a));
   const H = (hp, o) => { const pts = [...pre, ...o.nodes.map(id => GN[id].p)]; if (ac.pushed && !ac.leftStand && pts.length > 2 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[2]))) < 90) pts.splice(1, 1); return straightCross(pts); };
   const len = o => Math.round(o.len / M2NM / 10) * 10;
   showPop(ac, anchor, `<div class="lbl">Taxi clearance · runway ${depRw(ac)}</div><h4>${ac.cs} <span>${ac.stand && !ac.leftStand ? 'stand ' + ac.stand.id : 'on the move'} · ${ac.t}</span></h4>
@@ -956,6 +957,9 @@ function ihpOptions(from, face, rwyHolds){
     .filter(Boolean).sort((a, b) => a.o.len - b.o.len);
   return [...all.filter(a => !a.rwy), ...all.filter(a => a.rwy).slice(0, 8)];
 }
+// a route that ends where the aircraft can still taxi on to `goal` the way it arrives (not facing into a dead end)
+const goesOn = (nodes, goal) => { const n = nodes.length; if (n < 2 || nodes[n-1] === goal) return true;
+  const b = brg(...GN[nodes[n-2]].p, ...GN[nodes[n-1]].p); return headsOut(nodes[n-1], b) || !!route(nodes[n-1], goal, undefined, b); };
 function ihpGroup(all, opts){
   const row = a => `<button class="opt row" data-j="${all.indexOf(a)}"><span class="hp">${a.hp.replace(/~\d+$/, '')}</span><b>${hpWords(a.hp)}</b><span class="ln">${a.o.via.length ? 'via ' + a.o.via.join(' ') + ' · ' : ''}${Math.round(a.o.len / M2NM / 10) * 10} m</span></button>`;
   const grp = (list, h, sub) => list.length ? `<div class="grp"><div class="gh"><b>${h}</b><span>${sub}</span></div>${list.map(row).join('')}</div>` : '';

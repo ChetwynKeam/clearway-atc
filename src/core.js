@@ -118,6 +118,25 @@ function routeFacing(from, to, pen, face, outB){
   if (ck) TAXI_MEMO.set(ck, r && { nodes: r.nodes.slice(), tws: r.tws.slice() });
   return r;
 }
+// whether an aircraft at node `from` pointing `face` can taxi on and out (not boxed in at the end of a taxilane): a facing
+// search, under the same turn rules, that stops as soon as it has come round to head back the other way or got 1,500 m
+// on. A dead end runs out of states first. Cheap where the way is open, which is nearly everywhere
+const HEADS_OUT = new Map();
+function headsOut(from, face){
+  if (typeof refreshShut === 'function') refreshShut();
+  const ck = from + '>' + face.toFixed(0) + '>' + GE.filter(e => e.closed).length; if (HEADS_OUT.has(ck)) return HEADS_OUT.get(ck);
+  const k0 = from + '|', dd = new Map([[k0, 0]]), st = new Map([[k0, [from, '', face, [[face, 0]]]]]), done = new Set(), h = [[0, k0]];
+  const push = (nk, s, nd) => { const o = dd.get(nk); if (o === undefined || nd < o) { dd.set(nk, nd); st.set(nk, s); heapPush(h, [nd, nk]); } };
+  let out = false;
+  while (h.length && !out) {
+    const [d, k] = heapPop(h); if (done.has(k)) continue; done.add(k);
+    const [u, from_, inB, hist] = st.get(k);
+    if (d > 1500/1852 || Math.abs(angDiff(inB, face)) > 150 || done.size > 4000) { out = true; break; }
+    if (u !== from && u[0] === 'R') continue;
+    facingSteps(k, u, from_, inB, hist, d, null, () => true, push);
+  }
+  HEADS_OUT.set(ck, out); return out;
+}
 // shortest routes from one node to many (the holding-point lists): one search instead of one per target, with the same
 // rules and memo entries as route() without a penalty. Returns a Map of target → { nodes, tws } or null.
 function routesFrom(from, targets, face){
