@@ -97,6 +97,8 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
 // don't count: they are dual function (AD 2-EGCC-2-1: TWY D between D9 and D10 and TWY NC) and close while the stands
 // over them are in use.
 const MARS_LANES = new Set(['NC', 'LINK5']);
+const D9_10 = (() => { const ih = Object.fromEntries(G.ihps), a = GN[ih.D9] && GN[ih.D9].p, b = GN[ih.D10] && GN[ih.D10].p;
+  return e => !!a && [e.a, e.b].every(n => segDistM(GN[n].p, a, b) < 5); })();
 { const body = (c, h) => [add(c, h, 19*M2NM), add(c, h + 180, 19*M2NM), add(c, h - 90, 18*M2NM), add(c, h + 90, 18*M2NM)];
   for (const t of STANDS) {
     const u = t.hdg, end = add(t.lp, u, 100*M2NM);
@@ -406,13 +408,20 @@ const PENNINES = [[53.22, -1.97], [53.40, -1.97], [53.56, -1.99], [53.70, -1.98]
 // the terminal an airline uses (Ryanair, British Airways, Loganair and Aer Lingus at Terminal 3, everyone else at
 // Terminal 2); the two spill over into each other when full
 const termOf = ac => EGCC.TERMINAL_OF[ac.cs.slice(0, 3)] || '2';
+// any free stand of the terminal that takes it, the smallest that fits first (a narrowbody leaves the widebody stands
+// free), picked at random across the whole terminal: Pier 1 (101-112) and Pier 2 get their share, not only the first
+// stands in the list
 function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
-  return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
+  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
+  return best[Math.floor(Math.random()*best.length)] || null;
 }
 const flowText = c => `land ${CFG[c].land}, depart ${CFG[c].dep}`;
 const APT = {
   dualLanes: true,   // AD 2-EGCC-2-1: TWY D (D9 to D10) and TWY NC are dual function: closed under their stands while in use
+  // which taxiway edges those are: NC, LINK5 (down stand 74's centre line) and D between D9 and D10. Only these close
+  // under a parked aircraft; E and the rest of D always stay open, so the north-west aprons are never cut off
+  dualLane: e => MARS_LANES.has(e.tw) || (e.tw === 'D' && D9_10(e)),
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT, TICZU: 3500, NODUC: 3500, EVAKU: 3000, FECJO: 3000 },   // STAR levels, then the downwind, base and IF
   icao: 'EGCC', name: 'Manchester', coordName: 'Manchester', radarName: 'MAN', utcOff: 1,
   radar: [EGCC.UNITS.app.name, EGCC.UNITS.app.freq], depRadar: [EGCC.UNITS.app.name, EGCC.UNITS.app.freq],

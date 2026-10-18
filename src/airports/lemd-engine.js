@@ -396,9 +396,12 @@ const GUADARRAMA = [[40.55, -4.45], [40.72, -4.20], [40.84, -3.92], [40.98, -3.7
 // the terminal an airline uses (Iberia, Iberia Express, Air Nostrum and Vueling at T-4; the oneworld long-haul partners at
 // T-4S; everyone else at T-1, T-2 and T-3); Terminals 4 and 4S spill over into each other when full
 const termOf = ac => LEMD.TERMINAL_OF[ac.cs.slice(0, 3)] || '123';
+// any free stand of the terminal that takes it, the smallest that fits first (a narrowbody leaves the widebody stands
+// free), picked at random across the whole terminal
 function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
-  return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
+  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
+  return best[Math.floor(Math.random()*best.length)] || null;
 }
 const flowText = c => `land ${landRwys(c).join(' and ')}, depart ${depRwysOf(c).join(' and ')}`;
 const APT = {

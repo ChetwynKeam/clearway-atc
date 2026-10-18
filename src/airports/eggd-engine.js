@@ -357,9 +357,12 @@ const sraMinsOk = w => minsOk(w, '27');
 // the apron an airline uses (easyJet the West Apron, Ryanair and the holiday airlines the East, the rest the Main Apron
 // by the terminal); business and light aircraft on the East Apron. Full: the Main Apron, then the other one.
 const termOf = ac => EGGD.APRON_OF[ac.cs.slice(0, 3)] || (isBiz(ac) ? 'E' : 'M');
+// any free stand of the terminal that takes it, the smallest that fits first (a narrowbody leaves the widebody stands
+// free), picked at random across the whole terminal
 function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t);
-  return free[Math.floor(Math.random()*Math.min(free.length, 6))] || null;
+  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
+  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
+  return best[Math.floor(Math.random()*best.length)] || null;
 }
 const APT = {
   // STAR levels (FL70 at BRI, 1,000 ft above the SIDs' 6,000 ft stop), then the downwind and base
