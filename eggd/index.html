@@ -11734,11 +11734,87 @@ function landOrder(ac){
         const t = [x.e, ...taken.map(s => s.t + need(s.x.o, x.o)), Math.max(x.e, ...taken.map(s => s.t + need(s.x.o, x.o)))].filter(t => t >= x.e).sort((a, b) => a - b).find(fits);
         taken.push({ t: t ?? x.e, x });
       }
-      taken.sort((a, b) => a.t - b.t).forEach((s, i) => ord.set(s.x.o, { rw: s.x.rw, n: i + 1, after: i ? taken[i - 1].x.o : null }));
+      taken.sort((a, b) => a.t - b.t).forEach((s, i) => ord.set(s.x.o, { rw: s.x.rw, n: i + 1, after: i ? taken[i - 1].x.o : null, t: s.t, e: s.x.e, afterT: i ? taken[i - 1].t : null }));
     }
     S.landOrd = { t: Math.floor(S.t), n: S.acs.length, ord };
   }
   return S.landOrd.ord.get(ac) || null;
+}
+// ── directs: a shortcut to a fix further along the route, when the airspace allows it. Never through high ground (or
+// below a minimum vectoring altitude), a restricted area, a hold in use or another runway's final at its levels, never
+// towards anyone in the next three minutes; an arrival only where it keeps its place in the landing order (still the
+// full gap behind the one ahead) and can get down in the shorter distance
+const segNM = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx*dx + dy*dy || 1e-9, u = Math.max(0, Math.min(1, ((p[0] - a[0])*dx + (p[1] - a[1])*dy)/L)); return Math.hypot(p[0] - a[0] - dx*u, p[1] - a[1] - dy*u); };
+const segsCross = (a, b, c, d) => { const o = (p, q, r) => Math.sign((q[0] - p[0])*(r[1] - p[1]) - (q[1] - p[1])*(r[0] - p[0])); return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b); };
+// where a flight will be t seconds on, flying its route (then straight on), or straight ahead off one
+function alongRt(a, rt, t){
+  let p = [a.x, a.y], m = (a.gs || a.ias || 0)/3600*t, h = (a.trk ?? a.hdg)*D2R;
+  for (const id of rt) { const w = WP[id]; if (!w) continue; const d = dist(...p, ...w.p); if (d >= m) { const b = brg(...p, ...w.p)*D2R; return [p[0] + Math.sin(b)*m, p[1] + Math.cos(b)*m]; } h = brg(...p, ...w.p)*D2R; m -= d; p = w.p; }
+  return [p[0] + Math.sin(h)*m, p[1] + Math.cos(h)*m];
+}
+function dctClear(ac, rt, lo, hi){
+  const q = WP[rt[0]].p, p = [ac.x, ac.y], at = f => [p[0] + (q[0] - p[0])*f, p[1] + (q[1] - p[1])*f];
+  const T = APT.terrain, Rz = APT.restricted;
+  for (let f = 0; f <= 1.0001; f += 0.04) { const [x, y] = at(f);
+    if (T && (T.check ? T.check({ ...ac, x, y, alt: lo, mode: 'HDG', onSid: false, state: 'VECTORS' }) : T.poly && T.poly.length && lo < T.min + 1000 && inPoly([x, y], T.poly))) return false;
+    if (Rz && lo < Rz.top && inPoly([x, y], Rz.poly)) return false; }
+  const others = airNow().filter(o => o !== ac);
+  // a hold in use at its levels
+  if (others.some(o => o.mode === 'HOLD' && o.hold && o.hold.c && segNM(o.hold.c, p, q) < 7 && o.alt > lo - 1000 && o.alt < hi + 1000)) return false;
+  // across a final in use (not its own), down where arrivals join it
+  const mine = ac.kind === 'ARR' ? landRw(ac) : null, finals = new Set(S.acs.filter(o => o.kind === 'ARR' && o.airborne).map(o => landRw(o)));
+  for (const rw of finals) { const F = FINAL[rw]; if (rw === mine || !F || !F.pts || lo > (F.alt || APT.appAlt || 3000) + 1500) continue;
+    for (let i = 1; i < F.pts.length; i++) if (segsCross(p, q, F.pts[i - 1], F.pts[i])) return false; }
+  // towards anyone (5 NM, and within 1,000 ft of anywhere between their level and the one they are cleared to) until a
+  // minute past the end of its route: it on its new way, the others on theirs
+  const rate = (hi > ac.alt + 100 ? Math.max(1500, ac.perf.climb || 2000) : -2000)/60, tgt = hi > ac.alt + 100 ? hi : lo;
+  let L = 0; for (let i = 0, pr = p; i < rt.length; i++) { L += dist(...pr, ...WP[rt[i]].p); pr = WP[rt[i]].p; }
+  const Tend = Math.min(900, L/Math.max(0.03, (ac.gs || ac.ias)/3600) + 60);
+  for (let t = 0; t <= Tend; t += 10) {
+    const [x, y] = alongRt(ac, rt, t), z = rate > 0 ? Math.min(tgt, ac.alt + rate*t) : Math.max(tgt, ac.alt + rate*t);
+    for (const o of others) { const [x2, y2] = alongRt(o, o.mode === 'NAV' ? o.route || [] : [], t), lo2 = Math.min(o.alt, o.tgtAlt ?? o.alt), hi2 = Math.max(o.alt, o.tgtAlt ?? o.alt); if (Math.hypot(x - x2, y - y2) < 5 && z > lo2 - 1000 && z < hi2 + 1000) return false; }
+  }
+  return true;
+}
+function aiDirect(ac, seat){
+  if (!ac.airborne || ac.emerg || ac.handed || ac.need || ac.mode !== 'NAV' || ac.appId || ac.aiLev || ['MISSED', 'DIVERTING', 'PRE'].includes(ac.state)) return false;
+  const rt = ac.route || []; if (rt.length < 2 || S.t < (ac.aiDctT || 0) || S.t < (ac.aiNext || 0)) return false;
+  ac.aiDctT = S.t + 10;   // looked at again every ten seconds
+  const arr = ac.kind === 'ARR', F = arr ? (ac.app ? finOf(ac) : FINAL[landRw(ac)]) : null;
+  if (arr && !F) return false;
+  // a departure: once well up and clear of the field's own climb-out
+  if (!arr && (!APT.depClear(ac) || ac.alt < Math.min(ELEV + 4000, sidTop(ac) - 300) || ac.alt < ELEV + 2500)) return false;
+  // an arrival: not delayed (one that will have to wait gains nothing), and how far it may go: as far as the start of
+  // the approach once cleared for it, else no further than its hold
+  let last = rt.length - 1, O = null;
+  if (arr) { O = landOrder(ac); if (!O || O.t - O.e > 20) return false;
+    if (!ac.app) { const hi = rt.indexOf(holdFixOf(ac)); last = hi >= 0 ? hi : rt.length - 2; } }
+  const along = [0]; for (let i = 0, pr = [ac.x, ac.y]; i < rt.length; i++) { along.push(along[i] + dist(...pr, ...WP[rt[i]].p)); pr = WP[rt[i]].p; }
+  for (let i = last; i >= 1; i--) {
+    const id = rt[i], w = WP[id]; if (!w || w.hide) continue;
+    const d = dist(ac.x, ac.y, ...w.p), save = along[i + 1] - d; if (save < 2) continue;
+    // a turn at the fix it can fly: onto the next leg, or on to the final
+    const nx = i < rt.length - 1 ? WP[rt[i + 1]].p : arr && ac.app ? F.pts[F.pts.length - 1] : null;
+    if (nx && Math.abs(angDiff(brg(ac.x, ac.y, ...w.p), brg(...w.p, ...nx))) > (arr && i === rt.length - 1 ? 60 : 90)) continue;
+    let lo = ac.alt, hi = ac.tgtAlt ?? ac.alt;
+    if (arr) {
+      // down in time: to the approach altitude at its start, or to the bottom of the stack at the hold
+      const down = ac.app ? (APT.arrAlt && APT.arrAlt[id]) ?? (F.alt || APT.appAlt || 3000) : stackBase(ac);
+      if (ac.alt - down > d*290) continue;
+      lo = Math.min(lo, down, hi); hi = Math.max(ac.alt, hi);
+      // still the full gap (and a little more) behind the one it lands after, a departure's gap included, and with
+      // nobody ahead, still time for a departure waiting for the runway to go first
+      const keep = ac.route; ac.route = rt.slice(i); let e; try { e = eta(ac, F); } catch (er) { e = NaN; } ac.route = keep;
+      if (!isFinite(e)) continue;
+      const R = rwyOf(O.rw), dg = holdGap(R, depGapS(R));
+      if (O.after && e < O.afterT + Math.max(landGapS(O.after, ac, R), dg)*1.15 + 15) continue;
+      if (!O.after && S.acs.some(o => o.kind === 'DEP' && o.ground && ['HOLDPT', 'LINEUP', 'LINEDUP'].includes(o.state) && sameRwy(R, rwyOf(depRw(o)).id) && e < clearS(o) + 60)) continue;
+    } else { lo = Math.min(lo, hi); hi = Math.max(ac.alt, hi); }
+    if (!dctClear(ac, rt.slice(i), lo, hi)) continue;
+    if (aiDo(seat, ac, 'DCT ' + id)) { ac.aiWhy = `direct ${id}, ${Math.round(save)} NM shorter`; ac.aiDct = (ac.aiDct || 0) + save; return true; }
+    return false;
+  }
+  return false;
 }
 function aiSequence(list){
   // soonest first
@@ -11752,6 +11828,7 @@ function aiSequence(list){
   for (const ac of list) {
     const rw = landRw(ac), F = FINAL[rw], R = rwyOf(rw), n = ac.need || '';
     if (S.t < (ac.aiNext || 0) || !F) continue;
+    if (aiDirect(ac, 'APP')) continue;   // a shortcut while it is not delayed
     if (ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75) { ac.aiWhy = 'climbing out after the go-around'; continue; }
     const shut = rwyShut(rw);
     let ok = !shut;
@@ -11866,6 +11943,8 @@ function aiApproach(ac){
       } else if (ac.spdAssigned && gap > need*1.3 && togo > 6 && aiDue(ac, 'fast' + L.cs, 3, 6)) { ac.aiWhy = ''; aiDo('APP', ac, 'SN'); }
     }
     else if (!L && ac.spdAssigned && togo > 6 && aiDue(ac, 'fast', 3, 6)) aiDo('APP', ac, 'SN');   // nobody ahead any more
+    // a shortcut to the start of the approach when it keeps its place in the order
+    if (aiDirect(ac, 'APP')) return true;
     // on the approach: transfer to Tower once established inside about 11 NM (still slowed if it is close behind)
     if (ac.mode === 'FINAL' && finalDist(ac) < 11 && aiDue(ac, 'ho', 1, 4)) aiDo('APP', ac, ac.spdAssigned && gap > need*1.1 ? 'SN HO' : 'HO');
     else if (n === 'Initial call' && aiDue(ac, n, 3, 7)) aiDo('APP', ac, 'IDENT');
@@ -11890,6 +11969,7 @@ function aiDeparture(ac){
   if (n === 'Request climb' && cap != null) return;
   if (n.startsWith('Request direct') && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, 'DCT ' + n.split(' ').pop());
   if (n === 'Request climb' && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, `C${Math.round(climbTop()/100)}`);
+  aiDirect(ac, 'DEP');   // further along its way out when the airspace allows
 }
 
 // the level a departure stays at under holds near its way out: those holding above it within 6 NM, or within 15 NM
