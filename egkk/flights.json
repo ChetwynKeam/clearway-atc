@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-18T22:19:26Z",
+ "updated": "2026-10-18T22:48:03Z",
  "source": "avionio.com",
  "days": {
   "2026-10-18": {
@@ -9,8 +9,8 @@
      "place": "Antalya",
      "flight": "U28560",
      "sched": "23:00",
-     "status": "Estimated",
-     "expected": "23:04"
+     "status": "Landed",
+     "expected": "23:07"
     },
     {
      "place": "Sevilla",
@@ -23,8 +23,8 @@
      "place": "Barcelona",
      "flight": "U28060",
      "sched": "23:05",
-     "status": "Estimated",
-     "expected": "22:55"
+     "status": "Landed",
+     "expected": "22:52"
     },
     {
      "place": "Rome",
@@ -58,14 +58,14 @@
      "place": "Ibiza",
      "flight": "A02683",
      "sched": "23:15",
-     "status": "Estimated",
-     "expected": "23:13"
+     "status": "Landed",
+     "expected": "23:10"
     },
     {
      "place": "Krakow/Balice",
      "flight": "U28824",
      "sched": "23:15",
-     "status": "Estimated",
+     "status": "Landed",
      "expected": "22:55"
     },
     {
@@ -86,29 +86,29 @@
      "place": "Dalaman",
      "flight": "U28570",
      "sched": "23:20",
-     "status": "Estimated",
-     "expected": "22:59"
+     "status": "Landed",
+     "expected": "23:00"
     },
     {
      "place": "Preveza/Lefkada",
      "flight": "U28252",
      "sched": "23:25",
-     "status": "Estimated",
-     "expected": "22:55"
+     "status": "Landed",
+     "expected": "22:53"
     },
     {
      "place": "Lisbon",
      "flight": "U28518",
      "sched": "23:25",
      "status": "Estimated",
-     "expected": "23:23"
+     "expected": "23:27"
     },
     {
      "place": "Paphos",
      "flight": "U28654",
      "sched": "23:25",
      "status": "Estimated",
-     "expected": "23:16"
+     "expected": "23:14"
     },
     {
      "place": "Alicante",
@@ -122,28 +122,28 @@
      "flight": "BA2817",
      "sched": "23:35",
      "status": "Estimated",
-     "expected": "23:43"
+     "expected": "23:42"
     },
     {
      "place": "Rhodes",
      "flight": "A02757",
      "sched": "23:40",
      "status": "Estimated",
-     "expected": "23:18"
+     "expected": "23:17"
     },
     {
      "place": "Catania",
      "flight": "U28288",
      "sched": "23:40",
      "status": "Estimated",
-     "expected": "23:32"
+     "expected": "23:31"
     },
     {
      "place": "Porto",
      "flight": "A02669",
      "sched": "23:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "00:56"
     },
     {
      "place": "Kerkyra",
@@ -157,7 +157,7 @@
      "flight": "A02617",
      "sched": "23:50",
      "status": "Estimated",
-     "expected": "23:52"
+     "expected": "23:51"
     },
     {
      "place": "Fuerteventura",
@@ -213,14 +213,14 @@
      "flight": "U28450",
      "sched": "00:10",
      "status": "Estimated",
-     "expected": "23:42"
+     "expected": "23:41"
     },
     {
      "place": "Malaga",
      "flight": "A02645",
      "sched": "00:15",
      "status": "Estimated",
-     "expected": "00:24"
+     "expected": "00:25"
     },
     {
      "place": "Tenerife",
@@ -255,7 +255,7 @@
      "flight": "U28222",
      "sched": "01:05",
      "status": "Estimated",
-     "expected": "00:58"
+     "expected": "00:57"
     },
     {
      "place": "Rhodes",
@@ -304,7 +304,7 @@
      "flight": "U28186",
      "sched": "01:45",
      "status": "Estimated",
-     "expected": "01:46"
+     "expected": "01:47"
     },
     {
      "place": "Hurghada",
@@ -318,7 +318,7 @@
      "flight": "U28710",
      "sched": "02:15",
      "status": "Estimated",
-     "expected": "01:56"
+     "expected": "02:01"
     },
     {
      "place": "Tenerife",
@@ -339,7 +339,7 @@
      "flight": "BY407",
      "sched": "03:35",
      "status": "Estimated",
-     "expected": ""
+     "expected": "03:42"
     },
     {
      "place": "Accra",
@@ -352,7 +352,7 @@
      "place": "Antalya",
      "flight": "BY203",
      "sched": "04:50",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -360,7 +360,7 @@
      "flight": "BA2238",
      "sched": "05:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:07"
     },
     {
      "place": "Antigua",
@@ -451,7 +451,7 @@
      "flight": "BA2036",
      "sched": "06:55",
      "status": "Estimated",
-     "expected": "06:31"
+     "expected": "06:29"
     },
     {
      "place": "Singapore",
@@ -472,7 +472,7 @@
      "flight": "BY55",
      "sched": "07:00",
      "status": "Estimated",
-     "expected": "07:05"
+     "expected": "07:09"
     },
     {
      "place": "Shanghai",
@@ -562,6 +562,13 @@
      "place": "Dublin",
      "flight": "FR112",
      "sched": "07:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bergen",
+     "flight": "DY1316",
+     "sched": "08:05",
      "status": "Scheduled",
      "expected": ""
     },
