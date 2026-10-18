@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-18T13:23:32Z",
+ "updated": "2026-10-18T13:51:30Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-18": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "London Gatwick",
-     "flight": "BA2716",
-     "sched": "12:35",
-     "status": "Diverted",
-     "expected": ""
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7623",
-     "sched": "12:45",
-     "status": "Diverted",
-     "expected": ""
-    },
     {
      "place": "Lisboa",
      "flight": "TP1689",
@@ -30,8 +16,8 @@
      "place": "Paris Beauvais",
      "flight": "FR400",
      "sched": "13:40",
-     "status": "",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "14:26"
     },
     {
      "place": "Ponta Delgada",
@@ -44,14 +30,14 @@
      "place": "Shannon",
      "flight": "FR6676",
      "sched": "14:10",
-     "status": "",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "14:35"
     },
     {
      "place": "Porto",
      "flight": "TP1703",
      "sched": "14:15",
-     "status": "Diverted",
+     "status": "",
      "expected": ""
     },
     {
@@ -177,8 +163,8 @@
      "place": "Dusseldorf",
      "flight": "X32852",
      "sched": "18:10",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:15"
     },
     {
      "place": "London Gatwick",
@@ -246,13 +232,6 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1688",
-     "sched": "12:40",
-     "status": "Departed",
-     "expected": "14:00"
-    },
-    {
      "place": "London Gatwick",
      "flight": "BA2717",
      "sched": "13:25",
@@ -264,7 +243,7 @@
      "flight": "EJU7624",
      "sched": "13:30",
      "status": "Estimated",
-     "expected": "15:00"
+     "expected": "15:25"
     },
     {
      "place": "Lisboa",
@@ -277,7 +256,7 @@
      "place": "Ponta Delgada",
      "flight": "S4163",
      "sched": "14:40",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
