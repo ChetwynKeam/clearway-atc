@@ -519,35 +519,23 @@ function drawAirport(){
 }
 
 // ── aircraft ──────────────────────────────────────────────
+// the aircraft's real outline (shapes.js) at its true wingspan and length; never smaller than AC_MIN_PX across, so a
+// light aircraft stays visible when zoomed out
+const AC_MIN_PX = 11;
 function silhouette(ac, X, Y, mpx, col, shadow){
-  const P = ac.perf, span = Math.max(9, P.span*mpx), len = Math.max(9, P.len*mpx);
-  cx.save(); cx.translate(X, Y); cx.rotate(ac.hdg*D2R);
-  cx.fillStyle = col; cx.strokeStyle = shadow ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,.55)'; cx.lineWidth = 0.8;
-  const L = len/2, fw = Math.max(1.2, len*0.06);
-  cx.beginPath();
-  // fuselage
-  cx.moveTo(0, -L); cx.quadraticCurveTo(fw, -L*0.85, fw, -L*0.6); cx.lineTo(fw, L*0.75); cx.lineTo(0, L); cx.lineTo(-fw, L*0.75); cx.lineTo(-fw, -L*0.6); cx.quadraticCurveTo(-fw, -L*0.85, 0, -L);
-  cx.fill(); cx.stroke();
-  // wings (swept for jets, straight for props)
-  const sw = P.shape === 'prop' ? 0.02 : 0.22, root = P.shape === 'prop' ? -0.12 : -0.06;
-  cx.beginPath(); cx.moveTo(fw, L*root); cx.lineTo(span/2, L*(root+sw+0.1)); cx.lineTo(span/2, L*(root+sw+0.2)); cx.lineTo(fw, L*(root+0.32)); cx.lineTo(-fw, L*(root+0.32)); cx.lineTo(-span/2, L*(root+sw+0.2)); cx.lineTo(-span/2, L*(root+sw+0.1)); cx.lineTo(-fw, L*root); cx.closePath(); cx.fill(); cx.stroke();
-  // tailplane
-  cx.beginPath(); cx.moveTo(0, L*0.7); cx.lineTo(span*0.17, L*0.93); cx.lineTo(span*0.17, L*0.98); cx.lineTo(-span*0.17, L*0.98); cx.lineTo(-span*0.17, L*0.93); cx.closePath(); cx.fill(); cx.stroke();
-  // engines
-  cx.fillStyle = 'rgba(0,0,0,.35)';
-  if (P.shape === 'jet') for (const s of [-1,1]) { cx.fillRect(s*span*0.17 - fw*0.55, L*(root+0.02), fw*1.1, L*0.22); }
-  if (P.shape === 'biz') for (const s of [-1,1]) { cx.fillRect(s*fw*1.6 - fw*0.5, L*0.45, fw, L*0.2); }
-  if (P.shape === 'prop') for (const s of [-1,1]) { cx.fillRect(s*span*0.2 - fw*0.4, L*(root-0.1), fw*0.8, L*0.25); }
+  const P = ac.perf, sh = acShape(ac.t, P.span, P.len), m = Math.max(mpx, AC_MIN_PX/sh.size);
+  drawShape(sh, X, Y, ac.hdg, m, col, { line: shadow ? null : 'rgba(0,0,0,.55)', lw: 0.8, shadow, detail: m > 0.9, spin: P.shape === 'prop' && ac.state !== 'PARKED' && ac.state !== 'ONSTAND' });
   // nav lights + beacon
   if (mpx > 0.12 && !shadow) {
-    const lr = Math.max(1.2, 0.8*mpx);
-    cx.fillStyle = 'rgba(255,60,60,.95)'; cx.beginPath(); cx.arc(-span/2, L*(root+sw+0.15), lr, 0, 7); cx.fill();
-    cx.fillStyle = 'rgba(60,255,120,.95)'; cx.beginPath(); cx.arc(span/2, L*(root+sw+0.15), lr, 0, 7); cx.fill();
+    cx.save(); cx.translate(X, Y); cx.rotate(ac.hdg*D2R);
+    const lr = Math.max(1.2, 0.8*mpx), [tx, ty] = sh.tip.map(v => v*m);
+    cx.fillStyle = 'rgba(255,60,60,.95)'; cx.beginPath(); cx.arc(-tx, ty, lr, 0, 7); cx.fill();
+    cx.fillStyle = 'rgba(60,255,120,.95)'; cx.beginPath(); cx.arc(tx, ty, lr, 0, 7); cx.fill();
     if (ac.state !== 'PARKED' && ac.state !== 'ONSTAND' && Math.floor(S.t*1.2 + hash(ac.cs)%7) % 2 === 0) { cx.fillStyle = 'rgba(255,40,40,.95)'; cx.beginPath(); cx.arc(0, 0, lr*1.6, 0, 7); cx.fill(); }
-    if (ac.onRwy && Math.floor(S.t*2.2) % 3 === 0) { cx.fillStyle = 'rgba(255,255,255,.95)'; cx.beginPath(); cx.arc(-span/2, L*(root+sw+0.15), lr*1.7, 0, 7); cx.arc(span/2, L*(root+sw+0.15), lr*1.7, 0, 7); cx.fill(); }
+    if (ac.onRwy && Math.floor(S.t*2.2) % 3 === 0) { cx.fillStyle = 'rgba(255,255,255,.95)'; cx.beginPath(); cx.arc(-tx, ty, lr*1.7, 0, 7); cx.arc(tx, ty, lr*1.7, 0, 7); cx.fill(); }
+    cx.restore();
   }
-  cx.restore();
-  return Math.max(span, len);
+  return sh.size*m;
 }
 // a landing or take-off clearance that still stands: cleared to land until it is off the runway (or goes around),
 // cleared for take-off until it is airborne
