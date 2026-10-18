@@ -1,44 +1,44 @@
 {
- "updated": "2026-10-18T06:43:09Z",
+ "updated": "2026-10-18T07:16:48Z",
  "source": "gibraltarairport.gi",
  "days": {
   "2026-10-18": {
    "utcOffsetMin": 120,
    "arr": [
     {
-     "place": "Bristol",
-     "flight": "EZY2759",
-     "sched": "10:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "Manchester",
      "flight": "EZY2267",
      "sched": "10:35",
      "status": "Estimated",
-     "expected": "10:34"
+     "expected": "10:12"
+    },
+    {
+     "place": "Bristol",
+     "flight": "EZY2759",
+     "sched": "10:00",
+     "status": "Estimated",
+     "expected": "10:37"
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8791",
      "sched": "10:40",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": "10:47"
+    },
+    {
+     "place": "Birmingham",
+     "flight": "EZY6671",
+     "sched": "11:00",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "London Heathrow",
      "flight": "BA490",
      "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EZY6671",
-     "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:08"
     },
     {
      "place": "London Heathrow",
@@ -50,13 +50,6 @@
    ],
    "dep": [
     {
-     "place": "Bristol",
-     "flight": "EZY2760",
-     "sched": "10:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "Manchester",
      "flight": "EZY2268",
      "sched": "11:10",
@@ -64,25 +57,32 @@
      "expected": ""
     },
     {
+     "place": "Bristol",
+     "flight": "EZY2760",
+     "sched": "10:35",
+     "status": "Estimated",
+     "expected": "11:17"
+    },
+    {
      "place": "London Gatwick",
      "flight": "EZY8792",
      "sched": "11:25",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     },
     {
      "place": "Birmingham",
      "flight": "EZY6672",
      "sched": "11:35",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     },
     {
      "place": "London Heathrow",
      "flight": "BA491",
      "sched": "11:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:48"
     },
     {
      "place": "London Heathrow",
