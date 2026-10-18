@@ -587,7 +587,7 @@ function drawAc(ac){
 }
 
 function stateLabel(ac){
-  return ({ PARKED:(ac.stand && ac.stand.area === 'hangar' ? 'HANGAR ' : 'STAND ')+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', PULL:'PULL FORWARD', READY:'STARTED', TAXI:ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:ac.towHold ? 'TOW HOLDING '+ac.towHold : 'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
+  return ({ PARKED:(ac.stand && ac.stand.area === 'hangar' ? 'HANGAR ' : 'STAND ')+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', PULL:'PULL FORWARD', READY:'STARTED', TAXI:ac.depVac ? 'VACATING' : ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:ac.towHold ? 'TOW HOLDING '+ac.towHold : 'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
 }
 
 // ═════════════════════════ console UI ═════════════════════════
@@ -641,6 +641,7 @@ function renderAtis(){
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${blockRw()} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
+    ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the ${APT.turbName || 'Special Procedures'} limit. Expect windshear on final.</div>` : ''}
     ${APT.atisPanel ? APT.atisPanel(w) : ''}
@@ -679,10 +680,10 @@ const ICON = {
   up: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2l5 6H9v6H7V8H3z" fill="currentColor"/></svg>',
   dn: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14l5-6H9V2H7v6H3z" fill="currentColor"/></svg>'
 };
-const relCls = ac => { const R = ac.rel; return !R ? 'none' : R.st === 'REQ' ? 'req' : R.st === 'EXP' ? 'exp' : R.nb && S.t < R.nb ? 'req' : 'ok'; };
+const relCls = ac => { const R = ac.rel; return !R ? 'none' : R.st === 'REQ' ? 'req' : R.st === 'EXP' || R.st === 'CXL' ? 'exp' : R.nb && S.t < R.nb ? 'req' : 'ok'; };
 function relText(ac){
   const R = ac.rel, who = relUnit(ac), sid = ac.sid || sidName(ac.gate, depRw(ac));
-  const st = !needRel(ac) ? 'no release needed' : !R ? `no release from ${who} yet` : R.st === 'REQ' ? `release requested, ${who} will call back` : R.st === 'EXP' ? 'release expired: request a new one' : R.nb && S.t < R.nb ? `released not before ${zt(R.nb).slice(0,5)}, until ${zt(R.until).slice(0,5)}` : `released until ${zt(R.until).slice(0,5)}`;
+  const st = !needRel(ac) ? 'no release needed' : !R ? `no release from ${who} yet` : R.st === 'REQ' ? `release requested, ${who} will call back` : R.st === 'EXP' ? 'release expired: request a new one' : R.st === 'CXL' ? (typeof flowStop === 'function' && flowStop(ac) ? `release cancelled: ${who} has stopped departures until ${flowEnd(flowStop(ac))}Z` : 'release cancelled: request a new one') : R.nb && S.t < R.nb ? `released not before ${zt(R.nb).slice(0,5)}, until ${zt(R.until).slice(0,5)}` : `released until ${zt(R.until).slice(0,5)}`;
   return `<b>${esc(sid)}</b> · ${st}`;
 }
 function renderSel(){
@@ -738,10 +739,14 @@ function renderSel(){
       const R = ac.rel, relOk = !needRel(ac) || (R && R.st === 'OK' && !(R.nb && S.t < R.nb)), canRel = ac.state !== 'TOW';
       if (needRel(ac)) html += b('REL', R && R.st === 'REQ' ? 'Release requested…' : relOk ? 'Released' : 'Request release', canRel && (!R || R.st === 'EXP'), ac.state === 'HOLDPT' && !R ? 'go' : '');
       // taxiing to the runway, it can be cleared on before it reaches the holding point, and won't stop there
-      const onTaxi = luTaxi(ac), cleared = onTaxi && (ac.luq || ac.cto);
+      const onTaxi = luTaxi(ac), cleared = onTaxi && (ac.luq || ac.cto), fs = typeof flowStop === 'function' && flowStop(ac);
       html += (ac.luAfter ? b('LU', `Line up behind ${ac.luAfter.cs}`, false, 'on')   // a conditional line-up, waiting for the traffic
         : b('LU', ac.luq && onTaxi ? 'Lining up' : 'Line up', ac.state === 'HOLDPT' || (onTaxi && !cleared), ac.luq && onTaxi ? 'on' : ''))
-        + b('CTO', 'Cleared take-off', (['HOLDPT','LINEUP','LINEDUP'].includes(ac.state) && !(ac.state === 'LINEUP' && ac.cto)) || (onTaxi && !ac.cto), ac.cto && (onTaxi || ac.state === 'LINEUP') ? 'on' : relOk ? 'go' : '');
+        + b('CTO', 'Cleared take-off', (['HOLDPT','LINEUP','LINEDUP'].includes(ac.state) && !(ac.state === 'LINEUP' && ac.cto)) || (onTaxi && !ac.cto), ac.cto && (onTaxi || ac.state === 'LINEUP') ? 'on' : relOk && !fs ? 'go' : '');
+      // a departure stop from the next unit: pass the delay, cancel a clearance it hasn't acted on, take it off the runway
+      if (fs) html += b('DLY', `Stopped until ${flowEnd(fs)}Z: pass delay`, true, ac.need === 'Asking for the delay' ? 'go' : '');
+      if ((ac.cto || ac.luq || ac.luAfter) && ac.state !== 'TAKEOFF') html += b('CXL', ac.cto ? 'Cancel take-off' : 'Cancel line-up', true, fs ? 'danger' : '');
+      if (['LINEUP', 'LINEDUP'].includes(ac.state) || ac.depVac) html += b('VAC', ac.depVac || ac.vacq ? 'Vacating runway' : 'Vacate runway', !ac.depVac && !ac.vacq, ac.depVac || ac.vacq ? 'on' : fs ? 'go' : '');
     } else {
       // the runway exits offered come from the airport's profile
       // it vacates by itself; these override the exit until it is off the runway
@@ -1081,7 +1086,7 @@ function bayOf(ac){
   if (st === 'PRE') return 'pend';
   if (['PARKED', 'TOW', 'ONSTAND'].includes(st)) return 'del';
   if (st === 'HOLDPT' || (st === 'TAXI' && ac.holdAt && !ac.path && ac.kind === 'DEP')) return 'hold';
-  if (['FINAL', 'LINEUP', 'LINEDUP', 'TAKEOFF', 'ROLLOUT', 'ROLLED'].includes(st) || (st === 'VACATING' && !ac.taxiIn && !ac.vacated)) return 'rwy';
+  if (['FINAL', 'LINEUP', 'LINEDUP', 'TAKEOFF', 'ROLLOUT', 'ROLLED'].includes(st) || (st === 'VACATING' && !ac.taxiIn && !ac.vacated) || (ac.depVac && ac.onRwy)) return 'rwy';
   if (['PUSH', 'PULL', 'READY', 'TAXI', 'VACATING'].includes(st)) return 'gnd';
   return 'air';
 }
@@ -1213,7 +1218,7 @@ daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListen
 renderSlots();
 function resetSession(){
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
-  S.emg = null; S.rtow = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+  S.emg = null; S.flow = null; S.rtow = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
@@ -1244,6 +1249,8 @@ function start(){
     if (APT.windLimit && windLimit({ perf: { wake: 'M' } }, S.rwy)) sys(`Wind is outside the ${APT.name} limits for runway ${S.rwy}: landings and take-offs are not allowed until it eases.`, true);
     emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
     S.rtow = ex ? null : { next: rnd(4, 10)*60 };   // random tows around the apron (sim.js stepRandomTows)
+    flowInit(ex ? 'off' : ($('flowSel') ? $('flowSel').value : 'some'));
+    if (S.flow.rate) sys(`Area control may stop departures now and then this session (${S.flow.level === 'often' ? 'often' : 'occasionally'}): take-offs are refused until the stop ends, so hold them, or vacate the runway (VAC) and taxi back later.`);
     if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);
     step(0.01); setView(ex && ex.sched[0].k === 'DEP' ? 'gnd' : 'app');
     emit('start', mode);

@@ -1312,6 +1312,7 @@
             <button type="button" class="btn ghost" id="cnShuffle" title="Make a new set of callsigns, types and times">Shuffle</button>
           </div>
           <label><span class="lbl">Emergencies</span><select id="emgSel"><option value="off">Off · routine flights only</option><option value="some" selected>Occasional · about every 20 minutes</option><option value="often">Frequent · about every 10 minutes</option></select></label>
+          <label><span class="lbl">Area control flow stops</span><select id="flowSel" title="The next unit stops departures for a few minutes: airspace full, storms on the routes, military activity"><option value="off">Off · departures always released</option><option value="some" selected>Occasional · about every 40 minutes</option><option value="often">Frequent · about every 15 minutes</option></select></label>
         </div>
         <h2>Positions</h2>
         <p class="fine" style="margin-top:0">Work every position yourself, or hand some to an AI controller to share the load. They give the same instructions you would, on the frequency, and pass traffic to you at the normal hand-off points. You can change this during the session with <b>Positions</b> on the scope.</p>
@@ -1480,6 +1481,9 @@
         <tr><td>Taxi to a holding point</td><td class="mono">TAXI A · TAXI A VIA B</td><td>“taxi to holding point alpha via bravo”</td><td><b>Taxi…</b> (route picker)</td></tr>
         <tr><td>Hold position / continue</td><td class="mono">HP · RES</td><td>“hold position”, “continue taxi”</td><td>Type or say it</td></tr>
         <tr><td>Cross a runway</td><td class="mono">CROSS 05L</td><td>“cross runway zero five left”</td><td><b>Cross runway 05L</b></td></tr>
+        <tr><td>Cancel a line-up or take-off clearance</td><td class="mono">CXL</td><td>“hold position, cancel takeoff clearance”</td><td><b>Cancel take-off</b></td></tr>
+        <tr><td>Take a lined-up departure off the runway</td><td class="mono">VAC · VAC C</td><td>“vacate the runway via charlie”</td><td><b>Vacate runway</b></td></tr>
+        <tr><td>Pass the delay in a departure stop</td><td class="mono">DLY</td><td>“departures are stopped, expect departure not before …”</td><td><b>Pass delay</b></td></tr>
         <tr><td>Line up</td><td class="mono">LU</td><td>“runway two three right, line up and wait”</td><td><b>Line up</b></td></tr>
         <tr><td>Cleared for take-off</td><td class="mono">CTO</td><td>“runway two three right, cleared for takeoff”</td><td><b>Cleared take-off</b></td></tr>
         <tr><td>Assign an arrival's stand</td><td class="mono">STAND 5 · STAND AUTO</td><td>“stand five”, “stand auto”</td><td>Stand list · <b>Auto</b></td></tr>
@@ -1629,6 +1633,8 @@
         <div><span class="w">BAW493</span><span class="p">PIMOS one Alpha, cleared for takeoff runway 27, Speedbird four niner three</span></div>
       </div>
       <p>If the runway changed since start-up, Tower gives the amended route. The departure minimum is <b>1,000 m visibility</b> at the threshold.</p>
+      <h3>Departure stops</h3>
+      <p>Now and then the next unit can't take any more departures: the airspace is full, storms sit on the routes, the military have the danger areas. It phones to stop all departures, or those on one route, until a time, and cancels any releases it gave (the warning shows under the ATIS). Take-off clearances are refused until the stop ends; cancel one already given with <code>CXL</code>. It often comes with an aircraft lined up: hold it there, or take it off the runway with <code>VAC</code> (an exit ahead of it, or name one: <code>VAC C</code>). It stops clear of that exit's holding point and waits; taxi it back with <code>TAXI</code> when the stop is nearly over. Crews kept waiting ask for news: pass the delay with <code>DLY</code>. When departures resume, ask for new releases. Turn stops off or up in the session setup.</p>
       <h3>After take-off</h3>
       <p>Above 1,000 ft the crew wants Radar: press <b>To Radar 122.8</b> (<code>HO</code>). On its route it turns towards its exit fix by itself and asks for further climb near 4,000 ft: give it <code>A80</code>. Vector it with a heading and it leaves the route, then asks for its exit fix when clear of the Rock (<code>DCT UPMUP A80</code>). Beyond about 22 NM it is ready for <b>Sevilla Control 132.6</b> or <b>Casablanca Control 125.5</b>. Transfer it with <code>HO</code>, or name the frequency yourself with <code>HO 132.6</code>. Give the wrong one and the crew finds nobody there and comes back to you a little later, which costs points. One that leaves your airspace without a transfer costs more.</p>
     </section>

@@ -142,7 +142,10 @@ function phraseToCmd(raw){
   if (APT.rnp && out.length && out[out.length-1].startsWith('APP') && / (rnp|r n p|rmp) /.test(s)) out[out.length-1] += / (yankee|yankees|y) /.test(s) ? ' RNPY' : / (zulu|z) /.test(s) ? ' RNPZ' : ' RNP';
   if (/ cleared to land /.test(s)) out.push('CTL');
   if (/ goaround /.test(s)) out.push('GA');
-  if (/ hold position /.test(s) || / stop immediately /.test(s)) out.push('HP');
+  // "hold position, cancel takeoff clearance": the cancellation, not a stop while taxiing
+  const cxl = / cancel (takeoff|lineup|line up)/.test(s);
+  if (cxl) out.push('CXL');
+  else if (/ hold position /.test(s) || / stop immediately /.test(s)) out.push('HP');
   else if ((m = s.match(/ hold( at| over)? (\S+) /)) && !/ holding point /.test(s)) { const f = fixFrom(m[2]); out.push(f ? 'HOLD ' + f : 'HOLD'); }
   if (/ (continue taxi|resume taxi|continue taxiing) /.test(s)) out.push('RES');
   if (/ (pull (forward|back)|tow (it )?back) /.test(s)) out.push('PULL');
@@ -178,7 +181,7 @@ function phraseToCmd(raw){
   if (/ cross runway /.test(s)) { const r = heardRwy(s, / cross runway (\d{1,2})( left| right| center)? /); out.push('CROSS' + (r ? ' ' + r : '')); }
   if (/ cleared( for)? takeoff /.test(s)) out.push('CTO');
   // "vacate via bravo 2" / "foxtrot romeo": the exit named after it
-  if ((m = s.match(/ vacate (?:(?:via|at|using|the|by) )*(.*)$/))) { const w = m[1].trim().split(' '); let ex = '', k = 0;
+  if ((m = s.match(/ vacate (?:(?:via|at|using|the|by|runway) )*(.*)$/))) { const w = m[1].trim().split(' '); let ex = '', k = 0;
     while (k < 2 && k < w.length && PHONW[w[k]]) ex += PHONW[w[k++]];
     if (ex && /^\d{1,2}$/.test(w[k] || '')) ex += w[k];
     out.push('VAC' + (ex ? ' ' + ex : '')); }
@@ -186,6 +189,8 @@ function phraseToCmd(raw){
   else if (/ (contact|monitor) /.test(s)) out.push('HO');
   if (/ (request|requesting) release /.test(s) || / release /.test(s) && !/ released /.test(s)) out.push('REL');
   if (/ (squawk )?ident /.test(s)) out.push('IDENT');
+  // passing the delay in a departure stop: "departures are stopped ... expect departure not before ..."
+  if (ac && ac.kind === 'DEP' && / (departures (are )?(stopped|suspended)|expect departure|ground stop|delay) /.test(s) && !/ cleared( for)? takeoff /.test(s)) out.push('DLY');
   if (/ roger (mayday|pan)/.test(s)) out.push('ROG');
   if (/ windshear /.test(s)) out.push('WS');
   return { ac, cmd: out.join(' ') };

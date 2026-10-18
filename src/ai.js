@@ -276,11 +276,15 @@ function aiGround(ac){
     if (!aiDue(ac, n, 5, 12)) return;
     const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
     if (sl && sl.ctot != null && nowMin() < sl.ctot - 20) return;   // its slot is a while off: it waits on stand
+    { const fs = flowStop(ac); if (fs && fs.until - S.t > 300) { ac.aiWhy = `departures stopped until ${flowEnd(fs)}`; return; } }   // a long departure stop: it waits on stand too
     if (!pushClear(ac) && aiSince(ac, n) < 150) return;
     if (!aiDo('GND', ac, 'PUSH')) aiDo('GND', ac, aiTaxiCmd(ac));
     return;
   }
   if (n === 'Ready to taxi' && aiDue(ac, n, 3, 7)) return aiDo('GND', ac, aiTaxiCmd(ac));
+  if (n === 'Asking for the delay' && aiDue(ac, n + ac.flowTold, 3, 7)) return aiDo('GND', ac, 'DLY');
+  // off the runway again in a departure stop: back to the holding point once it is nearly over
+  if (n.startsWith('Holding at') && ac.kind === 'DEP' && flowStop(ac) && flowStop(ac).until - S.t > 150) { ac.aiWhy = `departures stopped until ${flowEnd(flowStop(ac))}`; return; }
   if (n.startsWith('Holding at') && aiDue(ac, n, 4, 9)) return aiDo('GND', ac, aiTaxiCmd(ac));
   if ((n === 'Request taxi' || n === 'Needs a stand') && aiDue(ac, n, 3, 7)) {
     if (!ac.stand) aiDo('GND', ac, 'STAND AUTO');
@@ -301,6 +305,12 @@ function aiDepart(ac){
   const rw = depRw(ac), R = rwyOf(rw), lined = ac.state === 'LINEDUP', why = t => { ac.aiWhy = t; };
   if ((APT.toLimit && APT.toLimit(rw)) || S.wx.vis < 1000 || windLimit(ac, rw)) return why('weather or wind out of limits');
   if (rwyBlocked(rw)) return why('runway closed');
+  // a departure stop from the next unit: wait. Lined up, it leaves the runway if an arrival or a departure the stop
+  // doesn't hold needs it, or the stop has a while to run
+  { const fs = flowStop(ac); if (fs) {
+    if (lined && !ac.vacq) { const a = arrNear(R, ac), other = S.acs.some(o => o !== ac && o.kind === 'DEP' && o.ground && o.state === 'HOLDPT' && !flowStop(o) && depRw(o) === rw);
+      if ((a.eta < 300 || other || fs.until - S.t > 240) && depExits(ac).length) { ac.aiWhy = 'off the runway for the departure stop'; return aiDo('TWR', ac, 'VAC'); } }
+    return why(`departures stopped until ${flowEnd(fs)} (${flowMins(fs)} min)`); } }
   if (APT.xing && S.xing.st !== 'CLOSED') return why('the road is closing');
   if (needRel(ac)) { const L = ac.rel; if (!L || L.st === 'EXP') { why('release requested'); return aiDo('TWR', ac, 'REL'); } if (L.st !== 'OK') return why('waiting for the release'); if (L.nb && S.t < L.nb - 20) return why('released not before ' + zt(L.nb).slice(0, 5)); }
   const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
@@ -395,6 +405,7 @@ function aiTower(ac){
       if (!ac.aiWhy) aiDo('TWR', ac, 'CROSS');
       return;
     }
+    if (ac.kind === 'DEP' && n === 'Asking for the delay' && aiDue(ac, n + ac.flowTold, 3, 7)) { aiDo('TWR', ac, 'DLY'); return; }
     if (ac.kind === 'DEP' && (n === 'Ready for departure' || n === 'Lined up') && aiDue(ac, n, 3, 7)) aiDepart(ac);
     return;
   }
@@ -852,7 +863,7 @@ function stepAI(dt){
   if (S.seats.TWR === 'AI') { aiTowerVehicles(); aiRoad(); }
   // the release for a departure taxiing out is Tower's to ask for
   if (S.seats.TWR === 'AI') for (const ac of S.acs) {
-    if (ac.kind !== 'DEP' || !ac.ground || ac.cto || !['READY', 'TAXI'].includes(ac.state) || !needRel(ac) || (ac.rel && ac.rel.st !== 'EXP') || ac.meSeat === 'TWR') continue;
+    if (ac.kind !== 'DEP' || !ac.ground || ac.cto || !['READY', 'TAXI'].includes(ac.state) || !needRel(ac) || (ac.rel && ac.rel.st !== 'EXP') || ac.meSeat === 'TWR' || flowStop(ac)) continue;
     if (S.t >= (ac.aiNext || 0) && aiDue(ac, 'rel' + (ac.rel ? ac.rel.until : ''), 6, 14)) aiDo('TWR', ac, 'REL');
   }
 }
