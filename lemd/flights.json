@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-18T00:15:05Z",
+ "updated": "2026-10-18T00:54:49Z",
  "source": "avionio.com",
  "days": {
   "2026-10-18": {
@@ -31,7 +31,7 @@
      "flight": "AM36",
      "sched": "04:45",
      "status": "Estimated",
-     "expected": "03:50"
+     "expected": "03:53"
     },
     {
      "place": "Asuncion",
@@ -87,7 +87,7 @@
      "flight": "UX122",
      "sched": "05:10",
      "status": "Estimated",
-     "expected": "04:43"
+     "expected": "04:47"
     },
     {
      "place": "Lima",
@@ -115,14 +115,14 @@
      "flight": "IB156",
      "sched": "05:15",
      "status": "Estimated",
-     "expected": "04:47"
+     "expected": "04:45"
     },
     {
      "place": "Sao Paulo",
      "flight": "IB268",
      "sched": "05:25",
      "status": "Estimated",
-     "expected": "05:40"
+     "expected": "05:31"
     },
     {
      "place": "Buenos Aires",
@@ -136,21 +136,21 @@
      "flight": "AA748",
      "sched": "05:30",
      "status": "Estimated",
-     "expected": "05:35"
+     "expected": "05:42"
     },
     {
      "place": "New York",
      "flight": "AA94",
      "sched": "05:35",
      "status": "Estimated",
-     "expected": "05:50"
+     "expected": "06:09"
     },
     {
      "place": "Buenos Aires",
      "flight": "IB102",
      "sched": "05:40",
      "status": "Estimated",
-     "expected": "05:40"
+     "expected": "05:43"
     },
     {
      "place": "Lima",
@@ -192,7 +192,7 @@
      "flight": "IB212",
      "sched": "06:30",
      "status": "Estimated",
-     "expected": "06:04"
+     "expected": "06:03"
     },
     {
      "place": "Buenos Aires",
@@ -227,7 +227,7 @@
      "flight": "IB368",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "05:58"
+     "expected": "05:55"
     },
     {
      "place": "Reykjavik",
@@ -269,7 +269,7 @@
      "flight": "IB382",
      "sched": "07:30",
      "status": "Estimated",
-     "expected": "07:18"
+     "expected": "07:23"
     },
     {
      "place": "Valencia",
@@ -310,6 +310,13 @@
      "place": "A Coruna",
      "flight": "IB464",
      "sched": "07:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tindouf",
+     "flight": "AH2660",
+     "sched": "07:55",
      "status": "Scheduled",
      "expected": ""
     },
@@ -500,7 +507,7 @@
      "flight": "UA51",
      "sched": "09:00",
      "status": "Estimated",
-     "expected": "01:55"
+     "expected": "05:12"
     },
     {
      "place": "Duesseldorf",
@@ -563,7 +570,7 @@
      "flight": "CX315",
      "sched": "09:15",
      "status": "Estimated",
-     "expected": "09:14"
+     "expected": "09:10"
     },
     {
      "place": "Lisbon",
@@ -654,7 +661,7 @@
      "flight": "AA740",
      "sched": "09:35",
      "status": "Estimated",
-     "expected": "05:55"
+     "expected": "02:47"
     },
     {
      "place": "Brussels",
@@ -724,7 +731,7 @@
      "flight": "AC824",
      "sched": "09:50",
      "status": "Estimated",
-     "expected": "09:55"
+     "expected": "02:46"
     },
     {
      "place": "Hamburg",
@@ -751,8 +758,8 @@
      "place": "Miami",
      "flight": "AA68",
      "sched": "09:55",
-     "status": "Cancelled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:04"
     },
     {
      "place": "Dublin",
@@ -765,7 +772,7 @@
      "place": "Muscat",
      "flight": "ET3785",
      "sched": "09:55",
-     "status": "Estimated",
+     "status": "Unknown",
      "expected": ""
     },
     {
@@ -801,7 +808,7 @@
      "flight": "IB380",
      "sched": "10:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:07"
     },
     {
      "place": "Amsterdam",
@@ -898,12 +905,19 @@
      "place": "Boston",
      "flight": "IB346",
      "sched": "10:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:56"
     },
     {
      "place": "Toulouse",
      "flight": "YW1190",
+     "sched": "10:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bordeaux",
+     "flight": "YW1200",
      "sched": "10:30",
      "status": "Scheduled",
      "expected": ""
@@ -1035,18 +1049,25 @@
      "expected": ""
     },
     {
-     "place": "Punta Cana",
-     "flight": "E9802",
+     "place": "London",
+     "flight": "BA458",
      "sched": "11:20",
      "status": "Scheduled",
      "expected": ""
     },
     {
+     "place": "Punta Cana",
+     "flight": "E9802",
+     "sched": "11:20",
+     "status": "Estimated",
+     "expected": "11:38"
+    },
+    {
      "place": "Santo Domingo",
      "flight": "UX88",
      "sched": "11:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:07"
     },
     {
      "place": "New York",
@@ -1126,6 +1147,13 @@
      "expected": ""
     },
     {
+     "place": "Athens",
+     "flight": "A3700",
+     "sched": "12:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Lisbon",
      "flight": "FR9441",
      "sched": "12:00",
@@ -1150,8 +1178,8 @@
      "place": "Miami",
      "flight": "UX98",
      "sched": "12:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:43"
     },
     {
      "place": "Cancun",
@@ -1178,7 +1206,7 @@
      "place": "Santo Domingo",
      "flight": "IB262",
      "sched": "12:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1186,7 +1214,7 @@
      "flight": "JJ8076",
      "sched": "12:15",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:02"
     },
     {
      "place": "Santa Cruz",
@@ -1194,6 +1222,13 @@
      "sched": "12:15",
      "status": "Estimated",
      "expected": "12:19"
+    },
+    {
+     "place": "Athens",
+     "flight": "VJT981",
+     "sched": "12:15",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Fuerteventura",
@@ -1235,7 +1270,7 @@
      "flight": "AM1",
      "sched": "12:35",
      "status": "Estimated",
-     "expected": "11:49"
+     "expected": "11:59"
     },
     {
      "place": "Berlin",
@@ -1247,6 +1282,13 @@
     {
      "place": "Orlando",
      "flight": "IB340",
+     "sched": "12:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Izmir",
+     "flight": "PC1529",
      "sched": "12:45",
      "status": "Scheduled",
      "expected": ""
@@ -1283,8 +1325,8 @@
      "place": "Bogota",
      "flight": "UX194",
      "sched": "13:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:20"
     },
     {
      "place": "Monterrey",
@@ -1311,8 +1353,8 @@
      "place": "Medellin",
      "flight": "UX198",
      "sched": "13:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:35"
     },
     {
      "place": "Palma de Mallorca",
@@ -1325,50 +1367,8 @@
      "place": "Panama City",
      "flight": "UX56",
      "sched": "13:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "New York",
-     "flight": "IB328",
-     "sched": "13:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Chicago",
-     "flight": "AA126",
-     "sched": "13:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Dubai",
-     "flight": "EK141",
-     "sched": "13:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Istanbul",
-     "flight": "PC1099",
-     "sched": "13:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Istanbul",
-     "flight": "TK1357",
-     "sched": "13:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Mexico City",
-     "flight": "IB308",
-     "sched": "13:40",
      "status": "Estimated",
-     "expected": "13:17"
+     "expected": "12:53"
     }
    ],
    "dep": [
@@ -1390,8 +1390,8 @@
      "place": "Bogota",
      "flight": "AV47",
      "sched": "02:20",
-     "status": "Estimated",
-     "expected": "02:33"
+     "status": "Departed",
+     "expected": "02:28"
     },
     {
      "place": "Istanbul",
@@ -1668,17 +1668,10 @@
     },
     {
      "place": "Barcelona",
-     "flight": "AA8572",
+     "flight": "IB403",
      "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Bordeaux",
-     "flight": "AA8621",
-     "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Departed",
+     "expected": "07:05"
     },
     {
      "place": "Munich",
@@ -1702,6 +1695,13 @@
      "expected": ""
     },
     {
+     "place": "Bordeaux",
+     "flight": "IB1199",
+     "sched": "07:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "London",
      "flight": "IB711",
      "sched": "07:10",
@@ -1718,6 +1718,13 @@
     {
      "place": "Toulouse",
      "flight": "IB1189",
+     "sched": "07:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "IB43",
      "sched": "07:15",
      "status": "Scheduled",
      "expected": ""
@@ -2034,6 +2041,34 @@
      "place": "Rome",
      "flight": "IB647",
      "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Catania",
+     "flight": "IB693",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "IB731",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "IB791",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "AA8503",
+     "sched": "08:45",
      "status": "Scheduled",
      "expected": ""
     }
