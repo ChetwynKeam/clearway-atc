@@ -1,38 +1,10 @@
 {
- "updated": "2026-10-18T15:01:51Z",
+ "updated": "2026-10-18T15:21:43Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-18": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Ponta Delgada",
-     "flight": "S4160",
-     "sched": "14:00",
-     "status": "Arrived",
-     "expected": "14:19"
-    },
-    {
-     "place": "Shannon",
-     "flight": "FR6676",
-     "sched": "14:10",
-     "status": "Arrived",
-     "expected": "14:35"
-    },
-    {
-     "place": "Porto",
-     "flight": "TP1703",
-     "sched": "14:15",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Porto",
-     "flight": "EJU6833",
-     "sched": "14:15",
-     "status": "Arrived",
-     "expected": "14:04"
-    },
     {
      "place": "Lisboa",
      "flight": "TP3831",
@@ -69,13 +41,6 @@
      "expected": "15:54"
     },
     {
-     "place": "Frankfurt",
-     "flight": "4Y702",
-     "sched": "16:05",
-     "status": "Estimated",
-     "expected": "15:50"
-    },
-    {
      "place": "Warsaw",
      "flight": "W61535",
      "sched": "16:05",
@@ -83,11 +48,18 @@
      "expected": "16:45"
     },
     {
+     "place": "Frankfurt",
+     "flight": "4Y702",
+     "sched": "16:05",
+     "status": "Arrived",
+     "expected": "16:02"
+    },
+    {
      "place": "Hannover",
      "flight": "X32830",
      "sched": "16:35",
-     "status": "Estimated",
-     "expected": "16:10"
+     "status": "Arrived",
+     "expected": "16:08"
     },
     {
      "place": "Amsterdam",
@@ -108,14 +80,14 @@
      "flight": "W61029",
      "sched": "17:00",
      "status": "Estimated",
-     "expected": "16:45"
+     "expected": "16:50"
     },
     {
      "place": "Dusseldorf",
      "flight": "DE1414",
      "sched": "17:05",
      "status": "Estimated",
-     "expected": "17:00"
+     "expected": "16:50"
     },
     {
      "place": "Munich",
@@ -129,7 +101,7 @@
      "flight": "W61715",
      "sched": "17:20",
      "status": "Estimated",
-     "expected": "17:15"
+     "expected": "17:10"
     },
     {
      "place": "Gran Canaria",
@@ -157,7 +129,7 @@
      "flight": "EZY8521",
      "sched": "18:20",
      "status": "Estimated",
-     "expected": "18:25"
+     "expected": "19:40"
     },
     {
      "place": "Lisboa",
@@ -218,13 +190,6 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1690",
-     "sched": "14:15",
-     "status": "Closed",
-     "expected": ""
-    },
-    {
      "place": "Ponta Delgada",
      "flight": "S4163",
      "sched": "14:40",
@@ -256,35 +221,35 @@
      "place": "Faro",
      "flight": "TP1716",
      "sched": "15:40",
-     "status": "Boarding",
+     "status": "Final Call",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "FR384",
      "sched": "15:45",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "15:50",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Frankfurt",
      "flight": "DE1571",
      "sched": "16:15",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Manchester",
      "flight": "FR006",
      "sched": "16:25",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
