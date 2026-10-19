@@ -395,12 +395,12 @@ const EGLL = (() => {
     SVA: 'B789', MSR: 'B38M', THY: 'A21N', CPA: 'A35K', SIA: 'A388', AUA: 'A320', FIN: 'A321', LOT: 'B38M', BEL: 'A320', AEE: 'A20N', MAS: 'A359', JAL: 'A35K',
     GFA: 'B789', THA: 'B77W', ITY: 'A20N', ELY: 'B738', QFA: 'B789', RWD: 'A333', KMM: 'A20N', MEA: 'A21N', ICE: 'B38M', WJA: 'B789', ASL: 'A320', KQA: 'B788',
     AVA: 'B788', HVN: 'B789', CCA: 'B77W', IGO: 'B789', CSN: 'B789', AAR: 'A359', KAC: 'B77W', ASA: 'B789', TAM: 'B789', RJA: 'B788', AMX: 'B789', ANA: 'B77W',
-    CAL: 'A359', LZB: 'A320', RAM: 'B738', DAH: 'B738', PIA: 'B77W', ETH: 'B789', KAL: 'B77W', CES: 'A359', OMA: 'B789', EVA: 'B77W', CBJ: 'A359', ALK: 'A333', RXI: 'B789' };
-  // the terminal each airline uses (2026). Terminal 5: British Airways and Iberia (IAG), with BA's overflow at Terminal 3;
+    CAL: 'A359', LZB: 'A320', RAM: 'B738', DAH: 'B738', PIA: 'B77W', ETH: 'B789', KAL: 'B77W', CES: 'A359', OMA: 'B789', EVA: 'B77W', CBJ: 'A359', ALK: 'A333', RXI: 'B789', SHT: 'A320' };
+  // the terminal each airline uses (2026). Terminal 5: British Airways (its Shuttle flights too) and Iberia (IAG), with BA's overflow at Terminal 3;
   // Terminal 3: oneworld and Virgin/Delta; Terminal 4: SkyTeam and the Gulf and Asian carriers; everyone else, the Star
   // Alliance and Aer Lingus, at Terminal 2. Approximate where an airline splits.
   const TERMINAL_OF = {
-    BAW: '5', IBE: '5', VLG: '5',
+    BAW: '5', SHT: '5', IBE: '5', VLG: '5',
     AAL: '3', CPA: '3', QFA: '3', JAL: '3', UAE: '3', VIR: '3', DAL: '3', FIN: '3', RJA: '3', MAS: '3', SVA: '3', ALK: '3', LOG: '3',
     QTR: '4', ETD: '4', KLM: '4', AFR: '4', KAL: '4', GFA: '4', RAM: '4', KQA: '4', HVN: '4', ELY: '4', KAC: '4', OMA: '4', RWD: '4', MEA: '4', DAH: '4', CES: '4',
     CSN: '4', PIA: '4', AMX: '4', TAM: '4', RXI: '4', CBJ: '4', ITY: '4', ASL: '4', LZB: '4', KMM: '4', IGO: '4', AAR: '4'

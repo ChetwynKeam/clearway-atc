@@ -5516,6 +5516,11 @@ const xNote = (ac, r) => { ac.xc = r ? xsOn(r).map(c => ({ c, side: Math.sign(c.
 // a point on a runway-end turning pad: the aircraft goes round it slowly and tight, staying on the pad
 const padPt = (R, m, o) => { const q = R.rm(m, o); q.tight = true; return q; };
 function lineUpPath(ac, hp){
+  // where the holding point has a turn-on each way (Heathrow's N8 and N8~2 share a stop bar), the one that turns the way
+  // it departs: the other swings it round the wrong way and back on the runway
+  { const H0 = HOLDS[hp], R0 = holdRwy(hp), up = depRw(ac) === R0.lo;
+    const turns = k => { if (!FIL[k]) return null; const f = filOut(k, up ? 'E' : 'W'); return f.length > 1 ? Math.sign(R0.mOf(f[f.length-1]) - R0.mOf(f[0])) : null; };
+    if (R0.ends && turns(hp) === (up ? -1 : 1)) { const k = Object.keys(HOLDS).find(k => k !== hp && HOLDS[k].node === H0.node && HOLDS[k].on === H0.on && turns(k) === (up ? 1 : -1)); if (k) hp = k; } }
   const H = HOLDS[hp], R = holdRwy(hp), pts = [...holdLink(hp), GN[H.rwy].p];
   // a runway entered at its end (R.ends: New York) is lined up straight away, pointing down the runway
   if (R.ends) { const up = depRw(ac) === R.lo; pts.push(...filOut(hp, up ? 'E' : 'W')); const e = pts[pts.length-1]; pts.push(R.rm(R.mOf(e) + (up ? 60 : -60), 0)); return pts; }

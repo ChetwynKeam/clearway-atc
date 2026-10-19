@@ -498,9 +498,12 @@ function stepAlternation(){
   if (altWas && key !== altWas) {
     if (P.land !== S.rwy) setRwy(P.land);
     else if (S.depRwy !== depFor(S.rwy)) { S.depRwy = depFor(S.rwy); nextAtis(false); renderAtis(); emit('rwy', S.rwy); }
-    sys(P.mode === 'night' ? `Night-time runway alternation: runway ${P.land} for landing and departure until 06:00.`
-      : P.mode === 'dual' ? `06:00, the arrivals rush: both runways for landing until 07:00, departures from ${P.dep}.`
-      : `Runway alternation${altWas.startsWith('dual') ? ', 07:00' : ''}: runway ${P.land} for landing, ${P.dep} for departure.`);
+    // the programme's times are UK local; the radar clock shows UTC, so both are given
+    const off = EGLL.londonOff(clockMs()), z = hm => { const m = ((hm - off) % 1440 + 1440) % 1440; return `${String(Math.floor(m/60)).padStart(2, '0')}${String(m % 60).padStart(2, '0')}Z`; };
+    const at = (h, m = 0) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} local (${z(h*60 + m)})`;
+    sys(P.mode === 'night' ? `Night-time runway alternation from 23:30 local (${z(23*60 + 30)}): runway ${P.land} for landing and departure until ${at(6)}.`
+      : P.mode === 'dual' ? `${at(6)}, the arrivals rush: both runways for landing until ${at(7)}, departures from ${P.dep}.`
+      : `Runway alternation${altWas.startsWith('dual') ? ' at ' + at(7) : altWas.startsWith('night') ? ' at ' + at(6) : ' at ' + at(15)}: runway ${P.land} for landing, ${P.dep} for departure.`);
   }
   altWas = key;
 }
@@ -534,7 +537,7 @@ const APT = {
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the approach minima', reqApp: rw => 'ILS approach',
   minsLong: 'Visibility is below even the ILS CAT III minima (RVR 75 m).',
   liveName: 'Heathrow Airport', liveThin: 30, atisFreq: EGLL.UNITS.atis.freq, turbName: 'Heathrow',
-  sessionHours: Array.from({ length: 17 }, (_, i) => i + 5),   // 0500Z to 2100Z: 06:00 to 22:00 in London
+  sessionHours: Array.from({ length: 19 }, (_, i) => i + 4),   // 0400Z to 2200Z: 05:00 to 23:00 in London, the night runway either side
   view: { app: [0, 0, 80], twr: [0, -0.4, 4.2], gnd: [mOf(EN(-200, -650)), offOf(EN(-200, -650)), 5200, 3600] },
   minsOk,
   // the landing runway and the departure runway: S.rwy lands, S.depRwy departs
