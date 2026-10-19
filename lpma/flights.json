@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-19T09:44:27Z",
+ "updated": "2026-10-19T10:16:17Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-19": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Porto Santo",
-     "flight": "NT4933",
-     "sched": "08:55",
-     "status": "Arrived",
-     "expected": "08:41"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7621",
-     "sched": "09:00",
-     "status": "Estimated",
-     "expected": "10:50"
-    },
     {
      "place": "Amsterdam",
      "flight": "HV6629",
@@ -51,8 +37,8 @@
      "place": "Porto Santo",
      "flight": "NT4935",
      "sched": "10:40",
-     "status": "Estimated",
-     "expected": "10:40"
+     "status": "Arrived",
+     "expected": "10:43"
     },
     {
      "place": "Bristol",
@@ -73,7 +59,7 @@
      "flight": "EZY8519",
      "sched": "11:35",
      "status": "Estimated",
-     "expected": "12:25"
+     "expected": "12:30"
     },
     {
      "place": "Lisboa",
@@ -108,7 +94,7 @@
      "flight": "IB559",
      "sched": "12:40",
      "status": "Estimated",
-     "expected": "12:20"
+     "expected": "12:15"
     },
     {
      "place": "Lisboa",
@@ -122,7 +108,7 @@
      "flight": "EZY2471",
      "sched": "12:55",
      "status": "Estimated",
-     "expected": "12:35"
+     "expected": "12:40"
     },
     {
      "place": "London Stansted",
@@ -358,13 +344,6 @@
    ],
    "dep": [
     {
-     "place": "Porto",
-     "flight": "FR365",
-     "sched": "08:50",
-     "status": "Departed",
-     "expected": "08:52"
-    },
-    {
      "place": "Lisboa",
      "flight": "TP1686",
      "sched": "09:25",
@@ -382,56 +361,56 @@
      "place": "Lisboa",
      "flight": "EJU7622",
      "sched": "09:40",
-     "status": "Estimated",
-     "expected": "11:10"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Amsterdam",
      "flight": "HV6630",
      "sched": "10:20",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "10:48"
     },
     {
      "place": "Paris Orly",
      "flight": "TO7691",
      "sched": "10:30",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "10:40"
     },
     {
      "place": "Munich",
      "flight": "DE1573",
      "sched": "10:50",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "10:55"
     },
     {
      "place": "Bristol",
      "flight": "EZY2878",
      "sched": "11:25",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Gran Canaria",
      "flight": "NT4073",
      "sched": "11:30",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
      "place": "Manchester",
      "flight": "LS852",
      "sched": "11:35",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
      "place": "Birmingham",
      "flight": "LS1226",
      "sched": "11:55",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
