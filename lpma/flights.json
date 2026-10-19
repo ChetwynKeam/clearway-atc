@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-19T11:42:50Z",
+ "updated": "2026-10-19T12:13:22Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-19": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Porto Santo",
-     "flight": "NT4935",
-     "sched": "10:40",
-     "status": "Arrived",
-     "expected": "10:43"
-    },
-    {
-     "place": "Bristol",
-     "flight": "EZY2877",
-     "sched": "10:55",
-     "status": "Arrived",
-     "expected": "10:37"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "LS1225",
-     "sched": "11:00",
-     "status": "Arrived",
-     "expected": "10:28"
-    },
     {
      "place": "Lisboa",
      "flight": "FR088",
@@ -37,8 +16,8 @@
      "place": "London Gatwick",
      "flight": "EZY8519",
      "sched": "11:35",
-     "status": "Estimated",
-     "expected": "12:30"
+     "status": "Arrived",
+     "expected": "12:32"
     },
     {
      "place": "Lisboa",
@@ -58,8 +37,8 @@
      "place": "Ponta Delgada",
      "flight": "S4160",
      "sched": "12:25",
-     "status": "Estimated",
-     "expected": "12:35"
+     "status": "Arrived",
+     "expected": "12:48"
     },
     {
      "place": "Madrid",
@@ -79,29 +58,29 @@
      "place": "London Luton",
      "flight": "EZY2471",
      "sched": "12:55",
-     "status": "Estimated",
+     "status": "Arrived",
      "expected": "12:40"
     },
     {
      "place": "London Stansted",
      "flight": "LS1445",
      "sched": "13:05",
-     "status": "Estimated",
-     "expected": "12:40"
+     "status": "Arrived",
+     "expected": "12:56"
     },
     {
      "place": "Lisboa",
      "flight": "TP1689",
      "sched": "13:10",
-     "status": "Estimated",
-     "expected": "13:00"
+     "status": "Arrived",
+     "expected": "13:02"
     },
     {
      "place": "Faro",
      "flight": "TP1717",
      "sched": "13:20",
      "status": "Estimated",
-     "expected": "13:10"
+     "expected": "13:05"
     },
     {
      "place": "Helsinki Vantaa",
@@ -121,8 +100,8 @@
      "place": "Porto",
      "flight": "TP1703",
      "sched": "14:15",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:15"
     },
     {
      "place": "Bristol",
@@ -170,8 +149,8 @@
      "place": "London Stansted",
      "flight": "FR389",
      "sched": "16:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:15"
     },
     {
      "place": "Budapest",
@@ -184,15 +163,15 @@
      "place": "Frankfurt",
      "flight": "DE1570",
      "sched": "16:50",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:50"
     },
     {
      "place": "Leipzig",
      "flight": "DI6578",
      "sched": "16:55",
      "status": "Estimated",
-     "expected": "17:55"
+     "expected": "16:50"
     },
     {
      "place": "London Luton",
@@ -316,13 +295,6 @@
    ],
    "dep": [
     {
-     "place": "Munich",
-     "flight": "DE1573",
-     "sched": "10:50",
-     "status": "Departed",
-     "expected": "10:55"
-    },
-    {
      "place": "Bristol",
      "flight": "EZY2878",
      "sched": "11:25",
@@ -354,28 +326,28 @@
      "place": "London Gatwick",
      "flight": "EZY8520",
      "sched": "12:25",
-     "status": "Estimated",
-     "expected": "13:05"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1688",
      "sched": "12:40",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Madrid",
      "flight": "IB560",
      "sched": "13:20",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "London Luton",
      "flight": "EZY2472",
      "sched": "13:25",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -389,7 +361,7 @@
      "place": "Copenhagen",
      "flight": "DK1125",
      "sched": "13:40",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -585,8 +557,8 @@
      "place": "Newcastle",
      "flight": "LS530",
      "sched": "20:15",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:25"
     },
     {
      "place": "Porto",

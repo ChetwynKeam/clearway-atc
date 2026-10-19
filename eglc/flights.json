@@ -1,59 +1,10 @@
 {
- "updated": "2026-10-19T11:42:50Z",
+ "updated": "2026-10-19T12:13:23Z",
  "source": "avionio.com",
  "days": {
   "2026-10-19": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Edinburgh",
-     "flight": "CJ8715",
-     "sched": "12:10",
-     "status": "Landed",
-     "expected": "11:56"
-    },
-    {
-     "place": "Belfast",
-     "flight": "CJ8753",
-     "sched": "12:10",
-     "status": "Landed",
-     "expected": "12:09"
-    },
-    {
-     "place": "Berlin",
-     "flight": "CJ8492",
-     "sched": "12:30",
-     "status": "Estimated",
-     "expected": "12:32"
-    },
-    {
-     "place": "Zurich",
-     "flight": "LX456",
-     "sched": "12:35",
-     "status": "Estimated",
-     "expected": "12:29"
-    },
-    {
-     "place": "Rotterdam",
-     "flight": "CJ4453",
-     "sched": "12:40",
-     "status": "Estimated",
-     "expected": "12:35"
-    },
-    {
-     "place": "Dublin",
-     "flight": "CJ4465",
-     "sched": "12:45",
-     "status": "Estimated",
-     "expected": "12:48"
-    },
-    {
-     "place": "Milan",
-     "flight": "AZ226",
-     "sched": "12:55",
-     "status": "Landed",
-     "expected": "13:02"
-    },
     {
      "place": "Nice",
      "flight": "CJ8476",
@@ -86,28 +37,28 @@
      "place": "Amsterdam",
      "flight": "CJ8454",
      "sched": "14:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Luxembourg",
      "flight": "LG4595",
      "sched": "14:50",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Edinburgh",
      "flight": "CJ8705",
      "sched": "14:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Guernsey",
      "flight": "GR406",
      "sched": "15:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -119,34 +70,55 @@
     },
     {
      "place": "Zurich",
-     "flight": "BA8766",
+     "flight": "CJ8766",
      "sched": "15:30",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "AZ238",
+     "sched": "15:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "CJ8488",
+     "sched": "15:45",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Belfast",
+     "flight": "CJ8757",
+     "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "CJ8725",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Exeter",
+     "flight": "BA9771",
+     "sched": "16:27",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Palma de Mallorca",
+     "flight": "BA8484",
+     "sched": "16:30",
      "status": "Scheduled",
      "expected": ""
     }
    ],
    "dep": [
-    {
-     "place": "Luxembourg",
-     "flight": "LG4594",
-     "sched": "12:20",
-     "status": "Estimated",
-     "expected": "12:20"
-    },
-    {
-     "place": "Belfast",
-     "flight": "CJ8756",
-     "sched": "12:25",
-     "status": "Estimated",
-     "expected": "12:21"
-    },
-    {
-     "place": "Nice",
-     "flight": "CJ8477",
-     "sched": "12:45",
-     "status": "Estimated",
-     "expected": "12:50"
-    },
     {
      "place": "Glasgow",
      "flight": "CJ8722",
@@ -172,29 +144,29 @@
      "place": "Milan",
      "flight": "CJ7303",
      "sched": "13:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:20"
     },
     {
      "place": "Berlin",
      "flight": "CJ8493",
      "sched": "13:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:25"
     },
     {
      "place": "Milan",
      "flight": "AZ227",
      "sched": "13:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:05"
     },
     {
      "place": "Dublin",
      "flight": "CJ4464",
      "sched": "13:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:45"
     },
     {
      "place": "Milan",
@@ -207,8 +179,8 @@
      "place": "Exeter",
      "flight": "BA9770",
      "sched": "14:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:08"
     },
     {
      "place": "Ibiza",
@@ -235,6 +207,27 @@
      "place": "Dublin",
      "flight": "CJ4466",
      "sched": "14:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Luxembourg",
+     "flight": "LG4596",
+     "sched": "15:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "CJ8455",
+     "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Guernsey",
+     "flight": "GR407",
+     "sched": "15:30",
      "status": "Scheduled",
      "expected": ""
     }
