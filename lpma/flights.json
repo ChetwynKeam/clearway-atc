@@ -1,45 +1,10 @@
 {
- "updated": "2026-10-19T13:35:10Z",
+ "updated": "2026-10-19T14:21:14Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-19": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Madrid",
-     "flight": "IB559",
-     "sched": "12:40",
-     "status": "Arrived",
-     "expected": "12:14"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7623",
-     "sched": "12:45",
-     "status": "Arrived",
-     "expected": "14:24"
-    },
-    {
-     "place": "London Luton",
-     "flight": "EZY2471",
-     "sched": "12:55",
-     "status": "Arrived",
-     "expected": "12:40"
-    },
-    {
-     "place": "London Stansted",
-     "flight": "LS1445",
-     "sched": "13:05",
-     "status": "Arrived",
-     "expected": "12:56"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1689",
-     "sched": "13:10",
-     "status": "Arrived",
-     "expected": "13:02"
-    },
     {
      "place": "Faro",
      "flight": "TP1717",
@@ -72,22 +37,22 @@
      "place": "Bristol",
      "flight": "LS1825",
      "sched": "15:10",
-     "status": "Estimated",
-     "expected": "14:45"
+     "status": "Arrived",
+     "expected": "14:38"
     },
     {
      "place": "Hamburg",
      "flight": "DI6506",
      "sched": "15:25",
      "status": "Estimated",
-     "expected": "15:25"
+     "expected": "15:15"
     },
     {
      "place": "Lisboa",
      "flight": "EJU7625",
      "sched": "15:50",
      "status": "Estimated",
-     "expected": "15:30"
+     "expected": "15:40"
     },
     {
      "place": "Helsinki Vantaa",
@@ -142,8 +107,8 @@
      "place": "London Luton",
      "flight": "LS3833",
      "sched": "17:35",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:25"
     },
     {
      "place": "Gran Canaria",
@@ -156,15 +121,15 @@
      "place": "London Gatwick",
      "flight": "EZY8521",
      "sched": "18:00",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:05"
     },
     {
      "place": "London Gatwick",
      "flight": "BA2718",
      "sched": "18:05",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:55"
     },
     {
      "place": "Vilnius",
@@ -191,8 +156,8 @@
      "place": "Glasgow",
      "flight": "LS129",
      "sched": "18:40",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:10"
     },
     {
      "place": "East Midlands",
@@ -260,13 +225,6 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1688",
-     "sched": "12:40",
-     "status": "Departed",
-     "expected": "13:06"
-    },
-    {
      "place": "Madrid",
      "flight": "IB560",
      "sched": "13:20",
@@ -298,8 +256,8 @@
      "place": "Lisboa",
      "flight": "EJU7624",
      "sched": "13:50",
-     "status": "Estimated",
-     "expected": "15:00"
+     "status": "Closed",
+     "expected": ""
     },
     {
      "place": "London Stansted",
@@ -312,15 +270,15 @@
      "place": "Lisboa",
      "flight": "TP1690",
      "sched": "14:15",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "14:41"
     },
     {
      "place": "Lisboa",
      "flight": "TP3834",
      "sched": "14:20",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "14:50"
     },
     {
      "place": "Liverpool",
@@ -333,28 +291,28 @@
      "place": "Helsinki Vantaa",
      "flight": "DK1309",
      "sched": "15:00",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "FR384",
      "sched": "15:00",
-     "status": "Final Call",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Porto",
      "flight": "TP1704",
      "sched": "15:05",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Bristol",
      "flight": "LS1826",
      "sched": "16:00",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
