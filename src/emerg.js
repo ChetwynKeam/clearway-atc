@@ -40,8 +40,8 @@ function makeReturn(ac){
   ac.tgtAlt = ac.cleared = Math.min(ac.tgtAlt || 4000, 4000);
   S.score.pts += 0;
 }
-function block(why, mins){
-  const E = S.emg, rw = S.rwy, par = parallelEnd(rw); E.rwyBlock = { why, until: S.t + mins*60, rw, id: rwyOf(rw).id };
+function block(why, mins, rw = S.rwy){
+  const E = S.emg, par = parallelEnd(rw); E.rwyBlock = { why, until: S.t + mins*60, rw, id: rwyOf(rw).id };
   sys(`Runway ${rw} CLOSED: ${why}. About ${Math.round(mins)} minutes. ${par ? `Runway ${par} stays open: move the arrivals on to it (APP ${par}), or hold them.` : 'Send arrivals around or hold them, and hold departures.'}`, true);
   for (const a of S.acs) if (a.ctl && a.airborne && a.mode === 'FINAL' && rwyBlocked(landRw(a))) sys(`${a.cs} is cleared to land on a closed runway: send it around${par ? ` or move it to ${par}` : ''}.`, true);
   nextAtis(); renderAtis(); emit('rwyblock', why);
@@ -122,7 +122,7 @@ function stepEmerg(dt){
     const rw = blockRw(); E.rwyBlock = null; sys(`Runway ${rw} inspection complete: the runway is open again.`); nextAtis(); renderAtis(); emit('rwyopen'); }
   if (E.incursion && S.t >= E.incursion.until) { E.incursion = null; sys('The pedestrian has been escorted off the runway by the police: the crossing is clear.'); }
   if (E.ws && S.t - E.ws.t > 25*60) { E.ws = null; nextAtis(); renderAtis(); }
-  if (E.inspectAfter && E.inspectAfter.cs && !E.inspectAfter.onRwy && !E.inspectAfter.airborne) { E.inspectAfter = null; block('runway inspection after the emergency landing', rnd(2.5, 4)); }
+  if (E.inspectAfter && E.inspectAfter.cs && !E.inspectAfter.onRwy && !E.inspectAfter.airborne) { const rw = E.inspectAfter.emerg && E.inspectAfter.emerg.rw; E.inspectAfter = null; block('runway inspection after the emergency landing', rnd(2.5, 4), rw || S.rwy); }
   for (const ac of S.acs) if (ac.emerg && !ac.emerg.ack && !ac.emerg.late && S.t - ac.emerg.t > 60) { ac.emerg.late = true; SC(ac).pts -= 10; sys(`${ac.cs}'s ${ac.emerg.k} has not been acknowledged.`, true); }
   if (E.rate && S.t >= E.next && S.running) {
     E.next = S.t + E.rate*rnd(0.7, 1.3);
@@ -159,7 +159,7 @@ S.listeners.push((ev, ac) => {
   if (ev === 'landed' && ac && ac.emerg) {
     SC(ac).pts += 40; if (!aiOwns(ac)) S.emg.handled++;
     sys(`${ac.cs} has landed safely after its ${ac.emerg.k}. ${ac.emerg.k === 'MAYDAY' ? 'It will stop clear of the runway: the fire service will go to it, then a tug tows it in.' : /medical/.test(ac.emerg.why) ? 'The ambulance is meeting it on stand.' : ''}`);
-    if (ac.emerg.k === 'MAYDAY' || S.emg.inspectAfter === 'bird') S.emg.inspectAfter = ac;
+    if (ac.emerg.k === 'MAYDAY' || S.emg.inspectAfter === 'bird') { S.emg.inspectAfter = ac; ac.emerg.rw = ac.app || landRw(ac); }   // (the runway it landed on is the one inspected)
     if (ac.emerg.k === 'MAYDAY') ac.emgStop = true;   // it stops clear of the runway for the fire service, then is towed in (vehicles.js)
     else if (/medical/.test(ac.emerg.why)) ac.medical = true;
     ac.emerg.done = true;

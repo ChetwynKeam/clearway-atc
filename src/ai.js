@@ -165,6 +165,42 @@ function appLeader(ac){
   }
   return best;
 }
+// ── a MAYDAY on its way in: the runway it lands on closes after it (the fire service, then the inspection). The AI's
+// arrivals due to land on that runway after the MAYDAY, before it can be open again, go to the parallel if there is
+// one open, otherwise they are held. Worked out once a second: arrival -> { m: the MAYDAY, rw: its runway, p: the
+// parallel or null }
+function mayClose(){
+  if (S.mayCl && S.mayCl.t === Math.floor(S.t) && S.mayCl.n === S.acs.length) return S.mayCl;
+  const by = new Map(); S.mayCl = { t: Math.floor(S.t), n: S.acs.length, by };
+  if (!S.emg || !aiActive()) return S.mayCl;
+  for (const m of S.acs) {
+    if (m.kind !== 'ARR' || !m.emerg || m.emerg.k !== 'MAYDAY' || m.state === 'DIVERTING') continue;
+    const landed = !!m.emerg.done;
+    // (once it is off the runway the closure itself has begun: the runway's own closure takes over)
+    if (landed ? !(m.onRwy && S.emg.inspectAfter === m) : !m.airborne) continue;
+    const mrw = landed ? m.emerg.rw || baseLandRw(m) : baseLandRw(m), R = rwyOf(mrw);
+    let tM = 0; if (!landed) { try { tM = eta(m, m.app ? finOf(m) : FINAL[mrw]); } catch (er) { continue; } }
+    const end = tM + occS(R) + 300;   // it lands and stops clear, then four or five minutes of inspection
+    for (const o of S.acs) {
+      if (o === m || o.kind !== 'ARR' || !o.airborne || o.emerg || o.handed || o.state === 'DIVERTING' || o.state === 'PRE' || !aiOwns(o)) continue;
+      const rw = baseLandRw(o); if (!FINAL[rw] || rwyOf(rw).id !== R.id) continue;
+      let e; try { e = eta(o, o.app ? finOf(o) : FINAL[rw]); } catch (er) { continue; }
+      // (ahead of it by less than the landing gap: out of its way too, it is number one; already on the final, it stays)
+      if (!isFinite(e) || e > end || (e < tM && (tM - e >= landGapS(o, m, R) || (o.mode === 'FINAL' && finalDist(o) < 8)))) continue;
+      const p = parallelEnd(rw);
+      by.set(o, { m, rw, p: p && FINAL[p] && rwyOf(p).id !== R.id && !rwyBlocked(p) ? p : null });
+    }
+  }
+  return S.mayCl;
+}
+const mayAfter = ac => ac && ac.kind === 'ARR' && !ac.emerg ? mayClose().by.get(ac) || null : null;
+// the runway an AI Approach arrival not yet cleared expects (landRw in sim.js): the open parallel while its own is
+// about to close behind a MAYDAY
+function mayRw(ac, rw){
+  if (!S.emg || ac.kind !== 'ARR' || ac.emerg || !aiActive()) return rw;
+  const M = mayAfter(ac); return M && M.p ? M.p : rw;
+}
+const mayWhy = M => `runway ${M.rw} closes after the MAYDAY ${M.m.cs} lands`;
 // the runway opens again (debris cleared, the inspection done) before this flight would land
 function shutOpenFor(ac){
   const B = S.emg && S.emg.rwyBlock;
@@ -637,7 +673,7 @@ function dctClear(ac, rt, lo, hi){
   return true;
 }
 function aiDirect(ac, seat){
-  if (!ac.airborne || ac.emerg || ac.handed || ac.need || ac.mode !== 'NAV' || ac.appId || ac.aiLev || ['MISSED', 'DIVERTING', 'PRE'].includes(ac.state)) return false;
+  if (!ac.airborne || ac.handed || ac.need || ac.mode !== 'NAV' || ac.appId || ac.aiLev || ['MISSED', 'DIVERTING', 'PRE'].includes(ac.state)) return false;
   const rt = ac.route || []; if (rt.length < 2 || S.t < (ac.aiDctT || 0) || S.t < (ac.aiNext || 0)) return false;
   ac.aiDctT = S.t + 10;   // looked at again every ten seconds
   const arr = ac.kind === 'ARR', F = arr ? (ac.app ? finOf(ac) : FINAL[landRw(ac)]) : null;
@@ -647,8 +683,9 @@ function aiDirect(ac, seat){
   // an arrival: not delayed (one that will have to wait gains nothing), and how far it may go: as far as the start of
   // the approach once cleared for it, else no further than its hold
   let last = rt.length - 1, O = null;
-  if (arr) { O = landOrder(ac); if (!O || O.t - O.e > 20) return false;
-    if (!ac.app) { const hi = rt.indexOf(holdFixOf(ac)); last = hi >= 0 ? hi : rt.length - 2; } }
+  // (an emergency is number one: the shortest way in whenever the airspace allows)
+  if (arr && !ac.emerg) { O = landOrder(ac); if (!O || O.t - O.e > 20) return false; }
+  if (arr && !ac.app) { const hi = rt.indexOf(holdFixOf(ac)); last = hi >= 0 ? hi : rt.length - 2; }
   const along = [0]; for (let i = 0, pr = [ac.x, ac.y]; i < rt.length; i++) { along.push(along[i] + dist(...pr, ...WP[rt[i]].p)); pr = WP[rt[i]].p; }
   for (let i = last; i >= 1; i--) {
     const id = rt[i], w = WP[id]; if (!w || w.hide) continue;
@@ -666,9 +703,11 @@ function aiDirect(ac, seat){
       // nobody ahead, still time for a departure waiting for the runway to go first
       const keep = ac.route; ac.route = rt.slice(i); let e; try { e = eta(ac, F); } catch (er) { e = NaN; } ac.route = keep;
       if (!isFinite(e)) continue;
-      const R = rwyOf(O.rw), dg = holdGap(R, depGapS(R));
-      if (O.after && e < O.afterT + Math.max(landGapS(O.after, ac, R), dg)*1.15 + 15) continue;
-      if (!O.after && S.acs.some(o => o.kind === 'DEP' && o.ground && ['HOLDPT', 'LINEUP', 'LINEDUP'].includes(o.state) && sameRwy(R, rwyOf(depRw(o)).id) && e < clearS(o) + 60)) continue;
+      if (O) {
+        const R = rwyOf(O.rw), dg = holdGap(R, depGapS(R));
+        if (O.after && e < O.afterT + Math.max(landGapS(O.after, ac, R), dg)*1.15 + 15) continue;
+        if (!O.after && S.acs.some(o => o.kind === 'DEP' && o.ground && ['HOLDPT', 'LINEUP', 'LINEDUP'].includes(o.state) && sameRwy(R, rwyOf(depRw(o)).id) && e < clearS(o) + 60)) continue;
+      }
     } else { lo = Math.min(lo, hi); hi = Math.max(ac.alt, hi); }
     if (!dctClear(ac, rt.slice(i), lo, hi)) continue;
     if (aiDo(seat, ac, 'DCT ' + id)) { ac.aiWhy = `direct ${id}, ${Math.round(save)} NM shorter`; ac.aiDct = (ac.aiDct || 0) + save; return true; }
@@ -690,9 +729,9 @@ function aiSequence(list){
     if (S.t < (ac.aiNext || 0) || !F) continue;
     if (aiDirect(ac, 'APP')) continue;   // a shortcut while it is not delayed
     if (ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75) { ac.aiWhy = 'climbing out after the go-around'; continue; }
-    const shut = rwyShut(rw);
+    const M = mayAfter(ac), shut = rwyShut(rw) || (M && !M.p ? mayWhy(M) : null);
     let ok = !shut;
-    ac.aiWhy = shut ? `holding, runway closed (${shut})` : ok ? '' : 'in sequence behind the others';
+    ac.aiWhy = shut ? (M && !M.p ? `holding: ${shut}` : `holding, runway closed (${shut})`) : ok ? '' : 'in sequence behind the others';
     if (ok && !ac.emerg) {
       const dg = depGapS(R), gap = holdGap(R, dg); ac.aiGapRun = dg ? (gap ? 0 : 1) : null;
       const why = spacingFor(ac, F, R);
@@ -758,7 +797,8 @@ function aiSequence(list){
 // cleared for a runway that has shut while its parallel is open: cleared for the parallel instead (one already on the
 // final is turned on to an intercept for it first). True while that is in hand
 function toParallel(ac, seat){
-  if (!ac.app || ac.emerg || ac.state === 'MISSED' || !rwyBlocked(ac.app)) return false;
+  const M = !ac.app || rwyBlocked(ac.app) ? null : mayAfter(ac);
+  if (!ac.app || ac.emerg || ac.state === 'MISSED' || !(rwyBlocked(ac.app) || M)) return false;
   const p = parallelEnd(ac.app), F = p && FINAL[p];
   if (!F || rwyBlocked(p)) return false;
   if (!aiDue(ac, 'par' + p + (ac.gaCount || 0), 2, 5)) return true;
@@ -771,7 +811,7 @@ function toParallel(ac, seat){
     const tgt = [thr[0] - Math.sin(crs*D2R)*d, thr[1] - Math.cos(crs*D2R)*d], off = Math.max(-30, Math.min(30, angDiff(crs, brg(ac.x, ac.y, ...tgt))));
     cmd = `H${String(Math.round((crs + off + 360) % 360) || 360).padStart(3, '0')} ${cmd}`;
   }
-  ac.aiWhy = `runway ${ac.app} closed: on to ${p}`;
+  ac.aiWhy = M ? `${mayWhy(M)}: on to ${p}` : `runway ${ac.app} closed: on to ${p}`;
   aiDo(seat, ac, cmd);
   return true;
 }
@@ -785,8 +825,8 @@ function aiApproach(ac){
     // the runway has shut: over to the parallel if there is one, else off the approach and into the hold, unless it
     // opens again before it gets there
     if ((ac.mode !== 'FINAL' || finalDist(ac) > 5.5) && toParallel(ac, 'APP')) return true;
-    const shut = rwyShut(ac.app);
-    if (shut && !ac.emerg && ac.mode !== 'FINAL' && !shutOpenFor(ac) && aiDue(ac, 'shut', 2, 5)) { const hf = holdFixFor(ac); if (hf) { ac.aiWhy = `holding, runway closed (${shut})`; aiDo('APP', ac, holdCmd(ac, hf)); return true; } }
+    const M = mayAfter(ac), shut = rwyShut(ac.app) || (M ? mayWhy(M) : null);
+    if (shut && !ac.emerg && (ac.mode !== 'FINAL' || (M && finalDist(ac) > 8)) && !shutOpenFor(ac) && aiDue(ac, 'shut' + (M ? M.m.cs : ''), 2, 5)) { const hf = holdFixFor(ac); if (hf) { ac.aiWhy = M ? `holding: ${shut}` : `holding, runway closed (${shut})`; aiDo('APP', ac, holdCmd(ac, hf)); return true; } }
     // keep the gap to the one ahead: slow down while it closes up, back to the hold if it can't be made up
     const L = appLeader(ac), R = rwyOf(landRw(ac)), gap = L ? eta(ac) - eta(L) : 1e9, need = L ? landGapS(L, ac, R) : 0, togo = estToGo(ac, finOf(ac));
     if (L && !ac.emerg) {
@@ -883,11 +923,11 @@ function safeLevel(ac, cands){
 }
 // who gives way: a departure to an arrival, a go-around to one on the approach, a flight not yet cleared for the
 // approach to one that is; otherwise the later callsign
-const yieldRank = a => a.kind === 'DEP' ? 0 : a.state === 'MISSED' ? 1 : !a.app ? 2 : 3;
+const yieldRank = a => a.emerg ? 4 : a.kind === 'DEP' ? 0 : a.state === 'MISSED' ? 1 : !a.app ? 2 : 3;   // (an emergency never)
 // (a flight on the approach can still be stopped in its descent, until it is on the final)
 const canMove = a => aiOwns(a) && a.mode !== 'FINAL' && !(a.kind === 'ARR' && a.aiSlot != null) && !(a.kind === 'DEP' && a.alt < ELEV + 2500) && ['APP', 'DEP', 'TWR'].includes(seatOf(a));
 // two on the approach: the one behind (further to go) gives way to the one ahead
-const yields = (a, o) => a.kind === 'ARR' && o.kind === 'ARR' && a.app && o.app && a.state !== 'MISSED' && o.state !== 'MISSED' ? eta(a) > eta(o) : yieldRank(a) < yieldRank(o) || (yieldRank(a) === yieldRank(o) && a.cs > o.cs);
+const yields = (a, o) => !!a.emerg !== !!o.emerg ? !a.emerg : a.kind === 'ARR' && o.kind === 'ARR' && a.app && o.app && a.state !== 'MISSED' && o.state !== 'MISSED' ? eta(a) > eta(o) : yieldRank(a) < yieldRank(o) || (yieldRank(a) === yieldRank(o) && a.cs > o.cs);
 function aiProbe(){
   const air = airNow();
   for (const ac of air) {

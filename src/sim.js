@@ -94,7 +94,9 @@ const depRw = ac => (ac && APT.depRwyOf && APT.depRwyOf(ac)) || S.depRwy || S.rw
 const parallelEnd = rw => { const m = /^(\d\d)([LRC])$/.exec(rw || ''); if (!m) return null; for (const s of 'LRC') { const p = m[1] + s; if (p !== rw && FINAL[p] && rwyOf(p).id !== rwyOf(rw).id) return p; } return null; };
 // the runway an arrival expects: its approach's, else the airport's; while that one is closed, its parallel if there is one
 const openRw = rw => { const B = S.emg && S.emg.rwyBlock; if (!B || B.id == null || !rw || rwyOf(rw).id !== B.id) return rw; const p = parallelEnd(rw); return p || rw; };
-const landRw = ac => (ac && ac.app) || openRw((ac && APT.landRwyOf && APT.landRwyOf(ac)) || S.rwy);
+const baseLandRw = ac => (ac && ac.app) || openRw((ac && APT.landRwyOf && APT.landRwyOf(ac)) || S.rwy);
+// (an AI Approach arrival due just after a MAYDAY expects the parallel: the MAYDAY's runway closes after it, ai.js)
+const landRw = ac => { const rw = baseLandRw(ac); return ac && !ac.app && typeof mayRw === 'function' ? mayRw(ac, rw) : rw; };
 // ── runways. A one-runway airport is described by its profile's globals (rm, mOf, offOf, RU, RW_LO/RW_HI, TURN_W/E);
 // an airport with several runways (New York JFK) lists them in APT.runways, each with its own frame along the runway
 // (metres from its low end, offset to the left), so landing and departing traffic can use different pavements.
