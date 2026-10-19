@@ -1,17 +1,10 @@
 {
- "updated": "2026-10-19T18:06:58Z",
+ "updated": "2026-10-19T18:47:12Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-19": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "London Luton",
-     "flight": "LS3833",
-     "sched": "17:35",
-     "status": "Arrived",
-     "expected": "17:26"
-    },
     {
      "place": "Gran Canaria",
      "flight": "NT4072",
@@ -44,8 +37,8 @@
      "place": "Brussels",
      "flight": "TB1563",
      "sched": "18:20",
-     "status": "Estimated",
-     "expected": "19:15"
+     "status": "Arrived",
+     "expected": "19:05"
     },
     {
      "place": "Lisboa",
@@ -72,7 +65,7 @@
      "place": "Lisboa",
      "flight": "FR385",
      "sched": "19:05",
-     "status": "Estimated",
+     "status": "Arrived",
      "expected": "19:30"
     },
     {
@@ -107,8 +100,8 @@
      "place": "Lisboa",
      "flight": "EJU7627",
      "sched": "20:50",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:20"
     },
     {
      "place": "Lisboa",
@@ -126,20 +119,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Budapest",
-     "flight": "W62398",
-     "sched": "17:15",
-     "status": "Departed",
-     "expected": "17:29"
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR363",
-     "sched": "17:30",
-     "status": "Departed",
-     "expected": "17:37"
-    },
     {
      "place": "Frankfurt",
      "flight": "DE1571",
@@ -165,15 +144,15 @@
      "place": "London Gatwick",
      "flight": "EZY8522",
      "sched": "18:50",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "19:02"
     },
     {
      "place": "London Gatwick",
      "flight": "BA2719",
      "sched": "18:55",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "19:08"
     },
     {
      "place": "Porto Santo",
@@ -186,35 +165,35 @@
      "place": "Brussels",
      "flight": "TB1563",
      "sched": "19:10",
-     "status": "Estimated",
-     "expected": "20:10"
+     "status": "Boarding",
+     "expected": ""
     },
     {
      "place": "Vilnius",
      "flight": "GW3312",
      "sched": "19:15",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "19:37"
     },
     {
      "place": "Glasgow",
      "flight": "LS130",
      "sched": "19:25",
-     "status": "Final Call",
-     "expected": ""
+     "status": "Departed",
+     "expected": "19:26"
     },
     {
      "place": "Lisboa",
      "flight": "TP1692",
      "sched": "19:35",
-     "status": "",
-     "expected": ""
+     "status": "Departed",
+     "expected": "19:39"
     },
     {
      "place": "East Midlands",
      "flight": "LS624",
      "sched": "19:50",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -256,8 +235,8 @@
      "place": "Lisboa",
      "flight": "TP1694",
      "sched": "21:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "22:10"
     }
    ]
   }
