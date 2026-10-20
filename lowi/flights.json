@@ -1,19 +1,82 @@
 {
- "updated": "2026-10-20T16:45:59Z",
+ "updated": "2026-10-20T17:18:32Z",
  "source": "avionio.com",
  "days": {
-  "2026-10-20": {
+  "2026-10-19": {
    "utcOffsetMin": 120,
    "arr": [
+    {
+     "place": "Vienna",
+     "flight": "OS101",
+     "sched": "07:40",
+     "status": "Landed",
+     "expected": "07:32"
+    },
     {
      "place": "Vienna",
      "flight": "OS107",
      "sched": "18:10",
      "status": "Estimated",
-     "expected": "18:06"
+     "expected": "18:27"
+    },
+    {
+     "place": "Geneva",
+     "flight": "JFL139",
+     "sched": "18:51",
+     "status": "Landed",
+     "expected": "18:39"
     }
    ],
    "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
+     "status": "Departed",
+     "expected": "19:07"
+    },
+    {
+     "place": "Linz",
+     "flight": "JFL139",
+     "sched": "19:00",
+     "status": "Departed",
+     "expected": "19:01"
+    },
+    {
+     "place": "Linz",
+     "flight": "JFL139",
+     "sched": "19:30",
+     "status": "Estimated",
+     "expected": "19:35"
+    }
+   ]
+  },
+  "2026-10-20": {
+   "utcOffsetMin": 120,
+   "arr": [
+    {
+     "place": "London",
+     "flight": "U28695",
+     "sched": "11:05",
+     "status": "Landed",
+     "expected": "10:49"
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS107",
+     "sched": "18:10",
+     "status": "Landed",
+     "expected": "18:17"
+    }
+   ],
+   "dep": [
+    {
+     "place": "London",
+     "flight": "U28696",
+     "sched": "12:00",
+     "status": "Departed",
+     "expected": "12:19"
+    },
     {
      "place": "Vienna",
      "flight": "OS108",
