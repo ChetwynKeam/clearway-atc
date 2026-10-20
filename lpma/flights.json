@@ -1,17 +1,10 @@
 {
- "updated": "2026-10-20T13:31:28Z",
+ "updated": "2026-10-20T14:09:48Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-20": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Paris Orly",
-     "flight": "TO7698",
-     "sched": "12:45",
-     "status": "Arrived",
-     "expected": "12:23"
-    },
     {
      "place": "Warsaw",
      "flight": "3Z7306",
@@ -65,15 +58,15 @@
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "14:45",
-     "status": "Estimated",
-     "expected": "14:35"
+     "status": "Arrived",
+     "expected": "14:36"
     },
     {
      "place": "Hannover",
      "flight": "X32830",
      "sched": "14:55",
-     "status": "Estimated",
-     "expected": "14:55"
+     "status": "Arrived",
+     "expected": "14:53"
     },
     {
      "place": "Lisboa",
@@ -150,7 +143,7 @@
      "flight": "EZS1469",
      "sched": "17:45",
      "status": "Estimated",
-     "expected": "17:40"
+     "expected": "17:50"
     },
     {
      "place": "Nantes",
@@ -163,8 +156,8 @@
      "place": "Paris Ch. de Gaulle",
      "flight": "EJU4601",
      "sched": "18:15",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:45"
     },
     {
      "place": "Lisboa",
@@ -232,18 +225,11 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1688",
-     "sched": "12:40",
-     "status": "Departed",
-     "expected": "12:50"
-    },
-    {
      "place": "Paris Orly",
      "flight": "TO7699",
      "sched": "13:25",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "14:29"
     },
     {
      "place": "Warsaw",
@@ -263,28 +249,28 @@
      "place": "Porto",
      "flight": "EJU6834",
      "sched": "14:35",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "14:33"
     },
     {
      "place": "Ponta Delgada",
      "flight": "S4163",
      "sched": "14:40",
-     "status": "Final Call",
-     "expected": ""
+     "status": "Departed",
+     "expected": "14:56"
     },
     {
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "14:55",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Frankfurt",
      "flight": "4Y703",
      "sched": "15:40",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -361,8 +347,8 @@
      "place": "Geneva",
      "flight": "EZS1470",
      "sched": "18:15",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:40"
     },
     {
      "place": "Stuttgart",
