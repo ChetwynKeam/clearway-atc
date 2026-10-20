@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-20T03:10:27Z",
+ "updated": "2026-10-20T03:39:38Z",
  "source": "avionio.com",
  "days": {
   "2026-10-20": {
@@ -10,14 +10,14 @@
      "flight": "BA2160",
      "sched": "05:15",
      "status": "Estimated",
-     "expected": "04:34"
+     "expected": "04:36"
     },
     {
      "place": "Antigua",
      "flight": "BA2156",
      "sched": "05:30",
      "status": "Estimated",
-     "expected": "05:08"
+     "expected": "05:09"
     },
     {
      "place": "Punta Cana",
@@ -45,28 +45,28 @@
      "flight": "CA851",
      "sched": "06:35",
      "status": "Estimated",
-     "expected": "06:16"
+     "expected": "06:14"
     },
     {
      "place": "Shanghai",
      "flight": "MU201",
      "sched": "06:40",
      "status": "Estimated",
-     "expected": "06:29"
+     "expected": "06:21"
     },
     {
      "place": "Doha",
      "flight": "QR329",
      "sched": "06:40",
      "status": "Estimated",
-     "expected": "06:37"
+     "expected": "06:36"
     },
     {
      "place": "Orlando",
      "flight": "BA2036",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:19"
+     "expected": "06:17"
     },
     {
      "place": "Nairobi",
@@ -80,7 +80,7 @@
      "flight": "CA847",
      "sched": "06:55",
      "status": "Estimated",
-     "expected": "06:29"
+     "expected": "06:30"
     },
     {
      "place": "Singapore",
@@ -94,14 +94,14 @@
      "flight": "BY45",
      "sched": "07:15",
      "status": "Estimated",
-     "expected": "07:00"
+     "expected": "07:01"
     },
     {
      "place": "Dubai",
      "flight": "EK11",
      "sched": "07:20",
      "status": "Estimated",
-     "expected": "07:06"
+     "expected": "07:05"
     },
     {
      "place": "Paris",
@@ -164,7 +164,7 @@
      "flight": "BY39",
      "sched": "07:55",
      "status": "Estimated",
-     "expected": "07:21"
+     "expected": "07:22"
     },
     {
      "place": "Dublin",
@@ -191,7 +191,7 @@
      "place": "Malaga",
      "flight": "EC8078",
      "sched": "08:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -220,7 +220,7 @@
      "flight": "BA2166",
      "sched": "08:40",
      "status": "Estimated",
-     "expected": "08:30"
+     "expected": "08:35"
     },
     {
      "place": "Oslo",
@@ -325,7 +325,7 @@
      "flight": "SQ314",
      "sched": "09:30",
      "status": "Estimated",
-     "expected": "09:08"
+     "expected": "09:05"
     },
     {
      "place": "Jersey",
@@ -388,7 +388,7 @@
      "flight": "Z0784",
      "sched": "10:00",
      "status": "Estimated",
-     "expected": "09:31"
+     "expected": "09:29"
     },
     {
      "place": "Singapore",
@@ -402,7 +402,7 @@
      "flight": "BA2038",
      "sched": "10:10",
      "status": "Estimated",
-     "expected": "09:46"
+     "expected": "09:49"
     },
     {
      "place": "Stockholm",
@@ -462,7 +462,7 @@
     },
     {
      "place": "Madrid",
-     "flight": "IB1861",
+     "flight": "I21861",
      "sched": "10:50",
      "status": "Scheduled",
      "expected": ""
@@ -506,6 +506,13 @@
      "place": "Dublin",
      "flight": "FR1111",
      "sched": "11:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Guernsey",
+     "flight": "GR604",
+     "sched": "11:20",
      "status": "Scheduled",
      "expected": ""
     },
@@ -587,6 +594,13 @@
      "expected": ""
     },
     {
+     "place": "Belfast",
+     "flight": "U2804",
+     "sched": "11:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Nice",
      "flight": "U28418",
      "sched": "11:50",
@@ -659,6 +673,13 @@
     {
      "place": "Malaga",
      "flight": "U28068",
+     "sched": "12:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "U2862",
      "sched": "12:20",
      "status": "Scheduled",
      "expected": ""
@@ -748,8 +769,22 @@
      "expected": ""
     },
     {
+     "place": "Barcelona",
+     "flight": "VY6008",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Faro",
      "flight": "U28534",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bilbao",
+     "flight": "VY7294",
      "sched": "12:55",
      "status": "Scheduled",
      "expected": ""
@@ -769,58 +804,16 @@
      "expected": ""
     },
     {
+     "place": "Dubrovnik",
+     "flight": "A02721",
+     "sched": "13:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Preveza/Lefkada",
      "flight": "U28248",
      "sched": "13:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Prague",
-     "flight": "U28782",
-     "sched": "13:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Kerkyra",
-     "flight": "U28208",
-     "sched": "13:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Naples",
-     "flight": "U28340",
-     "sched": "13:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Ibiza",
-     "flight": "A02681",
-     "sched": "13:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malta",
-     "flight": "U28762",
-     "sched": "13:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Thessaloniki",
-     "flight": "A02741",
-     "sched": "13:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Thessaloniki",
-     "flight": "U28244",
-     "sched": "13:55",
      "status": "Scheduled",
      "expected": ""
     }
@@ -830,8 +823,8 @@
      "place": "Ibiza",
      "flight": "U28099",
      "sched": "05:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "05:50"
     },
     {
      "place": "Chania",
@@ -942,7 +935,7 @@
      "place": "Belfast",
      "flight": "U2823",
      "sched": "06:00",
-     "status": "Scheduled",
+     "status": "Cancelled",
      "expected": ""
     },
     {
@@ -1628,13 +1621,6 @@
      "place": "Riga",
      "flight": "BT652",
      "sched": "09:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Cancun",
-     "flight": "BY48",
-     "sched": "09:15",
      "status": "Scheduled",
      "expected": ""
     }
