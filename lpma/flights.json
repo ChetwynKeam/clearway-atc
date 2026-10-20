@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-20T15:43:44Z",
+ "updated": "2026-10-20T16:15:59Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-20": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Frankfurt",
-     "flight": "4Y702",
-     "sched": "14:45",
-     "status": "Arrived",
-     "expected": "14:36"
-    },
-    {
-     "place": "Hannover",
-     "flight": "X32830",
-     "sched": "14:55",
-     "status": "Arrived",
-     "expected": "14:53"
-    },
     {
      "place": "Lisboa",
      "flight": "EJU7623",
@@ -51,8 +37,8 @@
      "place": "Berlin Brandenburg",
      "flight": "EJU5333",
      "sched": "16:40",
-     "status": "Estimated",
-     "expected": "16:45"
+     "status": "Arrived",
+     "expected": "16:43"
     },
     {
      "place": "Frankfurt",
@@ -65,8 +51,8 @@
      "place": "Munich",
      "flight": "X32846",
      "sched": "17:05",
-     "status": "Estimated",
-     "expected": "17:05"
+     "status": "Arrived",
+     "expected": "17:04"
     },
     {
      "place": "Stuttgart",
@@ -114,8 +100,8 @@
      "place": "Lisboa",
      "flight": "TP1691",
      "sched": "18:35",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:35"
     },
     {
      "place": "London Gatwick",
@@ -135,8 +121,8 @@
      "place": "Porto",
      "flight": "FR6049",
      "sched": "19:15",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:10"
     },
     {
      "place": "Lisboa",
@@ -176,20 +162,6 @@
    ],
    "dep": [
     {
-     "place": "Ponta Delgada",
-     "flight": "S4163",
-     "sched": "14:40",
-     "status": "Departed",
-     "expected": "14:56"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7626",
-     "sched": "14:55",
-     "status": "Departed",
-     "expected": "15:07"
-    },
-    {
      "place": "Frankfurt",
      "flight": "4Y703",
      "sched": "15:40",
@@ -221,42 +193,42 @@
      "place": "Prague",
      "flight": "QS1171",
      "sched": "16:40",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:55"
     },
     {
      "place": "Manchester",
      "flight": "FR006",
      "sched": "17:00",
-     "status": "Final Call",
-     "expected": ""
+     "status": "Departed",
+     "expected": "17:07"
     },
     {
      "place": "Oslo",
      "flight": "DY1785",
      "sched": "17:10",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Berlin Brandenburg",
      "flight": "EJU5334",
      "sched": "17:15",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Frankfurt",
      "flight": "X32807",
      "sched": "17:30",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Dusseldorf",
      "flight": "X32853",
      "sched": "17:35",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
