@@ -1,32 +1,23 @@
 {
- "updated": "2026-10-20T22:09:27Z",
+ "updated": "2026-10-20T22:38:17Z",
  "source": "avionio.com",
  "days": {
-  "2026-10-19": {
+  "2026-10-21": {
    "utcOffsetMin": 120,
    "arr": [
     {
      "place": "Vienna",
      "flight": "OS101",
      "sched": "07:40",
-     "status": "Landed",
-     "expected": "07:32"
-    },
-    {
-     "place": "Vienna",
-     "flight": "OS107",
-     "sched": "18:10",
-     "status": "Estimated",
-     "expected": "18:27"
-    },
-    {
-     "place": "Geneva",
-     "flight": "JFL139",
-     "sched": "18:51",
-     "status": "Landed",
-     "expected": "18:39"
+     "status": "Scheduled",
+     "expected": ""
     }
    ],
+   "dep": []
+  },
+  "2026-10-19": {
+   "utcOffsetMin": 120,
+   "arr": [],
    "dep": [
     {
      "place": "Vienna",
@@ -53,22 +44,7 @@
   },
   "2026-10-20": {
    "utcOffsetMin": 120,
-   "arr": [
-    {
-     "place": "London",
-     "flight": "U28695",
-     "sched": "11:05",
-     "status": "Landed",
-     "expected": "10:49"
-    },
-    {
-     "place": "Vienna",
-     "flight": "OS107",
-     "sched": "18:10",
-     "status": "Landed",
-     "expected": "18:17"
-    }
-   ],
+   "arr": [],
    "dep": [
     {
      "place": "London",
