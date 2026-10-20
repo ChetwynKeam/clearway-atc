@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-20T14:09:48Z",
+ "updated": "2026-10-20T14:41:47Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-20": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Warsaw",
-     "flight": "3Z7306",
-     "sched": "13:10",
-     "status": "Arrived",
-     "expected": "12:46"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1689",
-     "sched": "13:15",
-     "status": "Arrived",
-     "expected": "13:12"
-    },
     {
      "place": "Lisboa",
      "flight": "EJU7625",
@@ -72,8 +58,8 @@
      "place": "Lisboa",
      "flight": "EJU7623",
      "sched": "15:35",
-     "status": "Estimated",
-     "expected": "15:15"
+     "status": "Arrived",
+     "expected": "15:26"
     },
     {
      "place": "Prague",
@@ -101,14 +87,14 @@
      "flight": "EJU5333",
      "sched": "16:40",
      "status": "Estimated",
-     "expected": "16:30"
+     "expected": "16:45"
     },
     {
      "place": "Frankfurt",
      "flight": "X32806",
      "sched": "16:40",
      "status": "Estimated",
-     "expected": "16:25"
+     "expected": "16:40"
     },
     {
      "place": "Munich",
@@ -122,7 +108,7 @@
      "flight": "X32810",
      "sched": "17:25",
      "status": "Estimated",
-     "expected": "17:40"
+     "expected": "17:50"
     },
     {
      "place": "Tenerife Norte",
@@ -136,21 +122,21 @@
      "flight": "ENT5991",
      "sched": "17:40",
      "status": "Estimated",
-     "expected": "17:35"
+     "expected": "17:40"
     },
     {
      "place": "Geneva",
      "flight": "EZS1469",
      "sched": "17:45",
      "status": "Estimated",
-     "expected": "17:50"
+     "expected": "18:05"
     },
     {
      "place": "Nantes",
      "flight": "EJU4731",
      "sched": "17:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:40"
     },
     {
      "place": "Paris Ch. de Gaulle",
@@ -170,15 +156,15 @@
      "place": "London Gatwick",
      "flight": "BA2718",
      "sched": "18:35",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:35"
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8521",
      "sched": "18:45",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "19:05"
     },
     {
      "place": "Porto",
@@ -225,13 +211,6 @@
    ],
    "dep": [
     {
-     "place": "Paris Orly",
-     "flight": "TO7699",
-     "sched": "13:25",
-     "status": "Departed",
-     "expected": "14:29"
-    },
-    {
      "place": "Warsaw",
      "flight": "3Z7307",
      "sched": "14:00",
@@ -263,28 +242,28 @@
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "14:55",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "15:07"
     },
     {
      "place": "Frankfurt",
      "flight": "4Y703",
      "sched": "15:40",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Hannover",
      "flight": "X32831",
      "sched": "15:55",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
      "place": "Milan Malpensa",
      "flight": "FR6671",
      "sched": "16:05",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
