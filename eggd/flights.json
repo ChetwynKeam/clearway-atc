@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-20T04:39:49Z",
+ "updated": "2026-10-20T05:11:07Z",
  "source": "avionio.com",
  "days": {
   "2026-10-20": {
@@ -9,14 +9,14 @@
      "place": "Dublin",
      "flight": "FR504",
      "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:35"
     },
     {
      "place": "Dublin",
      "flight": "EA3280",
      "sched": "07:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -51,14 +51,14 @@
      "place": "Faro",
      "flight": "EC7507",
      "sched": "08:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Barcelona",
      "flight": "EC7191",
      "sched": "09:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -142,6 +142,13 @@
      "place": "Palma de Mallorca",
      "flight": "FR8235",
      "sched": "11:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Manchester",
+     "flight": "U29004",
+     "sched": "11:53",
      "status": "Scheduled",
      "expected": ""
     },
@@ -279,6 +286,13 @@
      "expected": ""
     },
     {
+     "place": "Malaga",
+     "flight": "U27003",
+     "sched": "15:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Krakow/Balice",
      "flight": "FR6220",
      "sched": "15:45",
@@ -386,13 +400,6 @@
    ],
    "dep": [
     {
-     "place": "Rzeszow",
-     "flight": "FR8224",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "06:10"
-    },
-    {
      "place": "Kos",
      "flight": "BY6254",
      "sched": "06:00",
@@ -418,7 +425,7 @@
      "flight": "U22715",
      "sched": "06:00",
      "status": "Estimated",
-     "expected": "06:00"
+     "expected": "06:15"
     },
     {
      "place": "Lanzarote",
@@ -445,64 +452,64 @@
      "place": "Palma de Mallorca",
      "flight": "FR8234",
      "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:30"
     },
     {
      "place": "Amsterdam",
      "flight": "KL1074",
      "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:25"
     },
     {
      "place": "Faro",
      "flight": "LS1821",
      "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:28"
     },
     {
      "place": "Olbia",
      "flight": "U22835",
      "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:32"
     },
     {
      "place": "Split",
      "flight": "U22891",
      "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:20"
     },
     {
      "place": "Milan",
      "flight": "U22841",
      "sched": "06:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:20"
     },
     {
      "place": "Bari",
      "flight": "U22849",
      "sched": "06:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:25"
     },
     {
      "place": "Palma de Mallorca",
      "flight": "BY6272",
      "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:43"
     },
     {
      "place": "Menorca",
      "flight": "LS1859",
      "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:43"
     },
     {
      "place": "Malaga",
@@ -522,22 +529,22 @@
      "place": "Murcia",
      "flight": "U22701",
      "sched": "06:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:01"
     },
     {
      "place": "Palma de Mallorca",
      "flight": "LS1871",
      "sched": "06:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:58"
     },
     {
      "place": "Ibiza",
      "flight": "U22741",
      "sched": "06:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:50"
     },
     {
      "place": "Dalaman",
