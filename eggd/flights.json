@@ -1,45 +1,10 @@
 {
- "updated": "2026-10-21T09:41:32Z",
+ "updated": "2026-10-21T10:14:40Z",
  "source": "avionio.com",
  "days": {
   "2026-10-21": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Glasgow",
-     "flight": "U2202",
-     "sched": "10:10",
-     "status": "Landed",
-     "expected": "10:12"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "U2214",
-     "sched": "10:15",
-     "status": "Landed",
-     "expected": "10:03"
-    },
-    {
-     "place": "Paris",
-     "flight": "U22774",
-     "sched": "10:20",
-     "status": "Landed",
-     "expected": "10:14"
-    },
-    {
-     "place": "Girona",
-     "flight": "FR9335",
-     "sched": "10:40",
-     "status": "Landed",
-     "expected": "10:23"
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR5164",
-     "sched": "10:55",
-     "status": "Estimated",
-     "expected": "10:35"
-    },
     {
      "place": "Madrid",
      "flight": "FR154",
@@ -73,7 +38,7 @@
      "flight": "U22840",
      "sched": "12:10",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:21"
     },
     {
      "place": "Malaga",
@@ -122,14 +87,14 @@
      "flight": "FR4148",
      "sched": "13:05",
      "status": "Estimated",
-     "expected": "13:05"
+     "expected": "13:13"
     },
     {
      "place": "Sofia",
      "flight": "FR4130",
      "sched": "13:10",
      "status": "Estimated",
-     "expected": "12:46"
+     "expected": "12:47"
     },
     {
      "place": "Palma de Mallorca",
@@ -156,8 +121,8 @@
      "place": "Enfidha",
      "flight": "U22794",
      "sched": "13:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:15"
     },
     {
      "place": "Glasgow",
@@ -198,15 +163,15 @@
      "place": "Skiathos",
      "flight": "U22830",
      "sched": "14:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:45"
     },
     {
      "place": "Lanzarote",
      "flight": "FR4761",
      "sched": "14:30",
      "status": "Estimated",
-     "expected": "14:30"
+     "expected": "14:26"
     },
     {
      "place": "Guernsey",
@@ -247,7 +212,7 @@
      "place": "Thessaloniki",
      "flight": "U22880",
      "sched": "15:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -261,7 +226,7 @@
      "place": "Rhodes",
      "flight": "BY6377",
      "sched": "15:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -364,8 +329,15 @@
     },
     {
      "place": "Geneva",
-     "flight": "U21409",
+     "flight": "DS1409",
      "sched": "18:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Toulouse",
+     "flight": "U22784",
+     "sched": "19:25",
      "status": "Scheduled",
      "expected": ""
     },
@@ -421,41 +393,6 @@
    ],
    "dep": [
     {
-     "place": "Alicante",
-     "flight": "FR2292",
-     "sched": "10:10",
-     "status": "Departed",
-     "expected": "10:01"
-    },
-    {
-     "place": "Tenerife",
-     "flight": "FR4753",
-     "sched": "10:20",
-     "status": "Estimated",
-     "expected": "10:16"
-    },
-    {
-     "place": "Ibiza",
-     "flight": "U22727",
-     "sched": "10:25",
-     "status": "Departed",
-     "expected": "10:29"
-    },
-    {
-     "place": "Glasgow",
-     "flight": "U2207",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "10:50"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "U2217",
-     "sched": "10:50",
-     "status": "Estimated",
-     "expected": "10:50"
-    },
-    {
      "place": "Prague",
      "flight": "U22935",
      "sched": "11:05",
@@ -473,8 +410,8 @@
      "place": "Madrid",
      "flight": "FR155",
      "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:45"
     },
     {
      "place": "Budapest",
@@ -746,8 +683,8 @@
      "place": "Malaga",
      "flight": "FR4121",
      "sched": "17:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:10"
     },
     {
      "place": "Palma de Mallorca",
