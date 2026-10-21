@@ -1,10 +1,44 @@
 {
- "updated": "2026-10-21T16:44:22Z",
+ "updated": "2026-10-21T17:14:40Z",
  "source": "avionio.com",
  "days": {
+  "2026-10-20": {
+   "utcOffsetMin": 120,
+   "arr": [
+    {
+     "place": "Vienna",
+     "flight": "OS107",
+     "sched": "18:10",
+     "status": "Landed",
+     "expected": "18:17"
+    }
+   ],
+   "dep": []
+  },
   "2026-10-21": {
    "utcOffsetMin": 120,
    "arr": [
+    {
+     "place": "Vienna",
+     "flight": "OS101",
+     "sched": "07:40",
+     "status": "Landed",
+     "expected": "07:41"
+    },
+    {
+     "place": "Linz",
+     "flight": "MOZ309",
+     "sched": "09:38",
+     "status": "Landed",
+     "expected": "09:31"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6609",
+     "sched": "15:45",
+     "status": "Estimated",
+     "expected": "15:40"
+    },
     {
      "place": "Vienna",
      "flight": "OS107",
@@ -14,6 +48,34 @@
     }
    ],
    "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS102",
+     "sched": "08:20",
+     "status": "Departed",
+     "expected": "08:26"
+    },
+    {
+     "place": "Hurghada",
+     "flight": "TYW431",
+     "sched": "11:10",
+     "status": "Departed",
+     "expected": "11:25"
+    },
+    {
+     "place": "Linz",
+     "flight": "MOZ309",
+     "sched": "16:00",
+     "status": "Departed",
+     "expected": "16:41"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "16:30",
+     "status": "Departed",
+     "expected": "16:44"
+    },
     {
      "place": "Vienna",
      "flight": "OS108",
