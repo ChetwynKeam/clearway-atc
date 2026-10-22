@@ -1,72 +1,37 @@
 {
- "updated": "2026-10-22T18:18:50Z",
+ "updated": "2026-10-22T19:07:22Z",
  "source": "avionio.com",
  "days": {
   "2026-10-22": {
    "utcOffsetMin": 60,
    "arr": [
     {
-     "place": "Glasgow",
-     "flight": "CJ8727",
-     "sched": "19:00",
-     "status": "Estimated",
-     "expected": "19:03"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "CJ8709",
-     "sched": "19:20",
-     "status": "Estimated",
-     "expected": "19:00"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL995",
-     "sched": "19:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Luxembourg",
-     "flight": "LG4597",
-     "sched": "19:50",
-     "status": "Estimated",
-     "expected": "19:43"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "CJ8458",
-     "sched": "19:55",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
      "place": "Zurich",
      "flight": "CJ8768",
      "sched": "20:00",
      "status": "Estimated",
-     "expected": "20:02"
+     "expected": "20:04"
     },
     {
      "place": "Glasgow",
      "flight": "CJ8729",
      "sched": "20:35",
      "status": "Estimated",
-     "expected": ""
+     "expected": "20:13"
     },
     {
      "place": "Dublin",
      "flight": "CJ4473",
      "sched": "20:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "20:28"
     },
     {
      "place": "Milan",
      "flight": "AZ224",
      "sched": "20:50",
-     "status": "Estimated",
-     "expected": "20:55"
+     "status": "Landed",
+     "expected": "21:29"
     },
     {
      "place": "Rotterdam",
@@ -80,7 +45,7 @@
      "flight": "CJ8717",
      "sched": "21:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "20:34"
     },
     {
      "place": "Milan",
@@ -100,8 +65,8 @@
      "place": "Milan",
      "flight": "BA7306",
      "sched": "21:30",
-     "status": "Estimated",
-     "expected": "21:30"
+     "status": "Landed",
+     "expected": "21:34"
     },
     {
      "place": "Dublin",
@@ -113,76 +78,6 @@
    ],
    "dep": [
     {
-     "place": "Edinburgh",
-     "flight": "CJ8710",
-     "sched": "19:00",
-     "status": "Estimated",
-     "expected": "19:00"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL994",
-     "sched": "19:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "CJ8457",
-     "sched": "19:05",
-     "status": "Estimated",
-     "expected": "19:18"
-    },
-    {
-     "place": "Madrid",
-     "flight": "CJ3270",
-     "sched": "19:15",
-     "status": "Estimated",
-     "expected": "19:15"
-    },
-    {
-     "place": "Zurich",
-     "flight": "LX467",
-     "sched": "19:15",
-     "status": "Estimated",
-     "expected": "19:27"
-    },
-    {
-     "place": "Guernsey",
-     "flight": "GR411",
-     "sched": "19:20",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "AZ219",
-     "sched": "19:25",
-     "status": "Estimated",
-     "expected": "19:39"
-    },
-    {
-     "place": "Milan",
-     "flight": "AZ219",
-     "sched": "19:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Glasgow",
-     "flight": "CJ8730",
-     "sched": "19:35",
-     "status": "Estimated",
-     "expected": "19:53"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "CJ8714",
-     "sched": "19:55",
-     "status": "Estimated",
-     "expected": "19:59"
-    },
-    {
      "place": "Amsterdam",
      "flight": "KL996",
      "sched": "20:15",
@@ -193,15 +88,15 @@
      "place": "Luxembourg",
      "flight": "LG4598",
      "sched": "20:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:20"
     },
     {
      "place": "Dublin",
      "flight": "CJ4470",
      "sched": "20:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:34"
     },
     {
      "place": "Edinburgh",
@@ -219,6 +114,55 @@
      "place": "Milan",
      "flight": "AZ218",
      "sched": "08:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Frankfurt",
+     "flight": "EN8772",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX460",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "AJD214K",
+     "sched": "10:04",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "BA7302",
+     "sched": "11:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX456",
+     "sched": "12:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "AZ226",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "AZ238",
+     "sched": "15:45",
      "status": "Scheduled",
      "expected": ""
     }
@@ -242,6 +186,62 @@
      "place": "Frankfurt",
      "flight": "EN8773",
      "sched": "09:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX461",
+     "sched": "09:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "AZ221",
+     "sched": "09:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "AJD214K",
+     "sched": "11:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX457",
+     "sched": "13:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "BA7303",
+     "sched": "13:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "AZ227",
+     "sched": "13:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX465",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Frankfurt",
+     "flight": "EN8779",
+     "sched": "18:30",
      "status": "Scheduled",
      "expected": ""
     }
