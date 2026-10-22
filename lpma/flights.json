@@ -1,24 +1,10 @@
 {
- "updated": "2026-10-22T10:45:35Z",
+ "updated": "2026-10-22T11:14:22Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-22": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Leipzig",
-     "flight": "DI6578",
-     "sched": "09:55",
-     "status": "Arrived",
-     "expected": "09:49"
-    },
-    {
-     "place": "Porto",
-     "flight": "FR366",
-     "sched": "10:05",
-     "status": "Arrived",
-     "expected": "09:56"
-    },
     {
      "place": "London Gatwick",
      "flight": "EZY8519",
@@ -44,8 +30,15 @@
      "place": "Lisboa",
      "flight": "TP1687",
      "sched": "11:40",
-     "status": "Estimated",
-     "expected": "11:45"
+     "status": "Arrived",
+     "expected": "11:46"
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "BA2716",
+     "sched": "12:25",
+     "status": "Arrived",
+     "expected": "12:04"
     },
     {
      "place": "Ponta Delgada",
@@ -53,13 +46,6 @@
      "sched": "12:25",
      "status": "Estimated",
      "expected": "12:45"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "BA2716",
-     "sched": "12:25",
-     "status": "Estimated",
-     "expected": "12:05"
     },
     {
      "place": "Lisboa",
@@ -93,8 +79,8 @@
      "place": "Lisboa",
      "flight": "TP1689",
      "sched": "13:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:05"
     },
     {
      "place": "Edinburgh",
@@ -149,15 +135,15 @@
      "place": "Frankfurt",
      "flight": "DE1570",
      "sched": "15:30",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:40"
     },
     {
      "place": "Lisboa",
      "flight": "TP3831",
      "sched": "15:35",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:35"
     },
     {
      "place": "Vienna",
@@ -170,15 +156,15 @@
      "place": "Prague",
      "flight": "QS1170",
      "sched": "15:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:45"
     },
     {
      "place": "Hamburg",
      "flight": "DI6506",
      "sched": "16:05",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:05"
     },
     {
      "place": "Warsaw",
@@ -309,13 +295,6 @@
    ],
    "dep": [
     {
-     "place": "Amsterdam",
-     "flight": "HV6630",
-     "sched": "10:05",
-     "status": "Departed",
-     "expected": "10:15"
-    },
-    {
      "place": "Dusseldorf",
      "flight": "EW9601",
      "sched": "10:25",
@@ -361,14 +340,14 @@
      "place": "Berlin Brandenburg",
      "flight": "EJU5334",
      "sched": "11:35",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1688",
      "sched": "12:40",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
@@ -501,8 +480,8 @@
      "place": "Frankfurt",
      "flight": "4Y703",
      "sched": "17:40",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:55"
     },
     {
      "place": "Munich",
