@@ -8,7 +8,8 @@ name: Refresh airport flights
 # Madrid-Barajas (avionio.com's MAD boards, ten pages each way) as lemd/flights.json,
 # Manchester (avionio.com's MAN boards, ten pages each way) as egcc/flights.json,
 # London Heathrow (avionio.com's LHR boards, fourteen pages each way) as egll/flights.json,
-# Bristol (avionio.com's BRS boards, six pages each way) as eggd/flights.json.
+# Bristol (avionio.com's BRS boards, six pages each way) as eggd/flights.json,
+# Sydney (avionio.com's SYD boards, fourteen pages each way) as yssy/flights.json.
 on:
   schedule:
     - cron: '2,17,32,47 * * * *'
@@ -111,9 +112,19 @@ jobs:
           [ -n "$A" ] && [ -n "$D" ] || exit 0
           python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/eggd.json Europe/London || exit 0
           python3 -c "import json,sys; d=json.load(open('/tmp/eggd.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p eggd && cp /tmp/eggd.json eggd/flights.json || echo "no Bristol flights parsed"
+      - name: Fetch Sydney's flight information
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; A=""; D=""
+          for P in 0 1 2 3 4 5 6 7 8 9 10 11 12 13; do
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/syd_a$P.html "https://www.avionio.com/en/airport/syd/arrivals?page=$P" && A="$A,/tmp/syd_a$P.html"
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/syd_d$P.html "https://www.avionio.com/en/airport/syd/departures?page=$P" && D="$D,/tmp/syd_d$P.html"
+          done
+          [ -n "$A" ] && [ -n "$D" ] || exit 0
+          python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/yssy.json Australia/Sydney || exit 0
+          python3 -c "import json,sys; d=json.load(open('/tmp/yssy.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p yssy && cp /tmp/yssy.json yssy/flights.json || echo "no Sydney flights parsed"
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json egkk/flights.json lemd/flights.json egcc/flights.json egll/flights.json eggd/flights.json; do [ -f "$f" ] && git add "$f"; done; true
+          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json egkk/flights.json lemd/flights.json egcc/flights.json egll/flights.json eggd/flights.json yssy/flights.json; do [ -f "$f" ] && git add "$f"; done; true
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main
