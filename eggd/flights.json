@@ -1,52 +1,10 @@
 {
- "updated": "2026-10-23T10:57:34Z",
+ "updated": "2026-10-23T11:22:01Z",
  "source": "avionio.com",
  "days": {
   "2026-10-23": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Dublin",
-     "flight": "FR5164",
-     "sched": "11:00",
-     "status": "Landed",
-     "expected": "10:35"
-    },
-    {
-     "place": "Geneva",
-     "flight": "U22884",
-     "sched": "11:20",
-     "status": "Estimated",
-     "expected": "11:54"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "U2216",
-     "sched": "11:30",
-     "status": "Estimated",
-     "expected": "11:20"
-    },
-    {
-     "place": "Palma de Mallorca",
-     "flight": "U22710",
-     "sched": "11:40",
-     "status": "Estimated",
-     "expected": "11:20"
-    },
-    {
-     "place": "Palma de Mallorca",
-     "flight": "LS1872",
-     "sched": "11:45",
-     "status": "Estimated",
-     "expected": "11:30"
-    },
-    {
-     "place": "Cork",
-     "flight": "EA3840",
-     "sched": "11:55",
-     "status": "Estimated",
-     "expected": "11:33"
-    },
     {
      "place": "Milan",
      "flight": "EC3843",
@@ -73,7 +31,7 @@
      "flight": "U22874",
      "sched": "12:15",
      "status": "Estimated",
-     "expected": "12:09"
+     "expected": "12:10"
     },
     {
      "place": "Milan",
@@ -101,14 +59,14 @@
      "flight": "EC5531",
      "sched": "12:30",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:50"
     },
     {
      "place": "Pisa",
      "flight": "U22840",
      "sched": "12:30",
      "status": "Estimated",
-     "expected": "12:07"
+     "expected": "12:06"
     },
     {
      "place": "Menorca",
@@ -171,14 +129,14 @@
      "flight": "U22846",
      "sched": "13:15",
      "status": "Estimated",
-     "expected": "13:11"
+     "expected": "13:10"
     },
     {
      "place": "Enfidha",
      "flight": "U22794",
      "sched": "13:30",
      "status": "Estimated",
-     "expected": "13:17"
+     "expected": "13:13"
     },
     {
      "place": "Bucharest",
@@ -191,7 +149,7 @@
      "place": "Belfast",
      "flight": "U2224",
      "sched": "13:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -387,7 +345,7 @@
      "place": "Antalya",
      "flight": "XQ584",
      "sched": "17:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -524,6 +482,13 @@
      "expected": ""
     },
     {
+     "place": "Antalya",
+     "flight": "LS1846",
+     "sched": "23:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Sal Island",
      "flight": "U22824",
      "sched": "23:40",
@@ -532,34 +497,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Belfast",
-     "flight": "U2223",
-     "sched": "11:05",
-     "status": "Departed",
-     "expected": "11:07"
-    },
-    {
-     "place": "Nice",
-     "flight": "U22765",
-     "sched": "11:10",
-     "status": "Estimated",
-     "expected": "11:36"
-    },
-    {
-     "place": "Sal Island",
-     "flight": "U22823",
-     "sched": "11:20",
-     "status": "Estimated",
-     "expected": "11:33"
-    },
-    {
-     "place": "Knock",
-     "flight": "FR8202",
-     "sched": "11:40",
-     "status": "Estimated",
-     "expected": "11:43"
-    },
     {
      "place": "Edinburgh",
      "flight": "U2215",
@@ -572,7 +509,7 @@
      "flight": "FR7727",
      "sched": "12:05",
      "status": "Estimated",
-     "expected": "12:30"
+     "expected": "12:35"
     },
     {
      "place": "Dublin",
@@ -592,8 +529,8 @@
      "place": "Tivat",
      "flight": "U22751",
      "sched": "12:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:59"
     },
     {
      "place": "Milan",
@@ -669,8 +606,8 @@
      "place": "Milan",
      "flight": "FR3560",
      "sched": "13:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:01"
     },
     {
      "place": "Heraklion",
@@ -1003,6 +940,13 @@
      "place": "Venice",
      "flight": "FR1362",
      "sched": "11:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Milan",
+     "flight": "U22842",
+     "sched": "12:05",
      "status": "Scheduled",
      "expected": ""
     },
