@@ -6,8 +6,8 @@
 // charts are MAGNETIC (variation 13°E: true = magnetic + 13). Plain data plus a few small functions, like kjfk.js;
 // yssy-engine.js turns it into the engine's globals.
 // Sydney has three runways: the parallel pair 16L/34R (2,438 m) and 16R/34L (3,962 m) and the crossing 07/25 (2,530 m).
-// Simplifications (see the Academy briefing): the parallel pair is run in one configuration at a time (land one, depart the
-// other), 07/25 is run alone, the curfew (23:00 to 06:00 local) closes the session, and the centre sectors are representative.
+// Simplifications (see the Academy briefing): the parallel pair is run in one configuration at a time (land on the short runway, depart the
+// long one), 07/25 is run alone, the curfew (23:00 to 06:00 local) closes the session, and the centre sectors are representative.
 
 const YSSY = (() => {
   // ── fixes (ERSA GEN IFR waypoints 03 SEP 2026), those on the SIDs, STARs and approaches used here
@@ -52,16 +52,17 @@ const YSSY = (() => {
                 via: { '25': [['MARLN'], ['BIKUS', 8000], ['VENUL', 9000], ['UXAMA']] }, rwx: { '34R': [['MANFA'], ['JAKLN']] }, expect: 'expect radar vectors to final after PRAWN' }
   };
 
-  // ── ILS approaches (Airservices DAP ILS or LOC charts 11-0 to 13-0, ILS PAGE 2 minima): the IAF/intermediate fix and the
-  // fix at the final approach altitude, 3° glideslope, CAT I DA 200 ft (parallel 16/34 runways: CAT II on 16R/34L).
+  // ── ILS approaches (Airservices DAP ILS charts, profile views): the intermediate fix with its platform altitude and the
+  // final approach fix with the altitude on the 3° path there; the decision altitude is 220 ft or so on every runway.
   const ILS = {
-    '16L': { loc: 'ISS', freq: '110.90', ifx: 'TONUX', faf: 'RENAM', ifAlt: 4000, fafAlt: 3000, missedHdg: 125, missed: 3000 },
-    '16R': { loc: 'IKS', freq: '109.50', ifx: 'URDEN', faf: 'IGALA', ifAlt: 3000, fafAlt: 3000, missedHdg: 170, missed: 3000 },
-    '34L': { loc: 'ISN', freq: '110.10', ifx: 'SOSIJ', faf: 'ATRET', ifAlt: 3000, fafAlt: 2880, missedHdg: 320, missed: 3000 },
-    '34R': { loc: 'IKN', freq: '109.30', ifx: 'BOBIG', faf: 'ENDEV', ifAlt: 3000, fafAlt: 2000, missedHdg: 60, missed: 4000 },
-    '07':  { loc: 'ISY', freq: '109.90', ifx: 'GURSI', faf: 'ANKUB', ifAlt: 4000, fafAlt: 3000, missedHdg: 62, missed: 3000 },
-    '25':  { loc: 'ISW', freq: '109.70', ifx: 'JELLI', faf: 'PEGBA', ifAlt: 4000, fafAlt: 3000, missedHdg: 242, missed: 3000 }
+    '16L': { loc: 'ISS', freq: '110.90', ifx: 'TONUX', faf: 'RENAM', ifAlt: 4000, fafAlt: 1700, missedHdg: 125, missed: 3000 },
+    '16R': { loc: 'IKS', freq: '109.50', ifx: 'URDEN', faf: 'IGALA', ifAlt: 3000, fafAlt: 1700, missedHdg: 170, missed: 3000 },
+    '34L': { loc: 'ISN', freq: '110.10', ifx: 'SOSIJ', faf: 'ATRET', ifAlt: 3000, fafAlt: 1900, missedHdg: 320, missed: 3000 },
+    '34R': { loc: 'IKN', freq: '109.30', ifx: 'BOBIG', faf: 'OLSOG', ifAlt: 2000, fafAlt: 1600, missedHdg: 60, missed: 4000 },
+    '07':  { loc: 'ISY', freq: '109.90', ifx: 'ANKUB', faf: 'VIDIK', ifAlt: 3000, fafAlt: 1320, missedHdg: 62, missed: 3000 },
+    '25':  { loc: 'ISW', freq: '109.70', ifx: 'JELLI', faf: 'PEGBA', ifAlt: 3000, fafAlt: 1610, missedHdg: 242, missed: 3000 }
   };
+
 
   // ── SIDs (Airservices DAP): RNAV SIDs by runway, the common climb from the runway, then the transitions. Initial
   // headings in the charts are magnetic. Where a destination has no RNAV SID off the runway in use it flies SYDNEY FOUR
@@ -169,17 +170,17 @@ const YSSY = (() => {
     { cs: 'ANZ201', t: 'A320', k: 'ARR', o: 'NZWN' }, { cs: 'JST519', t: 'A320', k: 'DEP', d: 'YBCG' }, { cs: 'RXA201', t: 'SF34', k: 'ARR', o: 'YMAY' }, { cs: 'QFA503', t: 'B738', k: 'DEP', d: 'YBBN' }
   ];
   const EXERCISES = {
-    dep: { name: 'Sydney 1 · Avmov One off 34L', wx: 'n', rwy: '34L', depRwy: '34R', sched: [{ cs: 'QFA441', t: 'B738', k: 'DEP', d: 'YBBN', m: 0, stand: '35' }] },
-    arr: { name: 'Sydney 2 · ILS 34L and the runway crossing', wx: 'n', rwy: '34L', depRwy: '34R', sched: [{ cs: 'JST519', t: 'A320', k: 'ARR', o: 'YMML', m: 0 }] },
-    mix: { name: 'Sydney 3 · A mixed hour on 16R', wx: 's', rwy: '16R', depRwy: '16L', sched: [{ cs: 'VOZ453', t: 'B738', k: 'ARR', o: 'YBBN', m: 0 }, { cs: 'QFA547', t: 'B738', k: 'DEP', d: 'YMML', m: 0, stand: '41' }, { cs: 'UAE413', t: 'A388', k: 'ARR', o: 'OMDB', m: 6 }] }
+    dep: { name: 'Sydney 1 · Avmov One off 34L', wx: 'n', rwy: '34R', depRwy: '34L', sched: [{ cs: 'QFA441', t: 'B738', k: 'DEP', d: 'YBBN', m: 0, stand: '35' }] },
+    arr: { name: 'Sydney 2 · ILS 34R and the runway crossing', wx: 'n', rwy: '34R', depRwy: '34L', sched: [{ cs: 'JST519', t: 'A320', k: 'ARR', o: 'YMML', m: 0 }] },
+    mix: { name: 'Sydney 3 · A mixed hour on 16L and 16R', wx: 's', rwy: '16L', depRwy: '16R', sched: [{ cs: 'VOZ453', t: 'B738', k: 'ARR', o: 'YBBN', m: 0 }, { cs: 'QFA547', t: 'B738', k: 'DEP', d: 'YMML', m: 0, stand: '41' }, { cs: 'UAE413', t: 'A388', k: 'ARR', o: 'OMDB', m: 6 }] }
   };
   const WX_PRESETS = {
-    n:     { name: 'Northerly: land 34L, depart 34R',                       short: 'Northerly',   metar: 'YSSY 051751Z 36012KT 9999 FEW040 SCT250 24/12 Q1016' },
-    s:     { name: 'Southerly: land 16R, depart 16L',                       short: 'Southerly',   metar: 'YSSY 051751Z 17014KT 9999 SCT035 19/11 Q1018' },
+    n:     { name: 'Northerly: land 34R, depart 34L',                       short: 'Northerly',   metar: 'YSSY 051751Z 36012KT 9999 FEW040 SCT250 24/12 Q1016' },
+    s:     { name: 'Southerly: land 16L, depart 16R',                       short: 'Southerly',   metar: 'YSSY 051751Z 17014KT 9999 SCT035 19/11 Q1018' },
     ne:    { name: 'North-east sea breeze: runway 07',                      short: 'Sea breeze',  metar: 'YSSY 051751Z 05014KT 9999 FEW030 26/17 Q1014' },
     w:     { name: 'Westerly: runway 25',                                   short: 'Westerly',    metar: 'YSSY 051751Z 27016G26KT 9999 FEW060 SCT120 21/05 Q1013' },
-    bsb:   { name: 'Southerly buster: gusty 16R',                           short: 'Buster',      metar: 'YSSY 051751Z 17026G38KT 9999 SCT025 BKN040 17/13 Q1010' },
-    ifr:   { name: 'Low cloud and drizzle, ILS 34L near the minima',        short: 'IFR',         metar: 'YSSY 051751Z 02010KT 3000 -DZ BR OVC004 17/16 Q1012' },
+    bsb:   { name: 'Southerly buster: gusty 16L and 16R',                           short: 'Buster',      metar: 'YSSY 051751Z 17026G38KT 9999 SCT025 BKN040 17/13 Q1010' },
+    ifr:   { name: 'Low cloud and drizzle, ILS 34R near the minima',        short: 'IFR',         metar: 'YSSY 051751Z 02010KT 3000 -DZ BR OVC004 17/16 Q1012' },
     storm: { name: 'Summer thunderstorms over the field',                   short: 'Storms',      metar: 'YSSY 051951Z 33018G34KT 4000 TSRA BKN030CB OVC060 29/21 Q1005' },
     fog:   { name: 'Winter fog: below the ILS minima',                      short: 'Fog',         metar: 'YSSY 051051Z 00000KT 0400 FG VV001 08/08 Q1021' }
   };

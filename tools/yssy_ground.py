@@ -27,9 +27,9 @@ def tagged(w, *k): return w.get('tags', {}).get('aeroway') in k
 def wend(wid, k):
     w = next(w for w in ways if w['id'] == wid); g = w['geometry'][k]; return en(g['lat'], g['lon'])
 RWYS = [
-    (186842426, '16L', '34R', wend(186842426, 0), wend(186842426, -1), 21, 21),
-    (219359696, '16R', '34L', wend(1064563478, 0), wend(219359696, -1), 21, 21),
-    (219847158, '07', '25', wend(219847158, 0), wend(219847158, -1), 21, 21),
+    (186842426, '16L', '34R', wend(186842426, 0), wend(186842426, -1), 16, 13),
+    (219359696, '16R', '34L', wend(1064563478, 0), wend(219359696, -1), 7, 14),
+    (219847158, '07', '25', wend(219847158, 0), wend(219847158, -1), 16, 20),
 ]
 runways, FR = [], {}
 for wid, lo, hi, tlo, thi, elo, ehi in RWYS:
