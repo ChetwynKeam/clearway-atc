@@ -1,0 +1,56 @@
+name: Fetch YSSY data
+# One-off for the Sydney (YSSY) airport build: OSM aerodrome, Botany Bay and coast geometry, airside roads and vehicle places,
+# towns and neighbouring aerodromes, METAR/TAF, a sample of the avionio SYD flight boards and live ADS-B, published to the yssy-data branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/workflows/yssy-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          BUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          ovp(){ for R in 1 2 3; do for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do curl -sSf -m 300 -A "$UA" --data-urlencode "data=$1" "$H/api/interpreter" -o "$2" && { echo "$2 from $H"; return 0; }; sleep 15; done; done; echo "FAILED $2" >> failures.txt; return 0; }
+          B=-33.985,151.150,-33.915,151.215
+          # aerodrome: runways, taxiways, aprons, stands, gates, buildings, roads, rail and fence round the field
+          ovp "[out:json][timeout:180];(way[aeroway]($B);node[aeroway]($B);relation[aeroway]($B);way[building](-33.980,151.155,-33.920,151.210);way[highway]($B);way[railway]($B);way[barrier](-33.980,151.155,-33.920,151.210);way[man_made](-33.980,151.155,-33.920,151.210);way[natural=water]($B);relation[natural=water]($B););out geom;" osm_aerodrome.json
+          # vehicle places: roads, fire stations, fuel, hangars, jet bridges, boundary (same query as vehicles-fetch.yml)
+          ovp "[out:json][timeout:180];(way[highway]($B);way[aeroway]($B);node[aeroway]($B);relation[aeroway]($B);nwr[amenity~\"fire_station|fuel\"]($B);nwr[emergency]($B);way[building~\"hangar|fire_station|service|industrial\"]($B);way[man_made~\"storage_tank|works\"]($B);way[landuse~\"industrial|garages\"]($B);way[barrier~\"fence|wall|gate\"]($B);node[barrier]($B););out geom;" YSSY_vehicles.json
+          # the coast, Botany Bay, Port Botany and the rivers for the approach map
+          ovp '[out:json][timeout:240];(way[natural=coastline](-34.60,150.55,-33.30,151.75););out geom;' osm_coast.json
+          ovp '[out:json][timeout:240];(way[natural=water](-34.10,151.00,-33.85,151.30);relation[natural=water](-34.10,151.00,-33.85,151.30);way[waterway=riverbank](-34.10,151.00,-33.85,151.30););out geom;' osm_water.json
+          # towns and suburbs, aerodromes with ICAO codes (Sydney basin neighbours), tall structures near the approaches
+          ovp '[out:json][timeout:120];(node[place~"city|town|suburb"](-34.60,150.55,-33.30,151.75);node[aeroway=aerodrome][icao](-34.80,150.40,-33.20,152.00);way[aeroway=aerodrome][icao](-34.80,150.40,-33.20,152.00);node[man_made~"mast|tower"][height](-34.00,151.12,-33.88,151.26););out center;' osm_area.json
+          for S in YSSY YSCB YSBK YSHL; do
+            curl -sS -m 20 "https://aviationweather.gov/api/data/metar?ids=$S&format=raw&hours=24" -o metar_$S.txt || true
+            curl -sS -m 20 "https://aviationweather.gov/api/data/taf?ids=$S&format=raw" -o taf_$S.txt || true
+            curl -sS -m 20 "https://metar.vatsim.net/$S" -o vatsim_$S.txt || true
+          done
+          # avionio SYD boards: fourteen pages of each, to check the schedule is parsed (tools/avionio_flights.py)
+          mkdir flights
+          for P in 0 1 2 3 4 5 6 7 8 9 10 11 12 13; do
+            curl -sSL --compressed -m 30 -A "$UA" -o flights/syd_a$P.html -w "arr $P %{http_code}\n" "https://www.avionio.com/en/airport/syd/arrivals?page=$P" || true
+            curl -sSL --compressed -m 30 -A "$UA" -o flights/syd_d$P.html -w "dep $P %{http_code}\n" "https://www.avionio.com/en/airport/syd/departures?page=$P" || true
+          done
+          A=$(ls flights/syd_a*.html | tr '\n' ',' | sed 's/,$//'); D=$(ls flights/syd_d*.html | tr '\n' ',' | sed 's/,$//')
+          cp "$GITHUB_WORKSPACE/tools/avionio_flights.py" . 2>/dev/null || true
+          python3 "$GITHUB_WORKSPACE/tools/avionio_flights.py" "$A" "$D" yssy_flights.json Australia/Sydney || echo "avionio parse failed"
+          ls -la flights
+          # live ADS-B round the field, straight from the feed and through the site's relay
+          curl -sS -m 20 -A "$UA" "https://api.adsb.lol/v2/point/-33.946/151.177/60" -o adsb_lol.json -w "adsb.lol %{http_code}\n" || true
+          curl -sS -m 25 "https://clearway-atc.vercel.app/api/traffic?lat=-33.946&lon=151.177&r=60" -o relay.json -w "relay %{http_code}\n" || true
+          ls -la; du -sh .
+      - name: Publish to yssy-data branch
+        run: |
+          cd out
+          git init -q -b yssy-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "YSSY data"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" yssy-data

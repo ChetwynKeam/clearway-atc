@@ -1,9 +1,9 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'yssy', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live, #resume.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd', YSSY: 'yssy' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 // an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
 const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
@@ -55,7 +55,7 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD, EGCC, EGLL and EGGD are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD, EGCC, EGLL, EGGD and YSSY are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
 // ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
@@ -67,6 +67,7 @@ const AIRPORTS_NET = [
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
   { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'The busiest two-runway airport in Europe. Four holding stacks, segregated mode with the 15:00 runway alternation, five terminals and a heavy wake mix, with Terminal 4 arrivals crossing the departure runway.' },
   { icao:'EGGD', ll:[51.383, -2.719], iata:'BRS', name:'Bristol', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:3, blurb:'One runway on a hilltop 600 ft up, with a parallel taxiway and three aprons. Arrivals from the BRI hold over the field, conventional SIDs that stop at 6,000 ft, and hill fog on Broadfield Down.' },
+  { icao:'YSSY', ll:[-33.946, 151.177], iata:'SYD', name:'Sydney', ctry:'Australia', region:'Oceania', rwys:['07/25','16L/34R','16R/34L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'Three runways on Botany Bay: a long parallel for the heavy jets and a short one for the landings, the crossing 07/25, RNAV SIDs and STARs, and a curfew at 23:00.' },
   { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'The world’s busiest single runway, in mixed mode: fit every departure into the gaps between arrivals from the TIMBA and WILLO holds. The old 08L/26R is now a taxiway.' },
   { icao:'LEMD', ll:[40.472, -3.561], iata:'MAD', name:'Madrid-Barajas', ctry:'Spain', region:'Europe', rwys:['14L/32R','14R/32L','18L/36R','18R/36L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'Four runways at once: parallel ILS approaches to 32L and 32R, departures off 36L and 36R, a north and a south flow, and arrivals crossing 18R/36L between Terminals 4 and 4S.' },
   { icao:'EGCC', ll:[53.354, -2.275], iata:'MAN', name:'Manchester', ctry:'United Kingdom', region:'UK & Ireland', rwys:['05L/23R','05R/23L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'Two parallel runways in segregated mode: land on one, depart from the other across it. Arrivals from the ROSUN, MIRSI and DAYNE holds, SIDs that stop at 5,000 ft, the Pennines to the east.' },
@@ -545,6 +546,15 @@ const SCEN_TEXT = { LPMA: {
   fog: 'Thick fog, below the CAT I minima. Hold the arrivals at BRI, plan diversions to Cardiff and Exeter, and keep the departures waiting.',
   storm: 'An Atlantic gale gusting into the forties across runway 27. Turbulence and windshear on short final over the hills: expect go-arounds.',
   calm: 'High pressure, light and variable wind. A quiet day to learn the flow on one runway.'
+}, YSSY: {
+  n: 'A northerly. Land 34R, depart from 34L: the long runway takes the heavy jets, RNAV SIDs to the north and west, arrivals from MEPIL and BOREE.',
+  s: 'A southerly. Land 16L, depart from 16R. Arrivals come from the north round to the south end, departures turn away over Botany Bay.',
+  ne: 'A north-east sea breeze. Runway 07 alone, landing and departing on the one runway with the ILS from the west over the city side.',
+  w: 'A westerly. Runway 25 alone: arrivals from the east over Botany Bay, departures on Stuie One and Avmov One.',
+  bsb: 'A southerly buster: a gusty change from the south. Runway 16L and 16R with windshear on short final and some go-arounds.',
+  ifr: 'Low cloud and drizzle on a northerly. ILS 34R close to the minima: keep the spacing wide, some arrivals will go around.',
+  storm: 'Summer thunderstorms over the field. Gusts, heavy rain and crews asking for deviations.',
+  fog: 'Winter fog, below the ILS minima. Hold arrivals, plan diversions to Canberra and Newcastle, and keep the departures waiting.'
 }, LXGB: {
   fair: 'A gentle westerly and good visibility. Learn the flow: road closures, backtracks and the SRA to runway 27.',
   levanter: 'The easterly gale and its banner cloud. Runway 09, approaches through RIPRA, and turbulence curling off the Rock.',
@@ -621,6 +631,7 @@ const ENDORSE = {
   EGLL: { name: 'London Heathrow', ex: ['hdep', 'harr', 'hmix'], badge: 'heathrow', p: 'Segregated mode on two parallel runways and the 15:00 alternation, arrivals from the Bovingdon, Lambourne, Biggin and Ockham stacks, Terminal 5 departures taxiing the length of the airport and Terminal 4 arrivals crossing the departure runway.' },
   EGGD: { name: 'Bristol', ex: ['bdep', 'barr', 'bmix'], badge: 'lulsgate', p: 'One runway with a parallel taxiway on a hilltop: arrivals from the BRI hold onto the ILS, conventional SIDs that stop at 6,000 ft, the Link Charlie hot spot and departures fitted between the landings.' },
   EGCC: { name: 'Manchester', ex: ['rdep', 'rarr', 'rmix'], badge: 'ringway', p: 'Two parallel runways in segregated mode: departures across runway 1 to runway 2, arrivals from the ROSUN, MIRSI and DAYNE holds onto the ILS, SIDs that stop at 5,000 ft and hand-offs to Scottish Control.' },
+  YSSY: { name: 'Sydney', ex: ['ydep', 'yarr', 'ymix'], badge: 'kingsford', p: 'Three runways on Botany Bay: the long 16R/34L for departures and the short 16L/34R for landings, the crossing 07/25, RNAV SIDs and STARs, apron taxiing and a curfew at 23:00.' },
   KJFK: { name: 'New York JFK', ex: ['kdep', 'karr', 'kcross'], badge: 'kennedy', p: 'Four runways in two parallel pairs, the Kennedy Five, ILS approaches, runway crossings, calls for release on flow-restricted routes and FAA phraseology.' }
 };
 function renderHub(){
@@ -650,7 +661,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : ap === 'EGGD' ? '2.6 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'YSSY' ? '1.3 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : ap === 'EGGD' ? '2.6 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });

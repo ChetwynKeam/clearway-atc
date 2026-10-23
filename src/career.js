@@ -23,6 +23,7 @@ const BADGES = [
   { id: 'valley',   ap: 'LOWI', name: 'Valley endorsement', d: 'Complete the three Innsbruck guided exercises.',         ic: 'M2 20l6-11 4 6 3-4 7 9zM8 9l2-4 2 4' },
   { id: 'crossing', ap: 'KJFK', name: 'Crossing guard',    d: 'Cross ten aircraft over an active runway at Kennedy in one session, with no incidents.', ic: 'M2 8h20M2 16h20M12 3v18M9 18l3 3 3-3' },
   { id: 'kennedy',  ap: 'KJFK', name: 'Kennedy endorsement', d: 'Complete the three New York JFK guided exercises.',     ic: 'M4 21V11l8-6 8 6v10M9 21v-6h6v6M2 21h20' },
+  { id: 'kingsford', ap: 'YSSY', name: 'Kingsford Smith endorsement', d: 'Complete the three Sydney guided exercises.', ic: 'M2 18h20M5 18l3-8 4 5 3-4 4 7M12 3v4' },
   { id: 'gapfiller', ap: 'EGKK', name: 'Gap filler',       d: 'Fit a departure between two landings on Gatwick’s one runway ten times in one session.', ic: 'M2 12h20M5 8l-3 4 3 4M19 8l3 4-3 4M12 6v12' },
   { id: 'gatwick',  ap: 'EGKK', name: 'Gatwick endorsement', d: 'Complete the three London Gatwick guided exercises.',   ic: 'M3 18h18M5 18l3-9h8l3 9M9 9V5h6v4' },
   { id: 'sidebyside', ap: 'LEMD', name: 'Side by side',     d: 'Land five arrivals on each runway of a parallel pair at Madrid in one session.', ic: 'M7 21L10 3M14 21L17 3M3 21h18' },
@@ -34,7 +35,7 @@ const BADGES = [
   { id: 'hillfog',  ap: 'EGGD', name: 'Hill fog',          d: 'Land five arrivals at Bristol in one session in low cloud or fog: a cloud base below 500 ft or visibility under 3 km.', ic: 'M3 10h18M5 14h14M3 18h18M8 6l4-3 4 3' },
   { id: 'lulsgate', ap: 'EGGD', name: 'Lulsgate endorsement', d: 'Complete the three Bristol guided exercises.',         ic: 'M2 18h20M4 18l4-7h8l4 7M11 11V6h2v5M7 6h10' }
 ];
-const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester', EGLL: 'London Heathrow', EGGD: 'Bristol' };
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', YSSY: 'Sydney', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester', EGLL: 'London Heathrow', EGGD: 'Bristol' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -76,6 +77,7 @@ function careerCheck(){
   if (['cdep','carr','ceast'].every(k => CAR.ex[k])) careerAward('docklands');
   if (['idep','iarr','ifoehn'].every(k => CAR.ex[k])) careerAward('valley');
   if (['kdep','karr','kcross'].every(k => CAR.ex[k])) careerAward('kennedy');
+  if (['ydep','yarr','ymix'].every(k => CAR.ex[k])) careerAward('kingsford');
   if (['gdep','garr','gmix'].every(k => CAR.ex[k])) careerAward('gatwick');
   if (['ldep','larr','lmix'].every(k => CAR.ex[k])) careerAward('barajas');
   if (['rdep','rarr','rmix'].every(k => CAR.ex[k])) careerAward('ringway');

@@ -28,6 +28,7 @@ jobs:
           q EGCC 53.330,-2.330,53.385,-2.225
           q EGLL 51.452,-0.512,51.492,-0.400
           q EGGD 51.366,-2.752,51.398,-2.688
+          q YSSY -33.985,151.150,-33.915,151.215
           ls -la
       - name: Publish to vehicles-data branch
         run: |
