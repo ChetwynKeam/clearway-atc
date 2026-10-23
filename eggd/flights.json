@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T02:05:17Z",
+ "updated": "2026-10-23T02:39:38Z",
  "source": "avionio.com",
  "days": {
   "2026-10-23": {
@@ -76,9 +76,30 @@
      "expected": ""
     },
     {
+     "place": "Belfast",
+     "flight": "U2226",
+     "sched": "10:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Newcastle",
+     "flight": "U2238",
+     "sched": "10:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Paris",
      "flight": "U22774",
      "sched": "10:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "U22922",
+     "sched": "10:30",
      "status": "Scheduled",
      "expected": ""
     },
@@ -97,6 +118,13 @@
      "expected": ""
     },
     {
+     "place": "Geneva",
+     "flight": "U22884",
+     "sched": "11:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Palma de Mallorca",
      "flight": "U22710",
      "sched": "11:40",
@@ -104,9 +132,51 @@
      "expected": ""
     },
     {
+     "place": "Palma de Mallorca",
+     "flight": "LS1872",
+     "sched": "11:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Milan",
      "flight": "EC3843",
      "sched": "12:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "U22716",
+     "sched": "12:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faro",
+     "flight": "U22874",
+     "sched": "12:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "LS1806",
+     "sched": "12:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Pisa",
+     "flight": "U22840",
+     "sched": "12:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "U22722",
+     "sched": "12:40",
      "status": "Scheduled",
      "expected": ""
     },
@@ -431,8 +501,8 @@
      "place": "Tenerife",
      "flight": "U22731",
      "sched": "07:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:45"
     },
     {
      "place": "Kerkyra",
@@ -466,12 +536,33 @@
      "place": "Jersey",
      "flight": "LM582",
      "sched": "08:50",
+     "status": "Cancelled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "EC5530",
+     "sched": "09:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faro",
+     "flight": "EC7508",
+     "sched": "09:15",
      "status": "Scheduled",
      "expected": ""
     },
     {
      "place": "Dublin",
      "flight": "FR505",
+     "sched": "09:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "KL1076",
      "sched": "09:20",
      "status": "Scheduled",
      "expected": ""
@@ -487,6 +578,13 @@
      "place": "Porto",
      "flight": "FR1331",
      "sched": "09:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Larnaca",
+     "flight": "LS3423",
+     "sched": "10:00",
      "status": "Scheduled",
      "expected": ""
     },
