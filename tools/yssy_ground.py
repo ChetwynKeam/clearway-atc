@@ -3,8 +3,8 @@
 # Three runways: parallel 16L/34R and 16R/34L and the crossing 07/25. Every runway gets its own frame (m from its
 # low-numbered end, offset to the left), its holding points and its crossings. bays.json: the AIP parking tables
 # (bay, lat, lon, elevation, largest type, guidance) parsed by tools/yssy_bays.py.
-import json, math, re, sys, collections
-OSM, BAYS, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+import json, math, re, sys, os, collections
+OSM, BAYS, OUT = sys.argv[1], sys.argv[2], sys.argv[3]; BAYS_PATH = BAYS
 A = (-(33 + 56/60 + 46/3600), 151 + 10/60 + 38/3600)               # ARP 335646S 1511038E (AIP AD 2.2)
 KX = 60*1852*math.cos(math.radians(A[0])); KY = 60*1852
 def en(lat, lon): return ((lon - A[1])*KX, (lat - A[0])*KY)
@@ -285,25 +285,53 @@ def crosses(a, b, skip):
             Lab = math.dist(a, b)
             if 6 < tt*Lab < Lab - 6: return True
     return False
-pp = {}
+ppall = collections.defaultdict(list)                              # ref -> [(pts, length)] of every mapped way
 for w in ways:
     r = (w.get('tags', {}).get('ref') or '').strip().rstrip('.')
     if not tagged(w, 'parking_position') or not r or not re.match(r'^(\d{1,3}[A-Z]?|F\d{1,2}[A-Z]?)$', r): continue
     pts = [NODE[n] for n in w['nodes']]
     if len(pts) < 2: continue
-    L = sum(math.dist(pts[i], pts[i+1]) for i in range(len(pts)-1))
-    if r not in pp or L > pp[r][1]: pp[r] = (pts, L)
+    ppall[r].append((pts, sum(math.dist(pts[i], pts[i+1]) for i in range(len(pts)-1))))
+# the Qantas Jet Base and the maintenance aprons north of the terminals: parking positions mapped with no bay number
+# (maintenance and layover parking). They become remote bays Q1, Q2, ... in the order they are mapped from west to east
+unl = []
+for w in ways:
+    if not tagged(w, 'parking_position') or (w.get('tags', {}).get('ref') or '').strip(): continue
+    pts = [NODE[n] for n in w['nodes'] if n in NODE]
+    if len(pts) < 2: continue
+    c = (sum(p[0] for p in pts)/len(pts), sum(p[1] for p in pts)/len(pts))
+    if c[1] > 1600 and c[0] > -340 and not (c[0] < 100 and c[1] < 1990): unl.append((c, pts))
+for i, (c, pts) in enumerate(sorted(unl, key=lambda t: (round(t[0][0]/250), t[0][1]))): ppall['Q%d' % (i + 1)].append((pts, sum(math.dist(pts[j], pts[j+1]) for j in range(len(pts)-1))))
 for e in E:                                                        # three stands are mapped as points only
     r = e.get('tags', {}).get('ref')
-    if e['type'] == 'node' and e.get('tags', {}).get('aeroway') == 'parking_position' and r and r not in pp: pp[r] = ([NODE[e['id']]], 0)
+    if e['type'] == 'node' and e.get('tags', {}).get('aeroway') == 'parking_position' and r and r not in ppall: ppall[r].append(([NODE[e['id']]], 0))
 TERMS = {}
 for w in ways:
     if w.get('tags', {}).get('aeroway') == 'terminal' and w['tags'].get('ref') and 'geometry' in w: TERMS.setdefault(w['tags']['ref'], []).extend(NODE[n] for n in w['nodes'])
 BAYS = json.load(open(BAYS))
 def term(sid, p=None):
-    """T1 international, T2 and T3 domestic: the nearest terminal building; F bays are freight"""
-    if sid.startswith('F'): return 'F'
+    """T1 international, T2 and T3 domestic: the nearest terminal building; F bays are the regional apron (AIP DOM3/DOM3A/DOM3B), Q the Jet Base maintenance bays"""
+    if sid.startswith('F') or sid.startswith('Q'): return 'F'
     return min(TERMS, key=lambda t: min(math.dist(p, q) for q in TERMS[t])) if p else 'T1'
+# The International and Domestic terminals number their bays separately, so a number can be two stands a kilometre apart
+# (bays 1-12, 31-36 and 53-59 exist in both). Ways of one ref are grouped by place, the group at Terminal 1 is the
+# international bay, written I<number>; the domestic bay keeps the plain number.
+pp = {}
+INTL = json.load(open(os.path.join(os.path.dirname(BAYS_PATH), 'yssy_bays_intl.json')))
+for r, ws in ppall.items():
+    groups = []
+    for pts, L in ws:
+        c = (sum(p[0] for p in pts)/len(pts), sum(p[1] for p in pts)/len(pts))
+        for g in groups:
+            if math.dist(g['c'], c) < 150: g['ws'].append((pts, L)); break
+        else: groups.append({'c': c, 'ws': [(pts, L)]})
+    for g in groups: g['best'] = max(g['ws'], key=lambda x: x[1]); g['t'] = term(r, g['c'])
+    if len(groups) > 1 and any(g['t'] == 'T1' for g in groups) and any(g['t'] != 'T1' for g in groups):
+        for g in groups:
+            if g['t'] == 'T1': pp['I' + r] = g['best']
+            elif r not in pp or g['best'][1] > pp[r][1]: pp[r] = g['best']
+    else:
+        pp[r] = max((g['best'] for g in groups), key=lambda x: x[1])
 gates, splits = [], []
 def along(pl, d):
     """the point d metres along a polyline, and the index of the segment it is on"""
@@ -349,7 +377,7 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (kv[0][0] == 'T', int(re.se
     paint = [lq] + (line[1:] if line else [p]) if line or math.dist(p, lq) <= 45 else None
     if paint and any(crosses(paint[j], paint[j+1], e) for j in range(len(paint) - 1)): paint = None
     splits.append((sid, hit))
-    gates.append([sid, term(sid, p), [r1(p[0]), r1(p[1])], hit, round(hd, 1), [[r1(x) for x in pt] for pt in paint] if paint else 0, BAYS.get(sid, {}).get('max', '')])
+    gates.append([sid, term(sid, p), [r1(p[0]), r1(p[1])], hit, round(hd, 1), [[r1(x) for x in pt] for pt in paint] if paint else 0, (INTL if sid[0] == 'I' else BAYS).get(sid[1:] if sid[0] == 'I' else sid, {}).get('max', '')])
 byedge = collections.defaultdict(list)
 for sid, (t, e, i, u) in splits: byedge[id(e)].append((i + u, sid, e))
 newedges, gnode, POS = [], {}, {}
@@ -403,7 +431,7 @@ with open(OUT, 'w') as fo:
 // rnodes: runway-edge points 40 m out on each entry/exit; holds key: [hold node, runway-edge node, runway, m along it,
 // offset, directions that can turn off there, runway end it serves, taxiway]; hlink: the bend between the runway edge and
 // the holding point; fil: centreline to runway-edge fillet in the runway frame; hs: holding positions before a runway;
-// gates: [stand, terminal apron (T1 international, T2 and T3 domestic, F freight), stop point [e, n], lead-in node, heading into the stand, the painted lead-in line from the lane (0: none), largest aircraft type]; ihps: [name, node] holding points away
+// gates: [stand, terminal apron (T1 international, T2 and T3 domestic, F regional apron, Q Jet Base maintenance), stop point [e, n], lead-in node, heading into the stand, the painted lead-in line from the lane (0: none), largest aircraft type]; ihps: [name, node] holding points away
 // from the runways.
 const YSSY_GROUND = ''')
     fo.write(json.dumps(out, separators=(',', ':')))
