@@ -401,6 +401,17 @@ for r, ws in ppall.items():
             elif r not in pp or g['best'][1] > pp[r][1]: pp[r] = g['best']
     else:
         pp[r] = max((g['best'] for g in groups), key=lambda x: x[1])
+SUBSETS = eval(os.environ.get('SUBS', "(('dom', BAYS, ''),)"))
+# AIP bays with no parking position of their own in OpenStreetMap (the 'A'/'B' sub-bays): a stand at the AIP coordinate,
+# kept only where no other stand is already there
+for _t, _tab, _pre in SUBSETS:
+    for b, v in _tab.items():
+        sid = _pre + b
+        if sid in pp or 'lat' not in v: continue
+        p = en(v['lat'], v['lon'])
+        if _pre and term(sid, p) != 'T1': continue   # an international bay is at Terminal 1; elsewhere the number is a domestic bay
+        if any(math.dist(p, q[0][len(q[0])//2]) < 8 for q in pp.values()): print('sub-bay skipped (on another stand)', sid); continue
+        pp[sid] = ([p], 0); print('sub-bay from AIP', sid)
 gates, splits = [], []
 def along(pl, d):
     """the point d metres along a polyline, and the index of the segment it is on"""
