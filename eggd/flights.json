@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T05:12:19Z",
+ "updated": "2026-10-23T05:39:28Z",
  "source": "avionio.com",
  "days": {
   "2026-10-23": {
@@ -16,8 +16,8 @@
      "place": "Dublin",
      "flight": "FR504",
      "sched": "08:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:05"
     },
     {
      "place": "Jersey",
@@ -38,7 +38,7 @@
      "flight": "EC7507",
      "sched": "08:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:20"
     },
     {
      "place": "Amsterdam",
@@ -58,8 +58,8 @@
      "place": "Porto",
      "flight": "FR1332",
      "sched": "09:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:25"
     },
     {
      "place": "Edinburgh",
@@ -279,6 +279,13 @@
      "expected": ""
     },
     {
+     "place": "Belfast",
+     "flight": "U2224",
+     "sched": "13:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Dublin",
      "flight": "FR506",
      "sched": "14:05",
@@ -321,6 +328,13 @@
      "expected": ""
     },
     {
+     "place": "Malaga",
+     "flight": "EC7003",
+     "sched": "15:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Kos",
      "flight": "U22806",
      "sched": "15:25",
@@ -342,9 +356,37 @@
      "expected": ""
     },
     {
+     "place": "Tenerife",
+     "flight": "LS1884",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tenerife",
+     "flight": "U22732",
+     "sched": "16:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Palma de Mallorca",
      "flight": "FR7728",
      "sched": "17:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Antalya",
+     "flight": "XQ584",
+     "sched": "17:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Antalya",
+     "flight": "U22856",
+     "sched": "17:50",
      "status": "Scheduled",
      "expected": ""
     },
@@ -396,36 +438,36 @@
      "place": "Palma de Mallorca",
      "flight": "U22709",
      "sched": "06:00",
-     "status": "Estimated",
-     "expected": "06:00"
+     "status": "Departed",
+     "expected": "06:01"
     },
     {
      "place": "Malaga",
      "flight": "U22715",
      "sched": "06:00",
      "status": "Estimated",
-     "expected": "06:00"
+     "expected": "06:15"
     },
     {
      "place": "Catania",
      "flight": "U22845",
      "sched": "06:00",
-     "status": "Estimated",
-     "expected": "06:00"
+     "status": "Departed",
+     "expected": "06:04"
     },
     {
      "place": "Palma de Mallorca",
      "flight": "LS1871",
      "sched": "06:05",
-     "status": "Estimated",
-     "expected": "06:18"
+     "status": "Departed",
+     "expected": "06:12"
     },
     {
      "place": "Enfidha",
      "flight": "U22793",
      "sched": "06:10",
      "status": "Estimated",
-     "expected": "06:20"
+     "expected": "06:13"
     },
     {
      "place": "Faro",
@@ -439,14 +481,14 @@
      "flight": "FR4757",
      "sched": "06:15",
      "status": "Estimated",
-     "expected": "06:30"
+     "expected": "06:27"
     },
     {
      "place": "Bucharest",
      "flight": "FR5341",
      "sched": "06:15",
      "status": "Estimated",
-     "expected": "06:30"
+     "expected": "06:12"
     },
     {
      "place": "Amsterdam",
@@ -480,71 +522,71 @@
      "place": "Ibiza",
      "flight": "BY6504",
      "sched": "06:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "06:58"
     },
     {
      "place": "Menorca",
      "flight": "LS1859",
      "sched": "06:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:00"
     },
     {
      "place": "Alicante",
      "flight": "U22721",
      "sched": "06:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:00"
     },
     {
      "place": "Tenerife",
      "flight": "BY6508",
      "sched": "06:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:08"
     },
     {
      "place": "Faro",
      "flight": "LS1821",
      "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:13"
     },
     {
      "place": "Pisa",
      "flight": "U22839",
      "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:00"
     },
     {
      "place": "Lisbon",
      "flight": "U22867",
      "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:00"
     },
     {
      "place": "Ibiza",
      "flight": "LS1835",
      "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:18"
     },
     {
      "place": "Edinburgh",
      "flight": "U2213",
      "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:05"
     },
     {
      "place": "Paris",
      "flight": "U22773",
      "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:05"
     },
     {
      "place": "Barcelona",
@@ -557,36 +599,36 @@
      "place": "Glasgow",
      "flight": "U2201",
      "sched": "07:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:15"
     },
     {
      "place": "Amsterdam",
      "flight": "U22921",
      "sched": "07:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:15"
     },
     {
      "place": "Funchal",
      "flight": "LS1825",
      "sched": "07:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:33"
     },
     {
      "place": "Tenerife",
      "flight": "LS1883",
      "sched": "07:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:33"
     },
     {
      "place": "Geneva",
      "flight": "U22883",
      "sched": "07:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:20"
     },
     {
      "place": "Belfast",
@@ -701,6 +743,13 @@
      "expected": ""
     },
     {
+     "place": "Prague",
+     "flight": "U22935",
+     "sched": "10:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Copenhagen",
      "flight": "U22931",
      "sched": "10:50",
@@ -750,9 +799,37 @@
      "expected": ""
     },
     {
+     "place": "Dublin",
+     "flight": "EA3281",
+     "sched": "12:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Guernsey",
+     "flight": "GR643",
+     "sched": "12:45",
+     "status": "Cancelled",
+     "expected": ""
+    },
+    {
+     "place": "Tivat",
+     "flight": "U22751",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Milan",
      "flight": "EC3844",
      "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Toulouse",
+     "flight": "U22783",
+     "sched": "13:05",
      "status": "Scheduled",
      "expected": ""
     },
