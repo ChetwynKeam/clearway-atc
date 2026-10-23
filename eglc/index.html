@@ -5621,6 +5621,14 @@ function taxiStart(ac){
 // outB (optional): the way it must be able to carry on from `to` (onto a runway holding point's link), if it can
 // face (the way it points) is dropped only when no route goes forward from there: it turns round where it is rather than
 // stay stuck at the end of a taxilane
+// a taxi-in route steers clear of lanes where departures are stopped in a queue (head-on to it, with no room to pass):
+// the cost multiplier per edge, or null when nothing is queued
+function queuePen(ac){
+  const bad = new Set();
+  for (const o of S.acs) { if (o === ac || !o.ground || o.kind !== 'DEP' || (o.gs || 0) > 3 || !['TAXI', 'HOLDPT'].includes(o.state) || o.onRwy) continue;
+    for (const e of GE) if (e.a[0] !== 'R' && e.b[0] !== 'R' && segDistM([o.x, o.y], GN[e.a].p, GN[e.b].p) < 45) bad.add(e); }
+  return bad.size ? e => bad.has(e) ? 8 : 1 : null;
+}
 const routeAc = (ac, to, pen, outB) => { const [from, face] = taxiStart(ac); return (outB != null && face != null && route(from, to, pen, face, outB)) || route(from, to, pen, face) || (face != null && route(from, to, pen)) || null; };
 function taxiRoute(ac, hp, via){
   if (via && via.length) { const o = !via.line && (taxiOptions(ac, hp).find(r => r.via.join('') === via.join('')) || taxiOptions(ac, hp).find(r => via.every(v => r.via.includes(v)))); if (o) return o;
@@ -5920,9 +5928,11 @@ function taxiIn(ac, st, via, hold){
     from = ac.vacNode; face = dist(...q, ...v) > 1e-6 ? brg(...q, ...v) : ac.hdg; }
   else [from, face] = taxiStart(ac);
   // onto a stand: arriving the way its lead-in turns off, if there is such a route
-  const rt = pen => (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face)
+  const qp = APT.queuePen ? queuePen(ac) : null;   // lanes with a queue of stopped aircraft on them cost more: go round by another where there is one
+  const rt0 = pen => (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face)
     // no way round from where it stopped (it can't stay on the runway's exit): the tight turn, rather than a jam
     || (ac.vacated || rolling ? route(from, hold ? hold.node : st.node, pen) : null);
+  const rt = pen => rt0(qp ? (pen ? e => pen(e)*qp(e) : qp) : pen);
   // no taxiways named: over the runway crossing that suits the traffic, not always the shortest way
   const r = via && via.length ? rt(viaPen(via)) : xBest(ac, rt); if (!r) return null; xNote(ac, r);
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
