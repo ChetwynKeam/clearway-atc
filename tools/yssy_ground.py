@@ -243,6 +243,52 @@ holds = {k: h for k, h in holds.items() if h[0] in big}
 nodes = [[k, r1(NODE[inv[k]][0]), r1(NODE[inv[k]][1])] for k in sorted({x for e in edges for x in e[:2]} | {h[0] for h in holds.values()}, key=lambda s: (s[0], int(s[1:])))]
 hs = {k: v for k, v in hs.items() if k in big}
 fil = {k: fil[k] for k in holds}
+# ── one junction is often mapped as several nodes a few metres apart (one per overlapping way: B, B8 and B9 over the same
+# pavement), which draws the junction as a mesh of near-parallel lines. Nodes within 7 m become one, and of the edges that
+# then join the same two nodes only the shortest stays.
+MERGE_M = 7
+deg = collections.Counter()
+for e in edges: deg[e[0]] += 1; deg[e[1]] += 1
+hold_nodes = {h[0] for h in holds.values()}
+ids = sorted({x for e in edges for x in e[:2]} | hold_nodes, key=lambda i: (i not in hold_nodes, -deg[i], i))
+grid = collections.defaultdict(list); M = {}
+for i in ids:
+    if i[0] == 'x': M[i] = i; continue
+    p = NODE[inv[i]]; gx, gy = int(p[0] // MERGE_M), int(p[1] // MERGE_M)
+    rep = next((q for dx in (-1, 0, 1) for dy in (-1, 0, 1) for q in grid[(gx + dx, gy + dy)] if math.dist(NODE[inv[q]], p) < MERGE_M), None)
+    if rep is None: grid[(gx, gy)].append(i); rep = i
+    M[i] = rep
+def elen(e): 
+    pts = [NODE[inv[e[0]]]] + [tuple(q) for q in e[3]] + [NODE[inv[e[1]]]]
+    return sum(math.dist(pts[j], pts[j+1]) for j in range(len(pts) - 1))
+best = {}
+for e in edges:
+    a, b = M[e[0]], M[e[1]]
+    if a == b: continue
+    k = (min(a, b), max(a, b)); L = elen(e)
+    if k not in best or L < best[k][0] - 0.5 or (abs(L - best[k][0]) <= 0.5 and (best[k][1][2] == 'APRON') and e[2] != 'APRON'): best[k] = (L, [a, b, e[2], e[3]])
+print('merged nodes', len(ids) - len(set(M.values())), 'edges', len(edges), '->', len(best))
+edges = [v[1] for v in best.values()]
+holds = {k: [M.get(h[0], h[0])] + h[1:] for k, h in holds.items()}
+hs = {M.get(k, k): v for k, v in hs.items()}
+nid = {k: M.get(v, v) for k, v in nid.items()}
+# ── a holding position meets its runway by several routes through the junction (B's nine ways onto 16R/34L), all drawn
+# as fillet lines. Of the routes that serve the same directions, only the most direct stays.
+def flen(k): 
+    pts = fil[k] + holds[k][7]; return sum(math.dist(pts[j], pts[j+1]) for j in range(len(pts) - 1))
+pick = {}
+for k, h in holds.items():
+    g = (h[0], h[2], h[5], h[6])
+    if g not in pick or flen(k) < flen(pick[g]) - 1: pick[g] = k
+keepk = set(pick.values())
+nref = collections.Counter(); newh, newf = {}, {}
+for k in holds:
+    if k not in keepk: continue
+    base = k.split('~')[0]; nref[base] += 1; nk = base if nref[base] == 1 else '%s~%d' % (base, nref[base])
+    newh[nk] = holds[k]; newf[nk] = fil[k]
+print('holds', len(holds), '->', len(newh))
+holds, fil = newh, newf
+nodes = [[k, r1(NODE[inv[k]][0]), r1(NODE[inv[k]][1])] for k in sorted({x for e in edges for x in e[:2]} | {h[0] for h in holds.values()}, key=lambda s: (s[0], int(s[1:])))]
 # ── IHPs: every other named holding position on the graph (one per name)
 ihps = []
 hnodes = {h[0] for h in holds.values()}

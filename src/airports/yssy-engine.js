@@ -66,7 +66,11 @@ const SPAN = { A343: 60.3, A346: 63.5, A332: 60.3, A333: 60.3, A359: 64.8, A35K:
 const spanOfList = s => { const v = (s || '').split('/').map(t => SPAN[t]).filter(Boolean); return v.length ? Math.max(...v) : null; };
 const STANDS = G.gates.map(g => { const [id, term, [e, n], node] = g, p = EN(e, n), remote = term === 'F', sp = spanOfList(g[6]);
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: remote ? 'remote' : 'civil', occ: null, noLead: !g[5], ...(sp ? { maxSpan: Math.round(sp) } : {}) }; });
-STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = brg(...s.lp, ...s.p); });
+// OpenStreetMap ends a bay's line where the nose wheel stops, but an aircraft is placed by its centre: move the stop back along the lead-in by about
+// half the length of the largest type the bay takes (so the nose is at the terminal, not the whole aircraft over the pier), never more than 40% of the lead-in
+STANDS.forEach(s => { s.lp = GN[s.node].p; const L = dist(...s.lp, ...s.p)/M2NM, half = s.maxSpan ? Math.min(34, Math.max(11, s.maxSpan*0.5)) : 20, k = Math.min(half, L*0.4);
+  if (L > 12) { const u = [(s.lp[0] - s.p[0])/(L*M2NM), (s.lp[1] - s.p[1])/(L*M2NM)]; s.p = [s.p[0] + u[0]*k*M2NM, s.p[1] + u[1]*k*M2NM]; s.m = mOf(s.p); s.off = offOf(s.p); }
+  s.hdg = brg(...s.lp, ...s.p); });
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 { const civ = STANDS.filter(s => s.area === 'civil'), c = civ.reduce((a, s) => [a[0] + s.p[0]/civ.length, a[1] + s.p[1]/civ.length], [0, 0]); for (const R of RWY_LIST) R.side = Math.sign(R.offOf(c)); }
 
@@ -193,7 +197,7 @@ function drawYssy(){
       for (const [d, dash] of [[0.9, false], [0.3, false], [-0.3, true], [-0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([R.rm(m - 11, o + s*d), R.rm(m + 11, o + s*d)], false); cx.stroke(); }
       cx.setLineDash([]);
     }
-    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP([s.lp, s.p], false); cx.stroke(); } });
+    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { const L = dist(...s.lp, ...s.p)/M2NM, f = L > 70 ? 1 - 70/L : 0; pathP([[s.lp[0] + (s.p[0] - s.lp[0])*f, s.lp[1] + (s.p[1] - s.lp[1])*f], s.p], false); cx.stroke(); } });
     if (IMG) { cx.save(); clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx); cx.restore(); }
     else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
