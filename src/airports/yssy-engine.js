@@ -53,7 +53,7 @@ for (const [k, [node, rwy, on, m, off, dirs, end]] of Object.entries(G.holds)) {
   FIL[k] = { W: G.fil[k], E: G.fil[k] };
 }
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
-// terminals: T1 international, T2 domestic (Virgin, Jetstar, Rex), T3 Qantas domestic; F is the freight apron
+// terminals: T1 international, T2 domestic (Virgin, Jetstar, Rex), T3 Qantas domestic; F is the regional (commuter) apron and Q the Qantas Jet Base maintenance bays; the International and Domestic terminals number their bays separately, so the international ones are I1, I31 ... where a number is used twice
 const INTL_ONLY = new Set(['ANZ', 'FJI', 'UAE', 'QTR', 'ETD', 'SIA', 'CPA', 'MAS', 'THA', 'PAL', 'GIA', 'KAL', 'JAL', 'ANA', 'CSN', 'CES', 'EVA', 'DAL', 'UAL', 'ACA', 'LAN', 'SAA', 'AIC']);
 function termFor(ac){
   const c = ac.cs.slice(0, 3), ap = (ac.kind === 'ARR' ? ac.o : ac.d) || ac.o || ac.d || '';
@@ -140,7 +140,7 @@ function exitFor(ac, name){
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
 const AD_SITE = { pave: { w: 23 }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
-const TERM_NAME = { T1: 'TERMINAL 1', T2: 'TERMINAL 2', T3: 'TERMINAL 3', F: 'FREIGHT' };
+const TERM_NAME = { T1: 'TERMINAL 1', T2: 'TERMINAL 2', T3: 'TERMINAL 3', F: 'REGIONAL' };
 const TERM_LABELS = (() => { const by = {}; for (const s of STANDS) (by[s.term] ||= []).push(s.p); return Object.entries(by).map(([t, ps]) => [TERM_NAME[t] || t, ps.reduce((a, p) => [a[0] + p[0]/ps.length, a[1] + p[1]/ps.length], [0, 0])]); })();
 function drawYssy(){
   const sc = V.scale, mpx = sc/1852, IMG = mapImagery();
@@ -347,9 +347,9 @@ const APT = {
   appRwys: () => FINAL[parallelOf(S.rwy)] ? [S.rwy, parallelOf(S.rwy)] : [S.rwy],
   needRel: ac => false,
   remoteAreas: ['remote'],
-  areaNames: { civil: 'bays', remote: 'freight apron' },
-  termName: t => t === 'F' ? 'Freight apron' : 'Terminal ' + t.slice(1),
-  remoteWord: s => 'freight bay',
+  areaNames: { civil: 'bays', remote: 'regional and maintenance bays' },
+  termName: t => t === 'F' ? 'Regional and maintenance apron' : 'Terminal ' + t.slice(1),
+  remoteWord: s => s.id[0] === 'Q' ? 'maintenance bay' : 'regional bay',
   prefArea: ac => { const t = termFor(ac); return { key: t, name: 'Terminal ' + t.slice(1), has: s => s.term === t }; },
   standFor: ac => { const t = termFor(ac);
     const pick = list => { const free = list.filter(s => standFree(s, ac)).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80)), best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
@@ -459,5 +459,13 @@ const APT = {
     cmdHint: 'Command, e.g. QFA441 A50 APP · VOZ453 TAXI · JST413 CROSS · / to focus, Tab cycles flights'
   }
 };
-APT.hangars = [];
+// maintenance hangars (OpenStreetMap): the Qantas Jet Base hangars north of Terminal 3 and Hangar 96. Aircraft stored there at the
+// start of a session are towed to a bay at their airline's terminal an hour before departure; the door is the nearest taxilane node.
+const QF_HANGAR = ac => /^(QFA|QLK|JST)$/.test(ac.cs.slice(0, 3));
+APT.hangars = [[354.7, 1778.2, 'n436', 'Qantas hangar 1'], [78.6, 1813.6, 'n490', 'Qantas hangar 2'], [91.2, 1884.8, 'n484', 'Qantas Jet Base hangar 3'],
+  [248.7, 1869.6, 'n487', 'Qantas Jet Base hangar 4'], [281.6, 1790.4, 'n431', 'Qantas hangar 5'], [198.1, 1780.4, 'n487', 'Qantas hangar 6'],
+  [399.0, 1562.0, 'n495', 'Hangar 96']]
+  .filter(([, , node]) => GN[node])
+  .map(([e, n, node, name], i) => ({ id: 'H' + (i + 1), name, in: inF0(e, n), door: [GN[node].m, GN[node].off], node, to: ['civil'],
+    fits: ac => name === 'Hangar 96' ? !QF_HANGAR(ac) : QF_HANGAR(ac), pick: ac => APT.standFor(ac) }));
 APT.queuePen = true;   // taxi-in routes go round lanes where departures are queued
