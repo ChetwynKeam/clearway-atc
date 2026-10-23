@@ -1,17 +1,10 @@
 {
- "updated": "2026-10-23T13:08:56Z",
+ "updated": "2026-10-23T13:47:09Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-23": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "London Gatwick",
-     "flight": "BA2716",
-     "sched": "12:20",
-     "status": "Arrived",
-     "expected": "12:12"
-    },
     {
      "place": "Lisboa",
      "flight": "EJU7623",
@@ -30,8 +23,8 @@
      "place": "Paris Beauvais",
      "flight": "FR400",
      "sched": "13:45",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:40"
     },
     {
      "place": "Porto",
@@ -48,13 +41,6 @@
      "expected": "13:51"
     },
     {
-     "place": "Ponta Delgada",
-     "flight": "S4160",
-     "sched": "14:20",
-     "status": "Estimated",
-     "expected": "15:25"
-    },
-    {
      "place": "Lisboa",
      "flight": "EJU7625",
      "sched": "14:20",
@@ -62,11 +48,18 @@
      "expected": "14:01"
     },
     {
+     "place": "Ponta Delgada",
+     "flight": "S4160",
+     "sched": "14:20",
+     "status": "Estimated",
+     "expected": "15:25"
+    },
+    {
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "14:45",
-     "status": "Estimated",
-     "expected": "14:45"
+     "status": "Arrived",
+     "expected": "14:39"
     },
     {
      "place": "London Gatwick",
@@ -86,8 +79,8 @@
      "place": "Porto",
      "flight": "FR366",
      "sched": "15:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "16:15"
     },
     {
      "place": "Prague",
@@ -101,7 +94,7 @@
      "flight": "W62397",
      "sched": "16:25",
      "status": "Estimated",
-     "expected": "17:40"
+     "expected": "17:45"
     },
     {
      "place": "Brussels",
@@ -177,27 +170,6 @@
    "dep": [
     {
      "place": "London Gatwick",
-     "flight": "EZY8520",
-     "sched": "12:05",
-     "status": "Departed",
-     "expected": "13:22"
-    },
-    {
-     "place": "London Luton",
-     "flight": "EZY2472",
-     "sched": "12:15",
-     "status": "Departed",
-     "expected": "12:47"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "TP1688",
-     "sched": "12:40",
-     "status": "Departed",
-     "expected": "12:35"
-    },
-    {
-     "place": "London Gatwick",
      "flight": "BA2717",
      "sched": "13:10",
      "status": "Departed",
@@ -214,8 +186,8 @@
      "place": "Lisboa",
      "flight": "TP1690",
      "sched": "14:15",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "14:35"
     },
     {
      "place": "Dublin",
@@ -228,8 +200,8 @@
      "place": "Porto",
      "flight": "EJU6834",
      "sched": "14:45",
-     "status": "Estimated",
-     "expected": "14:45"
+     "status": "Closed",
+     "expected": ""
     },
     {
      "place": "Ponta Delgada",
@@ -242,14 +214,14 @@
      "place": "Porto",
      "flight": "TP1704",
      "sched": "15:05",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "15:10",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
