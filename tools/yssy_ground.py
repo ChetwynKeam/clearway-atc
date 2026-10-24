@@ -86,7 +86,7 @@ for e in E:
             if m.get('role') == 'outer' and 'geometry' in m: aprons.append([en(g['lat'], g['lon']) for g in m['geometry']])
 segs = []                                                          # [u, v, name, [mid points], wayid]
 for w in taxi:
-    ref = tname(w['tags'].get('ref')); ns = w['nodes']; cur = [ns[0]]
+    ref = tname(w['tags'].get('ref') or (w['tags'].get('name') if re.match(r'^[A-Za-z]{1,5}-?\d{0,2}[A-Za-z]?$', w['tags'].get('name') or '') else None)); ns = w['nodes']; cur = [ns[0]]
     for n in ns[1:]:
         cur.append(n)
         if n in gnodes: segs.append([cur[0], cur[-1], ref, cur[1:-1], w['id']]); cur = [n]
@@ -109,6 +109,7 @@ for s in segs:
 nid = {}
 def NID(n): return nid.setdefault(n, 'n%d' % len(nid))
 holds, fil, rnodes, hs = {}, {}, [], {}
+usedBy = {}
 paths = []
 cnt = collections.Counter()
 drop = set()
@@ -187,9 +188,47 @@ for rid, R in FR.items():
             rnodes.append([rn, r1(fe), r1(fn)])
             hp = mo(NODE[h])
             tws = [t[2] or 'APRON' for t in used]; tw = next((t for t in tws if t != 'APRON'), ref)
+            usedBy[key] = (h, used)
             holds[key] = [NID(h), rn, rid, r1(hp[0]), r1(hp[1]), ','.join(dirs), endr, [[r1(m), r1(o)] for m, o in rest], tw]
             fil[key] = [[r1(m), r1(o)] for m, o in f]
             paths.append((h, f[0], key, rid))
+# ── a holding position meets its runway by several routes through the junction (B's nine ways onto 16R/34L), all drawn
+# as fillet lines. Of the routes that serve the same directions only the most direct stays; the taxiways the others ran
+# along are ordinary taxiways again (they were dropped as runway links).
+def flen(k):
+    pts = fil[k] + holds[k][7]; return sum(math.dist(pts[j], pts[j+1]) for j in range(len(pts) - 1))
+pick = {}
+for k, h in holds.items():
+    g = (h[0], h[2], h[5], h[6])
+    if g not in pick or flen(k) < flen(pick[g]) - 1: pick[g] = k
+keepk = set(pick.values()); ren = {}; nref = collections.Counter(); newh, newf = {}, {}
+for k in holds:
+    if k not in keepk: continue
+    base = k.split('~')[0]; nref[base] += 1; ren[k] = base if nref[base] == 1 else '%s~%d' % (base, nref[base])
+    newh[ren[k]] = holds[k]; newf[ren[k]] = fil[k]
+print('holds', len(holds), '->', len(newh))
+paths_all, holds_all, fil_all = paths, holds, fil
+paths = [(h, c, ren[k], rid) for h, c, k, rid in paths if k in ren]
+hold_used = [usedBy[k] for k in holds if k in keepk]
+drop = {id(t) for h, used in hold_used for t in used}
+holds, fil = newh, newf
+# a dropped taxiway the runway links don't actually run along (a connector a hold's path only passed through) is a taxiway again
+def to_world(k):
+    R = FR[holds[k][2]]; a, U, N = R['a'], R['U'], R['N']
+    return [(a[0] + U[0]*m + N[0]*o, a[1] + U[1]*m + N[1]*o) for m, o in fil[k] + holds[k][7]]
+def pdist(p, a, b):
+    dx, dy = b[0]-a[0], b[1]-a[1]; L2 = dx*dx + dy*dy or 1e-9; u = max(0, min(1, ((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L2)); return math.dist(p, (a[0] + dx*u, a[1] + dy*u))
+LINKS = [to_world(k) for k in holds]
+restored = 0
+for t in segs:
+    if id(t) not in drop or any(onAny(NODE[n]) for n in [t[0], t[1]] + t[3]): continue
+    pts = [NODE[t[0]]] + [NODE[n] for n in t[3]] + [NODE[t[1]]]; S = []
+    for j in range(len(pts) - 1):
+        L = math.dist(pts[j], pts[j+1]); k = max(1, int(L / 6))
+        S += [(pts[j][0] + (pts[j+1][0]-pts[j][0])*i/k, pts[j][1] + (pts[j+1][1]-pts[j][1])*i/k) for i in range(k)]
+    cov = sum(1 for q in S if any(pdist(q, w[i], w[i+1]) < 12 for w in LINKS for i in range(len(w) - 1)))
+    if cov < 0.5*len(S): drop.discard(id(t)); restored += 1
+print('taxiway segments restored', restored)
 # a holding point short of a junction (ZW2/ZW3: the parallel taxiway and W1 meet between the holds and runway 18R/36L):
 # the way on to the last junction that leads anywhere else stays a taxiway, so the taxiways there stay joined up; only
 # the rest is the runway link
@@ -206,16 +245,16 @@ drop -= keep
 print('kept as taxiway', len(keep))
 # crossings: holding positions either side of one runway that reach the same centreline point
 xedges, XN, pairs = [], {}, set()
-for h1, c1, k1, r1d in paths:
-    for h2, c2, k2, r2d in paths:
+for h1, c1, k1, r1d in paths_all:
+    for h2, c2, k2, r2d in paths_all:
         if r1d != r2d or (h1, h2) in pairs or h1 >= h2: continue
         R = FR[r1d]; mo = R['mo']
         if abs(c1[0] - c2[0]) < 15 and mo(NODE[h1])[1]*mo(NODE[h2])[1] < 0:
             pairs.add((h1, h2)); x = 'x%d' % len(XN); a, U, N = R['a'], R['U'], R['N']
             XN[x] = (a[0] + U[0]*c1[0], a[1] + U[1]*c1[0])
             for h, k in ((h1, k1), (h2, k2)):
-                Rr = fil[k] + holds[k][7]
-                xedges.append([x, NID(h), holds[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr[1:]]])
+                Rr = fil_all[k] + holds_all[k][7]
+                xedges.append([x, NID(h), holds_all[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr[1:]]])
 print('holds', len(holds), 'crossings', len(XN))
 def runway_seg(s): return id(s) in drop or any(onAny(NODE[n]) for n in [s[0], s[1]] + s[3])
 edges = []
@@ -272,22 +311,6 @@ edges = [v[1] for v in best.values()]
 holds = {k: [M.get(h[0], h[0])] + h[1:] for k, h in holds.items()}
 hs = {M.get(k, k): v for k, v in hs.items()}
 nid = {k: M.get(v, v) for k, v in nid.items()}
-# ── a holding position meets its runway by several routes through the junction (B's nine ways onto 16R/34L), all drawn
-# as fillet lines. Of the routes that serve the same directions, only the most direct stays.
-def flen(k): 
-    pts = fil[k] + holds[k][7]; return sum(math.dist(pts[j], pts[j+1]) for j in range(len(pts) - 1))
-pick = {}
-for k, h in holds.items():
-    g = (h[0], h[2], h[5], h[6])
-    if g not in pick or flen(k) < flen(pick[g]) - 1: pick[g] = k
-keepk = set(pick.values())
-nref = collections.Counter(); newh, newf = {}, {}
-for k in holds:
-    if k not in keepk: continue
-    base = k.split('~')[0]; nref[base] += 1; nk = base if nref[base] == 1 else '%s~%d' % (base, nref[base])
-    newh[nk] = holds[k]; newf[nk] = fil[k]
-print('holds', len(holds), '->', len(newh))
-holds, fil = newh, newf
 nodes = [[k, r1(NODE[inv[k]][0]), r1(NODE[inv[k]][1])] for k in sorted({x for e in edges for x in e[:2]} | {h[0] for h in holds.values()}, key=lambda s: (s[0], int(s[1:])))]
 # ── IHPs: every other named holding position on the graph (one per name)
 ihps = []
