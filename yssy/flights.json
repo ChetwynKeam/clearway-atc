@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-24T23:03:18Z",
+ "updated": "2026-10-24T23:33:37Z",
  "source": "avionio.com",
  "days": {
   "2026-10-25": {
@@ -101,7 +101,7 @@
      "flight": "QLK1432",
      "sched": "10:35",
      "status": "Estimated",
-     "expected": "10:19"
+     "expected": "10:18"
     },
     {
      "place": "Jakarta",
@@ -143,14 +143,14 @@
      "flight": "JQ510",
      "sched": "10:50",
      "status": "Estimated",
-     "expected": "10:44"
+     "expected": "10:43"
     },
     {
      "place": "Gold Coast",
      "flight": "VA508",
      "sched": "10:50",
      "status": "Estimated",
-     "expected": "10:31"
+     "expected": "10:30"
     },
     {
      "place": "Tamworth",
@@ -171,21 +171,21 @@
      "flight": "VA829",
      "sched": "10:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:03"
     },
     {
      "place": "Melbourne",
      "flight": "QF428",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:01"
     },
     {
      "place": "Gold Coast",
      "flight": "JQ405",
      "sched": "11:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:58"
     },
     {
      "place": "Brisbane",
@@ -213,7 +213,7 @@
      "flight": "QF736",
      "sched": "11:20",
      "status": "Estimated",
-     "expected": "11:09"
+     "expected": "11:08"
     },
     {
      "place": "Auckland",
@@ -261,7 +261,7 @@
      "place": "Brisbane",
      "flight": "VA932",
      "sched": "11:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -276,7 +276,7 @@
      "flight": "JQ761",
      "sched": "11:45",
      "status": "Estimated",
-     "expected": "11:15"
+     "expected": "11:21"
     },
     {
      "place": "Brisbane",
@@ -325,7 +325,7 @@
      "flight": "QN12",
      "sched": "11:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:52"
     },
     {
      "place": "Bangkok",
@@ -366,14 +366,14 @@
      "place": "Brisbane",
      "flight": "JQ7789",
      "sched": "12:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Narrandera",
      "flight": "ZL6464",
      "sched": "12:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -387,7 +387,7 @@
      "place": "Melbourne",
      "flight": "QF438",
      "sched": "12:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -401,7 +401,7 @@
      "place": "Melbourne",
      "flight": "JQ512",
      "sched": "12:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -415,7 +415,7 @@
      "place": "Brisbane",
      "flight": "VA938",
      "sched": "12:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -751,7 +751,7 @@
      "place": "Perth",
      "flight": "QF644",
      "sched": "15:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1031,8 +1031,15 @@
      "place": "Honolulu",
      "flight": "5X34",
      "sched": "17:07",
-     "status": "Estimated",
-     "expected": "16:34"
+     "status": "Diverted",
+     "expected": ""
+    },
+    {
+     "place": "Canberra",
+     "flight": "QLK1448",
+     "sched": "17:10",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Albury",
@@ -1119,6 +1126,27 @@
      "expected": ""
     },
     {
+     "place": "Tamworth",
+     "flight": "QLK2007",
+     "sched": "17:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dubbo",
+     "flight": "QLK2043",
+     "sched": "17:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Coffs Harbour",
+     "flight": "ZL6437",
+     "sched": "17:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Darwin",
      "flight": "QF841",
      "sched": "17:55",
@@ -1133,6 +1161,27 @@
      "expected": ""
     },
     {
+     "place": "Gold Coast",
+     "flight": "VA530",
+     "sched": "17:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Melbourne",
+     "flight": "VA863",
+     "sched": "17:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brisbane",
+     "flight": "QF541",
+     "sched": "18:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Townsville",
      "flight": "QLK1989",
      "sched": "18:00",
@@ -1140,8 +1189,50 @@
      "expected": ""
     },
     {
+     "place": "Dubbo",
+     "flight": "ZL6833",
+     "sched": "18:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Ballina",
+     "flight": "JQ461",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Coffs Harbour",
+     "flight": "QLK2107",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Albury",
+     "flight": "QLK2208",
+     "sched": "18:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Melbourne",
+     "flight": "JQ524",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Hamilton Island",
      "flight": "VA1282",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brisbane",
+     "flight": "VA960",
      "sched": "18:10",
      "status": "Scheduled",
      "expected": ""
@@ -1154,8 +1245,29 @@
      "expected": ""
     },
     {
+     "place": "Armidale",
+     "flight": "QLK2031",
+     "sched": "18:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Griffith",
+     "flight": "ZL6469",
+     "sched": "18:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Nadi",
      "flight": "VA182",
+     "sched": "18:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Melbourne",
+     "flight": "VA867",
      "sched": "18:25",
      "status": "Scheduled",
      "expected": ""
@@ -1175,10 +1287,24 @@
      "expected": ""
     },
     {
+     "place": "Melbourne",
+     "flight": "QF470",
+     "sched": "18:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Hong Kong",
      "flight": "LD8071",
      "sched": "18:40",
      "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Brisbane",
+     "flight": "VA962",
+     "sched": "18:40",
+     "status": "Scheduled",
      "expected": ""
     },
     {
@@ -1196,10 +1322,17 @@
      "expected": ""
     },
     {
+     "place": "Sunshine Coast",
+     "flight": "QLK1579",
+     "sched": "18:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Singapore",
      "flight": "TR42",
      "sched": "18:50",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1208,6 +1341,20 @@
      "sched": "18:55",
      "status": "Estimated",
      "expected": "18:22"
+    },
+    {
+     "place": "Hobart",
+     "flight": "QLK1534",
+     "sched": "18:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Broken Hill",
+     "flight": "ZL6867",
+     "sched": "18:55",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Dubai",
@@ -1227,7 +1374,7 @@
      "place": "Kuala Lumpur",
      "flight": "TK174",
      "sched": "19:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1245,6 +1392,13 @@
      "expected": ""
     },
     {
+     "place": "Christchurch",
+     "flight": "EK413",
+     "sched": "19:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Delhi",
      "flight": "AI302",
      "sched": "19:45",
@@ -1257,6 +1411,13 @@
      "sched": "19:45",
      "status": "Estimated",
      "expected": "14:36"
+    },
+    {
+     "place": "Cairns",
+     "flight": "VA1422",
+     "sched": "19:45",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Nadi",
@@ -1304,7 +1465,7 @@
      "place": "Guangzhou",
      "flight": "CZ301",
      "sched": "20:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1349,7 +1510,7 @@
      "flight": "MH250",
      "sched": "10:00",
      "status": "Estimated",
-     "expected": "10:00"
+     "expected": "09:54"
     },
     {
      "place": "Bangkok",
@@ -1363,21 +1524,21 @@
      "flight": "VA1530",
      "sched": "10:00",
      "status": "Estimated",
-     "expected": "10:00"
+     "expected": "09:56"
     },
     {
      "place": "Melbourne",
      "flight": "VA830",
      "sched": "10:00",
      "status": "Estimated",
-     "expected": "10:00"
+     "expected": "10:04"
     },
     {
      "place": "Brisbane",
      "flight": "VA931",
      "sched": "10:00",
      "status": "Estimated",
-     "expected": "10:00"
+     "expected": "09:58"
     },
     {
      "place": "Melbourne",
@@ -1398,7 +1559,7 @@
      "flight": "AA72",
      "sched": "10:10",
      "status": "Estimated",
-     "expected": "10:38"
+     "expected": "10:25"
     },
     {
      "place": "Los Angeles",
@@ -1440,7 +1601,7 @@
      "flight": "JQ406",
      "sched": "10:20",
      "status": "Estimated",
-     "expected": "10:20"
+     "expected": "10:40"
     },
     {
      "place": "Christchurch",
@@ -1558,71 +1719,71 @@
      "place": "Adelaide",
      "flight": "JQ762",
      "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:55"
     },
     {
      "place": "Hamilton Island",
      "flight": "QF576",
      "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:00"
     },
     {
      "place": "Lord Howe Island",
      "flight": "QN17",
      "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:00"
     },
     {
      "place": "Melbourne",
      "flight": "VA834",
      "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:00"
     },
     {
      "place": "Brisbane",
      "flight": "VA935",
      "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:00"
     },
     {
      "place": "Hong Kong",
      "flight": "CX162",
      "sched": "11:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:05"
     },
     {
      "place": "Nanjing",
      "flight": "MU792",
      "sched": "11:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:05"
     },
     {
      "place": "Melbourne",
      "flight": "QF437",
      "sched": "11:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:05"
     },
     {
      "place": "Brisbane",
      "flight": "QF522",
      "sched": "11:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:05"
     },
     {
      "place": "Denpasar-Bali",
      "flight": "GA715",
      "sched": "11:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:10"
     },
     {
      "place": "Los Angeles",
@@ -2444,6 +2605,146 @@
      "expected": ""
     },
     {
+     "place": "Melbourne",
+     "flight": "QF461",
+     "sched": "16:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Singapore",
+     "flight": "BA16",
+     "sched": "16:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Melbourne",
+     "flight": "JQ525",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Ho Chi Minh City",
+     "flight": "JQ61",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Denpasar-Bali",
+     "flight": "QF43",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Perth",
+     "flight": "QF651",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Orange",
+     "flight": "QLK2011",
+     "sched": "16:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Singapore",
+     "flight": "QF1",
+     "sched": "16:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Melbourne",
+     "flight": "QF465",
+     "sched": "16:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Adelaide",
+     "flight": "VA428",
+     "sched": "16:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Canberra",
+     "flight": "QLK1813",
+     "sched": "16:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brisbane",
+     "flight": "QF540",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Adelaide",
+     "flight": "QF741",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Abu Dhabi",
+     "flight": "EY451",
+     "sched": "16:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Canberra",
+     "flight": "VA658",
+     "sched": "16:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gold Coast",
+     "flight": "JQ412",
+     "sched": "17:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Melbourne",
+     "flight": "JQ527",
+     "sched": "17:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Hobart",
+     "flight": "JQ725",
+     "sched": "17:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brisbane",
+     "flight": "VA965",
+     "sched": "17:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Canberra",
+     "flight": "QLK1451",
+     "sched": "17:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Honolulu",
      "flight": "QF103",
      "sched": "20:30",
@@ -2477,9 +2778,23 @@
      "expected": ""
     },
     {
+     "place": "Abu Dhabi",
+     "flight": "EY450",
+     "sched": "06:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Vancouver",
      "flight": "QF76",
      "sched": "06:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Doha",
+     "flight": "QR2",
+     "sched": "06:50",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2538,6 +2853,20 @@
      "place": "Los Angeles",
      "flight": "DL40",
      "sched": "09:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Houston",
+     "flight": "UA100",
+     "sched": "10:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vancouver",
+     "flight": "AC34",
+     "sched": "10:20",
      "status": "Scheduled",
      "expected": ""
     }
