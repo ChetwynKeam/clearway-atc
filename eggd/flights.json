@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-24T07:56:47Z",
+ "updated": "2026-10-24T08:18:01Z",
  "source": "avionio.com",
  "days": {
   "2026-10-24": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Valencia",
-     "flight": "FR4441",
-     "sched": "08:35",
-     "status": "Landed",
-     "expected": "08:24"
-    },
-    {
-     "place": "Faro",
-     "flight": "EC7507",
-     "sched": "08:45",
-     "status": "Estimated",
-     "expected": "08:48"
-    },
-    {
-     "place": "Alicante",
-     "flight": "EC5527",
-     "sched": "08:55",
-     "status": "Estimated",
-     "expected": "08:46"
-    },
     {
      "place": "Faro",
      "flight": "FR4148",
@@ -38,7 +17,7 @@
      "flight": "U2214",
      "sched": "09:20",
      "status": "Estimated",
-     "expected": "09:08"
+     "expected": "09:07"
     },
     {
      "place": "Antalya",
@@ -52,7 +31,7 @@
      "flight": "U2224",
      "sched": "09:50",
      "status": "Estimated",
-     "expected": ""
+     "expected": "09:37"
     },
     {
      "place": "Amsterdam",
@@ -73,7 +52,7 @@
      "flight": "LS1830",
      "sched": "10:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:45"
     },
     {
      "place": "Lanzarote",
@@ -142,7 +121,7 @@
      "place": "Barcelona",
      "flight": "U22706",
      "sched": "12:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -198,7 +177,7 @@
      "place": "Venice",
      "flight": "U22832",
      "sched": "12:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -370,15 +349,15 @@
      "expected": ""
     },
     {
-     "place": "Olbia",
-     "flight": "U22836",
+     "place": "Lisbon",
+     "flight": "EC7659",
      "sched": "16:05",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Lisbon",
-     "flight": "U27659",
+     "place": "Olbia",
+     "flight": "U22836",
      "sched": "16:05",
      "status": "Scheduled",
      "expected": ""
@@ -405,6 +384,13 @@
      "expected": ""
     },
     {
+     "place": "Paris",
+     "flight": "U22774",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Rhodes",
      "flight": "BY6655",
      "sched": "16:45",
@@ -426,9 +412,23 @@
      "expected": ""
     },
     {
+     "place": "Palma de Mallorca",
+     "flight": "U22712",
+     "sched": "18:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Barcelona",
      "flight": "FR3160",
      "sched": "18:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "U22718",
+     "sched": "18:40",
      "status": "Scheduled",
      "expected": ""
     },
@@ -483,20 +483,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Cork",
-     "flight": "EA3841",
-     "sched": "08:35",
-     "status": "Estimated",
-     "expected": "08:35"
-    },
-    {
-     "place": "Madrid",
-     "flight": "U22707",
-     "sched": "08:40",
-     "status": "Departed",
-     "expected": "08:40"
-    },
     {
      "place": "Valencia",
      "flight": "FR4440",
@@ -746,6 +732,55 @@
      "place": "Fuerteventura",
      "flight": "U22719",
      "sched": "14:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Thessaloniki",
+     "flight": "U22879",
+     "sched": "15:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Istanbul",
+     "flight": "PC1197",
+     "sched": "15:15",
+     "status": "Cancelled",
+     "expected": ""
+    },
+    {
+     "place": "Sal Island",
+     "flight": "BY762",
+     "sched": "15:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rhodes",
+     "flight": "U22801",
+     "sched": "15:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gran Canaria",
+     "flight": "U22735",
+     "sched": "15:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "EC7075",
+     "sched": "15:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "EA3283",
+     "sched": "16:00",
      "status": "Scheduled",
      "expected": ""
     },

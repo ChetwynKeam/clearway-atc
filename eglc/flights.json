@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-24T07:56:05Z",
+ "updated": "2026-10-24T08:17:01Z",
  "source": "avionio.com",
  "days": {
   "2026-10-24": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Milan",
-     "flight": "AZ218",
-     "sched": "08:10",
-     "status": "Landed",
-     "expected": "08:13"
-    },
-    {
-     "place": "Milan",
-     "flight": "AZ218",
-     "sched": "08:20",
-     "status": "Landed",
-     "expected": "08:11"
-    },
-    {
-     "place": "Zurich",
-     "flight": "LX460",
-     "sched": "08:25",
-     "status": "Estimated",
-     "expected": "08:30"
-    },
     {
      "place": "Amsterdam",
      "flight": "KL983",
@@ -51,7 +30,7 @@
      "place": "Luxembourg",
      "flight": "LG4593",
      "sched": "11:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -93,7 +72,7 @@
      "place": "Zurich",
      "flight": "LX456",
      "sched": "11:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -107,52 +86,17 @@
      "place": "Ibiza",
      "flight": "CJ8462",
      "sched": "12:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     }
    ],
    "dep": [
     {
-     "place": "Luxembourg",
-     "flight": "LG4592",
-     "sched": "08:00",
-     "status": "Departed",
-     "expected": "08:15"
-    },
-    {
-     "place": "Dublin",
-     "flight": "CJ4460",
-     "sched": "08:05",
-     "status": "Departed",
-     "expected": "08:20"
-    },
-    {
-     "place": "Ibiza",
-     "flight": "CJ8465",
-     "sched": "08:25",
-     "status": "Estimated",
-     "expected": "08:25"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "CJ8702",
-     "sched": "08:25",
-     "status": "Estimated",
-     "expected": "08:25"
-    },
-    {
-     "place": "Milan",
-     "flight": "AZ221",
-     "sched": "08:55",
-     "status": "Estimated",
-     "expected": "09:15"
-    },
-    {
      "place": "Zurich",
      "flight": "LX461",
      "sched": "09:00",
      "status": "Estimated",
-     "expected": "09:15"
+     "expected": "09:12"
     },
     {
      "place": "Milan",
@@ -263,9 +207,45 @@
      "sched": "17:20",
      "status": "Scheduled",
      "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX466",
+     "sched": "18:30",
+     "status": "Scheduled",
+     "expected": ""
     }
    ],
-   "dep": []
+   "dep": [
+    {
+     "place": "Zurich",
+     "flight": "LX457",
+     "sched": "13:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Frankfurt",
+     "flight": "EN937",
+     "sched": "17:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX465",
+     "sched": "17:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX467",
+     "sched": "19:05",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
   }
  }
 }
