@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-24T22:04:29Z",
+ "updated": "2026-10-24T22:36:16Z",
  "source": "avionio.com",
  "days": {
   "2026-10-25": {
@@ -17,28 +17,28 @@
      "flight": "BA34",
      "sched": "04:25",
      "status": "Estimated",
-     "expected": "04:07"
+     "expected": "04:14"
     },
     {
      "place": "Cape Town",
      "flight": "BA58",
      "sched": "04:30",
      "status": "Estimated",
-     "expected": "04:23"
+     "expected": "04:18"
     },
     {
      "place": "Singapore",
      "flight": "BA16",
      "sched": "04:35",
      "status": "Estimated",
-     "expected": ""
+     "expected": "05:00"
     },
     {
      "place": "Johannesburg",
      "flight": "BA56",
      "sched": "04:35",
      "status": "Estimated",
-     "expected": "04:36"
+     "expected": "04:42"
     },
     {
      "place": "New York",
@@ -52,7 +52,7 @@
      "flight": "QF219",
      "sched": "05:05",
      "status": "Estimated",
-     "expected": "04:33"
+     "expected": "04:44"
     },
     {
      "place": "Bridgetown",
@@ -79,7 +79,7 @@
      "place": "Toronto",
      "flight": "BA92",
      "sched": "05:15",
-     "status": "Estimated",
+     "status": "Cancelled",
      "expected": ""
     },
     {
@@ -199,7 +199,7 @@
      "flight": "UA929",
      "sched": "05:55",
      "status": "Estimated",
-     "expected": "23:18"
+     "expected": "23:09"
     },
     {
      "place": "Muscat",
@@ -219,7 +219,7 @@
      "place": "Bermuda",
      "flight": "BA158",
      "sched": "06:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -268,7 +268,7 @@
      "place": "Doha",
      "flight": "QR11",
      "sched": "06:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -282,8 +282,8 @@
      "place": "Toronto",
      "flight": "AC854",
      "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "00:24"
     },
     {
      "place": "Johannesburg",
@@ -324,14 +324,14 @@
      "place": "Doha",
      "flight": "QR107",
      "sched": "06:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Abu Dhabi",
      "flight": "EY61",
      "sched": "06:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -367,7 +367,7 @@
      "flight": "AA50",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "22:52"
+     "expected": "02:38"
     },
     {
      "place": "Hong Kong",
@@ -422,8 +422,8 @@
      "place": "Minneapolis/Saint Paul",
      "flight": "DL10",
      "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "00:25"
     },
     {
      "place": "Montreal",
@@ -443,7 +443,7 @@
      "place": "Dubai",
      "flight": "EK7",
      "sched": "07:10",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -521,13 +521,20 @@
      "flight": "UA880",
      "sched": "07:40",
      "status": "Estimated",
-     "expected": "23:42"
+     "expected": "23:35"
     },
     {
      "place": "Philadelphia",
      "flight": "AA728",
      "sched": "07:50",
      "status": "Cancelled",
+     "expected": ""
+    },
+    {
+     "place": "Sofia",
+     "flight": "FB851",
+     "sched": "07:50",
+     "status": "Scheduled",
      "expected": ""
     },
     {
@@ -604,7 +611,7 @@
      "place": "Austin",
      "flight": "BA190",
      "sched": "08:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -647,7 +654,7 @@
      "flight": "VS450",
      "sched": "08:35",
      "status": "Estimated",
-     "expected": "08:10"
+     "expected": "08:08"
     },
     {
      "place": "Cairo",
@@ -758,7 +765,7 @@
      "place": "Los Angeles",
      "flight": "BA282",
      "sched": "09:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -829,7 +836,7 @@
      "flight": "VS479",
      "sched": "09:50",
      "status": "Estimated",
-     "expected": "09:06"
+     "expected": "09:02"
     },
     {
      "place": "Nairobi",
@@ -890,6 +897,13 @@
     {
      "place": "Las Vegas",
      "flight": "BA270",
+     "sched": "10:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Larnaca",
+     "flight": "BA665",
      "sched": "10:15",
      "status": "Scheduled",
      "expected": ""
@@ -996,6 +1010,13 @@
      "place": "New York",
      "flight": "VS138",
      "sched": "11:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "New York",
+     "flight": "BA182",
+     "sched": "11:10",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1126,6 +1147,13 @@
      "expected": ""
     },
     {
+     "place": "Abu Dhabi",
+     "flight": "EY63",
+     "sched": "12:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Los Angeles",
      "flight": "AA136",
      "sched": "12:10",
@@ -1142,6 +1170,13 @@
     {
      "place": "Fort Worth",
      "flight": "BA192",
+     "sched": "12:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Doha",
+     "flight": "QR3",
      "sched": "12:15",
      "status": "Scheduled",
      "expected": ""
@@ -1182,8 +1217,22 @@
      "expected": ""
     },
     {
+     "place": "San Diego",
+     "flight": "BA272",
+     "sched": "12:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Frankfurt",
      "flight": "LH906",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Calgary",
+     "flight": "WS2",
      "sched": "12:50",
      "status": "Scheduled",
      "expected": ""
@@ -1301,6 +1350,13 @@
      "expected": ""
     },
     {
+     "place": "Vancouver",
+     "flight": "BA84",
+     "sched": "14:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Milan",
      "flight": "BA569",
      "sched": "14:30",
@@ -1308,9 +1364,37 @@
      "expected": ""
     },
     {
+     "place": "Las Vegas",
+     "flight": "BA274",
+     "sched": "14:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Hong Kong",
      "flight": "CX257",
      "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Mexico City",
+     "flight": "AM7",
+     "sched": "15:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "San Francisco",
+     "flight": "BA286",
+     "sched": "15:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Los Angeles",
+     "flight": "BA268",
+     "sched": "15:15",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1371,6 +1455,20 @@
      "expected": ""
     },
     {
+     "place": "Beijing",
+     "flight": "CA855",
+     "sched": "15:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Sylhet",
+     "flight": "BG201",
+     "sched": "16:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Zurich",
      "flight": "LX324",
      "sched": "16:20",
@@ -1413,6 +1511,13 @@
      "expected": ""
     },
     {
+     "place": "Shanghai",
+     "flight": "MU551",
+     "sched": "17:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Frankfurt",
      "flight": "LH916",
      "sched": "17:45",
@@ -1441,9 +1546,30 @@
      "expected": ""
     },
     {
+     "place": "Seoul",
+     "flight": "VS209",
+     "sched": "18:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Singapore",
+     "flight": "SQ318",
+     "sched": "19:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Zurich",
      "flight": "LX338",
      "sched": "19:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tokyo",
+     "flight": "BA6",
+     "sched": "19:20",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2559,6 +2685,13 @@
      "place": "Bogota",
      "flight": "AV121",
      "sched": "21:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Mexico City",
+     "flight": "AM8",
+     "sched": "22:30",
      "status": "Scheduled",
      "expected": ""
     }
