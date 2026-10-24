@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-24T15:05:16Z",
+ "updated": "2026-10-24T15:37:45Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-24": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "London Stansted",
-     "flight": "FR389",
-     "sched": "14:10",
-     "status": "Arrived",
-     "expected": "13:46"
-    },
-    {
-     "place": "Milan Malpensa",
-     "flight": "FR6672",
-     "sched": "14:10",
-     "status": "Arrived",
-     "expected": "14:18"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "EJU7623",
-     "sched": "14:30",
-     "status": "Arrived",
-     "expected": "14:43"
-    },
     {
      "place": "Lisboa",
      "flight": "EJU7625",
@@ -58,27 +37,20 @@
      "place": "Prague",
      "flight": "QS1170",
      "sched": "15:55",
-     "status": "Estimated",
-     "expected": "16:10"
+     "status": "Arrived",
+     "expected": "16:13"
     },
     {
      "place": "Frankfurt",
      "flight": "4Y702",
      "sched": "16:15",
-     "status": "Estimated",
-     "expected": "16:10"
+     "status": "Arrived",
+     "expected": "16:20"
     },
     {
      "place": "Dusseldorf",
      "flight": "EW9600",
      "sched": "16:25",
-     "status": "Estimated",
-     "expected": "16:20"
-    },
-    {
-     "place": "Munich",
-     "flight": "4Y704",
-     "sched": "16:35",
      "status": "Estimated",
      "expected": "16:15"
     },
@@ -88,6 +60,13 @@
      "sched": "16:35",
      "status": "Arrived",
      "expected": "15:57"
+    },
+    {
+     "place": "Munich",
+     "flight": "4Y704",
+     "sched": "16:35",
+     "status": "Arrived",
+     "expected": "16:27"
     },
     {
      "place": "Frankfurt",
@@ -107,7 +86,7 @@
      "place": "Dusseldorf",
      "flight": "DE1414",
      "sched": "16:55",
-     "status": "Estimated",
+     "status": "Arrived",
      "expected": "16:05"
     },
     {
@@ -240,8 +219,8 @@
      "place": "Katowice",
      "flight": "ENT7121",
      "sched": "20:50",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "20:35"
     },
     {
      "place": "Lisboa",
@@ -281,13 +260,6 @@
    ],
    "dep": [
     {
-     "place": "Lisboa",
-     "flight": "TP1690",
-     "sched": "14:15",
-     "status": "Departed",
-     "expected": "14:38"
-    },
-    {
      "place": "Edinburgh",
      "flight": "FR6673",
      "sched": "15:00",
@@ -305,15 +277,15 @@
      "place": "Paris Beauvais",
      "flight": "FR399",
      "sched": "15:50",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:24"
     },
     {
      "place": "Lisboa",
      "flight": "EJU7626",
      "sched": "15:55",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "16:02"
     },
     {
      "place": "Paris Orly",
@@ -326,14 +298,14 @@
      "place": "London Gatwick",
      "flight": "EZY8520",
      "sched": "16:35",
-     "status": "Final Call",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Jersey",
      "flight": "5O724",
      "sched": "16:40",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
