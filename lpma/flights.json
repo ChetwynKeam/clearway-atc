@@ -1,17 +1,10 @@
 {
- "updated": "2026-10-24T12:44:09Z",
+ "updated": "2026-10-24T13:17:27Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-10-24": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Lisboa",
-     "flight": "TP1687",
-     "sched": "11:40",
-     "status": "Arrived",
-     "expected": "11:34"
-    },
     {
      "place": "London Gatwick",
      "flight": "BA2716",
@@ -41,18 +34,18 @@
      "expected": "13:20"
     },
     {
+     "place": "London Stansted",
+     "flight": "FR389",
+     "sched": "14:10",
+     "status": "Arrived",
+     "expected": "13:46"
+    },
+    {
      "place": "Milan Malpensa",
      "flight": "FR6672",
      "sched": "14:10",
      "status": "Estimated",
      "expected": "14:25"
-    },
-    {
-     "place": "London Stansted",
-     "flight": "FR389",
-     "sched": "14:10",
-     "status": "Estimated",
-     "expected": "13:45"
     },
     {
      "place": "Lisboa",
@@ -65,8 +58,8 @@
      "place": "Lisboa",
      "flight": "EJU7625",
      "sched": "15:10",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:05"
     },
     {
      "place": "Paris Orly",
@@ -108,7 +101,7 @@
      "flight": "EW9600",
      "sched": "16:25",
      "status": "Estimated",
-     "expected": "16:35"
+     "expected": "16:20"
     },
     {
      "place": "Berlin Brandenburg",
@@ -128,22 +121,22 @@
      "place": "Frankfurt",
      "flight": "DE1570",
      "sched": "16:40",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:20"
     },
     {
      "place": "Stockholm Arlanda",
      "flight": "SK2901",
      "sched": "16:50",
      "status": "Estimated",
-     "expected": "16:25"
+     "expected": "16:30"
     },
     {
      "place": "Dusseldorf",
      "flight": "DE1414",
      "sched": "16:55",
      "status": "Estimated",
-     "expected": "16:15"
+     "expected": "16:10"
     },
     {
      "place": "Tenerife Norte",
@@ -156,8 +149,8 @@
      "place": "Stuttgart",
      "flight": "EW2264",
      "sched": "17:35",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:15"
     },
     {
      "place": "Geneva",
@@ -177,22 +170,22 @@
      "place": "Basel",
      "flight": "EZS1283",
      "sched": "17:45",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:15"
     },
     {
      "place": "Brussels",
      "flight": "SN3827",
      "sched": "17:50",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "17:20"
     },
     {
      "place": "Poznan",
      "flight": "ENT7101",
      "sched": "18:15",
      "status": "Estimated",
-     "expected": "18:50"
+     "expected": "17:50"
     },
     {
      "place": "London Gatwick",
@@ -316,34 +309,6 @@
    ],
    "dep": [
     {
-     "place": "Paris Orly",
-     "flight": "TO7695",
-     "sched": "11:40",
-     "status": "Departed",
-     "expected": "11:52"
-    },
-    {
-     "place": "Katowice",
-     "flight": "AMQ653",
-     "sched": "11:45",
-     "status": "Departed",
-     "expected": "11:46"
-    },
-    {
-     "place": "Copenhagen",
-     "flight": "D83615",
-     "sched": "11:50",
-     "status": "Departed",
-     "expected": "11:59"
-    },
-    {
-     "place": "Porto",
-     "flight": "FR365",
-     "sched": "11:55",
-     "status": "Departed",
-     "expected": "12:08"
-    },
-    {
      "place": "Deauville",
      "flight": "ENT734",
      "sched": "12:20",
@@ -361,28 +326,28 @@
      "place": "London Gatwick",
      "flight": "BA2717",
      "sched": "13:10",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "13:56"
     },
     {
      "place": "Ponta Delgada",
      "flight": "S4163",
      "sched": "13:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:05"
     },
     {
      "place": "Warsaw",
      "flight": "ENT7694",
      "sched": "13:50",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "13:59"
     },
     {
      "place": "Lisboa",
      "flight": "TP1690",
      "sched": "14:15",
-     "status": "Boarding",
+     "status": "Closed",
      "expected": ""
     },
     {
