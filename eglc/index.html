@@ -5198,7 +5198,7 @@ const uniqCs = (cs, me) => { const used = c => S.acs.some(o => o !== me && o.cs 
 class Aircraft {
   constructor(f){
     Object.assign(this, f); this.cs = uniqCs(f.cs, this);
-    this.perf = TYPES[f.t]; this.hist = []; this.histT = 0;
+    this.perf = TYPES[f.t]; this.hist = []; this.histT = 0; this.track = [];
     this.mode = 'NAV'; this.route = []; this.turnDir = 0; this.tgtSpd = null; this.spdAssigned = false;
     this.app = null; this.ctl = false; this.cto = false; this.ground = false; this.onRwy = false; this.path = null;
     this.state = ''; this.need = null; this.handed = false; this.freq = 'RAD';
@@ -6491,6 +6491,9 @@ function step(dt){
     stepNose(ac, dt);
     if (ac.rel) stepRelease(ac);
     if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; SC(ac).pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
+    // the whole track flown (holds, taxi routes, go-arounds), drawn as a thin line while the flight is selected: [x, y, altitude, on the ground]
+    if (ac.state !== 'PRE') { const T = ac.track, l = T[T.length - 1], g = ac.ground ? 1 : 0;
+      if (!l || Math.hypot(ac.x - l[0], ac.y - l[1]) >= (g ? 0.004 : 0.03)) { T.push([ac.x, ac.y, Math.round(ac.alt), g]); if (T.length > 15000) T.splice(0, 1000); } }
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
   }
   S.acs = S.acs.filter(ac => {
@@ -7075,6 +7078,7 @@ function draw(){
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
+  if (S.sel) drawTrack(S.sel);
   if (S.sel && S.sel.airborne) drawAirRoute(S.sel);   // under the traffic, so it never hides a label
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   // a route (taxi, or a tow asked for or under way) only while you have that aircraft selected
@@ -7880,6 +7884,23 @@ function airRoute(ac){
   if (!pts || pts.length < 2) return null;
   const label = ac.cs + ' · ' + (ac.kind === 'ARR' && F && !what ? to : ac.kind === 'ARR' && what ? what + (to ? ', ' + to : '') : what || '');
   return { pts, label, thin: true };
+}
+// the track a selected flight has flown, a thin line shaded by altitude: violet on the ground, then amber low down through
+// green to deep blue high up
+function drawTrack(ac){
+  const T = ac.track; if (!T || T.length < 2) return;
+  const NB = 14, band = p => p[3] ? 0 : 1 + Math.min(NB - 2, Math.floor(Math.sqrt(Math.max(0, p[2])/14000)*(NB - 1)));
+  const col = b => b === 0 ? 'rgba(120,50,180,.95)' : `hsl(${Math.round(35 + (b - 1)/(NB - 2)*195)},${85 - (b - 1)*2}%,${58 - (b - 1)*2}%)`;
+  cx.save(); cx.lineWidth = 1; cx.lineJoin = 'round'; cx.globalAlpha = .9;
+  for (let b = 0; b < NB; b++) {
+    cx.beginPath(); let on = false;
+    for (let i = 1; i < T.length; i++) { const p = T[i], q = T[i - 1];
+      if (band(p) !== b) { on = false; continue; }
+      if (!on) { cx.moveTo(sx(q[0]), sy(q[1])); on = true; }
+      cx.lineTo(sx(p[0]), sy(p[1])); }
+    cx.strokeStyle = col(b); cx.stroke();
+  }
+  cx.restore();
 }
 function drawAirRoute(ac){ const r = airRoute(ac); if (r) drawPreview(r); }
 const pop = document.createElement('div'); pop.className = 'pop'; pop.hidden = true; pop.setAttribute('role', 'dialog'); document.body.appendChild(pop);

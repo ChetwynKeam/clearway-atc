@@ -69,6 +69,7 @@ function draw(){
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
+  if (S.sel) drawTrack(S.sel);
   if (S.sel && S.sel.airborne) drawAirRoute(S.sel);   // under the traffic, so it never hides a label
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   // a route (taxi, or a tow asked for or under way) only while you have that aircraft selected
@@ -874,6 +875,23 @@ function airRoute(ac){
   if (!pts || pts.length < 2) return null;
   const label = ac.cs + ' · ' + (ac.kind === 'ARR' && F && !what ? to : ac.kind === 'ARR' && what ? what + (to ? ', ' + to : '') : what || '');
   return { pts, label, thin: true };
+}
+// the track a selected flight has flown, a thin line shaded by altitude: violet on the ground, then amber low down through
+// green to deep blue high up
+function drawTrack(ac){
+  const T = ac.track; if (!T || T.length < 2) return;
+  const NB = 14, band = p => p[3] ? 0 : 1 + Math.min(NB - 2, Math.floor(Math.sqrt(Math.max(0, p[2])/14000)*(NB - 1)));
+  const col = b => b === 0 ? 'rgba(120,50,180,.95)' : `hsl(${Math.round(35 + (b - 1)/(NB - 2)*195)},${85 - (b - 1)*2}%,${58 - (b - 1)*2}%)`;
+  cx.save(); cx.lineWidth = 1; cx.lineJoin = 'round'; cx.globalAlpha = .9;
+  for (let b = 0; b < NB; b++) {
+    cx.beginPath(); let on = false;
+    for (let i = 1; i < T.length; i++) { const p = T[i], q = T[i - 1];
+      if (band(p) !== b) { on = false; continue; }
+      if (!on) { cx.moveTo(sx(q[0]), sy(q[1])); on = true; }
+      cx.lineTo(sx(p[0]), sy(p[1])); }
+    cx.strokeStyle = col(b); cx.stroke();
+  }
+  cx.restore();
 }
 function drawAirRoute(ac){ const r = airRoute(ac); if (r) drawPreview(r); }
 const pop = document.createElement('div'); pop.className = 'pop'; pop.hidden = true; pop.setAttribute('role', 'dialog'); document.body.appendChild(pop);
