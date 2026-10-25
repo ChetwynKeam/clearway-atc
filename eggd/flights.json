@@ -1,31 +1,10 @@
 {
- "updated": "2026-10-25T07:43:05Z",
+ "updated": "2026-10-25T08:07:26Z",
  "source": "avionio.com",
  "days": {
   "2026-10-25": {
    "utcOffsetMin": 0,
    "arr": [
-    {
-     "place": "Kaunas",
-     "flight": "FR8682",
-     "sched": "07:10",
-     "status": "Landed",
-     "expected": "07:11"
-    },
-    {
-     "place": "Dublin",
-     "flight": "EA3280",
-     "sched": "07:55",
-     "status": "Estimated",
-     "expected": "07:58"
-    },
-    {
-     "place": "Madrid",
-     "flight": "FR154",
-     "sched": "07:55",
-     "status": "Estimated",
-     "expected": "07:54"
-    },
     {
      "place": "Poznan",
      "flight": "FR7948",
@@ -65,14 +44,14 @@
      "place": "Dublin",
      "flight": "FR504",
      "sched": "09:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:55"
     },
     {
      "place": "Paris",
      "flight": "U22774",
      "sched": "09:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -86,14 +65,14 @@
      "place": "Copenhagen",
      "flight": "FR746",
      "sched": "10:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:30"
     },
     {
      "place": "Barcelona",
      "flight": "U22704",
      "sched": "11:10",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -384,6 +363,13 @@
      "expected": ""
     },
     {
+     "place": "Lanzarote",
+     "flight": "LS1804",
+     "sched": "18:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Rovaniemi",
      "flight": "FR6668",
      "sched": "18:55",
@@ -435,109 +421,11 @@
    ],
    "dep": [
     {
-     "place": "Murcia",
-     "flight": "U22665",
-     "sched": "07:00",
-     "status": "Estimated",
-     "expected": "07:00"
-    },
-    {
-     "place": "Rhodes",
-     "flight": "U22801",
-     "sched": "07:00",
-     "status": "Estimated",
-     "expected": "07:00"
-    },
-    {
-     "place": "Agadir",
-     "flight": "U22899",
-     "sched": "07:00",
-     "status": "Departed",
-     "expected": "07:04"
-    },
-    {
-     "place": "Wroclaw",
-     "flight": "FR8212",
-     "sched": "07:10",
-     "status": "Estimated",
-     "expected": "07:13"
-    },
-    {
-     "place": "Alicante",
-     "flight": "LS1805",
-     "sched": "07:15",
-     "status": "Estimated",
-     "expected": "07:40"
-    },
-    {
-     "place": "Palma de Mallorca",
-     "flight": "U22709",
-     "sched": "07:15",
-     "status": "Departed",
-     "expected": "07:22"
-    },
-    {
-     "place": "Bodrum",
-     "flight": "U22853",
-     "sched": "07:15",
-     "status": "Estimated",
-     "expected": "07:30"
-    },
-    {
-     "place": "Dublin",
-     "flight": "FR505",
-     "sched": "07:20",
-     "status": "Estimated",
-     "expected": "07:25"
-    },
-    {
-     "place": "Faro",
-     "flight": "U22871",
-     "sched": "07:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Reykjavik",
-     "flight": "U22907",
-     "sched": "07:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Kaunas",
-     "flight": "FR8681",
-     "sched": "07:35",
-     "status": "Estimated",
-     "expected": "07:50"
-    },
-    {
-     "place": "Tenerife",
-     "flight": "U22739",
-     "sched": "07:35",
-     "status": "Estimated",
-     "expected": "07:35"
-    },
-    {
-     "place": "Alicante",
-     "flight": "U22721",
-     "sched": "07:45",
-     "status": "Estimated",
-     "expected": "07:45"
-    },
-    {
-     "place": "Glasgow",
-     "flight": "U2201",
-     "sched": "07:50",
-     "status": "Estimated",
-     "expected": "07:50"
-    },
-    {
      "place": "Lanzarote",
      "flight": "BY6758",
      "sched": "08:00",
      "status": "Estimated",
-     "expected": "08:00"
+     "expected": "08:09"
     },
     {
      "place": "Paphos",
@@ -557,29 +445,29 @@
      "place": "Madrid",
      "flight": "FR155",
      "sched": "08:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:20"
     },
     {
      "place": "Cork",
      "flight": "EA3841",
      "sched": "08:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:25"
     },
     {
      "place": "Poznan",
      "flight": "FR7949",
      "sched": "08:40",
      "status": "Estimated",
-     "expected": "09:07"
+     "expected": "09:05"
     },
     {
      "place": "Krakow/Balice",
      "flight": "FR5516",
      "sched": "09:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:15"
     },
     {
      "place": "Faro",
@@ -739,6 +627,55 @@
      "place": "Lanzarote",
      "flight": "U22733",
      "sched": "14:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gran Canaria",
+     "flight": "LS1863",
+     "sched": "14:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bordeaux",
+     "flight": "U22767",
+     "sched": "14:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "U22775",
+     "sched": "14:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rome",
+     "flight": "U22837",
+     "sched": "14:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "U2213",
+     "sched": "14:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Toulouse",
+     "flight": "U22781",
+     "sched": "14:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kos",
+     "flight": "U22805",
+     "sched": "14:50",
      "status": "Scheduled",
      "expected": ""
     },
