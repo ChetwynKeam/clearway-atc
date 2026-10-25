@@ -69,7 +69,7 @@ function draw(){
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();
   if (typeof drawRwyBlock === 'function') drawRwyBlock();
-  if (S.sel) drawTrack(S.sel);
+  if (S.sel || S.trk) drawTrack(S.trk || S.sel);
   if (S.sel && S.sel.airborne) drawAirRoute(S.sel);   // under the traffic, so it never hides a label
   for (const ac of S.acs) if (!ac.ground) { if (typeof drawFarAc === 'function' && outsideRadar(ac)) drawFarAc(ac); else drawAc(ac); }
   // a route (taxi, or a tow asked for or under way) only while you have that aircraft selected
@@ -594,7 +594,7 @@ function stateLabel(ac){
 // ═════════════════════════ console UI ═════════════════════════
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
-function select(ac){ if (ac && outOfCtl(ac)) return; S.sel = ac; renderSel(); renderStrips(true); cmdPrefill(); }
+function select(ac){ if (ac && outOfCtl(ac)) return; S.trk = null; S.sel = ac; renderSel(); renderStrips(true); cmdPrefill(); }
 // the selected flight's callsign waits in the command box, so you only type the instruction after it. Only text the
 // box put there itself (or a bare callsign) is replaced; anything you have started typing is left alone. On a mouse,
 // the box takes the focus unless you are typing in another field; on a touch screen it doesn't, so no keyboard pops up.
@@ -879,10 +879,14 @@ function airRoute(ac){
 // the track a selected flight has flown, a thin line shaded by altitude: violet on the ground, then amber low down through
 // green to deep blue high up
 function drawTrack(ac){
-  const T = ac.track; if (!T || T.length < 2) return;
-  const NB = 14, band = p => p[3] ? 0 : 1 + Math.min(NB - 2, Math.floor(Math.sqrt(Math.max(0, p[2])/14000)*(NB - 1)));
+  if (typeof trkRoute !== 'function') { if (ac.track) drawTrackLine(ac.track, false); return; }
+  const r = trkRoute(ac); drawTrackLine(r.rec, false); for (const l of r.ext) drawTrackLine(l, true);
+}
+function drawTrackLine(T, dashed){
+  if (!T || T.length < 2) return;
+  const NB = 14, band = p => p[3] ? 0 : 1 + Math.min(NB - 2, Math.floor(Math.sqrt(Math.max(0, p[2])/40000)*(NB - 1)));
   const col = b => b === 0 ? 'rgba(120,50,180,.95)' : `hsl(${Math.round(35 + (b - 1)/(NB - 2)*195)},${85 - (b - 1)*2}%,${58 - (b - 1)*2}%)`;
-  cx.save(); cx.lineWidth = 1; cx.lineJoin = 'round'; cx.globalAlpha = .9;
+  cx.save(); cx.lineWidth = 1; cx.lineJoin = 'round'; cx.globalAlpha = dashed ? .75 : .9; if (dashed) cx.setLineDash([5, 4]);
   for (let b = 0; b < NB; b++) {
     cx.beginPath(); let on = false;
     for (let i = 1; i < T.length; i++) { const p = T[i], q = T[i - 1];
@@ -1199,7 +1203,11 @@ cv.addEventListener('pointermove', e => {
 });
 cv.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac) || (inHangar(ac) && !towPending(ac))) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } if (best) tapSelect(best); else if (typeof vehAt === 'function') { const v = vehAt(e.offsetX, e.offsetY); if (v) showVehPop(v, e); } }
+  if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac) || (inHangar(ac) && !towPending(ac))) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } S.trk = null;
+    if (!best) { let hb = null, hd = 26; for (const ac of S.acs) if (outOfCtl(ac) && !ac.ground) { const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < hd) { hd = d; hb = ac; } }
+      const fa = hb || (typeof farAt === 'function' ? farAt(e.offsetX, e.offsetY) : null);   // handed on, or beyond radar cover: view its route only
+      if (fa) { S.trk = fa; S.sel = null; renderSel(); renderStrips(true); } }
+    if (best) tapSelect(best); else if (!S.trk && typeof vehAt === 'function') { const v = vehAt(e.offsetX, e.offsetY); if (v) showVehPop(v, e); } }
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });

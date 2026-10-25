@@ -65,7 +65,39 @@ function addDepGhost(ac, at){
   const via = (VIA[ac.d] || []).filter(p => !nearGib(p) && gcDist(p, p0) > 30 && gcDist(p, AP[ac.d]) < gcDist(p0, AP[ac.d]));
   const leg = makeLeg([p0, ...via, AP[ac.d].slice(0, 2)]), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
-  FAR.list.push({ cs: ac.cs, t: ac.t, from: ac.from || APT.icao, to: ac.d, kind: ac.from ? 'DIV' : 'DEP', leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? APT.initClimb : ac.alt, endAlt: 0 });
+  FAR.list.push({ cs: ac.cs, t: ac.t, from: ac.from || APT.icao, to: ac.d, kind: ac.from ? 'DIV' : 'DEP', track: ac.track, leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? APT.initClimb : ac.alt, endAlt: 0 });
+}
+// ── the whole route of a selected flight: what it has flown (solid) and the rough airway route on to its destination or back to
+// where it came from (dashed), as [x, y, altitude, on the ground] points
+function legPts(leg, d0, d1, altAt){
+  const out = [], n = Math.max(1, Math.ceil((d1 - d0)/Math.max(4, leg.D/300)));
+  for (let i = 0; i <= n; i++) { const d = d0 + (d1 - d0)*i/n, p = xy(...legAt(leg, d).ll); out.push([p[0], p[1], Math.round(altAt(d)), 0]); }
+  return out;
+}
+function trkRoute(o){
+  if (o.leg) {   // a flight beyond radar cover (yellow plane)
+    const g = o, D = g.leg.D, d = Math.min(D, farDist(g)), alt = x => Math.max(0, Math.min(g.cruise, (g.kind !== 'ARR' ? (g.startAlt || 0) : 1500) + x*330, (g.endAlt || 0) + (D - x)*300));
+    return { rec: (g.track || []).concat(legPts(g.leg, 0, d, alt)), ext: g.kind === 'ARR' || d < D ? [legPts(g.leg, d, D, alt)] : [] };
+  }
+  const rec = o.track || [], ext = [], cr = CRUISE[o.t] || [450, 37000];
+  if (o.kind === 'ARR' && rec.length && AP[o.o]) {   // back to its origin airport
+    if (!o._tb || o._tb.k !== rec[0][0] + o.o) {
+      const end = toLL([rec[0][0], rec[0][1]]), via = (VIA[o.o] || []).filter(p => !nearGib(p) && gcDist(p, end) > 40).slice().reverse();
+      o._tb = { k: rec[0][0] + o.o, leg: makeLeg([AP[o.o].slice(0, 2), ...via, end]) }; }
+    const L = o._tb.leg, c = Math.min(cr[1], 9000 + L.D*75), e = rec[0][2];
+    ext.push(legPts(L, 0, L.D, x => Math.max(0, Math.min(c, 1500 + x*330, e + (L.D - x)*300))));
+  } else if (o.kind === 'DEP' && AP[o.d] && o.state !== 'PRE') {   // on to its destination
+    const p0 = toLL([o.x, o.y]), via = (VIA[o.d] || []).filter(p => !nearGib(p) && gcDist(p, p0) > 30 && gcDist(p, AP[o.d]) < gcDist(p0, AP[o.d]));
+    const L = makeLeg([p0, ...via, AP[o.d].slice(0, 2)]), c = Math.min(cr[1], 9000 + L.D*75), a0 = o.ground ? 0 : o.alt;
+    ext.push(legPts(L, 0, L.D, x => Math.max(0, Math.min(c, a0 + x*330, (L.D - x)*300))));
+  }
+  return { rec, ext };
+}
+// the flight beyond radar cover under a click
+function farAt(px, py){
+  let best = null, bd = 20;
+  for (const g of FAR.list) { const st = farState(g); if (!st) continue; const d = Math.hypot(sx(st.p[0]) - px, sy(st.p[1]) - py); if (d < bd) { bd = d; best = g; } }
+  return best;
 }
 // at the start of a session: inbounds already airborne or due later, and today's earlier departures still en route
 function buildFar(){
@@ -137,7 +169,7 @@ function drawFar(){
   for (const g of FAR.list) {
     const st = farState(g); if (!st) continue;
     const X = sx(st.p[0]), Y = sy(st.p[1]); if (X < -60 || Y < -60 || X > W + 60 || Y > H + 60) continue;
-    planeIcon(X, Y, st.hdg, '#f7c600');
+    planeIcon(X, Y, st.hdg, S.trk === g ? '#ffe066' : '#f7c600', S.trk === g);
     if (tags) farTag(X, Y, g.cs, `${FL(st.alt)} ${String(Math.round(st.gs/10)).padStart(2, '0')}`, `${g.t} ${g.from}-${g.to}`, C.name === 'dark' ? '#f7d34a' : '#5b4a00');
   }
 }
