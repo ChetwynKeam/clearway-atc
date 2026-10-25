@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-25T03:19:56Z",
+ "updated": "2026-10-25T03:59:54Z",
  "source": "avionio.com",
  "days": {
   "2026-10-25": {
@@ -65,8 +65,8 @@
      "place": "Rio de Janeiro",
      "flight": "IB118",
      "sched": "04:45",
-     "status": "EstimatedSCL →",
-     "expected": "04:33"
+     "status": "LandedSCL →",
+     "expected": "04:34"
     },
     {
      "place": "Bogota",
@@ -135,15 +135,15 @@
      "place": "Miami",
      "flight": "AA68",
      "sched": "05:50",
-     "status": "Estimated",
-     "expected": "04:47"
+     "status": "Landed",
+     "expected": "22:38"
     },
     {
      "place": "Washington",
      "flight": "IB362",
      "sched": "05:50",
      "status": "Estimated",
-     "expected": "09:38"
+     "expected": "10:36"
     },
     {
      "place": "Reykjavik",
@@ -164,7 +164,7 @@
      "flight": "QR147",
      "sched": "06:35",
      "status": "Estimated",
-     "expected": "06:40"
+     "expected": "06:41"
     },
     {
      "place": "Philadelphia",
@@ -185,7 +185,7 @@
      "flight": "IB348",
      "sched": "06:50",
      "status": "Estimated",
-     "expected": "06:32"
+     "expected": "06:31"
     },
     {
      "place": "Toronto",
@@ -297,14 +297,14 @@
      "flight": "HU7971",
      "sched": "08:00",
      "status": "EstimatedHAK →",
-     "expected": "07:35"
+     "expected": "07:45"
     },
     {
      "place": "Shanghai",
      "flight": "MU709",
      "sched": "08:00",
      "status": "Estimated",
-     "expected": "07:33"
+     "expected": "07:35"
     },
     {
      "place": "Fort Worth",
@@ -381,7 +381,7 @@
      "flight": "CX315",
      "sched": "08:35",
      "status": "Estimated",
-     "expected": "07:47"
+     "expected": "07:46"
     },
     {
      "place": "Caracas",
@@ -472,7 +472,7 @@
      "flight": "LA708",
      "sched": "09:00",
      "status": "Estimated",
-     "expected": "08:40"
+     "expected": "08:36"
     },
     {
      "place": "Basel/Mulhouse",
@@ -492,15 +492,15 @@
      "place": "Budapest",
      "flight": "FR5712",
      "sched": "09:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:45"
     },
     {
      "place": "Rio de Janeiro",
      "flight": "IB270",
      "sched": "09:05",
      "status": "Estimated",
-     "expected": "09:12"
+     "expected": "09:14"
     },
     {
      "place": "Paris",
@@ -570,7 +570,7 @@
      "flight": "AA126",
      "sched": "09:25",
      "status": "Estimated",
-     "expected": "04:01"
+     "expected": "07:52"
     },
     {
      "place": "Palma de Mallorca",
@@ -906,7 +906,7 @@
      "flight": "IB346",
      "sched": "10:30",
      "status": "Estimated",
-     "expected": "09:43"
+     "expected": "09:42"
     },
     {
      "place": "Malaga",
@@ -1052,8 +1052,8 @@
      "place": "Tel Aviv-Yafo",
      "flight": "LY395",
      "sched": "10:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:24"
     },
     {
      "place": "Rome",
@@ -1123,7 +1123,7 @@
      "flight": "2W2502",
      "sched": "11:10",
      "status": "Estimated",
-     "expected": "11:10"
+     "expected": "11:28"
     },
     {
      "place": "Quito",
@@ -1144,14 +1144,14 @@
      "flight": "UX88",
      "sched": "11:10",
      "status": "Estimated",
-     "expected": "10:48"
+     "expected": "10:57"
     },
     {
      "place": "New York",
      "flight": "UX92",
      "sched": "11:10",
      "status": "Estimated",
-     "expected": "10:29"
+     "expected": "10:41"
     },
     {
      "place": "Munich",
@@ -1322,8 +1322,22 @@
      "expected": "10:43"
     },
     {
+     "place": "Casablanca",
+     "flight": "AT972",
+     "sched": "12:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Rome",
      "flight": "FR5316",
+     "sched": "12:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "IB408",
      "sched": "12:00",
      "status": "Scheduled",
      "expected": ""
@@ -1348,20 +1362,6 @@
      "sched": "12:00",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Athens",
-     "flight": "A3700",
-     "sched": "12:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Nowy Dwor Mazowiecki",
-     "flight": "FR1063",
-     "sched": "12:05",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -1369,7 +1369,7 @@
      "place": "Shanghai",
      "flight": "CA8440",
      "sched": "05:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1751,13 +1751,6 @@
      "expected": ""
     },
     {
-     "place": "Budapest",
-     "flight": "AA8724",
-     "sched": "07:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "Alicante",
      "flight": "IB1009",
      "sched": "07:20",
@@ -1781,6 +1774,13 @@
     {
      "place": "Sevilla",
      "flight": "IB605",
+     "sched": "07:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Budapest",
+     "flight": "IB869",
      "sched": "07:20",
      "status": "Scheduled",
      "expected": ""
@@ -1969,7 +1969,7 @@
     },
     {
      "place": "Bogota",
-     "flight": "AV27",
+     "flight": "AV027",
      "sched": "08:10",
      "status": "Scheduled",
      "expected": ""
