@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-25T02:20:27Z",
+ "updated": "2026-10-25T02:58:18Z",
  "source": "avionio.com",
  "days": {
   "2026-10-25": {
@@ -62,6 +62,13 @@
      "expected": ""
     },
     {
+     "place": "Amsterdam",
+     "flight": "U22926",
+     "sched": "09:35",
+     "status": "Cancelled",
+     "expected": ""
+    },
+    {
      "place": "Dublin",
      "flight": "FR504",
      "sched": "09:55",
@@ -69,9 +76,30 @@
      "expected": ""
     },
     {
+     "place": "Paris",
+     "flight": "U22774",
+     "sched": "09:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "KL1077",
+     "sched": "10:15",
+     "status": "Cancelled",
+     "expected": ""
+    },
+    {
      "place": "Copenhagen",
      "flight": "FR746",
      "sched": "10:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "U22704",
+     "sched": "11:10",
      "status": "Scheduled",
      "expected": ""
     },
@@ -445,6 +473,13 @@
      "place": "Madrid",
      "flight": "FR155",
      "sched": "08:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cork",
+     "flight": "EA3841",
+     "sched": "08:25",
      "status": "Scheduled",
      "expected": ""
     },
