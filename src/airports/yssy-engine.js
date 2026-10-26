@@ -50,7 +50,8 @@ const HOLDS = {}, FIL = {};
 for (const [k, [node, rwy, on, m, off, dirs, end]] of Object.entries(G.holds)) {
   HOLDS[k] = { node, rwy, on, m, off, dirs: dirs.split(','), end: end || null, ref: k.replace(/~\d+$/, '') };
   HOLDS[k].base = ((G.hside || {})[HOLDS[k].ref] || [])[0];   // FW, FE: on taxiway F
-  ge(rwy, node, HOLDS[k].base || HOLDS[k].ref);
+  { const Rh = RWY_LIST.find(R => R.id === on) || RWY_LIST[0];   // the bend between the runway edge and the holding point (hlink, in its runway's frame)
+    chain(rwy, ((G.hlink || {})[k] || []).map(([mm, oo]) => { const p = Rh.rm(mm, oo); return [mOf(p), offOf(p)]; }), node, HOLDS[k].base || HOLDS[k].ref); }
   FIL[k] = { W: G.fil[k], E: G.fil[k] };
 }
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
@@ -341,6 +342,11 @@ const APT = {
   get tower(){ return [YSSY.UNITS.twr.name, YSSY.UNITS.twr.freq[RWYS_BY_END(S.rwy).id]]; },
   gnd: [YSSY.UNITS.gnd.name, YSSY.UNITS.gnd.freq],
   runways: RWY_LIST, rwyHalfWidth: 23, holdSigns: true,
+  // independent parallel runways (1,037 m apart, with PRM): aircraft on final to 16L and 16R (or 34L and 34R) side by side are
+  // not a loss of separation, nor are a departure and an arrival on different parallels, or two departures off them, near the field
+  sepOk: (a, b, d) => { const par = (x, y) => x && y && x !== y && x.slice(0, 2) === y.slice(0, 2) && /[LR]$/.test(x) && /[LR]$/.test(y), near = p => dist(p.x, p.y, ...ARP) < 22;
+    const rw = x => x.kind === 'ARR' ? (x.app || x.gaRwy) : depRw(x);
+    return par(rw(a), rw(b)) && near(a) && near(b) && (a.kind === 'ARR' && b.kind === 'ARR' ? true : dist(a.x, a.y, ...ARP) < 8 && dist(b.x, b.y, ...ARP) < 8); },
   xing: false, drawnTown: false, ta: YSSY.TA, initClimb: 5000, gaAlt: 4000, appAlt: 4000, handoffNM: 18, climbFL: 190, divertAlt: 9000,
   area: { dep: 45, arr: 100, div: 45 }, roll: [70, RWY_M - 70], defRwy: '34R', defWx: 'n',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minima', reqApp: rw => 'ILS approach',

@@ -252,12 +252,12 @@ for h1, c1, k1, r1d in paths_all:
     for h2, c2, k2, r2d in paths_all:
         if r1d != r2d or (h1, h2) in pairs or h1 >= h2: continue
         R = FR[r1d]; mo = R['mo']
-        if abs(c1[0] - c2[0]) < 15 and mo(NODE[h1])[1]*mo(NODE[h2])[1] < 0:
+        if abs(c1[0] - c2[0]) < 15 and mo(NODE[h1])[1]*mo(NODE[h2])[1] < 0 and abs(mo(NODE[h1])[0] - mo(NODE[h2])[0]) < 45:   # facing each other across the runway, not diagonally
             pairs.add((h1, h2)); x = 'x%d' % len(XN); a, U, N = R['a'], R['U'], R['N']
             XN[x] = (a[0] + U[0]*c1[0], a[1] + U[1]*c1[0])
             for h, k in ((h1, k1), (h2, k2)):
-                Rr = fil_all[k] + holds_all[k][7]
-                xedges.append([x, NID(h), holds_all[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr[1:]]])
+                Rr = [fil_all[k][-1]] + holds_all[k][7]   # straight over the runway from the centreline to where its taxiway meets the edge, then on to the hold
+                xedges.append([x, NID(h), holds_all[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr]])
 print('holds', len(holds), 'crossings', len(XN))
 def runway_seg(s): return id(s) in drop or any(onAny(NODE[n]) for n in [s[0], s[1]] + s[3])
 edges = []
@@ -496,6 +496,22 @@ for e in E:
         for m in e.get('members', []):
             if m.get('role') == 'outer' and 'geometry' in m:
                 blds.append({'pts': ring([en(g['lat'], g['lon']) for g in m['geometry']]), 'h': 18, 'name': e['tags'].get('name')})
+# no taxiway along or diagonally over a runway's pavement: OpenStreetMap joins some taxiways across a runway (B10 to L over
+# 16R/34L), but the way over a runway is a crossing (x) or a holding point's own link, never an ordinary taxiway
+def on_rwy_pave(p):
+    for R in FR.values():
+        m, o = R['mo'](p)
+        if -60 < m < R['L'] + 60 and abs(o) < 30: return True
+    return False
+_posn = {n[0]: (n[1], n[2]) for n in nodes}
+_before = len(edges)
+def _over(e):
+    if e[0][0] in 'xR' or e[1][0] in 'xR': return False
+    pl = [_posn[e[0]]] + [tuple(p) for p in e[3]] + [_posn[e[1]]]
+    mids = pl + [((pl[i][0]+pl[i+1][0])/2, (pl[i][1]+pl[i+1][1])/2) for i in range(len(pl) - 1)]
+    return sum(on_rwy_pave(p) for p in mids) >= 1
+edges = [e for e in edges if not _over(e)]
+print('taxiway stretches over a runway removed', _before - len(edges))
 # ── junction fillets: OpenStreetMap has Sydney's taxiways meeting at sharp corners, where the painted centrelines (and
 # the pavement) sweep round in curves. At every junction or bend, each pair of taxiway stretches that turns between 30
 # and 140 degrees gets a curve from a point up to 45 m along one to a point along the other; at a plain bend the sharp
@@ -621,6 +637,49 @@ for ref, byn in sorted(bars.items()):
 holds = {rename[k]: h for k, h in holds.items()}
 fil = {rename[k]: f for k, f in fil.items()}
 print('holding points', len({re.sub(r'~\d+$', '', k) for k in holds}), 'stop bars; renamed', sorted(hside))
+# ── lead-on/lead-off lines: OpenStreetMap often carries a taxiway straight on across the runway to the far side, so the
+# mapped way from the runway edge to the centreline can be a long diagonal over the runway. Each one is drawn instead as the
+# painted curve: from where the taxiway meets the runway edge, along the taxiway's own heading, sweeping round onto the
+# centreline in the direction it serves (a turn of the taxiway's angle to the runway, no tighter than its distance out).
+# The two-way ones (a taxiway square to the runway) go straight to the centreline.
+def bez(P0, P1, P2, P3, n=10):
+    return [tuple((1-t)**3*P0[i] + 3*(1-t)**2*t*P1[i] + 3*(1-t)*t*t*P2[i] + t**3*P3[i] for i in (0, 1)) for t in [j/n for j in range(n + 1)]]
+nsmooth = 0
+# the variants of one stop bar (each turn onto the runway) leave it by one way to the runway edge, the most direct of them;
+# the lead lines fan out from there
+prim = {}
+for k, h in holds.items():
+    L = sum(math.dist(p, q) for p, q in zip(([(h[3], h[4])] + h[7][::-1])[:-1], ([(h[3], h[4])] + h[7][::-1])[1:])) + math.dist((h[7][0] if h[7] else (h[3], h[4])), fil[k][-1])
+    if h[0] not in prim or L < prim[h[0]][1]: prim[h[0]] = (k, L)
+for k, h in holds.items():
+    p = prim[h[0]][0]
+    if p != k:
+        d0 = 1 if fil[k][-1][0] > fil[k][0][0] else -1
+        holds[k][1] = holds[p][1]; holds[k][7] = holds[p][7]; E = fil[p][-1]
+        fil[k] = [[E[0] - d0*10, 0.0], E]   # only its direction matters here; the curve is drawn below
+for k, f in list(fil.items()):
+    h = holds[k]; E = f[-1]; C0 = f[0]
+    if abs(E[1]) < 5: continue
+    nxt = h[7][0] if h[7] else (h[3], h[4])
+    tv = (E[0] - nxt[0], E[1] - nxt[1]); L = math.hypot(*tv)
+    if L < 1: continue
+    tv = (tv[0]/L, tv[1]/L)                                   # the taxiway's heading onto the runway
+    if tv[1]*E[1] > -0.2: continue                             # not heading in towards the centreline: leave the mapped line
+    two = set(h[5].split(',')) >= {FR[h[2]]['lo'], FR[h[2]]['hi']} and len(h[5].split(',')) == 2
+    oe = abs(E[1])
+    if two or not h[5]:
+        mc = E[0] + tv[0]*(oe/abs(tv[1]))                     # straight on along its heading to the centreline
+        if abs(mc - E[0]) > oe*1.2: mc = E[0]
+        fil[k] = [[r1(mc), 0.0], [r1(E[0]), r1(E[1])]]; nsmooth += 1; continue
+    d = 1 if E[0] > C0[0] else -1                              # which way along the runway it serves (as the mapped line did)
+    a = math.atan2(abs(tv[1]), abs(tv[0]))                     # its angle to the runway
+    if tv[0]*-d < -0.05:                                        # a turn back on itself (more than a right angle): straight in, the turn made on the centreline
+        mc = E[0] + tv[0]*(oe/abs(tv[1])); fil[k] = [[r1(mc), 0.0], [r1(E[0]), r1(E[1])]]; nsmooth += 1; continue
+    run = max(oe*0.9, min(220, oe/max(0.18, math.tan(a))))
+    C = (E[0] - d*run, 0.0)
+    pts = bez(C, (C[0] + d*run*0.5, 0.0), (E[0] - tv[0]*oe*0.55, E[1] - tv[1]*oe*0.55), E)
+    fil[k] = [[r1(p[0]), r1(p[1])] for p in pts]; nsmooth += 1
+print('lead lines drawn as curves', nsmooth, 'of', len(fil))
 out = {'runways': runways, 'nodes': nodes, 'edges': edges, 'rnodes': rnodes,
        'holds': {k: h[:7] + [h[8]] for k, h in holds.items()}, 'hlink': {k: h[7] for k, h in holds.items() if h[7]}, 'fil': fil, 'hs': hs,
        'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds, 'hside': hside}
