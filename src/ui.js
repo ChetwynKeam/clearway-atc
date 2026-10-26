@@ -794,9 +794,11 @@ function standLine(ac){
 // ── clearance pop-outs (push direction, taxi routing) ──
 function drawPreview(pv){
   cx.save(); cx.lineJoin = cx.lineCap = 'round';
-  const lw = pv.thin ? 1.6 : 3;   // thin: an airborne route on the radar picture
-  cx.strokeStyle = pv.thin ? 'rgba(0,0,0,.35)' : 'rgba(0,0,0,.55)'; cx.lineWidth = lw + (pv.thin ? 2.4 : 4); poly(pv.pts, false); cx.stroke();
-  cx.strokeStyle = C.pv; cx.lineWidth = lw; cx.setLineDash([9, 6]); cx.lineDashOffset = -performance.now()/40; poly(pv.pts, false); cx.stroke(); cx.setLineDash([]);
+  const lw = pv.thin ? 2.2 : 3;   // thin: an airborne route on the radar picture, a fainter dashed line ahead of it
+  if (!pv.thin) { cx.strokeStyle = 'rgba(0,0,0,.55)'; cx.lineWidth = lw + 4; poly(pv.pts, false); cx.stroke(); }
+  cx.globalAlpha = pv.thin ? .55 : 1;
+  cx.strokeStyle = C.pv; cx.lineWidth = lw; cx.setLineDash(pv.thin ? [8, 6] : [9, 6]); cx.lineDashOffset = -performance.now()/40; poly(pv.pts, false); cx.stroke(); cx.setLineDash([]);
+  cx.globalAlpha = 1;
   const e = pv.pts[pv.pts.length-1]; cx.fillStyle = C.pv; cx.beginPath(); cx.arc(sx(e[0]), sy(e[1]), 5, 0, 7); cx.fill();
   if (pv.label) { cx.font = `600 12px ${FONT_L}`; const t = pv.label, w = cx.measureText(t).width + 12; cx.fillStyle = C.pvBg; cx.fillRect(sx(e[0]) + 9, sy(e[1]) - 22, w, 18); cx.fillStyle = C.pvTxt; cx.fillText(t, sx(e[0]) + 15, sy(e[1]) - 9); }
   cx.restore();
@@ -881,7 +883,7 @@ function airRoute(ac){
   const label = ac.cs + ' · ' + (ac.kind === 'ARR' && F && !what ? to : ac.kind === 'ARR' && what ? what + (to ? ', ' + to : '') : what || '');
   return { pts, label, thin: true };
 }
-// the track a selected flight has flown, a thin line shaded by altitude: violet on the ground, then amber low down through
+// the track a selected flight has flown, a solid line shaded by altitude (and, dashed and fainter, the way still to go): violet on the ground, then amber low down through
 // green to deep blue high up
 function drawTrack(ac){
   if (typeof trkRoute !== 'function') { if (ac.track) drawTrackLine(ac.track, false); return; }
@@ -891,7 +893,7 @@ function drawTrackLine(T, dashed){
   if (!T || T.length < 2) return;
   const NB = 14, band = p => p[3] ? 0 : 1 + Math.min(NB - 2, Math.floor(Math.sqrt(Math.max(0, p[2])/40000)*(NB - 1)));
   const col = b => b === 0 ? 'rgba(120,50,180,.95)' : `hsl(${Math.round(35 + (b - 1)/(NB - 2)*195)},${85 - (b - 1)*2}%,${58 - (b - 1)*2}%)`;
-  cx.save(); cx.lineWidth = 1; cx.lineJoin = 'round'; cx.globalAlpha = dashed ? .75 : .9; if (dashed) cx.setLineDash([5, 4]);
+  cx.save(); cx.lineWidth = dashed ? 2 : 2.6; cx.lineJoin = cx.lineCap = 'round'; cx.globalAlpha = dashed ? .45 : .9; if (dashed) cx.setLineDash([8, 6]);
   for (let b = 0; b < NB; b++) {
     cx.beginPath(); let on = false;
     for (let i = 1; i < T.length; i++) { const p = T[i], q = T[i - 1];
