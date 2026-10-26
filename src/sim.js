@@ -356,8 +356,13 @@ function spawnArrival(f){
 function makeInbound(ac, keepAlt){
   const first = WP[ARR_ROUTE[ac.gate][S.rwy][0]];
   ac.tgtAlt = ac.cleared = keepAlt ? Math.round(ac.alt/100)*100 : APT.inboundAlt(ac.gate); ac.freq = 'RAD';
-  ac.ias = 260; ac.hdg = brg(ac.x, ac.y, ...first.p); ac.trk = ac.hdg; ac.state = 'INBOUND';
+  ac.state = 'INBOUND';
   ac.route = ARR_ROUTE[ac.gate][S.rwy].slice();
+  // handed over at (or just short of) the route's first fix: that fix is behind it now, so it flies on to the next one
+  // rather than turning round for it (a heading of 000 when it sits on the fix itself, then a loop back)
+  while (ac.route.length > 1 && WP[ac.route[0]] && dist(ac.x, ac.y, ...WP[ac.route[0]].p) < 2) ac.route.shift();
+  const to = WP[ac.route[0]] || first;
+  ac.ias = 260; if (dist(ac.x, ac.y, ...to.p) > 0.2) ac.hdg = brg(ac.x, ac.y, ...to.p); ac.trk = ac.hdg;
   pilot(ac, PH.checkIn(ac));
   ac.need = 'Initial call';
 }
