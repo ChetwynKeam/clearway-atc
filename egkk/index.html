@@ -10311,6 +10311,40 @@ function gcAt([a1, o1], [a2, o2], f){
 // leaves one edge of the world and comes back in from the other)
 const llxy = (lat, lon) => [(((lon - LON0 + 540) % 360) - 180)*60*COSL, (lat - LAT0)*60];
 const nearGib = ll => gcDist(ll, AP[APT.icao]) < 70;
+// ── a realistic airway-like route: the great circle broken into legs of 150-300 NM whose turning points sit a little to
+// one side or the other (as airways do), and every corner flown as a smooth turn, never a sharp one
+const gcDest = ([a, o], b, nm) => { const d = nm/3440.065, p1 = a*D2R, l1 = o*D2R, t = b*D2R, p2 = Math.asin(Math.sin(p1)*Math.cos(d) + Math.cos(p1)*Math.sin(d)*Math.cos(t));
+  return [p2*R2D, (l1 + Math.atan2(Math.sin(t)*Math.sin(d)*Math.cos(p1), Math.cos(d) - Math.sin(p1)*Math.sin(p2)))*R2D]; };
+const hashOf = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+function airwayPts(pts, seed, keepLast){
+  // turning points along each long leg, offset sideways by up to 6% of the leg (at most 28 NM)
+  let rnd = hashOf(seed); const rn = () => ((rnd = Math.imul(rnd ^ (rnd >>> 15), 2246822507) >>> 0) / 4294967296)*2 - 1;
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const A = pts[i-1], B = pts[i], D = gcDist(A, B), last = keepLast && i === pts.length - 1;
+    const n = last || D < 260 ? 1 : Math.round(D/220);
+    for (let j = 1; j < n; j++) { const q = gcAt(A, B, j/n), h = gcBrg(gcAt(A, B, j/n - 0.01), q); out.push(gcDest(q, h + 90, rn()*Math.min(28, D*0.06/n*2))); }
+    out.push(B);
+  }
+  return out;
+}
+function smoothPts(pts, keepLast){
+  // each corner rounded off: a curve from a point before the turning point to one after it (up to 35 NM either side,
+  // never more than a third of either leg), so the heading changes gradually through the turn
+  if (pts.length < 3) return pts;
+  pts = pts.map(p => p.slice()); for (let i = 1; i < pts.length; i++) { while (pts[i][1] - pts[i-1][1] > 180) pts[i][1] -= 360; while (pts[i][1] - pts[i-1][1] < -180) pts[i][1] += 360; }   // longitudes made continuous over the date line
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length - 1; i++) {
+    const A = pts[i-1], V = pts[i], B = pts[i+1], la = gcDist(A, V), lb = gcDist(V, B);
+    const c = Math.min(35, la/3, (keepLast && i === pts.length - 2 ? lb/4 : lb/3)); if (c < 1) { out.push(V); continue; }
+    const P = gcAt(V, A, c/la), Q = gcAt(V, B, c/lb);
+    for (let k = 0; k <= 8; k++) { const t = k/8, u = 1 - t;   // quadratic through the corner, in degrees (short distances)
+      out.push([u*u*P[0] + 2*u*t*V[0] + t*t*Q[0], u*u*P[1] + 2*u*t*V[1] + t*t*Q[1]]); }
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+const airway = (pts, seed, keepLast) => smoothPts(airwayPts(pts, seed, keepLast), keepLast);
 function makeLeg(pts){ const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i-1] + gcDist(pts[i-1], pts[i])); return { pts, cum, D: cum[cum.length-1] }; }
 function legAt(L, d){
   d = clamp(d, 0, L.D); let i = 1; while (i < L.cum.length - 1 && L.cum[i] < d) i++;
@@ -10326,7 +10360,7 @@ function addArrGhost(f){
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
   // it joins the entry point flying in along the same line the pending track then follows, with no turn at the handover
   const join = gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
-  const leg = makeLeg([AP[f.o].slice(0, 2), ...via.filter(p => gcDist(p, join[0] || endLL) > 60), ...join, endLL]), [spd, fl] = CRUISE[f.t] || [450, 37000];
+  const leg = makeLeg(airway([AP[f.o].slice(0, 2), ...via.filter(p => gcDist(p, join[0] || endLL) > 60), ...join, endLL], f.cs + f.o, true)), [spd, fl] = CRUISE[f.t] || [450, 37000];
   const cruise = Math.min(fl, 9000 + leg.D*75), tStart = tEnd - leg.D/spd*3600;
   FAR.list.push({ cs: f.cs, t: f.t, from: f.o, to: APT.icao, kind: 'ARR', leg, tStart, tEnd, spd, cruise, endAlt: PRE_ALT[f.gate], f });
 }
@@ -10336,8 +10370,13 @@ function addDepGhost(ac, at){
   const p0 = at || toLL([ac.x, ac.y]);
   const via = (VIA[ac.d] || []).filter(p => !nearGib(p) && gcDist(p, p0) > 30 && gcDist(p, AP[ac.d]) < gcDist(p0, AP[ac.d]));
   // on from where it left the radar area along the heading it had, then round towards the destination
-  const lead = !at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150 ? [toLL([ac.x + Math.sin(ac.hdg*D2R)*45, ac.y + Math.cos(ac.hdg*D2R)*45])] : [];
-  const leg = makeLeg([p0, ...lead, ...via, AP[ac.d].slice(0, 2)]), [spd, fl] = CRUISE[ac.t] || [450, 37000];
+  // on along the heading it left with for a short way (further the more it has to turn), then round towards the destination
+  // it turns from the heading it left with onto its way to the destination as an aircraft does: 15 degrees each 6 NM
+  // (a steady turn), then the airway route on from there
+  const lead = [];
+  if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150) { let p = p0, h = ac.hdg;
+    for (let k = 0; k < 24; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 8) break; h = norm(h + Math.sign(d)*Math.min(15, Math.abs(d))); p = gcDest(p, h, 6); lead.push(p); } }
+  const leg = makeLeg([p0, ...lead.slice(0, -1), ...airway([lead.length ? lead[lead.length - 1] : p0, ...via, AP[ac.d].slice(0, 2)], ac.cs + ac.d, false)]), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
   FAR.list.push({ cs: ac.cs, t: ac.t, from: ac.from || APT.icao, to: ac.d, kind: ac.from ? 'DIV' : 'DEP', track: ac.track, leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? APT.initClimb : ac.alt, endAlt: 0 });
 }
