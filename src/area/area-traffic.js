@@ -141,6 +141,7 @@ function spawnFlight(F, st){
   const ac = new Aircraft({ cs: F.cs, t: F.t, dep: F.dep, arr: F.arr, la: st.la, lo: st.lo, alt: Math.round(st.alt/100)*100, hdg: st.h, route: F.R.pts.map(p => p.slice()), ri: st.i,
     rfl: F.rfl, sid: F.R.sid, star: F.R.star, holdFix: F.R.holdFix, src: 'plan' });
   ac.tas = tasTarget(ac); ac.gs = ac.tas;
+  ac.past = pastWithAlt([...F.R.pts.slice(0, st.i), [st.la, st.lo, null]], st.alt);
   if (st.climbing) ac.cfl = F.rfl; else if (st.desc) ac.cfl = Math.max(2000, Math.floor(ac.alt/1000)*1000); else ac.cfl = F.rfl;
   ac.alt = Math.min(ac.alt, ac.cfl > ac.alt ? ac.alt : ac.alt);
   ac.owner = ownerAt(ac.la, ac.lo, ac.alt);
@@ -193,7 +194,7 @@ async function pollLive(){
   for (const [k, a] of LIVE.ac) if (now - a.ts > 90e3) LIVE.ac.delete(k);
   if (!LIVE.ok) sys(`Live traffic connected: ${LIVE.ac.size} aircraft in the air within ${r} NM (${j.src || 'ADS-B'}).`);
   LIVE.ok = now; LIVE.err = 0; LIVE.polls++; LIVE.src = j.src || '';
-  askRoutes();
+  await askRoutes();
   liveAdopt(LIVE.polls <= 2);
 }
 // where a live flight is going: today's boards, the relay's route lookup, else a guess from how it is flying
@@ -205,7 +206,19 @@ async function askRoutes(){
     const base = RELAY_URLS[0].replace(/\/traffic$/, '/routes');
     const res = await fetch(`${base}?q=${encodeURIComponent(want.map(a => `${a.cs},${a.lat.toFixed(2)},${a.lon.toFixed(2)}`).join(';'))}`, { cache: 'no-store' });
     if (!res.ok) return; const j = await res.json();
-    for (const [cs, r] of Object.entries(j.routes || {})) if (r && APS[r[0]] && APS[r[1]]) LIVE.routes.set(cs, r);
+    for (const [cs, r] of Object.entries(j.routes || {})) {
+      if (!r) continue;
+      for (const k of [0, 1]) if (!APS[r[k]] && r[k + 2] && isFinite(r[k + 2][0])) APS[r[k]] = [r[k + 2][0], r[k + 2][1], String(r[k + 2][2] || r[k])];
+      if (APS[r[0]] && APS[r[1]]) LIVE.routes.set(cs, [r[0], r[1]]);
+    }
+    // flights already taken over before their route was known: on their real route now, if you haven't re-routed them
+    for (const ac of S.acs) {
+      const rt = ac.src === 'live' && !ac.arr && LIVE.routes.get(ac.cs); if (!rt || ac.told) continue;
+      ac.dep = rt[0]; ac.arr = rt[1];
+      const on = routeOnward(ac.la, ac.lo, ac.trk, ac.arr); if (on) { ac.route = on; ac.ri = 1; }
+      if (!ac.past) ac.past = pastWithAlt(routeBack(ac.la, ac.lo, ac.trk, ac.dep), ac.alt);
+      if (STARS[ac.arr] && STARS[ac.arr][0]) ac.holdFix = holdFixOf(STARS[ac.arr][0]);
+    }
   } catch (e) {}
 }
 const liveLL = a => { const dt = Math.min(60, (Date.now() - a.ts)/1000), d = (a.gs || 0)*dt/3600; return moveLL(a.lat, a.lon, a.trk || 0, d); };
@@ -222,19 +235,23 @@ function adoptLive(a, mineNow){
     for (const [k, v] of Object.entries(APS)) { if (!STARS[k]) continue; const d = nm(la, lo, v[0], v[1]), off = Math.abs(angDiff(a.trk || 0, crs(la, lo, v[0], v[1]))); if (off < 35 && d < bd) { bd = d; best = k; } }
     arr = best;
   }
-  let route = null, star = null, holdFix = null;
-  if (arr && APS[arr]) {
-    const R = dep && APS[dep] ? planRoute(dep, arr, S.wdir, true) : null;
+  let route = null, star = null, holdFix = null, past = null;
+  if (arr && APS[arr] && dep && APS[dep]) {
+    const R = planRoute(dep, arr, S.wdir, true);
     if (R) { route = R.pts.map(p => p.slice()); star = R.star; holdFix = R.holdFix; }
-    else { const p = apLL(arr); route = [[la, lo, null], [p[0], p[1], arr]]; const st = STARS[arr]; if (st && st[0]) holdFix = holdFixOf(st[0]); }
   }
-  if (!route) { const far = moveLL(la, lo, a.trk || 0, 600); route = [[la, lo, null], [far[0], far[1], null]]; }
+  if (arr && STARS[arr] && STARS[arr][0]) holdFix = holdFix || holdFixOf(STARS[arr][0]);
+  // where it has come from (the airways back to its origin) and where it is going from here: airways, never a straight line
+  let onward = null;
+  if (route) { let bi = 1, bd = Infinity; for (let i = 1; i < route.length; i++) { const d = segNM([la, lo], route[i - 1], route[i]); if (d < bd) { bd = d; bi = i; } }
+    if (bd < 25) { past = [...route.slice(0, bi), [la, lo, null]]; onward = [[la, lo, null], ...route.slice(bi)]; } }
+  if (!onward) onward = routeOnward(la, lo, a.trk || 0, arr) || (() => { const f = arr && apLL(arr) || moveLL(la, lo, a.trk || 0, 600); return [[la, lo, null], [f[0], f[1], arr || null]]; })();
+  if (!past && dep) past = routeBack(la, lo, a.trk || 0, dep);
+  route = onward;
   const ac = new Aircraft({ cs, t: a.t || 'A320', dep, arr, la, lo, alt: Math.round(alt/100)*100, hdg: a.trk || 0, route, ri: 1, src: 'live', live: a.hex, star, holdFix });
   ac.tas = Math.max(180, (a.gs || 400) - windAt(alt).kt*Math.cos(((windAt(alt).dir + 180) - (a.trk || 0))*D2R)); ac.gs = a.gs || ac.tas;
   if (a.cs && a.cs !== cs) ac.real = a.cs;
-  // the rest of its route from where it is now: from the leg it is nearest to
-  if (route.length > 2) { let bi = 1, bd = Infinity; for (let i = 1; i < route.length; i++) { const d = segNM([la, lo], route[i - 1], route[i]); if (d < bd) { bd = d; bi = i; } }
-    if (bd < 30) ac.ri = bi; else { ac.route = [[la, lo, null], ...route.slice(bi)]; ac.ri = 1; } }
+  ac.past = pastWithAlt(past, alt);
   // its cleared level: where it is levelling, or the next whole thousand the way it is going
   const vs = a.vs || 0; ac.vs = vs;
   ac.cfl = Math.abs(vs) < 300 ? Math.round(alt/1000)*1000 : vs > 0 ? Math.max(Math.ceil((alt + 1500)/1000)*1000, Math.min(36000, ac.rfl)) : Math.max(5000, Math.floor((alt - 2500)/1000)*1000);

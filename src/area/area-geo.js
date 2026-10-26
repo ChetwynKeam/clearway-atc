@@ -279,3 +279,61 @@ function agreementFor(ac, a, b){
   }
   return best;
 }
+
+// ── routes from where a flight is now (live traffic: we only know where it is, and perhaps where it is going) ──
+// on: the airway fixes ahead of it (within 80° of its track), joined at the nearest; then airways to the STAR of its
+// destination, or towards a far destination (or, not knowing, a point far ahead on its track) until the map's edge
+function startsAhead(la, lo, trk, r = 70){
+  const out = [];
+  for (const f of AWY_NODES) { const p = FIXP[f], d = nm(la, lo, p[0], p[1]); if (d < r && d > 3 && Math.abs(angDiff(trk, crs(la, lo, p[0], p[1]))) < 80) out.push([f, d*1.25]); }
+  return out;
+}
+function routeOnward(la, lo, trk, arr){
+  const here = [la, lo, null], D = arr && apLL(arr);
+  const starts = startsAhead(la, lo, trk);
+  if (!starts.length) return null;
+  let via = null, tail = [];
+  if (D && inMap(D) && STARS[arr]) {
+    const rw = rwyFor(arr, STARS[arr], S.wdir), list = STARS[arr].filter(r => r[0] === rw && procPts(r).length);
+    const goals = list.map(r => { const p = procPts(r); return [p[0], procLen(p.slice(1), FIXP[p[0]])*1.05, r]; });
+    if (nm(la, lo, D[0], D[1]) < 50) return [here, [D[0], D[1], arr]];
+    via = awyRoute([la, lo], D, starts, goals.map(g => [g[0], g[1]]), true);
+    const g = via && goals.find(x => x[0] === via[via.length - 1]);
+    if (g) for (const n of procPts(g[2]).slice(1)) { if (/^(CF|FI|FF)/.test(n)) break; tail.push([FIXP[n][0], FIXP[n][1], n]); }
+    tail.push([D[0], D[1], arr]);
+  } else {
+    const far = D || moveLL(la, lo, trk, 900), edge = inMap(far) ? far : edgeOf(far, [la, lo]);
+    if (!edge) return null;
+    via = awyRoute([la, lo], edge, starts, null, true, null, inMap(far) ? null : far);
+    tail.push(D ? [D[0], D[1], arr] : [far[0], far[1], null]);
+  }
+  if (!via) return null;
+  return [here, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), ...tail];
+}
+// back: from its origin (its SID, airways) to where it is now
+function routeBack(la, lo, trk, dep){
+  const O = dep && apLL(dep); if (!O) return null;
+  const back = norm(trk + 180), goals = startsAhead(la, lo, back, 60);
+  if (!goals.length) return [[O[0], O[1], dep], [la, lo, null]];
+  let starts = null, sidPts = [];
+  if (inMap(O) && SIDS[dep]) {
+    const rw = rwyFor(dep, SIDS[dep], S.wdir), list = SIDS[dep].filter(r => r[0] === rw && procPts(r).length);
+    starts = list.map(r => { const p = procPts(r); return [p[p.length - 1], procLen(p, O)*1.05, r]; });
+  }
+  const from = inMap(O) ? O : edgeOf(O, [la, lo]); if (!from) return [[O[0], O[1], dep], [la, lo, null]];
+  const via = awyRoute(from, [la, lo], starts && starts.map(s => [s[0], s[1]]), goals, true, inMap(O) ? null : O, null);
+  if (!via) return [[O[0], O[1], dep], [la, lo, null]];
+  const sid = starts && starts.find(s => s[0] === via[0]);
+  if (sid) sidPts = procPts(sid[2]).slice(0, -1).map(n => [FIXP[n][0], FIXP[n][1], n]);
+  return [[O[0], O[1], dep], ...sidPts, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), [la, lo, null]];
+}
+// a past route with the levels it would have flown: up from the airport at about 230 ft a mile, never above where it is now
+function pastWithAlt(pts, altNow){
+  if (!pts || pts.length < 2) return null;
+  const out = []; let s = 0;
+  for (let i = 0; i < pts.length; i++) {
+    if (i) { const L = gcNM(pts[i - 1], pts[i]), n = Math.max(1, Math.ceil(L/30)); for (let k = 1; k <= n; k++) { const q = gcAt(pts[i - 1], pts[i], k/n); out.push([q[0], q[1], Math.min(altNow, 500 + (s + L*k/n)*230)]); } s += L; }
+    else out.push([pts[0][0], pts[0][1], 0]);
+  }
+  return out;
+}

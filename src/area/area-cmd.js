@@ -86,6 +86,7 @@ function command(str){
   if (said.length && ac.need === 'Check-in') clearNeed(ac);
   if (said.length) atc(ac, `${spoken(ac.cs)}, ${said.join(', ')}`, reads.length ? `${reads.join(', ')}, ${spoken(ac.cs)}` : null);
   if (xfer) transfer(ac);
+  ac.told = true;
   emit('cmd', ac);
 }
 // a diversion: straight to the airport, its level down to 3 to 1 from there
