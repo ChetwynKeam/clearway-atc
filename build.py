@@ -124,7 +124,7 @@ def page(icao, A):
 {r('account.css')}
 </style>
 <style>[data-only]:not([data-only~="{icao}"]){{display:none!important}}</style>
-{r('site.html').replace('</main>', r('account.html') + '</main>')}
+{r('site.html').replace('</main>', r('account.html') + '</main>').replace('@@AREA@@', '@@AREALINK@@')}
 <script>
 const AIRPORT = '{icao}';
 const SITE = @@SITE@@;
@@ -159,8 +159,8 @@ const AP_DATA = {ap_data};
 '''
     (root/'dist').mkdir(exist_ok=True)
     # the claude.ai artifact is a private preview: no paywall there
-    (root/'dist'/A['artifact']).write_text(out.replace('@@SITE@@', json.dumps(links(icao, True))).replace('@@CWCFG@@', cwcfg(False)).replace('@@PWA@@\n', ''))
-    out = out.replace('@@SITE@@', json.dumps(links(icao, False))).replace('@@CWCFG@@', cwcfg(True))
+    (root/'dist'/A['artifact']).write_text(out.replace('@@AREALINK@@', SITE_URL + 'area/').replace('@@SITE@@', json.dumps(links(icao, True))).replace('@@CWCFG@@', cwcfg(False)).replace('@@PWA@@\n', ''))
+    out = out.replace('@@AREALINK@@', '../'*A['page'].count('/') + 'area/').replace('@@SITE@@', json.dumps(links(icao, False))).replace('@@CWCFG@@', cwcfg(True))
     out = out.replace('@@PWA@@', pwa(icao))
     head, body = out.split('<style>', 1)
     standalone = ('<!doctype html>\n<html lang="en">\n<head>\n' + head.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">')
@@ -169,5 +169,55 @@ const AP_DATA = {ap_data};
     (root/'dist'/A['page']).write_text(standalone)
     print(icao, len(out))
 for k, A in AIRPORTS.items(): page(k, A)
+
+# Area Control: its own page (dist/area/index.html), the same look as the airport consoles, built from src/area/ with the
+# shared styles, aircraft shapes and map tiles, and the UK airports' timetables for the planned traffic
+def area_page():
+    A = root/'src'/'area'
+    ra = lambda n: (A/n).read_text()
+    logo = re.search(r'<svg class="logo".*?</svg>', r('site.html')).group(0)
+    desc = 'Clearway Area Control: work a sector of London or Scottish Control, with the real UK airways, sectors and standing agreements, live traffic or the airline timetables, delays, holds, diversions and weather.'
+    url = SITE_URL + 'area/'
+    data = '\n'.join(r(f'airports/{a}.js') for a in ('egll', 'egkk', 'egcc', 'eggd', 'eglc'))
+    out = f'''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Area Control · Clearway ATC Simulator</title>
+<link rel="icon" type="image/svg+xml" href="{fav}">
+<meta name="description" content="{desc}">
+<link rel="canonical" href="{url}"><meta name="theme-color" content="#0b2a4a">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Clearway"><meta property="og:title" content="Area Control · Clearway ATC Simulator">
+<meta property="og:description" content="{desc}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE_URL}og.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="{fonts}">
+<style>
+{r('styles.css')}
+{ra('area.css')}
+</style>
+</head>
+<body>
+{ra('area.html').replace('@@LOGO@@', logo)}
+<script>
+"use strict";
+{ra('area-data.js')}
+{data}
+{ra('area-geo.js').replace('"use strict";', '', 1)}
+{r('shapes.js')}
+{r('tiles.js')}
+{ra('area-sim.js')}
+{ra('area-cmd.js')}
+{ra('area-traffic.js')}
+{ra('area-ui.js')}
+</script>
+</body>
+</html>
+'''
+    (root/'dist'/'area').mkdir(parents=True, exist_ok=True)
+    (root/'dist'/'area'/'index.html').write_text(out)
+    print('AREA', len(out))
+area_page()
 (root/'dist'/'manifest.webmanifest').write_text(manifest())
 (root/'dist'/'sw.js').write_text(r('sw.js'))

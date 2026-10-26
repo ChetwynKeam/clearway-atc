@@ -933,3 +933,9 @@ body.theme-dark .ailine:not(.me) { color: #4fd1c5; border-color: #4fd1c5; backgr
 body.theme-dark #log .ln.ai .who { color: #4fd1c5; }
 .hud-score .ai { border-color: #0f8a7a; color: #0b6b5f; }
 .hud-score .ai b { color: #0b6b5f; }
+
+/* the Area Control section on the home page */
+.areapromo { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: center; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 40px; }
+.areapromo h2 { font-size: clamp(30px, 3.4vw, 42px); margin: 12px 0 14px; }
+.areapromo p { color: var(--ink-2); font-size: 17px; line-height: 1.55; margin: 0 0 20px; max-width: 60ch; }
+@media (max-width: 900px) { .areapromo { grid-template-columns: 1fr; padding: 24px; } }

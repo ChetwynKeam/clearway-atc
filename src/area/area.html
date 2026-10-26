@@ -1,0 +1,119 @@
+<header class="topbar">
+  <a class="brand" href="../" aria-label="Clearway home">@@LOGO@@<span class="wm">Clearway</span><span class="sub">ATC Simulation</span></a>
+  <nav class="nav" aria-label="Site">
+    <a href="../#airports">Tower &amp; Approach</a>
+    <a href="./" class="on" aria-current="page">Area Control</a>
+    <a href="../#training">Academy</a>
+    <a href="../#pricing">Pricing</a>
+  </nav>
+  <div class="status"><span class="live clk"><i></i><span id="topClock">--:--Z</span></span><a class="btn primary" href="#pick">Start a sector</a></div>
+</header>
+
+<main>
+<section class="page" id="page-area" data-page="area">
+  <div class="ahero"><div class="wrap">
+    <div>
+      <div class="eyebrow mono">EN-ROUTE · LONDON, MANCHESTER AND SCOTTISH CONTROL</div>
+      <h1>Work the airways.<br>Take a sector at London or Scottish Control.</h1>
+      <p class="lede">Climb departures out of the terminal areas, descend arrivals to their standing agreements, keep 5 NM or 1,000 ft, and hand every flight on to the next sector on time. Today’s real traffic over the UK, or the airline timetables, with the delays, holds, diversions and weather that come with them.</p>
+      <div class="ctas"><a class="btn primary" href="#pick">Choose a sector</a><a class="btn" href="#how">How area control works</a></div>
+    </div>
+    <canvas id="ukMap" width="620" height="420" aria-label="Map of the UK area control sectors"></canvas>
+  </div></div>
+
+  <div class="section" id="pick"><div class="wrap">
+    <div class="section-head"><div><div class="eyebrow">Positions</div><h2>Choose a sector.</h2></div>
+      <p>Each position is a real bandbox of London or Scottish Control, with its own airspace, levels and neighbours. The AI controllers work the sectors round you and hand traffic to you at the boundaries.</p></div>
+    <div class="secgrid" id="secGrid"></div>
+  </div></div>
+
+  <div class="section alt" id="setupSec"><div class="wrap">
+    <div class="setcard">
+      <div class="eyebrow">Session</div>
+      <h2 id="setupTitle">London Control South</h2>
+      <div class="sub mono" id="setupSub"></div>
+      <div class="grid2">
+        <label><span class="lbl">Traffic</span><select id="aTraffic">
+          <option value="live">Live now · the real traffic in the air</option>
+          <option value="liveplan">Live now plus the timetables</option>
+          <option value="plan">Timetables · choose the day and time</option>
+          <option value="event">Busy event · timetables plus extra flows</option>
+          <option value="quiet">Quiet · training pace</option></select></label>
+        <label><span class="lbl">Day</span><select id="aDay"></select></label>
+        <label><span class="lbl">Start time (UTC)</span><select id="aHour"></select></label>
+        <label><span class="lbl">Delays and disruption</span><select id="aDis"><option value="off">Off</option><option value="some" selected>Occasional: airport delays, flow restrictions, weather</option><option value="often">Frequent</option></select></label>
+        <label><span class="lbl">Emergencies</span><select id="aEmg"><option value="off">Off</option><option value="some" selected>Occasional, about one an hour</option><option value="often">Frequent</option></select></label>
+        <label><span class="lbl">Check-ins</span><select id="aId"><option value="you">You answer each one (ID or any instruction)</option><option value="auto">Answered for you</option></select></label>
+        <label><span class="lbl">Upper wind</span><select id="aWind"><option value="live">Typical westerly, 70 kt at FL300</option><option value="jet">Jet stream, 140 kt at FL340</option><option value="calm">Light, 20 kt</option><option value="east">Easterly, 40 kt</option></select></label>
+      </div>
+      <ul class="brief">
+        <li>Flights coming your way are <b>offered</b> to you by the unit next door: accept them (<code>ACC</code>, or click the strip) before they reach your boundary. They call you about a minute out.</li>
+        <li>Answer each check-in (<code>ID</code> or any instruction). Climb departures to their cruising level, descend arrivals to the level the standing agreement gives for the next sector, and <b>transfer</b> each flight (<code>XFR</code>) before it leaves your airspace.</li>
+        <li>Keep 5 NM or 1,000 ft between your flights and everything else. When an airport is holding the terminal unit only takes one arrival per slot: hold the rest at a fix of yours (<code>HOLD SFD</code>) or slow them down (<code>M76</code>).</li>
+        <li>Commands: <code>BAW123 C350</code> climb, <code>D240</code> descend, <code>H270</code> heading, <code>DCT SFD</code>, <code>RES</code> own navigation, <code>M78</code> / <code>S280</code> speed, <code>HOLD SFD</code>, <code>XFR</code>, <code>ACC</code>, <code>DIV EGKK</code>.</li>
+      </ul>
+      <div class="row"><button class="btn primary" id="aStart">Open the position</button><a class="btn" href="#pick">Change sector</a></div>
+    </div>
+  </div></div>
+
+  <div class="section" id="how"><div class="wrap">
+    <div class="section-head"><div><div class="eyebrow">How it works</div><h2>Same console, bigger map.</h2></div>
+      <p>The street map, the buttons, the strips and the command line are the ones you know from the airports. The difference is the job: you own a block of airspace, not an airport.</p></div>
+    <ol class="how">
+      <li><b>Accept and identify</b><span>Inbound flights appear on your strips as offers from Paris, Brest, Shannon, Maastricht, the terminal sectors or the next London sector. Accept them, then answer their call when they come on frequency.</span></li>
+      <li><b>Climb, descend, separate</b><span>Departures want their cruising level, arrivals want to come down. Keep everyone 5 NM or 1,000 ft apart: the short-term conflict alert warns you two minutes ahead.</span></li>
+      <li><b>Work the agreements</b><span>Each pair of sectors has a standing agreement: the level a flight crosses the boundary at for its destination. The next unit refuses a flight that isn't descending to it.</span></li>
+      <li><b>Delays, weather and the unexpected</b><span>Airports back up and hold, close and send traffic elsewhere. Neighbours regulate the flow. Thunderstorms build and crews ask to go round. And sometimes a crew declares an emergency.</span></li>
+    </ol>
+  </div></div>
+  <div class="section"><div class="wrap"><div class="sources">
+    <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(28px,3.2vw,38px);margin:10px 0 16px">What is real and what is modelled.</h2>
+      <p class="note">Sector boundaries, levels and positions, airways, fixes, navaids, SIDs, STARs and the standing agreements between sectors come from the VATSIM UK sector file, which follows the UK AIP (ENR 2, ENR 3, ENR 4 and AD 2) with the sector split VATSIM UK uses; real NATS sectorisation and frequencies differ in places. Planned traffic comes from the Clearway airline timetables of Heathrow, Gatwick, Manchester, Bristol and London City and from typical flows over the UK. Live traffic comes from the adsb.lol and adsb.fi networks through the site’s relay; once a flight is yours it follows your instructions. Aircraft performance and the upper wind are modelled. This is a training game, not for real-world navigation, and is not affiliated with NATS or any airline.</p></div>
+    <ul><li><b>UK AIP ENR 2</b>Flight information regions, control areas and terminal areas.</li><li><b>UK AIP ENR 3</b>ATS routes, upper and lower.</li><li><b>UK AIP ENR 4</b>Navaids and significant points.</li><li><b>AD 2</b>SIDs and STARs of the UK airports.</li><li><b>VATSIM UK</b>Sectorisation, positions and agreements (UK sector file, GPL-3.0).</li><li><b>OpenStreetMap</b>The street map under the scope.</li></ul>
+  </div></div></div>
+  <footer class="footer"><div class="wrap"><span>Clearway · Area Control</span><span>London Control works from Swanwick, Scottish Control from Prestwick.</span></div></footer>
+</section>
+
+<section class="page" id="page-sim" data-page="sim" hidden>
+<div class="app">
+  <div class="scopewrap">
+    <canvas id="scope" aria-label="Area radar display"></canvas>
+    <div class="toolbar">
+      <button class="exit" id="tgExit" title="Leave the position"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</button>
+      <span class="apchip" id="apChip"><b id="chipCode">EGTT</b><span id="chipName">London Control South</span></span>
+      <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
+      <div class="seg" role="group" aria-label="Routes"><button data-routes="sel" class="on" title="Route ahead and track flown for the selected flight">Routes: selected</button><button data-routes="all" title="Routes ahead for all your flights">All</button><button data-routes="off">Off</button></div>
+      <button id="tgAwy" class="on" title="Airways, points and airports">Airways</button>
+      <label class="flsel" title="Sector boundaries shown at this level">Sectors at <select id="viewFL"></select></label>
+      <button id="tgDis" title="Delays, closures, restrictions, weather and emergencies">Disruptions</button>
+      <button id="tgVoice" aria-pressed="false" title="Pilots speak">Voice</button>
+      <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
+      <button id="tgFull" title="Full screen">Full screen</button>
+    </div>
+    <div class="dispop" id="disPop" hidden role="dialog" aria-label="Disruptions">
+      <div class="lbl">Make something happen</div>
+      <div class="drow"><select id="dApt"></select><select id="dMins"><option value="10">10 min</option><option value="20" selected>20 min</option><option value="30">30 min</option><option value="45">45 min</option></select><button id="dDelay">Delay arrivals</button><button id="dClose" class="danger">Close airport</button></div>
+      <div class="drow"><select id="dUnit"></select><select id="dReg"><option value="mit5">1 every 5 min</option><option value="mit3">1 every 3 min</option><option value="cap300">Cap FL300</option><option value="cap340">Cap FL340</option></select><button id="dFlow">Restrict</button></div>
+      <div class="drow"><button id="dCB">Thunderstorms</button><button id="dTurb">Turbulence</button><select id="dEmg"><option value="">Emergency…</option><option value="MED">Medical diversion</option><option value="PRESS">Depressurisation</option><option value="ENG">Engine failure</option><option value="NORDO">Radio failure</option><option value="FUEL">Minimum fuel</option></select></div>
+      <div class="lbl" style="margin-top:10px">Now</div>
+      <div id="disNow" class="disnow"></div>
+    </div>
+    <div class="hud-score" id="score"></div>
+    <div class="hud-clock"><div class="t" id="clock">--:--:--</div><div class="lbl" id="clockz"></div></div>
+  </div>
+  <aside class="side">
+    <div class="sec" id="secInfo"></div>
+    <div class="sec" id="sel"></div>
+    <div class="sec" id="coordBox"></div>
+    <div class="sec strips-head"><div class="ph"><span class="lbl">Flight progress strips</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span></div></div>
+    <div class="strips" id="strips"></div>
+  </aside>
+  <div class="bottom">
+    <div id="log" aria-live="polite"></div>
+    <form class="cmd" id="cmdForm"><span class="prompt">›</span>
+      <input id="cmd" autocomplete="off" spellcheck="false" placeholder="Command, e.g. BAW2491 C350 · EZY64RT D260 DCT SFD · RYR8TQ XFR · / to focus, Tab cycles flights" aria-label="Command">
+      <button class="go" type="submit">Send</button></form>
+  </div>
+</div>
+</section>
+</main>
