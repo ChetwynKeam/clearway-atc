@@ -4612,10 +4612,18 @@ function pushRec(ac){
   const b = brg(...st.lp, ...GN[r.nodes[1]].p), off = f => Math.abs(angDiff(norm(laneDir(st, f) + 180), b));
   return off('east') <= off('west') ? 'east' : 'west';
 }
-function exitsFor(rw){
-  const R = RWYS_BY_END(rw), up = rw === R.lo, thr = R.thr[rw];
+// the side of the runway an arrival vacates to: the side its terminal is on (Terminal 1, the international terminal, is
+// west of 16R/34L; the domestic terminals east), from its bay once it has one
+const TERM_C = {}; for (const s of STANDS) (TERM_C[s.term] ||= []).push(s.p);
+function sideFor(ac, R){
+  if (!ac) return R.side;
+  const pts = ac.stand ? [ac.stand.p] : TERM_C[termFor(ac)]; if (!pts || !pts.length) return R.side;
+  const off = pts.reduce((a, p) => a + R.offOf(p), 0)/pts.length; return Math.abs(off) > 60 ? Math.sign(off) : R.side;
+}
+function exitsFor(rw, ac){
+  const R = RWYS_BY_END(rw), up = rw === R.lo, thr = R.thr[rw], side = sideFor(ac, R);
   const ks = Object.keys(HOLDS).filter(k => { const H = HOLDS[k]; return H.on === R.id && H.dirs.includes(rw) && (up ? H.m > thr + 600 : H.m < thr - 600); });
-  const near = ks.filter(k => Math.sign(HOLDS[k].off) === R.side), far = ks.filter(k => Math.sign(HOLDS[k].off) !== R.side);
+  const near = ks.filter(k => Math.sign(HOLDS[k].off) === side), far = ks.filter(k => Math.sign(HOLDS[k].off) !== side);
   const order = a => a.sort((x, y) => (HOLDS[x].m - HOLDS[y].m)*(up ? 1 : -1));
   return [...order(near), ...order(far)];
 }
@@ -4624,7 +4632,8 @@ function exitFor(ac, name){
   if (HOLDS[name] && HOLDS[name].on === (ac.rwyId || RWYS_BY_END(ac.app || S.rwy).id)) return name;
   const rw = ac.app || S.rwy, R = RWYS_BY_END(rw), m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1;
   const ks = Object.keys(HOLDS).filter(k => HOLDS[k].ref === name && HOLDS[k].on === R.id && (HOLDS[k].m - m)*dir > 20);
-  return ks.sort((a, b) => (Math.sign(HOLDS[b].off) === R.side) - (Math.sign(HOLDS[a].off) === R.side) || (HOLDS[a].m - HOLDS[b].m)*dir)[0] || null;
+  const side = sideFor(ac, R);
+  return ks.sort((a, b) => (Math.sign(HOLDS[b].off) === side) - (Math.sign(HOLDS[a].off) === side) || (HOLDS[a].m - HOLDS[b].m)*dir)[0] || null;
 }
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
@@ -4855,8 +4864,8 @@ const APT = {
   firstAlt: g => ENTRY_ALT[g] - 2000,
   rolledCall: 'request taxi',
   vacExits: ac => { const R = RWYS_BY_END(ac.app || S.rwy), m = R.mOf([ac.x, ac.y]), dir = (ac.app || S.rwy) === R.lo ? 1 : -1;
-    return exitsFor(ac.app || S.rwy).filter(k => (HOLDS[k].m - m)*dir > 30 && Math.sign(HOLDS[k].off) === R.side).slice(0, 4); },
-  vacPrefs: (st, ac) => exitsFor(ac && ac.app || S.rwy),
+    const side = sideFor(ac, R); return exitsFor(ac.app || S.rwy, ac).filter(k => (HOLDS[k].m - m)*dir > 30 && Math.sign(HOLDS[k].off) === side).slice(0, 4); },
+  vacPrefs: (st, ac) => exitsFor(ac && ac.app || S.rwy, ac),
   exitFor,
   lineUpWords: hp => 'line up',
   terrain: { name: 'the Sydney city towers', poly: [[-33.875, 151.200], [-33.865, 151.200], [-33.865, 151.215], [-33.875, 151.215]].map(LL), min: 1500, low: 1000, msg: ac => `${ac.cs} is over the city at ${Math.round(ac.alt)} ft${ac.alt < 1000 ? ', OBSTACLE' : ''}.` },
