@@ -215,7 +215,7 @@ async function askRoutes(){
     for (const ac of S.acs) {
       const rt = ac.src === 'live' && !ac.arr && LIVE.routes.get(ac.cs); if (!rt || ac.told) continue;
       ac.dep = rt[0]; ac.arr = rt[1];
-      const on = routeOnward(ac.la, ac.lo, ac.trk, ac.arr); if (on) { ac.route = on; ac.ri = 1; }
+      const on = routeOnward(ac.la, ac.lo, ac.trk, ac.arr); if (on) { ac.route = smoothJoin(on, ac.la, ac.lo, ac.trk); ac.ri = 1; }
       if (!ac.past) ac.past = pastWithAlt(routeBack(ac.la, ac.lo, ac.trk, ac.dep), ac.alt);
       if (STARS[ac.arr] && STARS[ac.arr][0]) ac.holdFix = holdFixOf(STARS[ac.arr][0]);
     }
@@ -247,7 +247,7 @@ function adoptLive(a, mineNow){
     if (bd < 25) { past = [...route.slice(0, bi), [la, lo, null]]; onward = [[la, lo, null], ...route.slice(bi)]; } }
   if (!onward) onward = routeOnward(la, lo, a.trk || 0, arr) || (() => { const f = arr && apLL(arr) || moveLL(la, lo, a.trk || 0, 600); return [[la, lo, null], [f[0], f[1], arr || null]]; })();
   if (!past && dep) past = routeBack(la, lo, a.trk || 0, dep);
-  route = onward;
+  route = smoothJoin(onward, la, lo, a.trk || 0);
   const ac = new Aircraft({ cs, t: a.t || 'A320', dep, arr, la, lo, alt: Math.round(alt/100)*100, hdg: a.trk || 0, route, ri: 1, src: 'live', live: a.hex, star, holdFix });
   ac.tas = Math.max(180, (a.gs || 400) - windAt(alt).kt*Math.cos(((windAt(alt).dir + 180) - (a.trk || 0))*D2R)); ac.gs = a.gs || ac.tas;
   if (a.cs && a.cs !== cs) ac.real = a.cs;
