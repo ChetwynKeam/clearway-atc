@@ -4728,8 +4728,9 @@ const fromNode = ac => ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode(
 const DEP_PICK = new Map();
 function depRwyOf(ac){
   const now = depRwysOf();
-  if (ac.depRwy && (ac.cto || now.includes(ac.depRwy))) return ac.depRwy;
+  if (ac.cto && ac.depRwy) return ac.depRwy;
   if (ac.hp && HOLDS[ac.hp]) { const r = now.find(r => RWYS_BY_END(r).id === HOLDS[ac.hp].on); if (r) return r; }
+  if (ac.depRwy && now.includes(ac.depRwy)) return ac.depRwy;
   const from = fromNode(ac); if (!from) return now[0];
   // north flow (AD 2.20 standard taxi routes): Terminal 4 (and its remote stands) to 36L, Terminal 4S (and its) to 36R
   const st = ac.stand && !ac.leftStand ? ac.stand : null, n = st && /^\d+$/.test(st.id) ? +st.id : 0;
@@ -6628,7 +6629,7 @@ function commandRun(str){
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : R && R.st === 'CXL' ? ': it was cancelled, request a new one with REL once departures resume' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
       const sid = sidName(ac.gate, depRw(ac)), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
-      ac.cto = true; ac.need = null; ac.depRwy = depRw(ac); ac.luAfter = null;
+      { const rw = depRw(ac); ac.cto = true; ac.need = null; ac.depRwy = rw; ac.luAfter = null; }   // the runway it is at, worked out before cto (cto keeps whatever depRwy was)
       if (ac.state === 'HOLDPT') startLineUp(ac);
       else if (ac.path && (ac.state === 'TAXI' || ac.state === 'LINEUP')) { ac.path.thru = true; if (ac.state === 'LINEUP') ac.path.roll = true; }   // rolling: straight on into the take-off
       { const [sa, ra] = PH.cto(ac, sid, chg); said.push(sa); reads.push(ra); }

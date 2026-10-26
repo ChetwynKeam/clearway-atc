@@ -185,8 +185,10 @@ function luOk(k, rw){
 const fromNode = ac => ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)) || {}).id;
 function depRwyOf(ac){
   const dep = depOf(), land = landOf();
-  if (ac.depRwy && (ac.cto || ac.depRwy === dep || ac.depRwy === land)) return ac.depRwy;
-  if (ac.hp && HOLDS[ac.hp] && HOLDS[ac.hp].on === RWYS_BY_END(land).id && HOLDS[ac.hp].on !== RWYS_BY_END(dep).id) return land;
+  if (ac.cto && ac.depRwy) return ac.depRwy;
+  // the runway of the holding point it is going to or waiting at decides (see Manchester)
+  if (ac.hp && HOLDS[ac.hp]) { const on = HOLDS[ac.hp].on; if (on === RWYS_BY_END(dep).id) return dep; if (on === RWYS_BY_END(land).id) return land; }
+  if (ac.depRwy && (ac.depRwy === dep || ac.depRwy === land)) return ac.depRwy;
   return dep;
 }
 // 06:00 to 07:00 both runways land: arrivals from the northern stacks (Bovingdon, Lambourne) to the northern runway,

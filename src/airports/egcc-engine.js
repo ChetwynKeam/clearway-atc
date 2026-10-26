@@ -143,8 +143,11 @@ const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r
 const fromNode = ac => ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)) || {}).id;
 function depRwyOf(ac){
   const dep = depOf(), land = landOf();
-  if (ac.depRwy && (ac.cto || ac.depRwy === dep || ac.depRwy === land)) return ac.depRwy;
-  if (ac.hp && HOLDS[ac.hp] && HOLDS[ac.hp].on === RWYS_BY_END(land).id && HOLDS[ac.hp].on !== RWYS_BY_END(dep).id) return land;
+  if (ac.cto && ac.depRwy) return ac.depRwy;   // cleared (or rolling): the runway it was cleared from
+  // the runway of the holding point it is going to or waiting at decides: a departure once meant for the landing
+  // runway (a live flight first given a hold there) that is now at a 23L holding point departs from 23L, not 23R
+  if (ac.hp && HOLDS[ac.hp]) { const on = HOLDS[ac.hp].on; if (on === RWYS_BY_END(dep).id) return dep; if (on === RWYS_BY_END(land).id) return land; }
+  if (ac.depRwy && (ac.depRwy === dep || ac.depRwy === land)) return ac.depRwy;
   return dep;
 }
 const landRwyOf = ac => landOf();

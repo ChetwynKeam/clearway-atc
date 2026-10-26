@@ -6466,7 +6466,7 @@ function commandRun(str){
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : R && R.st === 'CXL' ? ': it was cancelled, request a new one with REL once departures resume' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
       const sid = sidName(ac.gate, depRw(ac)), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
-      ac.cto = true; ac.need = null; ac.depRwy = depRw(ac); ac.luAfter = null;
+      { const rw = depRw(ac); ac.cto = true; ac.need = null; ac.depRwy = rw; ac.luAfter = null; }   // the runway it is at, worked out before cto (cto keeps whatever depRwy was)
       if (ac.state === 'HOLDPT') startLineUp(ac);
       else if (ac.path && (ac.state === 'TAXI' || ac.state === 'LINEUP')) { ac.path.thru = true; if (ac.state === 'LINEUP') ac.path.roll = true; }   // rolling: straight on into the take-off
       { const [sa, ra] = PH.cto(ac, sid, chg); said.push(sa); reads.push(ra); }
