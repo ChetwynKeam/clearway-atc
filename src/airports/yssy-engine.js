@@ -86,6 +86,7 @@ const PHON = {};
 for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
 for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);
 // a holding point named for its side of the runway (FW: F West) or its runway (L16L): said as the taxiway and the side
+for (const [id] of G.ihps || []) { const [t, n] = id.split('.'); PHON[id] = twyWords(t) + ' hold ' + n; }
 for (const [k, [ref, w]] of Object.entries(G.hside || {})) { PHON[k] = twyWords(ref) + (w && !w.startsWith('runway') ? ' ' + w : ''); for (const v of Object.keys(HOLDS)) if (HOLDS[v].ref === k) PHON[v] = PHON[k]; }
 PHON.APRON = 'the apron';
 
@@ -342,6 +343,7 @@ const APT = {
   get tower(){ return [YSSY.UNITS.twr.name, YSSY.UNITS.twr.freq[RWYS_BY_END(S.rwy).id]]; },
   gnd: [YSSY.UNITS.gnd.name, YSSY.UNITS.gnd.freq],
   runways: RWY_LIST, rwyHalfWidth: 23, holdSigns: true,
+  ihps: G.ihps.map(([id, node]) => ({ id, node })),   // intermediate holding points: A.1, A.2 ... along each taxiway
   // independent parallel runways (1,037 m apart, with PRM): aircraft on final to 16L and 16R (or 34L and 34R) side by side are
   // not a loss of separation, nor are a departure and an arrival on different parallels, or two departures off them, near the field
   sepOk: (a, b, d) => { const par = (x, y) => x && y && x !== y && x.slice(0, 2) === y.slice(0, 2) && /[LR]$/.test(x) && /[LR]$/.test(y), near = p => dist(p.x, p.y, ...ARP) < 22;
