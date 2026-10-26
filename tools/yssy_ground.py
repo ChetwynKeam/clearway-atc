@@ -173,7 +173,7 @@ for rid, R in FR.items():
             for t in used: drop.add(id(t))
             hold_used.append((h, used))
             Pp = Pp[::-1]
-            lim = min(40, abs(Pp[-1][1])*0.5)
+            lim = min(32, abs(Pp[-1][1])*0.5)   # where the lead lines leave the taxiway: about 10 m out from the runway edge
             f = [Pp[0]]; rest = []
             for i in range(1, len(Pp)):
                 if abs(Pp[i][1]) >= lim:
@@ -229,7 +229,7 @@ for t in segs:
     for j in range(len(pts) - 1):
         L = math.dist(pts[j], pts[j+1]); k = max(1, int(L / 6))
         S += [(pts[j][0] + (pts[j+1][0]-pts[j][0])*i/k, pts[j][1] + (pts[j+1][1]-pts[j][1])*i/k) for i in range(k)]
-    cov = sum(1 for q in S if any(pdist(q, w[i], w[i+1]) < 12 for w in LINKS for i in range(len(w) - 1)))
+    cov = sum(1 for q in S if any(pdist(q, w[i], w[i+1]) < 22 for w in LINKS for i in range(len(w) - 1)))
     if cov < 0.5*len(S): drop.discard(id(t)); restored += 1
 print('taxiway segments restored', restored)
 # a holding point short of a junction (ZW2/ZW3: the parallel taxiway and W1 meet between the holds and runway 18R/36L):
@@ -318,9 +318,23 @@ nodes = [[k, r1(NODE[inv[k]][0]), r1(NODE[inv[k]][1])] for k in sorted({x for e 
 # ── IHPs: every other named holding position on the graph (one per name)
 ihps = []
 hnodes = {h[0] for h in holds.values()}
+# intermediate holding positions (OSM holding_position:type=intermediate, mostly unnamed): named after their taxiway and
+# numbered along it after the taxiways that already have the name (B11, B12 ... on B, whose B1-B10 are taxiways), one per stop line
+_byref = collections.defaultdict(list)
+TAKEN = {tname(w['tags'].get('ref') or w['tags'].get('name') or '') for w in taxi} | {re.sub(r'~\d+$', '', k) for k in holds} | {v for v in HP.values() if v}
+TAKEN |= {p for t in list(TAKEN) if t for p in t.split('/')}
 for n, ref in HP.items():
-    if n in nid and nid[n] in big and nid[n] not in hnodes and ref:
-        if ref not in [i[0] for i in ihps] and ref not in holds: ihps.append([ref, nid[n]])
+    if HPTYPE.get(n) == 'runway' or not ref or n not in nid or nid[n] not in big or nid[n] in hnodes: continue
+    if any(math.dist(NODE[n], NODE[inv_h]) < 25 for inv_h in [k for k, v in nid.items() if v in hnodes]): continue
+    _byref[re.match(r'[A-Z]+', ref)[0] if re.match(r'[A-Z]+', ref) else ref].append(n)   # by its taxiway's letter(s): on B4 or B10 it is one of the B series
+for ref, ns in sorted(_byref.items()):
+    ns.sort(key=lambda n: (round(-NODE[n][1]/60), NODE[n][0]))   # north to south, then west to east
+    seen = set(); num = 0
+    for n in ns:
+        if nid[n] in seen: continue
+        seen.add(nid[n]); num += 1
+        while ref + str(num) in TAKEN: num += 1   # numbered on past the taxiways and holding points that already use the name (B1-B10)
+        TAKEN.add(ref + str(num)); ihps.append(['%s%d' % (ref, num), nid[n]])
 # ── stands: OSM parking positions. The stop point is the end away from the taxilane; the lead-in runs back along the
 # painted line to the lane it starts from.
 segpts = []
@@ -680,6 +694,22 @@ for k, f in list(fil.items()):
     pts = bez(C, (C[0] + d*run*0.5, 0.0), (E[0] - tv[0]*oe*0.55, E[1] - tv[1]*oe*0.55), E)
     fil[k] = [[r1(p[0]), r1(p[1])] for p in pts]; nsmooth += 1
 print('lead lines drawn as curves', nsmooth, 'of', len(fil))
+# runway crossings: from each holding point the same way to the runway edge as its stop bar's turn-ons use, straight over
+# between the two edge points, the crossing node on the centreline halfway between them
+def W(rid, m, o): R = FR[rid]; a, U, N = R['a'], R['U'], R['N']; return [r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)]
+pkey = {h[0]: prim[h[0]][0] for h in holds.values()}
+xs = collections.defaultdict(list)
+for e in edges:
+    if e[0][0] == 'x' and e[1] in pkey: xs[e[0]].append(e)
+npos = {n[0]: n for n in nodes}
+for x, es in xs.items():
+    Es = []
+    for e in es:
+        k = pkey[e[1]]; h = holds[k]; E = fil[k][-1]
+        e[3] = [W(h[2], *E)] + [W(h[2], m, o) for m, o in h[7]]; Es.append((h[2], E[0]))
+    if x in npos and Es: rid = Es[0][0]; mm = sum(m for _, m in Es)/len(Es); p = W(rid, mm, 0); npos[x][1], npos[x][2] = p[0], p[1]
+print('crossings redrawn', len(xs))
+
 out = {'runways': runways, 'nodes': nodes, 'edges': edges, 'rnodes': rnodes,
        'holds': {k: h[:7] + [h[8]] for k, h in holds.items()}, 'hlink': {k: h[7] for k, h in holds.items() if h[7]}, 'fil': fil, 'hs': hs,
        'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds, 'hside': hside}
