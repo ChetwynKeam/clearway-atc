@@ -1606,7 +1606,7 @@ function step(dt){
     if (ac.rel) stepRelease(ac);
     if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; SC(ac).pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
     // the whole track flown (holds, taxi routes, go-arounds), drawn as a thin line while the flight is selected: [x, y, altitude, on the ground]
-    if (ac.state !== 'PRE') { const T = ac.track, l = T[T.length - 1], g = ac.ground ? 1 : 0;
+    { const T = ac.track, l = T[T.length - 1], g = ac.ground ? 1 : 0;
       if (!l || Math.hypot(ac.x - l[0], ac.y - l[1]) >= (g ? 0.004 : 0.03)) { T.push([ac.x, ac.y, Math.round(ac.alt), g]); if (T.length > 15000) T.splice(0, 1000); } }
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
   }

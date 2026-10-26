@@ -890,6 +890,7 @@ function drawTrackLine(T, dashed){
   for (let b = 0; b < NB; b++) {
     cx.beginPath(); let on = false;
     for (let i = 1; i < T.length; i++) { const p = T[i], q = T[i - 1];
+      if (p[4]) { on = false; continue; }
       if (band(p) !== b) { on = false; continue; }
       if (!on) { cx.moveTo(sx(q[0]), sy(q[1])); on = true; }
       cx.lineTo(sx(p[0]), sy(p[1])); }

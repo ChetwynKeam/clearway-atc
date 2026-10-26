@@ -6504,7 +6504,7 @@ function step(dt){
     if (ac.rel) stepRelease(ac);
     if (ac.lost && S.t >= ac.lost.until) { const f = ac.lost.f; ac.lost = null; SC(ac).pts -= 10; pilot(ac, `${ac.unit()}, back with you, no reply on ${f}`); ac.need = 'Back on frequency'; if (S.sel === ac) renderSel(); }
     // the whole track flown (holds, taxi routes, go-arounds), drawn as a thin line while the flight is selected: [x, y, altitude, on the ground]
-    if (ac.state !== 'PRE') { const T = ac.track, l = T[T.length - 1], g = ac.ground ? 1 : 0;
+    { const T = ac.track, l = T[T.length - 1], g = ac.ground ? 1 : 0;
       if (!l || Math.hypot(ac.x - l[0], ac.y - l[1]) >= (g ? 0.004 : 0.03)) { T.push([ac.x, ac.y, Math.round(ac.alt), g]); if (T.length > 15000) T.splice(0, 1000); } }
     ac.histT += dt; if (ac.histT >= 4) { ac.histT = 0; ac.hist.push([ac.x, ac.y]); if (ac.hist.length > 7) ac.hist.shift(); }
   }
@@ -7911,6 +7911,7 @@ function drawTrackLine(T, dashed){
   for (let b = 0; b < NB; b++) {
     cx.beginPath(); let on = false;
     for (let i = 1; i < T.length; i++) { const p = T[i], q = T[i - 1];
+      if (p[4]) { on = false; continue; }
       if (band(p) !== b) { on = false; continue; }
       if (!on) { cx.moveTo(sx(q[0]), sy(q[1])); on = true; }
       cx.lineTo(sx(p[0]), sy(p[1])); }
@@ -10142,6 +10143,9 @@ function gcAt([a1, o1], [a2, o2], f){
   const x = A*Math.cos(p1)*Math.cos(l1) + B*Math.cos(p2)*Math.cos(l2), y = A*Math.cos(p1)*Math.sin(l1) + B*Math.cos(p2)*Math.sin(l2), z = A*Math.sin(p1) + B*Math.sin(p2);
   return [Math.atan2(z, Math.hypot(x, y))*R2D, Math.atan2(y, x)*R2D];
 }
+// local map position of a lat/lon, longitude taken the short way round from this airport (so a flight across the date line
+// leaves one edge of the world and comes back in from the other)
+const llxy = (lat, lon) => [(((lon - LON0 + 540) % 360) - 180)*60*COSL, (lat - LAT0)*60];
 const nearGib = ll => gcDist(ll, AP[APT.icao]) < 70;
 function makeLeg(pts){ const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i-1] + gcDist(pts[i-1], pts[i])); return { pts, cum, D: cum[cum.length-1] }; }
 function legAt(L, d){
@@ -10156,7 +10160,9 @@ function addArrGhost(f){
   const e = ENTRY[f.gate], L0 = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L0, (e[1] - RADAR_REF[1])/L0];
   const endLL = toLL([e[0] + u[0]*PRE_NM, e[1] + u[1]*PRE_NM]);
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
-  const leg = makeLeg([AP[f.o].slice(0, 2), ...via, endLL]), [spd, fl] = CRUISE[f.t] || [450, 37000];
+  // it joins the entry point flying in along the same line the pending track then follows, with no turn at the handover
+  const join = gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
+  const leg = makeLeg([AP[f.o].slice(0, 2), ...via.filter(p => gcDist(p, join[0] || endLL) > 60), ...join, endLL]), [spd, fl] = CRUISE[f.t] || [450, 37000];
   const cruise = Math.min(fl, 9000 + leg.D*75), tStart = tEnd - leg.D/spd*3600;
   FAR.list.push({ cs: f.cs, t: f.t, from: f.o, to: APT.icao, kind: 'ARR', leg, tStart, tEnd, spd, cruise, endAlt: PRE_ALT[f.gate], f });
 }
@@ -10165,7 +10171,9 @@ function addDepGhost(ac, at){
   if (!AP[ac.d]) return;
   const p0 = at || toLL([ac.x, ac.y]);
   const via = (VIA[ac.d] || []).filter(p => !nearGib(p) && gcDist(p, p0) > 30 && gcDist(p, AP[ac.d]) < gcDist(p0, AP[ac.d]));
-  const leg = makeLeg([p0, ...via, AP[ac.d].slice(0, 2)]), [spd, fl] = CRUISE[ac.t] || [450, 37000];
+  // on from where it left the radar area along the heading it had, then round towards the destination
+  const lead = !at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150 ? [toLL([ac.x + Math.sin(ac.hdg*D2R)*45, ac.y + Math.cos(ac.hdg*D2R)*45])] : [];
+  const leg = makeLeg([p0, ...lead, ...via, AP[ac.d].slice(0, 2)]), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
   FAR.list.push({ cs: ac.cs, t: ac.t, from: ac.from || APT.icao, to: ac.d, kind: ac.from ? 'DIV' : 'DEP', track: ac.track, leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? APT.initClimb : ac.alt, endAlt: 0 });
 }
@@ -10173,26 +10181,32 @@ function addDepGhost(ac, at){
 // where it came from (dashed), as [x, y, altitude, on the ground] points
 function legPts(leg, d0, d1, altAt){
   const out = [], n = Math.max(1, Math.ceil((d1 - d0)/Math.max(4, leg.D/300)));
-  for (let i = 0; i <= n; i++) { const d = d0 + (d1 - d0)*i/n, p = xy(...legAt(leg, d).ll); out.push([p[0], p[1], Math.round(altAt(d)), 0]); }
+  for (let i = 0; i <= n; i++) { const d = d0 + (d1 - d0)*i/n, p = llxy(...legAt(leg, d).ll), q = out[out.length - 1];
+    out.push([p[0], p[1], Math.round(altAt(d)), 0, q && Math.abs(p[0] - q[0]) > 60*COSL*100 ? 1 : 0]); }   // 1: the world's edge, the line starts again on the other side
   return out;
 }
+// the straight line from a flight's position on to the airport it is bound for (dashed on the map)
+function crowFly(from, to, alt0, alt1, climb){
+  const L = makeLeg([from, to]), cr = 0;
+  return legPts(L, 0, L.D, x => climb ? Math.min(alt0 + x*330, 40000, Math.max(0, (L.D - x)*300)) : Math.max(alt1, alt0 - x*330));
+}
 function trkRoute(o){
+  const cr = CRUISE[o.t] || [450, 37000], home = AP[APT.icao].slice(0, 2);
   if (o.leg) {   // a flight beyond radar cover (yellow plane)
     const g = o, D = g.leg.D, d = Math.min(D, farDist(g)), alt = x => Math.max(0, Math.min(g.cruise, (g.kind !== 'ARR' ? (g.startAlt || 0) : 1500) + x*330, (g.endAlt || 0) + (D - x)*300));
-    return { rec: (g.track || []).concat(legPts(g.leg, 0, d, alt)), ext: g.kind === 'ARR' || d < D ? [legPts(g.leg, d, D, alt)] : [] };
+    const here = legAt(g.leg, d).ll, rec = (g.track || []).concat(legPts(g.leg, 0, d, alt));
+    return { rec, ext: g.kind === 'ARR' ? [crowFly(here, home, alt(d), 0, false)] : d < D || g.kind === 'DEP' ? [crowFly(here, AP[g.to].slice(0, 2), alt(d), 0, true)] : [] };
   }
-  const rec = o.track || [], ext = [], cr = CRUISE[o.t] || [450, 37000];
-  if (o.kind === 'ARR' && rec.length && AP[o.o]) {   // back to its origin airport
-    if (!o._tb || o._tb.k !== rec[0][0] + o.o) {
-      const end = toLL([rec[0][0], rec[0][1]]), via = (VIA[o.o] || []).filter(p => !nearGib(p) && gcDist(p, end) > 40).slice().reverse();
-      o._tb = { k: rec[0][0] + o.o, leg: makeLeg([AP[o.o].slice(0, 2), ...via, end]) }; }
-    const L = o._tb.leg, c = Math.min(cr[1], 9000 + L.D*75), e = rec[0][2];
-    ext.push(legPts(L, 0, L.D, x => Math.max(0, Math.min(c, 1500 + x*330, e + (L.D - x)*300))));
-  } else if (o.kind === 'DEP' && AP[o.d] && o.state !== 'PRE') {   // on to its destination
-    const p0 = toLL([o.x, o.y]), via = (VIA[o.d] || []).filter(p => !nearGib(p) && gcDist(p, p0) > 30 && gcDist(p, AP[o.d]) < gcDist(p0, AP[o.d]));
-    const L = makeLeg([p0, ...via, AP[o.d].slice(0, 2)]), c = Math.min(cr[1], 9000 + L.D*75), a0 = o.ground ? 0 : o.alt;
-    ext.push(legPts(L, 0, L.D, x => Math.max(0, Math.min(c, a0 + x*330, (L.D - x)*300))));
-  }
+  let rec = o.track || [];
+  const ext = [], here = toLL([o.x, o.y]);
+  if (o.kind === 'ARR' && AP[o.o]) {
+    // the whole way in from its origin, the same rough route its en-route plane flew
+    if (!o._tb || o._tb.o !== o.o) { const g = FAR.list.find(g => g.cs === o.cs && g.kind === 'ARR');
+      let L = g && g.leg; if (!L && rec.length) { const end = toLL([rec[0][0], rec[0][1]]); L = makeLeg([AP[o.o].slice(0, 2), end]); }
+      o._tb = { o: o.o, leg: L, pts: L ? legPts(L, 0, L.D, x => { const c = Math.min(cr[1], 9000 + L.D*75); return Math.max(0, Math.min(c, 1500 + x*330, (rec.length ? rec[0][2] : 6000) + (L.D - x)*300)); }) : [] }; }
+    rec = o._tb.pts.concat(rec);
+    if (o.airborne) ext.push(crowFly(here, home, o.alt, 0, false));
+  } else if (o.kind === 'DEP' && AP[o.d] && o.state !== 'PRE') ext.push(crowFly(here, AP[o.d].slice(0, 2), o.ground ? 0 : o.alt, 0, true));
   return { rec, ext };
 }
 // the flight beyond radar cover under a click
@@ -10225,10 +10239,10 @@ function farState(g){
   const up = g.kind !== 'ARR' ? (g.startAlt || 0) + d*330 : 1500 + d*330, down = g.endAlt + left*300;
   const alt = Math.max(0, Math.min(g.cruise, up, down));
   if (g.hold || (g.t1 != null && d >= g.leg.D - 0.01)) {   // holding: a rate-one orbit round the point it stopped at
-    const c = xy(...ll), a = (S.t*3) % 360, r = 0.7*(g.spd/250);
+    const c = llxy(...ll), a = (S.t*3) % 360, r = 0.7*(g.spd/250);
     return { p: [c[0] + Math.sin(a*D2R)*r, c[1] + Math.cos(a*D2R)*r], hdg: norm(a + 90), alt, gs: Math.round(g.spd*0.8), holding: true };
   }
-  return { p: xy(...ll), hdg, alt, gs: g.v || g.spd };
+  return { p: llxy(...ll), hdg, alt, gs: g.v || g.spd };
 }
 S.listeners.push((ev, d) => {
   if (ev === 'start') buildFar();
