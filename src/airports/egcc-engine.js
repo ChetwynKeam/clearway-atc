@@ -423,7 +423,7 @@ const APT = {
   // under a parked aircraft; E and the rest of D always stay open, so the north-west aprons are never cut off
   dualLane: e => MARS_LANES.has(e.tw) || (e.tw === 'D' && D9_10(e)),
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT, TICZU: 3500, NODUC: 3500, EVAKU: 3000, FECJO: 3000 },   // STAR levels, then the downwind, base and IF
-  icao: 'EGCC', name: 'Manchester', coordName: 'Manchester', radarName: 'MAN', utcOff: 1,
+  icao: 'EGCC', name: 'Manchester', coordName: 'Manchester', radarName: 'MAN', utcOff: 1, tz: 'Europe/London',
   radar: [EGCC.UNITS.app.name, EGCC.UNITS.app.freq], depRadar: [EGCC.UNITS.app.name, EGCC.UNITS.app.freq],
   tower: [EGCC.UNITS.twr.name, EGCC.UNITS.twr.freq],
   gnd: [EGCC.UNITS.gnd.name, EGCC.UNITS.gnd.freq],

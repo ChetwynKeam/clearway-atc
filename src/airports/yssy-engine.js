@@ -337,7 +337,7 @@ const visTxt = v => v >= 9999 ? '10 kilometres or more' : v >= 5000 ? Math.round
 const firstOf = (t, i = 0) => STANDS.filter(s => s.term === t && s.area === 'civil')[i];
 const APT = {
   arrAlt: { ...arrAltOf(STAR_LISTS.map(pts => ({ pts }))), ...FEED_ALT },
-  icao: 'YSSY', name: 'Sydney', coordName: 'Sydney', radarName: 'Sydney', utcOff: 11,
+  icao: 'YSSY', name: 'Sydney', coordName: 'Sydney', radarName: 'Sydney', utcOff: 11, tz: 'Australia/Sydney',
   radar: [YSSY.UNITS.app.name, YSSY.UNITS.app.freq], depRadar: [YSSY.UNITS.dep.name, YSSY.UNITS.dep.freq],
   get tower(){ return [YSSY.UNITS.twr.name, YSSY.UNITS.twr.freq[RWYS_BY_END(S.rwy).id]]; },
   gnd: [YSSY.UNITS.gnd.name, YSSY.UNITS.gnd.freq],

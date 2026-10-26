@@ -332,7 +332,7 @@ function standAt(ac, t){
 const APT = {
   lineSay: { b: 'West', r: 'East' },   // taxilane S's side lines are S West and S East (VIA S WEST, VIA S EAST)
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT },   // STAR levels, then the downwind and base
-  icao: 'EGKK', name: 'London Gatwick', coordName: 'Gatwick', radarName: 'LGW', utcOff: 1,
+  icao: 'EGKK', name: 'London Gatwick', coordName: 'Gatwick', radarName: 'LGW', utcOff: 1, tz: 'Europe/London',
   radar: [EGKK.UNITS.app.name, EGKK.UNITS.app.freq], depRadar: ['London Control', '134.125'],
   tower: [EGKK.UNITS.twr.name, EGKK.UNITS.twr.freq],
   runways: RWY_LIST, bigGround: true, rwyHalfWidth: 23,

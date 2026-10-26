@@ -209,3 +209,11 @@ const hm = t => +t.slice(0,2)*60 + +t.slice(3);
 // published altitudes at the arrival fixes of a set of procedures ({ pts: [[fix, alt], ...] }; the first to name a fix
 // wins). Profiles pass them as APT.arrAlt: cleared arrivals descend with them (viaAlt in sim.js)
 function arrAltOf(procs){ const m = {}; for (const P of procs) for (const [id, a] of P.pts) if (a && m[id] == null) m[id] = a; return m; }
+
+// the airport's offset from UTC (hours) at a moment: its time zone's rule (summer time and back), else the profile's fixed one
+function tzOffH(ms){
+  if (!APT.tz || typeof Intl === 'undefined') return APT.utcOff;
+  try { const p = new Intl.DateTimeFormat('en-GB', { timeZone: APT.tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' }).formatToParts(new Date(ms)), g = t => +p.find(x => x.type === t).value;
+    return Math.round((Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute')) - Math.floor(ms/60000)*60000)/60000)/60; } catch (e) { return APT.utcOff; }
+}
+const simMs = () => (typeof S !== 'undefined' && S.start ? S.start + (S.t || 0)*1000 : Date.now());
