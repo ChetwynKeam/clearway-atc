@@ -964,6 +964,12 @@ body.theme-dark #log .ln.ai .who { color: #4fd1c5; }
 .hud-score .ai { border-color: #0f8a7a; color: #0b6b5f; }
 .hud-score .ai b { color: #0b6b5f; }
 
+/* the Area Control section on the home page */
+.areapromo { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: center; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 40px; }
+.areapromo h2 { font-size: clamp(30px, 3.4vw, 42px); margin: 12px 0 14px; }
+.areapromo p { color: var(--ink-2); font-size: 17px; line-height: 1.55; margin: 0 0 20px; max-width: 60ch; }
+@media (max-width: 900px) { .areapromo { grid-template-columns: 1fr; padding: 24px; } }
+
 /* ═════ accounts, pricing, feedback, airport requests (account.html / account.js) ═════ */
 .topbar .status .btn.ghost { box-shadow: none; padding: 9px 14px; font-size: 14px; }
 .cw-note { display: inline-block; background: var(--accent-soft); color: var(--accent-2); border: 1px solid #c9d8ff; border-radius: 8px; padding: 10px 14px; font-size: 15px; font-weight: 500; }
@@ -1103,6 +1109,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </a>
   <nav class="nav" aria-label="Site">
     <a href="#airports" data-route="airports">Airports</a>
+    <a href="area/">Area Control</a>
     <a href="#training" data-route="training">Academy</a>
     <a href="#career" data-route="career">Career</a>
     <a href="#pricing" data-route="pricing">Pricing</a>
@@ -1121,7 +1128,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   <div class="phero">
     <div class="wrap">
       <div class="phero-copy">
-        <a class="pill" href="#egll"><b>New</b>London Heathrow is open: four stacks, two runways and the 15:00 alternation</a>
+        <a class="pill" href="area/"><b>New</b>Area Control is open: work a sector of London or Scottish Control</a>
         <h1>Real airports. Real charts. <em>Your frequency.</em></h1>
         <p class="lede">Clearway puts you on the radar, tower and ground positions of real airports, rebuilt from their published charts and open mapping. Every clearance is read back. The weather comes from the live METAR, and the traffic is either the real flights in the air right now or a weekly airline timetable, tracked from origin to destination.</p>
         <div class="ctas">
@@ -1152,6 +1159,19 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       <li><b>Give the clearances</b><span>Click the buttons on a flight, type short commands like <code>JBU702 APP</code>, or hold to talk and say them. Descend, sequence, clear to land, push, taxi, get the release, clear for take-off and hand off. Flights waiting on you are marked <b class="need-dot">◆</b>.</span></li>
       <li><b>Keep it safe and get scored</b><span>Keep aircraft 3 NM or 1,000 ft apart, keep the runway clear and answer every call. Separation losses, go-arounds and late clearances cost points, and every session goes into your logbook.</span></li>
     </ol>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="areapromo">
+      <div><div class="eyebrow">New · Area Control</div><h2>Take a sector at London or Scottish Control.</h2>
+        <p>The en-route side of the job: the UK’s real airways, sectors and standing agreements, from the Channel to the North Atlantic. Accept flights from Paris, Brest, Shannon and the terminal sectors, climb and descend them, keep 5 NM or 1,000 ft, hold them when an airport backs up, divert them when it closes, and hand every one on to the next sector. Live traffic or the airline timetables, on the same console you know from the airports.</p>
+        <div class="ctas"><a class="btn primary" href="area/">Open Area Control</a></div></div>
+      <ul class="steps3">
+        <li><b>Eight positions</b><span>London South, Central, West, North and East, the whole London bandbox, Manchester and Scottish Control.</span></li>
+        <li><b>Live or planned</b><span>The aircraft in the air right now over the UK, or the timetables of Heathrow, Gatwick, Manchester, Bristol and London City plus the other flows.</span></li>
+        <li><b>Delays and disruption</b><span>Airports holding and closing, flow restrictions next door, thunderstorms, turbulence and emergencies, or set them off yourself.</span></li>
+      </ul>
+    </div>
   </div></div>
 
   <div class="section alt"><div class="wrap">
