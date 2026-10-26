@@ -132,7 +132,7 @@ function spawnPlanned(){
     const st = planState(F, ms);
     if (!st) { if (ms - F.tOff > 3600e3*14) F.gone = true; continue; }
     if (!nearBox(st.la, st.lo)) continue;
-    if (F.live || S.acs.some(a => a.cs === F.cs)) { F.spawned = true; continue; }
+    if (F.live || S.acs.some(a => a.cs === F.cs) || LIVE.cs.has(F.cs)) { F.spawned = true; continue; }
     spawnFlight(F, st);
   }
 }
@@ -156,7 +156,7 @@ function spawnFlight(F, st){
 
 // ── live traffic ──
 const RELAY_URLS = ['https://clearway-atc.vercel.app/api/traffic', 'https://clearway-relay.ventrogroup.workers.dev/traffic'];
-const LIVE = { ac: new Map(), ok: 0, err: 0, timer: null, relay: 0, polls: 0, routes: new Map(), asked: new Set(), src: '' };
+const LIVE = { cs: new Set(), ac: new Map(), ok: 0, err: 0, timer: null, relay: 0, polls: 0, routes: new Map(), asked: new Set(), src: '' };
 // today's real flights at the five airports by callsign: where each comes from or goes to
 const BOARD = new Map();
 async function loadBoards(){
@@ -194,7 +194,15 @@ async function pollLive(){
   for (const [k, a] of LIVE.ac) if (now - a.ts > 90e3) LIVE.ac.delete(k);
   if (!LIVE.ok) sys(`Live traffic connected: ${LIVE.ac.size} aircraft in the air within ${r} NM (${j.src || 'ADS-B'}).`);
   LIVE.ok = now; LIVE.err = 0; LIVE.polls++; LIVE.src = j.src || '';
+  LIVE.cs = new Set([...LIVE.ac.values()].map(a => a.cs).filter(Boolean));
   await askRoutes();
+  // a timetable flight that is really in the air: the real one replaces it (yours, offered or not)
+  for (const a of LIVE.ac.values()) {
+    if (a.adopted || !a.cs) continue;
+    const o = S.acs.find(x => x.cs === a.cs && x.src === 'plan' && x.st !== 'OUT'); if (!o) continue;
+    if (o.mine || o.st === 'OFFER') { const n = adoptLive(a, o.mine); if (o.st === 'OFFER') { n.st = 'OFFER'; n.from = o.from; n.offerT = o.offerT; n.entryEta = o.entryEta; n.accepted = o.accepted; } }
+    else { S.acs.splice(S.acs.indexOf(o), 1); if (S.sel === o) S.sel = null; }
+  }
   liveAdopt(LIVE.polls <= 2);
 }
 // where a live flight is going: today's boards, the relay's route lookup, else a guess from how it is flying
@@ -216,7 +224,7 @@ async function askRoutes(){
       const rt = ac.src === 'live' && !ac.arr && LIVE.routes.get(ac.cs); if (!rt || ac.told) continue;
       ac.dep = rt[0]; ac.arr = rt[1];
       const on = routeOnward(ac.la, ac.lo, ac.trk, ac.arr); if (on) { ac.route = smoothJoin(on, ac.la, ac.lo, ac.trk); ac.ri = 1; }
-      if (!ac.past) ac.past = pastWithAlt(routeBack(ac.la, ac.lo, ac.trk, ac.dep), ac.alt);
+      if (!ac.past) { const t0 = ac.track[0] || [ac.la, ac.lo, ac.alt], t1 = ac.track[1] || [ac.la, ac.lo]; ac.past = pastWithAlt(routeBack(t0[0], t0[1], crs(t0[0], t0[1], t1[0], t1[1]) || ac.trk, ac.dep), t0[2]); }
       if (STARS[ac.arr] && STARS[ac.arr][0]) ac.holdFix = holdFixOf(STARS[ac.arr][0]);
     }
   } catch (e) {}
