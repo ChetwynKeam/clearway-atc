@@ -4161,7 +4161,7 @@ function splitAt(id, p, tw){
   ge(e.a, id, tw); ge(id, e.b, tw);
   return id;
 }
-function viaOf(tws, hp){ const ref = HOLDS[hp] && HOLDS[hp].ref, v = []; for (const t of tws) if (t !== 'APRON' && t !== hp && t !== ref && v[v.length-1] !== t) v.push(t); return v; }
+function viaOf(tws, hp){ const ref = HOLDS[hp] && HOLDS[hp].ref, base = HOLDS[hp] && HOLDS[hp].base, v = []; for (const t of tws) if (t !== 'APRON' && t !== hp && t !== ref && v[v.length-1] !== t) v.push(t); if (base && v[v.length-1] === base) v.pop(); return v; }
 function nearestNode(p, filter){ let best = null, bd = Infinity; for (const n of Object.values(GN)) { if (filter && !filter(n)) continue; const d = dist(...p, ...n.p); if (d < bd) { bd = d; best = n; } } return best; }
 
 function inPoly(p, poly){ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const [xi,yi]=poly[i],[xj,yj]=poly[j]; if(((yi>p[1])!==(yj>p[1])) && (p[0] < (xj-xi)*(p[1]-yi)/(yj-yi)+xi)) c=!c; } return c; }
@@ -10542,9 +10542,13 @@ function drawGroundSigns(){
     if (free(x, y, tw, fsH*1.25)) { cx.fillStyle = '#f5c518'; cx.fillRect(x, y, tw, fsH*1.25); cx.strokeStyle = '#111'; cx.lineWidth = 1; cx.strokeRect(x + 0.5, y + 0.5, tw - 1, fsH*1.25 - 1); cx.fillStyle = '#111'; cx.fillText(h.id, x + 4, y + fsH*0.98); }
   }
   // several runways (New York): a red mandatory sign with the runway at each holding position
-  if (APT.runways && sc > 800) { const fr = clamp(3*mpx, 9.5, 14); cx.font = `700 ${fr}px ${FONT_L}`;
-    for (const n of Object.values(GN)) { if (!n.p.hs) continue; const R = rwyById(n.p.hs), t = `${R.lo}-${R.hi}`, w = cx.measureText(t).width + 8, [X, Y] = P2(n.p), x = X + 6, y = Y - fr*1.5;
-      if (!free(x, y, w, fr*1.25)) continue; cx.fillStyle = '#c8202a'; cx.fillRect(x, y, w, fr*1.25); cx.fillStyle = '#fff'; cx.fillText(t, x + 4, y + fr*0.98); } }
+  // with the holding point's name on a location sign beside it (black, yellow letters), so a line-up point can be picked off the map
+  if (APT.runways && sc > (APT.holdSigns ? 260 : 800)) { const fr = clamp(3*mpx, 9.5, 14); cx.font = `700 ${fr}px ${FONT_L}`;
+    const nameAt = {}; if (APT.holdSigns) for (const [k, Hd] of Object.entries(HOLDS)) if (!(Hd.node in nameAt)) nameAt[Hd.node] = Hd.ref;
+    for (const [id, n] of Object.entries(GN)) { if (!n.p.hs) continue; const R = rwyById(n.p.hs), t = `${R.lo}-${R.hi}`, nm = nameAt[id] || '', wn = nm ? cx.measureText(nm).width + 8 : 0, wr = sc > 800 || !nm ? cx.measureText(t).width + 8 : 0, w = wn + wr, [X, Y] = P2(n.p), x = X + 6, y = Y - fr*1.5;
+      if (!w || !free(x, y, w, fr*1.25)) continue;
+      if (wn) { cx.fillStyle = '#14171a'; cx.fillRect(x, y, wn, fr*1.25); cx.strokeStyle = '#f5c518'; cx.lineWidth = 1; cx.strokeRect(x + 0.5, y + 0.5, wn - 1, fr*1.25 - 1); cx.fillStyle = '#f5c518'; cx.fillText(nm, x + 4, y + fr*0.98); }
+      if (wr) { cx.fillStyle = '#c8202a'; cx.fillRect(x + wn, y, wr, fr*1.25); cx.fillStyle = '#fff'; cx.fillText(t, x + wn + 4, y + fr*0.98); } } }
   // taxiway designators
   const fs = clamp(3.6*mpx, 10.5, 17); cx.font = `700 ${fs}px ${FONT_L}`;
   for (const a of twyAnchors()) {

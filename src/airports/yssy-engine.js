@@ -49,7 +49,8 @@ for (const [a, b, tw, mid] of G.edges) chain(a, mid.map(([e, n]) => inF0(e, n)),
 const HOLDS = {}, FIL = {};
 for (const [k, [node, rwy, on, m, off, dirs, end]] of Object.entries(G.holds)) {
   HOLDS[k] = { node, rwy, on, m, off, dirs: dirs.split(','), end: end || null, ref: k.replace(/~\d+$/, '') };
-  ge(rwy, node, HOLDS[k].ref);
+  HOLDS[k].base = ((G.hside || {})[HOLDS[k].ref] || [])[0];   // FW, FE: on taxiway F
+  ge(rwy, node, HOLDS[k].base || HOLDS[k].ref);
   FIL[k] = { W: G.fil[k], E: G.fil[k] };
 }
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
@@ -65,7 +66,7 @@ const SPAN = { A343: 60.3, A346: 63.5, A332: 60.3, A333: 60.3, A359: 64.8, A35K:
   B738: 35.8, B739: 35.8, B38M: 35.9, B3XM: 35.9, B737: 35.8, B461: 26.3, B463: 26.3, A320: 34.1, A321: 34.1, A21N: 35.8, SF34: 21.4, DH8C: 27.4, DH8D: 28.4, B190: 17.7, SW3: 17.4 };
 const spanOfList = s => { const v = (s || '').split('/').map(t => SPAN[t]).filter(Boolean); return v.length ? Math.max(...v) : null; };
 const STANDS = G.gates.map(g => { const [id, term, [e, n], node] = g, p = EN(e, n), remote = term === 'F', sp = spanOfList(g[6]);
-  return { id, term, p, m: mOf(p), off: offOf(p), node, area: remote ? 'remote' : 'civil', occ: null, noLead: !g[5], ...(sp ? { maxSpan: Math.round(sp) } : {}) }; });
+  return { id, term, p, m: mOf(p), off: offOf(p), node, area: remote ? 'remote' : 'civil', occ: null, noLead: !g[5], line: g[5] ? g[5].map(([x, y]) => EN(x, y)) : null, ...(sp ? { maxSpan: Math.round(sp) } : {}) }; });
 // OpenStreetMap ends a bay's line where the nose wheel stops, but an aircraft is placed by its centre: move the stop back along the lead-in by about
 // half the length of the largest type the bay takes (so the nose is at the terminal, not the whole aircraft over the pier), never more than 40% of the lead-in
 STANDS.forEach(s => { s.lp = GN[s.node].p; const L = dist(...s.lp, ...s.p)/M2NM, half = s.maxSpan ? Math.min(34, Math.max(11, s.maxSpan*0.5)) : 20, k = Math.min(half, L*0.4);
@@ -83,6 +84,8 @@ const twyWords = t => t.replace(/~\d+$/, '').split('/').map(part => { const m = 
 const PHON = {};
 for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
 for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);
+// a holding point named for its side of the runway (FW: F West) or its runway (L16L): said as the taxiway and the side
+for (const [k, [ref, w]] of Object.entries(G.hside || {})) { PHON[k] = twyWords(ref) + (w && !w.startsWith('runway') ? ' ' + w : ''); for (const v of Object.keys(HOLDS)) if (HOLDS[v].ref === k) PHON[v] = PHON[k]; }
 PHON.APRON = 'the apron';
 
 // departure entries: the holding points at the departure end of a runway, then intersection departures
@@ -197,7 +200,7 @@ function drawYssy(){
       for (const [d, dash] of [[0.9, false], [0.3, false], [-0.3, true], [-0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([R.rm(m - 11, o + s*d), R.rm(m + 11, o + s*d)], false); cx.stroke(); }
       cx.setLineDash([]);
     }
-    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { const L = dist(...s.lp, ...s.p)/M2NM, f = L > 70 ? 1 - 70/L : 0; pathP([[s.lp[0] + (s.p[0] - s.lp[0])*f, s.lp[1] + (s.p[1] - s.lp[1])*f], s.p], false); cx.stroke(); } });
+    groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { if (s.line && s.line.length > 1 && s.lineOk !== false) { if (s.lineOk == null) { const L = s.line.reduce((a, q, i) => i ? a + dist(...s.line[i-1], ...q) : 0, 0); s.lineOk = L < 1.2*dist(...s.line[0], ...s.line[s.line.length-1]) + 10*M2NM; } if (s.lineOk) { pathP(s.line, false); cx.stroke(); continue; } } const L = dist(...s.lp, ...s.p)/M2NM, f = L > 70 ? 1 - 70/L : 0; pathP([[s.lp[0] + (s.p[0] - s.lp[0])*f, s.lp[1] + (s.p[1] - s.lp[1])*f], s.p], false); cx.stroke(); } });
     if (IMG) { cx.save(); clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx); cx.restore(); }
     else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
     drawGroundSigns();
@@ -337,7 +340,7 @@ const APT = {
   radar: [YSSY.UNITS.app.name, YSSY.UNITS.app.freq], depRadar: [YSSY.UNITS.dep.name, YSSY.UNITS.dep.freq],
   get tower(){ return [YSSY.UNITS.twr.name, YSSY.UNITS.twr.freq[RWYS_BY_END(S.rwy).id]]; },
   gnd: [YSSY.UNITS.gnd.name, YSSY.UNITS.gnd.freq],
-  runways: RWY_LIST, rwyHalfWidth: 23,
+  runways: RWY_LIST, rwyHalfWidth: 23, holdSigns: true,
   xing: false, drawnTown: false, ta: YSSY.TA, initClimb: 5000, gaAlt: 4000, appAlt: 4000, handoffNM: 18, climbFL: 190, divertAlt: 9000,
   area: { dep: 45, arr: 100, div: 45 }, roll: [70, RWY_M - 70], defRwy: '34R', defWx: 'n',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minima', reqApp: rw => 'ILS approach',
