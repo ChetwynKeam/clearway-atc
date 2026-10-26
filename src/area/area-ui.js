@@ -222,7 +222,8 @@ function drawSelRoute(ac, labels){
     }
   }
   cx.restore();
-  if (labels) drawTrackLine(ac.track.concat([[ac.la, ac.lo, ac.alt]]));
+  // behind it: from its origin (solid, shaded by level) to where it is now
+  if (labels) drawTrackLine([...(ac.past || []), ...ac.track, [ac.la, ac.lo, ac.alt]]);
 }
 function drawTrackLine(T){
   if (!T || T.length < 2) return;
