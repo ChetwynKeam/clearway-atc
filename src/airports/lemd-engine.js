@@ -130,8 +130,9 @@ const fromNode = ac => ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode(
 const DEP_PICK = new Map();
 function depRwyOf(ac){
   const now = depRwysOf();
-  if (ac.depRwy && (ac.cto || now.includes(ac.depRwy))) return ac.depRwy;
+  if (ac.cto && ac.depRwy) return ac.depRwy;
   if (ac.hp && HOLDS[ac.hp]) { const r = now.find(r => RWYS_BY_END(r).id === HOLDS[ac.hp].on); if (r) return r; }
+  if (ac.depRwy && now.includes(ac.depRwy)) return ac.depRwy;
   const from = fromNode(ac); if (!from) return now[0];
   // north flow (AD 2.20 standard taxi routes): Terminal 4 (and its remote stands) to 36L, Terminal 4S (and its) to 36R
   const st = ac.stand && !ac.leftStand ? ac.stand : null, n = st && /^\d+$/.test(st.id) ? +st.id : 0;
