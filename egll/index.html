@@ -2687,6 +2687,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <tr><td>Pull back onto the stand</td><td class="mono">PULL</td><td>“pull forward”</td><td><b>Pull back to stand …</b></td></tr>
         <tr><td>Request the departure release</td><td class="mono">REL</td><td>“request release”</td><td><b>Request release</b></td></tr>
         <tr><td>Taxi to a holding point</td><td class="mono">TAXI A · TAXI A VIA B</td><td>“taxi to holding point alpha via bravo”</td><td><b>Taxi…</b> (route picker)</td></tr>
+        <tr><td>Taxi along a runway</td><td class="mono">TAXI A5 VIA RWY</td><td>“taxi to holding point alpha five via runway three four left”</td><td>(a command: from a holding point, along the runway and off at another)</td></tr>
         <tr><td>Hold position / continue</td><td class="mono">HP · RES</td><td>“hold position”, “continue taxi”</td><td>Type or say it</td></tr>
         <tr><td>Cross a runway</td><td class="mono">CROSS 05L</td><td>“cross runway zero five left”</td><td><b>Cross runway 05L</b></td></tr>
         <tr><td>Cancel a line-up or take-off clearance</td><td class="mono">CXL</td><td>“hold position, cancel takeoff clearance”</td><td><b>Cancel take-off</b></td></tr>
@@ -6486,6 +6487,39 @@ function vacSpeed(ac, dt){
   return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, Math.sqrt(turnV*turnV + 2*dec*d*3600)));
 }
 // v: the speed it reaches the holding point at, cleared on while still taxiing: it keeps rolling onto the runway
+// Taxiing along a runway (TAXI <holding point> VIA RWY): from the holding point it is at, onto the runway, along the
+// centreline and off at another holding point of the same runway, as controllers do to save a long taxi round (a long
+// runway with exits that suit, a stand beyond its end). The instruction is the clearance to enter and use the runway.
+function rwyTaxiPath(A, B){
+  const HA = HOLDS[A], HB = HOLDS[B];
+  if (!HA || !HB || A === B) return { err: 'no such holding point.' };
+  if ((HA.on ?? RWYS[0].id) !== (HB.on ?? RWYS[0].id)) return { err: `holding points ${A} and ${B} are on different runways.` };
+  const R = holdRwy(A), d = Math.sign(HB.m - HA.m);
+  if (!d || Math.abs(HB.m - HA.m) < 150) return { err: `${B} is too close to ${A} to use the runway between them.` };
+  const sIn = d > 0 ? 'E' : 'W', sOut = d > 0 ? 'W' : 'E';   // the turn-on that heads the way it is going; the turn-off it arrives at from behind
+  if (!FIL[A] || !FIL[A][sIn] || !FIL[A][sIn].length || !FIL[B] || !FIL[B][sOut] || !FIL[B][sOut].length || !GN[HA.node] || !GN[HA.rwy] || !GN[HB.node] || !GN[HB.rwy]) return { err: `there is no way onto the runway at ${A} towards ${B}, or off it at ${B}.` };
+  const rid = R.id, mk = p => { const q = [p[0], p[1]]; return q; };
+  const start = mk(GN[HA.node].p); start.hs = rid;
+  const pts = [start, ...holdLink(A).map(mk), mk(GN[HA.rwy].p), ...filOut(A, sIn).map(mk)];
+  const out = filIn(B, sOut).map(mk), m0 = R.mOf(pts[pts.length - 1]), m1 = R.mOf(out[0]);
+  for (let m = m0 + d*40; (m1 - m)*d > 20; m += d*40) pts.push(R.rm(m, 0));
+  pts.push(...out, mk(GN[HB.rwy].p), ...holdLink(B).reverse().map(mk));
+  const end = mk(GN[HB.node].p); end.hs = rid; pts.push(end);
+  return { pts, rid, mA: HA.m };
+}
+function rwyTaxi(ac, B, said, reads){
+  const dep = ac.kind === 'DEP', A = dep ? (ac.state === 'HOLDPT' ? ac.hp : null) : (ac.state === 'VACATING' && !ac.onRwy && !ac.path && HOLDS[ac.holdAt] ? ac.holdAt : null);
+  if (!A || !HOLDS[A] || ac.onRwy) { sys(`${ac.cs} must be stopped at a runway holding point to taxi along the runway.`); return false; }
+  if (!HOLDS[B]) { sys(`There is no runway holding point ${B}.`); return false; }
+  const r = rwyTaxiPath(A, B); if (r.err) { sys(`${ac.cs}: ${r.err}`); return false; }
+  const tx = xTraffic(r.rid, r.mA, ac);
+  if (tx.length) sys(`Careful: ${tx.map(o => o.cs).join(' and ')} on or about to use runway ${rwyName(r.rid)}.`, true);
+  (ac.xok ||= []).push(r.rid); ac.need = null; ac.held = false; ac.luq = false; ac.cto = false;
+  if (dep) { ac.hp = B; ac.state = 'TAXI'; ac.holdAt = null; setPath(ac, r.pts, 20, ['atHp', { hp: B }], { fine: true }); }
+  else { ac.taxiIn = true; ac.holdAt = null; setPath(ac, r.pts, 20, ['holdIn', { hold: holdPt(B) }], { fine: true }); }
+  said.push(`taxi to holding point ${hpWords(B)} via runway ${rwyName(r.rid)}`); reads.push(`holding point ${hpWords(B)} via runway ${rwyName(r.rid)}`);
+  return true;
+}
 function startLineUp(ac, v){
   ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw(ac)).id; ac.need = null; ac.luq = false; ac.gs = ac.ias = v || 0;
   const back = true;
@@ -6741,6 +6775,7 @@ function commandRun(str){
         if (want.occ && want.occ !== ac) { sys(`Stand ${want.id} is occupied (${want.occ.cs}).`); continue; }
         if (!standRoom(want, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for stand ${want.id} with ${standBy(want, ac).cs} next to it.`); continue; } st = want; }
       if (!st && !hold) { const sw = APT.standWord || 'stand'; sys(`${ac.cs} has no ${sw} yet. Assign one first (${ac.cs} STAND takes the first free one in its usual area; ${ac.cs} STAND ${(standChoices(ac)[0] || STANDS[0]).id} picks one), or taxi it to a holding point out of the way to wait.`); continue; }
+      if (hold && hold.rwy && toks[i+1] === 'VIA' && /^(RWY|RUNWAY)$/.test(toks[i+2] || '')) { i += 2; if (!rwyTaxi(ac, hold.id, said, reads)) return; continue; }   // along the runway
       const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
       const vw = taxiIn(ac, st, via, hold); if (vw && via.line && vw.includes(via.line[0])) vw.line = via.line; if (!vw) { sys(`No taxi route to ${hold ? 'holding point ' + hold.id : 'stand ' + st.id}.`); continue; }
       { const [sa, ra] = hold ? PH.taxiHold(ac, hold, vw) : PH.taxiIn(ac, st, vw); said.push(sa); reads.push(ra); }
@@ -6750,6 +6785,7 @@ function commandRun(str){
       const ihp = toks[i+1] && IHPS[toks[i+1]] && !HOLDS[toks[i+1]] ? IHPS[toks[++i]] : null;   // an intermediate holding point on the way
       let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
       if (APT.depHoldAs) hp = APT.depHoldAs(ac, hp);   // a name with a holding point each side of the runway: the side departures use
+      if (toks[i+1] === 'VIA' && /^(RWY|RUNWAY)$/.test(toks[i+2] || '') && toks[i-1] && HOLDS[toks[i]]) { i += 2; if (!rwyTaxi(ac, toks[i-2], said, reads)) return; continue; }   // along the runway
       const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
       { const why = APT.taxiCheck && APT.taxiCheck(ac, hp); if (why) { sys(why); continue; } }
       const rt = ihp ? routeAc(ac, ihp.node, viaPen(via)) : taxiRoute(ac, hp, via);
