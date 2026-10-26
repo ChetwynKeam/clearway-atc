@@ -550,7 +550,7 @@ def away(e, n): pl = epl(e); return pl if e[0] == n else pl[::-1]
 fid = [0]; newn = []; fillets = []; cut = {}   # cut[(id(edge), node)] = distance from that node to its new point
 for n, es in inc.items():
     if n in keepN or len(es) < 2: continue
-    es = [e for e in es if e[2] != 'APRON' or len(es) == 2]
+    es = [e for e in es if e[2] != 'APRON']   # apron lanes keep their own mapped paint
     pairs = []
     for i in range(len(es)):
         for j in range(i + 1, len(es)):
@@ -559,7 +559,7 @@ for n, es in inc.items():
             pa_, pb_ = (cut_at(a, min(12, plen(a)*0.5)) or (a[1],))[0], (cut_at(b, min(12, plen(b)*0.5)) or (b[1],))[0]   # the heading over its first 12 m
             ha = math.atan2(pa_[0]-a[0][0], pa_[1]-a[0][1]); hb = math.atan2(pb_[0]-b[0][0], pb_[1]-b[0][1])
             turn = 180 - abs((math.degrees(ha - hb) + 180) % 360 - 180)   # 0: straight on, 180: back the way it came
-            if 30 <= turn <= 140: pairs.append((es[i], es[j], turn))
+            if 30 <= turn <= 125: pairs.append((es[i], es[j], turn))
     for ea, eb, turn in pairs:
         la, lb = plen(away(ea, n)), plen(away(eb, n))
         r = min(FIL_R*(1 if turn < 100 else 0.7), 0.42*la, 0.42*lb)
@@ -595,7 +595,7 @@ for n, ea, eb, r in fillets:
     pa, pb = cutn.get((id(ea), n)), cutn.get((id(eb), n))
     if not pa or not pb: continue
     A, B, C = pos[pa], pos[pb], pos[n]
-    curve = [[r1((1-t)**2*A[0] + 2*(1-t)*t*C[0] + t*t*B[0]), r1((1-t)**2*A[1] + 2*(1-t)*t*C[1] + t*t*B[1])] for t in (0.2, 0.4, 0.6, 0.8)]
+    curve = [[r1((1-t)**2*A[0] + 2*(1-t)*t*C[0] + t*t*B[0]), r1((1-t)**2*A[1] + 2*(1-t)*t*C[1] + t*t*B[1])] for t in [j/12 for j in range(1, 12)]]
     tw = ea[2] if ea[2] == eb[2] or eb[2] == 'APRON' else eb[2] if ea[2] == 'APRON' else min(ea[2], eb[2], key=lambda t: (len(t), t))
     out_edges.append([pa, pb, tw, curve]); nfil += 1
 # a plain bend (two stretches, both cut): the sharp corner goes
