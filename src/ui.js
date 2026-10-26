@@ -215,8 +215,10 @@ function twyAnchors(){
 function leadLine(pts){   // [m, off] in a runway frame, from the runway centreline out to the taxiway
   const out = pts.map(p => p.slice()), [a, b] = out, dm = b[0] - a[0], s = Math.sign(out[out.length - 1][1]) || 1;
   if (Math.abs(dm) < Math.abs(b[1] - a[1])*0.4) return out;
-  const d = Math.sign(dm); out[0] = [a[0], s*0.9];
-  return [[a[0] - d*60, s*0.9], ...out];
+  // it meets the centreline and runs on along it a short way: the lines from either side of the runway join the one
+  // centreline there rather than running on side by side
+  const d = Math.sign(dm); out[0] = [a[0], 0];
+  return [[a[0] - d*25, 0], ...out];
 }
 // yellow ground paint: over the pale street map a thin dark casing goes underneath so the line still reads
 // (draw strokes the paths and leaves the colour and width alone)

@@ -43,7 +43,7 @@ def _lane_fix(a, b, dx):
             t = i/8; k += 1; nid = -(9000 + k)
             NODE[nid] = ((1-t)**2*P0[0] + 2*(1-t)*t*C[0] + t*t*F[0], (1-t)**2*P0[1] + 2*(1-t)*t*C[1] + t*t*F[1]); mids.append(nid)
         w['nodes'] = [zt] + mids + [foot]
-_lane_fix((48, 189), (39, 329), -17.5)
+# (no longer applied: the stands and lanes follow OpenStreetMap, which is what the map under them shows)
 # AD 2-EGGD-2-1: the OSM runway way, the thresholds and their elevations (ft). The pavement east of the 27 threshold
 # is mapped as a displaced-threshold way (joined in).
 RWYS = [
@@ -332,17 +332,34 @@ def crosses(a, b, skip):
 # Apron) keep their OSM lines, which match the chart there. The MARS alternatives (26L/26R, 28W, 31W, 33W, E1-E3,
 # W1-W8) are left out: each is drawn as its main stand.
 AIP_ALL = {m[0]: P(m[1], m[2]) for m in re.findall(r'\b(\d{1,2}[EW]?)\s+(\d{6}\.\d{2}N)\s+(\d{7}\.\d{2}W)', open(STANDS_TXT).read())}
+# a stand with its own line in OpenStreetMap is placed by that line (the street map under the chart shows the same paint);
+# the AIP coordinate only for one OpenStreetMap does not have
+_osm_refs = {w.get('tags', {}).get('ref') for w in ways if tagged(w, 'parking_position') and w['nodes'][0] != w['nodes'][-1]}
+AIP_ALL = {k: v for k, v in AIP_ALL.items() if re.sub(r'[EW]$', '', k) not in _osm_refs or k in ('34', '40')}
 AIP_STANDS = {k: v for k, v in AIP_ALL.items() if re.match(r'^\d{1,2}$', k)}
-for k in ('28', '31', '33'): AIP_STANDS[k] = AIP_ALL[k + 'E']
+for k in ('28', '31', '33'):
+    if k + 'E' in AIP_ALL: AIP_STANDS[k] = AIP_ALL[k + 'E']
 # true headings into the stand from the chart (AD 2-EGGD-2-2, West Apron): 28-31 and 33 east off the lanes (along
 # taxiway Z's line, 087°), 32 west off the W3/W4 lane, 34-36 west-north-west off W1, 37 north-west from Z; and 17 and
 # 18 (East Apron, not mapped) north off Z like 19 and 20
 AIP_HDG = {'17': 356.5, '18': 356.5, '28': 87, '29': 87, '30': 87, '31': 87, '33': 87, '32': 267, '34': 297, '35': 285, '36': 285, '37': 312}
 lines = []
+# a stand's painted line takes the number of the stand box it lies in: OpenStreetMap has some lines one number out from
+# their boxes (37-39 drawn in the boxes of 38-40, 35 and 36 swapped), and the box is what the map shows the number on
+def _inpoly(p, poly):
+    x, y = p; c = False
+    for i in range(len(poly)):
+        x1, y1 = poly[i]; x2, y2 = poly[i-1]
+        if (y1 > y) != (y2 > y) and x < (x2-x1)*(y-y1)/(y2-y1) + x1: c = not c
+    return c
+_boxes = [(w['tags'].get('ref'), [NODE[n] for n in w['nodes']]) for w in ways if tagged(w, 'parking_position') and w['nodes'][0] == w['nodes'][-1] and w.get('tags', {}).get('ref')]
 for w in ways:
     if not tagged(w, 'parking_position') or w['nodes'][0] == w['nodes'][-1]: continue
     pts = [NODE[n] for n in w['nodes']]
-    if len(pts) >= 2: lines.append((w.get('tags', {}).get('ref'), pts))
+    if len(pts) < 2: continue
+    r = w.get('tags', {}).get('ref'); inb = [b for b, bp in _boxes if _inpoly(pts[-1], bp) or _inpoly(pts[0], bp)]
+    if r and re.match(r'^\d{1,2}$', r) and len(inb) == 1 and re.match(r'^\d{1,2}$', inb[0]) and inb[0] != r: print('stand line', r, 'is in box', inb[0]); r = inb[0]
+    lines.append((r, pts))
 def seg_near(p):
     """the mapped stand line segment nearest p: (distance, a, b)"""
     best = None
@@ -360,9 +377,14 @@ for sid, ap in AIP_STANDS.items():
         if d < 15:   # the mapped line's direction, pointing at whichever of its ends is nearer the T-bar
             if math.dist(a, ap) < math.dist(b, ap): a, b = b, a
             AIPHD[sid] = math.degrees(math.atan2(b[0]-a[0], b[1]-a[1])) % 360
+    # OpenStreetMap has the stand as a point, or only its box: there, not the chart's coordinate
+    osm_pt = next((NODE[e['id']] for e in E if e['type'] == 'node' and e.get('tags', {}).get('aeroway') == 'parking_position' and e['tags'].get('ref') == sid), None)
+    box = next(([NODE[n] for n in w['nodes'][:-1]] for w in ways if tagged(w, 'parking_position') and w.get('tags', {}).get('ref') == sid and w['nodes'][0] == w['nodes'][-1]), None)
+    if osm_pt: ap = osm_pt
+    elif box: ap = (sum(p[0] for p in box)/len(box), sum(p[1] for p in box)/len(box))
     pp[sid] = ([ap], 0)
     for k, (r, q) in enumerate(lines):
-        if min(math.dist(ap, q[0]), math.dist(ap, q[-1])) < 20: used.add(k)
+        if (r in (None, sid)) and min(math.dist(ap, q[0]), math.dist(ap, q[-1])) < 20: used.add(k)
 for k, (r, q) in enumerate(lines):
     if k in used or not r or not re.match(r'^\d{1,2}$', r) or r in pp: continue
     pp[r] = (q, sum(math.dist(q[i], q[i+1]) for i in range(len(q)-1)))
