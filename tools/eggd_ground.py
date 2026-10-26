@@ -398,6 +398,7 @@ def term(sid):
     if n <= 20: return 'E'
     return 'W'
 gates, splits = [], []
+outs = {}
 def along(pl, d):
     """the point d metres along a polyline, and the index of the segment it is on"""
     for i in range(len(pl) - 1):
@@ -423,6 +424,8 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0
             else: p, k = along(q, L/2)
             line = q[:k+1] + [p]; hit = (n0[0], n0[1], n0[2], n0[3])
             hd = bear(q[k], p) if math.dist(q[k], p) > 1 else bear(q[k], q[k+1])
+            # a drive-through stand: taxi in from one lane, out (or in) from the other, no push back
+            outs[sid] = ([p] + q[k+1:], (n1[0], n1[1], n1[2], n1[3])); print('drive-through stand', sid)
         else:
             if n0[0] > n1[0]: q = q[::-1]; n0, n1 = n1, n0          # q runs from the lane end to the stop point
             p = q[-1]; line = q
@@ -450,6 +453,7 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0
     paint = [lq] + (line[1:] if line else [p]) if line or math.dist(p, lq) <= 45 else None
     if paint and any(crosses(paint[j], paint[j+1], e) for j in range(len(paint) - 1)): paint = None
     splits.append((sid, hit))
+    if sid in outs: splits.append((sid + '>', outs[sid][1]))
     gates.append([sid, term(sid), [r1(p[0]), r1(p[1])], hit, round(hd, 1), [[r1(x) for x in pt] for pt in paint] if paint else 0])
 byedge = collections.defaultdict(list)
 for sid, (t, e, i, u) in splits: byedge[id(e)].append((i + u, sid, e))
@@ -472,7 +476,9 @@ for e in edges:
     newedges.append([prev, e[1], e[2], [[r1(x) for x in m] for m in mids]] + e[4:])
     for j in range(k, len(lst)): gnode[lst[j][1]] = e[1]
 edges = newedges
-for gt in gates: gt[3] = gnode[gt[0]]
+for gt in gates:
+    gt[3] = gnode[gt[0]]
+    gt.append([gnode[gt[0] + '>'], [[r1(x) for x in pt] for pt in outs[gt[0]][0]]] if gt[0] in outs and (gt[0] + '>') in gnode else 0)
 edges = add_crossovers(edges, nodes, gates, r1)
 # ── aprons, buildings, hangars
 def ring(pts): return [[r1(x) for x in p] for p in pts]
