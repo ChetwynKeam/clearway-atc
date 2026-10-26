@@ -319,18 +319,22 @@ nodes = [[k, r1(NODE[inv[k]][0]), r1(NODE[inv[k]][1])] for k in sorted({x for e 
 ihps = []
 hnodes = {h[0] for h in holds.values()}
 # intermediate holding positions (OSM holding_position:type=intermediate, mostly unnamed): named after their taxiway and
-# numbered along it, B.1, B.2 ... (said "Bravo hold one"), one per stop line
+# numbered along it after the taxiways that already have the name (B11, B12 ... on B, whose B1-B10 are taxiways), one per stop line
 _byref = collections.defaultdict(list)
+TAKEN = {tname(w['tags'].get('ref') or w['tags'].get('name') or '') for w in taxi} | {re.sub(r'~\d+$', '', k) for k in holds} | {v for v in HP.values() if v}
+TAKEN |= {p for t in list(TAKEN) if t for p in t.split('/')}
 for n, ref in HP.items():
     if HPTYPE.get(n) == 'runway' or not ref or n not in nid or nid[n] not in big or nid[n] in hnodes: continue
     if any(math.dist(NODE[n], NODE[inv_h]) < 25 for inv_h in [k for k, v in nid.items() if v in hnodes]): continue
-    _byref[ref].append(n)
+    _byref[re.match(r'[A-Z]+', ref)[0] if re.match(r'[A-Z]+', ref) else ref].append(n)   # by its taxiway's letter(s): on B4 or B10 it is one of the B series
 for ref, ns in sorted(_byref.items()):
     ns.sort(key=lambda n: (round(-NODE[n][1]/60), NODE[n][0]))   # north to south, then west to east
-    seen = set()
+    seen = set(); num = 0
     for n in ns:
         if nid[n] in seen: continue
-        seen.add(nid[n]); ihps.append(['%s.%d' % (ref, len(seen)), nid[n]])
+        seen.add(nid[n]); num += 1
+        while ref + str(num) in TAKEN: num += 1   # numbered on past the taxiways and holding points that already use the name (B1-B10)
+        TAKEN.add(ref + str(num)); ihps.append(['%s%d' % (ref, num), nid[n]])
 # ── stands: OSM parking positions. The stop point is the end away from the taxilane; the lead-in runs back along the
 # painted line to the lane it starts from.
 segpts = []
