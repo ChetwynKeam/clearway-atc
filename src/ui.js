@@ -215,9 +215,11 @@ function twyAnchors(){
 function leadLine(pts){   // [m, off] in a runway frame, from the runway centreline out to the taxiway
   const out = pts.map(p => p.slice()), [a, b] = out, dm = b[0] - a[0], s = Math.sign(out[out.length - 1][1]) || 1;
   if (Math.abs(dm) < Math.abs(b[1] - a[1])*0.4) return out;
-  // it ends where it meets the centreline (the runway's own centreline paint carries on from there)
+  // it meets the centreline and runs on along it (60 m, as painted), one line where the leads from both sides of the
+  // runway meet; a profile whose lead lines are true fillet curves (APT.leadCurves: Sydney) ends them at the centreline
   out[0] = [a[0], 0];
-  return out;
+  if (APT.leadCurves) return out;
+  return [[a[0] - Math.sign(dm)*60, 0], ...out];
 }
 // yellow ground paint: over the pale street map a thin dark casing goes underneath so the line still reads
 // (draw strokes the paths and leaves the colour and width alone)

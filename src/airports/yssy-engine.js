@@ -342,7 +342,7 @@ const APT = {
   radar: [YSSY.UNITS.app.name, YSSY.UNITS.app.freq], depRadar: [YSSY.UNITS.dep.name, YSSY.UNITS.dep.freq],
   get tower(){ return [YSSY.UNITS.twr.name, YSSY.UNITS.twr.freq[RWYS_BY_END(S.rwy).id]]; },
   gnd: [YSSY.UNITS.gnd.name, YSSY.UNITS.gnd.freq],
-  runways: RWY_LIST, rwyHalfWidth: 23, holdSigns: true,
+  runways: RWY_LIST, rwyHalfWidth: 23, holdSigns: true, leadCurves: true,
   ihps: G.ihps.map(([id, node]) => ({ id, node })),   // intermediate holding points, numbered along each taxiway after its existing names (A7, B11 ...)
   // independent parallel runways (1,037 m apart, with PRM): aircraft on final to 16L and 16R (or 34L and 34R) side by side are
   // not a loss of separation, nor are a departure and an arrival on different parallels, or two departures off them, near the field
