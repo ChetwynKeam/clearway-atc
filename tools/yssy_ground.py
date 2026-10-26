@@ -550,7 +550,7 @@ def away(e, n): pl = epl(e); return pl if e[0] == n else pl[::-1]
 fid = [0]; newn = []; fillets = []; cut = {}   # cut[(id(edge), node)] = distance from that node to its new point
 for n, es in inc.items():
     if n in keepN or len(es) < 2: continue
-    es = [e for e in es if e[2] != 'APRON' or len(es) == 2]
+    es = [e for e in es if e[2] != 'APRON']   # apron lanes keep their own mapped paint
     pairs = []
     for i in range(len(es)):
         for j in range(i + 1, len(es)):
@@ -559,7 +559,7 @@ for n, es in inc.items():
             pa_, pb_ = (cut_at(a, min(12, plen(a)*0.5)) or (a[1],))[0], (cut_at(b, min(12, plen(b)*0.5)) or (b[1],))[0]   # the heading over its first 12 m
             ha = math.atan2(pa_[0]-a[0][0], pa_[1]-a[0][1]); hb = math.atan2(pb_[0]-b[0][0], pb_[1]-b[0][1])
             turn = 180 - abs((math.degrees(ha - hb) + 180) % 360 - 180)   # 0: straight on, 180: back the way it came
-            if 30 <= turn <= 140: pairs.append((es[i], es[j], turn))
+            if 30 <= turn <= 125: pairs.append((es[i], es[j], turn))
     for ea, eb, turn in pairs:
         la, lb = plen(away(ea, n)), plen(away(eb, n))
         r = min(FIL_R*(1 if turn < 100 else 0.7), 0.42*la, 0.42*lb)
@@ -595,7 +595,7 @@ for n, ea, eb, r in fillets:
     pa, pb = cutn.get((id(ea), n)), cutn.get((id(eb), n))
     if not pa or not pb: continue
     A, B, C = pos[pa], pos[pb], pos[n]
-    curve = [[r1((1-t)**2*A[0] + 2*(1-t)*t*C[0] + t*t*B[0]), r1((1-t)**2*A[1] + 2*(1-t)*t*C[1] + t*t*B[1])] for t in (0.2, 0.4, 0.6, 0.8)]
+    curve = [[r1((1-t)**2*A[0] + 2*(1-t)*t*C[0] + t*t*B[0]), r1((1-t)**2*A[1] + 2*(1-t)*t*C[1] + t*t*B[1])] for t in [j/12 for j in range(1, 12)]]
     tw = ea[2] if ea[2] == eb[2] or eb[2] == 'APRON' else eb[2] if ea[2] == 'APRON' else min(ea[2], eb[2], key=lambda t: (len(t), t))
     out_edges.append([pa, pb, tw, curve]); nfil += 1
 # a plain bend (two stretches, both cut): the sharp corner goes
@@ -659,6 +659,7 @@ print('holding points', len({re.sub(r'~\d+$', '', k) for k in holds}), 'stop bar
 def bez(P0, P1, P2, P3, n=10):
     return [tuple((1-t)**3*P0[i] + 3*(1-t)**2*t*P1[i] + 3*(1-t)*t*t*P2[i] + t**3*P3[i] for i in (0, 1)) for t in [j/n for j in range(n + 1)]]
 nsmooth = 0
+leads = {}   # paint only, where it differs from the path an aircraft takes: a two-way entry's curve each way
 # the variants of one stop bar (each turn onto the runway) leave it by one way to the runway edge, the most direct of them;
 # the lead lines fan out from there
 prim = {}
@@ -671,27 +672,37 @@ for k, h in holds.items():
         d0 = 1 if fil[k][-1][0] > fil[k][0][0] else -1
         holds[k][1] = holds[p][1]; holds[k][7] = holds[p][7]; E = fil[p][-1]
         fil[k] = [[E[0] - d0*10, 0.0], E]   # only its direction matters here; the curve is drawn below
+def back_dir(k, E, want=25):
+    """the taxiway's heading onto the runway at E: from a point about 25 m back along its link towards the holding point"""
+    h = holds[k]; path = [E] + list(h[7]) + [(h[3], h[4])]; acc = 0
+    for i in range(1, len(path)):
+        acc += math.dist(path[i-1], path[i])
+        if acc >= want or i == len(path) - 1: q = path[i]; break
+    v = (E[0] - q[0], E[1] - q[1]); L = math.hypot(*v)
+    return (v[0]/L, v[1]/L) if L > 1 else None
 for k, f in list(fil.items()):
     h = holds[k]; E = f[-1]; C0 = f[0]
     if abs(E[1]) < 5: continue
-    nxt = h[7][0] if h[7] else (h[3], h[4])
-    tv = (E[0] - nxt[0], E[1] - nxt[1]); L = math.hypot(*tv)
-    if L < 1: continue
-    tv = (tv[0]/L, tv[1]/L)                                   # the taxiway's heading onto the runway
-    if tv[1]*E[1] > -0.2: continue                             # not heading in towards the centreline: leave the mapped line
+    tv = back_dir(k, E)
+    if not tv or tv[1]*E[1] > -0.2: continue                   # not heading in towards the centreline: leave the mapped line
+    oe = abs(E[1]); t = oe/abs(tv[1]); X = (E[0] + tv[0]*t, 0.0)   # where the taxiway's line meets the centreline
     two = set(h[5].split(',')) >= {FR[h[2]]['lo'], FR[h[2]]['hi']} and len(h[5].split(',')) == 2
-    oe = abs(E[1])
-    if two or not h[5]:
-        mc = E[0] + tv[0]*(oe/abs(tv[1]))                     # straight on along its heading to the centreline
-        if abs(mc - E[0]) > oe*1.2: mc = E[0]
-        fil[k] = [[r1(mc), 0.0], [r1(E[0]), r1(E[1])]]; nsmooth += 1; continue
-    d = 1 if E[0] > C0[0] else -1                              # which way along the runway it serves (as the mapped line did)
-    a = math.atan2(abs(tv[1]), abs(tv[0]))                     # its angle to the runway
-    if tv[0]*-d < -0.05:                                        # a turn back on itself (more than a right angle): straight in, the turn made on the centreline
-        mc = E[0] + tv[0]*(oe/abs(tv[1])); fil[k] = [[r1(mc), 0.0], [r1(E[0]), r1(E[1])]]; nsmooth += 1; continue
-    run = max(oe*0.9, min(220, oe/max(0.18, math.tan(a))))
-    C = (E[0] - d*run, 0.0)
-    pts = bez(C, (C[0] + d*run*0.5, 0.0), (E[0] - tv[0]*oe*0.55, E[1] - tv[1]*oe*0.55), E)
+    d = 1 if E[0] > C0[0] else -1                              # the way along the runway it serves (as the mapped line did)
+    def curve(dd):   # the painted fillet for a turn onto the centreline heading dd (None: a turn of more than 135 degrees)
+        if dd*(-tv[0]) < -0.7 or t > 4*oe: return None
+        C = (X[0] - dd*t, 0.0)
+        return [[r1((1-u)**2*C[0] + 2*(1-u)*u*X[0] + u*u*E[0]), r1((1-u)**2*C[1] + 2*(1-u)*u*X[1] + u*u*E[1])] for u in [j/16 for j in range(17)]]
+    if two or not h[5] or d*(-tv[0]) < -0.7 or t > 4*oe:
+        # both ways (or a turn of more than 135 degrees): the aircraft goes straight on along its line to the centreline;
+        # what is painted is a curve each way it can turn (and the straight line only where it is square to the runway)
+        mc = X[0] if t <= 1.3*oe else E[0]
+        fil[k] = [[r1(mc), 0.0], [r1(E[0]), r1(E[1])]]; nsmooth += 1
+        if two: leads[k] = [c for c in (curve(1), curve(-1)) if c] + ([fil[k]] if abs(tv[0]) < 0.35 else [])
+        continue
+    # one way: the painted fillet, a smooth curve tangent to the taxiway's line at E and to the centreline, as far back
+    # along it from where the two lines meet as E is from there (a quadratic, so it never bulges or doubles back)
+    C = (X[0] - d*t, 0.0)
+    pts = [((1-u)**2*C[0] + 2*(1-u)*u*X[0] + u*u*E[0], (1-u)**2*C[1] + 2*(1-u)*u*X[1] + u*u*E[1]) for u in [j/16 for j in range(17)]]
     fil[k] = [[r1(p[0]), r1(p[1])] for p in pts]; nsmooth += 1
 print('lead lines drawn as curves', nsmooth, 'of', len(fil))
 # runway crossings: from each holding point the same way to the runway edge as its stop bar's turn-ons use, straight over
@@ -712,7 +723,7 @@ print('crossings redrawn', len(xs))
 
 out = {'runways': runways, 'nodes': nodes, 'edges': edges, 'rnodes': rnodes,
        'holds': {k: h[:7] + [h[8]] for k, h in holds.items()}, 'hlink': {k: h[7] for k, h in holds.items() if h[7]}, 'fil': fil, 'hs': hs,
-       'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds, 'hside': hside}
+       'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds, 'hside': hside, 'leads': leads}
 with open(OUT, 'w') as fo:
     fo.write('''// ═════════════════════════ Sydney Kingsford Smith (YSSY): aerodrome layout ═════════════════════════
 // Generated by tools/yssy_ground.py from OpenStreetMap (taxiways, holding positions, parking positions, aprons, terminals,
