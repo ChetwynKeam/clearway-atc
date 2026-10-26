@@ -394,7 +394,7 @@ const SEP_NM = 5, SEP_FT = 1000;
 function separation(){
   const air = S.acs.filter(a => a.st !== 'OUT' && a.alt > 1500);
   if (typeof liveGhosts === 'function') for (const g of liveGhosts()) if (g.alt > 1500 && nearBox(g.la, g.lo, 0.6)) air.push(g);
-  const now = new Set(), stca = new Set();
+  const now = new Set(), stca = new Set(), pairs = { stca: [], los: [] };
   for (let i = 0; i < air.length; i++) for (let j = i + 1; j < air.length; j++) {
     const a = air[i], b = air[j]; if (!(a.mine || b.mine)) continue;
     if ((a.ghost || b.ghost) && !(a.mine && b.ghost || b.mine && a.ghost)) continue;
@@ -402,7 +402,7 @@ function separation(){
     const dv = Math.abs(a.alt - b.alt), dh = nm(a.la, a.lo, b.la, b.lo);
     const k = [a.cs, b.cs].sort().join('|');
     if (dh < SEP_NM - 0.05 && dv < SEP_FT - 100) {
-      now.add(k);
+      now.add(k); pairs.los.push([a, b]);
       if (!S.conflicts.has(k)) { S.conflicts.set(k, S.t); S.stats.los = (S.stats.los || 0) + 1; score(-25, `Loss of separation: ${a.cs} and ${b.cs}, ${dh.toFixed(1)} NM and ${Math.round(dv/100)*100} ft`); emit('los', [a, b]); }
       continue;
     }
@@ -411,14 +411,14 @@ function separation(){
     for (let t = 15; t <= 120; t += 15) {
       const pa = moveLL(a.la, a.lo, a.trk, a.gs*t/3600), pb = moveLL(b.la, b.lo, b.trk, b.gs*t/3600);
       const za = clamp(a.alt + a.vs*t/60, Math.min(a.alt, a.cfl), Math.max(a.alt, a.cfl)), zb = clamp(b.alt + b.vs*t/60, Math.min(b.alt, b.cfl), Math.max(b.alt, b.cfl));
-      if (nm(pa[0], pa[1], pb[0], pb[1]) < SEP_NM && Math.abs(za - zb) < SEP_FT - 100) { stca.add(k); break; }
+      if (nm(pa[0], pa[1], pb[0], pb[1]) < SEP_NM && Math.abs(za - zb) < SEP_FT - 100) { stca.add(k); pairs.stca.push([a, b]); break; }
     }
   }
   for (const k of [...S.conflicts.keys()]) if (!now.has(k) && S.t - S.conflicts.get(k) > 30) S.conflicts.delete(k);
   for (const k of stca) if (!S.stca.has(k)) { const [a, b] = k.split('|'); sys(`STCA: ${a} and ${b}`, true); emit('stca', k); }
-  S.stca = stca; S.los = now;
+  S.stca = stca; S.los = now; S.pairs = pairs;
 }
-const inConflict = ac => { for (const k of S.stca) if (k.split('|').includes(ac.cs)) return true; for (const k of S.los || []) if (k.split('|').includes(ac.cs)) return true; return false; };
+const inConflict = ac => { const P = S.pairs; if (!P) return false; for (const l of [P.stca, P.los]) for (const [a, b] of l) if (a === ac || b === ac) return true; return false; };
 
 // ── score and log ──
 function score(n, why){ S.score += n; S.scoreLog = [...(S.scoreLog || []).slice(-60), [S.t, n, why]]; if (n < 0) logLine('sys', 'SCORE', `${why} (${n})`, true); emit('score'); }

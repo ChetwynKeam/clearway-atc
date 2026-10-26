@@ -239,14 +239,14 @@ function drawTrackLine(T){
   cx.restore();
 }
 function drawConflicts(){
-  const all = new Map(S.acs.map(a => [a.cs, a])); for (const g of liveGhosts()) all.set(g.cs, g);
+  const P = S.pairs; if (!P) return;
   cx.save();
-  for (const set of [S.stca, S.los || new Set()]) for (const k of set) {
-    const [a, b] = k.split('|').map(c => all.get(c)); if (!a || !b) continue;
+  for (const [kind, list] of [['STCA', P.stca], ['LOSS', P.los]]) for (const [a, b] of list) {
+    if (!S.acs.includes(a) && !a.ghost || !S.acs.includes(b) && !b.ghost) continue;
     const [X1, Y1] = SXY(a.la, a.lo), [X2, Y2] = SXY(b.la, b.lo);
     cx.strokeStyle = C.conf; cx.lineWidth = 1.6; cx.setLineDash([5, 4]); cx.beginPath(); cx.moveTo(X1, Y1); cx.lineTo(X2, Y2); cx.stroke(); cx.setLineDash([]);
     for (const [X, Y] of [[X1, Y1], [X2, Y2]]) { cx.beginPath(); cx.arc(X, Y, 5*V.scale/2 + 6, 0, 7); cx.stroke(); }
-    const d = nm(a.la, a.lo, b.la, b.lo); cx.font = `700 11px ${FONT_D}`; cx.fillStyle = C.conf; cx.fillText(`${set === S.stca ? 'STCA' : 'LOSS'} ${d.toFixed(1)} NM ${Math.round(Math.abs(a.alt - b.alt)/100)*100} FT`, (X1 + X2)/2 + 8, (Y1 + Y2)/2 - 8);
+    const d = nm(a.la, a.lo, b.la, b.lo); cx.font = `700 11px ${FONT_D}`; cx.fillStyle = C.conf; cx.fillText(`${kind} ${d.toFixed(1)} NM ${Math.round(Math.abs(a.alt - b.alt)/100)*100} FT`, (X1 + X2)/2 + 8, (Y1 + Y2)/2 - 8);
   }
   cx.restore();
 }
