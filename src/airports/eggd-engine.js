@@ -61,8 +61,9 @@ for (const [k, H] of Object.entries(HOLDS)) {
 }
 // stands (AD 2-EGGD-2-2): the Main Apron in front of the terminal (1-6, 21-26), the East Apron (7-20) and the West Apron
 // (28-40). Bristol has no air bridges: every stand is a walk-out or coach stand, all of them "terminal" stands here.
-const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line]) => { const p = EN(e, n);
-  return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null, noLead: !line, h0: hdg, line: line ? line.map(([e, n]) => EN(e, n)) : null }; });
+const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const p = EN(e, n);
+  return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null, noLead: !line, h0: hdg, line: line ? line.map(([e, n]) => EN(e, n)) : null,
+    ...(out ? { out: { node: out[0], pts: out[1].map(([e, n]) => EN(e, n)) } } : {}) }; });   // out: a drive-through stand's way out to the far lane
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
 // the mapped stand line ends where the nose stops: the stand's point is the aircraft's middle, set back from that end by
 // the stop-bar distance of the largest aircraft the stand takes (as at Madrid and Manchester)

@@ -29,7 +29,7 @@ window.__bot = function botTick(){
       if (ac.airborne) { if (ac.need || ac.freq === 'TWR') go(ac, 'HO'); continue; }
       if (typeof xingAhead === 'function' && xingAhead(ac) >= 0 && ac.hsAt) { go(ac, 'CROSS ' + rwyName(ac.path.pts[xingAhead(ac)].hs)); continue; }
       if (ac.need === 'Request tow') go(ac, 'TOW');
-      else if (ac.state === 'PARKED' && ac.need) go(ac, 'PUSH');
+      else if (ac.state === 'PARKED' && ac.need) go(ac, typeof driveOut === 'function' && driveOut(ac) ? 'TAXI' : 'PUSH');
       else if (ac.state === 'READY' && ac.need) go(ac, 'TAXI');
       else if (ac.state === 'HOLDPT' || ac.state === 'TAXI') {
         if (needRel(ac) && (!ac.rel || ac.rel.st === 'EXP')) go(ac, 'REL');
