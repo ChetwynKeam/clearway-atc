@@ -406,7 +406,7 @@ function standAt(ac, t){
 const flowText = c => `land ${landRwys(c).join(' and ')}, depart ${depRwysOf(c).join(' and ')}`;
 const APT = {
   get arrAlt(){ return ARR_ALT[cfgNow()]; },   // the flow's STAR and initial approach altitudes
-  icao: 'LEMD', name: 'Madrid-Barajas', coordName: 'Barajas', radarName: 'MAD', utcOff: 2,
+  icao: 'LEMD', name: 'Madrid-Barajas', coordName: 'Barajas', radarName: 'MAD', utcOff: 2, tz: 'Europe/Madrid',
   radar: [LEMD.UNITS.app.name, LEMD.UNITS.app.freq], depRadar: [LEMD.UNITS.dep.name, LEMD.UNITS.dep.freq.west],
   // Barajas Tower has a frequency for each runway pair: the one for the flow's west landing runway
   get tower(){ return [LEMD.UNITS.twr.name, LEMD.UNITS.twr.freq[S.rwy] || LEMD.UNITS.twr.freq['32L']]; },

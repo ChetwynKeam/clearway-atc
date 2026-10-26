@@ -246,7 +246,7 @@ const AD_SITE = {
 const APT = {
   areaNames: { civil: 'main apron' },   // what the stand areas are called (the preferred area shown for an arrival)
   arrAlt: arrAltOf(GATES.map(STAR_OF)),   // STARs (AD 2.24.10): MA534 4000, PILIM 3000
-  icao: 'LPMA', name: 'Madeira', coordName: 'Madeira', radarName: 'FUN', utcOff: 1,
+  icao: 'LPMA', name: 'Madeira', coordName: 'Madeira', radarName: 'FUN', utcOff: 1, tz: 'Atlantic/Madeira',
   radar: ['Madeira Approach', '119.605'], tower: ['Madeira Tower', '124.660'],
   xing: false, drawnTown: false, ta: 5000, initClimb: 6000, gaAlt: 3000, appAlt: 3000, handoffNM: 20, climbFL: 100,
   area: { dep: 80, arr: 100, div: 30 }, roll: [60, RWY_M - 60], defRwy: '05', defWx: 'trade',   // STAR entries are on the TMA edge, up to 70 NM from FUN

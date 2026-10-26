@@ -367,7 +367,7 @@ function standAt(ac, t){
 const APT = {
   // STAR levels (FL70 at BRI, 1,000 ft above the SIDs' 6,000 ft stop), then the downwind and base
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT },
-  icao: 'EGGD', name: 'Bristol', coordName: 'Bristol', radarName: 'BRS', utcOff: 1,
+  icao: 'EGGD', name: 'Bristol', coordName: 'Bristol', radarName: 'BRS', utcOff: 1, tz: 'Europe/London',
   radar: [EGGD.UNITS.app.name, EGGD.UNITS.app.freq], depRadar: [EGGD.UNITS.app.name, EGGD.UNITS.app.freq],   // departures go to Bristol Radar, then Cardiff Radar or London Control
   tower: [EGGD.UNITS.twr.name, EGGD.UNITS.twr.freq], gnd: [EGGD.UNITS.gnd.name, EGGD.UNITS.gnd.freq],
   runways: RWY_LIST, bigGround: true, rwyHalfWidth: 23,

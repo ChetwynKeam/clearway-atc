@@ -378,7 +378,7 @@ const altim = () => `altimeter ${S.wx.inhg.toFixed(2)}`;
 const visSM = v => v >= 9999 ? '10' : v >= 4800 ? String(Math.round(v/1609)) : String(Math.round(v/1609*4)/4).replace(/\.25$/, ' 1/4').replace(/\.5$/, ' 1/2').replace(/\.75$/, ' 3/4').replace(/^0 /, '');
 const APT = {
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT },   // STAR expect-altitudes, then the downwind and base
-  icao: 'KJFK', name: 'New York JFK', coordName: 'Kennedy', radarName: 'JFK', utcOff: -4,
+  icao: 'KJFK', name: 'New York JFK', coordName: 'Kennedy', radarName: 'JFK', utcOff: -4, tz: 'America/New_York',
   radar: [KJFK.UNITS.app.name, KJFK.UNITS.app.freq], depRadar: [KJFK.UNITS.dep.name, KJFK.UNITS.dep.freq],
   // two tower frequencies: 119.1 for 4R/22L and 13L/31R, 123.9 for 4L/22R and 13R/31L. Arrivals call the one for their runway.
   get tower(){ return [KJFK.UNITS.twr.name, KJFK.UNITS.twr.freq[RWYS_BY_END(S.rwy).id]]; },

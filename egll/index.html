@@ -4190,6 +4190,14 @@ const hm = t => +t.slice(0,2)*60 + +t.slice(3);
 // wins). Profiles pass them as APT.arrAlt: cleared arrivals descend with them (viaAlt in sim.js)
 function arrAltOf(procs){ const m = {}; for (const P of procs) for (const [id, a] of P.pts) if (a && m[id] == null) m[id] = a; return m; }
 
+// the airport's offset from UTC (hours) at a moment: its time zone's rule (summer time and back), else the profile's fixed one
+function tzOffH(ms){
+  if (!APT.tz || typeof Intl === 'undefined') return APT.utcOff;
+  try { const p = new Intl.DateTimeFormat('en-GB', { timeZone: APT.tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' }).formatToParts(new Date(ms)), g = t => +p.find(x => x.type === t).value;
+    return Math.round((Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute')) - Math.floor(ms/60000)*60000)/60000)/60; } catch (e) { return APT.utcOff; }
+}
+const simMs = () => (typeof S !== 'undefined' && S.start ? S.start + (S.t || 0)*1000 : Date.now());
+
 // ═════════════════════════ London Heathrow (EGLL) airport profile ═════════════════════════
 // Everything the Clearway engine needs to know that is true only of Heathrow. Sources: UK AIP AD 2-EGLL (AIRAC 10/26):
 // aerodrome chart 2-4 (thresholds, frequencies), parking charts 2-1 (stand positions), ground movement chart 2-2,
@@ -5733,7 +5741,7 @@ class Aircraft {
 // arrivals show on radar about 35 NM beyond the boundary as pending tracks (not on frequency, no control) and call
 // Gibraltar Radar when they reach the entry point inside the radar rings
 const PRE_NM = 35, PRE_LEAD = 6.5*60;
-const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + APT.utcOff) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
+const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + tzOffH(S.start + S.t*1000)) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
   const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][S.rwy][0]];
@@ -8713,7 +8721,7 @@ function renderScore(){
   $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>${S.running && !EXERCISES[S.mode] && AI_SEATS.some(k => S.seats[k] === 'AI') ? `<span class="ai" title="Seats worked by AI controllers (their flights don't count in your score)">AI <b>${AI_SEATS.filter(k => S.seats[k] === 'AI').join(' ')}</b></span>` : ''}`;
   const d = new Date(S.start + S.t*1000);
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
-  $('clockz').textContent = 'local ' + new Date(d.getTime() + APT.utcOff*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
+  $('clockz').textContent = 'local ' + new Date(d.getTime() + tzOffH(d.getTime())*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
   if (S.xing.st === 'CLOSING' || S.xing.st === 'OPENING') { const el = $('xCount'); if (el) el.textContent = Math.max(0, Math.ceil(S.xing.t - S.t)); const bar = document.querySelector('.xing .bar i'); if (bar) bar.style.width = Math.round((S.xing.st === 'CLOSING' ? clamp(1 - (S.xing.t - S.t)/150, 0, 1) : clamp((S.xing.t - S.t)/15, 0, 1))*100)+'%'; }
 }
 
@@ -8793,7 +8801,7 @@ wxSel.value = APT.defWx;
 const daySel = $('daySel'), hourSel = $('hourSel');
 DAYS.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; daySel.appendChild(o); });
 daySel.value = (new Date().getUTCDay() + 6) % 7;
-const lt = h => String(((h + APT.utcOff) % 24 + 24) % 24).padStart(2,'0');   // New York is behind UTC
+const lt = h => String(((h + tzOffH(Date.UTC(2026, 9, 5 + (+daySel.value || 0), ((h % 24) + 24) % 24))) % 24 + 24) % 24).padStart(2,'0');   // New York is behind UTC
 function renderSlots(){
   const d = +daySel.value, keep = hourSel.value, ex = !!EXERCISES[$('trafficSel').value];
   if (/^live/.test($('trafficSel').value)) { daySel.disabled = hourSel.disabled = true; if (typeof renderLiveSlots === 'function') renderLiveSlots(); return; }
