@@ -5388,7 +5388,7 @@ const PH = Object.assign({
   push: (ac, dn, face) => [`cleared to ${dn} via ${sidSpoken(ac.sid)} departure, climb ${altWords(APT.initClimb)}, squawk ${ac.sqk}, start-up and push back approved, facing ${faceSay(ac, face)}, ${PH.altim()}`,
     `cleared ${dn}, ${sidSpoken(ac.sid)}, ${altShort(APT.initClimb)}, squawk ${ac.sqk}, start and push approved facing ${faceSay(ac, face)}, ${PH.altim()}`],
   pull: (ac, st) => [`pull forward onto ${APT.standWord || 'stand'} ${st.id}, call me for push back`, `pulling forward onto ${APT.standWord || 'stand'} ${st.id}`],
-  startReq: ac => `${APT.tower[0]}, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up and push back`,
+  startReq: ac => `${APT.tower[0]}, stand ${ac.stand.id}, ${ac.perf.name} to ${ac.d}, information ${phonetic(S.atis)}, request start-up${driveOut(ac) ? '' : ' and push back'}`,
   checkIn: ac => `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)} descending ${altShort(ac.tgtAlt)}, inbound ${ac.route[0]}, information ${phonetic(S.atis)}`,
   depCall: ac => `${(APT.depRadar || APT.radar)[0]}, passing ${Math.round(ac.alt/100)*100} feet climbing ${altShort(ac.tgtAlt)}, ${ac.onSid && ac.sid ? sidSpoken(ac.sid) + ' departure' : 'heading ' + hdg3(ac.hdg)}`,
   cross: (ac, rw) => [`cross runway ${rw}`, `crossing runway ${rw}`],
@@ -5857,7 +5857,7 @@ function setPath(ac, pts, spd, onDone, opts={}){ if (!opts.fine) pts = straightC
 const PATH_DONE = {
   vacated: ac => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); },
   holdIn: (ac, { hold }) => atHoldIn(ac, hold),
-  onStand: (ac, { st }) => { ac.state = 'ONSTAND'; ac.hdg = st.hdg ?? ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); },
+  onStand: (ac, { st, rev }) => { ac.state = 'ONSTAND'; ac.hdg = st.hdg != null ? (rev ? norm(st.hdg + 180) : st.hdg) : ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); },
   linedUp: (ac, a, v) => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.vacq) { const [ex, back] = ac.vacq; ac.vacq = null; depVacate(ac, ex, back); } else if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; },
   // a departure taken off the runway again (VAC): clear of the exit's holding point, it waits for a taxi instruction
   depOff: (ac, { ex }) => { ac.depVac = null; ac.onRwy = false; ac.xing = null; ac.holdAt = ex; ac.need = `Holding at ${ex.replace(/~\d+$/, '')}`; pilot(ac, `runway vacated via ${exitWord(ex)}, holding`); emit('depoff', ac); },
@@ -5887,11 +5887,20 @@ function pushFace(ac){
   const other = rec === 'east' ? 'west' : 'east';
   return ok(rec) || !ok(other) ? rec : other;
 }
+// A drive-through stand (st.out: the painted line on from the stop mark to the far lane): no push back, it taxis out
+// forwards, out over the far lane, or over the lane it came in from when it went in the other way. null: push back
+function driveOut(ac){
+  const st = ac.stand; if (!st || !st.out || ac.pushed) return null;
+  const p = [ac.x, ac.y], fwd = st.out.pts[st.out.pts.length - 1];
+  if (Math.abs(angDiff(ac.hdg, brg(...p, ...fwd))) < 90) { const P = st.out.pts.slice(1), a = P.length > 1 ? P[P.length - 2] : p; return { node: st.out.node, pts: P, face: brg(...a, ...GN[st.out.node].p) }; }
+  const back = (st.line || [st.lp]).slice().reverse().slice(1), a = back.length > 1 ? back[back.length - 2] : p;
+  return { node: st.node, pts: back.length ? back : [st.lp], face: brg(...a, ...GN[st.node].p) };
+}
 function taxiStart(ac){
   const p = [ac.x, ac.y], h = ac.hdg; let best = null;
   // pushed back but not yet away: from the stand's lead-in point on the lane, the way the push left it facing
   // on its stand (an arrival's stand, assigned while it taxis in, doesn't count)
-  if (ac.stand && !ac.leftStand && (ac.pushed || ['PARKED', 'ONSTAND', 'PUSH', 'READY', 'PULL'].includes(ac.state))) { const id = ac.stand.node; if (!ac.pushed) return [id, null];
+  if (ac.stand && !ac.leftStand && (ac.pushed || ['PARKED', 'ONSTAND', 'PUSH', 'READY', 'PULL'].includes(ac.state))) { const id = ac.stand.node; if (!ac.pushed) { const dO = driveOut(ac); return dO ? [dO.node, dO.face] : [id, null]; }
     const n = GN[id].p, b = brg(...p, ...n); return [id, dist(...p, ...n) > 10/1852 && Math.abs(angDiff(h, b)) < 90 ? b : h]; }
   for (const e of GE) { if (/^R/.test(e.a) || /^R/.test(e.b)) continue;
     const a = GN[e.a].p, b = GN[e.b].p, dx = b[0]-a[0], dy = b[1]-a[1], L2 = dx*dx + dy*dy || 1e-12, f = clamp(((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L2, 0, 1);
@@ -6226,8 +6235,12 @@ function taxiIn(ac, st, via, hold){
   ac.taxiIn = true; ac.need = null; ac.held = false; ac.holdAt = null; ac.taxiVia = viaOf(r.tws, ac.exit);
   // to a holding point: it stops there and waits for the next taxi instruction
   if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, ['holdIn', { hold }]); else atHoldIn(ac, hold, true); return ac.taxiVia; }
+  // a drive-through stand: in over whichever lane is the shorter way round, nose on towards the other
+  let rev = false;
+  if (st.out && !rolling) { const r2 = route(from, st.out.node, undefined, face) || route(from, st.out.node);
+    if (r2 && pathLen(r2.nodes) < pathLen(r.nodes) - 30/1852) { rev = true; pts.length = 0; pts.push(...r2.nodes.map(id => GN[id].p), ...st.out.pts.slice(1).reverse()); } }
   pts.push(st.p);
-  setPath(ac, pts, 15, ['onStand', { st }], { inR: standInR(pts, st) });
+  setPath(ac, pts, 15, ['onStand', { st, rev }], { inR: standInR(pts, st) });
   return ac.taxiVia;
 }
 function atHoldIn(ac, hold, quiet){
@@ -6497,6 +6510,7 @@ function commandRun(str){
       return renderSel && renderSel();
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
+      if (driveOut(ac)) { sys(`${APT.standWord === 'gate' ? 'Gate' : 'Stand'} ${ac.stand.id} is a taxi-in, taxi-out stand: no push back. Give ${ac.cs} its taxi (TAXI) and it taxis out forwards.`); continue; }
       const dir = pushDir(ac, toks[i+1]); if (dir) i++;
       const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac));
       ac.pushPts = pushPath(ac, face);
@@ -6557,7 +6571,7 @@ function commandRun(str){
       const pts = rt.nodes.map(id => GN[id].p);
       // pushed onto the lane already: don't taxi back to the stand's lead-in point if the next node is ahead
       if (ac.pushed && !ac.leftStand && pts.length > 1 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90) pts.shift();
-      if (ac.state === 'PARKED') { ac.pushed = false; pts.unshift(ac.stand.lp); }
+      if (ac.state === 'PARKED') { const dO = driveOut(ac); ac.pushed = false; pts.unshift(...(dO ? dO.pts : [ac.stand.lp])); }
       ac.state = 'TAXI'; ac.need = null; ac.leftStand = true; ac.held = false; ac.holdAt = null;
       if (ihp) { ac.luq = false; ac.cto = false; setPath(ac, pts, 15, ['atIhp', { ihp }], { ihp: ihp.id }); }
       else setPath(ac, pts, 15, ['atHp', { hp }], { thru: !!(ac.cto || ac.luq) });
