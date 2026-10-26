@@ -283,9 +283,28 @@ function agreementFor(ac, a, b){
 // ── routes from where a flight is now (live traffic: we only know where it is, and perhaps where it is going) ──
 // on: the airway fixes ahead of it (within 80° of its track), joined at the nearest; then airways to the STAR of its
 // destination, or towards a far destination (or, not knowing, a point far ahead on its track) until the map's edge
-function startsAhead(la, lo, trk, r = 70){
+// joining fixes: well ahead (a gentle turn onto the airway, not a sharp one), the straighter the better
+function startsAhead(la, lo, trk, r = 80){
   const out = [];
-  for (const f of AWY_NODES) { const p = FIXP[f], d = nm(la, lo, p[0], p[1]); if (d < r && d > 3 && Math.abs(angDiff(trk, crs(la, lo, p[0], p[1]))) < 80) out.push([f, d*1.25]); }
+  for (let cone = 35; cone <= 80 && out.length < 3; cone += 15) {
+    out.length = 0;
+    for (const f of AWY_NODES) { const p = FIXP[f], d = nm(la, lo, p[0], p[1]), off = Math.abs(angDiff(trk, crs(la, lo, p[0], p[1])));
+      if (d < r && d > 10 && off < cone) out.push([f, d*1.25 + off*0.8]); }
+  }
+  return out;
+}
+// a route from where an aircraft is that starts with a turn of more than 25°: it joins along a gentle intercept instead,
+// a point ahead on its present track first, and drops any point it would have to turn back for
+function smoothJoin(route, la, lo, trk){
+  if (!route || route.length < 2) return route;
+  let i = 1;
+  while (i < route.length - 1) { const p = route[i], d = nm(la, lo, p[0], p[1]); if (Math.abs(angDiff(trk, crs(la, lo, p[0], p[1]))) > 70 || d < 4) i++; else break; }
+  const out = [route[0], ...route.slice(i)], p = out[1], d = nm(la, lo, p[0], p[1]), off = angDiff(trk, crs(la, lo, p[0], p[1]));
+  if (Math.abs(off) > 25 && d > 12) {
+    // fly on for a while, then turn half way, so the turn onto the route is spread out
+    const a = moveLL(la, lo, trk, Math.min(14, d*0.3)), b = moveLL(a[0], a[1], norm(trk + off*0.6), Math.min(14, d*0.25));
+    out.splice(1, 0, [a[0], a[1], null], [b[0], b[1], null]);
+  }
   return out;
 }
 function routeOnward(la, lo, trk, arr){
@@ -313,7 +332,7 @@ function routeOnward(la, lo, trk, arr){
 // back: from its origin (its SID, airways) to where it is now
 function routeBack(la, lo, trk, dep){
   const O = dep && apLL(dep); if (!O) return null;
-  const back = norm(trk + 180), goals = startsAhead(la, lo, back, 60);
+  const back = norm(trk + 180), goals = startsAhead(la, lo, back, 70);
   if (!goals.length) return [[O[0], O[1], dep], [la, lo, null]];
   let starts = null, sidPts = [];
   if (inMap(O) && SIDS[dep]) {
@@ -325,7 +344,10 @@ function routeBack(la, lo, trk, dep){
   if (!via) return [[O[0], O[1], dep], [la, lo, null]];
   const sid = starts && starts.find(s => s[0] === via[0]);
   if (sid) sidPts = procPts(sid[2]).slice(0, -1).map(n => [FIXP[n][0], FIXP[n][1], n]);
-  return [[O[0], O[1], dep], ...sidPts, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), [la, lo, null]];
+  const pts = [[O[0], O[1], dep], ...sidPts, ...via.map(n => [FIXP[n][0], FIXP[n][1], n])], last = pts[pts.length - 1], d = nm(la, lo, last[0], last[1]);
+  // the last stretch arrives along the way it is flying now, not at an angle
+  if (d > 12 && Math.abs(angDiff(back, crs(la, lo, last[0], last[1]))) > 20) { const q = moveLL(la, lo, back, Math.min(14, d*0.35)); pts.push([q[0], q[1], null]); }
+  return [...pts, [la, lo, null]];
 }
 // a past route with the levels it would have flown: up from the airport at about 230 ft a mile, never above where it is now
 function pastWithAlt(pts, altNow){
