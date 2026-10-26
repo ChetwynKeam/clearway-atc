@@ -10543,7 +10543,7 @@ function drawGroundSigns(){
   }
   // several runways (New York): a red mandatory sign with the runway at each holding position
   // with the holding point's name on a location sign beside it (black, yellow letters), so a line-up point can be picked off the map
-  if (APT.runways && sc > (APT.holdSigns ? 260 : 800)) { const fr = clamp(3*mpx, 9.5, 14); cx.font = `700 ${fr}px ${FONT_L}`;
+  if (APT.runways && sc > (APT.holdSigns ? 150 : 800)) { const fr = clamp(3*mpx, 9.5, 14); cx.font = `700 ${fr}px ${FONT_L}`;
     const nameAt = {}; if (APT.holdSigns) for (const [k, Hd] of Object.entries(HOLDS)) if (!(Hd.node in nameAt)) nameAt[Hd.node] = Hd.ref;
     for (const [id, n] of Object.entries(GN)) { if (!n.p.hs) continue; const R = rwyById(n.p.hs), t = `${R.lo}-${R.hi}`, nm = nameAt[id] || '', wn = nm ? cx.measureText(nm).width + 8 : 0, wr = sc > 800 || !nm ? cx.measureText(t).width + 8 : 0, w = wn + wr, [X, Y] = P2(n.p), x = X + 6, y = Y - fr*1.5;
       if (!w || !free(x, y, w, fr*1.25)) continue;
