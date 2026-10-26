@@ -667,7 +667,7 @@ for k, h in holds.items():
     if h[0] not in prim or L < prim[h[0]][1]: prim[h[0]] = (k, L)
 for k, h in holds.items():
     p = prim[h[0]][0]
-    if p != k:
+    if p != k and math.dist(fil[k][-1], fil[p][-1]) < 45:   # a separate way onto the runway (T4's rapid exit, 400 m on) keeps its own
         d0 = 1 if fil[k][-1][0] > fil[k][0][0] else -1
         holds[k][1] = holds[p][1]; holds[k][7] = holds[p][7]; E = fil[p][-1]
         fil[k] = [[E[0] - d0*10, 0.0], E]   # only its direction matters here; the curve is drawn below
