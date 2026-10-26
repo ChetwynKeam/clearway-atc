@@ -267,7 +267,7 @@ const APT = {
   areaNames: { civil: 'main apron', north: 'GA apron' },   // what the stand areas are called (the preferred area shown for an arrival)
   arrAlt: arrAltOf([...Object.values(EGLC.TRANS), ...GATES.map(STAR_OF)]),   // transitions (7-15..7-18) then STARs
   ihps: IHP_T.map(([id, m]) => ({ id, tw: 'T', at: rm(m, offT(m)) })),
-  icao: 'EGLC', name: 'London City', coordName: 'Thames', radarName: 'LCY', utcOff: 1,
+  icao: 'EGLC', name: 'London City', coordName: 'Thames', radarName: 'LCY', utcOff: 1, tz: 'Europe/London',
   radar: ['Thames Director', '132.700'], tower: ['City Tower', '118.080'],
   rwyHalfWidth: 15, xing: false, drawnTown: false, ta: 6000, initClimb: 3000, gaAlt: 2000, appAlt: 3000, handoffNM: 16, climbFL: 80,
   area: { dep: 40, arr: 90, div: 40 }, roll: [70, RWY_M - 70], defRwy: '27', defWx: 'sw',

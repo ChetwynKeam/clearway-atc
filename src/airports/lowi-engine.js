@@ -248,7 +248,7 @@ const APT = {
   arrAlt: arrAltOf(GATES.map(STAR_OF)),   // STARs (11-1): RTT 9500 and the valley entry altitudes
   // intermediate holding points (AD 2 MAP 1-1): L1 on Lima at the main taxiway, B1 on Bravo north of the apron
   ihps: [{ id: 'L1', node: 'L1', tw: 'L' }, { id: 'B1', tw: 'B', at: rm(1645, -188) }],
-  icao: 'LOWI', name: 'Innsbruck', coordName: 'Innsbruck', radarName: 'INN', utcOff: 2,
+  icao: 'LOWI', name: 'Innsbruck', coordName: 'Innsbruck', radarName: 'INN', utcOff: 2, tz: 'Europe/Vienna',
   radar: [LOWI.UNITS.app.name, LOWI.UNITS.app.freq], tower: [LOWI.UNITS.twr.name, LOWI.UNITS.twr.freq],
   xing: false, drawnTown: false, ta: LOWI.TA, initClimb: 10000, gaAlt: 9500, appAlt: 9500, handoffNM: 25, climbFL: 150, divertAlt: 15000,
   area: { dep: 60, arr: 120, div: 40 }, roll: [70, RWY_M - 40], defRwy: '26', defWx: 'west',
