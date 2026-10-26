@@ -252,7 +252,7 @@ for h1, c1, k1, r1d in paths_all:
     for h2, c2, k2, r2d in paths_all:
         if r1d != r2d or (h1, h2) in pairs or h1 >= h2: continue
         R = FR[r1d]; mo = R['mo']
-        if abs(c1[0] - c2[0]) < 15 and mo(NODE[h1])[1]*mo(NODE[h2])[1] < 0 and abs(mo(NODE[h1])[0] - mo(NODE[h2])[0]) < 45:   # facing each other across the runway, not diagonally
+        if abs(c1[0] - c2[0]) < 15 and mo(NODE[h1])[1]*mo(NODE[h2])[1] < 0 and abs(mo(NODE[h1])[0] - mo(NODE[h2])[0]) < 45 and 120 < c1[0] < R['L'] - 120:   # not over a runway end's threshold   # facing each other across the runway, not diagonally
             pairs.add((h1, h2)); x = 'x%d' % len(XN); a, U, N = R['a'], R['U'], R['N']
             XN[x] = (a[0] + U[0]*c1[0], a[1] + U[1]*c1[0])
             for h, k in ((h1, k1), (h2, k2)):
@@ -692,6 +692,12 @@ for k, f in list(fil.items()):
         if dd*(-tv[0]) < -0.7 or t > 4*oe: return None
         C = (X[0] - dd*t, 0.0)
         return [[r1((1-u)**2*C[0] + 2*(1-u)*u*X[0] + u*u*E[0]), r1((1-u)**2*C[1] + 2*(1-u)*u*X[1] + u*u*E[1])] for u in [j/16 for j in range(17)]]
+    if h[6]:
+        # at a runway end the only turn is onto the runway, away from the end: lining up there, or a landing that has
+        # rolled to the end turning off (the same curve), never a line out over the end
+        dEnd = -1 if h[6] == FR[h[2]]['lo'] else 1
+        c = curve(dEnd)
+        if c: fil[k] = c; leads[k] = [c]; nsmooth += 1; continue
     if two or not h[5] or d*(-tv[0]) < -0.7 or t > 4*oe:
         # both ways (or a turn of more than 135 degrees): the aircraft goes straight on along its line to the centreline;
         # what is painted is a curve each way it can turn (and the straight line only where it is square to the runway)
