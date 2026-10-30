@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-30T00:56:58Z",
+ "updated": "2026-10-30T06:40:52Z",
  "source": "avionio.com",
  "days": {
   "2026-10-30": {
@@ -9,20 +9,27 @@
      "place": "London",
      "flight": "U22637",
      "sched": "09:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Kuwait",
      "flight": "H5715",
      "sched": "13:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Vienna",
      "flight": "OS105",
      "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "U28697",
+     "sched": "14:30",
      "status": "Scheduled",
      "expected": ""
     },
@@ -36,6 +43,20 @@
    ],
    "dep": [
     {
+     "place": "Dalaman",
+     "flight": "TYW431",
+     "sched": "08:10",
+     "status": "Estimated",
+     "expected": "08:15"
+    },
+    {
+     "place": "London",
+     "flight": "U22638",
+     "sched": "10:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Vienna",
      "flight": "OS106",
      "sched": "15:15",
@@ -46,6 +67,27 @@
      "place": "Vienna",
      "flight": "OS108",
      "sched": "18:50",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-10-31": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Vienna",
+     "flight": "OS105",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "15:15",
      "status": "Scheduled",
      "expected": ""
     }
