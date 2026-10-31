@@ -1,319 +1,956 @@
 {
- "updated": "2026-10-31T01:50:04Z",
+ "updated": "2026-10-31T07:49:53Z",
  "source": "madeiraairport.pt",
  "days": {
-  "2026-10-30": {
+  "2026-10-31": {
    "utcOffsetMin": 0,
    "arr": [
     {
      "place": "Lisboa",
-     "flight": "TP1697",
-     "sched": "01:00",
+     "flight": "EJU7621",
+     "sched": "07:45",
      "status": "Arrived",
-     "expected": "00:55"
-    },
-    {
-     "place": "Lisboa",
-     "flight": "FR088",
-     "sched": "07:55",
-     "status": "Arrived",
-     "expected": "07:35"
+     "expected": "07:37"
     },
     {
      "place": "Porto",
      "flight": "TP1701",
      "sched": "08:00",
-     "status": "Arrived",
-     "expected": "08:04"
-    },
-    {
-     "place": "Porto",
-     "flight": "EJU6831",
-     "sched": "08:10",
-     "status": "Arrived",
-     "expected": "07:56"
+     "status": "Estimated",
+     "expected": "07:45"
     },
     {
      "place": "Lisboa",
-     "flight": "EJU7631",
+     "flight": "FR088",
+     "sched": "08:15",
+     "status": "Estimated",
+     "expected": "08:00"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6633",
+     "sched": "08:25",
+     "status": "Estimated",
+     "expected": "08:00"
+    },
+    {
+     "place": "Porto",
+     "flight": "EJU6835",
+     "sched": "08:35",
+     "status": "Estimated",
+     "expected": "08:25"
+    },
+    {
+     "place": "Bordeaux",
+     "flight": "EJU1869",
      "sched": "08:50",
-     "status": "Arrived",
-     "expected": "08:34"
+     "status": "Estimated",
+     "expected": "08:15"
     },
     {
      "place": "Porto Santo",
      "flight": "NT4933",
      "sched": "08:55",
-     "status": "Arrived",
-     "expected": "08:41"
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Luxembourg",
+     "flight": "LG771",
+     "sched": "09:05",
+     "status": "Estimated",
+     "expected": "08:50"
     },
     {
      "place": "Lisboa",
      "flight": "TP1685",
      "sched": "09:15",
-     "status": "Arrived",
-     "expected": "09:09"
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Bristol",
-     "flight": "LS1825",
+     "place": "Nantes",
+     "flight": "TO7840",
+     "sched": "09:25",
+     "status": "Estimated",
+     "expected": "09:05"
+    },
+    {
+     "place": "Hamburg",
+     "flight": "EW7268",
+     "sched": "09:40",
+     "status": "Estimated",
+     "expected": "09:25"
+    },
+    {
+     "place": "Dusseldorf",
+     "flight": "EW9600",
+     "sched": "09:50",
+     "status": "Estimated",
+     "expected": "09:40"
+    },
+    {
+     "place": "Brussels",
+     "flight": "SN3827",
      "sched": "10:05",
-     "status": "Arrived",
-     "expected": "09:46"
+     "status": "Estimated",
+     "expected": "09:45"
     },
     {
      "place": "Lisboa",
      "flight": "TP1687",
      "sched": "10:10",
-     "status": "Arrived",
-     "expected": "10:10"
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "London Stansted",
-     "flight": "LS1559",
-     "sched": "10:20",
-     "status": "Arrived",
-     "expected": "10:08"
+     "place": "Marseille",
+     "flight": "TO7844",
+     "sched": "10:15",
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Manchester",
-     "flight": "LS1721",
-     "sched": "10:40",
-     "status": "Arrived",
-     "expected": "10:21"
-    },
-    {
-     "place": "Porto Santo",
-     "flight": "NT9902",
-     "sched": "10:50",
-     "status": "Arrived",
-     "expected": "10:32"
-    },
-    {
-     "place": "Riga",
-     "flight": "BT767",
+     "place": "Zurich",
+     "flight": "WK264",
      "sched": "10:55",
-     "status": "Arrived",
-     "expected": "10:16"
+     "status": "Estimated",
+     "expected": "10:20"
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8519",
-     "sched": "11:00",
-     "status": "Arrived",
-     "expected": "11:26"
-    },
-    {
-     "place": "London Gatwick",
-     "flight": "BA2716",
-     "sched": "11:15",
-     "status": "Arrived",
-     "expected": "11:39"
+     "sched": "11:05",
+     "status": "Estimated",
+     "expected": "11:00"
     },
     {
      "place": "Ponta Delgada",
      "flight": "S4160",
+     "sched": "11:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "BA2716",
+     "sched": "11:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Copenhagen",
+     "flight": "D83614",
+     "sched": "11:20",
+     "status": "Estimated",
+     "expected": "10:45"
+    },
+    {
+     "place": "Katowice",
+     "flight": "W61029",
      "sched": "11:25",
-     "status": "Arrived",
-     "expected": "11:31"
+     "status": "Estimated",
+     "expected": "10:40"
+    },
+    {
+     "place": "Oslo",
+     "flight": "DY1784",
+     "sched": "11:55",
+     "status": "Estimated",
+     "expected": "11:20"
+    },
+    {
+     "place": "Paris Ch. de Gaulle",
+     "flight": "EJU4601",
+     "sched": "12:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Munich",
+     "flight": "4Y704",
+     "sched": "12:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "FR366",
+     "sched": "12:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Dusseldorf",
+     "flight": "DE1414",
+     "sched": "12:30",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Lisboa",
-     "flight": "FR385",
-     "sched": "12:35",
-     "status": "Arrived",
-     "expected": "12:30"
+     "flight": "EJU7633",
+     "sched": "12:30",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Warsaw",
+     "flight": "ENT7693",
+     "sched": "13:25",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1689",
      "sched": "13:30",
-     "status": "Arrived",
-     "expected": "13:47"
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Porto",
-     "flight": "EJU6833",
-     "sched": "13:55",
-     "status": "Arrived",
-     "expected": "13:44"
-    },
-    {
-     "place": "Brussels Charleroi",
-     "flight": "FR398",
-     "sched": "14:05",
-     "status": "Arrived",
-     "expected": "13:41"
+     "place": "Stockholm Arlanda",
+     "flight": "SK2901",
+     "sched": "13:45",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Porto",
      "flight": "TP1703",
-     "sched": "14:15",
-     "status": "Arrived",
-     "expected": "14:08"
+     "sched": "14:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR364",
+     "sched": "14:30",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Frankfurt",
-     "flight": "4Y702",
-     "sched": "14:20",
-     "status": "Arrived",
-     "expected": "14:47"
-    },
-    {
-     "place": "Helsinki Vantaa",
-     "flight": "AY1731",
-     "sched": "15:45",
-     "status": "Arrived",
-     "expected": "15:17"
+     "flight": "DE1570",
+     "sched": "14:50",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Prague",
      "flight": "QS1170",
-     "sched": "15:55",
-     "status": "Arrived",
-     "expected": "15:38"
+     "sched": "15:15",
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Warsaw",
-     "flight": "W61535",
+     "place": "London Gatwick",
+     "flight": "EZY8521",
+     "sched": "15:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Copenhagen",
+     "flight": "SK2267",
+     "sched": "15:35",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Paris Orly",
+     "flight": "TO7694",
+     "sched": "15:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Jersey",
+     "flight": "5O723",
      "sched": "15:55",
-     "status": "Arrived",
-     "expected": "15:04"
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "BA2718",
+     "sched": "16:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Dusseldorf",
+     "flight": "EW9604",
+     "sched": "16:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Geneva",
+     "flight": "EZS1467",
+     "sched": "16:35",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Berlin Brandenburg",
      "flight": "EJU5333",
-     "sched": "16:25",
-     "status": "Arrived",
-     "expected": "15:45"
+     "sched": "16:50",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Amsterdam",
-     "flight": "HV6631",
-     "sched": "17:10",
-     "status": "Arrived",
-     "expected": "17:13"
+     "flight": "EJU7965",
+     "sched": "16:55",
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Gdansk",
-     "flight": "W61715",
-     "sched": "17:10",
-     "status": "Arrived",
-     "expected": "16:21"
+     "place": "Manchester",
+     "flight": "LS851",
+     "sched": "17:05",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1691",
      "sched": "17:10",
-     "status": "Arrived",
-     "expected": "17:02"
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "London Gatwick",
-     "flight": "EZY8521",
+     "place": "Stuttgart",
+     "flight": "EW2264",
+     "sched": "17:20",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lyon St. Exupery",
+     "flight": "EJU4485",
+     "sched": "17:35",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Tenerife Norte",
+     "flight": "NT4152",
+     "sched": "17:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6635",
      "sched": "17:50",
-     "status": "Arrived",
-     "expected": "18:32"
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Gran Canaria",
-     "flight": "NT4072",
-     "sched": "18:00",
-     "status": "Arrived",
-     "expected": "17:54"
+     "place": "Basel",
+     "flight": "EZS1281",
+     "sched": "17:55",
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Brussels",
-     "flight": "TB1563",
-     "sched": "18:40",
-     "status": "Arrived",
-     "expected": "18:35"
+     "place": "London Stansted",
+     "flight": "LS1445",
+     "sched": "18:05",
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Budapest",
-     "flight": "W62397",
-     "sched": "18:40",
-     "status": "Arrived",
-     "expected": "18:01"
+     "place": "Poznan",
+     "flight": "ENT7101",
+     "sched": "18:10",
+     "status": "",
+     "expected": ""
     },
     {
-     "place": "Porto",
-     "flight": "FR366",
-     "sched": "19:30",
-     "status": "Arrived",
-     "expected": "19:07"
+     "place": "London Luton",
+     "flight": "EZY2471",
+     "sched": "18:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Bristol",
+     "flight": "EZY2877",
+     "sched": "18:50",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Stockholm Arlanda",
+     "flight": "SK6077",
+     "sched": "19:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Katowice",
+     "flight": "ENT5113",
+     "sched": "19:35",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Lisboa",
-     "flight": "EJU7621",
-     "sched": "19:35",
-     "status": "Arrived",
-     "expected": "19:47"
+     "flight": "FR385",
+     "sched": "19:45",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1693",
      "sched": "20:15",
-     "status": "Arrived",
-     "expected": "20:19"
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "FR6049",
+     "sched": "20:15",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Porto Santo",
      "flight": "NT4937",
      "sched": "20:25",
-     "status": "Arrived",
-     "expected": "20:08"
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "EJU6831",
+     "sched": "20:30",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Katowice",
+     "flight": "ENT7121",
+     "sched": "21:00",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "EJU7635",
-     "sched": "20:45",
-     "status": "Arrived",
-     "expected": "20:41"
-    },
-    {
-     "place": "Porto",
-     "flight": "EJU6835",
-     "sched": "20:45",
-     "status": "Arrived",
-     "expected": "20:33"
+     "sched": "21:10",
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP3843",
      "sched": "21:20",
-     "status": "Arrived",
-     "expected": "21:15"
-    },
-    {
-     "place": "Porto",
-     "flight": "TP3845",
-     "sched": "22:10",
-     "status": "Arrived",
-     "expected": "21:59"
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Lisboa",
      "flight": "TP1695",
      "sched": "22:55",
-     "status": "Arrived",
-     "expected": "22:49"
+     "status": "",
+     "expected": ""
     },
     {
      "place": "Porto",
      "flight": "TP1705",
      "sched": "23:10",
-     "status": "Arrived",
-     "expected": "22:54"
+     "status": "",
+     "expected": ""
     }
    ],
    "dep": [
     {
-     "place": "Porto",
-     "flight": "TP1706",
-     "sched": "23:55",
+     "place": "Lisboa",
+     "flight": "TP3844",
+     "sched": "06:10",
      "status": "Departed",
-     "expected": "00:00 31/10"
+     "expected": "06:07"
+    },
+    {
+     "place": "Dublin",
+     "flight": "FR363",
+     "sched": "06:45",
+     "status": "Departed",
+     "expected": "06:57"
+    },
+    {
+     "place": "Chateauroux",
+     "flight": "ENT734",
+     "sched": "07:00",
+     "status": "Departed",
+     "expected": "06:52"
+    },
+    {
+     "place": "Porto Santo",
+     "flight": "NT4932",
+     "sched": "07:30",
+     "status": "Departed",
+     "expected": "07:31"
+    },
+    {
+     "place": "Porto",
+     "flight": "TP3846",
+     "sched": "07:40",
+     "status": "Departed",
+     "expected": "07:42"
+    },
+    {
+     "place": "Lisboa",
+     "flight": "TP1698",
+     "sched": "07:50",
+     "status": "Closed",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "EJU7622",
+     "sched": "08:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "FR089",
+     "sched": "08:40",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "TP1702",
+     "sched": "08:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "EJU6832",
+     "sched": "09:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6634",
+     "sched": "09:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Luxembourg",
+     "flight": "LG772",
+     "sched": "09:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Bordeaux",
+     "flight": "EJU1870",
+     "sched": "10:00",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Nantes",
+     "flight": "TO7841",
+     "sched": "10:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "TP1686",
+     "sched": "10:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Hamburg",
+     "flight": "EW7269",
+     "sched": "10:30",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Dusseldorf",
+     "flight": "EW9601",
+     "sched": "10:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Marseille",
+     "flight": "TO7845",
+     "sched": "10:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Tenerife Norte",
+     "flight": "NT4153",
+     "sched": "11:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "TP1688",
+     "sched": "11:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Brussels",
+     "flight": "SN3828",
+     "sched": "11:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "EZY8520",
+     "sched": "11:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "WK265",
+     "sched": "11:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Ponta Delgada",
+     "flight": "S4163",
+     "sched": "11:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "BA2717",
+     "sched": "12:00",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Katowice",
+     "flight": "W61030",
+     "sched": "12:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Copenhagen",
+     "flight": "D83615",
+     "sched": "12:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Oslo",
+     "flight": "DY1785",
+     "sched": "12:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "FR365",
+     "sched": "12:50",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Paris Ch. de Gaulle",
+     "flight": "EJU4602",
+     "sched": "12:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "EJU7634",
+     "sched": "13:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Munich",
+     "flight": "4Y705",
+     "sched": "13:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Dusseldorf",
+     "flight": "DE1415",
+     "sched": "13:30",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Warsaw",
+     "flight": "ENT7694",
+     "sched": "14:20",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "TP1690",
+     "sched": "14:30",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Stockholm Arlanda",
+     "flight": "SK2902",
+     "sched": "14:35",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "TP1704",
+     "sched": "15:00",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "FR384",
+     "sched": "15:40",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Frankfurt",
+     "flight": "DE1571",
+     "sched": "15:50",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "EZY8522",
+     "sched": "16:00",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Prague",
+     "flight": "QS1171",
+     "sched": "16:00",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Copenhagen",
+     "flight": "SK2268",
+     "sched": "16:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Paris Orly",
+     "flight": "TO7695",
+     "sched": "16:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Jersey",
+     "flight": "5O724",
+     "sched": "16:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "London Gatwick",
+     "flight": "BA2719",
+     "sched": "16:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Dusseldorf",
+     "flight": "EW9605",
+     "sched": "17:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Geneva",
+     "flight": "EZS1468",
+     "sched": "17:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "EJU7966",
+     "sched": "17:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Berlin Brandenburg",
+     "flight": "EJU5334",
+     "sched": "17:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Manchester",
+     "flight": "LS852",
+     "sched": "17:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lyon St. Exupery",
+     "flight": "EJU4486",
+     "sched": "18:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "TP1692",
+     "sched": "18:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Stuttgart",
+     "flight": "EW2265",
+     "sched": "18:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Basel",
+     "flight": "EZS1282",
+     "sched": "18:25",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6636",
+     "sched": "18:40",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "London Stansted",
+     "flight": "LS1446",
+     "sched": "18:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto Santo",
+     "flight": "NT4936",
+     "sched": "19:00",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "London Luton",
+     "flight": "EZY2472",
+     "sched": "19:05",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Poznan",
+     "flight": "ENT7102",
+     "sched": "19:10",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Bristol",
+     "flight": "EZY2878",
+     "sched": "19:20",
+     "status": "Estimated",
+     "expected": "19:25"
+    },
+    {
+     "place": "Stockholm Arlanda",
+     "flight": "SK6078",
+     "sched": "19:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Katowice",
+     "flight": "ENT5114",
+     "sched": "20:30",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "FR386",
+     "sched": "20:40",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "FR6050",
+     "sched": "20:40",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "EJU6836",
+     "sched": "21:00",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "TP1694",
+     "sched": "21:15",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Lisboa",
+     "flight": "EJU7636",
+     "sched": "21:45",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Katowice",
+     "flight": "ENT7122",
+     "sched": "21:55",
+     "status": "",
+     "expected": ""
+    },
+    {
+     "place": "Porto",
+     "flight": "TP1708",
+     "sched": "23:55",
+     "status": "",
+     "expected": ""
     }
    ]
   }

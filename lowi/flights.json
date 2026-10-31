@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-31T01:50:06Z",
+ "updated": "2026-10-31T07:49:55Z",
  "source": "avionio.com",
  "days": {
   "2026-10-31": {
@@ -9,8 +9,8 @@
      "place": "Amsterdam",
      "flight": "HV6609",
      "sched": "08:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:28"
     },
     {
      "place": "Vienna",
@@ -22,9 +22,58 @@
    ],
    "dep": [
     {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "09:25",
+     "status": "Estimated",
+     "expected": "09:30"
+    },
+    {
+     "place": "Palma de Mallorca",
+     "flight": "TYW757",
+     "sched": "09:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Vienna",
      "flight": "OS106",
      "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-11-01": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Vienna",
+     "flight": "OS105",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS107",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
      "status": "Scheduled",
      "expected": ""
     }
