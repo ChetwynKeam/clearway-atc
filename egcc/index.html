@@ -5276,12 +5276,37 @@ function timetableSession(d, h){
   for (const [cs, t, stand, days] of LONG_STAY) if (days.includes(day)) residents.push({ cs, t, k: 'RES', o: 'LXGB', gate: 'E', m: 0, depM: null, stand, longStay: true });
   return { sched, residents };
 }
+// ── a lived-in apron: the timetable only puts an aircraft on the ground when it flies in this session, so without this
+// the stands are nearly empty. Real airports always have aircraft parked that aren't moving for hours: night-stoppers
+// and based aircraft between waves, spares, ones in for maintenance or a long turnaround. They are added as parked
+// residents (no departure in the session), from the airlines and types that really use the airport, most on remote
+// stands. About half the stands are taken through the day, more early and late when the based fleet is home; enough
+// stands are always left for the session's arrivals, and if one still finds none, a parked one is towed away for it.
+function apronFill(s, hour){
+  if (!STANDS.length || APT.noApronFill) return;
+  const pool = TIMETABLE.filter(r => r[6] && TYPES[r[6]]).map(r => ({ cs: r[3] || r[0], t: r[6], ap: r[4] || r[1] })).filter(x => /^[A-Z]{3}\d/.test(x.cs || ''));
+  if (!pool.length) return;
+  const h = ((Math.floor(hour) % 24) + 24) % 24, edge = h < 7 || h >= 20;
+  const res = s.filter(x => x.k === 'RES').length;
+  const need = Math.max(0, s.filter(x => x.k === 'ARR' && x.m < 120).length - s.filter(x => x.k === 'RES' && x.depM != null && x.depM < 120).length);
+  const room = STANDS.length - res - need - Math.max(4, Math.round(STANDS.length*0.12));
+  const n = Math.max(0, Math.min(Math.round(STANDS.length*(edge ? 0.68 : 0.5)) - res, room));
+  const used = new Set(s.map(x => x.cs)), seed = (h + 1)*7919;
+  let k = 0;
+  for (let i = 0; i < n*3 && k < n; i++) {
+    const e = pool[(seed + i*104729) % pool.length], al = e.cs.slice(0, 3);
+    const cs = al + (9000 - ((seed + i*31) % 900));   // a parked aircraft's label: its operator and a non-flight number
+    if (used.has(cs)) continue; used.add(cs);
+    s.push({ cs, t: e.t, k: 'RES', o: e.ap, gate: gateFor(e.ap), m: 0, depM: null, filler: true }); k++;
+  }
+}
 const SESSION_HOURS = APT.sessionHours || Array.from({ length: 16 }, (_, i) => i + 6); // 06Z to 21Z, the civil operating day (New York: its own)
 function buildSchedule(mode, day = 0, hour = 17){
   if (EXERCISES[mode]) return EXERCISES[mode].sched.map(x => ({...x}));
   if (mode === 'custom') return customSchedule(day, hour);   // you chose the numbers (custom.js)
   const LS = /^live/.test(mode) && typeof liveSession === 'function' ? liveSession(Date.now(), mode) : null;   // Real world: today's real flights
   const T = LS || timetableSession(day, Math.floor(hour)), s = [...T.residents, ...T.sched];
+  apronFill(s, LS ? new Date().getUTCHours() : hour);
   if (mode !== 'real' && mode !== 'live') {
     // busier sessions add charters, positioning flights and business jets on top of the timetable
     const used = new Set(s.map(x => x.cs)), extra = EXTRA.filter(x => !used.has(x.cs));
@@ -5615,25 +5640,43 @@ function stepPending(ac, dt){
   const busy = d < 15 && entryBusy(ac, e, ENTRY_ALT[ac.gate], 8, 3000);   // 8 NM in trail, whatever the one ahead is descending to
   // held, or slotted later on the Flights board: the previous sector holds it where it is (a rate-one orbit) until it is
   // due to fly the rest of the way in
-  if (ac.slotHold || (!busy && S.t < ac.preAt - d/330*3600 - 20)) {
-    if (ac.slotHold) ac.preAt = Math.max(ac.preAt, S.t + d/330*3600);
-    ac.gs = 230; ac.hdg = ac.trk = norm(ac.hdg + 3*dt); ac.vs = 0; ac.holding = true;
+  // Early: the previous sector takes the time off with speed first, the way real controllers do (anywhere from 330 kt
+  // down to 220 kt over the ground), and only when that isn't enough does it hold, and then not as a loop wherever the
+  // aircraft happens to be but in a racetrack on its inbound line. Speed changes about 1 kt a second (an airliner at
+  // these levels), never snapped, and the heading turns at rate one (3° a second), never jumps.
+  const left = ac.preAt - S.t, want = left > 5 ? d/left*3600 : 330;   // the ground speed that gets it there on time
+  const hold = ac.slotHold || (!busy && want < 215 && left > 60);
+  if (ac.slotHold) ac.preAt = Math.max(ac.preAt, S.t + d/Math.max(220, ac.gs)*3600);
+  const tgt = busy ? 200 : hold ? 220 : clamp(want, 220, 330);
+  ac.gs += clamp(tgt - ac.gs, -1.2*dt, 1.0*dt);
+  const inb = brg(ac.x, ac.y, ...e);
+  if (hold) {
+    // a racetrack: away from the entry point for a minute and a half, a rate-one turn back, inbound, and round again
+    if (!ac.pHold) ac.pHold = { inb, out: true, t: 0 };
+    const H = ac.pHold; H.t += dt;
+    const leg = H.out ? norm(H.inb + 180) : H.inb, turning = Math.abs(angDiff(ac.hdg, leg)) > 2;
+    if (turning) ac.hdg = norm(ac.hdg + Math.sign(angDiff(ac.hdg, leg) || 1)*Math.min(3*dt, Math.abs(angDiff(ac.hdg, leg))));
+    else { ac.hdg = leg; if (H.t > (H.out ? 90 : 60)) { H.out = !H.out; H.t = 0; } }
+    ac.trk = ac.hdg; ac.vs = 0; ac.holding = true;
     const m = ac.gs/3600*dt; ac.x += Math.sin(ac.hdg*D2R)*m; ac.y += Math.cos(ac.hdg*D2R)*m;
     return;
   }
-  ac.holding = false;
-  if (busy) ac.gs = Math.max(200, ac.gs - 3*dt); else if (ac.gs < 330) ac.gs = Math.min(330, ac.gs + 3*dt);
+  ac.holding = false; ac.pHold = null;
   const mv = ac.gs/3600*dt;
-  ac.hdg = ac.trk = brg(ac.x, ac.y, ...e);
+  { const dh = angDiff(ac.hdg, inb); ac.hdg = norm(ac.hdg + Math.sign(dh)*Math.min(3*dt, Math.abs(dh))); ac.trk = ac.hdg; }
   if (busy && d <= mv + 0.5 && S.t < ac.preAt + 600) return;   // waits at the boundary (at most ten minutes)
-  if (busy ? S.t >= ac.preAt + 600 : d <= mv + 0.05 || S.t >= ac.preAt + 90) {
+  // running late (slower than planned, or turning back out of a hold): its call comes later, it isn't jumped forward
+  if (!busy && ac.preAt < S.t + d/Math.max(200, ac.gs)*3600 - 30) ac.preAt = S.t + d/Math.max(200, ac.gs)*3600;
+  if (busy ? S.t >= ac.preAt + 600 : d <= mv + 0.05 || (S.t >= ac.preAt + 90 && d < 3)) {
     // still blocked after the wait: handed over 1,000 ft above the traffic, and it stays there until you descend it
     ac.x = e[0]; ac.y = e[1]; ac.alt = ENTRY_ALT[ac.gate]; let up = false; while (entryBusy(ac, e, ac.alt)) { ac.alt += 1000; up = true; }
     makeInbound(ac, up); return;
   }
-  ac.x += (e[0] - ac.x)/d*mv; ac.y += (e[1] - ac.y)/d*mv;
-  const left = Math.max(1, ac.preAt - S.t); ac.alt = Math.max(ENTRY_ALT[ac.gate], ac.alt - (ac.alt - ENTRY_ALT[ac.gate])*dt/left);
-  ac.vs = -(ac.alt - ENTRY_ALT[ac.gate])/left*60;
+  // along its heading while it is still turning back onto the inbound line (out of a hold), straight in once it is on it
+  if (Math.abs(angDiff(ac.hdg, inb)) > 5) { ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv; }
+  else { ac.x += (e[0] - ac.x)/d*mv; ac.y += (e[1] - ac.y)/d*mv; }
+  const togo = Math.max(1, ac.preAt - S.t); ac.alt = Math.max(ENTRY_ALT[ac.gate], ac.alt - (ac.alt - ENTRY_ALT[ac.gate])*dt/togo);
+  ac.vs = -(ac.alt - ENTRY_ALT[ac.gate])/togo*60;
 }
 function spawnDeparture(f){
   const ac = new Aircraft(f); ac.kind = 'DEP'; ac.freq = 'TWR';
@@ -5899,7 +5942,19 @@ function freeStand(ac){
   if (APT.standFor) { const s = APT.standFor(ac); if (s) return s; }
   const area = isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
   for (const a of area) { const s = STANDS.find(s => standFree(s, ac) && s.area === a); if (s) return s; }
-  return STANDS.find(s => standFree(s, ac));
+  return STANDS.find(s => standFree(s, ac)) || clearFiller(ac);
+}
+// no stand left for a flight: one of the aircraft parked for the day (apronFill) is towed off to a maintenance or
+// overflow area out of sight, and its stand is free
+function clearFiller(ac){
+  for (const st of STANDS) {
+    const o = st.occ; if (!o || !o.filler || o.state !== 'ONSTAND' || o.stand !== st) continue;
+    st.occ = null; if (!standFree(st, ac)) { st.occ = o; continue; }
+    S.acs = S.acs.filter(x => x !== o); if (S.sel === o) S.sel = null;
+    sys(`${o.cs} has been towed off ${APT.standWord || 'stand'} ${st.id} to the maintenance area, to make room for ${ac.cs}.`);
+    return st;
+  }
+  return null;
 }
 const ATIS_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const PHON_ALPHA = ['Alfa','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India','Juliett','Kilo','Lima','Mike','November','Oscar','Papa','Quebec','Romeo','Sierra','Tango','Uniform','Victor','Whiskey','X-ray','Yankee','Zulu'];
@@ -11147,7 +11202,14 @@ function liveBind(){
     if (dGbr > 90 || dGbr < 12) continue;
     const toGbr = brg(p[0], p[1], ...RADAR_REF), off = Math.abs(((a.trk - toGbr) % 360 + 540) % 360 - 180);
     const byName = S.sched.find(f => f.k === 'ARR' && f.cs === a.cs && !f.liveHex);
-    const byPath = !byName && off < 25 && a.alt < 26000 && (a.vs || 0) <= 300 && S.sched.find(f => f.k === 'ARR' && f.real && !f.liveHex && f.cs.slice(0, 3) === a.cs.slice(0, 3) && Math.abs(f.m*60 + 15*60 - S.t - dGbr/Math.max(150, a.gs || 250)*3600) < 40*60);
+    // a guess by airline and timing (the callsign doesn't match): only an aircraft that really looks like that flight on
+    // its way here. It must be on the side of the airport its flight comes from (within 60° of the bearing out to that
+    // flight's entry point: a Belfast flight can't be east of Bristol), high enough for the distance it still has to go
+    // (not another airport's departure or arrival down low) and not climbing. Busy airlines (easyJet, Ryanair) have
+    // dozens of aircraft within 90 NM, so without these checks any of them could be picked up as the wrong flight.
+    const sideOk = f => { const e = ENTRY[f.gate]; return !e || Math.abs(angDiff(brg(...RADAR_REF, ...p), brg(...RADAR_REF, ...e))) < 60; };
+    const highOk = a.alt >= Math.min(20000, dGbr*150);
+    const byPath = !byName && off < 25 && a.alt < 26000 && highOk && (a.vs || 0) <= 300 && S.sched.find(f => f.k === 'ARR' && f.real && !f.liveHex && f.cs.slice(0, 3) === a.cs.slice(0, 3) && sideOk(f) && Math.abs(f.m*60 + 15*60 - S.t - dGbr/Math.max(150, a.gs || 250)*3600) < 40*60);
     const f = byName || byPath; if (!f) continue;
     let ac = S.acs.find(x => x.cs === f.cs);
     if (ac && ac.state !== 'PRE' && S.t < LIVE_JOIN_S && !ac.liveHex && !ac.told) { dropAc(ac); ac = null; f.spawned = false; }   // just joined: the real one replaces the simulated copy
@@ -12523,6 +12585,9 @@ function landOrder(ac){
       if (o.mode === 'HOLD' && o.aiQ == null) o.aiQ = S.t;   // (held by you as well: the holds go in turn)
       const rw = landRw(o), F = o.app ? finOf(o) : FINAL[rw]; if (!F) continue;
       const R = rwyOf(rw); let e; try { e = eta(o, F); } catch (er) { continue; } if (!isFinite(e)) continue;
+      // not yet on an approach: its place in the order follows its time, but only a real change in that time (more than
+      // a minute and a half) moves it, so the order doesn't reshuffle every second as estimates wobble on a turn or in a hold
+      if (!o.app || o.state === 'MISSED') { if (o.ordE == null || Math.abs(S.t + e - o.ordE) > 90) o.ordE = S.t + e; e = Math.max(0, o.ordE - S.t); }
       (byR[R.id] ||= []).push({ o, rw, e, fixed: !!o.app && o.state !== 'MISSED' });
     }
     for (const id in byR) {
