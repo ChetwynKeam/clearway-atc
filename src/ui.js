@@ -1461,7 +1461,7 @@ window.__S = S; window.__cmd = command; window.__step = step; window.__start = s
 // the system bar: ATIS letter, wind, QNH, visibility and the runways in use, the UTC clock; click it for the full ATIS
 function renderSysbar(d){
   const c = $('sbClock'); if (!c) return;
-  const t = d.toISOString().substr(11, 8); c.innerHTML = `${t.slice(0, 5)}<span class="sec">${t.slice(5)}</span><small>Z</small>`;
+  const t = d.toISOString().substr(11, 8); c.innerHTML = `${t.slice(0, 5)}<span class="sb-s">${t.slice(5)}</span><small>Z</small>`;
   const w = S.wx, dep = typeof depRw === 'function' ? depRw() : S.rwy, warn = !!(S.emg && (S.emg.rwyBlock || S.emg.ws));
   const sig = [S.atis, w.raw, S.rwy, dep, S.atisAlert, warn].join('|');
   const a = $('sbAtis');
