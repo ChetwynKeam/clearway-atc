@@ -49,6 +49,10 @@ function heapPop(h){
 // shortest routes without a penalty, remembered until the graph changes (the push and taxi boxes ask for the same ones
 // every half second)
 const TAXI_MEMO = new Map();
+// the ground flow plan (gflow.js): the way traffic uses each taxiway for the runways in use. Going against a one-way flow
+// costs four times as much, so routes keep to the flow unless the other way is much shorter
+let GFLOW_DIR = null;
+const gfK = (e, u) => { if (!GFLOW_DIR) return 1; const d = GFLOW_DIR.get(e); return d && ((d > 0) !== (e.a === u)) ? 4 : 1; };
 // pen (optional): a cost multiplier per edge, to find alternative routings at big airports
 // face (optional): the way the aircraft at `from` is pointing. An aircraft can't turn round on a taxiway, so the route
 // then starts within 100 degrees of that heading and never doubles back on itself at a node further on
@@ -63,7 +67,7 @@ function route(from, to, pen, face, outB){
   while (h.length) {
     const [d, u] = heapPop(h); if (done.has(u)) continue;
     if (u === to) { found = true; break; } done.add(u);
-    for (const [v, e] of GN[u].adj) { if (e.closed || (v !== to && v[0] === 'R')) continue; const nd = d + e.len*(e.k || 1)*(pen ? pen(e) : 1), o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, [u, e]); heapPush(h, [nd, v]); } }
+    for (const [v, e] of GN[u].adj) { if (e.closed || (v !== to && v[0] === 'R')) continue; const nd = d + e.len*(e.k || 1)*(pen ? pen(e) : 1)*gfK(e, u), o = dd.get(v); if (o === undefined || nd < o) { dd.set(v, nd); prev.set(v, [u, e]); heapPush(h, [nd, v]); } }
   }
   let r = null;
   if (found) { const nodes = [to], tws = []; let c = to; while (c !== from) { const [u, e] = prev.get(c); nodes.unshift(u); tws.unshift(e.tw); c = u; } r = { nodes, tws }; }
@@ -93,7 +97,7 @@ function facingSteps(k, u, from_, inB, hist, d, pen, ok, push){
     const b = legBrg(u, v, inB);
     if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START) || !hairOk(hist, b)) continue;
     // keyed by the node before u too, so a junction reached two ways keeps both pasts (they turn on differently)
-    push(v + '|' + u + '|' + from_, [v, u, b, histOn(hist, b, e.len)], d + e.len*(e.k || 1)*(pen ? pen(e) : 1), k, e);
+    push(v + '|' + u + '|' + from_, [v, u, b, histOn(hist, b, e.len)], d + e.len*(e.k || 1)*(pen ? pen(e) : 1)*gfK(e, u), k, e);
   }
 }
 function routeFacing(from, to, pen, face, outB){
