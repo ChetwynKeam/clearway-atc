@@ -20,13 +20,14 @@
   color-scheme: light;
 }
 /* the operations display: simulator console, pop-outs and product shots */
-.dark, body.theme-dark #page-sim, body.theme-dark .pop, body.theme-dark .vehpop {
-  --bg: #0b1116; --bg-2: #0f171d; --panel: #121c23; --panel-2: #18242c; --panel-3: #1e2d36;
-  --line: #22323c; --line-2: #2f4552;
-  --ink: #e2ebef; --ink-2: #b9c8cf; --dim: #8a9ea8; --faint: #5f7480;
-  --phos: #6ef0a8; --phos-2: #34c983; --phos-ink: #04150d;
-  --sand: #e8c47f; --sand-2: #c49c52;
-  --arr: #ffc164; --dep: #7cc7ff; --warn: #ffb02e; --alert: #ff6464; --ok: #4fd18b; --pink: #ff7fae;
+.dark, body.theme-dark #page-sim, body.theme-dark .pop, body.theme-dark .vehpop, body.theme-dark .atis-pop {
+  --bg: #121519; --bg-2: #181c21; --panel: #1a1e23; --panel-2: #21262d; --panel-3: #282e36;
+  --line: #2b323b; --line-2: #3a434e;
+  --ink: #e3e8ee; --ink-2: #c3ccd5; --dim: #8d98a5; --faint: #66717d;
+  --accent: #46c2e6; --accent-2: #8ddcf3; --accent-soft: rgba(70,194,230,.14);
+  --phos: #46c2e6; --phos-2: #8ddcf3; --phos-ink: #071a21;
+  --sand: #f0b43c; --sand-2: #c99434; --amber: #f0b43c; --amber-soft: rgba(240,180,60,.12);
+  --arr: #f0c46a; --dep: #8fc0ec; --warn: #f0b43c; --alert: #ff5d52; --ok: #3fcf8e; --pink: #ff7fae;
   --r: 6px;
   color-scheme: dark; color: var(--ink);
 }
@@ -959,14 +960,9 @@ body.theme-dark #log .ln.ai .who { color: #4fd1c5; }
   .tabbed[data-mtab="map"] .heard { bottom: 12px; }
   .tabbed .strips { padding-bottom: 16px; }
 }
-/* phones: the toolbar keeps what you use most in view (Exit as an arrow, then Pause and the map views); the clock sits
-   under the toolbar, clear of the targets near the bottom of the map */
+/* phones: bigger targets on the flight card, actions first */
 @media (max-width: 900px) {
-  .tabbed .toolbar .exit { font-size: 0; gap: 0; min-width: 40px; justify-content: center; }
-  .tabbed .toolbar .exit svg { width: 18px; height: 18px; }
-  .tabbed .toolbar .apchip { display: none; }
   .app .seg.views button { padding: 8px 9px; }
-  .tabbed .hud-clock { top: 58px; bottom: auto; left: 10px; right: auto; text-align: left; }
   /* the flight card: what it needs and the instructions first, the reference details after them */
   .tabbed > .side > :where(#sel) { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
   .tabbed > .side > :where(#sel) > * { order: 10; margin-top: 0; margin-bottom: 0; }
@@ -978,3 +974,191 @@ body.theme-dark #log .ln.ai .who { color: #4fd1c5; }
   .selnav { display: inline-flex; gap: 4px; }
   .app .selnav button { min-width: 40px; min-height: 36px; padding: 0 8px; font-size: 20px; line-height: 1; }
 }
+
+/* ═════════════ the operations console (airport positions): a NATS-style night display ═════════════
+   A system bar across the top, the strip bay down the left, the map filling the rest with the flight card floating
+   over it, and the radio and command line under the map. The map's own colours (day or night) are chosen in the menu. */
+body.theme-dark[data-route="sim"] { background: #121519; }
+.app.tabbed { position: relative; grid-template-columns: 360px minmax(0,1fr); grid-template-rows: 48px minmax(0,1fr) auto; font-family: var(--font-body); }
+.tabbed > .sysbar { grid-row: 1; grid-column: 1 / -1; }
+.tabbed > .scopewrap { grid-row: 2; grid-column: 2; background: #0e1316; }
+.tabbed > .side { grid-row: 2 / span 2; grid-column: 1; border-left: 0; border-right: 1px solid var(--line); background: var(--panel); }
+.tabbed > .bottom { grid-row: 3; grid-column: 2; grid-template-rows: auto auto; background: var(--bg-2); }
+.tabbed #log { height: 76px; padding: 6px 14px 2px; font-size: 12px; }
+.tabbed #log .atc .tx { color: #8de3b8; } .tabbed #log .atc .who { color: var(--ok); }
+.tabbed .cmd { border-top: 0; padding: 4px 12px 10px; }
+.tabbed .cmd input { height: 38px; background: #0f1215; border-color: var(--line-2); color: var(--ink); font-size: 13.5px; }
+.tabbed .cmd input:focus { border-color: var(--accent); outline: none; }
+body .app.tabbed .cmd button.go { height: 38px; padding: 0 16px; background: var(--ok); border: 0; color: #08241a; }
+.tabbed .hud-clock { display: none; }
+.tabbed .hud-score { bottom: 10px; left: 12px; }
+.tabbed .hud-score span { background: rgba(24,28,33,.9); border-color: var(--line); color: var(--dim); }
+.tabbed .hud-score b { color: var(--ink); }
+
+/* buttons across the console */
+.tabbed button, .tabbed .apchip { font-family: var(--font-body); }
+body .app.tabbed button { background: var(--panel-3); border: 1px solid var(--line-2); color: var(--ink); border-radius: 6px; font-weight: 500; letter-spacing: 0; font-size: 13px; }
+body .app.tabbed button:hover:not(:disabled) { border-color: var(--dim); }
+body .app.tabbed button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-2); }
+body .app.tabbed .seg { background: rgba(24,28,33,.94); border: 1px solid var(--line-2); border-radius: 8px; padding: 3px; box-shadow: none; }
+body .app.tabbed .seg button { border: 0; background: none; color: #aab4bf; border-radius: 5px; }
+body .app.tabbed .seg button.on { background: var(--accent); color: #071a21; font-weight: 600; }
+body .app.tabbed button.go { background: rgba(63,207,142,.14); border-color: rgba(63,207,142,.5); color: #8de3b8; }
+body .app.tabbed button.danger { background: none; border-color: #5a2f2b; color: #ff9f97; }
+
+/* system bar */
+.sysbar { position: relative; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: var(--bg-2); border-bottom: 1px solid var(--line); min-width: 0; }
+.sysbar .sb-grow { flex: 1; min-width: 0; }
+.sysbar .exit { display: inline-flex; align-items: center; gap: 6px; height: 32px; }
+.sysbar .exit svg { width: 13px; height: 13px; }
+.sysbar .apchip { display: inline-flex; align-items: baseline; gap: 8px; text-decoration: none; color: var(--dim); white-space: nowrap; }
+.sysbar .apchip b { font-family: var(--font-data); font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: .04em; }
+.sysbar .apchip span { font-weight: 500; }
+.sysbar #tgSeats { height: 30px; font-family: var(--font-data); font-size: 12px; }
+.sysbar .seg button { height: 26px; padding: 0 10px; }
+.sysbar .talk { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 34px; padding: 0; border-radius: 50%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; }
+.sysbar .talk svg { width: 16px; height: 16px; pointer-events: none; }
+.app.tabbed .sysbar .talk.on { background: #d62d2d; border-color: #d62d2d; color: #fff; }
+.sb-clock { font-family: var(--font-data); font-size: 23px; font-weight: 500; letter-spacing: .02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sb-clock small { font-size: 14px; color: var(--dim); margin-left: 1px; }
+.app.tabbed .sb-menu { width: 34px; height: 32px; padding: 0; display: grid; place-items: center; }
+.sb-menu svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.sb-menupop { position: absolute; top: 52px; right: 12px; z-index: 40; display: flex; flex-direction: column; gap: 6px; min-width: 210px; padding: 8px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px; box-shadow: 0 18px 48px rgba(0,0,0,.5); }
+.sb-menupop[hidden] { display: none; }
+.app.tabbed .sb-menupop > button { height: 38px; text-align: left; padding: 0 12px; }
+.sb-menupop .seg { display: flex; } .sb-menupop .seg button { flex: 1; height: 32px; }
+.sb-menupop .phone-only { display: none; }
+/* the ATIS block */
+.app.tabbed .sb-atis { position: relative; display: flex; align-items: stretch; height: 36px; padding: 0; overflow: hidden; background: none; border: 1px solid var(--line-2); border-radius: 6px; font-family: var(--font-data); white-space: nowrap; }
+.sb-atis .sb-l { display: grid; place-items: center; width: 34px; background: var(--amber); color: #1a1406; font-weight: 700; font-size: 18px; }
+.sb-atis .sb-c { display: flex; flex-direction: column; justify-content: center; padding: 0 12px; border-left: 1px solid var(--line-2); font-size: 13px; line-height: 1.15; text-align: left; }
+.sb-atis .sb-c i { font: normal 600 9.5px var(--font-body); letter-spacing: .08em; color: var(--dim); }
+.sb-atis .sb-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+.sb-atis .sb-dot.flash { background: var(--alert); animation: atisFlash 1s steps(2, jump-none) infinite; }
+.app.tabbed .sb-atis.alert { border-color: var(--alert); }
+.app.tabbed .sb-atis[aria-expanded="true"] { border-color: var(--accent); }
+
+/* map overlays: view switch and toggles, runway status, map tools */
+.tabbed .toolbar { top: 12px; left: 12px; right: 70px; gap: 8px; }
+body .app.tabbed .toolbar > button { height: 36px; background: rgba(24,28,33,.94); border-color: var(--line-2); }
+body .app.tabbed .toolbar > button.on { background: rgba(70,194,230,.18); }
+.app.tabbed .toolbar .seg button { height: 28px; padding: 0 12px; }
+.rwypills { position: absolute; top: 56px; left: 12px; z-index: 3; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; font-family: var(--font-data); font-size: 12px; }
+.rwypills .rp { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 13px; background: rgba(24,28,33,.92); border: 1px solid #2f6b4f; color: var(--ink); }
+.rwypills .rp i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.rwypills .rp.occ { background: rgba(90,36,32,.95); border-color: var(--alert); color: #ffd2cd; } .rwypills .rp.occ i { background: var(--alert); }
+.rwypills .rp.shut { background: rgba(60,40,10,.95); border-color: var(--amber); color: #f6cf7c; } .rwypills .rp.shut i { background: var(--amber); }
+.maprail { position: absolute; top: 12px; right: 12px; z-index: 3; display: flex; flex-direction: column; gap: 2px; padding: 3px; background: rgba(24,28,33,.94); border: 1px solid var(--line-2); border-radius: 8px; }
+.app.tabbed .maprail button { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; background: none; border: 0; }
+.maprail svg { width: 15px; height: 15px; fill: none; stroke: #cfd6de; stroke-width: 1.6; stroke-linecap: round; }
+.maprail i { height: 1px; margin: 2px 4px; background: var(--line-2); }
+
+/* the strip bay */
+.tabbed .side > .strips-head { padding: 10px 12px 6px; border-bottom: 0; }
+.tabbed .strips-head .lbl { font-size: 11px; font-weight: 600; letter-spacing: .1em; color: var(--dim); }
+.tabbed .strips { gap: 4px; padding: 2px 10px 12px; }
+.bayhd { flex: none; display: flex; align-items: center; gap: 8px; height: 24px; margin-top: 6px; padding: 0 9px; border-radius: 4px; background: var(--panel-3); color: #aab4bf; font: 600 10.5px var(--font-body); letter-spacing: .1em; text-transform: uppercase; }
+.bayhd:first-child { margin-top: 0; }
+.bayhd .bn { flex: 1; }
+.bayhd b { font-family: var(--font-data); font-weight: 500; }
+.bayhd .dot { width: 9px; height: 9px; border-radius: 50%; }
+.bayhd .dot.need { background: var(--amber); }
+.bayhd .dot.emg { background: var(--alert); animation: emgPulse 1s ease-in-out infinite; }
+.bayhd.bay-rwy { background: #5a2420; color: #ffd2cd; }
+.bayhd.bay-off, .bayhd.bay-stand { opacity: .7; }
+.app.tabbed button.strip { min-height: 46px; border-radius: 3px; border: 0; background: #ecdeae; color: #1a1708; font-family: var(--font-data); }
+.app.tabbed button.strip.DEP { background: #c4d9ee; color: #111821; }
+.tabbed .strip .bar { background: #b48a1c; } .tabbed .strip.DEP .bar { background: #3b78b5; }
+.tabbed .strip .cs { font-size: 14px; font-weight: 700; }
+.tabbed .strip .ty, .tabbed .strip .lv, .tabbed .strip .fq { color: #4a4a3a; font-size: 10.5px; }
+.tabbed .strip.DEP .ty, .tabbed .strip.DEP .lv, .tabbed .strip.DEP .fq { color: #3c4a5a; }
+.tabbed .strip .stt { font-family: var(--font-data); font-size: 11.5px; font-weight: 700; letter-spacing: 0; }
+.app.tabbed button.strip.need { box-shadow: inset 0 0 0 2px #e0a020; }
+.app.tabbed button.strip.need .stt { color: #8a5a00; }
+.app.tabbed button.strip.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
+.app.tabbed button.strip.emg { box-shadow: inset 0 0 0 2px var(--alert); }
+.app.tabbed button.strip.off { opacity: .5; }
+.tabbed .strip .clrk { background: #1d7a4f; color: #fff; }
+
+/* the flight card, floating over the right of the map; away when nothing is selected */
+@media (min-width: 901px) {
+  .tabbed > .side > #sel { position: absolute; z-index: 8; top: 60px; right: 58px; width: 344px; max-height: calc(100% - 72px - var(--bot, 130px)); overflow-y: auto; padding: 14px 16px 16px;
+    background: rgba(26,30,35,.97); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 18px 48px rgba(0,0,0,.5); }
+  .tabbed > .side > #sel.empty { display: none; }
+  .tabbed > .side > #atis { position: absolute; z-index: 30; top: 54px; left: 50%; width: min(520px, calc(100% - 24px)); transform: translateX(-50%); max-height: calc(100% - 70px); overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 18px 48px rgba(0,0,0,.5); display: none; }
+  .tabbed.atis-open > .side > #atis { display: block; }
+  .tabbed > .side > .strips { min-height: 0; }
+}
+.tabbed #sel .sel-head .cs { font-family: var(--font-data); font-size: 24px; }
+.tabbed #sel .sel-head .cs.DEP { color: var(--dep); } .tabbed #sel .sel-head .cs.ARR { color: var(--arr); }
+.tabbed #sel .needline { background: rgba(240,180,60,.12); border: 1px solid rgba(240,180,60,.45); color: #f6cf7c; border-radius: 6px; font-weight: 600; }
+.tabbed #sel .btns { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.app.tabbed #sel .btns button { min-height: 44px; white-space: normal; line-height: 1.2; padding: 6px 10px; font-weight: 600; }
+body .app.tabbed #sel .btns button.go { background: var(--ok); border-color: var(--ok); color: #08241a; font-weight: 700; }
+.tabbed #sel .btns select { grid-column: 1 / -1; height: 38px; }
+.tabbed #sel .readout, .tabbed #sel .meta, .tabbed #sel .ordline { font-family: var(--font-data); }
+body .app.tabbed input, body .app.tabbed select { background: #0f1215; color: var(--ink); border-color: var(--line-2); }
+
+/* phones and tablets: the bar on top, compact */
+@media (max-width: 900px) {
+  .app.tabbed { grid-template-columns: 1fr; grid-template-rows: auto minmax(0,1fr) auto auto; padding-top: 0; }
+  .tabbed > .sysbar { grid-row: 1; height: 52px; gap: 8px; padding: 0 8px; padding-top: env(safe-area-inset-top, 0px); height: calc(52px + env(safe-area-inset-top, 0px)); }
+  .tabbed > .scopewrap { grid-row: 2; grid-column: 1; }
+  .tabbed > .bottom { grid-row: 3; grid-column: 1; }
+  .tabbed > .mtabs { grid-row: 4; }
+  .tabbed > .side { grid-row: 2; grid-column: 1; border-right: 0; }
+  .sysbar .apchip, .sysbar #tgSeats, .sysbar #tgSpeed { display: none; }
+  .sb-menupop .phone-only { display: block; }
+  .sysbar .exit { font-size: 0; gap: 0; width: 36px; padding: 0; justify-content: center; }
+  .sysbar .exit svg { width: 16px; height: 16px; }
+  .sb-atis .sb-c:nth-of-type(4), .sb-atis .sb-c:nth-of-type(5) { display: none; }
+  .sb-atis .sb-c { padding: 0 9px; font-size: 12px; }
+  .sb-clock { font-size: 18px; } .sb-clock small { font-size: 11px; }
+  .tabbed .toolbar { top: 8px; left: 8px; right: 54px; }
+  .rwypills { top: 52px; left: 8px; font-size: 11px; }
+  .maprail { top: 8px; right: 8px; }
+  .tabbed #log { height: var(--sheet-h, 46%); }
+  .tabbed > .side > #sel { position: static; }
+}
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .app.tabbed { grid-template-columns: minmax(0,1fr) min(340px, 44vw); grid-template-rows: auto minmax(0,1fr) auto auto; }
+  .tabbed > .sysbar { grid-column: 1 / -1; height: 44px; }
+  .tabbed > .scopewrap { grid-row: 2 / span 2; grid-column: 1; }
+  .tabbed > .side { grid-row: 2; grid-column: 2; height: auto; border-left: 1px solid var(--line); }
+  .tabbed > .bottom { grid-row: 3; grid-column: 2; border-left: 1px solid var(--line); }
+  .tabbed[data-mtab="log"] > .bottom, .tabbed[data-mtab="map"] > .bottom { grid-row: 2 / span 2; }
+  .tabbed #log { height: auto; position: static; }
+  .tabbed > .mtabs { grid-row: 4; grid-column: 1 / -1; }
+}
+.tabbed .mtabs { background: var(--bg-2); }
+.app.tabbed .mtabs button { border: 0; border-radius: 0; background: none; color: var(--dim); }
+.app.tabbed .mtabs button.on { color: var(--accent-2); background: var(--accent-soft); box-shadow: inset 0 2px 0 var(--accent); }
+.tabbed .mt-n { background: var(--amber); color: #1a1406; }
+.tabbed .sheet-grip { background: var(--panel) !important; border-top-color: var(--line-2) !important; }
+.app.tabbed .sb-road { height: 36px; font-family: var(--font-data); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.app.tabbed .sb-road.st-OPEN { border-color: var(--amber); color: #f6cf7c; }
+.app.tabbed .sb-road.st-CLOSED { border-color: var(--ok); color: #8de3b8; }
+.app.tabbed .sb-road.st-CLOSING, .app.tabbed .sb-road.st-OPENING { border-color: var(--accent); color: var(--accent-2); }
+@media (min-width: 901px) { .tabbed .coach { top: 124px; } }
+@media (max-width: 1200px) and (min-width: 901px) { .sb-atis .sb-c:nth-of-type(4) { display: none; } .sysbar .apchip span { display: none; } }
+
+.tabbed .strips-head .ph { flex-wrap: nowrap; }
+.tabbed #stripCount { font-family: var(--font-data); font-size: 10.5px; letter-spacing: 0; text-transform: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+body .app.tabbed .popbtn { background: var(--panel-3); border-color: var(--line-2); color: var(--ink); }
+body .app.tabbed button:disabled { opacity: .4; }
+.tabbed .strips-head .lbl { white-space: nowrap; }
+
+.app.tabbed .sb-atis { flex: none; }
+@media (max-width: 900px) {
+  body .app.tabbed .sysbar .exit { font-size: 0; gap: 0; width: 36px; height: 34px; padding: 0; justify-content: center; }
+  body .app.tabbed .sysbar .seg button { padding: 0 8px; font-size: 12.5px; }
+  .sb-clock .sec { display: none; }
+  .sysbar .sb-grow:first-of-type { display: none; }
+}
+@media (max-width: 430px) {
+  .sysbar.has-road .sb-atis .sb-c { display: none; }
+  body .app.tabbed .sb-road { padding: 0 8px; font-size: 11px; }
+  .sb-atis .sb-c { padding: 0 7px; }
+}
+@media (max-width: 360px) { .tabbed > .sysbar { gap: 5px; padding: 0 6px; } .sysbar .talk { display: none; } .sb-clock { font-size: 16px; } }

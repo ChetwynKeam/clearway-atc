@@ -634,21 +634,33 @@ const sheetOpen = () => sheetMQ.matches && document.querySelector('.app').datase
 const sheetPx = () => Math.round(scopeH()*sheetF);
 function applySheet(){ const app = document.querySelector('.app'); if (app) app.style.setProperty('--sheet-h', sheetPx() + 'px'); }
 // the part of the scope you can actually see: under the toolbar and above the sheet
-function mapViewport(){ const top = phoneMQ.matches ? 56 : 52; return [top, sheetOpen() ? H - sheetPx() - 26 : H - 10]; }
+function mapViewport(){
+  const top = phoneMQ.matches ? 56 : 92, card = !phoneMQ.matches && S.sel && !$('sel').classList.contains('empty');
+  return [top, sheetOpen() ? H - sheetPx() - 26 : H - 10, 12, card ? W - 420 : W - 60];
+}
 // pan (never zoom) so a flight sits in the visible part of the map; force: always bring it to the middle of it
 function keepInView(ac, force){
   if (!ac || !S.acs.includes(ac)) return;
-  const [x, y] = acMid(ac), X = sx(x), Y = sy(y), [t, b] = mapViewport();
-  if (!force && X > 24 && X < W - 24 && Y > t + 16 && Y < b - 16) return;
-  V.cx = x; V.cy = IMY(MY(y) + ((t + b)/2 - H/2)/V.scale);
+  const [x, y] = acMid(ac), X = sx(x), Y = sy(y), [t, b, l, r] = mapViewport();
+  if (!force && X > l + 12 && X < r - 12 && Y > t + 16 && Y < b - 16) return;
+  V.cx = x - ((l + r)/2 - W/2)/V.scale; V.cy = IMY(MY(y) + ((t + b)/2 - H/2)/V.scale);
 }
 // fromStrip: picked from the strips (not tapped on the map), so on a phone the map goes to it if it is out of sight
 function tapSelect(ac, fromStrip){
   select(ac);
-  if (!phoneMQ.matches) return;
-  if (document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight');
-  requestAnimationFrame(() => { if (S.sel !== ac) return; const [x, y] = acMid(ac), X = sx(x), Y = sy(y), [t, b] = mapViewport();
-    if (fromStrip && !(X > 0 && X < W && Y > t && Y < b)) centreOn(ac); else keepInView(ac); });
+  if (phoneMQ.matches && document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight');
+  requestAnimationFrame(() => { if (S.sel !== ac) return; if (fromStrip) focusOn(ac); else keepInView(ac); });
+}
+// a strip picked: the map goes to its flight, closing in on the airfield for one on the ground (from the radar picture)
+// and out to the radar picture for one in the air (from the ground view); otherwise the zoom stays as you set it
+function focusOn(ac){
+  if (!ac || !S.acs.includes(ac)) return;
+  const m = Math.min(W, H) || 600, g = APT.view.gnd, gs = Math.min(W/(g[2]*M2NM), H/(g[3]*M2NM));
+  let k = null;
+  if (ac.ground && V.scale < gs*0.6) { V.scale = gs; k = 'gnd'; }
+  else if (!ac.ground && V.scale >= gs*0.6) { V.scale = m/APT.view.app[2]; k = 'app'; }
+  if (k) { V.name = k; document.querySelectorAll('[data-view]').forEach(bt => bt.classList.toggle('on', bt.dataset.view === k)); }
+  keepInView(ac, true);
 }
 // on a phone the flight card steps through the flights with ‹ ›, those waiting on you first (the order of the strips)
 function cycleSel(dir){
@@ -747,6 +759,7 @@ function relText(ac){
 function renderSel(){
   if (S.sel && outOfCtl(S.sel)) S.sel = null;   // transferred to the next unit: no longer yours to select
   const ac = S.sel, el = $('sel');
+  el.classList.toggle('empty', !ac || !S.acs.includes(ac));
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → ${APT.icao}` : `${APT.icao} → ${ac.d}`;
   let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><span class="selnav"><button data-nav="-1" aria-label="Previous flight">‹</button><button data-nav="1" aria-label="Next flight">›</button></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
@@ -1123,8 +1136,28 @@ function centreOn(ac){
   else { V.scale = m/APT.view.app[2]; V.name = 'app'; }
   V.cx = x; V.cy = y;
   document.querySelectorAll('[data-view]').forEach(bt => bt.classList.toggle('on', bt.dataset.view === V.name));
-  if (sheetOpen()) keepInView(ac, true);   // on a phone, in the middle of the map you can see, above the panel
+  keepInView(ac, true);   // in the middle of the map you can see: above the panel on a phone, beside the flight card on a computer
 }
+// ── strip bays: which phase of the flight each strip sits in ──
+const PHASES = [['pend', 'Pending'], ['push', 'Push & start'], ['taxi', 'Taxi'], ['hold', 'Holding'], ['rwy', 'Runway'], ['final', 'Final'], ['inb', 'Inbound'], ['air', 'Airborne'], ['stand', 'On stand'], ['off', 'Handed off']];
+function phaseOf(ac){
+  if (outOfCtl(ac)) return 'off';
+  const st = ac.state;
+  if (ac.kind === 'ARR') {
+    if (st === 'ONSTAND') return 'stand';
+    if (st === 'FINAL') return 'final';
+    if (st === 'ROLLOUT' || st === 'ROLLED' || (st === 'VACATING' && ac.onRwy)) return 'rwy';
+    if (ac.ground || st === 'VACATING' || st === 'TOW') return ac.holdAt && !ac.path ? 'hold' : 'taxi';
+    return 'inb';
+  }
+  if (st === 'PARKED' || st === 'PRE') return 'pend';
+  if (st === 'PUSH' || st === 'PULL' || st === 'READY' || st === 'TOW') return 'push';
+  if (st === 'HOLDPT' || (st === 'TAXI' && ac.holdAt && !ac.path)) return 'hold';
+  if (st === 'TAXI') return 'taxi';
+  if (st === 'LINEUP' || st === 'LINEDUP' || st === 'TAKEOFF') return 'rwy';
+  return ac.airborne ? 'air' : 'taxi';
+}
+const phaseRwy = k => k === 'hold' || k === 'rwy' ? (typeof depRw === 'function' ? depRw() : '') : k === 'final' ? S.rwy : '';
 function renderStrips(force){
   const mine = a => !!a.need && !aiOwns(a);   // waiting on you (not on an AI controller)
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
@@ -1132,8 +1165,20 @@ function renderStrips(force){
   if (stripWin && stripWin.closed) closeStripBoard();
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
-  if (typeof vehStrips === 'function') for (const d of vehStrips()) el.appendChild(d);
-  for (const ac of list) el.appendChild(makeStrip(ac));
+  // the strip bay, grouped by phase of flight like an electronic strip board: each bay heads its strips, with an amber
+  // dot when one of them is waiting on you and a red one for an emergency
+  const groups = new Map(PHASES.map(([k]) => [k, []]));
+  for (const ac of list) groups.get(phaseOf(ac)).push(ac);
+  for (const [k, label] of PHASES) {
+    const L = groups.get(k); if (!L.length) continue;
+    const hd = document.createElement('div'); hd.className = 'bayhd bay-' + k;
+    const emg = L.some(a => a.emerg && !a.emerg.done), need = L.some(mine);
+    hd.innerHTML = `<span class="bl"></span><span class="bn"></span>${emg ? '<i class="dot emg" title="Emergency"></i>' : need ? '<i class="dot need" title="Waiting on you"></i>' : ''}<b></b>`;
+    hd.querySelector('.bl').textContent = label + (phaseRwy(k) ? ' · ' + phaseRwy(k) : ''); hd.querySelector('b').textContent = L.length;
+    el.appendChild(hd);
+    for (const ac of L) el.appendChild(makeStrip(ac));
+  }
+  if (typeof vehStrips === 'function') { const VS = vehStrips(); if (VS.length) { const hd = document.createElement('div'); hd.className = 'bayhd bay-veh'; hd.innerHTML = '<span class="bl">Vehicles</span><span class="bn"></span><b></b>'; hd.querySelector('b').textContent = VS.length; el.appendChild(hd); for (const d of VS) el.appendChild(d); } }
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
   { const n = S.acs.filter(mine).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
@@ -1204,6 +1249,7 @@ function renderScore(){
   $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>${S.running && !EXERCISES[S.mode] && AI_SEATS.some(k => S.seats[k] === 'AI') ? `<span class="ai" title="Seats worked by AI controllers (their flights don't count in your score)">AI <b>${AI_SEATS.filter(k => S.seats[k] === 'AI').join(' ')}</b></span>` : ''}`;
   const d = new Date(S.start + S.t*1000);
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
+  renderSysbar(d);
   $('clockz').textContent = 'local ' + new Date(d.getTime() + tzOffH(d.getTime())*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
   if (S.xing.st === 'CLOSING' || S.xing.st === 'OPENING') { const el = $('xCount'); if (el) el.textContent = Math.max(0, Math.ceil(S.xing.t - S.t)); const bar = document.querySelector('.xing .bar i'); if (bar) bar.style.width = Math.round((S.xing.st === 'CLOSING' ? clamp(1 - (S.xing.t - S.t)/150, 0, 1) : clamp((S.xing.t - S.t)/15, 0, 1))*100)+'%'; }
 }
@@ -1240,12 +1286,13 @@ document.querySelectorAll('[data-view]').forEach(bt => bt.onclick = () => setVie
 function viewOff(){ document.querySelectorAll('[data-view].on').forEach(bt => bt.classList.remove('on')); }
 // display theme: light chart or night radar, remembered per browser
 function applyTheme(t){
-  setTheme(t); document.body.classList.toggle('theme-dark', t === 'dark');
+  setTheme(t); document.body.classList.toggle('theme-dark', t === 'dark' || !!document.querySelector('.app.tabbed'));   // the console is always the night operations display; the choice is the map's
   document.querySelectorAll('[data-theme-set]').forEach(bt => bt.classList.toggle('on', bt.dataset.themeSet === t));
-  try { localStorage.setItem('cw-theme', t); } catch(_) {}
+  try { localStorage.setItem('cw-map', t); } catch(_) {}
 }
 document.querySelectorAll('[data-theme-set]').forEach(bt => bt.onclick = () => applyTheme(bt.dataset.themeSet));
-try { applyTheme(localStorage.getItem('cw-theme') === 'dark' ? 'dark' : 'light'); } catch(_) { applyTheme('light'); }
+// the map starts on its night colours, like the console round it; Day map in the menu switches it
+try { applyTheme(localStorage.getItem('cw-map') === 'light' ? 'light' : 'dark'); } catch(_) { applyTheme('dark'); }
 $('tgProc').onclick = e => { S.showProc = !S.showProc; e.currentTarget.classList.toggle('on', S.showProc); };
 $('tgPause').onclick = e => { if (!S.running) return; S.paused = !S.paused; e.currentTarget.textContent = S.paused ? 'Resume' : 'Pause'; };
 $('tgSpeed').onclick = e => {
@@ -1300,7 +1347,8 @@ cv.addEventListener('pointerup', e => {
     if (!best) { let hb = null, hd = 26; for (const ac of S.acs) if (outOfCtl(ac) && !ac.ground) { const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < hd) { hd = d; hb = ac; } }
       const fa = hb || (typeof farAt === 'function' ? farAt(e.offsetX, e.offsetY) : null);   // handed on, or beyond radar cover: view its route only
       if (fa) { S.trk = fa; S.sel = null; renderSel(); renderStrips(true); } }
-    if (best) tapSelect(best); else if (!S.trk && typeof vehAt === 'function') { const v = vehAt(e.offsetX, e.offsetY); if (v) showVehPop(v, e); } }
+    if (best) tapSelect(best); else if (!S.trk) { const v = typeof vehAt === 'function' && vehAt(e.offsetX, e.offsetY); if (v) showVehPop(v, e);
+      else if (S.sel) { select(null); if (sheetOpen() && document.querySelector('.app').dataset.mtab === 'flight') setMTab('map'); } } }   // empty map: put the flight card away
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); viewOff(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
@@ -1408,3 +1456,60 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 window.__S = S; window.__cmd = command; window.__step = step; window.__start = start;
+
+// ═════════════════ the operations console: system bar, menu, runway status, map tools ═════════════════
+// the system bar: ATIS letter, wind, QNH, visibility and the runways in use, the UTC clock; click it for the full ATIS
+function renderSysbar(d){
+  const c = $('sbClock'); if (!c) return;
+  const t = d.toISOString().substr(11, 8); c.innerHTML = `${t.slice(0, 5)}<span class="sec">${t.slice(5)}</span><small>Z</small>`;
+  const w = S.wx, dep = typeof depRw === 'function' ? depRw() : S.rwy, warn = !!(S.emg && (S.emg.rwyBlock || S.emg.ws));
+  const sig = [S.atis, w.raw, S.rwy, dep, S.atisAlert, warn].join('|');
+  const a = $('sbAtis');
+  if (a.dataset.sig !== sig) { a.dataset.sig = sig;
+    const cell = (l, v) => `<span class="sb-c"><i>${l}</i>${v}</span>`;
+    a.innerHTML = `<span class="sb-l">${S.atis}</span>${cell('WIND', `${w.vrb ? 'VRB' : hdg3(w.dir)}/${w.spd}${w.gust ? 'G' + w.gust : ''}`)}${cell(APT.inHg ? 'ALT' : 'QNH', APT.inHg ? w.inhg.toFixed(2) : w.qnh)}${cell('VIS', w.vis >= 9999 ? '10K+' : w.vis)}${cell(dep === S.rwy ? 'RWY' : 'ARR · DEP', dep === S.rwy ? S.rwy : S.rwy + ' · ' + dep)}${S.atisAlert || warn ? `<span class="sb-dot ${S.atisAlert ? 'flash' : ''}" title="${S.atisAlert ? 'The ATIS has changed' : 'Runway closure or windshear: see the ATIS panel'}"></span>` : ''}`;
+    a.classList.toggle('alert', !!S.atisAlert); }
+  if (APT.xing) { // Gibraltar: the road across the runway, open or shut from the bar
+    let rb = $('sbRoad'); if (!rb) { rb = document.createElement('button'); rb.type = 'button'; rb.id = 'sbRoad'; rb.className = 'sb-road'; rb.title = 'Winston Churchill Avenue: open or close the road'; rb.onclick = () => { const x = $('xBtn'); if (x) x.click(); }; a.after(rb); $('sysbar').classList.add('has-road'); }
+    const X = S.xing, txt = `ROAD ${X.st}${X.st === 'CLOSING' ? ' ' + Math.max(0, Math.ceil(X.t - S.t)) + 's' : ''}`;
+    if (rb.textContent !== txt) rb.textContent = txt; rb.className = 'sb-road st-' + X.st; }
+  renderPills();
+}
+// runway status over the map: each runway in use, clear or who is on it
+function renderPills(){
+  const el = $('rwyPills'); if (!el) return;
+  const dep = typeof depRw === 'function' ? depRw() : S.rwy, ends = dep === S.rwy ? [S.rwy] : [S.rwy, dep];
+  const html = ends.map(r => {
+    const occ = S.acs.find(o => onRunway(o, r)), shut = S.emg && S.emg.rwyBlock && typeof blockRw === 'function' && blockRw() === r;
+    const lbl = ends.length === 1 ? r : r === S.rwy ? r + ' ARR' : r + ' DEP';
+    return `<span class="rp ${shut ? 'shut' : occ ? 'occ' : 'clr'}"><i></i>${lbl} · ${shut ? 'CLOSED' : occ ? 'OCCUPIED ' + esc(occ.cs) : 'CLEAR'}</span>`;
+  }).join('');
+  if (el.innerHTML !== html) el.innerHTML = html;
+}
+{ // the menu: session, voice, the map's day or night colours, full screen and feedback
+  const btn = $('tgMenu'), pop = $('menuPop');
+  if (btn && pop) {
+    const set = open => { pop.hidden = !open; btn.setAttribute('aria-expanded', String(open)); btn.classList.toggle('on', open); };
+    btn.onclick = e => { e.stopPropagation(); set(pop.hidden); };
+    pop.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.click) $(b.dataset.click).click(); if (!b.closest('.seg')) set(false); });
+    document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && e.target !== btn && !btn.contains(e.target)) set(false); });
+  }
+  // the ATIS block opens the full ATIS: a panel under the bar on a computer, the ATIS tab on a phone
+  const at = $('sbAtis'), app = document.querySelector('.app');
+  if (at && app) {
+    at.onclick = e => { e.stopPropagation();
+      if (phoneMQ.matches) { setMTab(app.dataset.mtab === 'atis' && sheetMQ.matches ? 'map' : 'atis'); return; }
+      const open = !app.classList.contains('atis-open'); app.classList.toggle('atis-open', open); at.setAttribute('aria-expanded', String(open)); };
+    document.addEventListener('pointerdown', e => { if (!app.classList.contains('atis-open')) return; const p = $('atis');
+      if (p.contains(e.target) || at.contains(e.target) || (e.target.closest && e.target.closest('.atis-pop'))) return;
+      app.classList.remove('atis-open'); at.setAttribute('aria-expanded', 'false'); });
+  }
+  // map tools: zoom about the middle of the map, and back to the selected flight
+  const zoom = f => { V.scale = clamp(V.scale*f, 0.2, 12000); viewOff(); };
+  if ($('mrIn')) $('mrIn').onclick = () => zoom(1.5);
+  if ($('mrOut')) $('mrOut').onclick = () => zoom(1/1.5);
+  if ($('mrCtr')) $('mrCtr').onclick = () => { if (S.sel && S.acs.includes(S.sel)) centreOn(S.sel); };
+  // the command bar's height, so the flight card never runs under it
+  const bot = () => { const b = document.querySelector('.tabbed > .bottom'); if (b && app) app.style.setProperty('--bot', b.offsetHeight + 'px'); };
+  window.addEventListener('resize', bot); requestAnimationFrame(bot);
+}
