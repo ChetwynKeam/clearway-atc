@@ -6,7 +6,7 @@ const PAL = {
   light: { sea: '#cfe2ee', land: '#f3f0e7', wash: 'rgba(246,248,251,.38)', my: 'rgba(31,94,255,.07)', myEdge: 'rgba(31,94,255,.75)', nb: 'rgba(138,79,196,.55)', nbTxt: 'rgba(110,60,170,.85)',
     awy: 'rgba(90,105,125,.3)', awyTxt: 'rgba(80,95,115,.85)', fix: '#3a4a5e', apt: '#1452d9', arr: '#b75f00', dep: '#1452d9', ovf: '#0b3b5c', sel: '#0c1b2e', conf: '#d62d2d', off: '#8a4fc4',
     offer: '#b75f00', ghost: '#b4c2d1', ghostTxt: '#5d6f84', tagBg: 'rgba(255,255,255,.92)', tagEdge: 'rgba(12,27,46,.18)', cb: 'rgba(214,45,45,.16)', cbEdge: 'rgba(214,45,45,.6)', turb: 'rgba(183,95,0,.55)', pv: '#1f5eff', name: 'light' },
-  dark: { sea: '#04121a', land: '#0d2427', wash: 'rgba(2,10,16,.55)', my: 'rgba(110,240,168,.06)', myEdge: 'rgba(110,240,168,.65)', nb: 'rgba(195,155,255,.45)', nbTxt: 'rgba(195,155,255,.8)',
+  dark: { sea: '#04121a', land: '#0d2427', wash: 'rgba(2,10,16,.35)', my: 'rgba(110,240,168,.06)', myEdge: 'rgba(110,240,168,.65)', nb: 'rgba(195,155,255,.45)', nbTxt: 'rgba(195,155,255,.8)',
     awy: 'rgba(160,190,200,.28)', awyTxt: 'rgba(170,195,205,.7)', fix: '#9fb3c8', apt: '#7cc7ff', arr: '#ffc164', dep: '#7cc7ff', ovf: '#cfe3e2', sel: '#ffffff', conf: '#ff5a5a', off: '#c39bff',
     offer: '#ffc164', ghost: '#5b6f80', ghostTxt: '#9fb3c8', tagBg: 'rgba(4,14,18,.78)', tagEdge: 'rgba(0,0,0,0)', cb: 'rgba(255,90,90,.16)', cbEdge: 'rgba(255,90,90,.6)', turb: 'rgba(255,193,100,.55)', pv: '#6ef0a8', name: 'dark' }
 };
