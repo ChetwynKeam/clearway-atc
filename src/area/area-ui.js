@@ -299,6 +299,7 @@ function stateText(ac){
 }
 function renderSel(){
   const ac = S.sel, el = $('sel');
+  el.classList.toggle('empty', !ac || !S.acs.includes(ac));
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = '<span class="lbl">Selected flight</span><p class="dimmer" style="margin:6px 0 0;font-size:12.5px">Click an aircraft or a strip. Your flights have the type’s shape and a framed label; grey ones belong to other units.</p>'; return; }
   const k = kindOf(ac), X = ac.exit, ahead = ac.route.slice(ac.ri).filter(p => p[2]).slice(0, 7).map(p => p[2]);
   const nxt = ac.route.slice(ac.ri).filter(p => p[2] && FIXP[p[2]]).slice(0, 14).map(p => p[2]);
@@ -373,10 +374,26 @@ function renderHud(){
   const st = S.stats;
   $('score').innerHTML = `<span><b>${S.score}</b> pts</span><span>Yours <b>${S.acs.filter(a => a.mine).length}</b></span><span>Handed <b>${st.handed || 0}</b></span><span class="${st.los ? 'bad' : ''}">LoS <b>${st.los || 0}</b></span><span class="${S.stca.size ? 'bad' : ''}">STCA <b>${S.stca.size}</b></span><span>Holds <b>${st.holds || 0}</b></span><span>Div <b>${st.div || 0}</b></span><span>Emg <b>${st.emg || 0}</b></span>`;
   const ms = simMs(); $('clock').textContent = zHMS(ms) + 'Z';
+  { const t = zHMS(ms), c = $('sbClock'), h = `${t.slice(0, 5)}<span class="sb-s">${t.slice(5)}</span><small>Z</small>`; if (c && c.dataset.t !== t) { c.dataset.t = t; c.innerHTML = h; } }
+  { const u = unitOf(ME), W30 = windAt(30000), mine = S.acs.filter(a => a.mine).length, need = S.acs.filter(a => a.mine && a.need || a.st === 'OFFER' && !a.accepted).length;
+    const cell = (l, v, c = '') => `<span class="sb-c ${c}"><i>${l}</i>${v}</span>`;
+    const h = cell('FREQ', esc(u.freq)) + cell('LEVELS', `${MYLO ? FLs(MYLO*100) : 'SFC'}–${FLs(MYHI*100)}`) + cell('WIND FL300', `${hdg3(W30.dir)}/${Math.round(W30.kt)}`) + cell('YOURS', mine) + cell('STCA', S.stca.size || 'NIL', S.stca.size ? 'bad' : 'ok');
+    const b = $('sbSec'); if (b && b.dataset.h !== h) { b.dataset.h = h; b.innerHTML = h; }
+    const m = $('mtNeed'); if (m) { m.hidden = !need; m.textContent = need; } }
   let loc = ''; try { loc = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(ms)); } catch (e) {}
   $('clockz').textContent = `LOCAL ${loc} · ${S.speed}× ${S.paused ? '· PAUSED' : ''}`;
 }
-function select(ac, centre){ S.sel = ac; if (centre && ac) { const p = xy(ac.la, ac.lo); V.x = p[0]; V.y = p[1]; } renderSel(); renderStrips(); }
+function select(ac, centre){
+  S.sel = ac; renderSel(); renderStrips();
+  if (phoneMQ.matches) { const app = document.querySelector('.app'); if (ac && app.dataset.mtab !== 'flight') setMTab('flight'); else if (!ac && app.dataset.mtab === 'flight') setMTab('map'); }
+  if (centre && ac) centreOnAc(ac);
+}
+// the map goes to a flight, in the middle of the part you can see: beside the flight card, or above the phone's panel
+function centreOnAc(ac){
+  const p = xy(ac.la, ac.lo), phone = phoneMQ.matches, open = phone && document.querySelector('.app').dataset.mtab !== 'map';
+  const tx = phone ? W/2 : (W - 420)/2 + 12, ty = open ? (H*0.54)/2 + 24 : H/2 + 20;
+  V.x = p[0] - (tx - W/2)/V.scale; V.y = p[1] - (H/2 - ty)/V.scale;
+}
 let dirty = { sel: true, strips: true, info: true, coord: true, log: true };
 S.listeners.push(ev => {
   if (ev === 'log') dirty.log = true;
@@ -457,10 +474,10 @@ $('tgVoice').onclick = e => { UI.voice = !UI.voice; e.currentTarget.classList.to
 $('tgFull').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); };
 $('tgExit').onclick = () => { stopSession(); location.hash = '#pick'; };
 $('viewFL').onchange = e => { UI.viewFL = +e.target.value; };
-function applyTheme(t){ Object.assign(C, PAL[t === 'dark' ? 'dark' : 'light']); document.body.classList.toggle('theme-dark', t === 'dark');
-  document.querySelectorAll('[data-theme-set]').forEach(b => b.classList.toggle('on', b.dataset.themeSet === t)); try { localStorage.setItem('cw-theme', t); } catch (e) {} }
+function applyTheme(t){ Object.assign(C, PAL[t === 'dark' ? 'dark' : 'light']); document.body.classList.add('theme-dark');   // the console is always the night display; the choice is the map's
+  document.querySelectorAll('[data-theme-set]').forEach(b => b.classList.toggle('on', b.dataset.themeSet === t)); try { localStorage.setItem('cw-map', t); } catch (e) {} }
 document.querySelectorAll('[data-theme-set]').forEach(b => b.onclick = () => applyTheme(b.dataset.themeSet));
-try { applyTheme(localStorage.getItem('cw-theme') === 'dark' ? 'dark' : 'light'); } catch (e) { applyTheme('light'); }
+try { applyTheme(localStorage.getItem('cw-map') === 'light' ? 'light' : 'dark'); } catch (e) { applyTheme('dark'); }
 // disruptions you can set off yourself
 $('tgDis').onclick = () => { const p = $('disPop'); p.hidden = !p.hidden; if (!p.hidden) fillDis(); };
 function fillDis(){
@@ -574,3 +591,26 @@ function frame(now){
 $('aStart').onclick = () => startSession();
 setInterval(() => { const t = $('topClock'); if (t) t.textContent = zHM(Date.now()) + 'Z'; }, 1000);
 fillSetup(); renderSeats(); setupFor();
+
+// ═════════════════ the console: menu, map tools, phone panels ═════════════════
+const phoneMQ = matchMedia('(max-width: 900px)');
+function setMTab(t){
+  const app = document.querySelector('.app'); app.dataset.mtab = t;
+  document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.classList.toggle('on', b.dataset.mtab === t));
+  if (t === 'log') { const l = $('log'); l.scrollTop = l.scrollHeight; }
+  requestAnimationFrame(resize);
+}
+document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.onclick = () => setMTab(b.dataset.mtab !== 'map' && document.querySelector('.app').dataset.mtab === b.dataset.mtab ? 'map' : b.dataset.mtab));
+{
+  const btn = $('tgMenu'), pop = $('menuPop');
+  const set = open => { pop.hidden = !open; btn.setAttribute('aria-expanded', String(open)); btn.classList.toggle('on', open); };
+  btn.onclick = e => { e.stopPropagation(); set(pop.hidden); };
+  pop.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.click) $(b.dataset.click).click(); if (!b.closest('.seg')) set(false); });
+  document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !btn.contains(e.target)) set(false); });
+  const zoom = f => { V.scale = clamp(V.scale*f, 0.35, 40); };
+  $('mrIn').onclick = () => zoom(1.5); $('mrOut').onclick = () => zoom(1/1.5);
+  $('mrCtr').onclick = () => { if (S.sel && S.acs.includes(S.sel)) centreOnAc(S.sel); };
+  const bot = () => { const b = document.querySelector('.tabbed > .bottom'), app = document.querySelector('.app'); if (b) app.style.setProperty('--bot', b.offsetHeight + 'px'); };
+  window.addEventListener('resize', bot); requestAnimationFrame(bot);
+  phoneMQ.addEventListener && phoneMQ.addEventListener('change', () => requestAnimationFrame(resize));
+}

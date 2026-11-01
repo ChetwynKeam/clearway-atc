@@ -102,3 +102,34 @@ body.theme-dark #page-sim .co.warn, body.theme-dark #page-sim .co.bad, body.them
 body.theme-dark #page-sim .toolbar > button, body.theme-dark #page-sim .toolbar .seg button { color: var(--ink); }
 body.theme-dark #page-sim .toolbar > button { background: var(--panel); }
 body.theme-dark #page-sim .app input, body.theme-dark #page-sim .app select { background: var(--panel-2); color: var(--ink); border-color: var(--line-2); }
+
+/* ── the operations console (shares the airport console's night display) ── */
+.area .sb-sec .sb-c.bad { color: var(--alert); } .area .sb-sec .sb-c.ok { color: var(--ok); }
+.area .sysbar .apchip { cursor: default; }
+.area .toolbar .flsel { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 6px 0 12px; border: 1px solid var(--line-2); border-radius: 8px; background: rgba(24,28,33,.94); color: #aab4bf; font-size: 13px; }
+.area .toolbar .flsel select { height: 28px; }
+.area .side > #secInfo { padding: 12px 12px 8px; }
+.area #secInfo .secrow .nm { font-weight: 600; }
+.area #secInfo .secrow .fq { font-family: var(--font-data); color: var(--accent-2); }
+.area .side > #coordBox { padding: 8px 12px; }
+.area #coordBox .co { border-radius: 6px; }
+body .app.area #sel .lvrow { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)) minmax(0,1.3fr) auto; gap: 6px; }
+body .app.area #sel .lvrow input { width: 100%; text-align: center; font-family: var(--font-data); font-size: 15px; height: 40px; }
+body .app.area #sel .lvrow button { height: 40px; font-family: var(--font-data); }
+body .app.area #sel .acts { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+body .app.area #sel .acts select { height: 40px; }
+body .app.area #sel .acts button { min-height: 42px; font-weight: 600; }
+body .app.area #sel .acts button.go { background: var(--ok); border-color: var(--ok); color: #08241a; font-weight: 700; }
+body .app.area #sel .tiles { gap: 6px; }
+@media (max-width: 900px) {
+  .tabbed #sel > .lvrow { order: 5; } .tabbed #sel > .acts { order: 6; } .tabbed #sel > .tiles { order: 7; }
+  .area .toolbar .flsel { display: none; }
+}
+.area .strip .stt.due { color: #0b5a8a; } .area .strip .stt.bad { color: #8a5a00; }
+body .app.area #sel .lvrow { grid-template-columns: repeat(5, minmax(0,1fr)); }
+body .app.area #sel .lvrow [data-c="lvset"] { grid-column: span 3; }
+body .app.area #sel .lvrow [data-c="rfl"] { grid-column: span 2; }
+@media (max-width: 900px) {
+  .area .sb-sec .sb-c:nth-of-type(n) { display: none; }
+  .area .sb-sec .sb-c:nth-of-type(1), .area .sb-sec .sb-c:nth-of-type(5) { display: flex; }
+}

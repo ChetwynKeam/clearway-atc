@@ -49,13 +49,14 @@
   color-scheme: light;
 }
 /* the operations display: simulator console, pop-outs and product shots */
-.dark, body.theme-dark #page-sim, body.theme-dark .pop, body.theme-dark .vehpop {
-  --bg: #0b1116; --bg-2: #0f171d; --panel: #121c23; --panel-2: #18242c; --panel-3: #1e2d36;
-  --line: #22323c; --line-2: #2f4552;
-  --ink: #e2ebef; --ink-2: #b9c8cf; --dim: #8a9ea8; --faint: #5f7480;
-  --phos: #6ef0a8; --phos-2: #34c983; --phos-ink: #04150d;
-  --sand: #e8c47f; --sand-2: #c49c52;
-  --arr: #ffc164; --dep: #7cc7ff; --warn: #ffb02e; --alert: #ff6464; --ok: #4fd18b; --pink: #ff7fae;
+.dark, body.theme-dark #page-sim, body.theme-dark .pop, body.theme-dark .vehpop, body.theme-dark .atis-pop {
+  --bg: #121519; --bg-2: #181c21; --panel: #1a1e23; --panel-2: #21262d; --panel-3: #282e36;
+  --line: #2b323b; --line-2: #3a434e;
+  --ink: #e3e8ee; --ink-2: #c3ccd5; --dim: #8d98a5; --faint: #66717d;
+  --accent: #46c2e6; --accent-2: #8ddcf3; --accent-soft: rgba(70,194,230,.14);
+  --phos: #46c2e6; --phos-2: #8ddcf3; --phos-ink: #071a21;
+  --sand: #f0b43c; --sand-2: #c99434; --amber: #f0b43c; --amber-soft: rgba(240,180,60,.12);
+  --arr: #f0c46a; --dep: #8fc0ec; --warn: #f0b43c; --alert: #ff5d52; --ok: #3fcf8e; --pink: #ff7fae;
   --r: 6px;
   color-scheme: dark; color: var(--ink);
 }
@@ -679,7 +680,7 @@ body.theme-dark .needline { background: rgba(255,176,46,.07); border-color: rgba
 body.theme-dark .chip.ARR { border-color: rgba(255,193,100,.4); } body.theme-dark .chip.DEP { border-color: rgba(124,199,255,.4); }
 body.theme-dark .overlay { background: rgba(3,10,13,.86); }
 body.theme-dark .card { box-shadow: 0 30px 80px rgba(0,0,0,.5); }
-body.theme-dark textarea { background: #061217; color: var(--phos); border-color: var(--line); }
+body.theme-dark[data-route="sim"] textarea { background: #061217; color: var(--phos); border-color: var(--line); }
 body.theme-dark .coach { background: rgba(9,24,30,.96); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
 body.theme-dark .pop { background: #0a1c22; border-top-color: var(--phos-2); box-shadow: 0 24px 60px rgba(0,0,0,.6); }
 body.theme-dark .pop .phr { border-left-color: var(--phos-2); background: rgba(125,255,176,.05); }
@@ -988,14 +989,9 @@ body.theme-dark #log .ln.ai .who { color: #4fd1c5; }
   .tabbed[data-mtab="map"] .heard { bottom: 12px; }
   .tabbed .strips { padding-bottom: 16px; }
 }
-/* phones: the toolbar keeps what you use most in view (Exit as an arrow, then Pause and the map views); the clock sits
-   under the toolbar, clear of the targets near the bottom of the map */
+/* phones: bigger targets on the flight card, actions first */
 @media (max-width: 900px) {
-  .tabbed .toolbar .exit { font-size: 0; gap: 0; min-width: 40px; justify-content: center; }
-  .tabbed .toolbar .exit svg { width: 18px; height: 18px; }
-  .tabbed .toolbar .apchip { display: none; }
   .app .seg.views button { padding: 8px 9px; }
-  .tabbed .hud-clock { top: 58px; bottom: auto; left: 10px; right: auto; text-align: left; }
   /* the flight card: what it needs and the instructions first, the reference details after them */
   .tabbed > .side > :where(#sel) { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
   .tabbed > .side > :where(#sel) > * { order: 10; margin-top: 0; margin-bottom: 0; }
@@ -1007,6 +1003,194 @@ body.theme-dark #log .ln.ai .who { color: #4fd1c5; }
   .selnav { display: inline-flex; gap: 4px; }
   .app .selnav button { min-width: 40px; min-height: 36px; padding: 0 8px; font-size: 20px; line-height: 1; }
 }
+
+/* ═════════════ the operations console (airport positions): a NATS-style night display ═════════════
+   A system bar across the top, the strip bay down the left, the map filling the rest with the flight card floating
+   over it, and the radio and command line under the map. The map's own colours (day or night) are chosen in the menu. */
+body.theme-dark[data-route="sim"] { background: #121519; }
+.app.tabbed { position: relative; grid-template-columns: 360px minmax(0,1fr); grid-template-rows: 48px minmax(0,1fr) auto; font-family: var(--font-body); }
+.tabbed > .sysbar { grid-row: 1; grid-column: 1 / -1; }
+.tabbed > .scopewrap { grid-row: 2; grid-column: 2; background: #0e1316; }
+.tabbed > .side { grid-row: 2 / span 2; grid-column: 1; border-left: 0; border-right: 1px solid var(--line); background: var(--panel); }
+.tabbed > .bottom { grid-row: 3; grid-column: 2; grid-template-rows: auto auto; background: var(--bg-2); }
+.tabbed #log { height: 76px; padding: 6px 14px 2px; font-size: 12px; }
+.tabbed #log .atc .tx { color: #8de3b8; } .tabbed #log .atc .who { color: var(--ok); }
+.tabbed .cmd { border-top: 0; padding: 4px 12px 10px; }
+.tabbed .cmd input { height: 38px; background: #0f1215; border-color: var(--line-2); color: var(--ink); font-size: 13.5px; }
+.tabbed .cmd input:focus { border-color: var(--accent); outline: none; }
+body .app.tabbed .cmd button.go { height: 38px; padding: 0 16px; background: var(--ok); border: 0; color: #08241a; }
+.tabbed .hud-clock { display: none; }
+.tabbed .hud-score { bottom: 10px; left: 12px; }
+.tabbed .hud-score span { background: rgba(24,28,33,.9); border-color: var(--line); color: var(--dim); }
+.tabbed .hud-score b { color: var(--ink); }
+
+/* buttons across the console */
+.tabbed button, .tabbed .apchip { font-family: var(--font-body); }
+body .app.tabbed button { background: var(--panel-3); border: 1px solid var(--line-2); color: var(--ink); border-radius: 6px; font-weight: 500; letter-spacing: 0; font-size: 13px; }
+body .app.tabbed button:hover:not(:disabled) { border-color: var(--dim); }
+body .app.tabbed button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-2); }
+body .app.tabbed .seg { background: rgba(24,28,33,.94); border: 1px solid var(--line-2); border-radius: 8px; padding: 3px; box-shadow: none; }
+body .app.tabbed .seg button { border: 0; background: none; color: #aab4bf; border-radius: 5px; }
+body .app.tabbed .seg button.on { background: var(--accent); color: #071a21; font-weight: 600; }
+body .app.tabbed button.go { background: rgba(63,207,142,.14); border-color: rgba(63,207,142,.5); color: #8de3b8; }
+body .app.tabbed button.danger { background: none; border-color: #5a2f2b; color: #ff9f97; }
+
+/* system bar */
+.sysbar { position: relative; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: var(--bg-2); border-bottom: 1px solid var(--line); min-width: 0; }
+.sysbar .sb-grow { flex: 1; min-width: 0; }
+.sysbar .exit { display: inline-flex; align-items: center; gap: 6px; height: 32px; }
+.sysbar .exit svg { width: 13px; height: 13px; }
+.sysbar .apchip { display: inline-flex; align-items: baseline; gap: 8px; text-decoration: none; color: var(--dim); white-space: nowrap; }
+.sysbar .apchip b { font-family: var(--font-data); font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: .04em; }
+.sysbar .apchip span { font-weight: 500; }
+.sysbar #tgSeats { height: 30px; font-family: var(--font-data); font-size: 12px; }
+.sysbar .seg button { height: 26px; padding: 0 10px; }
+.sysbar .talk { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 34px; padding: 0; border-radius: 50%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; }
+.sysbar .talk svg { width: 16px; height: 16px; pointer-events: none; }
+.app.tabbed .sysbar .talk.on { background: #d62d2d; border-color: #d62d2d; color: #fff; }
+.sb-clock { font-family: var(--font-data); font-size: 23px; font-weight: 500; letter-spacing: .02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sb-clock small { font-size: 14px; color: var(--dim); margin-left: 1px; }
+.app.tabbed .sb-menu { width: 34px; height: 32px; padding: 0; display: grid; place-items: center; }
+.sb-menu svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.sb-menupop { position: absolute; top: 52px; right: 12px; z-index: 40; display: flex; flex-direction: column; gap: 6px; min-width: 210px; padding: 8px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px; box-shadow: 0 18px 48px rgba(0,0,0,.5); }
+.sb-menupop[hidden] { display: none; }
+.app.tabbed .sb-menupop > button { height: 38px; text-align: left; padding: 0 12px; }
+.sb-menupop .seg { display: flex; } .sb-menupop .seg button { flex: 1; height: 32px; }
+.sb-menupop .phone-only { display: none; }
+/* the ATIS block */
+.app.tabbed .sb-atis { position: relative; display: flex; align-items: stretch; height: 36px; padding: 0; overflow: hidden; background: none; border: 1px solid var(--line-2); border-radius: 6px; font-family: var(--font-data); white-space: nowrap; }
+.sb-atis .sb-l { display: grid; place-items: center; width: 34px; background: var(--amber); color: #1a1406; font-weight: 700; font-size: 18px; }
+.sb-atis .sb-c { display: flex; flex-direction: column; justify-content: center; padding: 0 12px; border-left: 1px solid var(--line-2); font-size: 13px; line-height: 1.15; text-align: left; }
+.sb-atis .sb-c i { font: normal 600 9.5px var(--font-body); letter-spacing: .08em; color: var(--dim); }
+.sb-atis .sb-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+.sb-atis .sb-dot.flash { background: var(--alert); animation: atisFlash 1s steps(2, jump-none) infinite; }
+.app.tabbed .sb-atis.alert { border-color: var(--alert); }
+.app.tabbed .sb-atis[aria-expanded="true"] { border-color: var(--accent); }
+
+/* map overlays: view switch and toggles, runway status, map tools */
+.tabbed .toolbar { top: 12px; left: 12px; right: 70px; gap: 8px; }
+body .app.tabbed .toolbar > button { height: 36px; background: rgba(24,28,33,.94); border-color: var(--line-2); }
+body .app.tabbed .toolbar > button.on { background: rgba(70,194,230,.18); }
+.app.tabbed .toolbar .seg button { height: 28px; padding: 0 12px; }
+.rwypills { position: absolute; top: 56px; left: 12px; z-index: 3; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; font-family: var(--font-data); font-size: 12px; }
+.rwypills .rp { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 13px; background: rgba(24,28,33,.92); border: 1px solid #2f6b4f; color: var(--ink); }
+.rwypills .rp i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.rwypills .rp.occ { background: rgba(90,36,32,.95); border-color: var(--alert); color: #ffd2cd; } .rwypills .rp.occ i { background: var(--alert); }
+.rwypills .rp.shut { background: rgba(60,40,10,.95); border-color: var(--amber); color: #f6cf7c; } .rwypills .rp.shut i { background: var(--amber); }
+.maprail { position: absolute; top: 12px; right: 12px; z-index: 3; display: flex; flex-direction: column; gap: 2px; padding: 3px; background: rgba(24,28,33,.94); border: 1px solid var(--line-2); border-radius: 8px; }
+.app.tabbed .maprail button { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; background: none; border: 0; }
+.maprail svg { width: 15px; height: 15px; fill: none; stroke: #cfd6de; stroke-width: 1.6; stroke-linecap: round; }
+.maprail i { height: 1px; margin: 2px 4px; background: var(--line-2); }
+
+/* the strip bay */
+.tabbed .side > .strips-head { padding: 10px 12px 6px; border-bottom: 0; }
+.tabbed .strips-head .lbl { font-size: 11px; font-weight: 600; letter-spacing: .1em; color: var(--dim); }
+.tabbed .strips { gap: 4px; padding: 2px 10px 12px; }
+.bayhd { flex: none; display: flex; align-items: center; gap: 8px; height: 24px; margin-top: 6px; padding: 0 9px; border-radius: 4px; background: var(--panel-3); color: #aab4bf; font: 600 10.5px var(--font-body); letter-spacing: .1em; text-transform: uppercase; }
+.bayhd:first-child { margin-top: 0; }
+.bayhd .bn { flex: 1; }
+.bayhd b { font-family: var(--font-data); font-weight: 500; }
+.bayhd .dot { width: 9px; height: 9px; border-radius: 50%; }
+.bayhd .dot.need { background: var(--amber); }
+.bayhd .dot.emg { background: var(--alert); animation: emgPulse 1s ease-in-out infinite; }
+.bayhd.bay-rwy { background: #5a2420; color: #ffd2cd; }
+.bayhd.bay-off, .bayhd.bay-stand { opacity: .7; }
+.app.tabbed button.strip { min-height: 46px; border-radius: 3px; border: 0; background: #ecdeae; color: #1a1708; font-family: var(--font-data); }
+.app.tabbed button.strip.DEP { background: #c4d9ee; color: #111821; }
+.tabbed .strip .bar { background: #b48a1c; } .tabbed .strip.DEP .bar { background: #3b78b5; }
+.tabbed .strip .cs { font-size: 14px; font-weight: 700; }
+.tabbed .strip .ty, .tabbed .strip .lv, .tabbed .strip .fq { color: #4a4a3a; font-size: 10.5px; }
+.tabbed .strip.DEP .ty, .tabbed .strip.DEP .lv, .tabbed .strip.DEP .fq { color: #3c4a5a; }
+.tabbed .strip .stt { font-family: var(--font-data); font-size: 11.5px; font-weight: 700; letter-spacing: 0; }
+.app.tabbed button.strip.need { box-shadow: inset 0 0 0 2px #e0a020; }
+.app.tabbed button.strip.need .stt { color: #8a5a00; }
+.app.tabbed button.strip.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
+.app.tabbed button.strip.emg { box-shadow: inset 0 0 0 2px var(--alert); }
+.app.tabbed button.strip.off { opacity: .5; }
+.tabbed .strip .clrk { background: #1d7a4f; color: #fff; }
+
+/* the flight card, floating over the right of the map; away when nothing is selected */
+@media (min-width: 901px) {
+  .tabbed > .side > #sel { position: absolute; z-index: 8; top: 60px; right: 58px; width: 344px; max-height: calc(100% - 72px - var(--bot, 130px)); overflow-y: auto; padding: 14px 16px 16px;
+    background: rgba(26,30,35,.97); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 18px 48px rgba(0,0,0,.5); }
+  .tabbed > .side > #sel.empty { display: none; }
+  .tabbed > .side > #atis { position: absolute; z-index: 30; top: 54px; left: 50%; width: min(520px, calc(100% - 24px)); transform: translateX(-50%); max-height: calc(100% - 70px); overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 18px 48px rgba(0,0,0,.5); display: none; }
+  .tabbed.atis-open > .side > #atis { display: block; }
+  .tabbed > .side > .strips { min-height: 0; }
+}
+.tabbed #sel .sel-head .cs { font-family: var(--font-data); font-size: 24px; }
+.tabbed #sel .sel-head .cs.DEP { color: var(--dep); } .tabbed #sel .sel-head .cs.ARR { color: var(--arr); }
+.tabbed #sel .needline { background: rgba(240,180,60,.12); border: 1px solid rgba(240,180,60,.45); color: #f6cf7c; border-radius: 6px; font-weight: 600; }
+.tabbed #sel .btns { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.app.tabbed #sel .btns button { min-height: 44px; white-space: normal; line-height: 1.2; padding: 6px 10px; font-weight: 600; }
+body .app.tabbed #sel .btns button.go { background: var(--ok); border-color: var(--ok); color: #08241a; font-weight: 700; }
+.tabbed #sel .btns select { grid-column: 1 / -1; height: 38px; }
+.tabbed #sel .readout, .tabbed #sel .meta, .tabbed #sel .ordline { font-family: var(--font-data); }
+body .app.tabbed input, body .app.tabbed select { background: #0f1215; color: var(--ink); border-color: var(--line-2); }
+
+/* phones and tablets: the bar on top, compact */
+@media (max-width: 900px) {
+  .app.tabbed { grid-template-columns: 1fr; grid-template-rows: auto minmax(0,1fr) auto auto; padding-top: 0; }
+  .tabbed > .sysbar { grid-row: 1; height: 52px; gap: 8px; padding: 0 8px; padding-top: env(safe-area-inset-top, 0px); height: calc(52px + env(safe-area-inset-top, 0px)); }
+  .tabbed > .scopewrap { grid-row: 2; grid-column: 1; }
+  .tabbed > .bottom { grid-row: 3; grid-column: 1; }
+  .tabbed > .mtabs { grid-row: 4; }
+  .tabbed > .side { grid-row: 2; grid-column: 1; border-right: 0; }
+  .sysbar .apchip, .sysbar #tgSeats, .sysbar #tgSpeed { display: none; }
+  .sb-menupop .phone-only { display: block; }
+  .sysbar .exit { font-size: 0; gap: 0; width: 36px; padding: 0; justify-content: center; }
+  .sysbar .exit svg { width: 16px; height: 16px; }
+  .sb-atis .sb-c:nth-of-type(4), .sb-atis .sb-c:nth-of-type(5) { display: none; }
+  .sb-atis .sb-c { padding: 0 9px; font-size: 12px; }
+  .sb-clock { font-size: 18px; } .sb-clock small { font-size: 11px; }
+  .tabbed .toolbar { top: 8px; left: 8px; right: 54px; }
+  .rwypills { top: 52px; left: 8px; font-size: 11px; }
+  .maprail { top: 8px; right: 8px; }
+  .tabbed #log { height: var(--sheet-h, 46%); }
+  .tabbed > .side > #sel { position: static; }
+}
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .app.tabbed { grid-template-columns: minmax(0,1fr) min(340px, 44vw); grid-template-rows: auto minmax(0,1fr) auto auto; }
+  .tabbed > .sysbar { grid-column: 1 / -1; height: 44px; }
+  .tabbed > .scopewrap { grid-row: 2 / span 2; grid-column: 1; }
+  .tabbed > .side { grid-row: 2; grid-column: 2; height: auto; border-left: 1px solid var(--line); }
+  .tabbed > .bottom { grid-row: 3; grid-column: 2; border-left: 1px solid var(--line); }
+  .tabbed[data-mtab="log"] > .bottom, .tabbed[data-mtab="map"] > .bottom { grid-row: 2 / span 2; }
+  .tabbed #log { height: auto; position: static; }
+  .tabbed > .mtabs { grid-row: 4; grid-column: 1 / -1; }
+}
+.tabbed .mtabs { background: var(--bg-2); }
+.app.tabbed .mtabs button { border: 0; border-radius: 0; background: none; color: var(--dim); }
+.app.tabbed .mtabs button.on { color: var(--accent-2); background: var(--accent-soft); box-shadow: inset 0 2px 0 var(--accent); }
+.tabbed .mt-n { background: var(--amber); color: #1a1406; }
+.tabbed .sheet-grip { background: var(--panel) !important; border-top-color: var(--line-2) !important; }
+.app.tabbed .sb-road { height: 36px; font-family: var(--font-data); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.app.tabbed .sb-road.st-OPEN { border-color: var(--amber); color: #f6cf7c; }
+.app.tabbed .sb-road.st-CLOSED { border-color: var(--ok); color: #8de3b8; }
+.app.tabbed .sb-road.st-CLOSING, .app.tabbed .sb-road.st-OPENING { border-color: var(--accent); color: var(--accent-2); }
+@media (min-width: 901px) { .tabbed .coach { top: 124px; } }
+@media (max-width: 1200px) and (min-width: 901px) { .sb-atis .sb-c:nth-of-type(4) { display: none; } .sysbar .apchip span { display: none; } }
+
+.tabbed .strips-head .ph { flex-wrap: nowrap; }
+.tabbed #stripCount { font-family: var(--font-data); font-size: 10.5px; letter-spacing: 0; text-transform: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+body .app.tabbed .popbtn { background: var(--panel-3); border-color: var(--line-2); color: var(--ink); }
+body .app.tabbed button:disabled { opacity: .4; }
+.tabbed .strips-head .lbl { white-space: nowrap; }
+
+.app.tabbed .sb-atis { flex: none; }
+@media (max-width: 900px) {
+  body .app.tabbed .sysbar .exit { font-size: 0; gap: 0; width: 36px; height: 34px; padding: 0; justify-content: center; }
+  body .app.tabbed .sysbar .seg button { padding: 0 8px; font-size: 12.5px; }
+  .sb-clock .sb-s { display: none; }
+  .sysbar .sb-grow:first-of-type { display: none; }
+}
+@media (max-width: 430px) {
+  .sysbar.has-road .sb-atis .sb-c { display: none; }
+  body .app.tabbed .sb-road { padding: 0 8px; font-size: 11px; }
+  .sb-atis .sb-c { padding: 0 7px; }
+}
+@media (max-width: 360px) { .tabbed > .sysbar { gap: 5px; padding: 0 6px; } .sysbar .talk { display: none; } .sb-clock { font-size: 16px; } }
 
 /* ═════ accounts, pricing, feedback, airport requests (account.html / account.js) ═════ */
 .topbar .status .btn.ghost { box-shadow: none; padding: 9px 14px; font-size: 14px; }
@@ -2445,23 +2629,40 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 <!-- ═════════════════════ SIMULATOR ═════════════════════ -->
 <section class="page" id="page-sim" data-page="sim" hidden>
 <div class="app tabbed">
+  <header class="sysbar" id="sysbar">
+    <button class="exit" id="tgExit" title="Leave the position and return to the airport page"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</button>
+    <a class="apchip" id="apChip" href="#lxgb" title="Airport briefing"><b>LXGB</b><span>Gibraltar</span></a>
+    <button id="tgSeats" title="Who works each position: you or an AI controller">Positions</button>
+    <span class="sb-grow"></span>
+    <button type="button" class="sb-atis" id="sbAtis" title="ATIS, weather and runways in use" aria-expanded="false"></button>
+    <span class="sb-grow"></span>
+    <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
+    <div class="sb-clock" id="sbClock">--:--:--</div>
+    <button id="tgTalk" class="talk" aria-label="Hold to talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    <button type="button" class="sb-menu" id="tgMenu" aria-label="Menu" aria-expanded="false" title="Session, voice, display and feedback"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></button>
+    <div class="sb-menupop" id="menuPop" hidden role="menu">
+      <button id="tgSetup">Session</button>
+      <button type="button" class="phone-only" data-click="tgSeats">Positions</button>
+      <button type="button" class="phone-only" data-click="tgSpeed">Change speed</button>
+      <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
+      <div class="seg theme" role="group" aria-label="Map display"><button data-theme-set="light" class="on">Day map</button><button data-theme-set="dark">Night map</button></div>
+      <button id="tgFull" title="Full screen">Full screen</button>
+    </div>
+  </header>
   <div class="scopewrap">
     <canvas id="scope" aria-label="Radar and aerodrome display"></canvas>
     <div class="toolbar">
-      <button class="exit" id="tgExit" title="Leave the position and return to the airport page"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</button>
-      <a class="apchip" id="apChip" href="#lxgb" title="Airport briefing"><b>LXGB</b><span>Gibraltar</span></a>
-      <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
       <div class="seg views" role="group" aria-label="Map view"><button data-view="app" title="Radar: the approach picture (or press 1)">Radar</button><button data-view="twr" title="Tower: the runway and its approaches (or press 2)">Tower</button><button data-view="gnd" title="Ground: the aprons, stands and taxiways (or press 3)">Ground</button></div>
       <button id="tgProc" class="on">Procedures</button>
-      <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
-      <button id="tgTalk" class="talk" aria-label="Hold to talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
-      <button id="tgSetup">Session</button>
-      <button id="tgSeats" title="Who works each position: you or an AI controller">Positions</button>
       <button id="tgFids" title="Today's arrivals and departures">Flights</button>
-      
-      <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
-      <button id="tgFull" title="Full screen">Full screen</button>
     </div>
+    <div class="maprail" role="group" aria-label="Map tools">
+      <button type="button" id="mrIn" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg></button>
+      <button type="button" id="mrOut" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10"/></svg></button>
+      <i></i>
+      <button type="button" id="mrCtr" aria-label="Centre on the selected flight" title="Centre on the selected flight"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5"/><path d="M8 .8v3M8 12.2v3M.8 8h3M12.2 8h3"/></svg></button>
+    </div>
+    <div class="rwypills" id="rwyPills" aria-live="polite"></div>
     <div class="seatpop" id="seatPop" hidden role="dialog" aria-label="Positions">
       <div class="lbl">Who works each position</div>
       <div class="seatgrid" id="seatPopGrid"></div>
@@ -2650,7 +2851,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   <aside class="side">
     <div class="sec" id="atis"></div>
     <div class="sec" id="sel"></div>
-    <div class="sec strips-head"><div class="ph"><span class="lbl">Flight progress strips</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span><button type="button" class="popbtn" id="popStrips" title="Open the strip board in its own window, for a second screen">Pop out ↗</button></div><p class="strips-away">The strips are in their own window. <button type="button" class="popbtn" id="backStrips">Bring them back</button></p></div>
+    <div class="sec strips-head"><div class="ph"><span class="lbl">Strip bay</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span><button type="button" class="popbtn" id="popStrips" title="Open the strip board in its own window, for a second screen">Pop out ↗</button></div><p class="strips-away">The strips are in their own window. <button type="button" class="popbtn" id="backStrips">Bring them back</button></p></div>
     <div class="strips" id="strips"></div>
   </aside>
   <div class="bottom">
@@ -7905,21 +8106,33 @@ const sheetOpen = () => sheetMQ.matches && document.querySelector('.app').datase
 const sheetPx = () => Math.round(scopeH()*sheetF);
 function applySheet(){ const app = document.querySelector('.app'); if (app) app.style.setProperty('--sheet-h', sheetPx() + 'px'); }
 // the part of the scope you can actually see: under the toolbar and above the sheet
-function mapViewport(){ const top = phoneMQ.matches ? 56 : 52; return [top, sheetOpen() ? H - sheetPx() - 26 : H - 10]; }
+function mapViewport(){
+  const top = phoneMQ.matches ? 56 : 92, card = !phoneMQ.matches && S.sel && !$('sel').classList.contains('empty');
+  return [top, sheetOpen() ? H - sheetPx() - 26 : H - 10, 12, card ? W - 420 : W - 60];
+}
 // pan (never zoom) so a flight sits in the visible part of the map; force: always bring it to the middle of it
 function keepInView(ac, force){
   if (!ac || !S.acs.includes(ac)) return;
-  const [x, y] = acMid(ac), X = sx(x), Y = sy(y), [t, b] = mapViewport();
-  if (!force && X > 24 && X < W - 24 && Y > t + 16 && Y < b - 16) return;
-  V.cx = x; V.cy = IMY(MY(y) + ((t + b)/2 - H/2)/V.scale);
+  const [x, y] = acMid(ac), X = sx(x), Y = sy(y), [t, b, l, r] = mapViewport();
+  if (!force && X > l + 12 && X < r - 12 && Y > t + 16 && Y < b - 16) return;
+  V.cx = x - ((l + r)/2 - W/2)/V.scale; V.cy = IMY(MY(y) + ((t + b)/2 - H/2)/V.scale);
 }
 // fromStrip: picked from the strips (not tapped on the map), so on a phone the map goes to it if it is out of sight
 function tapSelect(ac, fromStrip){
   select(ac);
-  if (!phoneMQ.matches) return;
-  if (document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight');
-  requestAnimationFrame(() => { if (S.sel !== ac) return; const [x, y] = acMid(ac), X = sx(x), Y = sy(y), [t, b] = mapViewport();
-    if (fromStrip && !(X > 0 && X < W && Y > t && Y < b)) centreOn(ac); else keepInView(ac); });
+  if (phoneMQ.matches && document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight');
+  requestAnimationFrame(() => { if (S.sel !== ac) return; if (fromStrip) focusOn(ac); else keepInView(ac); });
+}
+// a strip picked: the map goes to its flight, closing in on the airfield for one on the ground (from the radar picture)
+// and out to the radar picture for one in the air (from the ground view); otherwise the zoom stays as you set it
+function focusOn(ac){
+  if (!ac || !S.acs.includes(ac)) return;
+  const m = Math.min(W, H) || 600, g = APT.view.gnd, gs = Math.min(W/(g[2]*M2NM), H/(g[3]*M2NM));
+  let k = null;
+  if (ac.ground && V.scale < gs*0.6) { V.scale = gs; k = 'gnd'; }
+  else if (!ac.ground && V.scale >= gs*0.6) { V.scale = m/APT.view.app[2]; k = 'app'; }
+  if (k) { V.name = k; document.querySelectorAll('[data-view]').forEach(bt => bt.classList.toggle('on', bt.dataset.view === k)); }
+  keepInView(ac, true);
 }
 // on a phone the flight card steps through the flights with ‹ ›, those waiting on you first (the order of the strips)
 function cycleSel(dir){
@@ -8018,6 +8231,7 @@ function relText(ac){
 function renderSel(){
   if (S.sel && outOfCtl(S.sel)) S.sel = null;   // transferred to the next unit: no longer yours to select
   const ac = S.sel, el = $('sel');
+  el.classList.toggle('empty', !ac || !S.acs.includes(ac));
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → ${APT.icao}` : `${APT.icao} → ${ac.d}`;
   let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><span class="selnav"><button data-nav="-1" aria-label="Previous flight">‹</button><button data-nav="1" aria-label="Next flight">›</button></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
@@ -8394,8 +8608,28 @@ function centreOn(ac){
   else { V.scale = m/APT.view.app[2]; V.name = 'app'; }
   V.cx = x; V.cy = y;
   document.querySelectorAll('[data-view]').forEach(bt => bt.classList.toggle('on', bt.dataset.view === V.name));
-  if (sheetOpen()) keepInView(ac, true);   // on a phone, in the middle of the map you can see, above the panel
+  keepInView(ac, true);   // in the middle of the map you can see: above the panel on a phone, beside the flight card on a computer
 }
+// ── strip bays: which phase of the flight each strip sits in ──
+const PHASES = [['pend', 'Pending'], ['push', 'Push & start'], ['taxi', 'Taxi'], ['hold', 'Holding'], ['rwy', 'Runway'], ['final', 'Final'], ['inb', 'Inbound'], ['air', 'Airborne'], ['stand', 'On stand'], ['off', 'Handed off']];
+function phaseOf(ac){
+  if (outOfCtl(ac)) return 'off';
+  const st = ac.state;
+  if (ac.kind === 'ARR') {
+    if (st === 'ONSTAND') return 'stand';
+    if (st === 'FINAL') return 'final';
+    if (st === 'ROLLOUT' || st === 'ROLLED' || (st === 'VACATING' && ac.onRwy)) return 'rwy';
+    if (ac.ground || st === 'VACATING' || st === 'TOW') return ac.holdAt && !ac.path ? 'hold' : 'taxi';
+    return 'inb';
+  }
+  if (st === 'PARKED' || st === 'PRE') return 'pend';
+  if (st === 'PUSH' || st === 'PULL' || st === 'READY' || st === 'TOW') return 'push';
+  if (st === 'HOLDPT' || (st === 'TAXI' && ac.holdAt && !ac.path)) return 'hold';
+  if (st === 'TAXI') return 'taxi';
+  if (st === 'LINEUP' || st === 'LINEDUP' || st === 'TAKEOFF') return 'rwy';
+  return ac.airborne ? 'air' : 'taxi';
+}
+const phaseRwy = k => k === 'hold' || k === 'rwy' ? (typeof depRw === 'function' ? depRw() : '') : k === 'final' ? S.rwy : '';
 function renderStrips(force){
   const mine = a => !!a.need && !aiOwns(a);   // waiting on you (not on an AI controller)
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
@@ -8403,8 +8637,20 @@ function renderStrips(force){
   if (stripWin && stripWin.closed) closeStripBoard();
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
-  if (typeof vehStrips === 'function') for (const d of vehStrips()) el.appendChild(d);
-  for (const ac of list) el.appendChild(makeStrip(ac));
+  // the strip bay, grouped by phase of flight like an electronic strip board: each bay heads its strips, with an amber
+  // dot when one of them is waiting on you and a red one for an emergency
+  const groups = new Map(PHASES.map(([k]) => [k, []]));
+  for (const ac of list) groups.get(phaseOf(ac)).push(ac);
+  for (const [k, label] of PHASES) {
+    const L = groups.get(k); if (!L.length) continue;
+    const hd = document.createElement('div'); hd.className = 'bayhd bay-' + k;
+    const emg = L.some(a => a.emerg && !a.emerg.done), need = L.some(mine);
+    hd.innerHTML = `<span class="bl"></span><span class="bn"></span>${emg ? '<i class="dot emg" title="Emergency"></i>' : need ? '<i class="dot need" title="Waiting on you"></i>' : ''}<b></b>`;
+    hd.querySelector('.bl').textContent = label + (phaseRwy(k) ? ' · ' + phaseRwy(k) : ''); hd.querySelector('b').textContent = L.length;
+    el.appendChild(hd);
+    for (const ac of L) el.appendChild(makeStrip(ac));
+  }
+  if (typeof vehStrips === 'function') { const VS = vehStrips(); if (VS.length) { const hd = document.createElement('div'); hd.className = 'bayhd bay-veh'; hd.innerHTML = '<span class="bl">Vehicles</span><span class="bn"></span><b></b>'; hd.querySelector('b').textContent = VS.length; el.appendChild(hd); for (const d of VS) el.appendChild(d); } }
   if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
   { const n = S.acs.filter(mine).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
@@ -8475,6 +8721,7 @@ function renderScore(){
   $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>${S.running && !EXERCISES[S.mode] && AI_SEATS.some(k => S.seats[k] === 'AI') ? `<span class="ai" title="Seats worked by AI controllers (their flights don't count in your score)">AI <b>${AI_SEATS.filter(k => S.seats[k] === 'AI').join(' ')}</b></span>` : ''}`;
   const d = new Date(S.start + S.t*1000);
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
+  renderSysbar(d);
   $('clockz').textContent = 'local ' + new Date(d.getTime() + tzOffH(d.getTime())*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
   if (S.xing.st === 'CLOSING' || S.xing.st === 'OPENING') { const el = $('xCount'); if (el) el.textContent = Math.max(0, Math.ceil(S.xing.t - S.t)); const bar = document.querySelector('.xing .bar i'); if (bar) bar.style.width = Math.round((S.xing.st === 'CLOSING' ? clamp(1 - (S.xing.t - S.t)/150, 0, 1) : clamp((S.xing.t - S.t)/15, 0, 1))*100)+'%'; }
 }
@@ -8511,12 +8758,13 @@ document.querySelectorAll('[data-view]').forEach(bt => bt.onclick = () => setVie
 function viewOff(){ document.querySelectorAll('[data-view].on').forEach(bt => bt.classList.remove('on')); }
 // display theme: light chart or night radar, remembered per browser
 function applyTheme(t){
-  setTheme(t); document.body.classList.toggle('theme-dark', t === 'dark');
+  setTheme(t); document.body.classList.toggle('theme-dark', t === 'dark' || !!document.querySelector('.app.tabbed'));   // the console is always the night operations display; the choice is the map's
   document.querySelectorAll('[data-theme-set]').forEach(bt => bt.classList.toggle('on', bt.dataset.themeSet === t));
-  try { localStorage.setItem('cw-theme', t); } catch(_) {}
+  try { localStorage.setItem('cw-map', t); } catch(_) {}
 }
 document.querySelectorAll('[data-theme-set]').forEach(bt => bt.onclick = () => applyTheme(bt.dataset.themeSet));
-try { applyTheme(localStorage.getItem('cw-theme') === 'dark' ? 'dark' : 'light'); } catch(_) { applyTheme('light'); }
+// the map starts on its night colours, like the console round it; Day map in the menu switches it
+try { applyTheme(localStorage.getItem('cw-map') === 'light' ? 'light' : 'dark'); } catch(_) { applyTheme('dark'); }
 $('tgProc').onclick = e => { S.showProc = !S.showProc; e.currentTarget.classList.toggle('on', S.showProc); };
 $('tgPause').onclick = e => { if (!S.running) return; S.paused = !S.paused; e.currentTarget.textContent = S.paused ? 'Resume' : 'Pause'; };
 $('tgSpeed').onclick = e => {
@@ -8571,7 +8819,8 @@ cv.addEventListener('pointerup', e => {
     if (!best) { let hb = null, hd = 26; for (const ac of S.acs) if (outOfCtl(ac) && !ac.ground) { const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < hd) { hd = d; hb = ac; } }
       const fa = hb || (typeof farAt === 'function' ? farAt(e.offsetX, e.offsetY) : null);   // handed on, or beyond radar cover: view its route only
       if (fa) { S.trk = fa; S.sel = null; renderSel(); renderStrips(true); } }
-    if (best) tapSelect(best); else if (!S.trk && typeof vehAt === 'function') { const v = vehAt(e.offsetX, e.offsetY); if (v) showVehPop(v, e); } }
+    if (best) tapSelect(best); else if (!S.trk) { const v = typeof vehAt === 'function' && vehAt(e.offsetX, e.offsetY); if (v) showVehPop(v, e);
+      else if (S.sel) { select(null); if (sheetOpen() && document.querySelector('.app').dataset.mtab === 'flight') setMTab('map'); } } }   // empty map: put the flight card away
   if (!pointers.size) drag = null;
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); viewOff(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
@@ -8679,6 +8928,63 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 window.__S = S; window.__cmd = command; window.__step = step; window.__start = start;
+
+// ═════════════════ the operations console: system bar, menu, runway status, map tools ═════════════════
+// the system bar: ATIS letter, wind, QNH, visibility and the runways in use, the UTC clock; click it for the full ATIS
+function renderSysbar(d){
+  const c = $('sbClock'); if (!c) return;
+  const t = d.toISOString().substr(11, 8); c.innerHTML = `${t.slice(0, 5)}<span class="sb-s">${t.slice(5)}</span><small>Z</small>`;
+  const w = S.wx, dep = typeof depRw === 'function' ? depRw() : S.rwy, warn = !!(S.emg && (S.emg.rwyBlock || S.emg.ws));
+  const sig = [S.atis, w.raw, S.rwy, dep, S.atisAlert, warn].join('|');
+  const a = $('sbAtis');
+  if (a.dataset.sig !== sig) { a.dataset.sig = sig;
+    const cell = (l, v) => `<span class="sb-c"><i>${l}</i>${v}</span>`;
+    a.innerHTML = `<span class="sb-l">${S.atis}</span>${cell('WIND', `${w.vrb ? 'VRB' : hdg3(w.dir)}/${w.spd}${w.gust ? 'G' + w.gust : ''}`)}${cell(APT.inHg ? 'ALT' : 'QNH', APT.inHg ? w.inhg.toFixed(2) : w.qnh)}${cell('VIS', w.vis >= 9999 ? '10K+' : w.vis)}${cell(dep === S.rwy ? 'RWY' : 'ARR · DEP', dep === S.rwy ? S.rwy : S.rwy + ' · ' + dep)}${S.atisAlert || warn ? `<span class="sb-dot ${S.atisAlert ? 'flash' : ''}" title="${S.atisAlert ? 'The ATIS has changed' : 'Runway closure or windshear: see the ATIS panel'}"></span>` : ''}`;
+    a.classList.toggle('alert', !!S.atisAlert); }
+  if (APT.xing) { // Gibraltar: the road across the runway, open or shut from the bar
+    let rb = $('sbRoad'); if (!rb) { rb = document.createElement('button'); rb.type = 'button'; rb.id = 'sbRoad'; rb.className = 'sb-road'; rb.title = 'Winston Churchill Avenue: open or close the road'; rb.onclick = () => { const x = $('xBtn'); if (x) x.click(); }; a.after(rb); $('sysbar').classList.add('has-road'); }
+    const X = S.xing, txt = `ROAD ${X.st}${X.st === 'CLOSING' ? ' ' + Math.max(0, Math.ceil(X.t - S.t)) + 's' : ''}`;
+    if (rb.textContent !== txt) rb.textContent = txt; rb.className = 'sb-road st-' + X.st; }
+  renderPills();
+}
+// runway status over the map: each runway in use, clear or who is on it
+function renderPills(){
+  const el = $('rwyPills'); if (!el) return;
+  const dep = typeof depRw === 'function' ? depRw() : S.rwy, ends = dep === S.rwy ? [S.rwy] : [S.rwy, dep];
+  const html = ends.map(r => {
+    const occ = S.acs.find(o => onRunway(o, r)), shut = S.emg && S.emg.rwyBlock && typeof blockRw === 'function' && blockRw() === r;
+    const lbl = ends.length === 1 ? r : r === S.rwy ? r + ' ARR' : r + ' DEP';
+    return `<span class="rp ${shut ? 'shut' : occ ? 'occ' : 'clr'}"><i></i>${lbl} · ${shut ? 'CLOSED' : occ ? 'OCCUPIED ' + esc(occ.cs) : 'CLEAR'}</span>`;
+  }).join('');
+  if (el.innerHTML !== html) el.innerHTML = html;
+}
+{ // the menu: session, voice, the map's day or night colours, full screen and feedback
+  const btn = $('tgMenu'), pop = $('menuPop');
+  if (btn && pop) {
+    const set = open => { pop.hidden = !open; btn.setAttribute('aria-expanded', String(open)); btn.classList.toggle('on', open); };
+    btn.onclick = e => { e.stopPropagation(); set(pop.hidden); };
+    pop.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.click) $(b.dataset.click).click(); if (!b.closest('.seg')) set(false); });
+    document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && e.target !== btn && !btn.contains(e.target)) set(false); });
+  }
+  // the ATIS block opens the full ATIS: a panel under the bar on a computer, the ATIS tab on a phone
+  const at = $('sbAtis'), app = document.querySelector('.app');
+  if (at && app) {
+    at.onclick = e => { e.stopPropagation();
+      if (phoneMQ.matches) { setMTab(app.dataset.mtab === 'atis' && sheetMQ.matches ? 'map' : 'atis'); return; }
+      const open = !app.classList.contains('atis-open'); app.classList.toggle('atis-open', open); at.setAttribute('aria-expanded', String(open)); };
+    document.addEventListener('pointerdown', e => { if (!app.classList.contains('atis-open')) return; const p = $('atis');
+      if (p.contains(e.target) || at.contains(e.target) || (e.target.closest && e.target.closest('.atis-pop'))) return;
+      app.classList.remove('atis-open'); at.setAttribute('aria-expanded', 'false'); });
+  }
+  // map tools: zoom about the middle of the map, and back to the selected flight
+  const zoom = f => { V.scale = clamp(V.scale*f, 0.2, 12000); viewOff(); };
+  if ($('mrIn')) $('mrIn').onclick = () => zoom(1.5);
+  if ($('mrOut')) $('mrOut').onclick = () => zoom(1/1.5);
+  if ($('mrCtr')) $('mrCtr').onclick = () => { if (S.sel && S.acs.includes(S.sel)) centreOn(S.sel); };
+  // the command bar's height, so the flight card never runs under it
+  const bot = () => { const b = document.querySelector('.tabbed > .bottom'); if (b && app) app.style.setProperty('--bot', b.offsetHeight + 'px'); };
+  window.addEventListener('resize', bot); requestAnimationFrame(bot);
+}
 
 // ═════════════════════════ emergencies and things going wrong ═════════════════════════
 // A scheduler picks an event that fits the traffic on frequency: a MAYDAY, a medical PAN, a medical diversion from an

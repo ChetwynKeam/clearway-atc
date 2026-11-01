@@ -1303,23 +1303,40 @@
 <!-- ═════════════════════ SIMULATOR ═════════════════════ -->
 <section class="page" id="page-sim" data-page="sim" hidden>
 <div class="app tabbed">
+  <header class="sysbar" id="sysbar">
+    <button class="exit" id="tgExit" title="Leave the position and return to the airport page"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</button>
+    <a class="apchip" id="apChip" href="#lxgb" title="Airport briefing"><b>LXGB</b><span>Gibraltar</span></a>
+    <button id="tgSeats" title="Who works each position: you or an AI controller">Positions</button>
+    <span class="sb-grow"></span>
+    <button type="button" class="sb-atis" id="sbAtis" title="ATIS, weather and runways in use" aria-expanded="false"></button>
+    <span class="sb-grow"></span>
+    <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
+    <div class="sb-clock" id="sbClock">--:--:--</div>
+    <button id="tgTalk" class="talk" aria-label="Hold to talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    <button type="button" class="sb-menu" id="tgMenu" aria-label="Menu" aria-expanded="false" title="Session, voice, display and feedback"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></button>
+    <div class="sb-menupop" id="menuPop" hidden role="menu">
+      <button id="tgSetup">Session</button>
+      <button type="button" class="phone-only" data-click="tgSeats">Positions</button>
+      <button type="button" class="phone-only" data-click="tgSpeed">Change speed</button>
+      <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
+      <div class="seg theme" role="group" aria-label="Map display"><button data-theme-set="light" class="on">Day map</button><button data-theme-set="dark">Night map</button></div>
+      <button id="tgFull" title="Full screen">Full screen</button>
+    </div>
+  </header>
   <div class="scopewrap">
     <canvas id="scope" aria-label="Radar and aerodrome display"></canvas>
     <div class="toolbar">
-      <button class="exit" id="tgExit" title="Leave the position and return to the airport page"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</button>
-      <a class="apchip" id="apChip" href="#lxgb" title="Airport briefing"><b>LXGB</b><span>Gibraltar</span></a>
-      <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
       <div class="seg views" role="group" aria-label="Map view"><button data-view="app" title="Radar: the approach picture (or press 1)">Radar</button><button data-view="twr" title="Tower: the runway and its approaches (or press 2)">Tower</button><button data-view="gnd" title="Ground: the aprons, stands and taxiways (or press 3)">Ground</button></div>
       <button id="tgProc" class="on">Procedures</button>
-      <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
-      <button id="tgTalk" class="talk" aria-label="Hold to talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
-      <button id="tgSetup">Session</button>
-      <button id="tgSeats" title="Who works each position: you or an AI controller">Positions</button>
       <button id="tgFids" title="Today's arrivals and departures">Flights</button>
-      
-      <div class="seg theme" role="group" aria-label="Display theme"><button data-theme-set="light" class="on">Light</button><button data-theme-set="dark">Dark</button></div>
-      <button id="tgFull" title="Full screen">Full screen</button>
     </div>
+    <div class="maprail" role="group" aria-label="Map tools">
+      <button type="button" id="mrIn" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg></button>
+      <button type="button" id="mrOut" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10"/></svg></button>
+      <i></i>
+      <button type="button" id="mrCtr" aria-label="Centre on the selected flight" title="Centre on the selected flight"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5"/><path d="M8 .8v3M8 12.2v3M.8 8h3M12.2 8h3"/></svg></button>
+    </div>
+    <div class="rwypills" id="rwyPills" aria-live="polite"></div>
     <div class="seatpop" id="seatPop" hidden role="dialog" aria-label="Positions">
       <div class="lbl">Who works each position</div>
       <div class="seatgrid" id="seatPopGrid"></div>
@@ -1508,7 +1525,7 @@
   <aside class="side">
     <div class="sec" id="atis"></div>
     <div class="sec" id="sel"></div>
-    <div class="sec strips-head"><div class="ph"><span class="lbl">Flight progress strips</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span><button type="button" class="popbtn" id="popStrips" title="Open the strip board in its own window, for a second screen">Pop out ↗</button></div><p class="strips-away">The strips are in their own window. <button type="button" class="popbtn" id="backStrips">Bring them back</button></p></div>
+    <div class="sec strips-head"><div class="ph"><span class="lbl">Strip bay</span><span class="grow"></span><span class="lbl dimmer" id="stripCount"></span><button type="button" class="popbtn" id="popStrips" title="Open the strip board in its own window, for a second screen">Pop out ↗</button></div><p class="strips-away">The strips are in their own window. <button type="button" class="popbtn" id="backStrips">Bring them back</button></p></div>
     <div class="strips" id="strips"></div>
   </aside>
   <div class="bottom">
