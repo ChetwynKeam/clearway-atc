@@ -939,3 +939,42 @@ body.theme-dark #log .ln.ai .who { color: #4fd1c5; }
 .areapromo h2 { font-size: clamp(30px, 3.4vw, 42px); margin: 12px 0 14px; }
 .areapromo p { color: var(--ink-2); font-size: 17px; line-height: 1.55; margin: 0 0 20px; max-width: 60ch; }
 @media (max-width: 900px) { .areapromo { grid-template-columns: 1fr; padding: 24px; } }
+
+/* ── map view switch: Radar, Tower, Ground ── */
+.sheet-grip, .selnav { display: none; }
+
+/* ── phone held upright: the map fills the screen and the panels are a sheet over its lower part ── */
+@media (max-width: 900px) and (min-height: 521px), (max-width: 900px) and (orientation: portrait) {
+  .app.tabbed { grid-template-rows: minmax(0,1fr) auto auto; }
+  .tabbed > .scopewrap { grid-row: 1; }
+  .tabbed > .side { grid-row: 1; grid-column: 1; align-self: end; height: var(--sheet-h, 46%); z-index: 6; border-top: 0; box-shadow: 0 -10px 24px -14px rgba(10,25,45,.35); overscroll-behavior: contain; }
+  .tabbed > .bottom { grid-row: 2; position: relative; }
+  .tabbed > .mtabs { grid-row: 3; }
+  .tabbed #log { position: absolute; left: 0; right: 0; bottom: 100%; height: var(--sheet-h, 46%); z-index: 6; background: var(--panel); border-bottom: 0; box-shadow: 0 -10px 24px -14px rgba(10,25,45,.35); overscroll-behavior: contain; }
+  .tabbed:not([data-mtab="map"]) .sheet-grip { display: block; position: absolute; left: 0; right: 0; bottom: var(--sheet-h, 46%); height: 26px; z-index: 7; background: var(--panel); border-radius: 14px 14px 0 0; border-top: 1px solid var(--line); box-shadow: 0 -6px 16px -10px rgba(10,25,45,.35); touch-action: none; cursor: ns-resize; }
+  .sheet-grip i { position: absolute; left: 50%; top: 10px; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--line-2); }
+  /* things drawn over the map stay above the sheet */
+  .tabbed .coach { top: 58px; bottom: auto; max-height: 40%; }
+  .tabbed:not([data-mtab="map"]) .heard { bottom: calc(var(--sheet-h, 46%) + 34px); }
+  .tabbed[data-mtab="map"] .heard { bottom: 12px; }
+  .tabbed .strips { padding-bottom: 16px; }
+}
+/* phones: the toolbar keeps what you use most in view (Exit as an arrow, then Pause and the map views); the clock sits
+   under the toolbar, clear of the targets near the bottom of the map */
+@media (max-width: 900px) {
+  .tabbed .toolbar .exit { font-size: 0; gap: 0; min-width: 40px; justify-content: center; }
+  .tabbed .toolbar .exit svg { width: 18px; height: 18px; }
+  .tabbed .toolbar .apchip { display: none; }
+  .app .seg.views button { padding: 8px 9px; }
+  .tabbed .hud-clock { top: 58px; bottom: auto; left: 10px; right: auto; text-align: left; }
+  /* the flight card: what it needs and the instructions first, the reference details after them */
+  .tabbed > .side > :where(#sel) { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .tabbed > .side > :where(#sel) > * { order: 10; margin-top: 0; margin-bottom: 0; }
+  .tabbed #sel > .sel-head { order: 0; position: sticky; top: 0; z-index: 1; background: var(--panel); margin: -12px -14px 0; padding: 12px 14px 8px; border-bottom: 1px solid var(--line); }
+  .tabbed #sel > .emgline { order: 1; } .tabbed #sel > .needline { order: 2; } .tabbed #sel > .relline { order: 3; } .tabbed #sel > .readout { order: 4; }
+  .tabbed #sel > .btns { order: 5; } .tabbed #sel > .ctl { order: 6; } .tabbed #sel > .ordline { order: 7; } .tabbed #sel > .standline { order: 8; }
+  .tabbed #sel .btns button { min-height: 42px; }
+  .sel-head .cs { font-size: 22px; }
+  .selnav { display: inline-flex; gap: 4px; }
+  .app .selnav button { min-width: 40px; min-height: 36px; padding: 0 8px; font-size: 20px; line-height: 1; }
+}
