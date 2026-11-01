@@ -1302,13 +1302,14 @@
 
 <!-- ═════════════════════ SIMULATOR ═════════════════════ -->
 <section class="page" id="page-sim" data-page="sim" hidden>
-<div class="app">
+<div class="app tabbed">
   <div class="scopewrap">
     <canvas id="scope" aria-label="Radar and aerodrome display"></canvas>
     <div class="toolbar">
       <button class="exit" id="tgExit" title="Leave the position and return to the airport page"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</button>
       <a class="apchip" id="apChip" href="#lxgb" title="Airport briefing"><b>LXGB</b><span>Gibraltar</span></a>
       <div class="seg" role="group" aria-label="Simulation"><button id="tgPause">Pause</button><button id="tgSpeed">1×</button></div>
+      <div class="seg views" role="group" aria-label="Map view"><button data-view="app" title="Radar: the approach picture (or press 1)">Radar</button><button data-view="twr" title="Tower: the runway and its approaches (or press 2)">Tower</button><button data-view="gnd" title="Ground: the aprons, stands and taxiways (or press 3)">Ground</button></div>
       <button id="tgProc" class="on">Procedures</button>
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
       <button id="tgTalk" class="talk" aria-label="Hold to talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>

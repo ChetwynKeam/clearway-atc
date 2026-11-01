@@ -622,12 +622,62 @@ function setMTab(t){
   app.dataset.mtab = t;
   document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.classList.toggle('on', b.dataset.mtab === t));
   if (t === 'log') { const l = $('log'); l.scrollTop = l.scrollHeight; }
-  requestAnimationFrame(resize);
+  requestAnimationFrame(() => { resize(); applySheet(); });
 }
-function tapSelect(ac){ select(ac); if (phoneMQ.matches && document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight'); }
-document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.onclick = () => setMTab(b.dataset.mtab));
+// a phone held upright: the map always fills the screen and the panel is a sheet over its lower part, so switching
+// panels never resizes or moves the map. Drag the grip to make the sheet taller or shorter, down to put it away
+// (or tap the open panel's tab again); its height is remembered. A phone on its side keeps the panel beside the map.
+const sheetMQ = matchMedia('(max-width: 900px) and (min-height: 521px), (max-width: 900px) and (orientation: portrait)');
+let sheetF = (() => { try { const v = +localStorage.getItem('cw.sheet'); return v >= 0.2 && v <= 0.9 ? v : 0.5; } catch (_) { return 0.5; } })();
+const scopeH = () => { const w = document.querySelector('.scopewrap'); return w ? w.clientHeight : 0; };
+const sheetOpen = () => sheetMQ.matches && document.querySelector('.app').dataset.mtab !== 'map';
+const sheetPx = () => Math.round(scopeH()*sheetF);
+function applySheet(){ const app = document.querySelector('.app'); if (app) app.style.setProperty('--sheet-h', sheetPx() + 'px'); }
+// the part of the scope you can actually see: under the toolbar and above the sheet
+function mapViewport(){ const top = phoneMQ.matches ? 56 : 52; return [top, sheetOpen() ? H - sheetPx() - 26 : H - 10]; }
+// pan (never zoom) so a flight sits in the visible part of the map; force: always bring it to the middle of it
+function keepInView(ac, force){
+  if (!ac || !S.acs.includes(ac)) return;
+  const [x, y] = acMid(ac), X = sx(x), Y = sy(y), [t, b] = mapViewport();
+  if (!force && X > 24 && X < W - 24 && Y > t + 16 && Y < b - 16) return;
+  V.cx = x; V.cy = IMY(MY(y) + ((t + b)/2 - H/2)/V.scale);
+}
+// fromStrip: picked from the strips (not tapped on the map), so on a phone the map goes to it if it is out of sight
+function tapSelect(ac, fromStrip){
+  select(ac);
+  if (!phoneMQ.matches) return;
+  if (document.querySelector('.app').dataset.mtab !== 'flight') setMTab('flight');
+  requestAnimationFrame(() => { if (S.sel !== ac) return; const [x, y] = acMid(ac), X = sx(x), Y = sy(y), [t, b] = mapViewport();
+    if (fromStrip && !(X > 0 && X < W && Y > t && Y < b)) centreOn(ac); else keepInView(ac); });
+}
+// on a phone the flight card steps through the flights with ‹ ›, those waiting on you first (the order of the strips)
+function cycleSel(dir){
+  const mine = a => !!a.need && !aiOwns(a);
+  const L = S.acs.filter(a => !dormant(a) && !outOfCtl(a)).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
+  if (!L.length) return; const i = L.indexOf(S.sel), n = L[((i < 0 ? (dir > 0 ? -1 : 0) : i) + dir + L.length) % L.length];
+  tapSelect(n, true);
+}
+document.querySelectorAll('#mtabs [data-mtab]').forEach(b => b.onclick = () => setMTab(sheetMQ.matches && b.dataset.mtab !== 'map' && document.querySelector('.app').dataset.mtab === b.dataset.mtab ? 'map' : b.dataset.mtab));
+{ // the grip on top of the sheet: drag to resize, down to close; a tap toggles between half and nearly full height
+  const sw = document.querySelector('.scopewrap'), g = document.createElement('div');
+  g.className = 'sheet-grip'; g.setAttribute('role', 'separator'); g.setAttribute('aria-label', 'Drag to resize the panel'); g.innerHTML = '<i></i>';
+  if (sw) sw.appendChild(g);
+  let gd = null;
+  const save = () => { try { localStorage.setItem('cw.sheet', String(sheetF)); } catch (_) {} };
+  g.addEventListener('pointerdown', e => { e.preventDefault(); try { g.setPointerCapture(e.pointerId); } catch (_) {} gd = { y: e.clientY, f: sheetF, moved: false }; });
+  g.addEventListener('pointermove', e => { if (!gd) return; const dy = e.clientY - gd.y; if (Math.abs(dy) > 4) gd.moved = true; if (!gd.moved) return;
+    sheetF = clamp(gd.f - dy/Math.max(1, scopeH()), 0.08, 0.9); applySheet(); });
+  const end = () => { if (!gd) return; const d = gd; gd = null;
+    if (!d.moved) { sheetF = sheetF < 0.7 ? 0.85 : 0.5; applySheet(); save(); }
+    else if (sheetF < 0.2) { sheetF = d.f >= 0.2 ? d.f : 0.5; setMTab('map'); }
+    else save();
+    if (S.sel) keepInView(S.sel); };
+  g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
+}
 setMTab('strips');
 phoneMQ.addEventListener && phoneMQ.addEventListener('change', () => requestAnimationFrame(resize));
+sheetMQ.addEventListener && sheetMQ.addEventListener('change', () => requestAnimationFrame(() => { resize(); applySheet(); }));
+window.addEventListener('resize', () => applySheet());
 function renderAtis(){
   const w = S.wx, c = windComp(w, crsOf(S.rwy)), X = S.xing, tex = turbExcess(w), wl = windLimit({ perf: { wake: 'M' } }, S.rwy);
   const cloud = w.clouds.length ? w.clouds.join(' ') : (w.raw.includes('CAVOK') ? 'CAVOK' : 'NSC');
@@ -699,7 +749,7 @@ function renderSel(){
   const ac = S.sel, el = $('sel');
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
   const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → ${APT.icao}` : `${APT.icao} → ${ac.d}`;
-  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
+  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><span class="selnav"><button data-nav="-1" aria-label="Previous flight">‹</button><button data-nav="1" aria-label="Next flight">›</button></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline${aiOwns(ac) ? ' ai' : ''}">◆ ${esc(ac.need)}</div>`;
@@ -719,6 +769,7 @@ function renderSel(){
   else if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
   const wireRm = () => { el.querySelectorAll('[data-ai]').forEach(b => b.onclick = () => { if (b.dataset.ai === 'take') takeOver(ac); else handToAi(ac); renderSel(); renderStrips(true); });
+    el.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => cycleSel(+b.dataset.nav));
     const r = el.querySelector('[data-rm]'); if (r) r.onclick = () => { if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and ${ac.slotHold ? 'is holding outside your airspace until you release it on the Flights board' : `calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now`}.</p>`; wireRm(); return; }
   if (air) {
@@ -1055,7 +1106,7 @@ function makeStrip(ac, doc = document){
   if (ai) { const k = doc.createElement('span'); k.className = 'aik'; k.textContent = 'AI ' + seatOf(ac); k.title = `Worked by the AI ${AI_NAME[seatOf(ac)]}: select it and Take over to work it yourself`; d.querySelector('.fq').append(' ', k); }
   if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
   if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
-  else d.onclick = () => { tapSelect(ac); if (towAsk(ac) && !phoneMQ.matches) centreOn(ac); };   // a tow request: show me where it is
+  else d.onclick = () => { tapSelect(ac, true); if (towAsk(ac) && !phoneMQ.matches) centreOn(ac); };   // a tow request: show me where it is
   // the selected flight's strip gets a recentre button: the map jumps to it (close in on the ground, the radar picture in the air)
   if (S.sel === ac && !outOfCtl(ac)) {
     const c = doc.createElement('span'); c.className = 'ctr'; c.setAttribute('role', 'button'); c.tabIndex = 0; c.title = 'Centre the map on ' + ac.cs; c.setAttribute('aria-label', c.title);
@@ -1072,7 +1123,7 @@ function centreOn(ac){
   else { V.scale = m/APT.view.app[2]; V.name = 'app'; }
   V.cx = x; V.cy = y;
   document.querySelectorAll('[data-view]').forEach(bt => bt.classList.toggle('on', bt.dataset.view === V.name));
-  if (phoneMQ.matches) setMTab('map');
+  if (sheetOpen()) keepInView(ac, true);   // on a phone, in the middle of the map you can see, above the panel
 }
 function renderStrips(force){
   const mine = a => !!a.need && !aiOwns(a);   // waiting on you (not on an AI controller)
@@ -1185,6 +1236,8 @@ function setView(k){
   document.querySelectorAll('[data-view]').forEach(bt => bt.classList.toggle('on', bt.dataset.view === k));
 }
 document.querySelectorAll('[data-view]').forEach(bt => bt.onclick = () => setView(bt.dataset.view));
+// moving or zooming the map yourself: no preset view is lit any more (the view keeps its name for the label rules)
+function viewOff(){ document.querySelectorAll('[data-view].on').forEach(bt => bt.classList.remove('on')); }
 // display theme: light chart or night radar, remembered per browser
 function applyTheme(t){
   setTheme(t); document.body.classList.toggle('theme-dark', t === 'dark');
@@ -1222,14 +1275,14 @@ cv.addEventListener('pointermove', e => {
   if (pointers.size >= 2) {
     if (!drag.pinch) pinchStart();
     const P = drag.pinch, [mx, my, d] = pinchMid();
-    V.scale = clamp(P.s0*d/P.d0, 0.2, 12000);
+    V.scale = clamp(P.s0*d/P.d0, 0.2, 12000); viewOff();
     // the point of the map that was between the fingers stays between them
     V.cx = P.wx - (mx - W/2)/V.scale; V.cy = IMY(MY(P.wy) + (my - H/2)/V.scale);
     return;
   }
   if (drag.pinch) { dragFrom(e.offsetX, e.offsetY, true); return; }
   const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y; if (Math.hypot(dx,dy) > 4) drag.moved = true;
-  if (drag.moved) { V.cx = drag.cx - dx/V.scale; V.cy = IMY(MY(drag.cy) + dy/V.scale); }
+  if (drag.moved) { V.cx = drag.cx - dx/V.scale; V.cy = IMY(MY(drag.cy) + dy/V.scale); viewOff(); }
 });
 function pointerGone(e){
   pointers.delete(e.pointerId);
@@ -1250,11 +1303,11 @@ cv.addEventListener('pointerup', e => {
     if (best) tapSelect(best); else if (!S.trk && typeof vehAt === 'function') { const v = vehAt(e.offsetX, e.offsetY); if (v) showVehPop(v, e); } }
   if (!pointers.size) drag = null;
 });
-cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
+cv.addEventListener('wheel', e => { e.preventDefault(); viewOff(); const f = Math.exp(-e.deltaY*0.0015), wxp = wx2(e.offsetX), wyp = wy2(e.offsetY); V.scale = clamp(V.scale*f, 0.2, 12000); V.cx = wxp - (e.offsetX - W/2)/V.scale; V.cy = IMY(MY(wyp) + (e.offsetY - H/2)/V.scale); }, { passive: false });
 
 $('cmdForm').onsubmit = e => { e.preventDefault(); const v = $('cmd').value; $('cmd').value = cmdFill = ''; if (v.trim()) command(v); cmdPrefill(); };
 $('cmd').addEventListener('keydown', e => { if (e.key === 'Escape') { $('cmd').blur(); return; } if (e.key === 'Tab') { e.preventDefault(); const L = S.acs.filter(a => !outOfCtl(a)); if (!L.length) return; select(L[(L.indexOf(S.sel)+1) % L.length]); } });
-document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim') return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === ' ') { e.preventDefault(); $('tgPause').click(); } if (e.key === '/') { e.preventDefault(); $('cmd').focus(); } });
+document.addEventListener('keydown', e => { if (document.body.dataset.route !== 'sim') return; if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === ' ') { e.preventDefault(); $('tgPause').click(); } if (e.key === '/') { e.preventDefault(); $('cmd').focus(); } if (!e.ctrlKey && !e.metaKey && !e.altKey && ['1','2','3'].includes(e.key)) setView(['app','twr','gnd'][+e.key - 1]); });
 
 const wxSel = $('wxPreset'); { const o = document.createElement('option'); o.value = 'live'; o.textContent = `Live weather · current ${APT.icao} METAR`; wxSel.appendChild(o); }
 for (const [k,v] of Object.entries(WX_PRESETS)) { const o = document.createElement('option'); o.value = k; o.textContent = v.name; wxSel.appendChild(o); }
