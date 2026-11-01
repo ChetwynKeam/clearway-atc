@@ -619,6 +619,9 @@ function landOrder(ac){
       if (o.mode === 'HOLD' && o.aiQ == null) o.aiQ = S.t;   // (held by you as well: the holds go in turn)
       const rw = landRw(o), F = o.app ? finOf(o) : FINAL[rw]; if (!F) continue;
       const R = rwyOf(rw); let e; try { e = eta(o, F); } catch (er) { continue; } if (!isFinite(e)) continue;
+      // not yet on an approach: its place in the order follows its time, but only a real change in that time (more than
+      // a minute and a half) moves it, so the order doesn't reshuffle every second as estimates wobble on a turn or in a hold
+      if (!o.app || o.state === 'MISSED') { if (o.ordE == null || Math.abs(S.t + e - o.ordE) > 90) o.ordE = S.t + e; e = Math.max(0, o.ordE - S.t); }
       (byR[R.id] ||= []).push({ o, rw, e, fixed: !!o.app && o.state !== 'MISSED' });
     }
     for (const id in byR) {

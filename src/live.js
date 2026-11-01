@@ -118,7 +118,14 @@ function liveBind(){
     if (dGbr > 90 || dGbr < 12) continue;
     const toGbr = brg(p[0], p[1], ...RADAR_REF), off = Math.abs(((a.trk - toGbr) % 360 + 540) % 360 - 180);
     const byName = S.sched.find(f => f.k === 'ARR' && f.cs === a.cs && !f.liveHex);
-    const byPath = !byName && off < 25 && a.alt < 26000 && (a.vs || 0) <= 300 && S.sched.find(f => f.k === 'ARR' && f.real && !f.liveHex && f.cs.slice(0, 3) === a.cs.slice(0, 3) && Math.abs(f.m*60 + 15*60 - S.t - dGbr/Math.max(150, a.gs || 250)*3600) < 40*60);
+    // a guess by airline and timing (the callsign doesn't match): only an aircraft that really looks like that flight on
+    // its way here. It must be on the side of the airport its flight comes from (within 60° of the bearing out to that
+    // flight's entry point: a Belfast flight can't be east of Bristol), high enough for the distance it still has to go
+    // (not another airport's departure or arrival down low) and not climbing. Busy airlines (easyJet, Ryanair) have
+    // dozens of aircraft within 90 NM, so without these checks any of them could be picked up as the wrong flight.
+    const sideOk = f => { const e = ENTRY[f.gate]; return !e || Math.abs(angDiff(brg(...RADAR_REF, ...p), brg(...RADAR_REF, ...e))) < 60; };
+    const highOk = a.alt >= Math.min(20000, dGbr*150);
+    const byPath = !byName && off < 25 && a.alt < 26000 && highOk && (a.vs || 0) <= 300 && S.sched.find(f => f.k === 'ARR' && f.real && !f.liveHex && f.cs.slice(0, 3) === a.cs.slice(0, 3) && sideOk(f) && Math.abs(f.m*60 + 15*60 - S.t - dGbr/Math.max(150, a.gs || 250)*3600) < 40*60);
     const f = byName || byPath; if (!f) continue;
     let ac = S.acs.find(x => x.cs === f.cs);
     if (ac && ac.state !== 'PRE' && S.t < LIVE_JOIN_S && !ac.liveHex && !ac.told) { dropAc(ac); ac = null; f.spawned = false; }   // just joined: the real one replaces the simulated copy
