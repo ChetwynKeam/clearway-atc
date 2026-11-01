@@ -1942,6 +1942,8 @@ function stepGround(ac, dt){
       if ((ac.onRwy || ac.xing) && (o.state === 'HOLDPT' || (o.hsAt && (o.gs || 0) < 1) || (!o.onRwy && (o.waiting === ac.cs || Math.abs(angDiff(o.hdg, ac.hdg)) > 120)))) continue;
       if (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40 && !(o.state === 'PARKED' || o.state === 'ONSTAND')) { spd = 0; ac.waiting = o.cs; break; }
     }
+    // a two-way stretch ahead with traffic coming the other way: wait at its precautionary holding point (gflow.js)
+    if (spd > 0 && !ac.path.reverse && !ac.path.tug && !ac.onRwy && typeof gflowGate === 'function') spd = gflowGate(ac, spd);
     if (spd > 0) ac.waiting = null;
     // speed builds up and drops off gradually; a stop for traffic brakes harder
     const cur = ac.gs || 0, v = spd >= cur ? Math.min(spd, cur + TAXI_ACC*dt) : Math.max(spd, cur - (spd === 0 || cur > spd + 8 ? 6 : TAXI_DEC)*dt);   // well over the limit for the turn ahead (off a runway at speed): firm braking

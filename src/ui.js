@@ -65,6 +65,7 @@ function draw(){
   if (!ground) drawRadarMap(); else if (!img) drawRockRelief();
   if (S.showProc && sc >= 3) drawProcedures();
   drawAirport();
+  if (typeof drawGFlow === 'function') drawGFlow();
   if (S.preview) drawPreview(S.preview);
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
   if (typeof drawLive === 'function' && cv.id === 'scope') drawLive();

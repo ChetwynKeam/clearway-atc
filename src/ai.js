@@ -328,6 +328,10 @@ function aiGround(ac){
   }
   if (n.startsWith('Request follow') && aiDue(ac, n, 3, 6)) return aiDo('GND', ac, ac.stand ? 'FOLLOW' : 'STAND AUTO FOLLOW');
   if ((n === 'Request tow' || n.startsWith('Tug holding')) && aiDue(ac, n, 4, 10)) return aiDo('GND', ac, 'TOW');
+  // waiting a while at a precautionary hold for traffic coming the other way (gflow.js): send it round another way, if
+  // there is one that is not much longer
+  if (ac.gfWait && S.t - ac.gfWait.t > 40 && ac.path && (ac.state === 'TAXI' || ac.taxiIn) && aiDue(ac, 'gf' + ac.gfWait.t, 1, 3)) {
+    const c = aiTaxiCmd(ac); if (c !== 'TAXI') { const by = ac.gfWait.cs; aiDo('GND', ac, c); ac.aiWhy = `sent round ${by}`; ac.gfWait = null; return; } }
   // stopped nose to nose with someone coming the other way: send it round another way, if there is one
   if (ac.path && (ac.state === 'TAXI' || ac.taxiIn) && !ac.held && !ac.hsAt && (ac.gs || 0) < 1) {
     if (!ac.aiStop) ac.aiStop = S.t;
