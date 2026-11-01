@@ -405,9 +405,34 @@ cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBounding
   V.scale = clamp(V.scale*Math.exp(-e.deltaY*0.0015), 0.35, 40); V.x = wx - (X - W/2)/V.scale; V.y = wy + (Y - H/2)/V.scale; }, { passive: false });
 // touch: one finger pans, two pinch
 let touch = null;
-cv.addEventListener('touchstart', e => { if (e.touches.length === 1) touch = { x: e.touches[0].clientX, y: e.touches[0].clientY, vx: V.x, vy: V.y, moved: false, t: Date.now() }; else if (e.touches.length === 2) touch = { pinch: Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY), sc: V.scale }; }, { passive: true });
-cv.addEventListener('touchmove', e => { if (!touch) return; e.preventDefault(); if (touch.pinch && e.touches.length === 2) { const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); V.scale = clamp(touch.sc*d/touch.pinch, 0.35, 40); } else if (e.touches.length === 1 && !touch.pinch) { const dx = e.touches[0].clientX - touch.x, dy = e.touches[0].clientY - touch.y; if (Math.abs(dx) + Math.abs(dy) > 6) touch.moved = true; V.x = touch.vx - dx/V.scale; V.y = touch.vy + dy/V.scale; } }, { passive: false });
-cv.addEventListener('touchend', e => { if (touch && !touch.pinch && !touch.moved) clickAt(e.changedTouches[0]); touch = null; });
+const tpos = t => { const r = cv.getBoundingClientRect(); return [t.clientX - r.left, t.clientY - r.top]; };
+function touchFrom(list, moved){
+  if (list.length >= 2) { const a = tpos(list[0]), b = tpos(list[1]), mx = (a[0] + b[0])/2, my = (a[1] + b[1])/2;
+    touch = { pinch: Math.max(10, Math.hypot(a[0] - b[0], a[1] - b[1])), sc: V.scale, wx: wx2(mx), wy: wy2(my), moved: true }; }
+  else if (list.length === 1) { const [x, y] = tpos(list[0]); touch = { x, y, vx: V.x, vy: V.y, moved }; }
+  else touch = null;
+}
+cv.addEventListener('touchstart', e => touchFrom(e.touches, e.touches.length > 1), { passive: true });
+cv.addEventListener('touchmove', e => {
+  if (!touch) return; e.preventDefault();
+  if (e.touches.length >= 2) {
+    if (!touch.pinch) touchFrom(e.touches, true);
+    const a = tpos(e.touches[0]), b = tpos(e.touches[1]), mx = (a[0] + b[0])/2, my = (a[1] + b[1])/2;
+    V.scale = clamp(touch.sc*Math.hypot(a[0] - b[0], a[1] - b[1])/touch.pinch, 0.35, 40);
+    V.x = touch.wx - (mx - W/2)/V.scale; V.y = touch.wy + (my - H/2)/V.scale;   // the map between the fingers stays there
+  } else if (e.touches.length === 1) {
+    if (touch.pinch) { touchFrom(e.touches, true); return; }
+    const [x, y] = tpos(e.touches[0]), dx = x - touch.x, dy = y - touch.y; if (Math.abs(dx) + Math.abs(dy) > 6) touch.moved = true;
+    V.x = touch.vx - dx/V.scale; V.y = touch.vy + dy/V.scale;
+  }
+}, { passive: false });
+cv.addEventListener('touchend', e => {
+  if (touch && !touch.pinch && !touch.moved && !e.touches.length) clickAt(e.changedTouches[0]);
+  touchFrom(e.touches, true);   // a finger still down carries on from where it is
+  if (!e.touches.length) touch = null;
+  e.preventDefault();   // no copied mouse click after a tap
+});
+cv.addEventListener('touchcancel', e => { touchFrom(e.touches, true); if (!e.touches.length) touch = null; });
 function clickAt(e){
   const r = cv.getBoundingClientRect(), X = e.clientX - r.left, Y = e.clientY - r.top;
   for (const [ac, [x, y, w, h]] of TAGS) if (X >= x && X <= x + w && Y >= y && Y <= y + h) return select(ac);

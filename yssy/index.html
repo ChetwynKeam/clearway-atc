@@ -8357,15 +8357,45 @@ $('tgVoice').onclick = e => { S.voice = !S.voice; e.currentTarget.classList.togg
 $('tgSetup').onclick = () => openSetup();
 function openSetup(){ S.paused = true; $('tgPause').textContent = 'Resume'; $('startBtn').textContent = S.running ? 'Apply weather and resume' : 'Open the position'; $('setup').hidden = false; try { renderSlots(); } catch(_) {} if (typeof stintRender === 'function') stintRender(); }
 
+// touch and mouse on the scope: one finger (or the mouse) drags the map, two fingers pinch to zoom round the point between
+// them and move it as they go. A finger the browser cancels (a notification, an edge swipe, switching apps) is forgotten
+// straight away: left behind, it made every later drag a pinch and every pinch zoom the wrong way.
 let drag = null; const pointers = new Map();
-cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [e.offsetX, e.offsetY]); drag = { x: e.offsetX, y: e.offsetY, cx: V.cx, cy: V.cy, moved: false, d0: null, s0: V.scale }; });
+const pinchMid = () => { const [a, b] = [...pointers.values()]; return [(a[0] + b[0])/2, (a[1] + b[1])/2, Math.hypot(a[0] - b[0], a[1] - b[1])]; };
+function dragFrom(x, y, moved){ drag = { x, y, cx: V.cx, cy: V.cy, moved, pinch: null }; }
+function pinchStart(){ const [mx, my, d] = pinchMid(); drag = { pinch: { d0: Math.max(10, d), s0: V.scale, wx: wx2(mx), wy: wy2(my) }, moved: true }; }
+cv.addEventListener('pointerdown', e => {
+  if (e.isPrimary) pointers.clear();   // the first finger down: no other can really be down
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
+  if (pointers.size === 2) pinchStart();
+  else if (pointers.size === 1) dragFrom(e.offsetX, e.offsetY, false);
+});
 cv.addEventListener('pointermove', e => {
-  if (!drag) return; pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
-  if (pointers.size === 2) { const [a,b] = [...pointers.values()]; const d = Math.hypot(a[0]-b[0], a[1]-b[1]); if (!drag.d0) drag.d0 = d; V.scale = clamp(drag.s0*d/drag.d0, 0.2, 12000); drag.moved = true; return; }
+  if (!drag || !pointers.has(e.pointerId)) return; pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
+  if (pointers.size >= 2) {
+    if (!drag.pinch) pinchStart();
+    const P = drag.pinch, [mx, my, d] = pinchMid();
+    V.scale = clamp(P.s0*d/P.d0, 0.2, 12000);
+    // the point of the map that was between the fingers stays between them
+    V.cx = P.wx - (mx - W/2)/V.scale; V.cy = IMY(MY(P.wy) + (my - H/2)/V.scale);
+    return;
+  }
+  if (drag.pinch) { dragFrom(e.offsetX, e.offsetY, true); return; }
   const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y; if (Math.hypot(dx,dy) > 4) drag.moved = true;
   if (drag.moved) { V.cx = drag.cx - dx/V.scale; V.cy = IMY(MY(drag.cy) + dy/V.scale); }
 });
+function pointerGone(e){
+  pointers.delete(e.pointerId);
+  if (!pointers.size) { drag = null; return; }
+  // a finger lifted out of a pinch: the other carries on dragging from where it is, with no jump
+  const [x, y] = [...pointers.values()][0]; dragFrom(x, y, true);
+}
+cv.addEventListener('pointercancel', pointerGone);
+cv.addEventListener('lostpointercapture', e => { if (pointers.has(e.pointerId)) pointerGone(e); });
 cv.addEventListener('pointerup', e => {
+  if (!pointers.has(e.pointerId)) return;
+  if (pointers.size > 1 || (drag && drag.pinch)) { pointerGone(e); return; }
   pointers.delete(e.pointerId);
   if (drag && !drag.moved) { let best = null, bd = 26; for (const ac of S.acs) { if (outOfCtl(ac) || (inHangar(ac) && !towPending(ac))) continue; const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < bd) { bd = d; best = ac; } } S.trk = null;
     if (!best) { let hb = null, hd = 26; for (const ac of S.acs) if (outOfCtl(ac) && !ac.ground) { const M = acMid(ac), d = Math.hypot(sx(M[0])-e.offsetX, sy(M[1])-e.offsetY); if (d < hd) { hd = d; hb = ac; } }
