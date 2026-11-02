@@ -1822,7 +1822,9 @@ function stepAir(ac, dt){
   // turns are flown on bank angle like the autopilot: it rolls in and out at a few degrees a second, banks up to 25°,
   // and the rate of turn follows from bank and true airspeed (g·tan φ / V). Off the approach it keeps to rate one (3°/s).
   { const tas = Math.max(ac.ias*(1+ac.alt/1000*0.018), 60), K = 1091/tas;   // °/s of turn per unit of tan(bank)
-    const cap = ac.mode === 'FINAL' ? 25 : Math.min(25, Math.atan(3/K)*R2D);
+    if (ac.ease && !(ac.mode === 'NAV' && ac.route[0] === ac.ease)) ac.ease = null;   // given something else: flown normally
+    const rate = ac.ease ? clamp((ac.gs || tas)/3600/ac.easeR*R2D, 0.5, 3) : 3;   // a picked-up flight easing onto its route (live.js easeOn)
+    const cap = ac.mode === 'FINAL' ? 25 : Math.min(25, Math.atan(rate/K)*R2D);
     const want = clamp(turn*1.6, -cap, cap), roll = Pf.wake === 'H' ? 4 : 5;
     ac.bank = (ac.bank || 0) + clamp(want - (ac.bank || 0), -roll*dt, roll*dt);
     ac.hdg = norm(ac.hdg + K*Math.tan(ac.bank*D2R)*dt); }

@@ -245,7 +245,15 @@ function trkRoute(o){
     if (!o.ground && rec.length && gcDist(first, home) > 2 && !(rec[0] && rec[0][3])) {
       if (!o._db || o._db.n0 !== rec[0][0]) { const rh = crsOf(depRw(o)), D0 = gcDist(home, first), out = gcDest(home, rh, Math.min(3, D0/4)), back = gcDest(first, dir + 180, Math.min(5, D0/4));
         // off the runway, a steady turn round onto the line it was flying when we picked it up
-        const L = ptsLeg([home, ...intercept(out, rh, first, dir)]);   // off the runway, then a steady turn onto the line it was flying when we saw it
+        // drawn from both ends at once: off the runway on its heading, and backwards from where we saw it along the track it was
+        // flying, each end turning steadily towards the other until they meet, so it leaves the runway and arrives on its track
+        // with smooth turns and no corner anywhere
+        const st = clamp(D0/24, 0.3, 1.2), fa = [out], fb = [first]; let A = out, B = first, ha = rh, hb = norm(dir + 180);
+        for (let k = 0; k < 240 && gcDist(A, B) > st*2.2; k++) {
+          let d = angDiff(ha, gcBrg(A, B)); ha = norm(ha + Math.sign(d)*Math.min(11, Math.abs(d))); A = gcDest(A, ha, st); fa.push(A);
+          if (gcDist(A, B) <= st*2.2) break;
+          d = angDiff(hb, gcBrg(B, A)); hb = norm(hb + Math.sign(d)*Math.min(11, Math.abs(d))); B = gcDest(B, hb, st); fb.push(B); }
+        const L = ptsLeg(smoothPts([home, ...fa, ...fb.reverse()]));
         o._db = { n0: rec[0][0], pts: legPts(L, 0, L.D, x => Math.min(rec[0][2], x*350)) }; }
       rec = o._db.pts.concat(rec);
     }

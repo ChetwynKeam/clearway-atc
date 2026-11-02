@@ -7066,7 +7066,9 @@ function stepAir(ac, dt){
   // turns are flown on bank angle like the autopilot: it rolls in and out at a few degrees a second, banks up to 25°,
   // and the rate of turn follows from bank and true airspeed (g·tan φ / V). Off the approach it keeps to rate one (3°/s).
   { const tas = Math.max(ac.ias*(1+ac.alt/1000*0.018), 60), K = 1091/tas;   // °/s of turn per unit of tan(bank)
-    const cap = ac.mode === 'FINAL' ? 25 : Math.min(25, Math.atan(3/K)*R2D);
+    if (ac.ease && !(ac.mode === 'NAV' && ac.route[0] === ac.ease)) ac.ease = null;   // given something else: flown normally
+    const rate = ac.ease ? clamp((ac.gs || tas)/3600/ac.easeR*R2D, 0.5, 3) : 3;   // a picked-up flight easing onto its route (live.js easeOn)
+    const cap = ac.mode === 'FINAL' ? 25 : Math.min(25, Math.atan(rate/K)*R2D);
     const want = clamp(turn*1.6, -cap, cap), roll = Pf.wake === 'H' ? 4 : 5;
     ac.bank = (ac.bank || 0) + clamp(want - (ac.bank || 0), -roll*dt, roll*dt);
     ac.hdg = norm(ac.hdg + K*Math.tan(ac.bank*D2R)*dt); }
@@ -11003,7 +11005,15 @@ function trkRoute(o){
     if (!o.ground && rec.length && gcDist(first, home) > 2 && !(rec[0] && rec[0][3])) {
       if (!o._db || o._db.n0 !== rec[0][0]) { const rh = crsOf(depRw(o)), D0 = gcDist(home, first), out = gcDest(home, rh, Math.min(3, D0/4)), back = gcDest(first, dir + 180, Math.min(5, D0/4));
         // off the runway, a steady turn round onto the line it was flying when we picked it up
-        const L = ptsLeg([home, ...intercept(out, rh, first, dir)]);   // off the runway, then a steady turn onto the line it was flying when we saw it
+        // drawn from both ends at once: off the runway on its heading, and backwards from where we saw it along the track it was
+        // flying, each end turning steadily towards the other until they meet, so it leaves the runway and arrives on its track
+        // with smooth turns and no corner anywhere
+        const st = clamp(D0/24, 0.3, 1.2), fa = [out], fb = [first]; let A = out, B = first, ha = rh, hb = norm(dir + 180);
+        for (let k = 0; k < 240 && gcDist(A, B) > st*2.2; k++) {
+          let d = angDiff(ha, gcBrg(A, B)); ha = norm(ha + Math.sign(d)*Math.min(11, Math.abs(d))); A = gcDest(A, ha, st); fa.push(A);
+          if (gcDist(A, B) <= st*2.2) break;
+          d = angDiff(hb, gcBrg(B, A)); hb = norm(hb + Math.sign(d)*Math.min(11, Math.abs(d))); B = gcDest(B, hb, st); fb.push(B); }
+        const L = ptsLeg(smoothPts([home, ...fa, ...fb.reverse()]));
         o._db = { n0: rec[0][0], pts: legPts(L, 0, L.D, x => Math.min(rec[0][2], x*350)) }; }
       rec = o._db.pts.concat(rec);
     }
@@ -11374,6 +11384,17 @@ const nearGate = p => Object.keys(ENTRY).sort((g1, g2) => dist(...ENTRY[g1], ...
 // distance from q to the line through p along track trk (NM), and how far ahead along it q is
 const lineTo = (p, trk, q) => { const ux = Math.sin(trk*D2R), uy = Math.cos(trk*D2R), dx = q[0] - p[0], dy = q[1] - p[1]; return { off: Math.abs(dx*uy - dy*ux), ahead: dx*ux + dy*uy }; };
 const segDist = (p, a, b) => { const L = dist(...a, ...b) || 1e-9, t = clamp(((p[0]-a[0])*(b[0]-a[0]) + (p[1]-a[1])*(b[1]-a[1]))/(L*L), 0, 1); return dist(...p, a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t); };
+// a real flight picked up in the air keeps flying the way it was going and turns onto the route it was given gently,
+// as on the line drawn ahead of it (never a sudden rate-one swing where it was first seen): points it has already passed,
+// or is too close to turn for, are dropped, and the turn onto the first one is flown at a radius set by how far off it is
+function easeOn(ac){
+  const h = ac.hdg;
+  while (ac.route.length > 1) { const q = WP[ac.route[0]].p, d = dist(ac.x, ac.y, ...q), off = Math.abs(angDiff(h, brg(ac.x, ac.y, ...q)));
+    if (d < 1 || off > 95 || (off > 45 && d < 4)) ac.route.shift(); else break; }
+  if (!ac.route.length) return;
+  const d = dist(ac.x, ac.y, ...WP[ac.route[0]].p);
+  ac.ease = ac.route[0]; ac.easeR = clamp(d/30, 0.5, 1.5)*5.2;
+}
 // the rest of a route from where the aircraft is: from the leg it is nearest to
 function routeOn(p, from, names){
   const pts = [from, ...names.map(n => WP[n].p)]; let bi = 1, bd = Infinity;
@@ -11456,7 +11477,7 @@ function adoptArr(a, p, row){
     ac.mode = 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360; ac.state = 'VECTORS'; ac.route = [];
     liveCall(ac, `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)}${ac.tgtAlt < ac.alt - 200 ? ' descending ' + altShort(ac.tgtAlt) : ''}, heading ${hdg3(ac.tgtHdg)}, information ${phonetic(S.atis)}`);
   } else {   // on its arrival route: from the leg it is on
-    ac.mode = 'NAV'; ac.state = 'INBOUND'; ac.route = routeOn(p, ENTRY[gate], ARR_ROUTE[gate][S.rwy]);
+    ac.mode = 'NAV'; ac.state = 'INBOUND'; ac.route = routeOn(p, ENTRY[gate], ARR_ROUTE[gate][S.rwy]); easeOn(ac);
     liveCall(ac, PH.checkIn(ac));
   }
   ac.need = 'Initial call';
@@ -11466,7 +11487,7 @@ function adoptDepAir(a, p, row){
   const gate = row ? gateFor(row.ap) : depGateOf(p, a.trk || 0), ac = liveAc(a, p, row, 'DEP', gate), d = dist(...p, ...RADAR_REF);
   const drw = depRw(ac); Object.assign(ac, { depRwy: drw, sid: sidName(gate, drw), cto: true, turned: true, pushed: true, leftStand: true, state: 'AIRBORNE', reqDct: true, onSid: false });
   const top = sidTop(ac); ac.tgtAlt = ac.cleared = a.alt > top - 300 ? Math.ceil((a.alt + 1500)/1000)*1000 : top;
-  ac.route = routeOn(p, RADAR_REF, exitRouteOf(ac)); ac.mode = ac.route.length ? 'NAV' : 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360;
+  ac.route = routeOn(p, RADAR_REF, exitRouteOf(ac)); easeOn(ac); ac.mode = ac.route.length ? 'NAV' : 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360;
   if (d < 4 && a.alt < ELEV + 2500) { ac.freq = 'TWR'; ac.calledAir = false; }   // just airborne: still with Tower, transfer it to Radar
   else { ac.freq = 'RAD'; ac.calledAir = ac.calledRad = true; ac.state = 'CLIMB'; ac.reqClimb = ac.tgtAlt > top; liveCall(ac, PH.depCall(ac)); }
   return ac;
