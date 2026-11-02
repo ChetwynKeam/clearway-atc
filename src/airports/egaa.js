@@ -55,23 +55,23 @@ const EGAA = (() => {
   // disagree on which of RINGA/NELBO is high and which is low, and on whether the route ends at BEL or BELZU.
   // THE NAMES ARE REAL BUT THE POSITIONS BELOW ARE APPROXIMATE (placed along the airways by bearing and distance from BEL):
   // replace them with the AIP ENR 4.4 / ENR 6 coordinates. TRN and IOM are the Turnberry and Isle of Man VORs.
-  NAV.TRN = { name: 'Turnberry VOR/DME', freq: '117.5', p: P('551838N', '0044717W'), approx: true };
-  NAV.IOM = { name: 'Isle of Man VOR/DME', freq: '112.2', p: P('540400N', '0044600W'), approx: true };
+  NAV.TRN = { name: 'Turnberry VOR/DME', freq: '117.5', p: P('551848N', '0044702W') };
+  NAV.IOM = { name: 'Isle of Man VOR/DME', freq: '112.2', p: P('540401N', '0044549W') };
   const _brg = (a, b) => { const r = x => x*Math.PI/180, y = Math.sin(r(b[1]-a[1]))*Math.cos(r(b[0])),
     x = Math.cos(r(a[0]))*Math.sin(r(b[0])) - Math.sin(r(a[0]))*Math.cos(r(b[0]))*Math.cos(r(b[1]-a[1])); return (Math.atan2(y, x)*180/Math.PI + 360) % 360 + VAR; };
   const _BEL = NAV.BEL.p, _toTRN = _brg(_BEL, NAV.TRN.p), _toIOM = _brg(_BEL, NAV.IOM.p);
   Object.assign(FIX, {
-    BELZU: from(_BEL, 90, 8),                                // the TMA transition point: position unknown, placed east of BEL (approx)
-    BLACA: from(_BEL, 75, 30),                               // P600: the departure route runs out BEL R075 to BLACA (VATSIM UK / IVAO)
-    RINGA: from(_BEL, _toIOM, 38), NELBO: from(_BEL, _toIOM, 55),   // L10, between IOM and BEL
+    BELZU: P('543942N', '0061348W'),                                // the TMA transition point (official en-route coordinates; replaces the BEL VOR)
+    BLACA: P('545300N', '0050932W'),                               // P600: the departure route runs out BEL R075 to BLACA (VATSIM UK / IVAO)
+    RINGA: P('542354N', '0053416W'), NELBO: P('542924N', '0051810W'),   // L10, between IOM and BEL
     REMSI: from(_BEL, _toIOM + 25, 110), MASOP: from(_BEL, _toIOM + 18, 78),                      // UP6 south-east of IOM
-    NEVRI: from(_BEL, 185, 72), ABSUN: from(_BEL, 185, 38),  // N34 from the south (Dublin)
+    NEVRI: P('540406N', '0061612W'), ABSUN: P('541732N', '0061518W'),  // N34 from the south (Dublin)
     // departure routes (VATSIM UK): S via P620 LISBO-NUMPI-NIMAT; SE via L10 LISBO-PEPOD-IOM (FL90+) or LISBO-RINGA-SLYDA-IOM (FL70-)
     MAGEE: from(_BEL, 71, 23),                               // City's arrival hold and ILS 22 entry: BEL R071 D23 (plate 500839), 2,800 ft
-    LISBO: from(_BEL, 155, 9),                               // near Lisburn: every south and south-east departure crosses it at or above 4,000 ft
-    NUMPI: from(_BEL, 175, 27), NIMAT: from(_BEL, 185, 45),
-    PEPOD: from(_BEL, _toIOM + 4, 34), SLYDA: from(_BEL, _toIOM, 58),
-    KELLY: from(NAV.IOM.p, _toIOM, 22)                       // beyond IOM: jets to FL290+ cross it at or above FL290
+    LISBO: P('543130N', '0060524W'),                               // near Lisburn: every south and south-east departure crosses it at or above 4,000 ft
+    NUMPI: P('540840N', '0053536W'), NIMAT: P('535754N', '0054432W'),
+    PEPOD: P('541616N', '0053409W'), SLYDA: P('541204N', '0050515W'),
+    KELLY: P('535419N', '0042151W')                       // beyond IOM: jets to FL290+ cross it at or above FL290
   });
   FIX.LOUGH = [54.690, -5.760];                              // over the middle of Belfast Lough, where GB and European arrivals cross
   // the final-approach intercepts the vectors normally end at: ILS 25 at I-AG D14 (4,000 ft, the plate's "direct arrival
