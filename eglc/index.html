@@ -13249,13 +13249,23 @@ function aiDeparture(ac){
       if (aiDo('DEP', ac, `H${String(h || 360).padStart(3, '0')}`)) { ac.aiAround = { t: S.t, c: near }; ac.aiWhy = 'turned round the hold'; return; }
     }
   }
-  if (ac.aiAround && cap == null) { const A = ac.aiAround; ac.aiAround = null; ac.aiAroundT = S.t; ac.aiWhy = ''; if (S.t - A.t > 5) { aiDo('DEP', ac, `C${Math.round((ac.reqClimb ? climbTop() : sidTop(ac))/100)}`); return; } }
+  if (ac.aiAround && cap == null) { const A = ac.aiAround; ac.aiAround = null; ac.aiAroundT = S.t; ac.aiNewRte = true; ac.aiWhy = ''; if (S.t - A.t > 5) { aiDo('DEP', ac, `C${Math.round((ac.reqClimb ? climbTop() : sidTop(ac))/100)}`); return; } }
   if (cap != null && (ac.tgtAlt ?? ac.alt) > cap + 50) { ac.aiWhy = 'kept below the hold'; return aiDo('DEP', ac, `A${Math.round(cap/100)}`); }
   if (ac.aiLev) return;   // levelled off for traffic: the climb and the direct wait until it is clear
   if (n === 'Request climb' && cap != null) return;
   if (n.startsWith('Request direct') && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, 'DCT ' + n.split(' ').pop());
   if (n === 'Request climb' && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, `C${Math.round(climbTop()/100)}`);
-  if (ac.aiAroundT && S.t - ac.aiAroundT < 300 && S.acs.some(o => o.kind === 'ARR' && o.airborne && o.mode === 'HOLD' && dist(o.x, o.y, ac.x, ac.y) < 25)) return;   // round a hold: not straight back at it
+  // gone round a hold: given a new way on, the first fix of its route that the line to does not run through the hold (the old route
+  // where that makes sense), not back onto the old line through it
+  if (ac.aiNewRte && !ac.need && aiDue(ac, 'newrte', 2, 5)) {
+    const holds = S.acs.filter(o => o.kind === 'ARR' && o.airborne && o.mode === 'HOLD' && dist(o.x, o.y, ac.x, ac.y) < 45).map(o => o.hold && o.hold.c ? o.hold.c : [o.x, o.y]);
+    const clearOf = P => holds.every(c => { const ax = P[0] - ac.x, ay = P[1] - ac.y, l2 = ax*ax + ay*ay || 1, t = clamp(((c[0] - ac.x)*ax + (c[1] - ac.y)*ay)/l2, 0, 1); return Math.hypot(ac.x + ax*t - c[0], ac.y + ay*t - c[1]) > 9; });
+    const fx = (exitRouteOf(ac) || []).filter(id => WP[id] && Math.abs(angDiff(ac.trk ?? ac.hdg, brg(ac.x, ac.y, ...WP[id].p))) < 100 && dist(ac.x, ac.y, ...WP[id].p) > 3);
+    const pick = fx.find(id => clearOf(WP[id].p));
+    if (pick && ac.alt > ELEV + 2500) { ac.aiNewRte = false; if (aiDo('DEP', ac, 'DCT ' + pick)) { ac.aiWhy = 'new route round the hold'; return; } }
+    else if (!holds.length || S.t - (ac.aiAroundT || 0) > 600) ac.aiNewRte = false;
+    if (ac.aiNewRte) return;   // still on its heading round the hold until a fix is clear of it
+  }
   aiDirect(ac, 'DEP');   // further along its way out when the airspace allows
 }
 
