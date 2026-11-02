@@ -268,12 +268,15 @@ function baseFor(type, p){
 // baggage holds are on the right. A widebody has three passenger doors a side, a narrowbody two, a turboprop one (rear
 // left: its front door is the cargo door) and a small business jet its own airstair.
 const fusW = P => Math.max(2.2, Math.min(6.2, P.len*0.1));
+// the A380: its two decks give it a third passenger bridge, to the upper-deck door (U1) between the main-deck pair
+const super_ = P => P.span >= 75 && P.len >= 70;
 const DOORS = new Map();
 function doorsOf(P){
   const key = P.len + '|' + P.wake + '|' + P.shape; let D = DOORS.get(key); if (D) return D;
   const L = P.len, wide = P.wake === 'H' || L > 50, prop = P.shape === 'prop', tiny = P.wake === 'L' || L < 20, long = L >= 42;
   if (tiny) D = { pax: [{ id: 'L1', f: L*0.2 }], svc: [{ id: 'R1', f: L*0.2 }], hold: [{ f: -L*0.3 }] };
   else if (prop) D = { pax: [{ id: 'L2', f: -L*0.34 }], svc: [{ id: 'R1', f: L*0.34 }], hold: [{ f: L*0.3 }] };
+  else if (super_(P)) D = { pax: [{ id: 'L1', f: L*0.385 }, { id: 'U1', f: L*0.30, up: true }, { id: 'L2', f: L*0.22 }, { id: 'L4', f: -L*0.28 }], svc: [{ id: 'R1', f: L*0.385 }, { id: 'R4', f: -L*0.28 }], hold: [{ f: L*0.17 }, { f: -L*0.22 }] };
   else if (wide) D = { pax: [{ id: 'L1', f: L*0.38 }, { id: 'L2', f: L*0.25 }, { id: 'L4', f: -L*0.27 }], svc: [{ id: 'R1', f: L*0.38 }, { id: 'R4', f: -L*0.27 }], hold: [{ f: L*0.17 }, { f: -L*0.22 }] };
   else D = { pax: [{ id: 'L1', f: L*0.35 }, { id: long ? 'L4' : 'L2', f: -L*(long ? 0.36 : 0.27) }], svc: [{ id: 'R1', f: L*0.35 }, { id: long ? 'R4' : 'R2', f: -L*(long ? 0.36 : 0.27) }], hold: [{ f: L*0.2 }, { f: -L*0.25 }] };
   DOORS.set(key, D); return D;
@@ -430,10 +433,10 @@ function taPlan(ac, T, arr, hdg){
     T.rate = 6; T.brate = 3; T.jobs = J; return J;
   }
   // the access to the doors: the bridge where it reaches (a widebody uses its second door too), steps at the others
-  const steps = prop ? ['stepsR'] : biz ? (br ? [] : ['stepsF']) : H ? (br >= 2 ? [] : br === 1 ? ['stepsR'] : ['stepsF', 'stepsR']) : (br ? [] : ['stepsF', 'stepsR']);
+  const steps = prop ? ['stepsR'] : biz ? (br ? [] : ['stepsF']) : H ? (br >= (super_(P) ? 3 : 2) ? [] : br ? ['stepsR'] : ['stepsF', 'stepsR']) : (br ? [] : ['stepsF', 'stepsR']);
   const doors = Math.max(1, br + steps.length);
   T.rate = Math.max(8, br*14 + steps.length*12);   // passengers a minute off; boarding is the slower trickle the gate lets through
-  T.brate = biz ? 3 : prop ? 4 : H ? 8.5 : 5;
+  T.brate = biz ? 3 : prop ? 4 : super_(P) ? 13 : H ? 8.5 : 5;
   const busDoors = prop || biz ? 1 : Math.min(2, Math.max(1, steps.length)), shuttleWaves = shuttle || bus;
   const waves = busWaves(T.N, busDoors), slotOf = d => d === 0 ? 'bus' : 'bus2';
   const busExtra = (w, arrBus) => shuttle ? { bay: w.door, arr: arrBus } : { term: ST, arr: arrBus };
@@ -675,13 +678,14 @@ function vehBridges(){
     const B = { st: best.s, root, end0: end, rest, end: rest.slice(), want: rest, L: dist(...root, ...end) };
     B.sts = cand.filter(s => standDoorDist(s, end) <= Math.min(45, best.d + 6));   // every stand (a MARS centre and its halves) the bridge serves
     VEH.bridges.push(B);
-    for (const s of B.sts) { const l = VEH.bridgeBy.get(s) || []; if (l.length < 3) l.push(B); VEH.bridgeBy.set(s, l); }
+    for (const s of B.sts) { const l = VEH.bridgeBy.get(s) || []; if (l.length < 6) l.push(B); VEH.bridgeBy.set(s, l); }
   }
 }
 // where B would dock to the aircraft's door, or null: the cab on the fuselage side the rotunda is on, the stand-off point
 // beside it, and the tunnel's whole swing from its stowed position clear of the nose, the wings and the fuselage
 function dockFor(B, M, h, P, door){
-  const w = fusW(P)/2, R = toFS(M, h, B.root), g = R[1] < 0 ? -1 : 1;
+  const w = fusW(P)/2, R = toFS(M, h, B.root), g = -1;
+  if (R[1] > 0) return null;   // passenger doors are on the left only: a bridge on the aircraft's right has no door to reach
   if (Math.abs(R[1]) < w + 5) return null;   // the rotunda is in the aircraft's way, not beside it
   const D = mPt(M, h, door.f, g*(w + 1)), A = mPt(M, h, door.f, g*(w + 4.5)), len = dist(...B.root, ...D)/VM, L0 = B.L/VM;
   if (len < Math.max(6, L0*0.5) || len > L0*1.3 + 8) return null;   // more or less than the tunnel telescopes to
@@ -692,9 +696,9 @@ function dockFor(B, M, h, P, door){
 // the bridges that serve this aircraft, each at its own door: one (the front door) for most; a widebody takes a second at its second door
 function bridgePlan(ac, hdg){
   const st = ac.stand, Bs = bridgesAt(st); if (!Bs.length || small(ac)) return [];
-  const P = ac.perf, M = st.p, h = hdg != null ? hdg : ac.hdg, want = heavy(ac) ? 2 : 1, out = [], used = new Set();
+  const P = ac.perf, M = st.p, h = hdg != null ? hdg : ac.hdg, want = super_(P) ? 3 : heavy(ac) ? 2 : 1, out = [], used = new Set();
   // a narrowbody's bridge is at its front door, a widebody's at its first two; an aft door is for steps (a turboprop's one door is the rear one)
-  const D = doorsOf(P).pax, front = P.shape === 'prop' ? D : D.slice(0, heavy(ac) ? 2 : 1);
+  const D = doorsOf(P).pax, front = P.shape === 'prop' ? D : D.slice(0, super_(P) ? 3 : heavy(ac) ? 2 : 1);
   for (const door of front) {
     if (out.length >= want) break;
     let best = null;
@@ -714,9 +718,9 @@ function stepBridges(dt){
   for (const B of VEH.bridges) {
     const u = use.get(B); let want = B.rest, spd = 0.9, face = null, on = false;
     if (u) {
-      const [ac, k] = u, T = ac.ta; on = !!(T.dock && T.dock.some(([a, b]) => S.t >= a && S.t < b) && onStandNow(ac));
+      const [ac, k] = u, T = ac.ta; on = !!(T.dock && T.dock.some(([a, b]) => S.t >= a && S.t < b) && onStandNow(ac) && !(T.brd && S.t >= T.brd.dc + 70));   // never docked once the doors are shut
       const lg = legOf(B.end, k.appr, k.dock), inLeg = lg.perp < 0.7 && lg.t > -0.05, outLeg = lg.perp < 0.7 && lg.t > 0.03, dD = dist(...B.end, ...k.dock)/VM;
-      face = norm(ac.hdg + (k.side < 0 ? 90 : -90));
+      face = norm(ac.hdg + (k.side < 0 ? 90 : -90)); B.up = k.door === 'U1';
       if (on) { if (dD < 0.12) want = k.dock; else if (inLeg) { want = k.dock; spd = 0.2; } else want = k.appr; }
       else if (outLeg) { want = k.appr; spd = 0.25; }   // backs off the door before it swings away
     }
@@ -869,11 +873,11 @@ function drawBridges(mpx){
     const w = Math.max(2, 3.6*mpx), h = Math.atan2(b[1] - a[1], b[0] - a[0]), at = f => [a[0] + (b[0] - a[0])*f, a[1] + (b[1] - a[1])*f];
     cx.save(); cx.lineCap = 'butt';
     // the tunnel in three telescoping sections, each a little narrower than the one it slides into, with the drive wheels at the cab end
-    const secs = [[0, 0.4, 1], [0.4, 0.75, 0.92], [0.75, 1, 0.84]];
+    const secs = [[0, 0.4, 1], [0.4, 0.75, 0.92], [0.75, 1, 0.84]], tone = B.up ? ['#cdd5df', '#c2cad5'] : ['#b4bcc7', '#a9b1bc'];   // the A380's upper-deck bridge is a little paler, high over the others
     for (const [f0, f1, k] of secs) {
       const p0 = at(f0), p1 = at(f1);
       cx.strokeStyle = 'rgba(40,46,56,.75)'; cx.lineWidth = w*k + 1.4; cx.beginPath(); cx.moveTo(...p0); cx.lineTo(...p1); cx.stroke();
-      cx.strokeStyle = f0 ? '#b4bcc7' : '#a9b1bc'; cx.lineWidth = w*k; cx.beginPath(); cx.moveTo(...p0); cx.lineTo(...p1); cx.stroke();
+      cx.strokeStyle = f0 ? tone[0] : tone[1]; cx.lineWidth = w*k; cx.beginPath(); cx.moveTo(...p0); cx.lineTo(...p1); cx.stroke();
     }
     // the rotunda at the terminal
     cx.fillStyle = '#7e8794'; cx.strokeStyle = 'rgba(30,34,40,.8)'; cx.lineWidth = 0.8; cx.beginPath(); cx.arc(a[0], a[1], w*0.85, 0, 7); cx.fill(); cx.stroke();
@@ -899,12 +903,61 @@ function drawStandKit(mpx){
     cx.restore();
   }
 }
+// ── the passengers: a stream of people on foot, drawn from the turnaround's state (no state of their own, so nothing to save).
+// Off the aircraft down the steps and onto the apron bus, or across the apron to the terminal where it is close; through the
+// bridge's tunnel; and the other way for boarding. Only while a device is at the door, and a bus at the foot of the steps.
+const PAX_COL = ['#e8453c', '#2f6fdb', '#f2b01e', '#2aa876', '#8e5bd1', '#f7f7f7', '#2b2f36', '#e58a2b', '#4fb7d8', '#c9568f'];
+function paxStreams(ac){
+  const T = ac.ta, px = paxState(ac); if (!T || !px || (px.k !== 'Deplaning' && px.k !== 'Boarding')) return [];
+  const P = ac.perf, M = ac.stand.p, h = ac.hdg, w = fusW(P)/2, out = [], dir = px.k === 'Deplaning' ? 1 : -1, a = accessNow(ac), n = a.br.length + a.steps.length || 1;
+  const pt = (f, s) => mPt(M, h, f, s), rateOf = per => dir > 0 ? per : Math.max(10, T.brate/n);   // boarding: the gate lets people through in groups, so the stream is drawn at a steadier pace than the average
+  for (const k of a.br) { const B = VEH.bridges[k.bi]; out.push({ pts: [B.end.slice(), B.root.slice()], rate: rateOf(14), dir, inside: true }); }
+  const bus = bussed(ac, T.br.length);
+  let tf = null;
+  for (const j of a.steps) {
+    const f = (j.k === 'stepsR' ? doorLast(P) : doorFirst(P)).f, pts = [pt(f, -w), pt(f, -(w + 1.6)), pt(f, -(w + 5.8))];
+    if (bus) {
+      const bj = T.jobs.find(q => q.k === (j.k === 'stepsR' ? 'bus2' : 'bus') && q.v && q.v.parked && !q.v.home && !q.v.staged && !q.done && q.v.ac === ac);
+      if (!bj) continue;   // no bus at the foot of the steps yet: nobody comes down
+      const v = bj.v, foot = pts[2], d = dist(...foot, v.x, v.y) || 1, e = 1.3*VM; pts.push([v.x + (foot[0] - v.x)/d*e, v.y + (foot[1] - v.y)/d*e]);
+    } else {
+      if (tf === null) { tf = VD.terms.length ? VD.terms.map(q => VP(q)).reduce((b, q) => !b || dist(...q, ...pts[2]) < dist(...b, ...pts[2]) ? q : b, null) : false; }
+      if (!tf || dist(...tf, ...pts[2])/VM > 180) continue;
+      pts.push(tf.slice()); out.walk = true;
+    }
+    out.push({ pts, rate: rateOf(12), dir, walk: !bus });
+  }
+  return out;
+}
+function drawPax(mpx){
+  const SPD = 1.4, t = S.t*SPD, r = Math.max(1, 0.55*mpx);
+  for (const ac of S.acs) {
+    if (!ac.ta || !ac.stand || !onStandNow(ac) || !ac.ta.N) continue;
+    const X = sx(ac.stand.p[0]), Y = sy(ac.stand.p[1]); if (X < -250 || Y < -250 || X > W + 250 || Y > H + 250) continue;
+    for (const st of paxStreams(ac)) {
+      const pts = st.pts.map(q => [sx(q[0]), sy(q[1])]), seg = [], tot = []; let L = 0;
+      for (let i = 1; i < st.pts.length; i++) { const d = dist(...st.pts[i - 1], ...st.pts[i])/VM; seg.push(d); L += d; tot.push(L); }
+      if (L < 1) continue;
+      const gap = Math.max(0.9, 60*SPD/st.rate*0.4), cyc = Math.floor(t/gap), off = t - cyc*gap;
+      if (st.walk) { cx.save(); cx.strokeStyle = 'rgba(255,214,64,.28)'; cx.lineWidth = Math.max(1, 1.4*mpx); cx.setLineDash([4*mpx, 4*mpx]); cx.beginPath(); pts.forEach((q, i) => i ? cx.lineTo(...q) : cx.moveTo(...q)); cx.stroke(); cx.restore(); }
+      for (let n = 0; n*gap + off < L; n++) {
+        let u = n*gap + off; if (st.dir < 0) u = L - u;
+        let i = 0; while (i < seg.length - 1 && u > tot[i]) i++;
+        const a0 = i ? tot[i - 1] : 0, f = clamp((u - a0)/(seg[i] || 1), 0, 1), A = pts[i], B = pts[i + 1], id = cyc - n;
+        cx.globalAlpha = st.inside ? 0.45 : 1; cx.fillStyle = PAX_COL[((id*7) % 10 + 10) % 10];
+        cx.beginPath(); cx.arc(A[0] + (B[0] - A[0])*f, A[1] + (B[1] - A[1])*f, st.inside ? r*0.8 : r, 0, 7); cx.fill();
+      }
+      cx.globalAlpha = 1;
+    }
+  }
+}
 function drawVehicles(){
   const sc = V.scale; if (sc < VEH_MIN_SCALE || !VG_BUILT) return;
   const mpx = sc/1852;
   drawBridges(mpx);
   drawStandKit(mpx);
   for (const v of VEH.list) drawVehicle(v, mpx);
+  drawPax(mpx);
 }
 // what a vehicle is up to, for the pop-up when it is clicked
 function vehDoing(v){
