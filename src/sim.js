@@ -382,7 +382,10 @@ function spawnArrival(f){
     // another pending track on top of it (the same minute, or two flows sharing the entry point): in trail, 8 NM behind
     for (let k = 0; k < 6 && S.acs.some(o => o.state === 'PRE' && Math.hypot(o.x - ac.x, o.y - ac.y) < 5); k++) { ac.x += u[0]*8; ac.y += u[1]*8; }
     ac.alt = ENTRY_ALT[f.gate] + (PRE_ALT[f.gate] - ENTRY_ALT[f.gate])*frac; ac.ias = 300; ac.gs = 330;
-    ac.hdg = ac.trk = brg(ac.x, ac.y, ...e); ac.state = 'PRE'; ac.preAt = f.m*60; ac.route = []; ac.freq = 'PRE';
+    // flying the track to the entry point with the wind allowed for: the nose points off the track by the drift angle
+    { const trk = brg(ac.x, ac.y, ...e), Wd = windAt(ac.alt), tas = ac.ias*(1 + ac.alt/1000*0.018) || 1, cw = Wd[0]*Math.cos(trk*D2R) - Wd[1]*Math.sin(trk*D2R);
+      ac.trk = trk; ac.hdg = norm(trk - Math.asin(clamp(cw/tas, -0.5, 0.5))*R2D); }
+    ac.state = 'PRE'; ac.preAt = f.m*60; ac.route = []; ac.freq = 'PRE';
     S.acs.push(ac); emit('spawn', ac);
     return ac;
   }
@@ -395,6 +398,7 @@ function spawnArrival(f){
     for (let k = 0; k < 6 && entryBusy(ac, [ac.x, ac.y], ac.alt, 8, 3000); k++) { ac.x += u[0]*8; ac.y += u[1]*8; ac.alt += 1000; } }
   S.acs.push(ac);
   makeInbound(ac);
+  ac.legFrom = [e[0], e[1]]; ac.legW = WP[ac.route[0]];   // it flies the published leg from the entry point, not a line from where it appeared
   emit('spawn', ac);
   return ac;
 }
@@ -1797,11 +1801,21 @@ function stepAir(ac, dt){
     const w = WP[ac.route[0]], d = dist(ac.x, ac.y, ...w.p);
     if (ac.kind === 'ARR' && !ac.app && !ac.askedApp && ac.state !== 'DIVERTING' && ac.route.length === 1 && d < 8) { ac.askedApp = true; if (!ac.need) { ac.need = 'Request approach'; pilot(ac, `approaching ${/final/.test(w.note||'') ? w.note : w.id}, request ${APT.reqApp ? APT.reqApp(landRw(ac)) : APT.appName} runway ${landRw(ac)}`); } }
     tgtH = brg(ac.x, ac.y, ...w.p); track = true;
+    // the leg is the line from where it was joined (or the last fix) to this fix: it intercepts that line and holds it, so the
+    // path is the published track (and the line drawn for it), not a curve re-aimed at the fix from wherever the wind put it
+    if (ac.legW !== w) { ac.legW = w; ac.legFrom = [ac.x, ac.y]; }
+    { const a = ac.legFrom, ux = w.p[0] - a[0], uy = w.p[1] - a[1], len = Math.hypot(ux, uy);
+      if (len > 3 && d > 2) {
+        const nx_ = ux/len, ny_ = uy/len, at = (ac.x - a[0])*nx_ + (ac.y - a[1])*ny_, look = Math.max(1.5, (ac.gs || ac.ias)/3600*30), f = clamp(at + look, 0, len);
+        const leg = brg(...a, ...w.p); let h = brg(ac.x, ac.y, a[0] + nx_*f, a[1] + ny_*f);
+        const off = angDiff(leg, h); if (Math.abs(off) > 40) h = norm(leg + Math.sign(off)*40);
+        tgtH = h;
+      } }
     // fly-by: start the turn onto the next leg early by the turn radius at 25° bank × tan(half the course change)
     const nx = ac.route[1] ? WP[ac.route[1]].p : ac.kind === 'ARR' && ac.app && finOf(ac) ? (() => { const F = finOf(ac), q = onFinal({ x: w.p[0], y: w.p[1] }, F); return q && q.d < 0.5 ? pathAhead(F, q, 2) : null; })() : null;
     const lead = nx ? turnLead(ac, w.p, nx) : 0.7;
     if (d < lead) {
-      ac.route.shift();
+      ac.route.shift(); ac.legFrom = [w.p[0], w.p[1]]; ac.legW = ac.route[0] ? WP[ac.route[0]] : null;
       if (!ac.route.length) {
         if (ac.kind === 'ARR' && ac.app) {
           // an RNP start fix reached heading the wrong way (MONEC from the north): one lap of its hold reverses the course
@@ -1823,7 +1837,14 @@ function stepAir(ac, dt){
   if (ac.mode === 'HDG') tgtH = ac.tgtHdg;
   if (ac.mode === 'HOLD') {
     const h = ac.hold; h.t = (h.t||0) + dt;
-    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < (() => { const F = finOf(ac), q = onFinal({ x: h.c[0], y: h.c[1] }, F); return q && q.d < 0.5 ? turnLead(ac, h.c, pathAhead(F, q, 2)) : 1; })()) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) { h.ph = 'turn1'; h.t = 0; } }
+    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < (() => { const F = finOf(ac), q = onFinal({ x: h.c[0], y: h.c[1] }, F); return q && q.d < 0.5 ? turnLead(ac, h.c, pathAhead(F, q, 2)) : 1; })()) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) {
+      // over the fix: a direct entry turns onto the outbound leg; from the other sectors a parallel or teardrop entry first (70° rule)
+      const en = h.laps ? 'direct' : AW.holdEntry(h.inb, !!h.left, ac.hdg); h.entry = en;
+      h.ph = en === 'parallel' ? 'pout' : en === 'teardrop' ? 'tout' : 'turn1'; h.t = 0; } }
+    else if (h.ph === 'pout') { tgtH = norm(h.inb + 180); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'pturn'; h.t = 0; } }
+    else if (h.ph === 'pturn') { const hd = h.left ? 1 : -1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 45) { h.ph = 'in'; h.laps = Math.max(1, h.laps || 0); ac.turnDir = 0; } }
+    else if (h.ph === 'tout') { const hd = h.left ? -1 : 1; tgtH = norm(h.inb + 180 - 30*hd); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'tturn'; h.t = 0; } }
+    else if (h.ph === 'tturn') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 45) { h.ph = 'in'; h.laps = Math.max(1, h.laps || 0); ac.turnDir = 0; } }
     else if (h.ph === 'turn1') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb+180)) < 8) { h.ph = 'out'; h.t = 0; } }
     else if (h.ph === 'out') { tgtH = norm(h.inb + 180); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'turn2'; h.t = 0; } }
     else if (h.ph === 'turn2') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 25) { h.ph = 'in'; h.laps = (h.laps || 0) + 1; } }

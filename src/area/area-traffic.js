@@ -50,7 +50,14 @@ function flown(F, tau){
   return Math.min(F.L, C + (F.L - C - Dd) + (tau - T2)/3600*vD);
 }
 const durOf = F => { const vC = F.fam === 'prop' ? 200 : 320, vD = F.fam === 'prop' ? 210 : 300; return (F.cl/vC + (F.L - F.cl - F.dl)/F.vc + F.dl/vD)*3600; };
-function altAt(F, s){ const e0 = 500, e1 = 1000; return Math.min(F.rfl, e0 + s*(F.rfl/F.cl), e1 + (F.L - s)*(F.rfl/F.dl)); }
+// the climb and descent profile: a SID climbs steeply at first (about 4000 ft by 10 NM, 6000 by 15) then settles to the
+// flight's own climb; the arrival comes down the STAR level steps and the 3° final: about 4200 ft at 12 NM and 600 ft + 300 ft a
+// mile inside it, never the straight line from top of descent that put every arrival too high near the airport
+function altAt(F, s){
+  const e0 = 500, e1 = 1000, d = F.L - s;
+  const up = Math.max(e0 + s*(F.rfl/F.cl), Math.min(6000, e0 + s*370)), arr = d <= 12 ? 600 + d*300 : d <= 45 ? 4200 + (d - 12)*150 : 9150 + (d - 45)*(F.rfl/F.dl);
+  return Math.min(F.rfl, up, Math.max(e1, Math.min(e1 + d*(F.rfl/F.dl), arr)));
+}
 // build a flight: its route and timing. kind ARR: tArr is when it lands; DEP and overflights: tOff is when it takes off
 function makePlan(cs, t, dep, arr, when, kind){
   const fam = typeFam(t), R = planRoute(dep, arr, S.wdir, fam !== 'prop'); if (!R || R.pts.length < 2) return null;
@@ -141,6 +148,11 @@ function spawnFlight(F, st){
   const ac = new Aircraft({ cs: F.cs, t: F.t, dep: F.dep, arr: F.arr, la: st.la, lo: st.lo, alt: Math.round(st.alt/100)*100, hdg: st.h, route: F.R.pts.map(p => p.slice()), ri: st.i,
     rfl: F.rfl, sid: F.R.sid, star: F.R.star, holdFix: F.R.holdFix, src: 'plan' });
   ac.tas = tasTarget(ac); ac.gs = ac.tas;
+  // it appears on its leg, flying the track with the wind allowed for (the nose points off the track, as it really does),
+  // and the leg is anchored at the fix behind it so the line it follows is the airway, not a line from where it appeared
+  { const W = windAt(Math.round(st.alt/100)*100), wx = -Math.sin(W.dir*D2R)*W.kt, wy = -Math.cos(W.dir*D2R)*W.kt, cw = wx*Math.cos(st.h*D2R) - wy*Math.sin(st.h*D2R);
+    ac.hdg = norm(st.h - Math.asin(clamp(cw/Math.max(100, ac.tas), -0.4, 0.4))*R2D); ac.trk = st.h; }
+  { const a = F.R.pts[st.i - 1], b = F.R.pts[st.i]; if (a && b) { ac.legFrom = [a[0], a[1]]; ac.legTo = ac.route[ac.ri]; } }
   ac.past = pastWithAlt([...F.R.pts.slice(0, st.i), [st.la, st.lo, null]], st.alt);
   if (st.climbing) ac.cfl = F.rfl; else if (st.desc) ac.cfl = Math.max(2000, Math.floor(ac.alt/1000)*1000); else ac.cfl = F.rfl;
   ac.alt = Math.min(ac.alt, ac.cfl > ac.alt ? ac.alt : ac.alt);

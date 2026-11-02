@@ -58,25 +58,22 @@ Object.assign(APS, {
 });
 const apLL = ic => APS[ic] ? [APS[ic][0], APS[ic][1]] : null;
 const apName = ic => APS[ic] ? APS[ic][2] : ic;
-// airway graph: each fix's neighbours along every airway it is on
-const ADJ = {}, AWY_SEGS = [];
-for (const [name, A] of Object.entries(AREA.awy)) for (const s of A.s) {
-  for (let i = 1; i < s.length; i++) {
-    const a = s[i - 1], b = s[i], pa = FIXP[a], pb = FIXP[b]; if (!pa || !pb || a === b) continue;
-    const d = nm(pa[0], pa[1], pb[0], pb[1]); if (d > 400) continue;
-    (ADJ[a] ||= []).push([b, name, d, A.l]); (ADJ[b] ||= []).push([a, name, d, A.l]);
-    AWY_SEGS.push([a, b, name, A.l]);
-  }
-}
-const AWY_NODES = Object.keys(ADJ);
+// the airway network, its router and the geometry of a turn are shared with the airport consoles (awy.js)
+AW.init(AREA);
+const AWY_NODES = AW.nodes();
 // SIDs and STARs: the airport's procedures with the points they pass
-const SIDS = AREA.sid, STARS = AREA.star;
+const SIDS = AREA.sid, STARS = AREA.star, RWYS = AREA.rwy || {};
 const procPts = r => r[2].filter(n => FIXP[n]);
 const procLen = (pts, from) => { let d = 0, p = from; for (const n of pts) { const q = FIXP[n]; d += nm(p[0], p[1], q[0], q[1]); p = q; } return d; };
 // the runway in use for a westerly or easterly wind (the higher numbered end in a westerly)
 function rwyFor(ic, list, wdir){
   const rws = [...new Set(list.map(r => r[0]))]; if (!rws.length) return null;
   return rws.sort((a, b) => Math.abs(angDiff(+a.slice(0, 2)*10, wdir)) - Math.abs(angDiff(+b.slice(0, 2)*10, wdir)))[0];
+}
+// the runway of an airport nearest the wind (the one it lands or takes off on), from its surveyed thresholds
+function rwyIn(ic, wdir){
+  const R = RWYS[ic]; if (!R) return null;
+  return Object.keys(R).sort((a, b) => Math.abs(angDiff(R[a][2], wdir)) - Math.abs(angDiff(R[b][2], wdir)))[0];
 }
 // the point an arrival holds at before its approach: the last named fix of its STAR before the final approach points
 function holdFixOf(star){
@@ -85,94 +82,100 @@ function holdFixOf(star){
   return h || pts.find(n => FIXP[n] && FIXP[n][2] === 'V') || pts[0];
 }
 
-// ── routes: SID, airways, STAR ──
-// a min-heap for the searches
-function hpush(h, it){ let i = h.length; h.push(it); while (i) { const p = (i - 1) >> 1; if (h[p][0] <= it[0]) break; h[i] = h[p]; i = p; } h[i] = it; }
-function hpop(h){ const top = h[0], last = h.pop(), n = h.length; if (!n) return top; let i = 0;
-  for (;;) { let c = 2*i + 1; if (c >= n) break; if (c + 1 < n && h[c+1][0] < h[c][0]) c++; if (h[c][0] >= last[0]) break; h[i] = h[c]; i = c; } h[i] = last; return top; }
+// ── routes: SID, airways, STAR, final approach ──
 // where a great circle from far away first comes within the map (and the last point it leaves it): null when it never does
 const MAPBOX = { la: [48.2, 61.5], lo: [-13.5, 4.8] };
 const inMap = p => p[0] > MAPBOX.la[0] && p[0] < MAPBOX.la[1] && p[1] > MAPBOX.lo[0] && p[1] < MAPBOX.lo[1];
-function edgeOf(far, near){
-  const D = gcNM(far, near), n = Math.max(8, Math.ceil(D/25));
-  for (let i = 0; i <= n; i++) { const p = gcAt(far, near, i/n); if (inMap(p)) return p; }
-  return null;
-}
-// the shortest airway routing from a point to a point. starts/goals: [[fix, extra cost]] (the SID or STAR to reach them),
-// or a radius round the point to join at any airway fix. Returns the fixes, or null.
-function awyRoute(from, to, starts, goals, hi, farFrom, farTo){
-  const dist0 = new Map(), prev = new Map(), done = new Set(), h = [];
-  const goalCost = new Map(), target = farTo || to;
-  // the end: the STAR's first fix, any airway fix near an airport on the map, or (for an airport far away) the airway
-  // fixes near where the great circle to it leaves the map, costed by the distance still to fly
-  if (goals) for (const [f, c] of goals) goalCost.set(f, c);
-  else for (const f of AWY_NODES) { const p = FIXP[f];
-    if (farTo) { const e = nm(p[0], p[1], to[0], to[1]); if (e < 220) goalCost.set(f, gcNM(p, farTo) - gcNM(to, farTo) + e*0.6); }
-    else { const d = nm(p[0], p[1], to[0], to[1]); if (d < 70) goalCost.set(f, d*1.3); } }
-  const hOf = f => (farTo ? Math.max(0, gcNM(FIXP[f], farTo) - gcNM(to, farTo)) : nm(FIXP[f][0], FIXP[f][1], to[0], to[1]))*0.95;
-  const add = (f, c, pr) => { const o = dist0.get(f); if (o === undefined || c < o) { dist0.set(f, c); prev.set(f, pr); hpush(h, [c + hOf(f), f]); } };
-  if (starts) for (const [f, c] of starts) { if (FIXP[f]) add(f, c, null); }
-  else for (const f of AWY_NODES) { const p = FIXP[f];
-    if (farFrom) { const e = nm(p[0], p[1], from[0], from[1]); if (e < 220) add(f, e*0.6, null); }
-    else { const d = nm(p[0], p[1], from[0], from[1]); if (d < 70) add(f, d*1.3, null); } }
-  if (!h.length || !goalCost.size) return null;
-  let best = null, bestC = Infinity;
-  while (h.length) {
-    const [k, u] = hpop(h); if (done.has(u)) continue; done.add(u);
-    const cu = dist0.get(u);
-    if (k >= bestC) break;
-    if (goalCost.has(u) && cu + goalCost.get(u) < bestC) { bestC = cu + goalCost.get(u); best = u; }
-    for (const [v, , d, l] of ADJ[u] || []) { if (done.has(v)) continue; add(v, cu + d*(hi && l === 'L' ? 1.08 : !hi && l === 'U' ? 1.15 : 1) + 2, u); }
+const edgeOf = (far, near) => AW.edgeOf(far, near);
+// the shortest airway routing from a point to a point (see AW.search): { fixes, start, goal } or null. starts / goals: [[fix,
+// extra cost, procedure]] (the SID or STAR to reach them), or a spread of airway fixes round the point.
+// a procedure whose fixes sit in a part of the airway network that does not join the rest falls back to the nearest airways
+const awySearch = (from, to, starts, goals, hi, farFrom, farTo) => AW.search({ from, to, starts, goals, hi, farFrom, farTo })
+  || (goals && AW.search({ from, to, starts, goals: null, hi, farFrom, farTo }))
+  || (starts && AW.search({ from, to, starts: null, goals, hi, farFrom, farTo }))
+  || ((starts || goals) && AW.search({ from, to, starts: null, goals: null, hi, farFrom, farTo }));
+const awyRoute = (...a) => { const r = awySearch(...a); return r ? r.fixes : null; };
+// the way in from the end of a STAR: its final approach points (CF, FI on the extended centreline), and the runway threshold.
+// A runway with no procedure points gets a straight-in final of its own: the intercept 10 NM out, further if the turn onto it
+// from where the flight is would be wider than 55°
+function finalPts(ic, rw, from, procEnd){
+  const R = RWYS[ic] && RWYS[ic][rw]; if (!R) return null;
+  const thr = [R[0], R[1]], c = R[2], out = [];
+  if (!procEnd) {
+    let dd = 10; const brgIn = pt => Math.abs(angDiff(crs(from[0], from[1], pt[0], pt[1]), c));
+    for (const k of [10, 16, 24]) { dd = k; if (brgIn(AW.dest(thr, c + 180, k)) < 55) break; }
+    const q = AW.dest(thr, c + 180, dd); out.push([q[0], q[1], null]);
+    if (dd > 10) { const q2 = AW.dest(thr, c + 180, 10); out.push([q2[0], q2[1], null]); }
   }
-  if (!best) return null;
-  const out = [best]; let c = best; while (prev.get(c)) { c = prev.get(c); out.unshift(c); }
+  out.push([thr[0], thr[1], null]);
   return out;
 }
-// a flight's whole route: { pts: [[lat, lon, name?]], sid, star, holdFix } from its origin to its destination. Airports on
-// the map fly their real SID and STAR; far ones join and leave the airways where the great circle crosses the map's edge.
+// a flight's whole route: { pts: [[lat, lon, name?]], sid, star, holdFix, rwyDep, rwyArr } from its origin to its destination.
+// Airports on the map fly their real SID (from the threshold of the runway in use, along the runway), airways, STAR and
+// final approach; far ones join and leave the airways where the great circle crosses the map's edge.
 function planRoute(o, d, wdir = 250, rflHi = true){
   const O = apLL(o), Dd = apLL(d); if (!O || !Dd) return null;
   const sids = SIDS[o], stars = STARS[d];
-  let start = O, startPts = [], starts = null, sidName = null;
-  let end = Dd, goals = null, starName = null, holdFix = null;
   const oIn = inMap(O), dIn = inMap(Dd);
+  let start = O, end = Dd;
   if (!oIn) { start = edgeOf(O, Dd); if (!start) return null; }
   if (!dIn) { end = edgeOf(Dd, O); if (!end) return null; }
   // the SID whose end lies the way the flight is going (the runway for the wind)
-  let sidSet = null;
+  let starts = null, sidRw = null;
   if (oIn && sids) {
-    const rw = rwyFor(o, sids, wdir), list = sids.filter(r => r[0] === rw && procPts(r).length);
-    if (list.length) { sidSet = list; starts = list.map(r => { const p = procPts(r); return [p[p.length - 1], procLen(p, O)*1.05, r]; }); }
+    sidRw = rwyFor(o, sids, wdir); const list = sids.filter(r => r[0] === sidRw && procPts(r).length);
+    if (list.length) starts = list.map(r => { const p = procPts(r); return [p[p.length - 1], procLen(p, O)*1.05, r]; });
   }
-  let starSet = null;
+  let goals = null, starRw = null;
   if (dIn && stars) {
-    const rw = rwyFor(d, stars, wdir), list = stars.filter(r => r[0] === rw && procPts(r).length);
-    if (list.length) { starSet = list; goals = list.map(r => { const p = procPts(r); return [p[0], procLen(p.slice(1), FIXP[p[0]])*1.05, r]; }); }
+    starRw = rwyFor(d, stars, wdir); const list = stars.filter(r => r[0] === starRw && procPts(r).length);
+    if (list.length) goals = list.map(r => { const p = procPts(r); return [p[0], procLen(p.slice(1), FIXP[p[0]])*1.05, r]; });
   }
   // short hops (Heathrow to Manchester) still go by airway; very short ones fly direct
-  const via = gcNM(start, end) > 40 ? awyRoute(start, end, starts && starts.map(s => [s[0], s[1]]), goals && goals.map(g => [g[0], g[1]]), rflHi, oIn ? null : O, dIn ? null : Dd) : null;
-  const pts = [[O[0], O[1], o]];
+  const res = gcNM(start, end) > 40 ? awySearch(start, end, starts, goals, rflHi, oIn ? null : O, dIn ? null : Dd) : null;
+  const via = res && res.fixes;
+  const pts = [], P = (n, nm_) => [FIXP[n][0], FIXP[n][1], nm_ === undefined ? n : nm_];
+  // the take-off: from the threshold of the departure runway along the runway to its far end, then the SID
+  let sidName = null, rwyDep = null;
+  const sidRow = res && res.start, rwDep = sidRow ? sidRow[0] : oIn && RWYS[o] ? rwyIn(o, wdir) : null, RD = rwDep && RWYS[o] && RWYS[o][rwDep];
+  if (RD) { rwyDep = rwDep; pts.push([RD[0], RD[1], o], [RD[3], RD[4], null]); } else pts.push([O[0], O[1], o]);
   if (via) {
-    const sid = starts && starts.find(s => s[0] === via[0]);
-    if (sid) { sidName = sid[2][1]; for (const n of procPts(sid[2]).slice(0, -1)) pts.push([FIXP[n][0], FIXP[n][1], n]); }
-    else if (!oIn) pts.push([start[0], start[1], null]);
-    for (const n of via) pts.push([FIXP[n][0], FIXP[n][1], n]);
-    const star = goals && goals.find(g => g[0] === via[via.length - 1]);
-    if (star) { starName = star[2][1]; holdFix = holdFixOf(star[2]); for (const n of procPts(star[2]).slice(1)) { if (/^(CF|FI|FF)/.test(n)) break; pts.push([FIXP[n][0], FIXP[n][1], n]); } }
-    else if (!dIn) pts.push([end[0], end[1], null]);
-  } else {
-    if (!oIn) pts.push([start[0], start[1], null]);
-    if (!dIn) pts.push([end[0], end[1], null]);
+    if (sidRow) { sidName = sidRow[1]; for (const n of procPts(sidRow)) pts.push(P(n)); }
+    for (const n of via) pts.push(P(n));
   }
-  pts.push([Dd[0], Dd[1], d]);
+  let starName = null, holdFix = null, rwyArr = null;
+  const starRow = res && res.goal, rwArr = starRow ? starRow[0] : dIn && RWYS[d] ? rwyIn(d, wdir) : null;
+  if (starRow) {
+    starName = starRow[1]; holdFix = holdFixOf(starRow); rwyArr = rwArr;
+    let prevFix = via[via.length - 1];
+    for (const n of procPts(starRow)) { if (n === prevFix) continue; pts.push(P(n)); prevFix = n; }
+  }
+  if (via && !dIn) pts.push([end[0], end[1], null]);
+  // into the airport: a STAR's own approach points then the threshold; else a final of its own
+  const last = pts[pts.length - 1];
+  if (via && dIn && rwArr && RWYS[d] && RWYS[d][rwArr]) {
+    rwyArr = rwArr; const F = finalPts(d, rwArr, last, !!starRow && procPts(starRow).some(n => /^(CF|FI|FF)/.test(n)));
+    if (F) { F[F.length - 1][2] = d; pts.push(...F); } else pts.push([Dd[0], Dd[1], d]);
+  } else {
+    if (!via && !oIn) pts.push([start[0], start[1], null]);
+    if (!via && !dIn) pts.push([end[0], end[1], null]);
+    pts.push([Dd[0], Dd[1], d]);
+  }
   // drop a doubled point and any turn back on itself (a SID end behind the first airway fix)
   const out = [pts[0]];
   for (let i = 1; i < pts.length; i++) { const p = pts[i], q = out[out.length - 1]; if (nm(p[0], p[1], q[0], q[1]) < 0.5) { if (p[2] && !q[2]) out[out.length - 1] = p; continue; } out.push(p); }
+  const keep = i => i > 1 + (rwyDep ? 1 : 0) && i < out.length - 2 - (rwyArr ? 2 : 0);
   for (let i = 1; i < out.length - 1; i++) {
     const a = out[i - 1], b = out[i], c = out[i + 1];
-    if (Math.abs(angDiff(crs(a[0], a[1], b[0], b[1]), crs(b[0], b[1], c[0], c[1]))) > 150 && i > 1 && i < out.length - 2) { out.splice(i, 1); i--; }
+    if (Math.abs(angDiff(crs(a[0], a[1], b[0], b[1]), crs(b[0], b[1], c[0], c[1]))) > 150 && keep(i)) { out.splice(i, 1); i--; }
   }
-  return { pts: out, sid: sidName, star: starName, holdFix };
+  unloop(out);
+  return { pts: out, sid: sidName, star: starName, holdFix, rwyDep, rwyArr };
+}
+// a route that goes to a fix, to the next, and back to the first (a join and a procedure start side by side) drops the detour
+function unloop(pts){
+  for (let i = 2; i < pts.length; i++) if (pts[i][2] && pts[i][2] === pts[i - 2][2]) { pts.splice(i - 1, 2); i = Math.max(1, i - 2); }
+  return pts;
 }
 // the length of a route from index i (and the distance along it to each point)
 function routeLen(pts){ let d = 0; const cum = [0]; for (let i = 1; i < pts.length; i++) { d += gcNM(pts[i - 1], pts[i]); cum.push(d); } return { total: d, cum }; }
@@ -316,10 +319,15 @@ function routeOnward(la, lo, trk, arr){
     const rw = rwyFor(arr, STARS[arr], S.wdir), list = STARS[arr].filter(r => r[0] === rw && procPts(r).length);
     const goals = list.map(r => { const p = procPts(r); return [p[0], procLen(p.slice(1), FIXP[p[0]])*1.05, r]; });
     if (nm(la, lo, D[0], D[1]) < 50) return [here, [D[0], D[1], arr]];
-    via = awyRoute([la, lo], D, starts, goals.map(g => [g[0], g[1]]), true);
-    const g = via && goals.find(x => x[0] === via[via.length - 1]);
-    if (g) for (const n of procPts(g[2]).slice(1)) { if (/^(CF|FI|FF)/.test(n)) break; tail.push([FIXP[n][0], FIXP[n][1], n]); }
-    tail.push([D[0], D[1], arr]);
+    const res = awySearch([la, lo], D, starts, goals, true);
+    via = res && res.fixes;
+    // the STAR's own points, then the final: the approach points of the procedure, else a straight-in final, to the threshold
+    if (via) {
+      let prev = via[via.length - 1], hasFin = false;
+      if (res.goal) for (const n of procPts(res.goal)) { if (n === prev) continue; tail.push([FIXP[n][0], FIXP[n][1], n]); prev = n; if (/^(CF|FI|FF)/.test(n)) hasFin = true; }
+      const R = RWYS[arr] && RWYS[arr][rw], F = R && finalPts(arr, rw, tail.length ? tail[tail.length - 1] : FIXP[via[via.length - 1]], hasFin);
+      if (F) { F[F.length - 1][2] = arr; tail.push(...F); } else tail.push([D[0], D[1], arr]);
+    }
   } else {
     const far = D || moveLL(la, lo, trk, 900), edge = inMap(far) ? far : edgeOf(far, [la, lo]);
     if (!edge) return null;
@@ -327,7 +335,7 @@ function routeOnward(la, lo, trk, arr){
     tail.push(D ? [D[0], D[1], arr] : [far[0], far[1], null]);
   }
   if (!via) return null;
-  return [here, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), ...tail];
+  return unloop([here, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), ...tail]);
 }
 // back: from its origin (its SID, airways) to where it is now
 function routeBack(la, lo, trk, dep){

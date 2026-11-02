@@ -84,34 +84,44 @@ function inView(la, lo, m = 40){ const [X, Y] = SXY(la, lo); return X > -m && Y 
 function drawAirways(){
   if (!UI.awy) return;
   const sc = V.scale;
-  cx.save(); cx.strokeStyle = C.awy; cx.lineWidth = 1;
-  const named = new Map();
-  for (const [a, b, n, l] of AWY_SEGS) {
-    const pa = FIXP[a], pb = FIXP[b]; if (!inView(pa[0], pa[1], 400) && !inView(pb[0], pb[1], 400)) continue;
-    if (sc < 1.1 || (sc < 3.5 && l === 'L' && UI.viewFL > 245) || (sc < 3.5 && l === 'U' && UI.viewFL < 245)) continue;
-    const [X1, Y1] = SXY(pa[0], pa[1]), [X2, Y2] = SXY(pb[0], pb[1]);
-    cx.beginPath(); cx.moveTo(X1, Y1); cx.lineTo(X2, Y2); cx.stroke();
-    if (sc > 6 && Math.hypot(X2 - X1, Y2 - Y1) > 90 && !named.has(n + Math.round(X1/300) + Math.round(Y1/300))) { named.set(n + Math.round(X1/300) + Math.round(Y1/300), [(X1 + X2)/2, (Y1 + Y2)/2, n]); }
-  }
-  cx.font = `500 10px ${FONT_D}`; cx.fillStyle = C.awyTxt;
-  for (const [X, Y, n] of named.values()) cx.fillText(n, X + 3, Y - 3);
-  // points: the VORs always, named points when zoomed in
-  const shown = new Set();
-  for (const n of AWY_NODES) {
-    const p = FIXP[n]; if (!inView(p[0], p[1])) continue;
-    const vor = p[2] === 'V'; if (!vor && sc < 5) continue; if (p[2] === 'P' || sc < 1.1) continue;
-    const [X, Y] = SXY(p[0], p[1]); shown.add(n);
-    cx.strokeStyle = C.fix; cx.lineWidth = 1.1; cx.beginPath();
-    if (vor) { for (let k = 0; k < 6; k++) { const a = k*Math.PI/3; cx[k ? 'lineTo' : 'moveTo'](X + 4.5*Math.cos(a), Y + 4.5*Math.sin(a)); } cx.closePath(); }
-    else { cx.moveTo(X, Y - 4.5); cx.lineTo(X + 4, Y + 3); cx.lineTo(X - 4, Y + 3); cx.closePath(); }
-    cx.stroke();
-    if ((vor && sc > 1.8) || sc > 7) { cx.font = `${vor ? 600 : 500} ${vor ? 11 : 10}px ${FONT_D}`; cx.fillStyle = C.fix; cx.fillText(n, X + 6, Y - 4); }
-  }
+  // the airway chart: upper (blue) and lower (amber) routes by level in view, RNAV and conventional, the designators on
+  // the lines and the points with their symbols (awy.js); the flight's own route fixes are always named
+  const mine = new Set(); if (S.sel && S.acs.includes(S.sel)) for (const q of S.sel.route) if (q[2]) mine.add(q[2]);
+  if (sc >= 0.9) AW.drawChart({ cx, P: SXY, W, H, dark: C.name === 'dark', lvl: UI.viewFL > 245 ? 'U' : 'L', scale: sc, mine });
+  cx.save();
   // airports
   for (const [k, v] of Object.entries(AREA.ap)) {
     if (!/^E[GI]/.test(k) || !inView(v[0], v[1]) || !STARS[k]) continue;
     const [X, Y] = SXY(v[0], v[1]); cx.strokeStyle = C.apt; cx.lineWidth = 1.3; cx.beginPath(); cx.arc(X, Y, 3.6, 0, 7); cx.stroke();
     if (sc > 2.4) { cx.font = `600 10px ${FONT_D}`; cx.fillStyle = C.apt; cx.fillText(k, X + 6, Y + 11); }
+  }
+  cx.restore();
+}
+// the SIDs (amber) and STARs (blue) of the airports in view, for the runway in use: the published lines as they are flown,
+// the corners as fly-by arcs, each named at its far end (a SID at the fix it leaves on, a STAR at the fix it starts at)
+function drawProcs(){
+  if (!UI.proc || V.scale < 1.2) return;
+  // zoomed out only the selected flight's airports; from about 6 px a mile every airport in view
+  const sel = S.sel && S.acs.includes(S.sel) ? [S.sel.dep, S.sel.arr] : [];
+  const R = AW.turnRadius(240, 25);
+  cx.save(); cx.lineJoin = cx.lineCap = 'round'; cx.font = `600 10px ${FONT_D}`;
+  for (const ic of Object.keys(AREA.ap)) {
+    const A = AREA.ap[ic]; if (!inView(A[0], A[1], 300) || (!SIDS[ic] && !STARS[ic])) continue; if (V.scale < 6 && !sel.includes(ic)) continue;
+    for (const [kind, list] of [['SID', SIDS[ic]], ['STAR', STARS[ic]]]) {
+      if (!list) continue; const rw = rwyFor(ic, list, S.wdir); const col = kind === 'SID' ? '#e9a23b' : '#4fb3ff';
+      const seen = new Set();
+      for (const r of list) {
+        if (r[0] !== rw) continue; const names = procPts(r); if (names.length < 2) continue;
+        let pts = names.map(n => [FIXP[n][0], FIXP[n][1], n]);
+        if (kind === 'SID') { const T = RWYS[ic] && RWYS[ic][rw]; if (T) pts = [[T[0], T[1], null], [T[3], T[4], null], ...pts]; else pts = [[A[0], A[1], null], ...pts]; }
+        else { const T = RWYS[ic] && RWYS[ic][rw]; if (T && !pts.some(p => /^(CF|FI|FF)/.test(p[2]))) pts = [...pts, [T[0], T[1], null]]; }
+        const path = AW.flyPath(pts, R);
+        cx.strokeStyle = col; cx.globalAlpha = .75; cx.lineWidth = 1.4; cx.setLineDash(kind === 'SID' ? [] : [6, 4]); cx.beginPath();
+        path.forEach((q, i) => { const [X, Y] = SXY(q[0], q[1]); i ? cx.lineTo(X, Y) : cx.moveTo(X, Y); }); cx.stroke(); cx.setLineDash([]);
+        const e = kind === 'SID' ? pts[pts.length - 1] : pts[0]; if (seen.has(r[1])) continue; seen.add(r[1]);
+        const [X, Y] = SXY(e[0], e[1]); cx.globalAlpha = 1; cx.fillStyle = col; cx.fillText(r[1], X + 5, Y + (kind === 'SID' ? -5 : 11));
+      }
+    }
   }
   cx.restore();
 }
@@ -202,14 +212,32 @@ function drawTag(ac, X, Y, col, mine, sel){
 }
 // the selected flight: the track it has flown (solid, by altitude) and its route ahead (faint dashes) with fix ETAs
 function drawSelRoute(ac, labels){
-  const pts = [[ac.la, ac.lo]];
-  if (ac.mode === 'NAV') for (let i = ac.ri; i < ac.route.length; i++) pts.push(ac.route[i]);
+  // the route ahead is drawn as it will be flown: the leg it is on is anchored where it was joined (so the line does not
+  // swing with the aircraft), the corners are fly-by arcs at its turn radius, a hold is its racetrack
+  const here = [ac.la, ac.lo, null], R = AW.turnRadius(Math.max(160, ac.tas), 25);
+  let pts = [here], hold = null;
+  if (ac.mode === 'NAV') {
+    const next = ac.route[ac.ri];
+    // the leg's anchor: only while the aircraft is still on that leg and near its line
+    if (next && ac.legTo === next && ac.legFrom && AW.gcNM(ac.legFrom, next) > 4) { const X = AW.xtk([ac.la, ac.lo], ac.legFrom, next); if (Math.abs(X.xte) < 1.5) pts = [[ac.legFrom[0], ac.legFrom[1], null], here]; }
+    for (let i = ac.ri; i < ac.route.length; i++) pts.push(ac.route[i]);
+  }
   else if (ac.mode === 'HDG') pts.push(moveLL(ac.la, ac.lo, ac.tgtHdg ?? ac.hdg, 60));
-  else if (ac.mode === 'HOLD') pts.push(ac.hold.c);
+  else if (ac.mode === 'HOLD') { pts.push(ac.hold.c); hold = AW.holdPath(ac.hold.c, ac.hold.inb, ac.hold.left, Math.max(220, ac.tas), (ac.alt > 14000 ? 1.5 : 1)*Math.max(220, ac.tas)/60); }
+  const anch = pts.length > 2 && pts[1] === here ? 1 : 0;   // when the first point is the anchor, the path starts at the aircraft
+  const path = pts.length > 2 ? AW.flyPath(pts, R) : pts;
+  const drawn = anch ? path.filter((q, k) => k === 0 || true) : path;
   cx.save(); cx.lineJoin = cx.lineCap = 'round'; cx.strokeStyle = C.pv; cx.lineWidth = 2.2; cx.globalAlpha = .55; cx.setLineDash([8, 6]);
   cx.beginPath();
-  let prev = pts[0];
-  pts.forEach((p, i) => { if (i && gcNM(prev, p) > 60) { const n = Math.ceil(gcNM(prev, p)/40); for (let k = 1; k < n; k++) { const q = gcAt(prev, p, k/n); const [X, Y] = SXY(q[0], q[1]); cx.lineTo(X, Y); } } const [X, Y] = SXY(p[0], p[1]); i ? cx.lineTo(X, Y) : cx.moveTo(X, Y); prev = p; });
+  let prev = null, started = !anch;
+  // skip the part of the path behind the aircraft (between the anchor and its position)
+  const skipTo = anch ? drawn.findIndex(q => q[2] >= 1) : 0;
+  drawn.forEach((p, i) => {
+    if (anch && i < skipTo) return;
+    if (prev && gcNM(prev, p) > 60) { const n = Math.ceil(gcNM(prev, p)/40); for (let k = 1; k < n; k++) { const q = gcAt(prev, p, k/n); const [X, Y] = SXY(q[0], q[1]); cx.lineTo(X, Y); } }
+    const [X, Y] = SXY(p[0], p[1]); (prev ? cx.lineTo(X, Y) : cx.moveTo(X, Y)); prev = p;
+  });
+  if (hold) { const h0 = SXY(hold[0][0], hold[0][1]); cx.moveTo(h0[0], h0[1]); for (const q of hold) { const [X, Y] = SXY(q[0], q[1]); cx.lineTo(X, Y); } }
   cx.stroke(); cx.setLineDash([]); cx.globalAlpha = 1;
   if (labels && ac.mode === 'NAV') {
     cx.font = `700 11px ${FONT_D}`; let n = 0;
@@ -260,7 +288,7 @@ function draw(){
   cx.setTransform(DPR, 0, 0, DPR, 0, 0);
   cx.fillStyle = C.sea; cx.fillRect(0, 0, W, H);
   if (typeof drawImagery === 'function' && !TILE.failed) { drawImagery(); cx.fillStyle = C.wash; cx.fillRect(0, 0, W, H); }
-  drawNeighbours(); drawMine(); drawAirways(); drawWeather();
+  drawNeighbours(); drawMine(); drawAirways(); drawProcs(); drawWeather();
   if (UI.routes === 'all') for (const ac of S.acs) if (ac.mine && ac !== S.sel) drawSelRoute(ac, false);
   if (S.sel && UI.routes !== 'off' && S.acs.includes(S.sel)) drawSelRoute(S.sel, true);
   drawConflicts(); drawAircraft(); drawScale();
@@ -469,6 +497,7 @@ document.addEventListener('keydown', e => {
 $('tgPause').onclick = e => { S.paused = !S.paused; e.currentTarget.textContent = S.paused ? 'Resume' : 'Pause'; };
 $('tgSpeed').onclick = e => { S.speed = S.speed === 1 ? 2 : S.speed === 2 ? 4 : S.speed === 4 ? 8 : 1; e.currentTarget.textContent = S.speed + '×'; };
 document.querySelectorAll('[data-routes]').forEach(b => b.onclick = () => { UI.routes = b.dataset.routes; document.querySelectorAll('[data-routes]').forEach(x => x.classList.toggle('on', x === b)); });
+$('tgProc').onclick = e => { UI.proc = !UI.proc; e.currentTarget.classList.toggle('on', UI.proc); };
 $('tgAwy').onclick = e => { UI.awy = !UI.awy; e.currentTarget.classList.toggle('on', UI.awy); };
 $('tgVoice').onclick = e => { UI.voice = !UI.voice; e.currentTarget.classList.toggle('on', UI.voice); e.currentTarget.setAttribute('aria-pressed', UI.voice); if (!UI.voice && 'speechSynthesis' in window) speechSynthesis.cancel(); };
 $('tgFull').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); };

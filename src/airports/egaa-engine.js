@@ -173,7 +173,15 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
       if (nodes) { const main = new Set(); for (let i = 1; i < nodes.length; i++) main.add([nodes[i-1], nodes[i]].sort().join('|'));
         const c0 = GN[f0].p, near = id => Math.hypot(GN[id].p[0]-c0[0], GN[id].p[1]-c0[1])/M2NM < 450;
         const holdN = new Set(Object.values(HOLDS).flatMap(h => [h.node]));
-        for (const e of GE) if ((e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b) && !main.has([e.a, e.b].sort().join('|')) && !holdN.has(e.a) && !holdN.has(e.b) && !/^Cx|^Cf/.test(e.a + e.b)) e.bare = true; } }
+        for (const e of GE) if ((e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b) && !main.has([e.a, e.b].sort().join('|')) && !holdN.has(e.a) && !holdN.has(e.b) && !/^Cx|^Cf/.test(e.a + e.b)) e.bare = true;
+        for (const e of GE) if (e.bare && (e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b)) e.k = Math.max(e.k || 1, 4);   // the unpainted inner lanes are a last resort: routes and tows keep to the painted chain
+        // each hold's link must stay painted all the way to the main apron chain (A1, A2, A3 stubs join A)
+        const mainN = new Set(nodes);
+        for (const h of Object.values(HOLDS)) { const s0 = h.node; if (!GN[s0] || !near(s0) || mainN.has(s0)) continue;
+          const dd = { [s0]: 0 }, pv = {}, todo = new Set([s0]), done = new Set(); let hit = null;
+          while (todo.size) { let u = null; for (const x of todo) if (u === null || dd[x] < dd[u]) u = x; todo.delete(u); if (mainN.has(u)) { hit = u; break; } done.add(u);
+            for (const [v, ev] of GN[u].adj) { if (done.has(v) || /^R|^CR/.test(v) || (ev.tw !== 'A' && ev.tw !== 'APRON')) continue; const nd = dd[u] + ev.len; if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; pv[v] = [u, ev]; todo.add(v); } } }
+          for (let u = hit; u && u !== s0; u = pv[u] && pv[u][0]) if (pv[u]) delete pv[u][1].bare; } } }
     // the lanes that led to the old stands are left as dead ends: take them out (only the apron's own chain and lane nodes)
     const keep = new Set([...STANDS.map(t => t.node), ...Object.values(HOLDS).flatMap(h => [h.node, h.rwy])]);
     for (let again = true; again;) { again = false;

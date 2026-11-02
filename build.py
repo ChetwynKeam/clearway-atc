@@ -140,6 +140,8 @@ const GEO = {r(A['geo']).strip()};
 {r('core.js')}
 {prof}
 const AP_DATA = {ap_data};
+{r('awy-data.js')}
+{r('awy.js')}
 {r('sim.js')}
 {r('shapes.js')}
 {r('ui.js')}
@@ -211,6 +213,7 @@ def area_page():
 "use strict";
 {ra('area-data.js')}
 {data}
+{r('awy.js')}
 {ra('area-geo.js').replace('"use strict";', '', 1)}
 {r('shapes.js')}
 {r('tiles.js')}
