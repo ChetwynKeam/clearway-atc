@@ -176,6 +176,11 @@ const AW = (() => {
     return out;
   }
 
+  // ── the way a hold is joined: 'direct', 'parallel' or 'teardrop' from the track the aircraft arrives on (the 70° rule) ──
+  function holdEntry(inb, left, trk){
+    const r = angDiff(inb, norm(trk + 180))*(left ? -1 : 1);
+    return r >= -110 && r <= 70 ? 'direct' : r > 70 && r <= 140 ? 'parallel' : 'teardrop';
+  }
   // ── the chart ──
   // v: { cx, P(la, lo) → [X, Y], W, H, dark, lvl: 'U' | 'L' | 'all', scale (px per NM), mine: Set of fix names to stress,
   //      label: bool, awyLabels: bool, detail: 0..2 }
@@ -265,7 +270,7 @@ const AW = (() => {
     }
     cx.restore();
   }
-  return { init, search, legBetween, airwayOf, joinFixes, edgeOf, inCover, flyPath, holdPath, turnRadius, turnLead, xtk, drawChart,
+  return { init, search, legBetween, airwayOf, joinFixes, edgeOf, inCover, flyPath, holdPath, holdEntry, turnRadius, turnLead, xtk, drawChart,
     gcNM, gcBrg, gcAt, dest, norm, angDiff, clamp,
     get ready(){ return READY; }, fix: n => FIX[n], fixes: () => FIX, airways: () => AWYS, adj: n => ADJ[n], nodes: () => NODES, segs: () => SEGS, aps: () => AP, rwy: ic => RWY[ic], rwys: () => RWY };
 })();

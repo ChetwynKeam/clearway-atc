@@ -65,7 +65,8 @@ function airwayPts(pts, seed, keepLast){
       if (fx.length) { for (const q of fx) out.push([q[0], q[1]]); out.push(B); continue; }
     }
     // the great circle broken into legs whose turning points sit a little to one side or the other (as airways do)
-    const legNM = D > 1800 ? 250 : 120, n = last || D < 150 ? 1 : Math.max(2, Math.round(D/legNM));
+    // beyond the airway data the flight is routed direct (a great circle, as long-haul and off-network flights are filed), not zig-zagged
+    const legNM = D > 1800 ? 250 : 120, n = 1;
     let off = 0;
     for (let j = 1; j < n; j++) {
       const L = D/n, cap = Math.min(D > 1800 ? 18 : 9, L*0.075);

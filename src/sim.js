@@ -370,7 +370,10 @@ function spawnArrival(f){
     // another pending track on top of it (the same minute, or two flows sharing the entry point): in trail, 8 NM behind
     for (let k = 0; k < 6 && S.acs.some(o => o.state === 'PRE' && Math.hypot(o.x - ac.x, o.y - ac.y) < 5); k++) { ac.x += u[0]*8; ac.y += u[1]*8; }
     ac.alt = ENTRY_ALT[f.gate] + (PRE_ALT[f.gate] - ENTRY_ALT[f.gate])*frac; ac.ias = 300; ac.gs = 330;
-    ac.hdg = ac.trk = brg(ac.x, ac.y, ...e); ac.state = 'PRE'; ac.preAt = f.m*60; ac.route = []; ac.freq = 'PRE';
+    // flying the track to the entry point with the wind allowed for: the nose points off the track by the drift angle
+    { const trk = brg(ac.x, ac.y, ...e), Wd = windAt(ac.alt), tas = ac.ias*(1 + ac.alt/1000*0.018) || 1, cw = Wd[0]*Math.cos(trk*D2R) - Wd[1]*Math.sin(trk*D2R);
+      ac.trk = trk; ac.hdg = norm(trk - Math.asin(clamp(cw/tas, -0.5, 0.5))*R2D); }
+    ac.state = 'PRE'; ac.preAt = f.m*60; ac.route = []; ac.freq = 'PRE';
     S.acs.push(ac); emit('spawn', ac);
     return ac;
   }
@@ -383,6 +386,7 @@ function spawnArrival(f){
     for (let k = 0; k < 6 && entryBusy(ac, [ac.x, ac.y], ac.alt, 8, 3000); k++) { ac.x += u[0]*8; ac.y += u[1]*8; ac.alt += 1000; } }
   S.acs.push(ac);
   makeInbound(ac);
+  ac.legFrom = [e[0], e[1]]; ac.legW = WP[ac.route[0]];   // it flies the published leg from the entry point, not a line from where it appeared
   emit('spawn', ac);
   return ac;
 }
@@ -1821,7 +1825,14 @@ function stepAir(ac, dt){
   if (ac.mode === 'HDG') tgtH = ac.tgtHdg;
   if (ac.mode === 'HOLD') {
     const h = ac.hold; h.t = (h.t||0) + dt;
-    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < (() => { const F = finOf(ac), q = onFinal({ x: h.c[0], y: h.c[1] }, F); return q && q.d < 0.5 ? turnLead(ac, h.c, pathAhead(F, q, 2)) : 1; })()) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) { h.ph = 'turn1'; h.t = 0; } }
+    if (h.ph === 'in') { tgtH = brg(ac.x, ac.y, ...h.c); track = true; ac.turnDir = 0; if (h.join && h.laps && ac.app && dist(ac.x, ac.y, ...h.c) < (() => { const F = finOf(ac), q = onFinal({ x: h.c[0], y: h.c[1] }, F); return q && q.d < 0.5 ? turnLead(ac, h.c, pathAhead(F, q, 2)) : 1; })()) { ac.mode = 'FINAL'; ac.hold = null; ac.finI = null; fin = onFinal(ac, finOf(ac)); } else if (dist(ac.x, ac.y, ...h.c) < 0.5) {
+      // over the fix: a direct entry turns onto the outbound leg; from the other sectors a parallel or teardrop entry first (70° rule)
+      const en = h.laps ? 'direct' : AW.holdEntry(h.inb, !!h.left, ac.hdg); h.entry = en;
+      h.ph = en === 'parallel' ? 'pout' : en === 'teardrop' ? 'tout' : 'turn1'; h.t = 0; } }
+    else if (h.ph === 'pout') { tgtH = norm(h.inb + 180); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'pturn'; h.t = 0; } }
+    else if (h.ph === 'pturn') { const hd = h.left ? 1 : -1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 45) { h.ph = 'in'; h.laps = Math.max(1, h.laps || 0); ac.turnDir = 0; } }
+    else if (h.ph === 'tout') { const hd = h.left ? -1 : 1; tgtH = norm(h.inb + 180 - 30*hd); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'tturn'; h.t = 0; } }
+    else if (h.ph === 'tturn') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 45) { h.ph = 'in'; h.laps = Math.max(1, h.laps || 0); ac.turnDir = 0; } }
     else if (h.ph === 'turn1') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb+180)) < 8) { h.ph = 'out'; h.t = 0; } }
     else if (h.ph === 'out') { tgtH = norm(h.inb + 180); track = true; ac.turnDir = 0; if (h.t > 60) { h.ph = 'turn2'; h.t = 0; } }
     else if (h.ph === 'turn2') { const hd = h.left ? -1 : 1; tgtH = norm(ac.hdg + 90*hd); ac.turnDir = hd; if (Math.abs(angDiff(ac.hdg, h.inb)) < 25) { h.ph = 'in'; h.laps = (h.laps || 0) + 1; } }

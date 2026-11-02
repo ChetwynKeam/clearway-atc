@@ -169,7 +169,13 @@ function planRoute(o, d, wdir = 250, rflHi = true){
     const a = out[i - 1], b = out[i], c = out[i + 1];
     if (Math.abs(angDiff(crs(a[0], a[1], b[0], b[1]), crs(b[0], b[1], c[0], c[1]))) > 150 && keep(i)) { out.splice(i, 1); i--; }
   }
+  unloop(out);
   return { pts: out, sid: sidName, star: starName, holdFix, rwyDep, rwyArr };
+}
+// a route that goes to a fix, to the next, and back to the first (a join and a procedure start side by side) drops the detour
+function unloop(pts){
+  for (let i = 2; i < pts.length; i++) if (pts[i][2] && pts[i][2] === pts[i - 2][2]) { pts.splice(i - 1, 2); i = Math.max(1, i - 2); }
+  return pts;
 }
 // the length of a route from index i (and the distance along it to each point)
 function routeLen(pts){ let d = 0; const cum = [0]; for (let i = 1; i < pts.length; i++) { d += gcNM(pts[i - 1], pts[i]); cum.push(d); } return { total: d, cum }; }
@@ -313,10 +319,15 @@ function routeOnward(la, lo, trk, arr){
     const rw = rwyFor(arr, STARS[arr], S.wdir), list = STARS[arr].filter(r => r[0] === rw && procPts(r).length);
     const goals = list.map(r => { const p = procPts(r); return [p[0], procLen(p.slice(1), FIXP[p[0]])*1.05, r]; });
     if (nm(la, lo, D[0], D[1]) < 50) return [here, [D[0], D[1], arr]];
-    via = awyRoute([la, lo], D, starts, goals.map(g => [g[0], g[1]]), true);
-    const g = via && goals.find(x => x[0] === via[via.length - 1]);
-    if (g) for (const n of procPts(g[2]).slice(1)) { if (/^(CF|FI|FF)/.test(n)) break; tail.push([FIXP[n][0], FIXP[n][1], n]); }
-    tail.push([D[0], D[1], arr]);
+    const res = awySearch([la, lo], D, starts, goals, true);
+    via = res && res.fixes;
+    // the STAR's own points, then the final: the approach points of the procedure, else a straight-in final, to the threshold
+    if (via) {
+      let prev = via[via.length - 1], hasFin = false;
+      if (res.goal) for (const n of procPts(res.goal)) { if (n === prev) continue; tail.push([FIXP[n][0], FIXP[n][1], n]); prev = n; if (/^(CF|FI|FF)/.test(n)) hasFin = true; }
+      const R = RWYS[arr] && RWYS[arr][rw], F = R && finalPts(arr, rw, tail.length ? tail[tail.length - 1] : FIXP[via[via.length - 1]], hasFin);
+      if (F) { F[F.length - 1][2] = arr; tail.push(...F); } else tail.push([D[0], D[1], arr]);
+    }
   } else {
     const far = D || moveLL(la, lo, trk, 900), edge = inMap(far) ? far : edgeOf(far, [la, lo]);
     if (!edge) return null;
@@ -324,7 +335,7 @@ function routeOnward(la, lo, trk, arr){
     tail.push(D ? [D[0], D[1], arr] : [far[0], far[1], null]);
   }
   if (!via) return null;
-  return [here, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), ...tail];
+  return unloop([here, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), ...tail]);
 }
 // back: from its origin (its SID, airways) to where it is now
 function routeBack(la, lo, trk, dep){

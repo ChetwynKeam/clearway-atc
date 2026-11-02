@@ -97,6 +97,34 @@ function drawAirways(){
   }
   cx.restore();
 }
+// the SIDs (amber) and STARs (blue) of the airports in view, for the runway in use: the published lines as they are flown,
+// the corners as fly-by arcs, each named at its far end (a SID at the fix it leaves on, a STAR at the fix it starts at)
+function drawProcs(){
+  if (!UI.proc || V.scale < 1.2) return;
+  // zoomed out only the selected flight's airports; from about 6 px a mile every airport in view
+  const sel = S.sel && S.acs.includes(S.sel) ? [S.sel.dep, S.sel.arr] : [];
+  const R = AW.turnRadius(240, 25);
+  cx.save(); cx.lineJoin = cx.lineCap = 'round'; cx.font = `600 10px ${FONT_D}`;
+  for (const ic of Object.keys(AREA.ap)) {
+    const A = AREA.ap[ic]; if (!inView(A[0], A[1], 300) || (!SIDS[ic] && !STARS[ic])) continue; if (V.scale < 6 && !sel.includes(ic)) continue;
+    for (const [kind, list] of [['SID', SIDS[ic]], ['STAR', STARS[ic]]]) {
+      if (!list) continue; const rw = rwyFor(ic, list, S.wdir); const col = kind === 'SID' ? '#e9a23b' : '#4fb3ff';
+      const seen = new Set();
+      for (const r of list) {
+        if (r[0] !== rw) continue; const names = procPts(r); if (names.length < 2) continue;
+        let pts = names.map(n => [FIXP[n][0], FIXP[n][1], n]);
+        if (kind === 'SID') { const T = RWYS[ic] && RWYS[ic][rw]; if (T) pts = [[T[0], T[1], null], [T[3], T[4], null], ...pts]; else pts = [[A[0], A[1], null], ...pts]; }
+        else { const T = RWYS[ic] && RWYS[ic][rw]; if (T && !pts.some(p => /^(CF|FI|FF)/.test(p[2]))) pts = [...pts, [T[0], T[1], null]]; }
+        const path = AW.flyPath(pts, R);
+        cx.strokeStyle = col; cx.globalAlpha = .75; cx.lineWidth = 1.4; cx.setLineDash(kind === 'SID' ? [] : [6, 4]); cx.beginPath();
+        path.forEach((q, i) => { const [X, Y] = SXY(q[0], q[1]); i ? cx.lineTo(X, Y) : cx.moveTo(X, Y); }); cx.stroke(); cx.setLineDash([]);
+        const e = kind === 'SID' ? pts[pts.length - 1] : pts[0]; if (seen.has(r[1])) continue; seen.add(r[1]);
+        const [X, Y] = SXY(e[0], e[1]); cx.globalAlpha = 1; cx.fillStyle = col; cx.fillText(r[1], X + 5, Y + (kind === 'SID' ? -5 : 11));
+      }
+    }
+  }
+  cx.restore();
+}
 function drawWeather(){
   cx.save();
   for (const cb of S.cbs) {
@@ -260,7 +288,7 @@ function draw(){
   cx.setTransform(DPR, 0, 0, DPR, 0, 0);
   cx.fillStyle = C.sea; cx.fillRect(0, 0, W, H);
   if (typeof drawImagery === 'function' && !TILE.failed) { drawImagery(); cx.fillStyle = C.wash; cx.fillRect(0, 0, W, H); }
-  drawNeighbours(); drawMine(); drawAirways(); drawWeather();
+  drawNeighbours(); drawMine(); drawAirways(); drawProcs(); drawWeather();
   if (UI.routes === 'all') for (const ac of S.acs) if (ac.mine && ac !== S.sel) drawSelRoute(ac, false);
   if (S.sel && UI.routes !== 'off' && S.acs.includes(S.sel)) drawSelRoute(S.sel, true);
   drawConflicts(); drawAircraft(); drawScale();
@@ -469,6 +497,7 @@ document.addEventListener('keydown', e => {
 $('tgPause').onclick = e => { S.paused = !S.paused; e.currentTarget.textContent = S.paused ? 'Resume' : 'Pause'; };
 $('tgSpeed').onclick = e => { S.speed = S.speed === 1 ? 2 : S.speed === 2 ? 4 : S.speed === 4 ? 8 : 1; e.currentTarget.textContent = S.speed + '×'; };
 document.querySelectorAll('[data-routes]').forEach(b => b.onclick = () => { UI.routes = b.dataset.routes; document.querySelectorAll('[data-routes]').forEach(x => x.classList.toggle('on', x === b)); });
+$('tgProc').onclick = e => { UI.proc = !UI.proc; e.currentTarget.classList.toggle('on', UI.proc); };
 $('tgAwy').onclick = e => { UI.awy = !UI.awy; e.currentTarget.classList.toggle('on', UI.awy); };
 $('tgVoice').onclick = e => { UI.voice = !UI.voice; e.currentTarget.classList.toggle('on', UI.voice); e.currentTarget.setAttribute('aria-pressed', UI.voice); if (!UI.voice && 'speechSynthesis' in window) speechSynthesis.cancel(); };
 $('tgFull').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); };

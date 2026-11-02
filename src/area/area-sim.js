@@ -104,7 +104,7 @@ function stepAc(ac, dt){
       const X = AW.xtk([ac.la, ac.lo], ac.legFrom, [p[0], p[1]]);
       if (X.len > 3 && d > 3 && X.atd > -1) {
         // aim at a point ahead on the line: the nearer to it, the shorter the look-ahead (never more than a 45° intercept)
-        const la_ = Math.max(2.5, ac.gs/3600*40), aim = AW.gcAt(ac.legFrom, [p[0], p[1]], Math.min(1, Math.max(0, (X.atd + la_)/X.len)));
+        const la_ = Math.min(X.len*0.4, Math.max(1.5, ac.gs/3600*25)), aim = AW.gcAt(ac.legFrom, [p[0], p[1]], Math.min(1, Math.max(0, (X.atd + la_)/X.len)));
         tgt = crs(ac.la, ac.lo, aim[0], aim[1]);
         if (Math.abs(angDiff(tgt, X.crs)) > 45) tgt = norm(X.crs + Math.sign(angDiff(X.crs, tgt))*45);
       } else tgt = b;
@@ -129,12 +129,18 @@ const turnRate = ac => clamp(1091*Math.tan(25*D2R)/Math.max(150, ac.tas), 0.7, 3
 function startHold(ac, H){
   ac.mode = 'HOLD'; ac.holdAt = null;
   const p = FIXP[H.fix] || [ac.la, ac.lo];
-  ac.hold = { fix: H.fix, c: [p[0], p[1]], inb: H.inb ?? ac.trk, left: !!H.left, ph: 'turn1', t: 0, efc: H.efc || null, since: S.t, laps: 0 };
+  const inb = H.inb ?? ac.trk, left = !!H.left, entry = AW.holdEntry(inb, left, ac.trk);
+  ac.hold = { fix: H.fix, c: [p[0], p[1]], inb, left, ph: entry === 'parallel' ? 'pout' : entry === 'teardrop' ? 'tout' : 'turn1', entry, t: 0, efc: H.efc || null, since: S.t, laps: 0 };
   emit('hold', ac);
 }
 function holdSteer(ac, dt){
   const h = ac.hold; h.t += dt; const leg = ac.alt > 14000 ? 90 : 60, dirn = h.left ? -1 : 1;
   if (h.ph === 'in') { const d = nm(ac.la, ac.lo, h.c[0], h.c[1]); if (d < 0.8) { h.ph = 'turn1'; h.t = 0; h.laps++; } return crs(ac.la, ac.lo, h.c[0], h.c[1]); }
+  // parallel entry: outbound on the parallel track, then back across to the inbound track; teardrop: outbound 30° to the hold side, then round onto it
+  if (h.ph === 'pout') { if (h.t > leg) { h.ph = 'pturn'; h.t = 0; } return norm(h.inb + 180); }
+  if (h.ph === 'pturn') { if (Math.abs(angDiff(ac.hdg, h.inb)) < 45) h.ph = 'in'; return norm(ac.hdg - 60*dirn); }
+  if (h.ph === 'tout') { if (h.t > leg) { h.ph = 'tturn'; h.t = 0; } return norm(h.inb + 180 - 30*dirn); }
+  if (h.ph === 'tturn') { if (Math.abs(angDiff(ac.hdg, h.inb)) < 45) h.ph = 'in'; return norm(ac.hdg + 60*dirn); }
   if (h.ph === 'turn1') { if (Math.abs(angDiff(ac.hdg, h.inb + 180)) < 10) { h.ph = 'out'; h.t = 0; } return norm(ac.hdg + 60*dirn); }
   if (h.ph === 'out') { if (h.t > leg) { h.ph = 'turn2'; h.t = 0; } return norm(h.inb + 180); }
   if (h.ph === 'turn2') { if (Math.abs(angDiff(ac.hdg, crs(ac.la, ac.lo, h.c[0], h.c[1]))) < 20) h.ph = 'in'; return norm(ac.hdg + 60*dirn); }

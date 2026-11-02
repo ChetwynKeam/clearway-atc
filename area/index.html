@@ -1420,6 +1420,7 @@ body .app.area #sel .lvrow [data-c="rfl"] { grid-column: span 2; }
     <div class="toolbar">
       <div class="seg" role="group" aria-label="Routes"><button data-routes="sel" class="on" title="Route ahead and track flown for the selected flight">Routes: selected</button><button data-routes="all" title="Routes ahead for all your flights">All</button><button data-routes="off">Off</button></div>
       <button id="tgAwy" class="on" title="Airways, points and airports">Airways</button>
+      <button id="tgProc" title="SIDs and STARs of the airports in view, for the runway in use (zoom in)">Procedures</button>
       <label class="flsel" title="Sector boundaries shown at this level">Sectors at <select id="viewFL"></select></label>
       <button id="tgDis" title="Delays, closures, restrictions, weather and emergencies">Disruptions</button>
     </div>
@@ -3559,6 +3560,11 @@ const AW = (() => {
     return out;
   }
 
+  // ── the way a hold is joined: 'direct', 'parallel' or 'teardrop' from the track the aircraft arrives on (the 70° rule) ──
+  function holdEntry(inb, left, trk){
+    const r = angDiff(inb, norm(trk + 180))*(left ? -1 : 1);
+    return r >= -110 && r <= 70 ? 'direct' : r > 70 && r <= 140 ? 'parallel' : 'teardrop';
+  }
   // ── the chart ──
   // v: { cx, P(la, lo) → [X, Y], W, H, dark, lvl: 'U' | 'L' | 'all', scale (px per NM), mine: Set of fix names to stress,
   //      label: bool, awyLabels: bool, detail: 0..2 }
@@ -3648,7 +3654,7 @@ const AW = (() => {
     }
     cx.restore();
   }
-  return { init, search, legBetween, airwayOf, joinFixes, edgeOf, inCover, flyPath, holdPath, turnRadius, turnLead, xtk, drawChart,
+  return { init, search, legBetween, airwayOf, joinFixes, edgeOf, inCover, flyPath, holdPath, holdEntry, turnRadius, turnLead, xtk, drawChart,
     gcNM, gcBrg, gcAt, dest, norm, angDiff, clamp,
     get ready(){ return READY; }, fix: n => FIX[n], fixes: () => FIX, airways: () => AWYS, adj: n => ADJ[n], nodes: () => NODES, segs: () => SEGS, aps: () => AP, rwy: ic => RWY[ic], rwys: () => RWY };
 })();
@@ -3824,7 +3830,13 @@ function planRoute(o, d, wdir = 250, rflHi = true){
     const a = out[i - 1], b = out[i], c = out[i + 1];
     if (Math.abs(angDiff(crs(a[0], a[1], b[0], b[1]), crs(b[0], b[1], c[0], c[1]))) > 150 && keep(i)) { out.splice(i, 1); i--; }
   }
+  unloop(out);
   return { pts: out, sid: sidName, star: starName, holdFix, rwyDep, rwyArr };
+}
+// a route that goes to a fix, to the next, and back to the first (a join and a procedure start side by side) drops the detour
+function unloop(pts){
+  for (let i = 2; i < pts.length; i++) if (pts[i][2] && pts[i][2] === pts[i - 2][2]) { pts.splice(i - 1, 2); i = Math.max(1, i - 2); }
+  return pts;
 }
 // the length of a route from index i (and the distance along it to each point)
 function routeLen(pts){ let d = 0; const cum = [0]; for (let i = 1; i < pts.length; i++) { d += gcNM(pts[i - 1], pts[i]); cum.push(d); } return { total: d, cum }; }
@@ -3968,10 +3980,15 @@ function routeOnward(la, lo, trk, arr){
     const rw = rwyFor(arr, STARS[arr], S.wdir), list = STARS[arr].filter(r => r[0] === rw && procPts(r).length);
     const goals = list.map(r => { const p = procPts(r); return [p[0], procLen(p.slice(1), FIXP[p[0]])*1.05, r]; });
     if (nm(la, lo, D[0], D[1]) < 50) return [here, [D[0], D[1], arr]];
-    via = awyRoute([la, lo], D, starts, goals.map(g => [g[0], g[1]]), true);
-    const g = via && goals.find(x => x[0] === via[via.length - 1]);
-    if (g) for (const n of procPts(g[2]).slice(1)) { if (/^(CF|FI|FF)/.test(n)) break; tail.push([FIXP[n][0], FIXP[n][1], n]); }
-    tail.push([D[0], D[1], arr]);
+    const res = awySearch([la, lo], D, starts, goals, true);
+    via = res && res.fixes;
+    // the STAR's own points, then the final: the approach points of the procedure, else a straight-in final, to the threshold
+    if (via) {
+      let prev = via[via.length - 1], hasFin = false;
+      if (res.goal) for (const n of procPts(res.goal)) { if (n === prev) continue; tail.push([FIXP[n][0], FIXP[n][1], n]); prev = n; if (/^(CF|FI|FF)/.test(n)) hasFin = true; }
+      const R = RWYS[arr] && RWYS[arr][rw], F = R && finalPts(arr, rw, tail.length ? tail[tail.length - 1] : FIXP[via[via.length - 1]], hasFin);
+      if (F) { F[F.length - 1][2] = arr; tail.push(...F); } else tail.push([D[0], D[1], arr]);
+    }
   } else {
     const far = D || moveLL(la, lo, trk, 900), edge = inMap(far) ? far : edgeOf(far, [la, lo]);
     if (!edge) return null;
@@ -3979,7 +3996,7 @@ function routeOnward(la, lo, trk, arr){
     tail.push(D ? [D[0], D[1], arr] : [far[0], far[1], null]);
   }
   if (!via) return null;
-  return [here, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), ...tail];
+  return unloop([here, ...via.map(n => [FIXP[n][0], FIXP[n][1], n]), ...tail]);
 }
 // back: from its origin (its SID, airways) to where it is now
 function routeBack(la, lo, trk, dep){
@@ -4342,7 +4359,7 @@ function stepAc(ac, dt){
       const X = AW.xtk([ac.la, ac.lo], ac.legFrom, [p[0], p[1]]);
       if (X.len > 3 && d > 3 && X.atd > -1) {
         // aim at a point ahead on the line: the nearer to it, the shorter the look-ahead (never more than a 45° intercept)
-        const la_ = Math.max(2.5, ac.gs/3600*40), aim = AW.gcAt(ac.legFrom, [p[0], p[1]], Math.min(1, Math.max(0, (X.atd + la_)/X.len)));
+        const la_ = Math.min(X.len*0.4, Math.max(1.5, ac.gs/3600*25)), aim = AW.gcAt(ac.legFrom, [p[0], p[1]], Math.min(1, Math.max(0, (X.atd + la_)/X.len)));
         tgt = crs(ac.la, ac.lo, aim[0], aim[1]);
         if (Math.abs(angDiff(tgt, X.crs)) > 45) tgt = norm(X.crs + Math.sign(angDiff(X.crs, tgt))*45);
       } else tgt = b;
@@ -4367,12 +4384,18 @@ const turnRate = ac => clamp(1091*Math.tan(25*D2R)/Math.max(150, ac.tas), 0.7, 3
 function startHold(ac, H){
   ac.mode = 'HOLD'; ac.holdAt = null;
   const p = FIXP[H.fix] || [ac.la, ac.lo];
-  ac.hold = { fix: H.fix, c: [p[0], p[1]], inb: H.inb ?? ac.trk, left: !!H.left, ph: 'turn1', t: 0, efc: H.efc || null, since: S.t, laps: 0 };
+  const inb = H.inb ?? ac.trk, left = !!H.left, entry = AW.holdEntry(inb, left, ac.trk);
+  ac.hold = { fix: H.fix, c: [p[0], p[1]], inb, left, ph: entry === 'parallel' ? 'pout' : entry === 'teardrop' ? 'tout' : 'turn1', entry, t: 0, efc: H.efc || null, since: S.t, laps: 0 };
   emit('hold', ac);
 }
 function holdSteer(ac, dt){
   const h = ac.hold; h.t += dt; const leg = ac.alt > 14000 ? 90 : 60, dirn = h.left ? -1 : 1;
   if (h.ph === 'in') { const d = nm(ac.la, ac.lo, h.c[0], h.c[1]); if (d < 0.8) { h.ph = 'turn1'; h.t = 0; h.laps++; } return crs(ac.la, ac.lo, h.c[0], h.c[1]); }
+  // parallel entry: outbound on the parallel track, then back across to the inbound track; teardrop: outbound 30° to the hold side, then round onto it
+  if (h.ph === 'pout') { if (h.t > leg) { h.ph = 'pturn'; h.t = 0; } return norm(h.inb + 180); }
+  if (h.ph === 'pturn') { if (Math.abs(angDiff(ac.hdg, h.inb)) < 45) h.ph = 'in'; return norm(ac.hdg - 60*dirn); }
+  if (h.ph === 'tout') { if (h.t > leg) { h.ph = 'tturn'; h.t = 0; } return norm(h.inb + 180 - 30*dirn); }
+  if (h.ph === 'tturn') { if (Math.abs(angDiff(ac.hdg, h.inb)) < 45) h.ph = 'in'; return norm(ac.hdg + 60*dirn); }
   if (h.ph === 'turn1') { if (Math.abs(angDiff(ac.hdg, h.inb + 180)) < 10) { h.ph = 'out'; h.t = 0; } return norm(ac.hdg + 60*dirn); }
   if (h.ph === 'out') { if (h.t > leg) { h.ph = 'turn2'; h.t = 0; } return norm(h.inb + 180); }
   if (h.ph === 'turn2') { if (Math.abs(angDiff(ac.hdg, crs(ac.la, ac.lo, h.c[0], h.c[1]))) < 20) h.ph = 'in'; return norm(ac.hdg + 60*dirn); }
@@ -4845,7 +4868,14 @@ function flown(F, tau){
   return Math.min(F.L, C + (F.L - C - Dd) + (tau - T2)/3600*vD);
 }
 const durOf = F => { const vC = F.fam === 'prop' ? 200 : 320, vD = F.fam === 'prop' ? 210 : 300; return (F.cl/vC + (F.L - F.cl - F.dl)/F.vc + F.dl/vD)*3600; };
-function altAt(F, s){ const e0 = 500, e1 = 1000; return Math.min(F.rfl, e0 + s*(F.rfl/F.cl), e1 + (F.L - s)*(F.rfl/F.dl)); }
+// the climb and descent profile: a SID climbs steeply at first (about 4000 ft by 10 NM, 6000 by 15) then settles to the
+// flight's own climb; the arrival comes down the STAR level steps and the 3° final: about 4200 ft at 12 NM and 600 ft + 300 ft a
+// mile inside it, never the straight line from top of descent that put every arrival too high near the airport
+function altAt(F, s){
+  const e0 = 500, e1 = 1000, d = F.L - s;
+  const up = Math.max(e0 + s*(F.rfl/F.cl), Math.min(6000, e0 + s*370)), arr = d <= 12 ? 600 + d*300 : d <= 45 ? 4200 + (d - 12)*150 : 9150 + (d - 45)*(F.rfl/F.dl);
+  return Math.min(F.rfl, up, Math.max(e1, Math.min(e1 + d*(F.rfl/F.dl), arr)));
+}
 // build a flight: its route and timing. kind ARR: tArr is when it lands; DEP and overflights: tOff is when it takes off
 function makePlan(cs, t, dep, arr, when, kind){
   const fam = typeFam(t), R = planRoute(dep, arr, S.wdir, fam !== 'prop'); if (!R || R.pts.length < 2) return null;
@@ -5306,6 +5336,34 @@ function drawAirways(){
   }
   cx.restore();
 }
+// the SIDs (amber) and STARs (blue) of the airports in view, for the runway in use: the published lines as they are flown,
+// the corners as fly-by arcs, each named at its far end (a SID at the fix it leaves on, a STAR at the fix it starts at)
+function drawProcs(){
+  if (!UI.proc || V.scale < 1.2) return;
+  // zoomed out only the selected flight's airports; from about 6 px a mile every airport in view
+  const sel = S.sel && S.acs.includes(S.sel) ? [S.sel.dep, S.sel.arr] : [];
+  const R = AW.turnRadius(240, 25);
+  cx.save(); cx.lineJoin = cx.lineCap = 'round'; cx.font = `600 10px ${FONT_D}`;
+  for (const ic of Object.keys(AREA.ap)) {
+    const A = AREA.ap[ic]; if (!inView(A[0], A[1], 300) || (!SIDS[ic] && !STARS[ic])) continue; if (V.scale < 6 && !sel.includes(ic)) continue;
+    for (const [kind, list] of [['SID', SIDS[ic]], ['STAR', STARS[ic]]]) {
+      if (!list) continue; const rw = rwyFor(ic, list, S.wdir); const col = kind === 'SID' ? '#e9a23b' : '#4fb3ff';
+      const seen = new Set();
+      for (const r of list) {
+        if (r[0] !== rw) continue; const names = procPts(r); if (names.length < 2) continue;
+        let pts = names.map(n => [FIXP[n][0], FIXP[n][1], n]);
+        if (kind === 'SID') { const T = RWYS[ic] && RWYS[ic][rw]; if (T) pts = [[T[0], T[1], null], [T[3], T[4], null], ...pts]; else pts = [[A[0], A[1], null], ...pts]; }
+        else { const T = RWYS[ic] && RWYS[ic][rw]; if (T && !pts.some(p => /^(CF|FI|FF)/.test(p[2]))) pts = [...pts, [T[0], T[1], null]]; }
+        const path = AW.flyPath(pts, R);
+        cx.strokeStyle = col; cx.globalAlpha = .75; cx.lineWidth = 1.4; cx.setLineDash(kind === 'SID' ? [] : [6, 4]); cx.beginPath();
+        path.forEach((q, i) => { const [X, Y] = SXY(q[0], q[1]); i ? cx.lineTo(X, Y) : cx.moveTo(X, Y); }); cx.stroke(); cx.setLineDash([]);
+        const e = kind === 'SID' ? pts[pts.length - 1] : pts[0]; if (seen.has(r[1])) continue; seen.add(r[1]);
+        const [X, Y] = SXY(e[0], e[1]); cx.globalAlpha = 1; cx.fillStyle = col; cx.fillText(r[1], X + 5, Y + (kind === 'SID' ? -5 : 11));
+      }
+    }
+  }
+  cx.restore();
+}
 function drawWeather(){
   cx.save();
   for (const cb of S.cbs) {
@@ -5469,7 +5527,7 @@ function draw(){
   cx.setTransform(DPR, 0, 0, DPR, 0, 0);
   cx.fillStyle = C.sea; cx.fillRect(0, 0, W, H);
   if (typeof drawImagery === 'function' && !TILE.failed) { drawImagery(); cx.fillStyle = C.wash; cx.fillRect(0, 0, W, H); }
-  drawNeighbours(); drawMine(); drawAirways(); drawWeather();
+  drawNeighbours(); drawMine(); drawAirways(); drawProcs(); drawWeather();
   if (UI.routes === 'all') for (const ac of S.acs) if (ac.mine && ac !== S.sel) drawSelRoute(ac, false);
   if (S.sel && UI.routes !== 'off' && S.acs.includes(S.sel)) drawSelRoute(S.sel, true);
   drawConflicts(); drawAircraft(); drawScale();
@@ -5678,6 +5736,7 @@ document.addEventListener('keydown', e => {
 $('tgPause').onclick = e => { S.paused = !S.paused; e.currentTarget.textContent = S.paused ? 'Resume' : 'Pause'; };
 $('tgSpeed').onclick = e => { S.speed = S.speed === 1 ? 2 : S.speed === 2 ? 4 : S.speed === 4 ? 8 : 1; e.currentTarget.textContent = S.speed + '×'; };
 document.querySelectorAll('[data-routes]').forEach(b => b.onclick = () => { UI.routes = b.dataset.routes; document.querySelectorAll('[data-routes]').forEach(x => x.classList.toggle('on', x === b)); });
+$('tgProc').onclick = e => { UI.proc = !UI.proc; e.currentTarget.classList.toggle('on', UI.proc); };
 $('tgAwy').onclick = e => { UI.awy = !UI.awy; e.currentTarget.classList.toggle('on', UI.awy); };
 $('tgVoice').onclick = e => { UI.voice = !UI.voice; e.currentTarget.classList.toggle('on', UI.voice); e.currentTarget.setAttribute('aria-pressed', UI.voice); if (!UI.voice && 'speechSynthesis' in window) speechSynthesis.cancel(); };
 $('tgFull').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); };

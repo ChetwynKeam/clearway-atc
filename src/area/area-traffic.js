@@ -50,7 +50,14 @@ function flown(F, tau){
   return Math.min(F.L, C + (F.L - C - Dd) + (tau - T2)/3600*vD);
 }
 const durOf = F => { const vC = F.fam === 'prop' ? 200 : 320, vD = F.fam === 'prop' ? 210 : 300; return (F.cl/vC + (F.L - F.cl - F.dl)/F.vc + F.dl/vD)*3600; };
-function altAt(F, s){ const e0 = 500, e1 = 1000; return Math.min(F.rfl, e0 + s*(F.rfl/F.cl), e1 + (F.L - s)*(F.rfl/F.dl)); }
+// the climb and descent profile: a SID climbs steeply at first (about 4000 ft by 10 NM, 6000 by 15) then settles to the
+// flight's own climb; the arrival comes down the STAR level steps and the 3° final: about 4200 ft at 12 NM and 600 ft + 300 ft a
+// mile inside it, never the straight line from top of descent that put every arrival too high near the airport
+function altAt(F, s){
+  const e0 = 500, e1 = 1000, d = F.L - s;
+  const up = Math.max(e0 + s*(F.rfl/F.cl), Math.min(6000, e0 + s*370)), arr = d <= 12 ? 600 + d*300 : d <= 45 ? 4200 + (d - 12)*150 : 9150 + (d - 45)*(F.rfl/F.dl);
+  return Math.min(F.rfl, up, Math.max(e1, Math.min(e1 + d*(F.rfl/F.dl), arr)));
+}
 // build a flight: its route and timing. kind ARR: tArr is when it lands; DEP and overflights: tOff is when it takes off
 function makePlan(cs, t, dep, arr, when, kind){
   const fam = typeFam(t), R = planRoute(dep, arr, S.wdir, fam !== 'prop'); if (!R || R.pts.length < 2) return null;
