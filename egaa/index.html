@@ -5464,6 +5464,7 @@ function drawBelfast(){
     }
     { const seen = new Set(), leads = [], drawnEnd = new Set();
       for (const k in FIL) { const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0;
+        if (HOLDS[k].on === '1735') continue;   // 17/35 is taxi and crossing only: no line-up lines onto it
         for (const sd of ['W', 'E']) { const f = FIL[k][sd]; if (!f.length) continue; const key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
           // at a runway end the line-up lines only point the way the runway points: a curve that would turn the aircraft back towards the end is left off
           if (HOLDS[k].end) { const inw = HOLDS[k].m < Rr.len/2 ? 1 : -1; if (Math.sign(f[0][0] - f[f.length - 1][0]) !== inw) continue;
