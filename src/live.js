@@ -40,6 +40,7 @@ function liveToday(now = Date.now()){
   const conv = (r, kind) => {
     const cs = csOf(r.flight), t = hm(r.expected && /^\d\d:\d\d$/.test(r.expected) ? r.expected : r.sched) - off, sch = hm(r.sched) - off;
     const st = (r.status || '').trim(), stl = st.toLowerCase();
+    if (r.air === 'C' && APT.markCity) APT.markCity(cs);   // two airfields in one feed (Belfast): the row says which one
     return { cs, flight: r.flight, t: typeOf(cs), ap: placeOf(r.place), place: r.place, tm: t, sched: sch, kind,
       real: st + (r.expected && !/landed|departed|airborne|arrived/i.test(st) ? ' ' + r.expected + ' local' : ''),
       cancelled: /cancel/.test(stl), done: kind === 'ARR' ? /landed|arrived|on stand|on blocks/.test(stl) : /departed|airborne|closed/.test(stl), rel: t - nowUtc };

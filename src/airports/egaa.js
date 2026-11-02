@@ -64,10 +64,10 @@ const EGAA = (() => {
     BELZU: P('543942N', '0061348W'),                                // the TMA transition point (official en-route coordinates; replaces the BEL VOR)
     BLACA: P('545300N', '0050932W'),                               // P600: the departure route runs out BEL R075 to BLACA (VATSIM UK / IVAO)
     RINGA: P('542354N', '0053416W'), NELBO: P('542924N', '0051810W'),   // L10, between IOM and BEL
-    REMSI: from(_BEL, _toIOM + 25, 110), MASOP: from(_BEL, _toIOM + 18, 78),                      // UP6 south-east of IOM
+    REMSI: P('535737N', '0034932W'), MASOP: P('540921N', '0042115W'),                      // UP6 south-east of IOM
     NEVRI: P('540406N', '0061612W'), ABSUN: P('541732N', '0061518W'),  // N34 from the south (Dublin)
     // departure routes (VATSIM UK): S via P620 LISBO-NUMPI-NIMAT; SE via L10 LISBO-PEPOD-IOM (FL90+) or LISBO-RINGA-SLYDA-IOM (FL70-)
-    MAGEE: from(_BEL, 71, 23),                               // City's arrival hold and ILS 22 entry: BEL R071 D23 (plate 500839), 2,800 ft
+    MAGEE: P('544730N', '0053630W'),                               // City's arrival hold and ILS 22 entry: BEL R071 D23 (plate 500839), 2,800 ft
     LISBO: P('543130N', '0060524W'),                               // near Lisburn: every south and south-east departure crosses it at or above 4,000 ft
     NUMPI: P('540840N', '0053536W'), NIMAT: P('535754N', '0054432W'),
     PEPOD: P('541616N', '0053409W'), SLYDA: P('541204N', '0050515W'),

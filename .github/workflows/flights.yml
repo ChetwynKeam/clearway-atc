@@ -9,6 +9,7 @@ name: Refresh airport flights
 # Manchester (avionio.com's MAN boards, ten pages each way) as egcc/flights.json,
 # London Heathrow (avionio.com's LHR boards, fourteen pages each way) as egll/flights.json,
 # Bristol (avionio.com's BRS boards, six pages each way) as eggd/flights.json,
+# Belfast International and City (avionio.com's BFS and BHD boards, merged with an airfield tag per row) as egaa/flights.json,
 # Sydney (avionio.com's SYD boards, fourteen pages each way) as yssy/flights.json.
 on:
   schedule:
@@ -112,6 +113,19 @@ jobs:
           [ -n "$A" ] && [ -n "$D" ] || exit 0
           python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/eggd.json Europe/London || exit 0
           python3 -c "import json,sys; d=json.load(open('/tmp/eggd.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p eggd && cp /tmp/eggd.json eggd/flights.json || echo "no Bristol flights parsed"
+      - name: Fetch Belfast's flight information
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"
+          for AP in bfs bhd; do A=""; D=""
+            for P in 0 1 2 3; do
+              curl -sSL --compressed -m 30 -A "$UA" -o /tmp/${AP}_a$P.html "https://www.avionio.com/en/airport/$AP/arrivals?page=$P" && A="$A,/tmp/${AP}_a$P.html"
+              curl -sSL --compressed -m 30 -A "$UA" -o /tmp/${AP}_d$P.html "https://www.avionio.com/en/airport/$AP/departures?page=$P" && D="$D,/tmp/${AP}_d$P.html"
+            done
+            [ -n "$A" ] && [ -n "$D" ] || exit 0
+            python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/$AP.json Europe/London || exit 0
+          done
+          python3 tools/belfast_flights_merge.py /tmp/bfs.json /tmp/bhd.json /tmp/egaa.json || exit 0
+          python3 -c "import json,sys; d=json.load(open('/tmp/egaa.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p egaa && cp /tmp/egaa.json egaa/flights.json || echo "no Belfast flights parsed"
       - name: Fetch Sydney's flight information
         run: |
           UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; A=""; D=""
@@ -125,6 +139,6 @@ jobs:
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json egkk/flights.json lemd/flights.json egcc/flights.json egll/flights.json eggd/flights.json yssy/flights.json; do [ -f "$f" ] && git add "$f"; done; true
+          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json egkk/flights.json lemd/flights.json egcc/flights.json egll/flights.json eggd/flights.json egaa/flights.json yssy/flights.json; do [ -f "$f" ] && git add "$f"; done; true
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main
