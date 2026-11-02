@@ -9992,7 +9992,7 @@ function vgBuild(){
   VD.nodes.forEach((q, i) => vgAdd('r:' + i, VP(q), true));
   for (const [a, b] of VD.edges) vgLink('r:' + a, 'r:' + b, 'r');
   // the taxiways (never the runway itself): a vehicle drives along their edge where the roads don't reach
-  for (const id in GN) if (id[0] !== 'R') vgAdd('t:' + id, GN[id].p, false);
+  for (const id in GN) if (id[0] !== 'R' && GN[id].adj.length) vgAdd('t:' + id, GN[id].p, false);   // (a node left with no taxiway is not somewhere to drive)
   for (const e of GE) if (VG['t:' + e.a] && VG['t:' + e.b] && !crossesRwy(GN[e.a].p, GN[e.b].p)) vgLink('t:' + e.a, 't:' + e.b, 't');
   // across a runway where a taxiway crosses it: from the taxiway node one side, over the runway's own nodes, to the
   // taxiway node the other side (only ever driven with the tower's clearance)
@@ -10195,8 +10195,12 @@ function vehBases(){
   const terms = baseNodes(VD.terms);
   // no terminal faces in the map: the road nodes nearest the middle of the contact stands
   if (!terms.length && STANDS.length) {
-    const c = STANDS.filter(s => s.area === 'civil'), L = c.length ? c : STANDS, m = L.reduce((a, s) => [a[0] + s.p[0]/L.length, a[1] + s.p[1]/L.length], [0, 0]);
-    const n = vgNear(m, 800, N => N.road) || vgNear(m, 800); if (n) terms.push(n);
+    const c = STANDS.filter(s => s.area === 'civil'), A = c.length ? c : STANDS;
+    // one base per terminal where an airport has two (Belfast: Aldergrove and City), not one between them
+    for (const t of [...new Set(A.map(s => s.term || ''))]) {
+      const L = A.filter(s => (s.term || '') === t), m = L.reduce((a, s) => [a[0] + s.p[0]/L.length, a[1] + s.p[1]/L.length], [0, 0]);
+      const n = vgNear(m, 800, N => N.road) || vgNear(m, 800); if (n && !terms.includes(n)) terms.push(n);
+    }
   }
   VBASE.hand = terms;
   VBASE.fire = baseNodes(VD.fire); VBASE.fuel = baseNodes(VD.fuel); VBASE.cater = baseNodes(VD.catering); VBASE.maint = baseNodes(VD.hangars);
@@ -10663,7 +10667,7 @@ function rcEntry(R, from){
 // OPS1 out to the runway: rw (an end designator), why (log text), auto (the runway is closed: no clearance needed)
 function opsCheck(rw, why, auto){
   if (S.rc) { if (auto) S.rc.auto = true; return S.rc; }
-  const R = rwyOf(rw || S.rwy), base = baseFor('ops', [0, 0]); if (!base) return null;
+  const R = rwyOf(rw || S.rwy), base = baseFor('ops', R.rm(rLen(R)/2, 0)); if (!base) return null;
   const hp = rcEntry(R, base); if (!hp) return null;
   const v = newVeh('ops', VG[base].p, 0, { cs: 'OPS1' });
   const r = vroute(base, 't:' + HOLDS[hp].node, true);
@@ -10777,7 +10781,13 @@ function stepRadio(){
   const C = S.rc;
   if (S.rtow && S.running) {   // not in the Academy exercises
     if (S.rcNext == null) S.rcNext = S.t + rnd(12, 30)*60;
-    if (!C && S.t >= S.rcNext) { S.rcNext = S.t + rnd(70, 130)*60; if (!rwyBlocked(S.rwy)) opsCheck(S.rwy, 'routine runway inspection'); }
+    if (!C && S.t >= S.rcNext) {
+      S.rcNext = S.t + rnd(70, 130)*60;
+      // each runway in use in turn, not always the same one
+      const use = typeof rwysInUse === 'function' ? rwysInUse() : [S.rwy]; let rw = S.rwy;
+      if (use.length > 1) rw = use.find(r => rwyOf(r).id !== S.rcLastRw) || use[0];
+      if (!rwyBlocked(rw)) { S.rcLastRw = rwyOf(rw).id; opsCheck(rw, 'routine runway inspection'); }
+    }
   }
   if (C && C.st === 'READY' && C.asked != null && S.t - C.asked > 240) { C.asked = S.t; vcall(C.v, `still holding at ${hpWords(C.hp)} for the runway inspection`); }
   if (C && C.st === 'ON') for (const ac of S.acs) {
@@ -12857,6 +12867,8 @@ function aiDepart(ac){
   // the departure is away. Higher up it passes over, and the departure is stopped below it on the climb if need be
   const dh = parseInt(rw, 10)*10, over = S.acs.find(o => o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.handed && o.alt < ELEV + 3000 && dist(o.x, o.y, ac.x, ac.y) < (o.app ? 6 + (o.gs || 180)*depSecs(ac)/3600 : 3) && Math.abs(((o.hdg - dh + 540) % 360) - 180) > 90);
   if (over) return why(`${over.cs} passing overhead`);
+  // the inspection car is waiting at a holding point for this runway: the departures hold, so there is a gap for it
+  { const C = S.rc; if (!lined && C && C.st === 'READY' && C.v.need && C.R === R && S.t - (C.asked || S.t) < 420) return why('holding for the runway inspection'); }
   const a = arrNear(R, ac), need = clearS(ac);
   const last = S.aiDep && S.aiDep[R.id], gap = last ? (last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
   // a departure lined up behind this one (further back up the runway: multiple line-ups) doesn't stop it going
@@ -12978,7 +12990,7 @@ function aiTowerVehicles(){
     const R = v.req.R; if (rwyClearFor(R) && !rwyBusy(R) && arrNear(R).eta > 120) aiVeh('TWR', () => vehApprove(v));
   }
   const C = S.rc;
-  if (C && C.st === 'READY' && C.v.need && aiDue(C.v, 'enter' + C.t, 5, 10)) { if (!rwyBusy(C.R) && arrNear(C.R).eta > 300) aiVeh('TWR', () => command('OPS1 ENTER')); }
+  if (C && C.st === 'READY' && C.v.need && aiDue(C.v, 'enter' + C.t, 5, 10)) { if (!rwyBusy(C.R) && arrNear(C.R).eta > (S.t - (C.asked || S.t) > 150 ? 210 : 300)) aiVeh('TWR', () => command('OPS1 ENTER')); }
   if (C && C.st === 'ON' && arrNear(C.R).nm < 4 && aiDue(C.v, 'vac' + C.t, 1, 3)) aiVeh('TWR', () => command('OPS1 VACATE'));
 }
 function aiGroundVehicles(){
@@ -13368,6 +13380,18 @@ function aiDeparture(ac){
   }
   // a hold on or near its way out (Heathrow's Detling departures pass BIG): stopped a level under the lowest one there
   const cap = depHoldCap(ac);
+  // a hold on its way: rather than stay low in a straight line right through it, turned away round the side of it (about a right angle
+  // off the line to the hold) until it is no longer ahead of it, and then the climb is given as normal
+  if (cap != null && ac.mode === 'NAV' && !ac.aiLev && !ac.aiAround && !ac.need && ac.alt > ELEV + 1800 && S.t >= (ac.aiNext || 0)) {
+    let near = null, nd = 1e9;
+    for (const o of S.acs) { if (o.kind !== 'ARR' || !o.airborne || o.mode !== 'HOLD' || o.app || lvlOf(o) < ac.alt - 900 || (o.hold && holdOnEntry(o.hold.name))) continue;
+      const c = o.hold && o.hold.c ? o.hold.c : [o.x, o.y], d = dist(...c, ac.x, ac.y); if (d < nd) { nd = d; near = c; } }
+    if (near && nd > 3.5) {
+      const b = brg(ac.x, ac.y, ...near), side = angDiff(ac.trk ?? ac.hdg, b) >= 0 ? -1 : 1, h = Math.round(norm(b + side*105));
+      if (aiDo('DEP', ac, `H${String(h || 360).padStart(3, '0')}`)) { ac.aiAround = { t: S.t, c: near }; ac.aiWhy = 'turned round the hold'; return; }
+    }
+  }
+  if (ac.aiAround && cap == null) { const A = ac.aiAround; ac.aiAround = null; ac.aiWhy = ''; if (S.t - A.t > 5) { aiDo('DEP', ac, `C${Math.round((ac.reqClimb ? climbTop() : sidTop(ac))/100)}`); return; } }
   if (cap != null && (ac.tgtAlt ?? ac.alt) > cap + 50) { ac.aiWhy = 'kept below the hold'; return aiDo('DEP', ac, `A${Math.round(cap/100)}`); }
   if (ac.aiLev) return;   // levelled off for traffic: the climb and the direct wait until it is clear
   if (n === 'Request climb' && cap != null) return;

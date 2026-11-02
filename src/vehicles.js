@@ -42,7 +42,7 @@ function vgBuild(){
   VD.nodes.forEach((q, i) => vgAdd('r:' + i, VP(q), true));
   for (const [a, b] of VD.edges) vgLink('r:' + a, 'r:' + b, 'r');
   // the taxiways (never the runway itself): a vehicle drives along their edge where the roads don't reach
-  for (const id in GN) if (id[0] !== 'R') vgAdd('t:' + id, GN[id].p, false);
+  for (const id in GN) if (id[0] !== 'R' && GN[id].adj.length) vgAdd('t:' + id, GN[id].p, false);   // (a node left with no taxiway is not somewhere to drive)
   for (const e of GE) if (VG['t:' + e.a] && VG['t:' + e.b] && !crossesRwy(GN[e.a].p, GN[e.b].p)) vgLink('t:' + e.a, 't:' + e.b, 't');
   // across a runway where a taxiway crosses it: from the taxiway node one side, over the runway's own nodes, to the
   // taxiway node the other side (only ever driven with the tower's clearance)
@@ -245,8 +245,12 @@ function vehBases(){
   const terms = baseNodes(VD.terms);
   // no terminal faces in the map: the road nodes nearest the middle of the contact stands
   if (!terms.length && STANDS.length) {
-    const c = STANDS.filter(s => s.area === 'civil'), L = c.length ? c : STANDS, m = L.reduce((a, s) => [a[0] + s.p[0]/L.length, a[1] + s.p[1]/L.length], [0, 0]);
-    const n = vgNear(m, 800, N => N.road) || vgNear(m, 800); if (n) terms.push(n);
+    const c = STANDS.filter(s => s.area === 'civil'), A = c.length ? c : STANDS;
+    // one base per terminal where an airport has two (Belfast: Aldergrove and City), not one between them
+    for (const t of [...new Set(A.map(s => s.term || ''))]) {
+      const L = A.filter(s => (s.term || '') === t), m = L.reduce((a, s) => [a[0] + s.p[0]/L.length, a[1] + s.p[1]/L.length], [0, 0]);
+      const n = vgNear(m, 800, N => N.road) || vgNear(m, 800); if (n && !terms.includes(n)) terms.push(n);
+    }
   }
   VBASE.hand = terms;
   VBASE.fire = baseNodes(VD.fire); VBASE.fuel = baseNodes(VD.fuel); VBASE.cater = baseNodes(VD.catering); VBASE.maint = baseNodes(VD.hangars);
@@ -713,7 +717,7 @@ function rcEntry(R, from){
 // OPS1 out to the runway: rw (an end designator), why (log text), auto (the runway is closed: no clearance needed)
 function opsCheck(rw, why, auto){
   if (S.rc) { if (auto) S.rc.auto = true; return S.rc; }
-  const R = rwyOf(rw || S.rwy), base = baseFor('ops', [0, 0]); if (!base) return null;
+  const R = rwyOf(rw || S.rwy), base = baseFor('ops', R.rm(rLen(R)/2, 0)); if (!base) return null;
   const hp = rcEntry(R, base); if (!hp) return null;
   const v = newVeh('ops', VG[base].p, 0, { cs: 'OPS1' });
   const r = vroute(base, 't:' + HOLDS[hp].node, true);
@@ -827,7 +831,13 @@ function stepRadio(){
   const C = S.rc;
   if (S.rtow && S.running) {   // not in the Academy exercises
     if (S.rcNext == null) S.rcNext = S.t + rnd(12, 30)*60;
-    if (!C && S.t >= S.rcNext) { S.rcNext = S.t + rnd(70, 130)*60; if (!rwyBlocked(S.rwy)) opsCheck(S.rwy, 'routine runway inspection'); }
+    if (!C && S.t >= S.rcNext) {
+      S.rcNext = S.t + rnd(70, 130)*60;
+      // each runway in use in turn, not always the same one
+      const use = typeof rwysInUse === 'function' ? rwysInUse() : [S.rwy]; let rw = S.rwy;
+      if (use.length > 1) rw = use.find(r => rwyOf(r).id !== S.rcLastRw) || use[0];
+      if (!rwyBlocked(rw)) { S.rcLastRw = rwyOf(rw).id; opsCheck(rw, 'routine runway inspection'); }
+    }
   }
   if (C && C.st === 'READY' && C.asked != null && S.t - C.asked > 240) { C.asked = S.t; vcall(C.v, `still holding at ${hpWords(C.hp)} for the runway inspection`); }
   if (C && C.st === 'ON') for (const ac of S.acs) {
