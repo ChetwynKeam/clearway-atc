@@ -114,6 +114,8 @@ const emit = (ev, data) => { for (const f of S.listeners) try { f(ev, data); } c
 // the departure runway: the runway in use, unless the airport departs the other way (Innsbruck lands 26, departs 08).
 // Airports with two departure runways at once (Madrid) pick one per aircraft (APT.depRwyOf), and two landing runways
 // (APT.landRwyOf): pass the aircraft where there is one.
+// the field elevation an aircraft stands at: one value, except where two airfields share a session (Belfast)
+const gElev = ac => (APT.elevOf && APT.elevOf(ac)) ?? ELEV;
 const depRw = ac => (ac && APT.depRwyOf && APT.depRwyOf(ac)) || S.depRwy || S.rwy;
 // a parallel runway: 27L for 27R (another pavement with an approach of its own), or null
 const parallelEnd = rw => { const m = /^(\d\d)([LRC])$/.exec(rw || ''); if (!m) return null; for (const s of 'LRC') { const p = m[1] + s; if (p !== rw && FINAL[p] && rwyOf(p).id !== rwyOf(rw).id) return p; } return null; };
@@ -121,6 +123,8 @@ const parallelEnd = rw => { const m = /^(\d\d)([LRC])$/.exec(rw || ''); if (!m) 
 const openRw = rw => { const B = S.emg && S.emg.rwyBlock; if (!B || B.id == null || !rw || rwyOf(rw).id !== B.id) return rw; const p = parallelEnd(rw); return p || rw; };
 const baseLandRw = ac => (ac && ac.app) || openRw((ac && APT.landRwyOf && APT.landRwyOf(ac)) || S.rwy);
 // (an AI Approach arrival due just after a MAYDAY expects the parallel: the MAYDAY's runway closes after it, ai.js)
+// the runway key of an aircraft's arrival route: its own landing runway at an airport with two airfields (Belfast), else the flow's
+const arrKey = o => (APT.arrRoute && o && APT.arrRoute(o)) || S.rwy;
 const landRw = ac => { const rw = baseLandRw(ac); return ac && !ac.app && typeof mayRw === 'function' ? mayRw(ac, rw) : rw; };
 // ── runways. A one-runway airport is described by its profile's globals (rm, mOf, offOf, RU, RW_LO/RW_HI, TURN_W/E);
 // an airport with several runways (New York JFK) lists them in APT.runways, each with its own frame along the runway
@@ -314,7 +318,7 @@ const needRel = ac => !APT.needRel || APT.needRel(ac);
 // the altitude a SID climbs to (Gatwick: each SID's own stop altitude), otherwise the airport's initial climb
 const sidTop = ac => APT.sidAlt && ac.sid ? APT.sidAlt(ac) : APT.initClimb;
 function requestRelease(ac){
-  const who = relUnit(ac), sid = sidName(ac.gate, depRw(ac));
+  const who = relUnit(ac), sid = sidName(ac.gate, depRw(ac), ac);
   ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
   coord(`${who}, ${APT.coordName}, request release ${ac.cs}, ${ac.t} to ${ac.d}, ${sid}, runway ${depRw(ac)}`, APT.coordName.toUpperCase());
 }
@@ -358,7 +362,7 @@ const PRE_NM = 35, PRE_LEAD = 6.5*60;
 const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + tzOffH(S.start + S.t*1000)) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
-  const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][S.rwy][0]];
+  const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][arrKey(f)][0]];
   const left = f.m*60 - S.t;
   if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
     const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
@@ -383,10 +387,10 @@ function spawnArrival(f){
   return ac;
 }
 function makeInbound(ac, keepAlt){
-  const first = WP[ARR_ROUTE[ac.gate][S.rwy][0]];
+  const first = WP[ARR_ROUTE[ac.gate][arrKey(ac)][0]];
   ac.tgtAlt = ac.cleared = keepAlt ? Math.round(ac.alt/100)*100 : APT.inboundAlt(ac.gate); ac.freq = 'RAD';
   ac.state = 'INBOUND';
-  ac.route = ARR_ROUTE[ac.gate][S.rwy].slice();
+  ac.route = ARR_ROUTE[ac.gate][arrKey(ac)].slice();
   // handed over at (or just short of) the route's first fix: that fix is behind it now, so it flies on to the next one
   // rather than turning round for it (a heading of 000 when it sits on the fix itself, then a loop back)
   while (ac.route.length > 1 && WP[ac.route[0]] && dist(ac.x, ac.y, ...WP[ac.route[0]].p) < 2) ac.route.shift();
@@ -448,7 +452,7 @@ function spawnDeparture(f){
   if (!st) return null;
   st.occ = ac; ac.stand = st;
   ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
-  ac.ground = true; ac.alt = ELEV; ac.state = 'PARKED';
+  ac.ground = true; ac.alt = gElev(ac); ac.state = 'PARKED';
   ac.reqAt = S.t + (f.m === 0 ? 8 : rnd(10, 40));
   S.acs.push(ac);
   emit('spawn', ac);
@@ -458,7 +462,7 @@ const isBiz = ac => ac.perf.wake === 'L' || ac.t === 'GLF6' || ac.t === 'C56X';
 // an aircraft already on the ground when the session opens. Airliners with a long wait sit on a remote stand (south or
 // north apron) and are towed to a terminal stand about 35 minutes before departure for the turnaround.
 function spawnResident(f){
-  const ac = new Aircraft(f); ac.freq = 'TWR'; ac.ground = true; ac.alt = ELEV;
+  const ac = new Aircraft(f); ac.freq = 'TWR'; ac.ground = true; ac.alt = gElev(ac);
   const wait = f.depM == null ? Infinity : f.depM;
   const hg = hangarFor(ac, f);
   if (hg) {   // stored in a hangar: towed out to a stand before it leaves
@@ -1271,7 +1275,7 @@ function commandRun(str){
   if (toks.length === 1 && /^(REMOVE|DELETE|DEL)$/.test(toks[0])) { removeAc(ac); return; }   // works on any flight, yours or not
   if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
   if (!aiCtx && aiOwns(ac)) takeOver(ac);   // an instruction to a flight the AI is working: you take it back
-  if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
+  if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][arrKey(ac)][0] ? 'the boundary' : 'entry'}.`); return; }
   if (!aiCtx) select(ac);
   const said = [], reads = [];
   const air = ac.airborne;
@@ -1406,7 +1410,7 @@ function commandRun(str){
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
       if (driveOut(ac)) { sys(`${APT.standWord === 'gate' ? 'Gate' : 'Stand'} ${ac.stand.id} is a taxi-in, taxi-out stand: no push back. Give ${ac.cs} its taxi (TAXI) and it taxis out forwards.`); continue; }
       const dir = pushDir(ac, toks[i+1]); if (dir) i++;
-      const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac));
+      const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac), ac);
       ac.pushPts = pushPath(ac, face);
       setPath(ac, ac.pushPts, 3, ['pushed'], { reverse: true });
       const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
@@ -1521,7 +1525,7 @@ function commandRun(str){
       if (needRel(ac)) { const R = ac.rel, who = relUnit(ac);
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : R && R.st === 'CXL' ? ': it was cancelled, request a new one with REL once departures resume' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
-      const sid = sidName(ac.gate, depRw(ac)), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
+      const sid = sidName(ac.gate, depRw(ac), ac), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
       { const rw = depRw(ac); ac.cto = true; ac.need = null; ac.depRwy = rw; ac.luAfter = null; }   // the runway it is at, worked out before cto (cto keeps whatever depRwy was)
       if (ac.state === 'HOLDPT') startLineUp(ac);
       else if (ac.path && (ac.state === 'TAXI' || ac.state === 'LINEUP')) { ac.path.thru = true; if (ac.state === 'LINEUP') ac.path.roll = true; }   // rolling: straight on into the take-off
@@ -1915,7 +1919,7 @@ function stepAir(ac, dt){
       if (Math.abs(off) < 400) { const k = Math.exp(-dt*0.7); [ac.x, ac.y] = R.rm(m, off*k); ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, crsOf(rw)), -3*dt, 3*dt)); }
     }
     if (fin.togo < -0.12 && ac.alt < tdElev(rw) + 70) { // touchdown
-      const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = ELEV; ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
+      const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = tdElev(rw); ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
       ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } SC(ac).landed++; SC(ac).pts += 25; ac.need = null;
       emit('landed', ac); planVac(ac);
     }
@@ -2070,7 +2074,7 @@ function stepGround(ac, dt){
     const R = rwyOf(ac.depRwy), u = ac.depRwy === R.hi ? -1 : 1, mv = ac.ias/3600*dt;
     ac.x += R.RU[0]*u*mv; ac.y += R.RU[1]*u*mv;
     if (ac.ias >= ac.perf.vr) {
-      ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = ELEV + 10; ac.ias = ac.perf.vr;
+      ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = gElev(ac) + 10; ac.ias = ac.perf.vr;
       APT.liftoff(ac);
       ac.tgtAlt = ac.cleared = sidTop(ac); ac.onSid = true; SC(ac).pts += 10;
       emit('airborne', ac);

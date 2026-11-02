@@ -1,0 +1,29 @@
+name: Fetch Belfast flight boards
+# One-off: saves a day of avionio.com's arrivals and departures boards for Belfast International (BFS) and Belfast City
+# (BHD) into the flights-data-belfast branch, the input for tools/belfast_timetable.py (the TIMETABLE rows in egaa.js).
+on:
+  workflow_dispatch:
+  push:
+    branches: [belfast-egaa-egac]
+    paths: ['.github/workflows/belfast-flights-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the boards
+        run: |
+          mkdir out && cd out
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"
+          for AP in bfs bhd; do for K in arrivals departures; do for P in 0 1 2 3 4 5 6 7; do
+            curl -sSL --compressed -m 30 -A "$UA" -o "${AP}_${K}_$P.html" "https://www.avionio.com/en/airport/$AP/$K?page=$P" || true
+          done; done; done
+          ls -la
+      - name: Publish to flights-data-belfast branch
+        run: |
+          cd out
+          git init -q -b flights-data-belfast
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "Belfast boards"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" flights-data-belfast

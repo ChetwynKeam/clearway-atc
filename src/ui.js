@@ -127,7 +127,7 @@ function drawRockRelief(){
 function drawProcedures(){
   const sc = V.scale; if (sc > 400) return;
   cx.lineWidth = 1;
-  for (const g of Object.keys(ARR_ROUTE)) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][S.rwy].map(id => WP[id].p), false); cx.stroke(); }
+  for (const g of Object.keys(ARR_ROUTE)) for (const rk of (APT.arrRoutes ? APT.arrRoutes() : [S.rwy])) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][rk].map(id => WP[id].p), false); cx.stroke(); }
   cx.setLineDash([]);
   for (const k of RW_ENDS) {
     const F = FINAL[k]; if (!F) continue; cx.strokeStyle = k === S.rwy ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = k === S.rwy ? 1.3 : 1;
@@ -698,7 +698,8 @@ function renderAtis(){
   $('atis').innerHTML = `
     <div class="ph"><span class="lbl">ATIS</span><button id="atisRead" class="atis-letter" title="Read the ATIS broadcast">${S.atis}</button>${APT.splitRwy ? '' : `<span class="lbl dimmer">${phonetic(S.atis)}</span>`}
       <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">${APT.rwyConfigs ? 'Flow' : APT.splitRwy ? 'Land' : 'Runway'}</span>
-      ${APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" class="${APT.configOf(S.rwy) === c.key ? 'on' : ''}" title="Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}">${c.name}</button>`).join('')}</span>`
+      ${APT.rwyPickers ? APT.rwyPickers.map(k => `<span class="seg sm" title="${k.label}: runway in use"><span class="dimmer" style="padding:0 6px;align-self:center">${k.label}</span>${k.opts.map(r => `<button data-pk="${k.key}" data-r="${r}" class="${k.get() === r ? 'on' : ''}">${r}</button>`).join('')}</span>`).join('')
+        : APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" class="${APT.configOf(S.rwy) === c.key ? 'on' : ''}" title="Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}">${c.name}</button>`).join('')}</span>`
         : RW_ENDS.length > 2 ? `<select id="rwSel" class="rwsel" aria-label="Landing runway">${RW_ENDS.map(r => `<option${r === S.rwy ? ' selected' : ''}>${r}</option>`).join('')}</select><span class="lbl">Dep</span><select id="drSel" class="rwsel" aria-label="Departure runway">${RW_ENDS.map(r => `<option${r === depRw() ? ' selected' : ''}>${r}</option>`).join('')}</select>`
         : `<span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span>${APT.splitRwy ? `<span class="lbl">Dep</span><span class="seg sm"><button id="drHi" class="${depRw()===RW_HI?'on':''}">${RW_HI}</button><button id="drLo" class="${depRw()===RW_LO?'on':''}">${RW_LO}</button></span>` : ''}`}</div>
     <div class="metar"></div>
@@ -724,6 +725,7 @@ function renderAtis(){
       <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`}`;
   $('atis').querySelector('.metar').textContent = w.raw;
   $('atisRead').onclick = () => openAtis();
+  if (APT.rwyPickers) $('atis').querySelectorAll('[data-pk]').forEach(bt => bt.onclick = () => APT.rwyPickers.find(k => k.key === bt.dataset.pk).set(bt.dataset.r));
   if (APT.rwyConfigs) $('atis').querySelectorAll('[data-cfg]').forEach(bt => bt.onclick = () => setRwy(bt.dataset.cfg));
   else if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
   else { $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO); }
@@ -731,10 +733,14 @@ function renderAtis(){
   if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
   if ($('xBtn')) $('xBtn').onclick = toggleXing;
 }
+// arrivals still on their arrival route follow the runway now in use (their own airfield's)
+function rerouteArrivals(){
+  for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][arrKey(ac)]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
+}
 function setRwy(r){
   // New York: the landing runway brings its departure runway
   if (S.rwy === r) return; S.rwy = r; if (APT.depFor) S.depRwy = APT.depFor(r); nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
-  for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][r]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
+  rerouteArrivals();
   renderAtis(); emit('rwy', r);
 }
 // airports that land one way and depart the other (Innsbruck) choose the departure runway separately
@@ -753,7 +759,7 @@ const ICON = {
 };
 const relCls = ac => { const R = ac.rel; return !R ? 'none' : R.st === 'REQ' ? 'req' : R.st === 'EXP' || R.st === 'CXL' ? 'exp' : R.nb && S.t < R.nb ? 'req' : 'ok'; };
 function relText(ac){
-  const R = ac.rel, who = relUnit(ac), sid = ac.sid || sidName(ac.gate, depRw(ac));
+  const R = ac.rel, who = relUnit(ac), sid = ac.sid || sidName(ac.gate, depRw(ac), ac);
   const st = !needRel(ac) ? 'no release needed' : !R ? `no release from ${who} yet` : R.st === 'REQ' ? `release requested, ${who} will call back` : R.st === 'EXP' ? 'release expired: request a new one' : R.st === 'CXL' ? (typeof flowStop === 'function' && flowStop(ac) ? `release cancelled: ${who} has stopped departures until ${flowEnd(flowStop(ac))}Z` : 'release cancelled: request a new one') : R.nb && S.t < R.nb ? `released not before ${zt(R.nb).slice(0,5)}, until ${zt(R.until).slice(0,5)}` : `released until ${zt(R.until).slice(0,5)}`;
   return `<b>${esc(sid)}</b> · ${st}`;
 }
@@ -1400,7 +1406,7 @@ function start(){
   const RF = APT.rwyFor && APT.rwyFor(S.wx), newRwy = RF ? RF.land : cLo.head > cHi.head + 2 ? RW_LO : RW_HI;
   if (!S.running) {
     resetSession();
-    S.running = true; S.rwy = newRwy; S.depRwy = RF ? (ex && ex.depRwy) || RF.dep : null; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
+    S.running = true; S.rwy = newRwy; if (APT.onStart) APT.onStart(newRwy, /^live/.test(mode)); S.depRwy = RF ? (ex && ex.depRwy) || RF.dep : null; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
     const live = /^live/.test(mode), now = new Date(Math.floor(Date.now()/60e3)*60e3);
     const day = live ? (now.getUTCDay() + 6) % 7 : +daySel.value, hour = live ? now.getUTCHours() + now.getUTCMinutes()/60 : +hourSel.value; S.day = day; S.hour = hour;
     if (live) { S.start = +now; S.speed = 1; $('tgSpeed').textContent = '1×'; } else if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);

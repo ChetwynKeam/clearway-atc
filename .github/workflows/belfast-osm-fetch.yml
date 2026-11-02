@@ -1,0 +1,34 @@
+name: Fetch Belfast OSM airfield data
+# One-off: downloads the aerodrome geometry of Belfast International (EGAA) and Belfast City (EGAC) from OpenStreetMap
+# into the osm-data-belfast branch, the input for the Belfast ground layout generator (taxiways, aprons, buildings).
+on:
+  workflow_dispatch:
+  push:
+    branches: [belfast-egaa-egac]
+    paths: ['.github/workflows/belfast-osm-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download both aerodromes
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          q() {  # name south,west,north,east
+            Q="[out:json][timeout:90];(way[aeroway]($2);node[aeroway]($2);relation[aeroway]($2);way[building]($2);way[highway=service]($2););out geom;"
+            for H in https://overpass-api.de https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+              curl -sSf -A "$UA" --data-urlencode "data=$Q" "$H/api/interpreter" -o "$1.json" && break || sleep 10
+            done
+          }
+          q egaa 54.628,-6.262,54.685,-6.160
+          q egac 54.600,-5.900,54.634,-5.838
+          ls -la
+      - name: Publish to osm-data-belfast branch
+        run: |
+          cd out
+          git init -q -b osm-data-belfast
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OSM aerodrome data for EGAA and EGAC"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" osm-data-belfast

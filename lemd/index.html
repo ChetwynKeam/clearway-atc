@@ -1192,6 +1192,9 @@ body .app.tabbed button:disabled { opacity: .4; }
 }
 @media (max-width: 360px) { .tabbed > .sysbar { gap: 5px; padding: 0 6px; } .sysbar .talk { display: none; } .sb-clock { font-size: 16px; } }
 
+.metars { margin-top: 6px; font: 11px/1.45 var(--mono, ui-monospace, monospace); color: var(--dim, #8a97a6); word-break: break-word; }
+.metars b { color: var(--ink, inherit); margin-right: 4px; }
+
 /* ═════ accounts, pricing, feedback, airport requests (account.html / account.js) ═════ */
 .topbar .status .btn.ghost { box-shadow: none; padding: 9px 14px; font-size: 14px; }
 .cw-note { display: inline-block; background: var(--accent-soft); color: var(--accent-2); border: 1px solid #c9d8ff; border-radius: 8px; padding: 10px 14px; font-size: 15px; font-weight: 500; }
@@ -1497,6 +1500,18 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       </div>
     </div>
   </div></div>
+  <div class="section feat-ap" data-apt="EGAA"><div class="wrap">
+    <div class="fa-grid">
+      <div class="fa-shot"><img loading="lazy" src="shots/egaa-tower.jpg" width="1216" height="772" alt="Belfast International and Belfast City in the simulator, over the street map"><span class="fa-tag">LIVE · EGAA TOWER</span></div>
+      <div>
+        <div class="eyebrow">New airport</div>
+        <h2>Belfast, two airfields on one approach.</h2>
+        <p>Belfast International (Aldergrove) and Belfast City sit 14 miles apart and share one approach. There are no SIDs or STARs: arrivals from Great Britain and Europe cross Belfast Lough and are vectored onto short finals, and departures leave by airway. You work both airfields at once, with the BEL, HB and MAGEE holds, and a runway of your own choosing at each.</p>
+        <div class="kv"><span>RWY <b>07/25 · 04/22</b></span><span>Elev <b>268 ft · 15 ft</b></span><span>Approach <b>ILS · RNP</b></span></div>
+        <div class="ctas"><a class="btn primary" href="#sim">Open the position</a><a class="btn" href="#egaa">Airport briefing</a></div>
+      </div>
+    </div>
+  </div></div>
   <div class="section feat-ap" data-apt="LEMD"><div class="wrap">
     <div class="fa-grid">
       <div class="fa-shot"><img loading="lazy" src="shots/lemd-tower.jpg" width="1216" height="772" alt="Madrid-Barajas in the simulator, over the street map"><span class="fa-tag">LIVE · LEMD TOWER</span></div>
@@ -1618,7 +1633,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   <footer class="footer2"><div class="wrap">
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
     <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a><a href="#pricing">Pricing</a><a href="#request">Request an airport</a></div>
-    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a><a href="#kjfk">New York JFK · KJFK</a><a href="#egkk">London Gatwick · EGKK</a><a href="#lemd">Madrid-Barajas · LEMD</a><a href="#egcc">Manchester · EGCC</a><a href="#egll">London Heathrow · EGLL</a><a href="#eggd">Bristol · EGGD</a><a href="#yssy">Sydney · YSSY</a></div>
+    <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a><a href="#kjfk">New York JFK · KJFK</a><a href="#egkk">London Gatwick · EGKK</a><a href="#lemd">Madrid-Barajas · LEMD</a><a href="#egcc">Manchester · EGCC</a><a href="#egll">London Heathrow · EGLL</a><a href="#eggd">Bristol · EGGD</a><a href="#egaa">Belfast · EGAA · EGAC</a><a href="#yssy">Sydney · YSSY</a></div>
     <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span><a href="#terms">Terms</a><a href="#privacy">Privacy</a></div>
   </div></footer>
 </section>
@@ -2365,6 +2380,91 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   </div></div>
   <footer class="footer"><div class="wrap"><span>Clearway · Bristol EGGD</span><span>Built as RAF Lulsgate Bottom in 1940; Bristol's airport moved up to the hilltop from Whitchurch in 1957.</span></div></footer>
 </section>
+<section class="page" id="page-egaa" data-page="egaa" hidden>
+  <div class="aphead">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#airports">Airports</a><span>›</span><span>UK &amp; Ireland</span><span>›</span><b>Belfast</b></nav>
+      <div class="ap-grid">
+        <div>
+          <div class="ap-id"><span class="icao">EGAA</span><span class="icao">EGAC</span><span class="iata">BFS · BHD</span><span class="badge live">Open now</span><span class="badge new">New</span></div>
+          <h1>Belfast International &amp; City</h1>
+          <p class="lede">Two airfields, 14 miles apart, worked as one. Aldergrove (Belfast International) has runway 07/25 beside Lough Neagh; Belfast City (George Best) has 04/22 on the shore of Belfast Lough. Neither has SIDs or STARs, so you build the flow yourself: radar vectors, the BEL, HB and MAGEE holds, and sharp turns onto short finals over the Lough. You are Aldergrove Approach, Director, Tower and Ground, and you release Belfast City's departures.</p>
+          <div class="kv"><span>Approach <b>133.130</b></span><span>Director <b>120.905</b></span><span>Tower <b>118.305</b></span><span>Ground <b>121.755</b></span><span>City Tower <b>122.830</b></span><span>Charts <b>UK AIP</b></span></div>
+          <div class="ctas"><a class="btn primary" href="#sim"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Open the position</a><a class="btn" href="#training">Read the briefing</a></div>
+        </div>
+        <div class="ap-shot"><img loading="lazy" src="shots/egaa-tower.jpg" width="1216" height="772" alt="Belfast International and Belfast City in the simulator, over the street map"><span class="fa-tag">TWO AIRFIELDS · MAPPED TO SCALE</span></div>
+      </div>
+    </div>
+    <div class="wrap"><div class="facts">
+      <div><b>3</b><span>Runways: 07/25 and 04/22 in play, 17/35 drawn for taxiing only</span></div>
+      <div><b>2,780 m</b><span>Aldergrove 07/25; Belfast City 04/22 is 1,829 m</span></div>
+      <div><b>268 ft · 15 ft</b><span>Aerodrome elevations: Aldergrove on the plain, City at the water</span></div>
+      <div><b>25 · 22</b><span>The usual westerly pair: ILS 25 at Aldergrove, ILS 22 at City</span></div>
+      <div><b>0</b><span>SIDs and STARs: vectors, holds and airway departures</span></div>
+      <div><b>30</b><span>Stands: 18 at Aldergrove and 12 at City</span></div>
+    </div></div>
+  </div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">What makes it Belfast</div><h2>One approach, two airfields.</h2></div>
+      <p>The runways, holding points, ILS and RNP approaches, holds and frequencies come from the UK AIP charts for EGAA and EGAC. The en-route fixes are the published points the Belfast routes use, and the taxiways, stands and buildings follow OpenStreetMap.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 22h24"/><path d="M6 12h20" stroke-dasharray="3 2"/></svg><h3>Pick each runway yourself</h3><p>Aldergrove (25 or 07) and City (22 or 04) have separate switches in the ATIS panel. They start from the wind, and changing one re-routes only that airfield's arrivals.</p><div class="src">ATIS panel</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 24C10 24 12 10 18 10s8 6 11 6"/><path d="M26 13l3 3-3 3"/></svg><h3>Vectors, no STARs</h3><p>Arrivals from Great Britain and Europe funnel over BELZU and the Lough, then turn sharply onto the ILS 25 final or the short City 22 final. From the south, Dublin traffic comes up the N34 and from the Isle of Man down the L10.</p><div class="src">VATSIM and IVAO procedures, en-route fixes</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><ellipse cx="16" cy="16" rx="11" ry="6"/><path d="M5 16h22"/></svg><h3>The BEL, HB and MAGEE holds</h3><p>Aldergrove's arrivals wait at BEL; Belfast City's wait at MAGEE, with HB for the missed approach. The AI controllers keep each airfield's stack separate.</p><div class="src">Holding charts</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 26l10-10 6 6 8-14"/><path d="M22 8h6v6"/></svg><h3>Airway departures</h3><p>South via P620 (LISBO, NUMPI, NIMAT), south-east via L10 high (PEPOD to Isle of Man) or low (RINGA, SLYDA), north via P600 to BLACA and Turnberry. Turboprops and short sectors take the low route.</p><div class="src">Departure routes</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="16" cy="16" r="10"/><path d="M16 10v7M16 21v1"/></svg><h3>City's releases</h3><p>Belfast City departures are released by Aldergrove Radar and handed on by 2,000 ft. Runway 04 departures turn out to the right on 034°, and 22 departures turn left after climbing straight ahead.</p><div class="src">Belfast City procedures</div></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h8v16H3zM13 8h8v16h-8zM23 12h6v12h-6z"/></svg><h3>Both METARs on the panel</h3><p>EGAA and EGAC reports sit side by side. In Live now sessions each comes from its own live report.</p><div class="src">NOAA, VATSIM</div></div>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Four positions, two airfields</div><h2>From the Lough to the stand.</h2></div>
+      <p>Aldergrove Approach, Director, Tower and Ground are combined on one position, with Belfast City's approach and tower traffic worked from the same scope.</p>
+    </div>
+    <div class="positions">
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/egaa-radar.jpg" width="1216" height="772" alt="Belfast approach radar in the simulator"></div><div class="body"><div class="freq">ALDERGROVE APPROACH · 133.130 · DIRECTOR 120.905</div><h3>Approach</h3><p>Vector arrivals for both airfields onto their finals, hold them at BEL or MAGEE when you must, and keep the two flows apart. Release City's departures and hand every departure on.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/egaa-runway.jpg" width="1216" height="772" alt="The runways at Belfast in the simulator"></div><div class="body"><div class="freq">ALDERGROVE TOWER · 118.305 · BELFAST TOWER · 122.830</div><h3>Tower</h3><p>Clear landings and take-offs on both airfields. Line each departure up behind a landing and clear it once the arrival has vacated.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/egaa-ground.jpg" width="1216" height="772" alt="The aprons at Belfast in the simulator"></div><div class="body"><div class="freq">ALDERGROVE GROUND · 121.755</div><h3>Ground</h3><p>Clear, push and taxi departures from both airports' stands, and send arrivals to a stand at their own airfield.</p></div></div>
+    </div>
+  </div></div>
+
+  <div class="section live-sec"><div class="wrap">
+    <div class="academy">
+      <div><div class="eyebrow"><span class="live-dot"></span>Live now at Belfast</div><h2>Work today’s real traffic at EGAA and EGAC.</h2><p>Pick Live now in the session setup and the position opens at the current time with both airports' real flights, live aircraft positions over Northern Ireland and both live METARs.</p><div class="ctas"><a class="btn primary" href="#sim" data-live>Control live traffic</a></div></div>
+      <ol class="steps3">
+        <li><b>Today’s real schedule</b><span>Arrivals and departures for Belfast International and Belfast City from avionio’s public BFS and BHD boards, refreshed every 15 minutes. Each flight uses its own airfield.</span></li>
+        <li><b>Aircraft in the air right now</b><span>Live ADS-B positions from the adsb.lol and adsb.fi networks. When a real Belfast inbound comes within range, it becomes your flight.</span></li>
+        <li><b>The weather outside</b><span>The live EGAA METAR sets the runway, the ATIS and the QNH, with the EGAC METAR beside it.</span></li>
+      </ol>
+    </div>
+  </div></div>
+  <div class="section"><div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Weather scenarios</div><h2>Pick the weather you want to work.</h2></div>
+      <p>Each scenario is a METAR the simulation reads for wind, visibility, cloud and QNH. You can also switch on Live METAR to use the current EGAA report, or paste one yourself.</p>
+    </div>
+    <div class="scen" data-scen></div>
+  </div></div>
+
+  <div class="section"><div class="wrap">
+    <div class="sources">
+      <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
+        <p class="note">The runways, holding points, approaches, holds and frequencies come from the UK AIP charts for EGAA and EGAC. Belfast has no published SIDs or STARs, so the arrival and departure routes are modelled on the airway structure and the procedures described by VATSIM UK and IVAO, using the published fixes; a few waypoints are approximate and the frequencies for the neighbouring Scottish and London Control are representative. Runway 17/35 is drawn and used for taxiing but not for landing or take-off, only 30 stands are modelled, and the two airfields share one approach and one controller. Live now uses avionio’s public BFS and BHD boards and the adsb.lol and adsb.fi networks.</p></div>
+      <ul>
+        <li><b>Aerodrome charts</b>Runways, taxiways, holding points and stands.</li>
+        <li><b>Approach charts</b>ILS 25, RNP 07, ILS 22 and ILS 04, with the BEL, HB and MAGEE holds.</li>
+        <li><b>En-route fixes</b>BELZU, BLACA, RINGA, NELBO, NEVRI, ABSUN, LISBO, NUMPI, NIMAT, PEPOD, SLYDA and KELLY.</li>
+        <li><b>OpenStreetMap</b>Taxiway, apron and building geometry and the street map under the scope.</li>
+        <li><b>Live now</b>Belfast flights from avionio.com; positions from adsb.lol and adsb.fi; METARs from NOAA and VATSIM.</li>
+      </ul>
+    </div>
+  </div></div>
+  <footer class="footer"><div class="wrap"><span>Clearway · Belfast EGAA · EGAC</span><span>Two airfields, one approach.</span></div></footer>
+</section>
 <section class="page" id="page-egll" data-page="egll" hidden>
   <div class="aphead">
     <div class="wrap">
@@ -2738,6 +2838,12 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
         <div class="sub">EGGD · RWY 09/27 2011 × 45 m · ELEV 622 ft · ILS · TA 6000 · Radar 125.655 · Director 136.080 · Tower 133.855 · Ground 121.930</div>
         <p style="margin-top:14px">You hold all four positions for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Bristol flights from the current time with the live METAR. Bring arrivals off their STARs onto the ILS, and fit the departures from the three aprons between the landings on the one runway.</p>
         </div>
+        <div data-only="EGAA">
+        <div class="eyebrow">Position briefing</div>
+        <h1>Aldergrove Approach, Tower &amp; Ground, with Belfast City</h1>
+        <div class="sub">EGAA · RWY 07/25 2780 × 46 m · ELEV 268 ft · EGAC · RWY 04/22 1829 × 46 m · ELEV 15 ft · ILS · Approach 133.130 · Director 120.905 · Tower 118.305 · Ground 121.755 · City Tower 122.830</div>
+        <p style="margin-top:14px">You hold the positions for both airfields for the shift you pick below: choose a day and a start time and the traffic comes from that slot of the weekly timetable, or pick <b>Live now</b> to work today’s real Belfast International and Belfast City flights with both live METARs. Vector the arrivals to their finals, hold them at BEL or MAGEE when you need to, and fit the departures from both airports between the landings.</p>
+        </div>
         <div data-only="EGKK">
         <div class="eyebrow">Position briefing</div>
         <h1>Gatwick Director, Tower &amp; Ground</h1>
@@ -2833,6 +2939,11 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <li>Runway 27 departures enter at Alpha X-ray or Bravo X-ray at the east end, runway 09 departures at Golf X-ray at the west end. No releases are needed. Stands 22 to 26R taxi straight onto Zulu: Link Charlie is hot spot HS1.</li>
           <li>Type commands in the bar under the scope, for example <code>EZY6201 PUSH</code> or <code>KLM1081 A40 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
+        <ul data-only="EGAA">
+          <li>Each airfield has its own runway switch in the ATIS panel: Aldergrove 25 or 07, Belfast City 22 or 04. Arrivals for the two airfields turn onto their finals close together over the Lough, so keep them apart.</li>
+          <li>Belfast City departures need a release from you (Aldergrove Radar) and are handed on by 2,000 ft. There are no SIDs: departures follow their airway route after the runway heading.</li>
+          <li>Type commands in the bar under the scope, for example <code>CFE1394 H240 A40</code> or <code>EZY6201 PUSH</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
+        </ul>
         <ul data-only="EGKK">
           <li>One runway for everything: space arrivals on final with a gap for a departure, line the departure up behind each landing and clear it once the arrival has vacated.</li>
           <li>Runway 26L departures enter at Alfa 1, Bravo 1 or Mike 1, runway 08R departures at Juliett 1, Hotel 1 or Golf 1. No releases are needed. Old runway 26R is taxiway Juliett.</li>
@@ -2844,7 +2955,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
           <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span><span data-only="KJFK">Data from FAA terminal procedures for KJFK.</span><span data-only="EGKK">Data from UK AIP AD 2 EGKK.</span><span data-only="EGCC">Data from UK AIP AD 2 EGCC.</span><span data-only="EGGD">Data from UK AIP AD 2 EGGD.</span><span data-only="EGLL">Data from UK AIP AD 2 EGLL.</span><span data-only="LEMD">Data from AIP España AD 2 LEMD.</span><span data-only="YSSY">Data from Airservices Australia AIP and ERSA for YSSY.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span><span data-only="KJFK">Data from FAA terminal procedures for KJFK.</span><span data-only="EGKK">Data from UK AIP AD 2 EGKK.</span><span data-only="EGCC">Data from UK AIP AD 2 EGCC.</span><span data-only="EGGD">Data from UK AIP AD 2 EGGD.</span><span data-only="EGAA">Data from UK AIP AD 2 EGAA and EGAC.</span><span data-only="EGLL">Data from UK AIP AD 2 EGLL.</span><span data-only="LEMD">Data from AIP España AD 2 LEMD.</span><span data-only="YSSY">Data from Airservices Australia AIP and ERSA for YSSY.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>
@@ -4000,6 +4111,72 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       </ul>
     </section>
 
+    <section id="ba-position" data-apt="EGAA" data-track="ap"><h2><span class="n">01</span>Your position at Belfast</h2>
+      <p>You are <b>Aldergrove Approach (133.130)</b> and <b>Director (120.905)</b>, <b>Aldergrove Tower (118.305)</b> and <b>Aldergrove Ground (121.755)</b> combined, and you also work Belfast City's approach and tower traffic (<b>City Tower 122.830</b>). Arrivals for either airfield check in with you on a vector. You hand them to the Tower once they are established on the ILS.</p>
+      <p>Belfast works to UK rules:</p>
+      <ul>
+        <li>There are <b>no SIDs or STARs</b>. Arrivals are vectored; departures follow an airway route after the runway heading, climbing to 6,000 ft before they go to Scottish or London Control.</li>
+        <li><b>Belfast City's departures need a release</b> from Aldergrove Radar and are handed on by 2,000 ft.</li>
+        <li>Each airfield has its <b>own runway in use</b>, chosen separately in the ATIS panel.</li>
+        <li>UK phraseology: "cleared to land", "line up and wait", and a "four miles" call from each arrival.</li>
+      </ul>
+    </section>
+
+    <section id="ba-aerodrome" data-apt="EGAA" data-track="ap"><h2><span class="n">02</span>The two airfields</h2>
+      <figure class="fig"><canvas data-fig="aerodrome" aria-label="Belfast International and Belfast City diagram with the runways, taxiways and stands"></canvas><figcaption>The aerodromes as drawn in the simulator: Aldergrove's 07/25 and the closed-to-flying 17/35, and Belfast City's 04/22 on Belfast Lough.</figcaption></figure>
+      <div class="tbl"><table>
+        <tr><th>Runway</th><th>Length</th><th>Use</th></tr>
+        <tr><td>EGAA 25</td><td>2,780 × 46 m</td><td>The usual runway at Aldergrove: ILS (CAT III)</td></tr>
+        <tr><td>EGAA 07</td><td>2,780 × 46 m</td><td>Easterlies: RNP approach</td></tr>
+        <tr><td>EGAC 22</td><td>1,829 × 46 m</td><td>The usual runway at City: ILS over the Lough</td></tr>
+        <tr><td>EGAC 04</td><td>1,829 × 46 m</td><td>Easterlies: ILS; continuous descent approaches 2200–0700</td></tr>
+      </table></div>
+      <p>Runway 17/35 at Aldergrove is drawn and used for taxiing, but you cannot land or take off on it. Aldergrove has 18 stands and City 12.</p>
+    </section>
+
+    <section id="ba-routes" data-apt="EGAA" data-track="ap"><h2><span class="n">03</span>Arrivals, holds and departures</h2>
+      <div class="tbl"><table>
+        <tr><th>From</th><th>Arrival</th></tr>
+        <tr><td>Great Britain and Europe</td><td>Across BELZU and the Lough, then a sharp turn onto the ILS 25 or 22 final</td></tr>
+        <tr><td>North and Scotland</td><td>P600 from Turnberry and BLACA to BELZU</td></tr>
+        <tr><td>Isle of Man and the south-east</td><td>L10 and UP6 via RINGA, NELBO and REMSI to BELZU</td></tr>
+        <tr><td>Dublin and the south</td><td>N34 via NEVRI and ABSUN to BELZU</td></tr>
+      </table></div>
+      <p>Aldergrove's holds are at <b>BEL</b> (inbound 050°); Belfast City's arrivals wait at <b>MAGEE</b> (inbound 253°, left turns), with <b>HB</b> for the missed approach. City's finals are 22 and 04 at 2,500 ft (04 is intercepted at 1,500 ft by 5 NM).</p>
+      <div class="tbl"><table>
+        <tr><th>Departing to</th><th>Route</th></tr>
+        <tr><td>South</td><td>P620 via LISBO, NUMPI, NIMAT</td></tr>
+        <tr><td>South-east, FL90 and above</td><td>L10 via LISBO, PEPOD, Isle of Man</td></tr>
+        <tr><td>South-east, FL70 and below</td><td>L10 via LISBO, RINGA, SLYDA, Isle of Man</td></tr>
+        <tr><td>North</td><td>P600 via BLACA to Turnberry</td></tr>
+      </table></div>
+      <p>City runway 04 departures turn out right on 034°, and runway 22 departures turn left after climbing straight ahead.</p>
+    </section>
+
+    <section id="ba-weather" data-apt="EGAA" data-track="ap"><h2><span class="n">04</span>Airspace and weather</h2>
+      <p>Aldergrove sits just east of Lough Neagh; Belfast City is on the south shore of Belfast Lough. Westerlies keep 25 and 22 in use most of the time; an easterly swings Aldergrove to 07 (RNP) and City to 04. The panel shows both METARs. A strong crosswind or tailwind on one runway may be fine on the other airfield's, so switch each separately.</p>
+    </section>
+
+    <section id="ba-exercises" data-apt="EGAA" data-track="ap"><h2><span class="n">05</span>Guided exercises</h2>
+      <p>Each exercise opens the simulator with a small traffic load and a coach card on the scope. Complete all three for the <b>Aldergrove endorsement</b> badge.</p>
+      <div class="exgrid">
+        <div class="ex"><div class="nm">1 · Off 25 at Aldergrove</div><p>An easyJet A320 for Gatwick. Clear and push it, taxi it to the holding point, take off on 25, and hand it to the next unit.</p><button class="btn primary" data-ex="fdep">Start exercise</button></div>
+        <div class="ex"><div class="nm">2 · From BLACA to the ILS 22 at City</div><p>A BA CityFlyer Embraer 190 from Heathrow. Vector it round onto the short ILS 22 over the Lough, land it and taxi it to a City stand.</p><button class="btn primary" data-ex="farr">Start exercise</button></div>
+        <div class="ex"><div class="nm">3 · Two airports, one approach</div><p>Two arrivals and two departures across both airfields. Keep the two flows apart, release City's departure and get everything on the ground or away.</p><button class="btn primary" data-ex="fmix">Start exercise</button></div>
+      </div>
+    </section>
+
+    <section id="ba-limits" data-apt="EGAA" data-track="ap"><h2><span class="n">06</span>What is simplified at Belfast</h2>
+      <ul>
+        <li>Approach, Director, Tower and Ground for both airfields are one position.</li>
+        <li>With no published SIDs or STARs, the arrival and departure routes follow the airway structure and the procedures described by VATSIM UK and IVAO.</li>
+        <li>Runway 17/35 is for taxiing only, and only 30 stands are modelled.</li>
+        <li>CAT I minima only: low-visibility procedures are not modelled.</li>
+        <li>The Scottish and London Control frequencies are representative.</li>
+        <li>Live now uses today's real flights and positions; City's METAR falls back to Aldergrove's weather when its own report is not available.</li>
+      </ul>
+    </section>
+
     <section id="md-position" data-apt="LEMD" data-track="ap"><h2><span class="n">01</span>Your position at Madrid</h2>
       <p>You are <b>Madrid Approach (127.505)</b>, <b>Barajas Tower</b> and <b>Barajas Ground (121.980)</b> combined. Arrivals check in with Approach on their STAR. You hand them to the Tower once they are established on the ILS. Departures call Ground ready to start and push, go to the Tower at the holding point, to <b>Madrid Departure</b> once airborne, and then to <b>Madrid Control</b>. The ATIS is <b>Barajas Information</b> on 118.255.</p>
       <p>Madrid works to Spanish rules, close to ICAO's:</p>
@@ -4235,7 +4412,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
 
 <script>
 const AIRPORT = 'LEMD';
-const SITE = {"LXGB": "../", "LPMA": "../lpma/", "EGLC": "../eglc/", "LOWI": "../lowi/", "KJFK": "../kjfk/", "YSSY": "../yssy/", "EGKK": "../egkk/", "LEMD": "../lemd/", "EGCC": "../egcc/", "EGLL": "../egll/", "EGGD": "../eggd/"};
+const SITE = {"LXGB": "../", "LPMA": "../lpma/", "EGLC": "../eglc/", "LOWI": "../lowi/", "KJFK": "../kjfk/", "YSSY": "../yssy/", "EGKK": "../egkk/", "LEMD": "../lemd/", "EGCC": "../egcc/", "EGLL": "../egll/", "EGAA": "../egaa/", "EGGD": "../eggd/"};
 const SITE_HOST = 'LXGB';
 const CW_CFG = {"enabled": false, "feedback": true, "api": "https://clearway-atc.vercel.app/api", "supabase_url": "https://aqwdnicarvfpclqwljxe.supabase.co", "supabase_anon_key": "sb_publishable_dFOE16aBVYg8FUgElz5SPA_sJD0CuF3", "currency": "£", "prices": {"a1": 4.99, "a3": 9.99, "a5": 14.99, "a10": 24.99, "all": 29.99, "early": 4.99}, "trial_days": 2, "contact_email": "", "analytics_token": "", "legal_date": "5 October 2026", "offer": {"percent": 30, "months": 3, "label": "Launch offer"}, "commission": 25, "upgrade_offer": {"percent": 50, "months": 3, "days": 30}, "releases": [{"icao": "KJFK", "date": "2026-10-05", "code": "NEWKJFK"}], "site": "https://www.clearway-atc.co.uk/"};
 const GEO = {"land":[[[[-7.5,38.0],[0.0,38.0],[0.0,43.0],[-7.5,43.0],[-7.5,38.0]]]],"coast":[],"borders":[],"towns":[["MADRID",-3.7038,40.4168],["ALCALA DE HENARES",-3.364,40.482],["TORREJON",-3.4977,40.4554],["GETAFE",-3.7323,40.3083],["GUADALAJARA",-3.1667,40.6333],["TOLEDO",-4.0273,39.8628],["SEGOVIA",-4.1184,40.9429],["AVILA",-4.7003,40.6565],["ARANJUEZ",-3.6024,40.0311],["ALCOBENDAS",-3.6418,40.5475],["COSLADA",-3.5613,40.4237],["TRES CANTOS",-3.7085,40.6007],["COLMENAR VIEJO",-3.7656,40.659],["MOSTOLES",-3.8649,40.3223],["LEGANES",-3.7635,40.3272],["FUENLABRADA",-3.7941,40.2842],["VALDEMORO",-3.6739,40.1908],["ARGANDA",-3.4382,40.3008],["CUENCA",-2.1374,40.0704],["TALAVERA",-4.8303,39.9635],["VALLADOLID",-4.7245,41.6523]],"airports":[["LETO",-3.4459,40.4967],["LEGT",-3.7239,40.2944],["LECU",-3.7856,40.3706],["LEVD",-4.8519,41.7061]]};
@@ -4248,7 +4425,7 @@ const GEO = {"land":[[[[-7.5,38.0],[0.0,38.0],[0.0,43.0],[-7.5,43.0],[-7.5,38.0]
 
 // ═════════════════════════ geometry ═════════════════════════
 const D2R = Math.PI/180, R2D = 180/Math.PI;
-const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553], LOWI: [47.2602, 11.3439], KJFK: [40.639925, -73.778939], EGKK: [51 + 8/60 + 53/3600, -(11/60 + 25/3600)], LEMD: [40 + 28/60 + 20/3600, -(3 + 33/60 + 39/3600)], EGCC: [53 + 21/60 + 13/3600, -(2 + 16/60 + 30/3600)], EGLL: [51 + 28/60 + 39/3600, -(27/60 + 41/3600)], EGGD: [51 + 22/60 + 58/3600, -(2 + 43/60 + 9/3600)] , YSSY: [-(33 + 56/60 + 46/3600), 151 + 10/60 + 38/3600]};
+const AIRPORT_ORIGIN = { LXGB: [36.1512, -5.3494], LPMA: [32.6942, -16.7781], EGLC: [51.5053, 0.0553], LOWI: [47.2602, 11.3439], KJFK: [40.639925, -73.778939], EGKK: [51 + 8/60 + 53/3600, -(11/60 + 25/3600)], LEMD: [40 + 28/60 + 20/3600, -(3 + 33/60 + 39/3600)], EGCC: [53 + 21/60 + 13/3600, -(2 + 16/60 + 30/3600)], EGLL: [51 + 28/60 + 39/3600, -(27/60 + 41/3600)], EGGD: [51 + 22/60 + 58/3600, -(2 + 43/60 + 9/3600)], EGAA: [54 + 39/60 + 27/3600, -(6 + 12/60 + 57/3600)], YSSY: [-(33 + 56/60 + 46/3600), 151 + 10/60 + 38/3600]};
 const [LAT0, LON0] = AIRPORT_ORIGIN[AIRPORT], COSL = Math.cos(LAT0*D2R);
 const M2NM = 1/1852;
 const dms = (d, m, s=0) => d + m/60 + s/3600;
@@ -5545,6 +5722,8 @@ const emit = (ev, data) => { for (const f of S.listeners) try { f(ev, data); } c
 // the departure runway: the runway in use, unless the airport departs the other way (Innsbruck lands 26, departs 08).
 // Airports with two departure runways at once (Madrid) pick one per aircraft (APT.depRwyOf), and two landing runways
 // (APT.landRwyOf): pass the aircraft where there is one.
+// the field elevation an aircraft stands at: one value, except where two airfields share a session (Belfast)
+const gElev = ac => (APT.elevOf && APT.elevOf(ac)) ?? ELEV;
 const depRw = ac => (ac && APT.depRwyOf && APT.depRwyOf(ac)) || S.depRwy || S.rwy;
 // a parallel runway: 27L for 27R (another pavement with an approach of its own), or null
 const parallelEnd = rw => { const m = /^(\d\d)([LRC])$/.exec(rw || ''); if (!m) return null; for (const s of 'LRC') { const p = m[1] + s; if (p !== rw && FINAL[p] && rwyOf(p).id !== rwyOf(rw).id) return p; } return null; };
@@ -5552,6 +5731,8 @@ const parallelEnd = rw => { const m = /^(\d\d)([LRC])$/.exec(rw || ''); if (!m) 
 const openRw = rw => { const B = S.emg && S.emg.rwyBlock; if (!B || B.id == null || !rw || rwyOf(rw).id !== B.id) return rw; const p = parallelEnd(rw); return p || rw; };
 const baseLandRw = ac => (ac && ac.app) || openRw((ac && APT.landRwyOf && APT.landRwyOf(ac)) || S.rwy);
 // (an AI Approach arrival due just after a MAYDAY expects the parallel: the MAYDAY's runway closes after it, ai.js)
+// the runway key of an aircraft's arrival route: its own landing runway at an airport with two airfields (Belfast), else the flow's
+const arrKey = o => (APT.arrRoute && o && APT.arrRoute(o)) || S.rwy;
 const landRw = ac => { const rw = baseLandRw(ac); return ac && !ac.app && typeof mayRw === 'function' ? mayRw(ac, rw) : rw; };
 // ── runways. A one-runway airport is described by its profile's globals (rm, mOf, offOf, RU, RW_LO/RW_HI, TURN_W/E);
 // an airport with several runways (New York JFK) lists them in APT.runways, each with its own frame along the runway
@@ -5745,7 +5926,7 @@ const needRel = ac => !APT.needRel || APT.needRel(ac);
 // the altitude a SID climbs to (Gatwick: each SID's own stop altitude), otherwise the airport's initial climb
 const sidTop = ac => APT.sidAlt && ac.sid ? APT.sidAlt(ac) : APT.initClimb;
 function requestRelease(ac){
-  const who = relUnit(ac), sid = sidName(ac.gate, depRw(ac));
+  const who = relUnit(ac), sid = sidName(ac.gate, depRw(ac), ac);
   ac.rel = { st: 'REQ', at: S.t + rnd(35, 110) };
   coord(`${who}, ${APT.coordName}, request release ${ac.cs}, ${ac.t} to ${ac.d}, ${sid}, runway ${depRw(ac)}`, APT.coordName.toUpperCase());
 }
@@ -5789,7 +5970,7 @@ const PRE_NM = 35, PRE_LEAD = 6.5*60;
 const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + tzOffH(S.start + S.t*1000)) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
-  const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][S.rwy][0]];
+  const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][arrKey(f)][0]];
   const left = f.m*60 - S.t;
   if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
     const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
@@ -5814,10 +5995,10 @@ function spawnArrival(f){
   return ac;
 }
 function makeInbound(ac, keepAlt){
-  const first = WP[ARR_ROUTE[ac.gate][S.rwy][0]];
+  const first = WP[ARR_ROUTE[ac.gate][arrKey(ac)][0]];
   ac.tgtAlt = ac.cleared = keepAlt ? Math.round(ac.alt/100)*100 : APT.inboundAlt(ac.gate); ac.freq = 'RAD';
   ac.state = 'INBOUND';
-  ac.route = ARR_ROUTE[ac.gate][S.rwy].slice();
+  ac.route = ARR_ROUTE[ac.gate][arrKey(ac)].slice();
   // handed over at (or just short of) the route's first fix: that fix is behind it now, so it flies on to the next one
   // rather than turning round for it (a heading of 000 when it sits on the fix itself, then a loop back)
   while (ac.route.length > 1 && WP[ac.route[0]] && dist(ac.x, ac.y, ...WP[ac.route[0]].p) < 2) ac.route.shift();
@@ -5879,7 +6060,7 @@ function spawnDeparture(f){
   if (!st) return null;
   st.occ = ac; ac.stand = st;
   ac.x = st.p[0]; ac.y = st.p[1]; ac.hdg = st.hdg;
-  ac.ground = true; ac.alt = ELEV; ac.state = 'PARKED';
+  ac.ground = true; ac.alt = gElev(ac); ac.state = 'PARKED';
   ac.reqAt = S.t + (f.m === 0 ? 8 : rnd(10, 40));
   S.acs.push(ac);
   emit('spawn', ac);
@@ -5889,7 +6070,7 @@ const isBiz = ac => ac.perf.wake === 'L' || ac.t === 'GLF6' || ac.t === 'C56X';
 // an aircraft already on the ground when the session opens. Airliners with a long wait sit on a remote stand (south or
 // north apron) and are towed to a terminal stand about 35 minutes before departure for the turnaround.
 function spawnResident(f){
-  const ac = new Aircraft(f); ac.freq = 'TWR'; ac.ground = true; ac.alt = ELEV;
+  const ac = new Aircraft(f); ac.freq = 'TWR'; ac.ground = true; ac.alt = gElev(ac);
   const wait = f.depM == null ? Infinity : f.depM;
   const hg = hangarFor(ac, f);
   if (hg) {   // stored in a hangar: towed out to a stand before it leaves
@@ -6702,7 +6883,7 @@ function commandRun(str){
   if (toks.length === 1 && /^(REMOVE|DELETE|DEL)$/.test(toks[0])) { removeAc(ac); return; }   // works on any flight, yours or not
   if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
   if (!aiCtx && aiOwns(ac)) takeOver(ac);   // an instruction to a flight the AI is working: you take it back
-  if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
+  if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][arrKey(ac)][0] ? 'the boundary' : 'entry'}.`); return; }
   if (!aiCtx) select(ac);
   const said = [], reads = [];
   const air = ac.airborne;
@@ -6837,7 +7018,7 @@ function commandRun(str){
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
       if (driveOut(ac)) { sys(`${APT.standWord === 'gate' ? 'Gate' : 'Stand'} ${ac.stand.id} is a taxi-in, taxi-out stand: no push back. Give ${ac.cs} its taxi (TAXI) and it taxis out forwards.`); continue; }
       const dir = pushDir(ac, toks[i+1]); if (dir) i++;
-      const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac));
+      const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac), ac);
       ac.pushPts = pushPath(ac, face);
       setPath(ac, ac.pushPts, 3, ['pushed'], { reverse: true });
       const dn = AP[ac.d] ? AP[ac.d][2] : ac.d;
@@ -6952,7 +7133,7 @@ function commandRun(str){
       if (needRel(ac)) { const R = ac.rel, who = relUnit(ac);
         if (!R || R.st !== 'OK') { sys(`No release from ${who} for ${ac.cs}${R && R.st === 'REQ' ? ' yet: it is requested, wait for the call back' : R && R.st === 'EXP' ? ': it expired, request a new one with REL' : R && R.st === 'CXL' ? ': it was cancelled, request a new one with REL once departures resume' : ': request one with REL first'}.`, true); continue; }
         if (R.nb && S.t < R.nb) { sys(`${who} released ${ac.cs} not before ${zt(R.nb).slice(0,5)}.`, true); continue; } }
-      const sid = sidName(ac.gate, depRw(ac)), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
+      const sid = sidName(ac.gate, depRw(ac), ac), chg = ac.sid && ac.sid !== sid; ac.sid = sid;
       { const rw = depRw(ac); ac.cto = true; ac.need = null; ac.depRwy = rw; ac.luAfter = null; }   // the runway it is at, worked out before cto (cto keeps whatever depRwy was)
       if (ac.state === 'HOLDPT') startLineUp(ac);
       else if (ac.path && (ac.state === 'TAXI' || ac.state === 'LINEUP')) { ac.path.thru = true; if (ac.state === 'LINEUP') ac.path.roll = true; }   // rolling: straight on into the take-off
@@ -7346,7 +7527,7 @@ function stepAir(ac, dt){
       if (Math.abs(off) < 400) { const k = Math.exp(-dt*0.7); [ac.x, ac.y] = R.rm(m, off*k); ac.hdg = norm(ac.hdg + clamp(angDiff(ac.hdg, crsOf(rw)), -3*dt, 3*dt)); }
     }
     if (fin.togo < -0.12 && ac.alt < tdElev(rw) + 70) { // touchdown
-      const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = ELEV; ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
+      const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = tdElev(rw); ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
       ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } SC(ac).landed++; SC(ac).pts += 25; ac.need = null;
       emit('landed', ac); planVac(ac);
     }
@@ -7501,7 +7682,7 @@ function stepGround(ac, dt){
     const R = rwyOf(ac.depRwy), u = ac.depRwy === R.hi ? -1 : 1, mv = ac.ias/3600*dt;
     ac.x += R.RU[0]*u*mv; ac.y += R.RU[1]*u*mv;
     if (ac.ias >= ac.perf.vr) {
-      ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = ELEV + 10; ac.ias = ac.perf.vr;
+      ac.ground = false; ac.onRwy = false; ac.state = 'AIRBORNE'; ac.mode = 'HDG'; ac.alt = gElev(ac) + 10; ac.ias = ac.perf.vr;
       APT.liftoff(ac);
       ac.tgtAlt = ac.cleared = sidTop(ac); ac.onSid = true; SC(ac).pts += 10;
       emit('airborne', ac);
@@ -7798,7 +7979,7 @@ function drawRockRelief(){
 function drawProcedures(){
   const sc = V.scale; if (sc > 400) return;
   cx.lineWidth = 1;
-  for (const g of Object.keys(ARR_ROUTE)) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][S.rwy].map(id => WP[id].p), false); cx.stroke(); }
+  for (const g of Object.keys(ARR_ROUTE)) for (const rk of (APT.arrRoutes ? APT.arrRoutes() : [S.rwy])) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][rk].map(id => WP[id].p), false); cx.stroke(); }
   cx.setLineDash([]);
   for (const k of RW_ENDS) {
     const F = FINAL[k]; if (!F) continue; cx.strokeStyle = k === S.rwy ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = k === S.rwy ? 1.3 : 1;
@@ -8369,7 +8550,8 @@ function renderAtis(){
   $('atis').innerHTML = `
     <div class="ph"><span class="lbl">ATIS</span><button id="atisRead" class="atis-letter" title="Read the ATIS broadcast">${S.atis}</button>${APT.splitRwy ? '' : `<span class="lbl dimmer">${phonetic(S.atis)}</span>`}
       <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">${APT.rwyConfigs ? 'Flow' : APT.splitRwy ? 'Land' : 'Runway'}</span>
-      ${APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" class="${APT.configOf(S.rwy) === c.key ? 'on' : ''}" title="Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}">${c.name}</button>`).join('')}</span>`
+      ${APT.rwyPickers ? APT.rwyPickers.map(k => `<span class="seg sm" title="${k.label}: runway in use"><span class="dimmer" style="padding:0 6px;align-self:center">${k.label}</span>${k.opts.map(r => `<button data-pk="${k.key}" data-r="${r}" class="${k.get() === r ? 'on' : ''}">${r}</button>`).join('')}</span>`).join('')
+        : APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" class="${APT.configOf(S.rwy) === c.key ? 'on' : ''}" title="Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}">${c.name}</button>`).join('')}</span>`
         : RW_ENDS.length > 2 ? `<select id="rwSel" class="rwsel" aria-label="Landing runway">${RW_ENDS.map(r => `<option${r === S.rwy ? ' selected' : ''}>${r}</option>`).join('')}</select><span class="lbl">Dep</span><select id="drSel" class="rwsel" aria-label="Departure runway">${RW_ENDS.map(r => `<option${r === depRw() ? ' selected' : ''}>${r}</option>`).join('')}</select>`
         : `<span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span>${APT.splitRwy ? `<span class="lbl">Dep</span><span class="seg sm"><button id="drHi" class="${depRw()===RW_HI?'on':''}">${RW_HI}</button><button id="drLo" class="${depRw()===RW_LO?'on':''}">${RW_LO}</button></span>` : ''}`}</div>
     <div class="metar"></div>
@@ -8395,6 +8577,7 @@ function renderAtis(){
       <button id="xBtn" class="${X.st==='OPEN'||X.st==='OPENING'?'danger':'go'}">${X.st==='OPEN'||X.st==='OPENING'?'Close road':'Open road'}</button></div>`}`;
   $('atis').querySelector('.metar').textContent = w.raw;
   $('atisRead').onclick = () => openAtis();
+  if (APT.rwyPickers) $('atis').querySelectorAll('[data-pk]').forEach(bt => bt.onclick = () => APT.rwyPickers.find(k => k.key === bt.dataset.pk).set(bt.dataset.r));
   if (APT.rwyConfigs) $('atis').querySelectorAll('[data-cfg]').forEach(bt => bt.onclick = () => setRwy(bt.dataset.cfg));
   else if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
   else { $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO); }
@@ -8402,10 +8585,14 @@ function renderAtis(){
   if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
   if ($('xBtn')) $('xBtn').onclick = toggleXing;
 }
+// arrivals still on their arrival route follow the runway now in use (their own airfield's)
+function rerouteArrivals(){
+  for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][arrKey(ac)]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
+}
 function setRwy(r){
   // New York: the landing runway brings its departure runway
   if (S.rwy === r) return; S.rwy = r; if (APT.depFor) S.depRwy = APT.depFor(r); nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
-  for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][r]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
+  rerouteArrivals();
   renderAtis(); emit('rwy', r);
 }
 // airports that land one way and depart the other (Innsbruck) choose the departure runway separately
@@ -8424,7 +8611,7 @@ const ICON = {
 };
 const relCls = ac => { const R = ac.rel; return !R ? 'none' : R.st === 'REQ' ? 'req' : R.st === 'EXP' || R.st === 'CXL' ? 'exp' : R.nb && S.t < R.nb ? 'req' : 'ok'; };
 function relText(ac){
-  const R = ac.rel, who = relUnit(ac), sid = ac.sid || sidName(ac.gate, depRw(ac));
+  const R = ac.rel, who = relUnit(ac), sid = ac.sid || sidName(ac.gate, depRw(ac), ac);
   const st = !needRel(ac) ? 'no release needed' : !R ? `no release from ${who} yet` : R.st === 'REQ' ? `release requested, ${who} will call back` : R.st === 'EXP' ? 'release expired: request a new one' : R.st === 'CXL' ? (typeof flowStop === 'function' && flowStop(ac) ? `release cancelled: ${who} has stopped departures until ${flowEnd(flowStop(ac))}Z` : 'release cancelled: request a new one') : R.nb && S.t < R.nb ? `released not before ${zt(R.nb).slice(0,5)}, until ${zt(R.until).slice(0,5)}` : `released until ${zt(R.until).slice(0,5)}`;
   return `<b>${esc(sid)}</b> · ${st}`;
 }
@@ -9071,7 +9258,7 @@ function start(){
   const RF = APT.rwyFor && APT.rwyFor(S.wx), newRwy = RF ? RF.land : cLo.head > cHi.head + 2 ? RW_LO : RW_HI;
   if (!S.running) {
     resetSession();
-    S.running = true; S.rwy = newRwy; S.depRwy = RF ? (ex && ex.depRwy) || RF.dep : null; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
+    S.running = true; S.rwy = newRwy; if (APT.onStart) APT.onStart(newRwy, /^live/.test(mode)); S.depRwy = RF ? (ex && ex.depRwy) || RF.dep : null; S.mode = mode; S.atis = ATIS_LETTERS[8 + Math.floor(Math.random()*6)];
     const live = /^live/.test(mode), now = new Date(Math.floor(Date.now()/60e3)*60e3);
     const day = live ? (now.getUTCDay() + 6) % 7 : +daySel.value, hour = live ? now.getUTCHours() + now.getUTCMinutes()/60 : +hourSel.value; S.day = day; S.hour = hour;
     if (live) { S.start = +now; S.speed = 1; $('tgSpeed').textContent = '1×'; } else if (!ex) S.start = Date.UTC(2026, 9, 5 + day, hour, 0, 0); else S.start = Date.UTC(2026, 9, 4, 18, 55, 0);
@@ -9391,7 +9578,7 @@ function flowLine(){ const F = S.flow && S.flow.stop; return F ? `<div class="wa
 function flowAtRwy(ac){ return ac.kind === 'DEP' && ac.ground && !ac.handed && (['HOLDPT', 'LINEUP', 'LINEDUP'].includes(ac.state) || (ac.state === 'TAXI' && !ac.holdAt && ac.hp && HOLDS[ac.hp])); }
 
 // a stop for one exit is named the way the area says it: the SID's route name (EXMOR, DEGUN), else the exit fix
-function flowFix(ac){ const sid = sidName(ac.gate, depRw(ac)), w = sid && String(sid).split(' ')[0]; return w && /^[A-Z]{3,5}$/.test(w) ? w : (exitRouteOf(ac) || [ac.gate])[0]; }
+function flowFix(ac){ const sid = sidName(ac.gate, depRw(ac), ac), w = sid && String(sid).split(' ')[0]; return w && /^[A-Z]{3,5}$/.test(w) ? w : (exitRouteOf(ac) || [ac.gate])[0]; }
 function flowStart(){
   const at = S.acs.filter(flowAtRwy), lined = at.filter(o => o.state === 'LINEDUP' || o.state === 'LINEUP');
   const ac = lined[0] || at[Math.floor(Math.random()*at.length)];
@@ -9488,9 +9675,10 @@ const BADGES = [
   { id: 'alternation', ap: 'EGLL', name: 'Runway alternation', d: 'Land at least three arrivals on each runway (27R or 09L, and 27L or 09R) in one Heathrow session, across the 15:00 runway switch, with no loss of separation.', ic: 'M7 21V3M17 21V3M4 7l3-4 3 4M14 17l3 4 3-4' },
   { id: 'heathrow', ap: 'EGLL', name: 'Heathrow endorsement', d: 'Complete the three London Heathrow guided exercises.', ic: 'M2 21h20M4 21V12h5v9M10 21V8h4v13M15 21v-6h5v6M12 8V3' },
   { id: 'hillfog',  ap: 'EGGD', name: 'Hill fog',          d: 'Land five arrivals at Bristol in one session in low cloud or fog: a cloud base below 500 ft or visibility under 3 km.', ic: 'M3 10h18M5 14h14M3 18h18M8 6l4-3 4 3' },
+  { id: 'aldergrove', ap: 'EGAA', name: 'Aldergrove endorsement', d: 'Complete the three Belfast guided exercises.', ic: 'M2 18h20M4 18l4-7h8l4 7M11 11V6h2v5M7 6h10' },
   { id: 'lulsgate', ap: 'EGGD', name: 'Lulsgate endorsement', d: 'Complete the three Bristol guided exercises.',         ic: 'M2 18h20M4 18l4-7h8l4 7M11 11V6h2v5M7 6h10' }
 ];
-const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', YSSY: 'Sydney', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester', EGLL: 'London Heathrow', EGGD: 'Bristol' };
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', YSSY: 'Sydney', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester', EGLL: 'London Heathrow', EGGD: 'Bristol', EGAA: 'Belfast' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -9538,6 +9726,7 @@ function careerCheck(){
   if (['rdep','rarr','rmix'].every(k => CAR.ex[k])) careerAward('ringway');
   if (['hdep','harr','hmix'].every(k => CAR.ex[k])) careerAward('heathrow');
   if (['bdep','barr','bmix'].every(k => CAR.ex[k])) careerAward('lulsgate');
+  if (['fdep','farr','fmix'].every(k => CAR.ex[k])) careerAward('aldergrove');
   if (T.secs >= 3600) careerAward('hour');
   if (T.secs >= 36000) careerAward('ten');
   if (T.mov >= 100) careerAward('century');
@@ -11172,7 +11361,7 @@ function meet(A, ha, B, hb, st, tight){
 function arrIn(o, first, dir, f0){
   const O = AP[o.o].slice(0, 2), home = AP[APT.icao].slice(0, 2), bo = gcBrg(home, O);
   const gt = Object.keys(ENTRY).sort((a, b) => Math.abs(angDiff(brg(...RADAR_REF, ...ENTRY[a]), bo)) - Math.abs(angDiff(brg(...RADAR_REF, ...ENTRY[b]), bo)))[0];
-  const ids = gt && ARR_ROUTE[gt] ? (ARR_ROUTE[gt][S.rwy] || []).filter(id => WP[id]) : [];
+  const ids = gt && ARR_ROUTE[gt] ? (ARR_ROUTE[gt][arrKey(o)] || []).filter(id => WP[id]) : [];
   if (gt && gcDist(O, home) > 60) {
     const ch = [ENTRY[gt], ...ids.map(id => WP[id].p)]; let bi = 1, bd = Infinity;
     for (let i = 1; i < ch.length; i++) { const d = segDist(f0, ch[i-1], ch[i]); if (d < bd - 0.01) { bd = d; bi = i; } }
@@ -11235,7 +11424,7 @@ function trkRoute(o){
     const rec = (g.track || []).concat(legPts(g.leg, 0, d, alt));
     // ahead: the rest of the same route (to the pending-track point, then on to the airport for an inbound)
     const ext = [legPts(g.leg, d, D, alt)];
-    if (g.kind === 'ARR') { const e = legAt(g.leg, D).ll, fx = ((g.f && ARR_ROUTE[g.f.gate] && ARR_ROUTE[g.f.gate][S.rwy]) || []).filter(id => WP[id]).map(id => toLL(WP[id].p)), lastP = fx.length ? fx[fx.length - 1] : e, inH = fx.length ? gcBrg(fx.length > 1 ? fx[fx.length - 2] : e, lastP) : legAt(g.leg, D).hdg, L = ptsLeg([...smoothPts([e, ...fx]).slice(0, -1), ...ontoFinal(lastP, inH, FINAL[S.rwy], home)]); ext.push(legPts(L, 0, L.D, x => Math.max(0, (g.endAlt || 6000) - x*300))); }
+    if (g.kind === 'ARR') { const e = legAt(g.leg, D).ll, fx = ((g.f && ARR_ROUTE[g.f.gate] && ARR_ROUTE[g.f.gate][arrKey(g.f)]) || []).filter(id => WP[id]).map(id => toLL(WP[id].p)), lastP = fx.length ? fx[fx.length - 1] : e, inH = fx.length ? gcBrg(fx.length > 1 ? fx[fx.length - 2] : e, lastP) : legAt(g.leg, D).hdg, L = ptsLeg([...smoothPts([e, ...fx]).slice(0, -1), ...ontoFinal(lastP, inH, FINAL[S.rwy], home)]); ext.push(legPts(L, 0, L.D, x => Math.max(0, (g.endAlt || 6000) - x*300))); }
     return { rec, ext };
   }
   let rec = o.track || [];
@@ -11250,7 +11439,7 @@ function trkRoute(o){
     rec = o._tb.pts.concat(rec);
     // ahead: what it is cleared to (drawn as the clearance line) when in radar cover, else its arrival route to the airport
     if (o.airborne && (o.state === 'PRE' || (typeof outsideRadar === 'function' && outsideRadar(o)))) {
-      const fx = ((o.route && o.route.length ? o.route : (ARR_ROUTE[o.gate] && ARR_ROUTE[o.gate][S.rwy])) || []).filter(id => WP[id]).map(id => toLL(WP[id].p));
+      const fx = ((o.route && o.route.length ? o.route : (ARR_ROUTE[o.gate] && ARR_ROUTE[o.gate][arrKey(o)])) || []).filter(id => WP[id]).map(id => toLL(WP[id].p));
       const lastP = fx.length ? fx[fx.length - 1] : here, prevP = fx.length > 1 ? fx[fx.length - 2] : here, inH = fx.length ? gcBrg(prevP, lastP) : (o.trk ?? o.hdg ?? 0);
       const L = ptsLeg([...smoothPts([here, ...fx]).slice(0, -1), ...ontoFinal(lastP, inH, FINAL[landRw(o)], home)]); ext.push(legPts(L, 0, L.D, x => Math.max(0, o.alt - x*300)));
     }
@@ -11524,6 +11713,7 @@ function liveToday(now = Date.now()){
   const conv = (r, kind) => {
     const cs = csOf(r.flight), t = hm(r.expected && /^\d\d:\d\d$/.test(r.expected) ? r.expected : r.sched) - off, sch = hm(r.sched) - off;
     const st = (r.status || '').trim(), stl = st.toLowerCase();
+    if (r.air === 'C' && APT.markCity) APT.markCity(cs);   // two airfields in one feed (Belfast): the row says which one
     return { cs, flight: r.flight, t: typeOf(cs), ap: placeOf(r.place), place: r.place, tm: t, sched: sch, kind,
       real: st + (r.expected && !/landed|departed|airborne|arrived/i.test(st) ? ' ' + r.expected + ' local' : ''),
       cancelled: /cancel/.test(stl), done: kind === 'ARR' ? /landed|arrived|on stand|on blocks/.test(stl) : /departed|airborne|closed/.test(stl), rel: t - nowUtc };
@@ -11743,7 +11933,7 @@ function adoptArr(a, p, row){
     ac.mode = 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360; ac.state = 'VECTORS'; ac.route = [];
     liveCall(ac, `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)}${ac.tgtAlt < ac.alt - 200 ? ' descending ' + altShort(ac.tgtAlt) : ''}, heading ${hdg3(ac.tgtHdg)}, information ${phonetic(S.atis)}`);
   } else {   // on its arrival route: from the leg it is on
-    ac.mode = 'NAV'; ac.state = 'INBOUND'; ac.route = routeOn(p, ENTRY[gate], ARR_ROUTE[gate][S.rwy]); easeOn(ac);
+    ac.mode = 'NAV'; ac.state = 'INBOUND'; ac.route = routeOn(p, ENTRY[gate], ARR_ROUTE[gate][arrKey(ac)]); easeOn(ac);
     liveCall(ac, PH.checkIn(ac));
   }
   ac.need = 'Initial call';
@@ -11751,7 +11941,7 @@ function adoptArr(a, p, row){
 }
 function adoptDepAir(a, p, row){
   const gate = row ? gateFor(row.ap) : depGateOf(p, a.trk || 0), ac = liveAc(a, p, row, 'DEP', gate), d = dist(...p, ...RADAR_REF);
-  const drw = depRw(ac); Object.assign(ac, { depRwy: drw, sid: sidName(gate, drw), cto: true, turned: true, pushed: true, leftStand: true, state: 'AIRBORNE', reqDct: true, onSid: false });
+  const drw = depRw(ac); Object.assign(ac, { depRwy: drw, sid: sidName(gate, drw, ac), cto: true, turned: true, pushed: true, leftStand: true, state: 'AIRBORNE', reqDct: true, onSid: false });
   const top = sidTop(ac); ac.tgtAlt = ac.cleared = a.alt > top - 300 ? Math.ceil((a.alt + 1500)/1000)*1000 : top;
   ac.route = routeOn(p, RADAR_REF, exitRouteOf(ac)); easeOn(ac); ac.mode = ac.route.length ? 'NAV' : 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360;
   if (d < 4 && a.alt < ELEV + 2500) { ac.freq = 'TWR'; ac.calledAir = false; }   // just airborne: still with Tower, transfer it to Radar
@@ -11772,7 +11962,7 @@ function adoptGround(a, p){
       const dep = exDep ? true : exArr ? false : gs > a.pgs + 2;
       const m = R.mOf(p), q = R.rm(m, clamp(R.offOf(p), -8, 8));
       if (dep) { const row = exDep || liveRow(a, 'DEP', 0, 30), gate = row ? gateFor(row.ap) : depGateOf(p, a.trk || 0), ac = liveAc(a, q, row, 'DEP', gate);
-        Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'TAKEOFF', cto: true, depRwy: rw, sid: sidName(gate, rw), pushed: true, leftStand: true, hdg: crsOf(rw), mode: 'GROUND', ias: gs, freq: 'TWR' });
+        Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'TAKEOFF', cto: true, depRwy: rw, sid: sidName(gate, rw, ac), pushed: true, leftStand: true, hdg: crsOf(rw), mode: 'GROUND', ias: gs, freq: 'TWR' });
         return ac; }
       const row = exArr || liveRow(a, 'ARR', -2, 25), ac = liveAc(a, q, row, 'ARR', nearGate(p));
       Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'ROLLOUT', app: rw, rollDir: dir, hdg: crsOf(rw), mode: 'GROUND', ias: gs, freq: 'TWR', checked: true, ctl: true });
@@ -11781,7 +11971,7 @@ function adoptGround(a, p){
     const lrw = depRwys().find(r => rwyOf(r) === R);
     if (gs <= 30 && along && !exArr && lrw) {   // stopped on the runway, lined up: a departure waiting for take-off clearance
       const row = exDep || liveRow(a, 'DEP', 3, 30), gate = row ? gateFor(row.ap) : depGateOf(p, crsOf(lrw)), ac = liveAc(a, R.rm(R.mOf(p), 0), row, 'DEP', gate);
-      Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'LINEDUP', depRwy: lrw, hdg: crsOf(lrw), sid: sidName(gate, lrw), pushed: true, leftStand: true, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0, need: 'Lined up' });
+      Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'LINEDUP', depRwy: lrw, hdg: crsOf(lrw), sid: sidName(gate, lrw, ac), pushed: true, leftStand: true, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0, need: 'Lined up' });
       liveCall(ac, `${APT.tower[0]}, ${greet()}, lined up runway ${lrw}`);
       return ac;
     }
@@ -12876,7 +13066,8 @@ function holdFixFor(ac){
   const on = (ac.route || []).find(id => WP[id] && WP[id].hold);
   if (on) return on;
   let best = null, bd = 1e9;
-  const all = PUB_HOLDS(), list = all.length ? all : Object.values(WP).filter(w => w.hold && w.p);   // Bristol: only BRI, over the field
+  let all = PUB_HOLDS(); if (APT.holdOk) { const f = all.filter(w => APT.holdOk(ac, w.id)); if (f.length) all = f; }   // Belfast: each airfield's own holds
+  const list = all.length ? all : Object.values(WP).filter(w => w.hold && w.p);   // Bristol: only BRI, over the field
   for (const w of list) { const d = dist(ac.x, ac.y, ...w.p); if (d < bd) { bd = d; best = w.id; } }
   return best;
 }
@@ -13897,13 +14088,15 @@ const LIVE_SRC = ['metar.txt', `https://metar.vatsim.net/${APT.icao}`, `https://
 const liveBox = $('liveWx'), liveSt = $('liveWxSt');
 let liveTimer = null, liveLast = '', liveFailed = false;
 function liveStatus(t, cls){ liveSt.hidden = !t; liveSt.textContent = t; liveSt.className = 'fine' + (cls ? ' ' + cls : ''); }
-async function fetchMetar(){
-  for (const url of LIVE_SRC) {
+// a second airfield in the same session (Belfast City): its own report, shown beside the main one
+const ALT_SRC = APT.icaoAlt ? ['metar-' + APT.icaoAlt.toLowerCase() + '.txt', `https://metar.vatsim.net/${APT.icaoAlt}`, `https://aviationweather.gov/api/data/metar?ids=${APT.icaoAlt}&format=raw&hours=3`] : [];
+async function fetchMetar(icao = APT.icao, srcs = LIVE_SRC){
+  for (const url of srcs) {
     try {
       const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
       const r = await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Date.now(), { signal: ctl.signal, cache: 'no-store' }); clearTimeout(to);
       if (!r.ok) continue;
-      const line = (await r.text()).split('\n').map(x => x.trim()).find(x => new RegExp(`^(METAR |SPECI )?${APT.icao} \\d{6}Z`).test(x));
+      const line = (await r.text()).split('\n').map(x => x.trim()).find(x => new RegExp(`^(METAR |SPECI )?${icao} \\d{6}Z`).test(x));
       if (line) return line.replace(/^(METAR|SPECI) /, '').replace(/=$/, '');
     } catch(e) {}
   }
@@ -13927,6 +14120,7 @@ async function pollLive(){
     liveFailed = true; return;
   }
   liveFailed = false;
+  if (ALT_SRC.length) fetchMetar(APT.icaoAlt, ALT_SRC).then(a => { if (a) { S.metarC = { raw: a }; if (S.running) renderAtis(); } });
   const z = new Date().toISOString().substr(11,5);
   liveStatus(`Live · ${m} · checked ${z}Z`, 'ok');
   if (m !== liveLast) { liveLast = m; applyLiveMetar(m); }
@@ -14489,11 +14683,11 @@ function cwInit(){
 setTimeout(cwInit, 0);
 
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'yssy', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'egaa', 'yssy', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live, #resume.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd', YSSY: 'yssy' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd', EGAA: 'egaa', YSSY: 'yssy' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 // an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
 const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
@@ -14556,6 +14750,7 @@ const AIRPORTS_NET = [
   { icao:'LFMN', ll:[43.658, 7.216], iata:'NCE', name:'Nice Côte d’Azur', ctry:'France', region:'Europe', rwys:['04L/22R','04R/22L'], status:'dev', pos:['APP','TWR','GND'], diff:3, blurb:'Parallel runways on reclaimed land, approaches along the coast, and the Alps close to the north.' },
   { icao:'LEMG', ll:[36.675, -4.499], iata:'AGP', name:'Málaga', ctry:'Spain', region:'Europe', rwys:['13/31','12/30'], status:'plan', pos:['APP','TWR','GND'], diff:3, blurb:'Gibraltar’s busy neighbour: summer peaks, two runways and the Costa del Sol sea breeze.' },
   { icao:'EGLL', ll:[51.47, -0.454], iata:'LHR', name:'London Heathrow', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09L/27R','09R/27L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'The busiest two-runway airport in Europe. Four holding stacks, segregated mode with the 15:00 runway alternation, five terminals and a heavy wake mix, with Terminal 4 arrivals crossing the departure runway.' },
+  { icao:'EGAA', ll:[54.658, -6.216], iata:'BFS', name:'Belfast', ctry:'United Kingdom', region:'UK & Ireland', rwys:['07/25','17/35','04/22'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'Belfast International and Belfast City together: two airfields 14 miles apart under one approach, three runways, no SIDs or STARs but radar vectors over Belfast Lough, the BEL, HB and MAGEE holds, and City departures released by Aldergrove Radar.' },
   { icao:'EGGD', ll:[51.383, -2.719], iata:'BRS', name:'Bristol', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:3, blurb:'One runway on a hilltop 600 ft up, with a parallel taxiway and three aprons. Arrivals from the BRI hold over the field, conventional SIDs that stop at 6,000 ft, and hill fog on Broadfield Down.' },
   { icao:'YSSY', ll:[-33.946, 151.177], iata:'SYD', name:'Sydney', ctry:'Australia', region:'Oceania', rwys:['07/25','16L/34R','16R/34L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'Three runways on Botany Bay: a long parallel for the heavy jets and a short one for the landings, the crossing 07/25, RNAV SIDs and STARs, and a curfew at 23:00.' },
   { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'The world’s busiest single runway, in mixed mode: fit every departure into the gaps between arrivals from the TIMBA and WILLO holds. The old 08L/26R is now a taxiway.' },
@@ -15029,6 +15224,13 @@ const SCEN_TEXT = { LPMA: {
   fog: 'Thames Valley fog: low visibility procedures. Heathrow lands in CAT III, so the flow goes on, slower and with wider spacing.',
   storm: 'A south-westerly gale gusting into the forties. Windshear on short final, go-arounds and the stacks filling up.',
   calm: 'High pressure, light and variable wind and haze. A quiet morning to learn the two-runway flow.'
+}, EGAA: {
+  west: 'The usual westerly. Aldergrove lands and departs 25 (the Cat III ILS) and Belfast City lands and departs 22. Arrivals from Great Britain and Europe cross Belfast Lough and turn onto the finals.',
+  east: 'An easterly. Aldergrove uses 07 (the RNP approach) and City 04: City arrivals come down the east side of the Lough in a right-hand circuit.',
+  low: 'Low cloud and drizzle: the ILS minima are close. Expect go-arounds and holding at BEL and MAGEE.',
+  fog: 'Thick fog, below the CAT I minima at both airfields. Hold the arrivals, plan diversions to Dublin and Derry.',
+  storm: 'An Atlantic gale across the runways: turbulence and windshear on short final, go-arounds and a long queue to the stack.',
+  calm: 'High pressure, light and variable wind. A quiet day to learn how the two airfields share one approach.'
 }, EGGD: {
   west: 'The usual south-westerly. Land 27 off the ILS from the east, and fit each departure from the three aprons in between the arrivals.',
   east: 'An easterly. Runway 09: arrivals come in over Weston-super-Mare from EMPAS, departures taxi west along Zulu and Golf to Golf X-ray.',
@@ -15119,6 +15321,7 @@ const ENDORSE = {
   EGKK: { name: 'London Gatwick', ex: ['gdep', 'garr', 'gmix'], badge: 'gatwick', p: 'One runway in mixed mode, RNAV SIDs with their own stop altitudes, arrivals from the TIMBA and WILLO holds onto the ILS, rapid exits and two terminals.' },
   LEMD: { name: 'Madrid-Barajas', ex: ['ldep', 'larr', 'lmix'], badge: 'barajas', p: 'Four runways at once: independent parallel ILS approaches, two departure runways, the north and south flows, RNAV SIDs to 13,000 ft and the 18R/36L crossing between Terminals 4 and 4S.' },
   EGLL: { name: 'London Heathrow', ex: ['hdep', 'harr', 'hmix'], badge: 'heathrow', p: 'Segregated mode on two parallel runways and the 15:00 alternation, arrivals from the Bovingdon, Lambourne, Biggin and Ockham stacks, Terminal 5 departures taxiing the length of the airport and Terminal 4 arrivals crossing the departure runway.' },
+  EGAA: { name: 'Belfast', ex: ['fdep', 'farr', 'fmix'], badge: 'aldergrove', p: 'Two airfields on one approach: Aldergrove 07/25 with the ILS 25 and the RNP 07, Belfast City 04/22 over the Lough, vectors in place of STARs, the BEL, HB and MAGEE holds, and City departures released by Aldergrove Radar.' },
   EGGD: { name: 'Bristol', ex: ['bdep', 'barr', 'bmix'], badge: 'lulsgate', p: 'One runway with a parallel taxiway on a hilltop: arrivals from the BRI hold onto the ILS, conventional SIDs that stop at 6,000 ft, the Link Charlie hot spot and departures fitted between the landings.' },
   EGCC: { name: 'Manchester', ex: ['rdep', 'rarr', 'rmix'], badge: 'ringway', p: 'Two parallel runways in segregated mode: departures across runway 1 to runway 2, arrivals from the ROSUN, MIRSI and DAYNE holds onto the ILS, SIDs that stop at 5,000 ft and hand-offs to Scottish Control.' },
   YSSY: { name: 'Sydney', ex: ['ydep', 'yarr', 'ymix'], badge: 'kingsford', p: 'Three runways on Botany Bay: the long 16R/34L for departures and the short 16L/34R for landings, the crossing 07/25, RNAV SIDs and STARs, apron taxiing and a curfew at 23:00.' },
@@ -15151,7 +15354,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'YSSY' ? '1.3 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : ap === 'EGGD' ? '2.6 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'YSSY' ? '1.3 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : ap === 'EGGD' ? '2.6 / 1' : ap === 'EGAA' ? '1.6 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false }); else embedDraw(c, ap, 'fig');
   });

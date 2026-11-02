@@ -22,7 +22,7 @@ function flowLine(){ const F = S.flow && S.flow.stop; return F ? `<div class="wa
 function flowAtRwy(ac){ return ac.kind === 'DEP' && ac.ground && !ac.handed && (['HOLDPT', 'LINEUP', 'LINEDUP'].includes(ac.state) || (ac.state === 'TAXI' && !ac.holdAt && ac.hp && HOLDS[ac.hp])); }
 
 // a stop for one exit is named the way the area says it: the SID's route name (EXMOR, DEGUN), else the exit fix
-function flowFix(ac){ const sid = sidName(ac.gate, depRw(ac)), w = sid && String(sid).split(' ')[0]; return w && /^[A-Z]{3,5}$/.test(w) ? w : (exitRouteOf(ac) || [ac.gate])[0]; }
+function flowFix(ac){ const sid = sidName(ac.gate, depRw(ac), ac), w = sid && String(sid).split(' ')[0]; return w && /^[A-Z]{3,5}$/.test(w) ? w : (exitRouteOf(ac) || [ac.gate])[0]; }
 function flowStart(){
   const at = S.acs.filter(flowAtRwy), lined = at.filter(o => o.state === 'LINEDUP' || o.state === 'LINEUP');
   const ac = lined[0] || at[Math.floor(Math.random()*at.length)];
