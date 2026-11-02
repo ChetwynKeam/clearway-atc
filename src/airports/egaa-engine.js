@@ -156,7 +156,7 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
       const old = { a: e.a, b: e.b, tw: e.tw, bare: e.bare, line: e.line, k: e.k };
       drop(e);
       gn(fid, mOf(X), offOf(X)); GN[fid].p = X;
-      for (const [x, y] of [[old.a, fid], [fid, old.b]]) { ge(x, y, old.tw); const ne = GE[GE.length - 1]; if (old.bare) ne.bare = old.bare; if (old.line) ne.line = old.line; if (old.k) ne.k = old.k; }
+      for (const [x, y] of [[old.a, fid], [fid, old.b]]) { ge(x, y, old.tw); const ne = GE[GE.length - 1]; if (old.bare) ne.bare = old.bare; if (old.k) ne.k = old.k; }   // no copy of the old edge line: each half would carry the whole detour
       for (const [v, ev] of GN[t.node].adj.slice()) if (ev.tw === 'APRON') drop(ev);
       gn(sid, mOf(t.p), offOf(t.p)); GN[sid].p = t.p; ge(fid, sid, 'APRON'); GE[GE.length - 1].bare = true;
       const br = brg(...a, ...b), fwd = Math.abs(angDiff(br, H)) < 90 ? br : (br + 180) % 360;
