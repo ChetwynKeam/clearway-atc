@@ -5170,6 +5170,18 @@ for (const k of Object.keys(HOLDS)) FIL[k] = buildFil(k, G.fil[k]);
   FIL.X17 = { W: arcFil(m1, o1, u, 'W', R), E: arcFil(m1, o1, u, 'E', R) };
 }
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
+// taxiway L where its spur meets the parallel taxiway: a 7 m dog-leg (k18) and a dead-end stub (n20) tangled the curves, so the spur runs straight in
+if (GN.n19 && GN.k18 && GN.k17 && GN.n20 && GN.k18.adj.length === 2 && GN.n20.adj.length === 1) {
+  const dropE = e => { GE.splice(GE.indexOf(e), 1); for (const id of [e.a, e.b]) GN[id].adj = GN[id].adj.filter(([, x]) => x !== e); };
+  for (const e of GE.filter(e => [e.a, e.b].some(n => n === 'k18' || n === 'n20'))) dropE(e);
+  delete GN.k18; delete GN.n20; ge('k17', 'n19', 'L');
+  // and the second, twin link from the same fork (k4 to k7) that rejoined the parallel taxiway 50 m on, a loop on the chart: n14 reaches n15 through n19
+  const twin = ['k4', 'k5', 'k6', 'k7'];
+  if (twin.every(k => GN[k] && GN[k].adj.length === 2) && !Object.values(HOLDS).some(h => twin.includes(h.node)) && !G.gates.some(g => twin.includes(g[3]))) {
+    for (const e of GE.filter(e => twin.includes(e.a) || twin.includes(e.b))) dropE(e);
+    for (const k of twin) delete GN[k];
+  }
+}
 // stands: Aldergrove's apron stands by the terminal (M) and City's 1 to 10, 21 and 24 (C1... here)
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const p = EN(e, n);
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null, noLead: !line, h0: hdg, line: line ? line.map(([e, n]) => EN(e, n)) : null,
