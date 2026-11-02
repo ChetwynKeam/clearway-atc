@@ -161,6 +161,17 @@ const CLINES = (() => {
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const p = EN(e, n);
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null, noLead: !line, h0: hdg, line: line ? line.map(([e, n]) => EN(e, n)) : null,
     ...(out ? { out: { node: out[0], pts: out[1].map(([e, n]) => EN(e, n)) } } : {}) }; });   // out: a drive-through stand's way out to the far lane
+// satellite stands are entered one way only: the way that puts the left (door) side of the aircraft towards the satellite, so the
+// aircraft circle each satellite anticlockwise seen from above. Stands mapped the other way round are turned about.
+{ const S = STANDS.filter(s => s.out && s.line), cl = [];
+  for (const s of S) { const c = cl.find(c => c.some(o => dist(...o.p, ...s.p)/M2NM < 95)); if (c) c.push(s); else cl.push([s]); }
+  for (const c of cl) { const ce = [c.reduce((a, s) => a + s.p[0], 0)/c.length, c.reduce((a, s) => a + s.p[1], 0)/c.length];
+    for (const s of c) {
+      const h = dirv(s.h0 ?? brg(...s.line[0], ...s.p)), to = [(ce[0] - s.p[0])/M2NM, (ce[1] - s.p[1])/M2NM];
+      if (h[0]*to[1] - h[1]*to[0] > 0) continue;                      // the satellite is on its left already
+      const far = s.out.pts[s.out.pts.length - 1], oldLine = s.line, oldNode = s.node;
+      s.line = [far, s.p]; s.out = { node: oldNode, pts: [s.p, oldLine[0]] }; s.node = s.outNodeWas = G.gates.find(g => g[0] === s.id)[6][0]; s.h0 = norm((s.h0 ?? brg(...oldLine[0], ...s.p)) + 180);
+    } } }
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
 // the mapped stand line ends where the nose stops: the stand's point is the aircraft's middle, set back from that end by
 // the stop-bar distance of the largest aircraft the stand takes (as at Madrid and Manchester)
@@ -172,7 +183,7 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
       if (Math.abs(al) < 30 && la > 10) lat = Math.min(lat, la);
       if (la > 10 || Math.abs(al) > 10) near = Math.min(near, Math.hypot(dx, dy)); }
     const w = clamp(Math.min(isFinite(lat) ? lat : 38, near*1.1) - 1, 30, 82), sb = clamp(w + 6, 24, 80)*0.56 - 4;
-    at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
+    at.set(t, add(t.p, t.hdg + 180, Math.min(t.out ? sb - 9 : sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
   }
   for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
@@ -469,7 +480,7 @@ const APT = {
   areaNames: { civil: 'stands' },
   standWord: 'stand',
   // satellite stands: jet bridges and apron buses between the satellite building and the terminal (vehicles.js satBay, shuttleOut)
-  shuttle: st => st.term === 'S', shuttleTerm: 'T',
+  doorsToTerminal: true, shuttle: st => st.term === 'S', shuttleTerm: 'T',
   termName: t => TERM_NAME[t] || 'Apron ' + t,
   prefArea: ac => { const t = termOf(ac); return { key: t, name: TERM_NAME[t], has: s => s.term === t }; },
   standFor: ac => { const t = termOf(ac); return standAt(ac, t) || (t !== 'T' && standAt(ac, 'T')) || ['E', 'W', 'S', 'N'].filter(x => x !== t).map(x => standAt(ac, x)).find(Boolean) || null; },
