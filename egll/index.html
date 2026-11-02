@@ -11597,7 +11597,7 @@ function wayOn(o, dest, seed){
       pts.length = 0; pts.push(...flyPts(toLL(R.rm(R.len*0.5, 0)), rh, [endR, gcDest(endR, rh, 1), ...fx.map(id => toLL(WP[id].p))], 0.3));
       p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
       if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-      for (let k = 0; k < 80 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(5, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
+      for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
       const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
       return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
     }
@@ -11610,7 +11610,7 @@ function wayOn(o, dest, seed){
     else { pts.push(q); h = gcBrg(p, q); }
     p = q; }
   if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-  for (let k = 0; k < 80 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(5, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
+  for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
   return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
 }
