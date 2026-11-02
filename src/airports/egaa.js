@@ -117,8 +117,8 @@ const EGAA = (() => {
   //   UK and Europe (NE, SE): over Belfast Lough, then the sharp turn onto the final (25, 22), or round to the RNP 07 IAFs.
   //   South and west: straight to BEL (25), the RNP 07 IAFs, or City's 04 direct arrival.
   const STARS = {
-    // north-east: P600 from Turnberry, then over the Lough to the sharp turn onto the final
-    'NE 25': { apt: 'EGAA', rwy: '25', from: 'NE', pts: [['TRN', 12000], ['BLACA', 8000], ['LOUGH', 5000], ['INT25', 4000]] },
+    // north-east: P600 from Turnberry, direct to the 25 final (the extended centreline runs north-east, so the join is shallow)
+    'NE 25': { apt: 'EGAA', rwy: '25', from: 'NE', pts: [['TRN', 12000], ['BLACA', 8000], ['INT25', 4000]] },
     // south-east: L10 from the Isle of Man (RINGA low route shown; NELBO for the high one), up the Down coast and over the Lough
     'SE 25': { apt: 'EGAA', rwy: '25', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['LOUGH', 5000], ['INT25', 4000]] },
     // south: N34 from the Dublin side
