@@ -174,6 +174,7 @@ const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const
       s.line = [far, s.p]; s.out = { node: oldNode, pts: [s.p, oldLine[0]] }; s.node = s.outNodeWas = G.gates.find(g => g[0] === s.id)[6][0]; s.h0 = norm((s.h0 ?? brg(...oldLine[0], ...s.p)) + 180);
     } } }
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
+STANDS.forEach(s => { if (s.out) s.dash = null; });         // the satellite stands get their own turn-in curves (drawLsgg)
 // the mapped stand line ends where the nose stops: the stand's point is the aircraft's middle, set back from that end by
 // the stop-bar distance of the largest aircraft the stand takes (as at Madrid and Manchester)
 { const at = new Map();
@@ -335,12 +336,16 @@ function drawLsgg(){
     // from the lane either side of the start of the lead-in
     groundLines(lw(0.3), () => { for (const s of STANDS) if (s.out && s.line) {
       pathP([s.p, s.out.pts[s.out.pts.length - 1]], false); cx.stroke();
-      const L0 = s.line[0], E1 = s.out.pts[s.out.pts.length - 1], dx = s.p[0] - L0[0], dy = s.p[1] - L0[1], Ld = Math.hypot(dx, dy) || 1, d = [dx/Ld, dy/Ld], q = [-d[1], d[0]], Rr = 22;
+      // dashed turn-in curves linking the lane to the lead line, at the nose end and at the exit end: each runs from a point on the
+      // lane's own centreline, through the lane node, round onto the lead line (as at every other stand)
       cx.setLineDash([2*mpx + 2, 2*mpx + 2]);
-      // quarter circles centred where the cross line meets the lead line at the nose end and at the exit end, on the aircraft's side
-      for (const [C, sg] of [[L0, 1], [E1, -1]]) for (const sd of [-1, 1]) { const pts = [];
-        for (let i = 0; i <= 12; i++) { const t = i/12*Math.PI/2, u = Rr*Math.cos(t)*sg, v = sd*Rr*Math.sin(t);
-          pts.push([C[0] + (d[0]*u + q[0]*v)*M2NM, C[1] + (d[1]*u + q[1]*v)*M2NM]); } pathP(pts, false); cx.stroke(); }
+      for (const nid of [s.node, s.out.node]) { const gn = GN[nid]; if (!gn) continue; const P = gn.p, lead = brg(...P, ...s.p), seen = [];
+        const at = (q, bg, k) => [q[0] + Math.sin(bg*D2R)*k*M2NM, q[1] + Math.cos(bg*D2R)*k*M2NM];
+        for (const [v, e] of waysOn(nid)) { const w = GN[v] && GN[v].p; if (!w || !/^(OUTER|INNER|LINK)/.test(e.tw || '') || dist(...P, ...w)/M2NM < 3) continue;
+          const bg = brg(...P, ...w), an = Math.abs(angDiff(bg, lead)); if (an < 25 || an > 112 || seen.some(x => Math.abs(angDiff(x, bg)) < 20)) continue; seen.push(bg);
+          const A = at(P, bg, Math.min(18, dist(...P, ...w)/M2NM*0.9)), B = at(P, lead, 12), pts = [];
+          for (let i = 0; i <= 12; i++) { const u = i/12, q = 1 - u; pts.push([q*q*A[0] + 2*q*u*P[0] + u*u*B[0], q*q*A[1] + 2*q*u*P[1] + u*u*B[1]]); }
+          pathP(pts, false); cx.stroke(); } }
       cx.setLineDash([]);
     } });
     cx.save(); if (IMG) clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx, false); cx.restore();   // stand paint stops at the terminal walls
