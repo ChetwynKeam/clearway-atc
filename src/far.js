@@ -59,7 +59,7 @@ function airwayPts(pts, seed, keepLast){
   for (let i = 1; i < pts.length; i++) {
     const A = pts[i-1], B = pts[i], D = gcDist(A, B), last = keepLast && i === pts.length - 1;
     if (!last && D >= 60 && typeof AW !== 'undefined' && AW.ready) {
-      let fx = []; try { fx = AW.legBetween([A[0], A[1]], [B[0], B[1]], { rf: 70, rt: 70 }); } catch (e) { fx = []; }
+      let fx = []; try { fx = AW.legBetween([A[0], A[1]], [B[0], B[1]], { rf: 70, rt: 70, seed: String(seed) }); } catch (e) { fx = []; }
       // no doubling back: a joining fix behind the start or beyond the end is dropped
       fx = fx.filter(q => gcDist(A, q) < D + 40 && gcDist(q, B) < D + 40);
       if (fx.length) { for (const q of fx) out.push([q[0], q[1]]); out.push(B); continue; }
@@ -427,6 +427,7 @@ function farTag(X, Y, l1, l2, l3, col){
 }
 const FL = a => String(Math.max(0, Math.round(a/100))).padStart(3, '0');
 // the airway chart under the far traffic when zoomed out to the wider picture (the same chart as Area Control: awy.js)
+const SHOW_AIRWAYS = false;
 function drawAirwayChart(){
   if (typeof AW === 'undefined' || !AW.ready || V.scale >= 4 || ground3()) return;
   const P = (la, lo) => { const q = llxy(la, lo); return [sx(q[0]), sy(q[1])]; };
@@ -435,7 +436,7 @@ function drawAirwayChart(){
 }
 const ground3 = () => V.scale > 70;
 function drawFar(){
-  drawAirwayChart();
+  if (SHOW_AIRWAYS) drawAirwayChart();   // off: far flights fly the airways but the chart is not drawn (the Europe data is old)
   const tags = V.scale > 0.6;
   for (const g of FAR.list) {
     const st = farState(g); if (!st) continue;

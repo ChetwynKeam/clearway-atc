@@ -39,10 +39,12 @@ const AW = (() => {
 
   // ── the network ──
   let FIX = {}, AWYS = {}, AP = {}, RWY = {}, ADJ = {}, SEGS = [], NODES = [], DEG = {}, READY = false;
-  const COVER = { la: [48.2, 61.5], lo: [-13.5, 4.8] };
+  let COVER = { la: [48.2, 61.5], lo: [-13.5, 4.8] };
   const inCover = p => p[0] > COVER.la[0] && p[0] < COVER.la[1] && p[1] > COVER.lo[0] && p[1] < COVER.lo[1];
   function init(D){
     FIX = D.fix || {}; AWYS = D.awy || {}; AP = D.ap || {}; RWY = D.rwy || {};
+    // the region the airways cover (data may bring its own: the airport consoles carry the wider Europe network)
+    COVER = D.cover ? { la: [D.cover[0], D.cover[1]], lo: [D.cover[2], D.cover[3]] } : { la: [48.2, 61.5], lo: [-13.5, 4.8] };
     ADJ = {}; SEGS = []; DEG = {};
     const seen = new Set();
     for (const [name, A] of Object.entries(AWYS)) for (const s of A.s) for (let i = 1; i < s.length; i++) {
@@ -53,6 +55,20 @@ const AW = (() => {
       SEGS.push({ a, b, n: name, l: A.l, t: A.t, d, c: gcBrg(pa, pb), bb: [Math.min(pa[0], pb[0]), Math.min(pa[1], pb[1]), Math.max(pa[0], pb[0]), Math.max(pa[1], pb[1])] });
       (DEG[a] ||= new Set()).add(name); (DEG[b] ||= new Set()).add(name);
     }
+    // Networks from different sources (the UK file and the rest of Europe) meet at the border, mostly without a shared point: the
+    // nearest points of different networks within 35 NM are joined by a short direct leg (not drawn), so routes cross the border
+    { const comp = {}; let nc = 0;
+      for (const n of Object.keys(ADJ)) { if (comp[n] != null) continue; const st = [n]; comp[n] = nc; while (st.length) { const u = st.pop(); for (const e of ADJ[u]) if (comp[e[0]] == null) { comp[e[0]] = nc; st.push(e[0]); } } nc++; }
+      if (nc > 1) {
+        const ns = Object.keys(ADJ), grid = new Map(), key = (la, lo) => Math.floor(la/0.6) + ':' + Math.floor(lo/0.9);
+        for (const n of ns) { const q = FIX[n], k = key(q[0], q[1]); (grid.get(k) || grid.set(k, []).get(k)).push(n); }
+        const links = [];
+        for (const a of ns) { const pa = FIX[a], ka = key(pa[0], pa[1]).split(':').map(Number), near = [];
+          for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const b of grid.get((ka[0] + i) + ':' + (ka[1] + j)) || []) {
+            if (comp[b] === comp[a] || a >= b) continue; const d = gcNM(pa, FIX[b]); if (d < 35) near.push([d, b]); }
+          near.sort((x, y) => x[0] - y[0]); for (const [d, b] of near.slice(0, 2)) links.push([a, b, d]); }
+        for (const [a, b, d] of links) { (ADJ[a] ||= []).push([b, '', d, 'U', 'C']); (ADJ[b] ||= []).push([a, '', d, 'U', 'C']); }
+      } }
     NODES = Object.keys(ADJ); READY = true;
   }
   // a min-heap
@@ -84,6 +100,9 @@ const AW = (() => {
   // airport beyond the covered region: the join is on the great circle to it, costed by what is left to fly.
   // A start or goal that is not on any airway joins the network by the nearest fixes in its direction. Returns
   // { fixes, start: tag, goal: tag } or null.
+  // a steady pseudo-random number in [0, 1) for a leg and a seed: flights with different seeds fan out over the airways that
+  // are nearly as short as each other (the way real flights take different filed routes to the same place)
+  function jit(seed, a, b){ let h = 2166136261; const t = seed + a + '>' + b; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 10007)/10007; }
   function search(o){
     if (!READY) return null;
     const { from, to, starts, goals, hi = true, farFrom, farTo } = o, rf = o.rf || 90, rt = o.rt || 90;
@@ -113,7 +132,7 @@ const AW = (() => {
       const cu = dist0.get(u); if (k >= bestC) break;
       if (goalCost.has(u) && cu + goalCost.get(u) < bestC) { bestC = cu + goalCost.get(u); best = u; }
       for (const [v, , d, l, t] of ADJ[u] || []) { if (done.has(v)) continue;
-        add(v, cu + d*(hi && l === 'L' ? 1.1 : !hi && l === 'U' ? 1.2 : 1)*(t === 'C' ? 1.04 : 1) + 2, u); }
+        add(v, cu + d*(hi && l === 'L' ? 1.1 : !hi && l === 'U' ? 1.2 : 1)*(t === 'C' ? 1.04 : 1)*(o.seed ? 1 + 0.22*jit(o.seed, u, v) : 1) + 2, u); }
     }
     if (!best) return null;
     const fixes = [best]; let c = best; while (prev.get(c)) { c = prev.get(c); fixes.unshift(c); }
@@ -133,7 +152,7 @@ const AW = (() => {
     const ia = inCover(a), ib = inCover(b);
     const sA = ia ? a : edgeOf(a, b), sB = ib ? b : edgeOf(b, a);
     if (!sA || !sB || gcNM(sA, sB) < 30) return [];
-    const r = search({ from: sA, to: sB, hi: o.hi !== false, farFrom: ia ? null : a, farTo: ib ? null : b, rf: o.rf || 90, rt: o.rt || 90 });
+    const r = search({ from: sA, to: sB, hi: o.hi !== false, farFrom: ia ? null : a, farTo: ib ? null : b, rf: o.rf || 90, rt: o.rt || 90, seed: o.seed });
     if (!r) return [];
     return r.fixes.map(f => [FIX[f][0], FIX[f][1], f]);
   }
