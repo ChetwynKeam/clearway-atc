@@ -6571,7 +6571,15 @@ function taxiIn(ac, st, via, hold){
   // no taxiways named: over the runway crossing that suits the traffic, not always the shortest way
   const r = via && via.length ? rt(viaPen(via)) : xBest(ac, rt); if (!r) return null; xNote(ac, r);
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
-  const pts = r.nodes.map(id => GN[id].p);
+  let pts = r.nodes.map(id => GN[id].p);
+  // a stand lane that leaves the taxiway at a sharp angle (the herringbone stands): the corner is swept round as one curve, not a V
+  if (!hold) for (let i = r.nodes.length - 2; i > 0; i--) if (/^Cf/.test(r.nodes[i])) {
+    const A = pts[i - 1], C = pts[i], B = pts[i + 1], M = 1/M2NM, la = dist(...A, ...C)*M, lb = dist(...C, ...B)*M;
+    if (Math.abs(angDiff(brg(...A, ...C), brg(...C, ...B))) < 50 || la < 12 || lb < 12) break;
+    const k = Math.min(30, la*0.8, lb*0.8), P0 = [C[0] + (A[0] - C[0])*k/la, C[1] + (A[1] - C[1])*k/la], P2 = [C[0] + (B[0] - C[0])*k/lb, C[1] + (B[1] - C[1])*k/lb], arc = [];
+    for (let j = 0; j <= 8; j++) { const t = j/8, u = 1 - t; arc.push([u*u*P0[0] + 2*u*t*C[0] + t*t*P2[0], u*u*P0[1] + 2*u*t*C[1] + t*t*P2[1]]); }
+    pts = [...pts.slice(0, i), ...arc, ...pts.slice(i + 1)]; break;
+  }
   if (rolling) pts.splice(0, 1, ...ac.path.pts.filter(p => !p.ext));
   else if (pts.length > 1 && (dist(ac.x, ac.y, ...pts[0]) < 0.01 || (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90))) pts.shift();   // already there, or passed it
   ac.taxiIn = true; ac.need = null; ac.held = false; ac.holdAt = null; ac.taxiVia = viaOf(r.tws, ac.exit);
