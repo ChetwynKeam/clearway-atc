@@ -5306,8 +5306,7 @@ function drawLemd(){
     }
     // stand lead-in lines and numbers
     groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); } });
-    if (IMG) { cx.save(); clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx); cx.restore(); }   // stand paint stops at the terminal walls
-    else if (sc > 600) { cx.fillStyle = rgba('lab', .8); cx.font = `600 ${Math.max(9, 4*mpx)}px ${FONT_L}`; for (const s of STANDS) { const [X, Y] = P2(s.p); cx.fillText(s.id, X + 3, Y - 3); } }
+    cx.save(); if (IMG) clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx, false); cx.restore();   // stand paint stops at the terminal walls
     drawGroundSigns();
   }
 }
@@ -9966,7 +9965,7 @@ function drawApronSlabs(path){
 }
 
 // ── stands: lead-in, stop bar, safety box, number box; service road ──
-function drawStandDetail(c, path, mpx){
+function drawStandDetail(c, path, mpx, box = true){
   const sc = V.scale;
   // airport service vehicle route (E1): white edge lines along the south edge of the civil apron, zebra where lead-ins cross
   if (AD.serviceRoad) {
@@ -9980,23 +9979,27 @@ function drawStandDetail(c, path, mpx){
     cx.save(); cx.translate(...P); cx.rotate(h);
     const bw = sz.w*mpx, bh = sz.l*mpx, f = sz.f || 0.62, sb = sz.f ? bh*f - 4*mpx : bh*0.36;   // stop bar: at the nose of the largest aircraft the stand takes
     // red apron safety (clearance) box and equipment restraint line; an L/R stand sits inside its full-size stand's box
-    if (!sz.sub && !mapImagery()) {   // over the street map only the yellow paint is drawn
+    if (box && !sz.sub && !mapImagery()) {   // over the street map only the yellow paint is drawn
       cx.strokeStyle = C.gRed; cx.globalAlpha = 0.8; cx.lineWidth = Math.max(1, 0.3*mpx);
       cx.strokeRect(-bw/2, -bh*f, bw, bh);
       if (bw > 40) { cx.setLineDash([2*mpx, 2*mpx]); cx.strokeRect(-bw/2 - 2.5*mpx, -bh*f - 2.5*mpx, bw + 5*mpx, bh + 5*mpx); cx.setLineDash([]); }
       cx.globalAlpha = 1;
     }
     // stop bar at the nosewheel position with a short perpendicular tick
-    cx.strokeStyle = C.yellow; cx.lineWidth = Math.max(1.2, 0.45*mpx);
-    cx.beginPath(); cx.moveTo(-3.5*mpx, -sb); cx.lineTo(3.5*mpx, -sb); cx.stroke();
-    // centreline continues through the stand
-    cx.lineWidth = Math.max(1, 0.3*mpx); cx.beginPath(); cx.moveTo(0, bh*0.38); cx.lineTo(0, -sb); cx.stroke();
-    // stand number: yellow on black box at the lead-in
-    if (sc > 220 && !(sz.sub && sc < 900)) {
-      const fs = Math.max(9, 3.4*mpx); cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(s.id).width + fs*0.6;
-      if (tw > bw*0.9 && !AD.standBox) { cx.restore(); continue; }   // too small on screen to label without overlapping the next stand
-      const flip = Math.cos(h) < 0; if (flip) cx.rotate(Math.PI);
-      const yb = flip ? -bh*0.38 + fs*0.2 : bh*0.38 - fs*1.4; cx.fillStyle = '#111'; cx.fillRect(-tw/2, yb, tw, fs*1.2); cx.fillStyle = C.yellow; cx.textAlign = 'center'; cx.fillText(s.id, 0, yb + fs*0.95); cx.textAlign = 'left';
+    if (!s.noLead) {
+      cx.strokeStyle = C.yellow; cx.lineWidth = Math.max(1.2, 0.45*mpx);
+      cx.beginPath(); cx.moveTo(-3.5*mpx, -sb); cx.lineTo(3.5*mpx, -sb); cx.stroke();
+      // centreline continues through the stand
+      cx.lineWidth = Math.max(1, 0.3*mpx); cx.beginPath(); cx.moveTo(0, bh*0.38); cx.lineTo(0, -sb); cx.stroke();
+    }
+    // stand number: painted on the apron beside the lead-in, upright for a pilot looking along the stand (turned round where
+    // that would put it upside down on the screen); too small to read, it is left off
+    if (sc > 160 && !(sz.sub && sc < 900)) {
+      const fs = Math.max(7, 2.6*mpx); if (fs >= 7.5 || sc > 600) {
+        cx.font = `700 ${fs}px ${FONT_L}`; const tw = cx.measureText(s.id).width, flip = Math.cos(h) < 0; if (flip) cx.rotate(Math.PI);
+        const yb = flip ? -bh*0.34 : bh*0.34, xo = tw/2 + 0.9*mpx;
+        if (mapImagery() && C.name !== 'dark') { cx.strokeStyle = 'rgba(30,34,40,.55)'; cx.lineWidth = 1.6; cx.textAlign = 'center'; cx.strokeText(s.id, xo, yb + fs*0.35); }
+        cx.fillStyle = C.yellow; cx.textAlign = 'center'; cx.fillText(s.id, xo, yb + fs*0.35); cx.textAlign = 'left'; }
     }
     cx.restore();
   }
