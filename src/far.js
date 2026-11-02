@@ -53,15 +53,19 @@ const hashOf = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.ch
 // nearest joins), so far flights follow the airways the way they are filed; where there are none (the ocean, beyond the
 // data) it is the great circle with a gentle zig-zag of turning points, as before. Corners are flown as fly-by turns.
 if (typeof AWYDATA !== 'undefined' && typeof AW !== 'undefined' && !AW.ready) { try { AW.init(AWYDATA); } catch (e) { /* the old routes */ } }
-function airwayPts(pts, seed, keepLast){
+function airwayPts(pts, seed, keepLast, finalCourse){
   let rnd = hashOf(seed); const rn = () => ((rnd = Math.imul(rnd ^ (rnd >>> 15), 2246822507) >>> 0) / 4294967296)*2 - 1;
   const out = [pts[0]];
   for (let i = 1; i < pts.length; i++) {
     const A = pts[i-1], B = pts[i], D = gcDist(A, B), last = keepLast && i === pts.length - 1;
     if (!last && D >= 60 && typeof AW !== 'undefined' && AW.ready) {
-      let fx = []; try { fx = AW.legBetween([A[0], A[1]], [B[0], B[1]], { rf: 70, rt: 70, seed: String(seed) }); } catch (e) { fx = []; }
+      let fx = []; try { fx = AW.legBetween([A[0], A[1]], [B[0], B[1]], { rf: 70, rt: 70, seed: String(seed), course: gcBrg(A, B), courseTo: i === pts.length - (keepLast ? 2 : 1) && finalCourse != null ? finalCourse : null }); } catch (e) { fx = []; }
       // no doubling back: a joining fix behind the start or beyond the end is dropped
       fx = fx.filter(q => gcDist(A, q) < D + 40 && gcDist(q, B) < D + 40);
+      // and no hairpin: a joining fix that would turn the flight back on itself (over 100°) is skipped
+      { const seq = [A, ...fx.map(q => [q[0], q[1]]), B];
+        for (let i = 1; i < seq.length - 1; i++) if (Math.abs(angDiff(gcBrg(seq[i - 1], seq[i]), gcBrg(seq[i], seq[i + 1]))) > 100) { seq.splice(i, 1); i = Math.max(0, i - 2); }
+        fx = seq.slice(1, -1); }
       if (fx.length) { for (const q of fx) out.push([q[0], q[1]]); out.push(B); continue; }
     }
     // the great circle broken into legs whose turning points sit a little to one side or the other (as airways do)
@@ -118,7 +122,10 @@ function addArrGhost(f){
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
   // it joins the entry point flying in along the same line the pending track then follows, with no turn at the handover
   const join = gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
-  const leg = makeLeg(airway([AP[f.o].slice(0, 2), ...via.filter(p => gcDist(p, join[0] || endLL) > 60), ...join, endLL], f.cs + f.o, true)), [spd, fl] = CRUISE[f.t] || [450, 37000];
+  // the airways to the join point on the entry line (leaving them only from fixes behind it), no hairpin out to a fix and back
+  const raw = airwayPts([AP[f.o].slice(0, 2), ...via.filter(p => gcDist(p, join[0] || endLL) > 60), ...join, endLL], f.cs + f.o, true, join[0] ? gcBrg(join[0], endLL) : null);
+  for (let i = 1; i < raw.length - 1; i++) if (Math.abs(angDiff(gcBrg(raw[i - 1], raw[i]), gcBrg(raw[i], raw[i + 1]))) > 100 && (i === raw.length - 2 || gcDist(raw[i], endLL) > gcDist(raw[i - 1], endLL) - 1)) { raw.splice(i, 1); i = Math.max(0, i - 2); }
+  const leg = makeLeg(smoothPts(raw, true)), [spd, fl] = CRUISE[f.t] || [450, 37000];
   const cruise = Math.min(fl, 9000 + leg.D*75), tStart = tEnd - leg.D/spd*3600;
   FAR.list.push({ cs: f.cs, t: f.t, from: f.o, to: APT.icao, kind: 'ARR', leg, tStart, tEnd, spd, cruise, endAlt: PRE_ALT[f.gate], f });
 }
@@ -219,7 +226,10 @@ function wayIn(o, from, end, dir){
   const vv = via.filter(p => gcDist(p, J) > 60 && gcDist(p, end) > gcDist(J, end));
   // J lies on that line, so the airway's last leg meets it at a corner: rounded off as one wide curve that ends up along the
   // line, rather than an autopilot intercept begun at J itself (which overshot and looped round to come back to it)
-  return makeLeg(smoothPts([...airwayPts([O, ...vv, J], o.cs + (o.o || ''), false), end]));
+  // a fix the airway route reached beyond the join point is dropped rather than flown out to and back (no hairpin at J)
+  const seq = [...airwayPts([O, ...vv, J], o.cs + (o.o || ''), false, dir), end];
+  for (let i = 1; i < seq.length - 1; i++) if (Math.abs(angDiff(gcBrg(seq[i - 1], seq[i]), gcBrg(seq[i], seq[i + 1]))) > 100 && (i === seq.length - 2 || gcDist(seq[i], end) > gcDist(seq[i - 1], end) - 1)) { seq.splice(i, 1); i = Math.max(0, i - 2); }
+  return makeLeg(smoothPts(seq));
 }
 // a smooth way from A (flying ha) to B (arriving on hb): drawn from both ends at once, onward from A and backwards from B,
 // each end turning steadily towards the other until they meet, so it leaves A and reaches B on their headings, no corners

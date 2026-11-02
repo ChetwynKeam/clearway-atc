@@ -3502,13 +3502,19 @@ const AW = (() => {
     if (goals) expand(goals, to, goalCost, tagG);
     else for (const f of NODES) { const p = FIX[f];
       if (farTo) { const e = gcNM(p, to); if (e < 200) goalCost.set(f, gcNM(p, farTo) - gcNM(to, farTo) + e*0.5); }
-      else { const d = gcNM(p, to); if (d < rt) goalCost.set(f, d*1.25); } }
+      else { const d = gcNM(p, to); if (d >= rt) continue;
+        // leaving the airway for a point flown towards on a given course: only from fixes behind it (flying on to it, never back)
+        let pen = 0; if (o.courseTo != null && d > 1.5) { const off = Math.abs(angDiff(o.courseTo, gcBrg(p, to))); if (off > (o.cone || 55)) continue; pen = off*d/60; }
+        goalCost.set(f, d*1.25 + pen); } }
     const hOf = f => (farTo ? Math.max(0, gcNM(FIX[f], farTo) - gcNM(to, farTo)) : gcNM(FIX[f], to))*0.9;
     const add = (f, c, pr) => { const old = dist0.get(f); if (old === undefined || c < old) { dist0.set(f, c); prev.set(f, pr); hpush(h, [c + hOf(f), f]); } };
     if (starts) { const m = new Map(); expand(starts, from, m, tagS); for (const [f, c] of m) add(f, c, null); }
     else for (const f of NODES) { const p = FIX[f];
       if (farFrom) { const e = gcNM(p, from); if (e < 200) add(f, e*0.5, null); }
-      else { const d = gcNM(p, from); if (d < rf) add(f, d*1.25, null); } }
+      else { const d = gcNM(p, from); if (d >= rf) continue;
+        // joining from a flight's own course: only fixes ahead of it (never one to the side or behind: a sharp turn back onto the airway)
+        let pen = 0; if (o.course != null && d > 1.5) { const off = Math.abs(angDiff(o.course, gcBrg(from, p))); if (off > (o.cone || 55)) continue; pen = off*d/60; }
+        add(f, d*1.25 + pen, null); } }
     if (!h.length || !goalCost.size) return null;
     let best = null, bestC = Infinity;
     while (h.length) {
@@ -3536,7 +3542,9 @@ const AW = (() => {
     const ia = inCover(a), ib = inCover(b);
     const sA = ia ? a : edgeOf(a, b), sB = ib ? b : edgeOf(b, a);
     if (!sA || !sB || gcNM(sA, sB) < 30) return [];
-    const r = search({ from: sA, to: sB, hi: o.hi !== false, farFrom: ia ? null : a, farTo: ib ? null : b, rf: o.rf || 90, rt: o.rt || 90, seed: o.seed });
+    const q = { from: sA, to: sB, hi: o.hi !== false, farFrom: ia ? null : a, farTo: ib ? null : b, rf: o.rf || 90, rt: o.rt || 90, seed: o.seed };
+    const cc = (cone) => ({ ...q, course: ia ? o.course : null, courseTo: ib ? o.courseTo : null, cone });
+    const r = ((o.course != null && ia) || (o.courseTo != null && ib)) ? (search(cc(35)) || search(cc(65)) || search(q)) : search(q);
     if (!r) return [];
     return r.fixes.map(f => [FIX[f][0], FIX[f][1], f]);
   }
