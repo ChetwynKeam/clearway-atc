@@ -6,10 +6,15 @@
 // Positions are lat/lon (WGS84); bearings are TRUE unless named "mag" (variation 1.2°W at Aldergrove, 1.0°W at City:
 // 1.1°W used for the area, magnetic = true + 1.1).
 //
-// NO SIDs OR STARs ARE PUBLISHED for either airport. The routing below is Clearway's own standard routing, built on what
-// the charts do give: the initial approach fixes (BEL VOR, HB NDB, SULEV, VAGMO, LIRGU), the final-approach tracks, the
-// "direct arrival" sectors on the approach plates and the holds. The four gateway fixes are DERIVED points (a radial and
-// distance from BEL VOR), named B<radial>D<nm>, so none is mistaken for a real AIP fix. Not for real-world navigation.
+// NO SIDs OR STARs ARE PUBLISHED at either airport (Belfast International's own noise document says so): in real life
+// arrivals are radar-vectored, with a 220 kt limit from the hold (or 20 NM), 180 kt on base and 180-160 kt when
+// established, 160 kt to 4 DME, continuous descent 2200-0700; BEL is the hold, used in winter weather. Runway 25 is
+// Aldergrove's preferred runway (it has the Cat III ILS) and 07 the other direction; 17/35 is secondary and only used
+// when the weather needs it. So the "routes" below are not charts: they are the tracks the radar vectors normally make,
+// written as STAR-like legs so the simulator can fly them. UK and European arrivals come down over Belfast Lough and turn
+// sharply (60-85°) onto the ILS 25 final at 12-14 DME or the City 22 final at 12.5 DME; the other directions use BEL,
+// the RNP 07 IAFs or City's 04 direct arrival. Gateway points are DERIVED (B<radial>D<nm> from BEL VOR) and LOUGH is a
+// position over Belfast Lough; none is a real AIP fix. Not for real-world navigation.
 // Plain data plus a few small functions, like eggd.js.
 
 const EGAA = (() => {
@@ -44,6 +49,11 @@ const EGAA = (() => {
     B190D40: from(P('543940N', '0061348W'), 190, 40),     // south: Dublin, Ireland, Iberia, the Canaries
     B300D40: from(P('543940N', '0061348W'), 300, 40)      // west: the Atlantic, North America
   };
+  FIX.LOUGH = [54.690, -5.760];                              // over the middle of Belfast Lough, where GB and European arrivals cross
+  // the final-approach intercepts the vectors normally end at: ILS 25 at I-AG D14 (4,000 ft, the plate's "direct arrival
+  // via south-east" point is D14.9), ILS 22 at I-BFH D12.5 (2,800 ft, the plate's direct arrival via the north-east) and
+  // ILS 04 at I-HBD D13.5 (3,000 ft, the plate's direct arrival via the south-west); set below once the runways are known
+  const _INT = {};
 
   // ── runways. EGAA: 07/25 2,780 × 46 m and 17/35 1,891 × 46 m (chart 525678 gives the 07 and 35 ends; 25 and 17 are derived from
   // the length); EGAC: 04/22 1,829 × 46 m, chart threshold 04 543643.34N 0055247.14W, 22 end derived from the length.
@@ -61,6 +71,9 @@ const EGAA = (() => {
   RWYS.EGAA[0].thr['25'] = from(RWYS.EGAA[0].thr['07'], 66, 2780/1852);
   RWYS.EGAA[1].thr['17'] = from(RWYS.EGAA[1].thr['35'], 343, 1891/1852);      // 17's end, from the 35 end up the runway
   RWYS.EGAC[0].thr['22'] = from(RWYS.EGAC[0].thr['04'], 36, 1829/1852);
+  FIX.INT25 = from(RWYS.EGAA[0].thr['25'], 66, 14);           // the 25 final's reciprocal is 066° mag
+  FIX.INT22 = from(RWYS.EGAC[0].thr['22'], 36, 12.5);
+  FIX.INT04 = from(RWYS.EGAC[0].thr['04'], 216, 13.5);
 
   // ── holds (plates): BEL, the 050° hold at 3,000 ft or above (turn direction not on the plates: right-hand assumed);
   // HB, City's hold at 3,000 ft (inbound track not on the plates: 036° mag, the final approach course, assumed, right)
@@ -75,48 +88,51 @@ const EGAA = (() => {
   // Alt = level constraint at the fix (feet).
   const ILS = {
     '25': { apt: 'EGAA', loc: 'I-AG',  freq: '109.90', iaf: ['BEL'], ifAlt: 4000, fafAlt: 2500, missed: ['BEL', 3000], turn: 1,  dmeOffsetNM: 1.1 },
-    '17': { apt: 'EGAA', loc: 'I-FT',  freq: '110.90', iaf: ['BEL'], ifAlt: 4000, fafAlt: 2500, missed: ['BEL', 3000], turn: 1 },
+    '17': { apt: 'EGAA', secondary: true, loc: 'I-FT',  freq: '110.90', iaf: ['BEL'], ifAlt: 4000, fafAlt: 2500, missed: ['BEL', 3000], turn: 1 },
     '04': { apt: 'EGAC', loc: 'I-HBD', freq: '108.10', iaf: ['HB'],  ifAlt: 3000, fafAlt: 3000, missed: ['HB', 3000],  turn: 1 },
     '22': { apt: 'EGAC', loc: 'I-BFH', freq: '108.10', iaf: ['HB'],  ifAlt: 2800, fafAlt: 2800, missed: ['HB', 3000],  turn: -1 }
   };
   // the RNP 07 approach: three IAFs at 4,000 ft, IF AA07I (2,500 ft, 10.1 NM), FAF AA07F (2,500 ft, 7.1 NM), 3° to RW07, 210 kt
   const RNP07 = { iaf: ['SULEV', 'VAGMO', 'LIRGU'], ifx: 'AA07I', faf: 'AA07F', ifAlt: 2500, fafAlt: 2500, maxKt: 210, missed: ['BEL', 3000] };
 
-  // ── STARs (Clearway standard routing): from each gateway to the initial approach fix of the runway in use. Every one
-  // gives up its height in two steps and ends at the fix the plate names, so the controller takes over from there.
-  // Westerly (25 and 22) arrivals from the north-east, south-east and south end at BEL or HB; the west gateway comes in
-  // over the Antrim hills. Easterly (07 and 04) arrivals use the RNP 07 IAFs (Aldergrove) and HB (City).
+  // ── arrival tracks (Clearway standard routing, standing in for the radar vectors). Key = gateway + runway.
+  //   UK and Europe (NE, SE): over Belfast Lough, then the sharp turn onto the final (25, 22), or round to the RNP 07 IAFs.
+  //   South and west: straight to BEL (25), the RNP 07 IAFs, or City's 04 direct arrival.
   const STARS = {
-    'B050 25': { apt: 'EGAA', rwy: '25', from: 'NE', pts: [['B050D40', 8000], ['BEL', 4000]] },
-    'B120 25': { apt: 'EGAA', rwy: '25', from: 'SE', pts: [['B120D40', 8000], ['BEL', 4000]] },
-    'B190 25': { apt: 'EGAA', rwy: '25', from: 'S',  pts: [['B190D40', 8000], ['BEL', 4000]] },
-    'B300 25': { apt: 'EGAA', rwy: '25', from: 'W',  pts: [['B300D40', 8000], ['BEL', 4000]] },
-    'B050 07': { apt: 'EGAA', rwy: '07', from: 'NE', pts: [['B050D40', 8000], ['SULEV', 4000]] },
-    'B120 07': { apt: 'EGAA', rwy: '07', from: 'SE', pts: [['B120D40', 8000], ['LIRGU', 4000]] },
-    'B190 07': { apt: 'EGAA', rwy: '07', from: 'S',  pts: [['B190D40', 8000], ['LIRGU', 4000]] },
-    'B300 07': { apt: 'EGAA', rwy: '07', from: 'W',  pts: [['B300D40', 8000], ['VAGMO', 4000]] },
-    'B050 22': { apt: 'EGAC', rwy: '22', from: 'NE', pts: [['B050D40', 8000], ['HB', 3000]] },
-    'B120 22': { apt: 'EGAC', rwy: '22', from: 'SE', pts: [['B120D40', 8000], ['HB', 3000]] },
-    'B190 22': { apt: 'EGAC', rwy: '22', from: 'S',  pts: [['B190D40', 8000], ['HB', 3000]] },
-    'B300 22': { apt: 'EGAC', rwy: '22', from: 'W',  pts: [['B300D40', 8000], ['HB', 3000]] },
-    'B050 04': { apt: 'EGAC', rwy: '04', from: 'NE', pts: [['B050D40', 8000], ['HB', 3000]] },
-    'B120 04': { apt: 'EGAC', rwy: '04', from: 'SE', pts: [['B120D40', 8000], ['HB', 3000]] },
-    'B190 04': { apt: 'EGAC', rwy: '04', from: 'S',  pts: [['B190D40', 8000], ['HB', 3000]] },
-    'B300 04': { apt: 'EGAC', rwy: '04', from: 'W',  pts: [['B300D40', 8000], ['HB', 3000]] }
+    'NE 25': { apt: 'EGAA', rwy: '25', from: 'NE', pts: [['B050D40', 8000], ['LOUGH', 5000], ['INT25', 4000]] },
+    'SE 25': { apt: 'EGAA', rwy: '25', from: 'SE', pts: [['B120D40', 8000], ['LOUGH', 5000], ['INT25', 4000]] },
+    'S 25':  { apt: 'EGAA', rwy: '25', from: 'S',  pts: [['B190D40', 8000], ['BEL', 4000]] },
+    'W 25':  { apt: 'EGAA', rwy: '25', from: 'W',  pts: [['B300D40', 8000], ['BEL', 4000]] },
+    'NE 07': { apt: 'EGAA', rwy: '07', from: 'NE', pts: [['B050D40', 8000], ['LOUGH', 5000], ['SULEV', 4000]] },
+    'SE 07': { apt: 'EGAA', rwy: '07', from: 'SE', pts: [['B120D40', 8000], ['LIRGU', 4000]] },
+    'S 07':  { apt: 'EGAA', rwy: '07', from: 'S',  pts: [['B190D40', 8000], ['LIRGU', 4000]] },
+    'W 07':  { apt: 'EGAA', rwy: '07', from: 'W',  pts: [['B300D40', 8000], ['VAGMO', 4000]] },
+    'NE 22': { apt: 'EGAC', rwy: '22', from: 'NE', pts: [['B050D40', 8000], ['INT22', 2800]] },
+    'SE 22': { apt: 'EGAC', rwy: '22', from: 'SE', pts: [['B120D40', 8000], ['LOUGH', 5000], ['INT22', 2800]] },
+    'S 22':  { apt: 'EGAC', rwy: '22', from: 'S',  pts: [['B190D40', 8000], ['LOUGH', 5000], ['INT22', 2800]] },
+    'W 22':  { apt: 'EGAC', rwy: '22', from: 'W',  pts: [['B300D40', 8000], ['LOUGH', 5000], ['INT22', 2800]] },
+    'NE 04': { apt: 'EGAC', rwy: '04', from: 'NE', pts: [['B050D40', 8000], ['LOUGH', 5000], ['HB', 3000], ['INT04', 3000]] },
+    'SE 04': { apt: 'EGAC', rwy: '04', from: 'SE', pts: [['B120D40', 8000], ['INT04', 3000]] },
+    'S 04':  { apt: 'EGAC', rwy: '04', from: 'S',  pts: [['B190D40', 8000], ['INT04', 3000]] },
+    'W 04':  { apt: 'EGAC', rwy: '04', from: 'W',  pts: [['B300D40', 8000], ['INT04', 3000]] }
   };
+  // typical speed limits the vectors work to (Belfast International noise document): knots
+  const APP_SPEEDS = { hold: 220, twentyNM: 220, base: 180, established: [180, 160], to4dme: 160, cdaFromTo: ['22:00', '07:00'] };
+  // runway use: Aldergrove prefers 25 (Cat III ILS), then 07; 17/35 only for crosswind or weather. City: 22 or 04 by wind.
+  const RWY_USE = { EGAA: { main: ['25', '07'], secondary: ['17', '35'] }, EGAC: { main: ['22', '04'], secondary: [] } };
 
-  // ── SIDs (Clearway standard routing): straight ahead to 3,000 ft, then the turn towards the gateway, climbing to 6,000 ft
+  // ── SIDs (Clearway standard routing; real departures climb on the runway track to 2,000 ft at night, then follow ATC):
+  // straight ahead to 2,000 ft (Aldergrove) or 3,000 ft (City), then the turn towards the gateway, climbing to 6,000 ft
   // (Belfast Approach hands on to Scottish Control, which is why every SID stops there). T<rwy> are the turn points.
-  // Aldergrove 25 and 07 climb along the runway; 17 and 35 are the secondary runway and use the same gateways.
-  const SIDS = {
-    'NE25D': { apt: 'EGAA', rwy: '25', dir: 'NE', spoken: 'North-east, runway two five', pts: [['T25', 3000], ['B050D40', 6000]] },
-    'SE25D': { apt: 'EGAA', rwy: '25', dir: 'SE', spoken: 'South-east, runway two five', pts: [['T25', 3000], ['B120D40', 6000]] },
-    'S25D':  { apt: 'EGAA', rwy: '25', dir: 'S',  spoken: 'South, runway two five',      pts: [['T25', 3000], ['B190D40', 6000]] },
-    'W25D':  { apt: 'EGAA', rwy: '25', dir: 'W',  spoken: 'West, runway two five',       pts: [['T25', 3000], ['B300D40', 6000]] },
-    'NE07D': { apt: 'EGAA', rwy: '07', dir: 'NE', spoken: 'North-east, runway zero seven', pts: [['T07', 3000], ['B050D40', 6000]] },
-    'SE07D': { apt: 'EGAA', rwy: '07', dir: 'SE', spoken: 'South-east, runway zero seven', pts: [['T07', 3000], ['B120D40', 6000]] },
-    'S07D':  { apt: 'EGAA', rwy: '07', dir: 'S',  spoken: 'South, runway zero seven',      pts: [['T07', 3000], ['B190D40', 6000]] },
-    'W07D':  { apt: 'EGAA', rwy: '07', dir: 'W',  spoken: 'West, runway zero seven',       pts: [['T07', 3000], ['B300D40', 6000]] },
+    const SIDS = {
+    'NE25D': { apt: 'EGAA', rwy: '25', dir: 'NE', spoken: 'North-east, runway two five', pts: [['T25', 2000], ['B050D40', 6000]] },
+    'SE25D': { apt: 'EGAA', rwy: '25', dir: 'SE', spoken: 'South-east, runway two five', pts: [['T25', 2000], ['B120D40', 6000]] },
+    'S25D':  { apt: 'EGAA', rwy: '25', dir: 'S',  spoken: 'South, runway two five',      pts: [['T25', 2000], ['B190D40', 6000]] },
+    'W25D':  { apt: 'EGAA', rwy: '25', dir: 'W',  spoken: 'West, runway two five',       pts: [['T25', 2000], ['B300D40', 6000]] },
+    'NE07D': { apt: 'EGAA', rwy: '07', dir: 'NE', spoken: 'North-east, runway zero seven', pts: [['T07', 2000], ['B050D40', 6000]] },
+    'SE07D': { apt: 'EGAA', rwy: '07', dir: 'SE', spoken: 'South-east, runway zero seven', pts: [['T07', 2000], ['B120D40', 6000]] },
+    'S07D':  { apt: 'EGAA', rwy: '07', dir: 'S',  spoken: 'South, runway zero seven',      pts: [['T07', 2000], ['B190D40', 6000]] },
+    'W07D':  { apt: 'EGAA', rwy: '07', dir: 'W',  spoken: 'West, runway zero seven',       pts: [['T07', 2000], ['B300D40', 6000]] },
     'NE22D': { apt: 'EGAC', rwy: '22', dir: 'NE', spoken: 'North-east, runway two two', pts: [['T22', 3000], ['B050D40', 6000]] },
     'SE22D': { apt: 'EGAC', rwy: '22', dir: 'SE', spoken: 'South-east, runway two two', pts: [['T22', 3000], ['B120D40', 6000]] },
     'S22D':  { apt: 'EGAC', rwy: '22', dir: 'S',  spoken: 'South, runway two two',      pts: [['T22', 3000], ['B190D40', 6000]] },
@@ -126,11 +142,6 @@ const EGAA = (() => {
     'S04D':  { apt: 'EGAC', rwy: '04', dir: 'S',  spoken: 'South, runway zero four',      pts: [['T04', 3000], ['B190D40', 6000]] },
     'W04D':  { apt: 'EGAC', rwy: '04', dir: 'W',  spoken: 'West, runway zero four',       pts: [['T04', 3000], ['B300D40', 6000]] }
   };
-  // 17 and 35 reuse the 25 / 07 SIDs' gateways (turn point T17/T35 straight ahead along those runways)
-  for (const r of ['17', '35']) for (const d of ['NE', 'SE', 'S', 'W']) {
-    const g = { NE: 'B050D40', SE: 'B120D40', S: 'B190D40', W: 'B300D40' }[d];
-    SIDS[`${d}${r}D`] = { apt: 'EGAA', rwy: r, dir: d, spoken: `${d}, runway ${r}`, pts: [[`T${r}`, 3000], [g, 6000]] };
-  }
 
   // ── where each destination is: the gateway an arrival is brought in through and the SIDs that leave to it
   const DIR = {
@@ -164,7 +175,7 @@ const EGAA = (() => {
       EGAA: { name: 'Belfast International (Aldergrove)', iata: 'BFS', arp: P('543927N', '0061257W'), elev: 268, rwys: RWYS.EGAA },
       EGAC: { name: 'Belfast City (George Best)',         iata: 'BHD', arp: P('543705N', '0055221W'), elev: 15,  rwys: RWYS.EGAC }
     },
-    VAR, from, FIX, NAV, HOLDS_AIR, ILS, RNP07, STARS, SIDS, DIR, PLACE_DIR, dirFor, UNITS, TA, TZ, ALTERNATES,
+    VAR, from, FIX, NAV, HOLDS_AIR, ILS, RNP07, STARS, APP_SPEEDS, RWY_USE, SIDS, DIR, PLACE_DIR, dirFor, UNITS, TA, TZ, ALTERNATES,
     // not yet built: TIMETABLE / EXTRA / EXERCISES / WX_PRESETS / TYPES / PLACES / AIRPORTS, the airside layout
     // (belfast-ground.js) and the engine adapter (egaa-engine.js)
     features: { dualAirport: true, roadCrossing: false, sra: true, ils: true, rnavSids: false, singleRunway: false, mixedMode: true }
