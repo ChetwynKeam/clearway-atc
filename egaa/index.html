@@ -9219,6 +9219,7 @@ function renderSel(){
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
   if (ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) { const c = SLOT[ac.cs].ctot; html += `<div class="meta">Slot (CTOT) <b>${hhmm(c)}Z</b>: take-off between ${hhmm(c - 5)} and ${hhmm(c + 10)}Z.</div>`; }
   if (towOn(ac)) html += `<div class="meta">Under tow to ${towDest(ac.tow.to)}${ac.towHold ? `, the tug holding at ${ac.towHold}: send it on, or pick another route or holding point.` : ac.towTgt ? `, stopping at holding point ${ac.towTgt} to wait for you.` : '. Hold position stops it.'}</div>`;
+  if (ac.ground && ac.ta && typeof taLine === 'function') html += taLine(ac);   // what is happening round it on stand (vehicles.js)
   if (inHangar(ac)) html += `<div class="meta">In ${ac.stand.name}${ac.kind === 'DEP' ? (ac.tow && !ac.tow.asked && ac.tow.at < Infinity ? `: the tug calls to tow it out to a stand at about ${zt(ac.tow.at).slice(0,5)}Z, an hour before off-blocks.` : '.') : ', stored for the day.'}</div>`;
   if (ac.kind === 'DEP' && ac.state === 'PARKED' && ac.slotHold) html += `<div class="meta">Held on stand from the Flights board: the crew won’t call for start-up until you release it there.</div>`;
   else if (ac.kind === 'DEP' && ac.state === 'PARKED' && !ac.need && ac.reqAt > S.t) html += `<div class="meta">Parked. The crew calls for start-up at about ${zt(ac.reqAt).slice(0,5)}Z (in ${Math.max(1, Math.round((ac.reqAt - S.t)/60))} min). Start, push and taxi open then; you can ask for the release now, but it is only valid for about ten minutes.</div>`;
@@ -10919,20 +10920,37 @@ function baseFor(type, p){
   return L.length === 1 ? L[0] : L.slice().sort((a, b) => dist(...VG[a].p, ...p) - dist(...VG[b].p, ...p))[0];
 }
 
-// ── where each vehicle stands round an aircraft: f metres forward of the middle (aft is negative), s metres to the
-// right (left negative), and the way it faces relative to the aircraft's heading
+// ── doors: where an aircraft's doors and holds are, by its type's length and kind (f: metres forward of the middle, aft
+// negative). The passengers' doors are on the left, where the steps and the jet bridge come; the service doors and the
+// baggage holds are on the right. A widebody has three passenger doors a side, a narrowbody two, a turboprop one (rear
+// left: its front door is the cargo door) and a small business jet its own airstair.
 const fusW = P => Math.max(2.2, Math.min(6.2, P.len*0.1));
+// the A380: its two decks give it a third passenger bridge, to the upper-deck door (U1) between the main-deck pair
+const super_ = P => P.span >= 75 && P.len >= 70;
+const DOORS = new Map();
+function doorsOf(P){
+  const key = P.len + '|' + P.wake + '|' + P.shape; let D = DOORS.get(key); if (D) return D;
+  const L = P.len, wide = P.wake === 'H' || L > 50, prop = P.shape === 'prop', tiny = P.wake === 'L' || L < 20, long = L >= 42;
+  if (tiny) D = { pax: [{ id: 'L1', f: L*0.2 }], svc: [{ id: 'R1', f: L*0.2 }], hold: [{ f: -L*0.3 }] };
+  else if (prop) D = { pax: [{ id: 'L2', f: -L*0.34 }], svc: [{ id: 'R1', f: L*0.34 }], hold: [{ f: L*0.3 }] };
+  else if (super_(P)) D = { pax: [{ id: 'L1', f: L*0.385 }, { id: 'U1', f: L*0.30, up: true }, { id: 'L2', f: L*0.22 }, { id: 'L4', f: -L*0.28 }], svc: [{ id: 'R1', f: L*0.385 }, { id: 'R4', f: -L*0.28 }], hold: [{ f: L*0.17 }, { f: -L*0.22 }] };
+  else if (wide) D = { pax: [{ id: 'L1', f: L*0.38 }, { id: 'L2', f: L*0.25 }, { id: 'L4', f: -L*0.27 }], svc: [{ id: 'R1', f: L*0.38 }, { id: 'R4', f: -L*0.27 }], hold: [{ f: L*0.17 }, { f: -L*0.22 }] };
+  else D = { pax: [{ id: 'L1', f: L*0.35 }, { id: long ? 'L4' : 'L2', f: -L*(long ? 0.36 : 0.27) }], svc: [{ id: 'R1', f: L*0.35 }, { id: long ? 'R4' : 'R2', f: -L*(long ? 0.36 : 0.27) }], hold: [{ f: L*0.2 }, { f: -L*0.25 }] };
+  DOORS.set(key, D); return D;
+}
+const doorFirst = P => doorsOf(P).pax[0], doorLast = P => { const L = doorsOf(P).pax; return L[L.length - 1]; };
 const SLOTS = {
-  stepsF: P => ({ f: P.len*0.34, s: -(fusW(P)/2 + 3.6), h: 90 }),
-  stepsR: P => ({ f: -P.len*0.36, s: -(fusW(P)/2 + 3.6), h: 90 }),
-  bus:    P => ({ f: P.len*0.05, s: -(fusW(P)/2 + 15), h: 0 }),
-  bus2:   P => ({ f: -P.len*0.05 - 16, s: -(fusW(P)/2 + 15), h: 0 }),
-  beltF:  P => ({ f: P.len*0.2, s: fusW(P)/2 + 3.2, h: -90 }),
-  beltR:  P => ({ f: -P.len*0.25, s: fusW(P)/2 + 3.2, h: -90 }),
-  bags:   P => ({ f: P.len*0.2, s: fusW(P)/2 + 12, h: 180 }),
-  bagsR:  P => ({ f: -P.len*0.2, s: fusW(P)/2 + 12, h: 0 }),
-  cater:  P => ({ f: P.len*0.38, s: fusW(P)/2 + 4.4, h: -90 }),
-  caterR: P => ({ f: -P.len*0.4, s: fusW(P)/2 + 4.4, h: -90 }),
+  stepsF: P => ({ f: doorFirst(P).f, s: -(fusW(P)/2 + 3.6), h: 90 }),
+  stepsR: P => ({ f: doorLast(P).f, s: -(fusW(P)/2 + 3.6), h: 90 }),
+  // the apron bus pulls up alongside, at the foot of the steps, facing the way the aircraft does
+  bus:    P => ({ f: doorFirst(P).f - 2.5, s: -(fusW(P)/2 + 14.5), h: 0 }),
+  bus2:   P => ({ f: doorLast(P).f - 2.5, s: -(fusW(P)/2 + 14.5), h: 0 }),
+  beltF:  P => ({ f: doorsOf(P).hold[0].f, s: fusW(P)/2 + 3.2, h: -90 }),
+  beltR:  P => ({ f: doorsOf(P).hold.slice(-1)[0].f, s: fusW(P)/2 + 3.2, h: -90 }),
+  bags:   P => ({ f: doorsOf(P).hold[0].f, s: fusW(P)/2 + 12, h: 180 }),
+  bagsR:  P => ({ f: doorsOf(P).hold.slice(-1)[0].f, s: fusW(P)/2 + 12, h: 0 }),
+  cater:  P => ({ f: doorsOf(P).svc[0].f, s: fusW(P)/2 + 4.4, h: -90 }),
+  caterR: P => ({ f: doorsOf(P).svc.slice(-1)[0].f, s: fusW(P)/2 + 4.4, h: -90 }),
   fuel:   P => ({ f: P.len*0.02 - 3, s: Math.max(fusW(P)/2 + 6, P.span*0.27), h: 0 }),
   gpu:    P => ({ f: P.len*0.42, s: fusW(P)/2 + 2.5, h: 0 }),
   lav:    P => ({ f: -P.len*0.44, s: fusW(P)/2 + 3.4, h: -90 }),
@@ -10949,10 +10967,14 @@ function slotFrom(M, h, P, slot){
   const o = SLOTS[slot](P);
   return { p: [M[0] + (Math.sin(h*D2R)*o.f + Math.cos(h*D2R)*o.s)*VM, M[1] + (Math.cos(h*D2R)*o.f - Math.sin(h*D2R)*o.s)*VM], h: norm(h + o.h) };
 }
+// on the stand it is the way the aircraft actually sits (a drive-through stand's arrival can be parked the other way round)
 function slotAt(ac, slot){
   const on = ac.stand && (ac.state === 'PARKED' || ac.state === 'ONSTAND');
-  return slotFrom(on ? ac.stand.p : acMid(ac), on && ac.stand.hdg != null ? ac.stand.hdg : bodyHdg(ac), ac.perf, slot);
+  return slotFrom(on ? ac.stand.p : acMid(ac), on ? ac.hdg : bodyHdg(ac), ac.perf, slot);
 }
+// a point in the aircraft's own frame (f forward, s to the right, metres) and back
+const mPt = (M, h, f, s) => [M[0] + (Math.sin(h*D2R)*f + Math.cos(h*D2R)*s)*VM, M[1] + (Math.cos(h*D2R)*f - Math.sin(h*D2R)*s)*VM];
+const toFS = (M, h, p) => { const dx = (p[0] - M[0])/VM, dy = (p[1] - M[1])/VM; return [dx*Math.sin(h*D2R) + dy*Math.cos(h*D2R), dx*Math.cos(h*D2R) - dy*Math.sin(h*D2R)]; };
 // ── a vehicle: drives a list of points; parks; goes home (and is gone, into its base)
 function newVeh(type, at, hdg, o = {}){
   const T = VTYPES[type], v = { id: ++VEH.n, type, T, x: at[0], y: at[1], hdg: hdg || 0, v: 0, pts: [], spd: T.kt, job: null, trail: [], ...o };
@@ -11001,9 +11023,9 @@ const isJet = ac => ac.perf.shape !== 'prop';
 const small = ac => ac.perf.wake === 'L' || ac.perf.len < 20;
 const heavy = ac => ac.perf.wake === 'H' || ac.perf.len > 50;
 // a stand served by an apron bus: off the terminal (a remote stand, or anything over ~180 m from the terminal face)
-function bussed(ac){
+function bussed(ac, br){
   const st = ac.stand; if (!st || small(ac) || st.area === 'hangar') return false;
-  if (bridgeOf(st)) return false;
+  if (br) return false;   // a bridge reaches its door
   if (APT.shuttle && APT.shuttle(st)) return true;   // a satellite stand with no jet bridge: the bus comes to the aircraft
   if ((APT.remoteAreas || []).includes(st.area) || st.area === 'remote' || st.area === 'south' || st.term === 'R') return true;
   const t = VD.terms.length ? Math.min(...VD.terms.map(q => dist(...VP(q), ...st.p))) : 0;
@@ -11013,7 +11035,7 @@ function bussed(ac){
 // does not go to the aircraft. It meets them at the satellite building beside the bridge and runs between there and the
 // terminal: for an arrival it is waiting when the doors open and drives to the terminal once loaded; for a departure it
 // comes from the terminal with the passengers ahead of boarding and is gone before the doors close.
-const shuttleStand = st => !!(st && APT.shuttle && APT.shuttle(st) && bridgeOf(st));
+const shuttleStand = (st, br) => !!(st && APT.shuttle && APT.shuttle(st) && br);
 const SAT_BAYS = new Map();
 function satBay(st, k){
   const key = st.id + ':' + k; if (SAT_BAYS.has(key)) return SAT_BAYS.get(key);
@@ -11039,73 +11061,184 @@ function dispatchTerm(type, p, h, job){
 }
 // an arrival's bus, loaded: off to the terminal, a short wait, then home
 function shuttleOut(v){ v.job = { k: 'shuttle' }; v.ac = null; v.leaveAt = S.t + rnd(3, 12); v.go = ['toTerm', null]; v.endH = null; v.parked = false; v.pts = []; v.req = null; }
-function planJobs(ac, arr){
-  const J = [], A = S.t, R = ac.reqAt, add = (k, type, at, until, extra) => J.push({ k, type, at, until, ...extra });
-  const L = small(ac), H = heavy(ac), bridge = bridgeOf(ac.stand), bus = bussed(ac), shuttle = !L && shuttleStand(ac.stand), ST = !!(APT.shuttle && ac.stand && APT.shuttle(ac.stand));   // ST: a satellite stand's bus runs to and from the terminal
-  const depart = ac.kind === 'DEP' && R != null && R < Infinity;
-  const leave = depart ? R - 120 : Infinity;   // steps and bridge stay until the doors close
-  if (L) {   // light aircraft and small business jets: the fuel bowser now and then, nothing else
+// ── passengers: how many, and how fast they get off and on, so the order of a turnaround follows from the aircraft.
+// An arrival: on blocks, the chocks go in, the steps (or the bridge) come to the door, the door opens and the passengers
+// come off (to the buses at a remote stand); the holds are opened and the bags come off. A departure: catering, toilets and
+// water, fuel, bags on; the access comes back to the door and boarding starts; the last passenger, the holds and then the
+// doors close; the bridge swings away, the steps and the belt go; the tug connects, the ground power comes off, push back.
+const TA_V = 2;
+function taPax(ac){
+  const P = ac.perf, seats = Math.round(P.len*(isBiz(ac) ? 0.4 : P.shape === 'prop' ? 2.6 : heavy(ac) ? 4.4 : P.len >= 44 ? 4.2 : 4));
+  return { seats, N: Math.max(2, Math.round(seats*rnd(0.72, 0.94))) };
+}
+const BUS_PAX = 70;   // an apron bus takes about 70 standing passengers
+// the apron bus trips for N passengers: each bus is a job, a wave of them one to a door; frac is the share of the passengers that are on or off when the wave leaves
+function busWaves(N, doors){
+  const trips = Math.max(1, Math.ceil(N/BUS_PAX)), W = [];
+  for (let i = 0; i < trips; i++) W.push({ w: Math.floor(i/doors), door: i % doors, f: Math.min(1, (Math.floor(i/doors) + 1)*doors*BUS_PAX/N) });
+  return W;
+}
+// the turnaround's plan: the jobs (which vehicle comes to which place, and when), the bridges that serve it, when they are docked and when boarding is
+function taPlan(ac, T, arr, hdg){
+  const J = [], P = ac.perf, R = ac.reqAt, depart = ac.kind === 'DEP' && R != null && R < Infinity;
+  const add = (k, type, at, until, extra) => J.push({ k, type, at, until, ...extra });
+  const L = small(ac), H = heavy(ac), prop = P.shape === 'prop', biz = isBiz(ac), now = S.t;
+  T.br = L ? [] : bridgePlan(ac, hdg); T.dock = []; T.brd = null;
+  const br = T.br.length, ST = !!(APT.shuttle && ac.stand && APT.shuttle(ac.stand)), shuttle = !L && shuttleStand(ac.stand, br), bus = bussed(ac, br);
+  if (L) {   // light aircraft and small business jets: their own airstair, the fuel bowser now and then, nothing else
     if (depart && Math.random() < 0.6) add('fuel', 'fuel', R - 25*60, R - 12*60);
-    return J;
+    T.rate = 6; T.brate = 3; T.jobs = J; return J;
   }
-  if (!bridge) { add('stepsF', 'steps', arr ? A + rnd(20, 50) : -1, leave); if (!isBiz(ac)) add('stepsR', 'steps', arr ? A + rnd(30, 70) : -1, leave); }
+  // the access to the doors: the bridge where it reaches (a widebody uses its second door too), steps at the others
+  const steps = prop ? ['stepsR'] : biz ? (br ? [] : ['stepsF']) : H ? (br >= (super_(P) ? 3 : 2) ? [] : br ? ['stepsR'] : ['stepsF', 'stepsR']) : (br ? [] : ['stepsF', 'stepsR']);
+  const doors = Math.max(1, br + steps.length);
+  T.rate = Math.max(8, br*14 + steps.length*12);   // passengers a minute off; boarding is the slower trickle the gate lets through
+  T.brate = biz ? 3 : prop ? 4 : super_(P) ? 13 : H ? 8.5 : 5;
+  const busDoors = prop || biz ? 1 : Math.min(2, Math.max(1, steps.length)), shuttleWaves = shuttle || bus;
+  const waves = busWaves(T.N, busDoors), slotOf = d => d === 0 ? 'bus' : 'bus2';
+  const busExtra = (w, arrBus) => shuttle ? { bay: w.door, arr: arrBus } : { term: ST, arr: arrBus };
   if (arr) {
-    if (shuttle) { add('bus', 'bus', A + rnd(15, 40), A + rnd(5, 7)*60, { bay: 0, arr: true }); add('bus2', 'bus', A + rnd(40, 80), A + rnd(8, 11)*60, { bay: 1, arr: true }); }
-    else if (bus) { add('bus', 'bus', A + rnd(30, 60), A + rnd(6, 9)*60, { term: ST, arr: true }); if (H) add('bus2', 'bus', A + rnd(40, 80), A + rnd(7, 10)*60, { term: ST, arr: true }); }
-    if (!isBiz(ac)) { add('beltF', 'belt', A + rnd(60, 120), A + rnd(14, 22)*60); add('bags', 'bags', A + rnd(80, 140), A + rnd(12, 20)*60, { carts: H ? 4 : 3 }); if (H) add('beltR', 'belt', A + rnd(70, 130), A + rnd(16, 24)*60); }
-    if (!bridge && isJet(ac)) add('gpu', 'gpu', A + rnd(40, 90), depart ? R - 4*60 : A + rnd(15, 25)*60);
+    const ch = T.chocks, wdur = BUS_PAX/(T.rate/doors)*60;   // one wave of buses off, in seconds
+    // everything waits clear of the aircraft until the chocks are in
+    steps.forEach((k, i) => add(k, 'steps', ch + 4 + i*rnd(14, 30), Infinity, { stage: true, rel: { f: 1, g: rnd(70, 130) } }));
+    if (!br && isJet(ac)) add('gpu', 'gpu', ch + rnd(8, 14), depart ? R - 3*60 : T.A + rnd(16, 26)*60, { stage: true });
+    if (shuttleWaves) for (const w of waves) add(slotOf(w.door), 'bus', w.w ? ch + w.w*wdur - 110 : ch + 6, Infinity, { ...busExtra(w, true), stage: !w.w && !shuttle && !ST, rel: { f: w.f, g: rnd(10, 30) }, wave: w.w });
+    if (!biz) {
+      const unl = ch + (H ? rnd(16, 22) : rnd(11, 16))*60;
+      add('beltF', 'belt', ch + rnd(25, 45), unl); add('bags', 'bags', ch + rnd(60, 100), unl + rnd(30, 70), { carts: H ? 4 : 3 });
+      if (H) add('beltR', 'belt', ch + rnd(35, 60), unl + 60);
+    }
+    if (br) T.dock.push([ch + 25, Infinity]);   // out to the door once the chocks are in (home again a little after the last passenger is off)
   }
-  if (depart) {
-    const s = Math.max(S.t + 20, Math.min(R - 45*60, S.t + 60));
-    add('cater', 'cater', Math.max(s, R - rnd(42, 50)*60), R - rnd(24, 30)*60); if (H) add('caterR', 'cater', Math.max(s, R - rnd(40, 48)*60), R - rnd(22, 28)*60);
-    add('fuel', 'fuel', Math.max(s, R - rnd(38, 44)*60), R - rnd(14, 20)*60);
-    if (H || Math.random() < 0.35) add('lav', 'lav', Math.max(s, R - rnd(46, 52)*60), R - rnd(36, 40)*60);
-    if (H) add('water', 'water', Math.max(s, R - rnd(44, 50)*60), R - rnd(34, 38)*60);
-    if (!isBiz(ac)) { add('beltF', 'belt', Math.max(s, R - rnd(32, 36)*60), R - rnd(6, 9)*60); add('bagsR', 'bags', Math.max(s, R - rnd(30, 34)*60), R - rnd(7, 10)*60, { carts: H ? 4 : 3 }); }
-    if (shuttle) { add('bus', 'bus', Math.max(s, R - rnd(38, 42)*60), R - rnd(33, 36)*60, { bay: 0 }); add('bus2', 'bus', Math.max(s, R - rnd(31, 35)*60), R - rnd(25, 28)*60, { bay: 1 }); }
-    else if (bus) { add('bus', 'bus', Math.max(s, R - rnd(26, 30)*60), R - rnd(15, 18)*60, { term: ST }); add('bus2', 'bus', Math.max(s, R - rnd(18, 21)*60), R - rnd(7, 9)*60, { term: ST }); }
-    if (!bridge && isJet(ac) && !arr) add('gpu', 'gpu', -1, R - 4*60);
-    if (Math.random() < 0.12) add('van', 'van', Math.max(s, R - rnd(50, 70)*60), R - rnd(25, 40)*60);
-    if (!(ac.stand && ac.stand.out)) add('tug', 'tug', R - rnd(5, 8)*60, Infinity);   // a drive-through stand has no push back, so no tug
+  // an aircraft that will be towed off this stand before it leaves (a remote stand, a hangar) is served at the stand it is towed to
+  const towing = !!(ac.tow && ac.tow.at != null && ac.tow.at < Infinity);
+  if (depart && !towing) {
+    // the boarding, from the back: the last passenger on a few minutes before the doors close, the doors closed a few before off-blocks
+    const be = R - (H ? rnd(13, 16) : prop ? rnd(7, 9) : biz ? rnd(4, 6) : rnd(9, 11))*60, nW = waves[waves.length - 1].w + 1, wl = BUS_PAX/12*60;   // a bus load takes about six minutes to go up the steps
+    const dur = shuttleWaves ? Math.min(clamp(T.N/T.brate*60, 4*60, 45*60), nW*wl + 150) : clamp(T.N/T.brate*60, 4*60, 45*60), bs = be - dur;
+    const dc = Math.max(be + 60, R - (H ? rnd(7, 9) : prop ? rnd(3.5, 5) : biz ? rnd(2.5, 3.5) : rnd(4.8, 6.5))*60), hc = dc - rnd(40, 100);   // doors closed; holds closed
+    const devOn = bs - 150, devOff = dc + rnd(40, 80);   // the access is at the door before boarding opens and goes once the door is shut
+    T.brd = { t0: bs, t1: be, dc };
+    const s = Math.max(now + 20, Math.min(R - 45*60, now + 60)), due = (m1, m2) => Math.max(s, R - rnd(m1, m2)*60);
+    if (br) T.dock.push([devOn, devOff]);
+    steps.forEach((k, i) => add(k, 'steps', devOn - 90 + i*20, devOff + i*rnd(10, 30)));
+    // catering through the right-hand service doors, toilets and water, fuel, then the bags; all of it done before the doors close
+    if (!biz && P.len >= 30) { add('cater', 'cater', due(H ? 58 : 42, H ? 66 : 50), R - rnd(H ? 30 : 24, H ? 36 : 30)*60); if (H) add('caterR', 'cater', due(56, 64), R - rnd(28, 34)*60); }
+    add('fuel', 'fuel', due(H ? 56 : 38, H ? 62 : 44), R - rnd(H ? 20 : 14, H ? 26 : 20)*60);
+    if (H || Math.random() < 0.35) add('lav', 'lav', due(46, 52), R - rnd(36, 40)*60);
+    if (H) add('water', 'water', due(44, 50), R - rnd(34, 38)*60);
+    if (!biz) {
+      add('beltF', 'belt', due(H ? 46 : 32, H ? 52 : 36), hc + rnd(15, 40)); add('bagsR', 'bags', due(H ? 44 : 30, H ? 50 : 34), hc - rnd(5, 25), { carts: H ? 4 : 3 });
+      if (H) add('beltR', 'belt', due(44, 50), hc + rnd(20, 50));
+    }
+    // a bus per door at a time; each waits at the steps while its passengers go up
+    if (shuttleWaves) for (const w of waves) { const due = bs + 60 + w.w*wl, at = Math.max(s, due - 130); add(slotOf(w.door), 'bus', at, Math.max(at + 60, due + wl + 30), busExtra(w, false)); }
+    if (!br && isJet(ac) && !J.some(j => j.k === 'gpu')) add('gpu', 'gpu', due(48, 58), R - rnd(2.2, 3.2)*60);
+    if (Math.random() < 0.12) add('van', 'van', due(50, 70), R - rnd(25, 40)*60);
+    if (!(ac.stand && ac.stand.out)) add('tug', 'tug', R - rnd(6, 9)*60, Infinity);   // a drive-through stand has no push back, so no tug
   }
-  return J;
+  T.jobs = J; return J;
+}
+// the aircraft's turnaround: the chocks, the passengers' progress, the jobs
+function newTA(ac, arr, hdg){
+  const T = { v: TA_V, st: ac.stand, kind: ac.kind, req: ac.reqAt, first: S.t < 5, arr, A: arr ? (ac.inAt != null ? ac.inAt : S.t) : null, ...taPax(ac) };
+  T.chocks = arr ? T.A + rnd(10, 20) : -1;
+  taPlan(ac, T, arr, hdg); return T;
 }
 // is this aircraft parked where its turnaround happens (on a stand, not in a hangar, not being moved)?
 const onStandNow = ac => ac.ground && ac.stand && ac.stand.area !== 'hangar' && (ac.state === 'PARKED' || ac.state === 'ONSTAND') && !ac.handed;
+// where a vehicle that is to come to a slot waits until the chocks are in: out on the same line, well clear of the wing and the nose gear's way in
+function stagePt(ac, slot, h){
+  const P = ac.perf, M = ac.stand.p, o = SLOTS[slot](P), g = o.s < 0 ? -1 : 1, out = Math.abs(o.s) + (slot === 'gpu' ? 11 : 14);
+  return { p: mPt(M, h, o.f, g*out), h: norm(h + o.h) };
+}
+// arrivals still taxiing in: the access, the first bus and the power wait at the stand already (the handlers do), clear of the aircraft
+function stepPrestage(){
+  for (const ac of S.acs) {
+    if (ac.pre || ac.kind !== 'ARR' || !ac.ground || !ac.taxiIn || !ac.stand || ac.stand.out || ac.stand.area === 'hangar' || small(ac)) continue;
+    if (ac.state === 'PARKED' || ac.state === 'ONSTAND' || dist(ac.x, ac.y, ...ac.stand.p)/VM > 900) continue;
+    const T = { v: TA_V, st: ac.stand, kind: ac.kind, arr: true, A: S.t + 60, chocks: S.t + 75, ...taPax(ac) }, h = ac.stand.hdg;
+    ac.pre = {};
+    for (const j of taPlan(ac, T, true, h)) {
+      if (!j.stage || !vehUnder() || j.bay != null) continue;
+      const g = stagePt(ac, j.k, h), v = dispatch(j.type, g.p, g.h, null); if (!v) continue;
+      v.staged = j.k; v.ac = ac; v.visitUntil = S.t + 600; ac.pre[j.k] = v;
+    }
+  }
+}
+// the chocks are in: a staged vehicle moves in to its place
+function stageGo(v, slot){ v.staged = null; v.visitUntil = null; v.parked = false; v.pts = [slot.p.slice()]; v.endH = slot.h; v.req = null; v.v = 0; }
+function preEnd(ac){ if (!ac.pre) return; for (const k of Object.keys(ac.pre)) { const v = ac.pre[k]; if (v && !v.gone && v.staged && !v.home) { v.staged = null; v.ac = null; sendHome(v, rnd(2, 8)); } } ac.pre = null; }
+// the passengers' progress now, for the aircraft's panel and the vehicles' pop-ups
+function paxState(ac){
+  const T = ac.ta; if (!T || !T.N) return null;
+  if (ac.kind === 'ARR' || !T.brd || S.t < T.brd.t0) {
+    if (!T.dep || S.t < T.dep.t0) return null;
+    const f = clamp((S.t - T.dep.t0)/Math.max(1, T.dep.t1 - T.dep.t0), 0, 1);
+    return { k: f < 1 ? 'Deplaning' : 'Deplaned', n: Math.round(T.N*f), N: T.N, f };
+  }
+  const f = clamp((S.t - T.brd.t0)/Math.max(1, T.brd.t1 - T.brd.t0), 0, 1);
+  return { k: S.t >= T.brd.dc ? 'Doors closed' : f < 1 ? 'Boarding' : 'Boarding complete', n: Math.round(T.N*f), N: T.N, f };
+}
+// the access devices at the doors now: the bridges docked, the steps in place
+const accessNow = ac => ({ br: (ac.ta.br || []).filter(k => VEH.bridges[k.bi] && VEH.bridges[k.bi].dk), steps: ac.ta.jobs.filter(j => j.type === 'steps' && j.v && j.v.parked && !j.v.home && !j.v.staged && !j.done) });
+function taTick(ac, T){
+  const dep = ac.kind === 'DEP' && ac.reqAt != null && ac.reqAt < Infinity;
+  // chocks and cones: on when it stops, off just before the tug takes it
+  T.kit = S.t >= T.chocks && !(dep && S.t >= ac.reqAt - 150);
+  // the first door opens once the access is there and the chocks are in: then the passengers come off
+  if (T.arr && !T.dep && S.t >= T.chocks) {
+    const a = accessNow(ac), ready = small(ac) ? S.t >= T.chocks + 20 : a.br.length + a.steps.length > 0;
+    if (ready) { const t0 = S.t + rnd(12, 25); T.dep = { t0, t1: t0 + Math.max(60, T.N/Math.max(4, T.rate)*60) }; }
+  }
+  // a bridge goes back to its stowed place a little after the last passenger is off (unless the aircraft is boarding soon: its window already runs on)
+  if (T.dep && T.dock && T.dock[0] && T.dock[0][1] === Infinity && !dep) T.dock[0][1] = T.dep.t1 + 120;
+}
 function stepTurnarounds(){
   for (const ac of S.acs) {
     const here = onStandNow(ac);
     if (!here) { if (ac.ta) taEnd(ac); continue; }
-    if (!ac.ta || ac.ta.st !== ac.stand) {
+    if (!ac.ta || ac.ta.st !== ac.stand || ac.ta.v !== TA_V) {
       if (ac.ta) taEnd(ac);
       const arr = ac.inAt != null && S.t - ac.inAt < 120;
-      ac.ta = { st: ac.stand, kind: ac.kind, jobs: planJobs(ac, arr), first: S.t < 5 };
+      ac.ta = newTA(ac, arr);
     } else if (ac.ta.kind !== ac.kind || ac.ta.req !== ac.reqAt) {   // turned round (ARR to DEP), or a new off-blocks time
-      ac.ta.kind = ac.kind; const keep = ac.ta.jobs.filter(j => j.v && !j.done && j.until === Infinity);
-      const fresh = planJobs(ac, false).filter(j => !keep.some(k => k.k === j.k));
-      for (const j of ac.ta.jobs) if (j.v && !j.done && !keep.includes(j)) { if (fresh.some(f => f.k === j.k) && j.type !== 'tug') { const f = fresh.find(f => f.k === j.k); f.v = j.v; j.v.job = f; f.started = true; } else release(j); }
-      ac.ta.jobs = [...keep, ...fresh];
+      const T = ac.ta; T.kind = ac.kind; const keep = T.jobs.filter(j => j.v && !j.done && j.until === Infinity);
+      const old = T.jobs, dock = T.dock;
+      const fresh = taPlan(ac, T, false).filter(j => !keep.some(k => k.k === j.k));
+      for (const j of old) if (j.v && !j.done && !keep.includes(j)) { if (fresh.some(f => f.k === j.k) && j.type !== 'tug') { const f = fresh.find(f => f.k === j.k); f.v = j.v; j.v.job = f; f.started = true; } else release(j); }
+      T.jobs = [...keep, ...fresh];
+      // a bridge docked now and wanted again soon keeps its place: the old window runs into the new one
+      if (dock && dock[0] && T.dock.length && dock[0][1] > S.t && dock[0][1] !== Infinity && dock[0][1] + 300 > T.dock[0][0]) T.dock[0][0] = Math.min(T.dock[0][0], dock[0][0]);
     }
-    ac.ta.req = ac.reqAt;
-    for (const j of ac.ta.jobs) {
+    const T = ac.ta; T.req = ac.reqAt;
+    taTick(ac, T);
+    for (const j of T.jobs) {
       if (j.done) continue;
       if (!j.started && (j.at < 0 || S.t >= j.at) && S.t < j.until - 60) {
-        j.started = true; const slot = j.bay != null ? satBay(ac.stand, j.bay) : slotAt(ac, j.k);
-        // a vehicle that should already be there when the session opens, or the bridge's own steps: in place
-        if (j.at < 0 || ac.ta.first) { if (VEH.list.length < VEH.cap*1.3) { j.v = placeAt(j.type, slot, j); j.v.ac = ac; } }
+        j.started = true; const slot = j.bay != null ? satBay(ac.stand, j.bay) : slotAt(ac, j.k), pre = j.stage && ac.pre && ac.pre[j.k];
+        const same = T.jobs.find(o => o !== j && o.k === j.k && o.started && !o.done && o.v && !o.v.home);
+        if (same) { j.v = same.v; same.v.job = j; same.v = null; same.done = true; }   // the arrival's steps stay on for the boarding
+        else if (pre && !pre.gone && !pre.home) { j.v = pre; pre.job = j; delete ac.pre[j.k]; stageGo(pre, slot); }   // it was waiting here
+        // a vehicle that should already be there when the session opens: in place
+        else if (j.at < 0 || T.first) { if (VEH.list.length < VEH.cap*1.3) { j.v = placeAt(j.type, slot, j); j.v.ac = ac; } }
         else if (vehUnder() || j.type === 'tug' || j.type === 'amb') { j.v = (j.bay != null || j.term) ? dispatchTerm(j.type, slot.p, slot.h, j) : dispatch(j.type, slot.p, slot.h, j); if (j.v) j.v.ac = ac; }
         if (j.v && j.carts) j.v.carts = j.carts;
       }
-      if (j.started && S.t >= j.until) release(j);
+      // away when the last passenger of its share is off, or at its time
+      if (j.started && j.rel && T.dep && S.t >= T.dep.t0 + (T.dep.t1 - T.dep.t0)*j.rel.f + j.rel.g) release(j);
+      else if (j.started && S.t >= j.until) release(j);
     }
-    ac.ta.first = false;
+    T.first = false;
   }
+  for (const ac of S.acs) if (ac.pre && (!ac.ground || ac.state === 'PARKED' || ac.state === 'ONSTAND') && !ac.ta) preEnd(ac);
 }
-function release(j){ j.done = true; if (j.v && !j.v.attached) { if (j.arr && (j.bay != null || j.term) && !j.v.home && termBay()) shuttleOut(j.v); else sendHome(j.v, rnd(2, 10)); } j.v = null; }
+// a bus with its passengers goes on to the terminal; everything else goes home
+function release(j){ j.done = true; if (j.v && !j.v.attached) { if (j.arr && j.type === 'bus' && !j.v.home && termBay()) shuttleOut(j.v); else sendHome(j.v, rnd(2, 10)); } j.v = null; }
 function taEnd(ac){
   // pushed or towed away (the tug stays on it), or gone: everyone else drives off
   for (const j of ac.ta.jobs) if (j.v && !j.done) { if (j.v.attached) { j.done = true; continue; } release(j); }
-  ac.ta = null;
+  ac.ta = null; preEnd(ac);
 }
 
 // ── the tug: at the nose when it pushes or tows (it comes to the stand a few minutes before, and leaves after)
@@ -11151,33 +11284,109 @@ function nextTow(v){
   return true;
 }
 
-// ── jet bridges: from the map (aeroway=jet_bridge), each fixed to its terminal and swinging out to the stand nearest
-// its outer end. Out to the front left door while an aircraft is on the stand; back to its rest position otherwise.
-function bridgeOf(st){ return st && VEH.bridgeBy.get(st) || null; }
+// ── jet bridges (aeroway=jet_bridge on the map): the rotunda is fixed to the terminal; the tunnel telescopes out and the cab
+// swings square to the fuselage at a door of the aircraft that is actually on the stand: that type's own door, on the side
+// the bridge comes from (a widebody takes a second bridge at its second door). It docks only where the tunnel can reach
+// that door, between the length it telescopes to, without passing through the nose, the wing or the fuselage; at a stand
+// where it can't (a type too long or too short for it) the aircraft is served by steps and buses like any other.
+// Out from the terminal to a stand-off point beside the door first, then in square to the door at a creep.
+const bridgesAt = st => (st && VEH.bridgeBy.get(st)) || [];
+const bridgeOf = st => bridgesAt(st)[0] || null;
+const REF_NARROW = { len: 37.6, span: 34.1, wake: 'M', shape: 'jet' }, REF_WIDE = { len: 63, span: 60, wake: 'H', shape: 'jet' };
+// the aircraft's outline as convex pieces, in its own frame ([f, s] metres): the fuselage, tapered at both ends, and the wings
+const HULLS = new Map();
+function hullOf(P){
+  const key = P.len + '|' + P.span + '|' + P.shape; let H = HULLS.get(key); if (H) return H;
+  const L = P.len, w = fusW(P)/2 + 0.6, S = P.span/2, prop = P.shape === 'prop';
+  const fus = [[L/2, -w*0.4], [L/2 - L*0.05, -w], [-L/2 + L*0.15, -w], [-L/2, -w*0.3], [-L/2, w*0.3], [-L/2 + L*0.15, w], [L/2 - L*0.05, w], [L/2, w*0.4]];
+  const lead = prop ? L*0.04 : L*0.1, sweep = prop ? 0.05 : 0.5, chord = prop ? L*0.14 : L*0.17, tip = prop ? L*0.1 : L*0.07;
+  const wing = g => [[lead, g*w], [lead - sweep*(S - w), g*(S + 0.6)], [lead - sweep*(S - w) - tip, g*(S + 0.6)], [lead - chord, g*w]];
+  H = [fus, wing(-1), wing(1)]; HULLS.set(key, H); return H;
+}
+// does the segment a-b cross the convex polygon (Cyrus-Beck clipping)?
+function segHits(a, b, poly){
+  let ar = 0; for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; ar += p[0]*q[1] - q[0]*p[1]; }
+  const sg = ar > 0 ? 1 : -1, dx = b[0] - a[0], dy = b[1] - a[1]; let t0 = 0, t1 = 1;
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i], q = poly[(i + 1) % poly.length], nx = -(q[1] - p[1])*sg, ny = (q[0] - p[0])*sg;   // the inward normal
+    const num = nx*(a[0] - p[0]) + ny*(a[1] - p[1]), den = nx*dx + ny*dy;
+    if (den === 0) { if (num < 0) return false; continue; }
+    const t = -num/den; if (den > 0) t0 = Math.max(t0, t); else t1 = Math.min(t1, t);
+    if (t0 > t1) return false;
+  }
+  return true;
+}
+// how far from a point a stand's design doors are (a narrowbody's front door; a widebody's first and second): where a bridge's outer end was mapped
+function standDoorDist(s, e){
+  let best = Infinity;
+  for (const [P, i] of [[REF_NARROW, 0], [REF_WIDE, 0], [REF_WIDE, 1]]) { const d = doorsOf(P).pax[i], w = fusW(P)/2; for (const g of [-1, 1]) best = Math.min(best, dist(...mPt(s.p, s.hdg, d.f, g*w), ...e)/VM); }
+  return best;
+}
 function vehBridges(){
   VEH.bridges = []; VEH.bridgeBy = new Map();
+  const cand = STANDS.filter(s => s.p && s.hdg != null && s.area !== 'hangar');
   for (const [a, b] of VD.bridges) {
-    const pa = VP(a), pb = VP(b);
-    // the end nearer a stand's door is the outer end
-    const door = s => { const P = TYPES.A320, h = s.hdg || 0, f = P.len*0.34, sd = -(fusW(P)/2); return [s.p[0] + (Math.sin(h*D2R)*f + Math.cos(h*D2R)*sd)*VM, s.p[1] + (Math.cos(h*D2R)*f - Math.sin(h*D2R)*sd)*VM]; };
-    let best = null, bd = 45*VM, root = pa, end = pb;
-    for (const s of STANDS) for (const [r, e] of [[pa, pb], [pb, pa]]) { const d = dist(...door(s), ...e); if (d < bd) { bd = d; best = s; root = r; end = e; } }
-    if (!best) continue;
-    if (VEH.bridgeBy.has(best)) { const o = VEH.bridgeBy.get(best); if (dist(...door(best), ...o.rest) < dist(...door(best), ...end)) continue; VEH.bridges.splice(VEH.bridges.indexOf(o), 1); }
+    const pa = VP(a), pb = VP(b); let best = null;
+    for (const s of cand) for (const [r, e] of [[pa, pb], [pb, pa]]) { const d = standDoorDist(s, e); if (!best || d < best.d) best = { s, r, e, d }; }
+    if (!best || best.d > 45) continue;
+    if (VEH.bridges.some(o => dist(...o.end0, ...best.e)/VM < 4 && dist(...o.root, ...best.r)/VM < 4)) continue;   // the same bridge mapped twice
     // parked back from the door, as they are with no aircraft on the stand
-    const L = dist(...root, ...end), rest = [root[0] + (end[0]-root[0])*0.72, root[1] + (end[1]-root[1])*0.72];
-    const B = { st: best, root, rest, end: rest.slice(), want: rest, L };
-    VEH.bridges.push(B); VEH.bridgeBy.set(best, B);
+    const root = best.r, end = best.e, rest = [root[0] + (end[0] - root[0])*0.72, root[1] + (end[1] - root[1])*0.72];
+    const B = { st: best.s, root, end0: end, rest, end: rest.slice(), want: rest, L: dist(...root, ...end) };
+    B.sts = cand.filter(s => standDoorDist(s, end) <= Math.min(45, best.d + 6));   // every stand (a MARS centre and its halves) the bridge serves
+    VEH.bridges.push(B);
+    for (const s of B.sts) { const l = VEH.bridgeBy.get(s) || []; if (l.length < 6) l.push(B); VEH.bridgeBy.set(s, l); }
   }
 }
+// where B would dock to the aircraft's door, or null: the cab on the fuselage side the rotunda is on, the stand-off point
+// beside it, and the tunnel's whole swing from its stowed position clear of the nose, the wings and the fuselage
+function dockFor(B, M, h, P, door){
+  const w = fusW(P)/2, R = toFS(M, h, B.root), g = -1;
+  if (R[1] > 0) return null;   // passenger doors are on the left only: a bridge on the aircraft's right has no door to reach
+  if (Math.abs(R[1]) < w + 5) return null;   // the rotunda is in the aircraft's way, not beside it
+  const D = mPt(M, h, door.f, g*(w + 1)), A = mPt(M, h, door.f, g*(w + 4.5)), len = dist(...B.root, ...D)/VM, L0 = B.L/VM;
+  if (len < Math.max(6, L0*0.5) || len > L0*1.3 + 8) return null;   // more or less than the tunnel telescopes to
+  const hull = hullOf(P);
+  for (const k of [0.34, 0.67, 1]) { const e = toFS(M, h, [B.rest[0] + (A[0] - B.rest[0])*k, B.rest[1] + (A[1] - B.rest[1])*k]); for (const poly of hull) if (segHits(R, e, poly)) return null; }
+  return { door: door.id, f: door.f, side: g, dock: D, appr: A, len };
+}
+// the bridges that serve this aircraft, each at its own door: one (the front door) for most; a widebody takes a second at its second door
+function bridgePlan(ac, hdg){
+  const st = ac.stand, Bs = bridgesAt(st); if (!Bs.length || small(ac)) return [];
+  const P = ac.perf, M = st.p, h = hdg != null ? hdg : ac.hdg, want = super_(P) ? 3 : heavy(ac) ? 2 : 1, out = [], used = new Set();
+  // a narrowbody's bridge is at its front door, a widebody's at its first two; an aft door is for steps (a turboprop's one door is the rear one)
+  const D = doorsOf(P).pax, front = P.shape === 'prop' ? D : D.slice(0, super_(P) ? 3 : heavy(ac) ? 2 : 1);
+  for (const door of front) {
+    if (out.length >= want) break;
+    let best = null;
+    for (const B of Bs) { if (used.has(B)) continue; const k = dockFor(B, M, h, P, door); if (k && (!best || Math.abs(k.len - B.L/VM) < Math.abs(best.k.len - best.B.L/VM))) best = { B, k }; }
+    if (best) { used.add(best.B); out.push({ bi: VEH.bridges.indexOf(best.B), ...best.k }); }
+  }
+  return out;
+}
+// how the cab sits on its approach: perp metres off the line from the stand-off point to the door, t how far along it (0 stand-off, 1 docked)
+function legOf(E, A, D){
+  const ax = (D[0] - A[0])/VM, ay = (D[1] - A[1])/VM, ex = (E[0] - A[0])/VM, ey = (E[1] - A[1])/VM, L2 = ax*ax + ay*ay || 1, t = (ex*ax + ey*ay)/L2;
+  return { t, perp: Math.hypot(ex - t*ax, ey - t*ay) };
+}
 function stepBridges(dt){
+  const use = new Map();   // each bridge's aircraft, from the turnarounds' plans
+  for (const ac of S.acs) { const T = ac.ta; if (!T || !T.br || !T.br.length || T.st !== ac.stand) continue; for (const k of T.br) { const B = VEH.bridges[k.bi]; if (B) use.set(B, [ac, k]); } }
   for (const B of VEH.bridges) {
-    const ac = B.st.occ, on = ac && ac.stand === B.st && onStandNow(ac) && !(ac.kind === 'DEP' && ac.reqAt != null && S.t > ac.reqAt - 100) && !(ac.inAt != null && S.t - ac.inAt < 25);
-    // the cab stops a metre off the fuselage at the front left door
-    if (on) { const s = slotAt(ac, 'stepsF'), h = norm(s.h + 180); B.want = [s.p[0] + Math.sin(h*D2R)*(VTYPES.steps.len/2 - 1.2)*VM, s.p[1] + Math.cos(h*D2R)*(VTYPES.steps.len/2 - 1.2)*VM]; }
-    else B.want = B.rest;
-    const d = dist(...B.end, ...B.want), mv = 0.6*VM*dt;   // a bridge drives at walking pace
-    if (d <= mv) B.end = B.want.slice(); else { B.end[0] += (B.want[0] - B.end[0])/d*mv; B.end[1] += (B.want[1] - B.end[1])/d*mv; }
+    const u = use.get(B); let want = B.rest, spd = 0.9, face = null, on = false;
+    if (u) {
+      const [ac, k] = u, T = ac.ta; on = !!(T.dock && T.dock.some(([a, b]) => S.t >= a && S.t < b) && onStandNow(ac) && !(T.brd && S.t >= T.brd.dc + 70));   // never docked once the doors are shut
+      const lg = legOf(B.end, k.appr, k.dock), inLeg = lg.perp < 0.7 && lg.t > -0.05, outLeg = lg.perp < 0.7 && lg.t > 0.03, dD = dist(...B.end, ...k.dock)/VM;
+      face = norm(ac.hdg + (k.side < 0 ? 90 : -90)); B.up = k.door === 'U1';
+      if (on) { if (dD < 0.12) want = k.dock; else if (inLeg) { want = k.dock; spd = 0.2; } else want = k.appr; }
+      else if (outLeg) { want = k.appr; spd = 0.25; }   // backs off the door before it swings away
+    }
+    const d = dist(...B.end, ...want), mv = spd*VM*dt;   // a bridge drives at walking pace
+    if (d <= mv) B.end = want.slice(); else { B.end[0] += (want[0] - B.end[0])/d*mv; B.end[1] += (want[1] - B.end[1])/d*mv; }
+    B.dk = !!(u && on && dist(...B.end, ...u[1].dock)/VM < 0.12);   // docked: the door can open
+    // the cab turns square to the fuselage as it nears it, and back along the tunnel when it leaves
+    const tun = brg(...B.root, ...B.end), th = face != null && dist(...B.end, ...u[1].appr)/VM < 9 ? face : tun;
+    B.ch = B.ch == null ? th : norm(B.ch + clamp(angDiff(B.ch, th), -30*dt, 30*dt));
   }
 }
 
@@ -11258,13 +11467,13 @@ function vehInit(){
   vgBuild(); vehBases(); vehBridges();
   VEH.list = []; VEH.n = 0; VEH.nextRoam = S.t + rnd(30, 90); VEH.nextFire = S.t + rnd(8, 25)*60;
   VEH.cap = Math.round(clamp(STANDS.length*1.6, 24, 160)); TERM_BAY = undefined; SAT_BAYS.clear();
-  for (const B of VEH.bridges) B.end = B.rest.slice();
-  for (const ac of S.acs) { ac.ta = null; ac.tugV = null; }
+  for (const B of VEH.bridges) { B.end = B.rest.slice(); B.dk = false; B.ch = null; }
+  for (const ac of S.acs) { ac.ta = null; ac.tugV = null; ac.pre = null; }
 }
 function stepVehicles(dt){
   if (!VG_BUILT) return;
   VEH.tick += dt;
-  if (VEH.tick >= 1) { VEH.tick = 0; stepTurnarounds(); stepRoamers(); stepFireTraining(); stepRadio(); stepVehReqs(); }
+  if (VEH.tick >= 1) { VEH.tick = 0; stepPrestage(); stepTurnarounds(); stepRoamers(); stepFireTraining(); stepRadio(); stepVehReqs(); }
   stepTugs(); stepBridges(dt); stepFollow(dt);
   for (const v of VEH.list) {
     if (v.attached) continue;
@@ -11275,7 +11484,7 @@ function stepVehicles(dt){
 }
 S.listeners.push((ev, ac) => {
   if (ev === 'start') vehInit();
-  if (ev === 'removed' && ac) { if (ac.ta) taEnd(ac); if (ac.tugV) { ac.tugV.attached = false; sendHome(ac.tugV, 5); ac.tugV = null; } }
+  if (ev === 'removed' && ac) { if (ac.ta) taEnd(ac); preEnd(ac); if (ac.tugV) { ac.tugV.attached = false; sendHome(ac.tugV, 5); ac.tugV = null; } }
 });
 
 // ── drawing (under the aircraft: a bowser stands under the wing)
@@ -11318,23 +11527,102 @@ function drawBridges(mpx){
   for (const B of VEH.bridges) {
     const a = [sx(B.root[0]), sy(B.root[1])], b = [sx(B.end[0]), sy(B.end[1])];
     if (Math.max(a[0], b[0]) < -50 || Math.min(a[0], b[0]) > W + 50 || Math.max(a[1], b[1]) < -50 || Math.min(a[1], b[1]) > H + 50) continue;
-    const w = Math.max(2, 3.6*mpx), h = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    const w = Math.max(2, 3.6*mpx), h = Math.atan2(b[1] - a[1], b[0] - a[0]), at = f => [a[0] + (b[0] - a[0])*f, a[1] + (b[1] - a[1])*f];
     cx.save(); cx.lineCap = 'butt';
-    cx.strokeStyle = 'rgba(40,46,56,.75)'; cx.lineWidth = w + 1.4; cx.beginPath(); cx.moveTo(...a); cx.lineTo(...b); cx.stroke();
-    cx.strokeStyle = '#a9b1bc'; cx.lineWidth = w; cx.beginPath(); cx.moveTo(...a); cx.lineTo(...b); cx.stroke();
-    // the telescopic joints, the drive wheels and the cab at the door
-    cx.strokeStyle = 'rgba(60,66,76,.6)'; cx.lineWidth = Math.max(0.6, 0.3*mpx);
-    for (const f of [0.35, 0.65]) { const p = [a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f]; cx.beginPath(); cx.moveTo(p[0] - Math.sin(h)*w/2, p[1] + Math.cos(h)*w/2); cx.lineTo(p[0] + Math.sin(h)*w/2, p[1] - Math.cos(h)*w/2); cx.stroke(); }
-    cx.translate(...b); cx.rotate(h); cx.fillStyle = '#8d96a2'; cx.strokeStyle = 'rgba(30,34,40,.8)'; cx.lineWidth = 0.8;
-    cx.fillRect(-w*0.9, -w*0.75, w*1.3, w*1.5); cx.strokeRect(-w*0.9, -w*0.75, w*1.3, w*1.5);
+    // on the drawn chart (no imagery) the terminal may not be drawn here: a stub of the building face the rotunda stands on, so the bridge is never left floating
+    if (typeof IMG === 'undefined' || !IMG) {
+      cx.save(); cx.translate(...a); cx.rotate(h); const m = mpx;
+      cx.fillStyle = 'rgba(84,92,106,.95)'; cx.strokeStyle = 'rgba(30,34,40,.85)'; cx.lineWidth = 0.9;
+      cx.fillRect(-9*m, -7*m, 8.2*m, 14*m); cx.strokeRect(-9*m, -7*m, 8.2*m, 14*m);
+      cx.fillStyle = 'rgba(120,130,146,.9)'; cx.fillRect(-1.5*m, -7*m, 0.7*m, 14*m);   // the glazed face towards the apron
+      cx.restore();
+    }
+    // the tunnel in three telescoping sections, each a little narrower than the one it slides into, with the drive wheels at the cab end
+    const secs = [[0, 0.4, 1], [0.4, 0.75, 0.92], [0.75, 1, 0.84]], tone = B.up ? ['#cdd5df', '#c2cad5'] : ['#b4bcc7', '#a9b1bc'];   // the A380's upper-deck bridge is a little paler, high over the others
+    for (const [f0, f1, k] of secs) {
+      const p0 = at(f0), p1 = at(f1);
+      cx.strokeStyle = 'rgba(40,46,56,.75)'; cx.lineWidth = w*k + 1.4; cx.beginPath(); cx.moveTo(...p0); cx.lineTo(...p1); cx.stroke();
+      cx.strokeStyle = f0 ? tone[0] : tone[1]; cx.lineWidth = w*k; cx.beginPath(); cx.moveTo(...p0); cx.lineTo(...p1); cx.stroke();
+    }
+    // the rotunda at the terminal
+    cx.fillStyle = '#7e8794'; cx.strokeStyle = 'rgba(30,34,40,.8)'; cx.lineWidth = 0.8; cx.beginPath(); cx.arc(a[0], a[1], w*0.85, 0, 7); cx.fill(); cx.stroke();
+    // the cab, turned square to the fuselage once it is near it; the canopy at its face closes on the door
+    cx.translate(...b); cx.rotate((B.ch != null ? B.ch : brg(...B.root, ...B.end))*D2R);
+    cx.fillStyle = '#8d96a2'; cx.strokeStyle = 'rgba(30,34,40,.8)'; cx.lineWidth = 0.8;
+    cx.fillRect(-w*0.75, -w*0.8, w*1.5, w*1.2); cx.strokeRect(-w*0.75, -w*0.8, w*1.5, w*1.2);
+    cx.fillStyle = B.dk ? '#cfd5dc' : '#aab2bd'; cx.fillRect(-w*0.55, -w*0.8 - w*0.35, w*1.1, w*0.35); cx.strokeRect(-w*0.55, -w*0.8 - w*0.35, w*1.1, w*0.35);
+    if (B.dk && Math.floor(performance.now()/700) % 2 === 0) { cx.fillStyle = 'rgba(80,200,120,.95)'; cx.beginPath(); cx.arc(0, w*0.1, Math.max(0.9, 0.25*w), 0, 7); cx.fill(); }   // docked
     cx.restore();
+  }
+}
+// chocks at the nose and main wheels and the cones round the aircraft while the turnaround is on
+function drawStandKit(mpx){
+  for (const ac of S.acs) {
+    const T = ac.ta; if (!T || !T.kit || !onStandNow(ac)) continue;
+    const P = ac.perf, M = ac.stand.p, h = ac.hdg, X = sx(M[0]), Y = sy(M[1]); if (X < -80 || Y < -80 || X > W + 80 || Y > H + 80) continue;
+    const L = P.len, S2 = P.span/2, w = fusW(P)/2, r = Math.max(1.1, 0.45*mpx), pt = (f, s) => { const q = mPt(M, h, f, s); return [sx(q[0]), sy(q[1])]; };
+    cx.save();
+    cx.fillStyle = '#2a2a2a'; for (const [f, s] of [[L/2 - L*0.11, -0.6], [L/2 - L*0.11, 0.6], [-L*0.04, -(w*0.5 + 1)], [-L*0.04, w*0.5 + 1]]) { const q = pt(f, s); cx.fillRect(q[0] - r*0.6, q[1] - r*0.6, r*1.2, r*1.2); }
+    cx.fillStyle = '#ff7a1a'; cx.strokeStyle = 'rgba(255,255,255,.9)'; cx.lineWidth = Math.max(0.4, r*0.25);
+    for (const [f, s] of [[L/2 + 4, 0], [-L/2 - 4, 0], [-L*0.1, -(S2 + 4)], [-L*0.1, S2 + 4]]) { const q = pt(f, s); cx.beginPath(); cx.arc(q[0], q[1], r, 0, 7); cx.fill(); cx.stroke(); }
+    cx.restore();
+  }
+}
+// ── the passengers: a stream of people on foot, drawn from the turnaround's state (no state of their own, so nothing to save).
+// Off the aircraft down the steps and onto the apron bus, or across the apron to the terminal where it is close; through the
+// bridge's tunnel; and the other way for boarding. Only while a device is at the door, and a bus at the foot of the steps.
+const PAX_COL = ['#e8453c', '#2f6fdb', '#f2b01e', '#2aa876', '#8e5bd1', '#f7f7f7', '#2b2f36', '#e58a2b', '#4fb7d8', '#c9568f'];
+function paxStreams(ac){
+  const T = ac.ta, px = paxState(ac); if (!T || !px || (px.k !== 'Deplaning' && px.k !== 'Boarding')) return [];
+  const P = ac.perf, M = ac.stand.p, h = ac.hdg, w = fusW(P)/2, out = [], dir = px.k === 'Deplaning' ? 1 : -1, a = accessNow(ac), n = a.br.length + a.steps.length || 1;
+  const pt = (f, s) => mPt(M, h, f, s), rateOf = per => dir > 0 ? per : Math.max(10, T.brate/n);   // boarding: the gate lets people through in groups, so the stream is drawn at a steadier pace than the average
+  for (const k of a.br) { const B = VEH.bridges[k.bi]; out.push({ pts: [B.end.slice(), B.root.slice()], rate: rateOf(14), dir, inside: true }); }
+  const bus = bussed(ac, T.br.length);
+  let tf = null;
+  for (const j of a.steps) {
+    const f = (j.k === 'stepsR' ? doorLast(P) : doorFirst(P)).f, pts = [pt(f, -w), pt(f, -(w + 1.6)), pt(f, -(w + 5.8))];
+    if (bus) {
+      const bj = T.jobs.find(q => q.k === (j.k === 'stepsR' ? 'bus2' : 'bus') && q.v && q.v.parked && !q.v.home && !q.v.staged && !q.done && q.v.ac === ac);
+      if (!bj) continue;   // no bus at the foot of the steps yet: nobody comes down
+      const v = bj.v, foot = pts[2], d = dist(...foot, v.x, v.y) || 1, e = 1.3*VM; pts.push([v.x + (foot[0] - v.x)/d*e, v.y + (foot[1] - v.y)/d*e]);
+    } else {
+      if (tf === null) { tf = VD.terms.length ? VD.terms.map(q => VP(q)).reduce((b, q) => !b || dist(...q, ...pts[2]) < dist(...b, ...pts[2]) ? q : b, null) : false; }
+      if (!tf || dist(...tf, ...pts[2])/VM > 180) continue;
+      pts.push(tf.slice()); out.walk = true;
+    }
+    out.push({ pts, rate: rateOf(12), dir, walk: !bus });
+  }
+  return out;
+}
+function drawPax(mpx){
+  const SPD = 1.4, t = S.t*SPD, r = Math.max(1, 0.55*mpx);
+  for (const ac of S.acs) {
+    if (!ac.ta || !ac.stand || !onStandNow(ac) || !ac.ta.N) continue;
+    const X = sx(ac.stand.p[0]), Y = sy(ac.stand.p[1]); if (X < -250 || Y < -250 || X > W + 250 || Y > H + 250) continue;
+    for (const st of paxStreams(ac)) {
+      const pts = st.pts.map(q => [sx(q[0]), sy(q[1])]), seg = [], tot = []; let L = 0;
+      for (let i = 1; i < st.pts.length; i++) { const d = dist(...st.pts[i - 1], ...st.pts[i])/VM; seg.push(d); L += d; tot.push(L); }
+      if (L < 1) continue;
+      const gap = Math.max(0.9, 60*SPD/st.rate*0.4), cyc = Math.floor(t/gap), off = t - cyc*gap;
+      if (st.walk) { cx.save(); cx.strokeStyle = 'rgba(255,214,64,.28)'; cx.lineWidth = Math.max(1, 1.4*mpx); cx.setLineDash([4*mpx, 4*mpx]); cx.beginPath(); pts.forEach((q, i) => i ? cx.lineTo(...q) : cx.moveTo(...q)); cx.stroke(); cx.restore(); }
+      for (let n = 0; n*gap + off < L; n++) {
+        let u = n*gap + off; if (st.dir < 0) u = L - u;
+        let i = 0; while (i < seg.length - 1 && u > tot[i]) i++;
+        const a0 = i ? tot[i - 1] : 0, f = clamp((u - a0)/(seg[i] || 1), 0, 1), A = pts[i], B = pts[i + 1], id = cyc - n;
+        cx.globalAlpha = st.inside ? 0.45 : 1; cx.fillStyle = PAX_COL[((id*7) % 10 + 10) % 10];
+        cx.beginPath(); cx.arc(A[0] + (B[0] - A[0])*f, A[1] + (B[1] - A[1])*f, st.inside ? r*0.8 : r, 0, 7); cx.fill();
+      }
+      cx.globalAlpha = 1;
+    }
   }
 }
 function drawVehicles(){
   const sc = V.scale; if (sc < VEH_MIN_SCALE || !VG_BUILT) return;
   const mpx = sc/1852;
   drawBridges(mpx);
+  drawStandKit(mpx);
   for (const v of VEH.list) drawVehicle(v, mpx);
+  drawPax(mpx);
 }
 // what a vehicle is up to, for the pop-up when it is clicked
 function vehDoing(v){
@@ -11352,11 +11640,25 @@ function vehDoing(v){
   const J = v.job, ac = v.ac, cs = ac ? ac.cs : '', st = ac && ac.stand ? ` on ${APT.standWord || 'stand'} ${ac.stand.id}` : '';
   const w = { stepsF: 'Steps at the front door of', stepsR: 'Steps at the rear door of', bus: 'Bus for the passengers of', bus2: 'Second bus for', beltF: 'Belt loader at the hold of', beltR: 'Belt loader at the rear hold of',
     bags: 'Unloading the bags of', bagsR: 'Bringing the bags for', cater: 'Catering', caterR: 'Catering (rear galley)', fuel: 'Refuelling', gpu: 'Ground power for', lav: 'Toilet service for', water: 'Water service for', van: 'Engineer at', amb: 'Ambulance for', tug: 'Tug waiting at the nose of' };
-  if (J && w[J.k]) return `${v.parked ? '' : 'On the way: '}${w[J.k]} ${cs}${st}`;
+  if (J && w[J.k]) { const px = v.parked && ac && /^(steps|bus)/.test(J.k) ? paxState(ac) : null; return `${v.parked ? '' : 'On the way: '}${w[J.k]} ${cs}${st}${px ? `: ${px.k.toLowerCase()}, ${px.n} of ${px.N} passengers` : ''}`; }
+  if (v.staged && ac) return `Waiting clear of ${cs}${st} for the chocks to go in`;
   if (J && J.k === 'shuttle') return v.parked ? 'Bus unloading at the terminal' : 'Bus taking passengers to the terminal';
   if (J && J.k === 'crew') return v.parked ? 'Crew bus dropping off a crew' : 'Crew bus heading out';
   if (J && J.k === 'trip') return 'Driving across the airfield';
   return v.parked ? 'Parked' : 'Driving';
+}
+// the aircraft's panel (ui.js): what is happening round it on stand, and how many passengers are off or on
+const TA_JOB = { cater: 'catering', fuel: 'fuelling', lav: 'toilet service', water: 'water', belt: 'baggage', bags: 'baggage', bagsR: 'baggage', gpu: 'ground power', van: 'engineers' };
+function taLine(ac){
+  const T = ac.ta; if (!T || !onStandNow(ac)) return '';
+  const a = accessNow(ac), at = a.br.length ? (a.br.length > 1 ? 'jet bridges' : `jet bridge ${a.br[0].door}`) : a.steps.length ? (a.steps.length > 1 ? 'steps at both doors' : 'steps') : '', px = paxState(ac);
+  const doing = [...new Set(T.jobs.filter(j => j.v && !j.done && j.v.parked && !j.v.home && TA_JOB[j.k.replace(/[FR]$/, '')] || TA_JOB[j.k]).map(j => TA_JOB[j.k] || TA_JOB[j.k.replace(/[FR]$/, '')]).filter(Boolean))];
+  const parts = [];
+  if (px) parts.push(`<b>${px.k}</b>${at && px.k !== 'Doors closed' ? ' by ' + at : ''}: ${px.n} of ${px.N} passengers`);
+  else if (T.br && T.br.length && VEH.bridges[T.br[0].bi] && !VEH.bridges[T.br[0].bi].dk && T.dock.some(([x, y]) => S.t >= x && S.t < y)) parts.push(`Jet bridge ${T.br[0].door} moving in to the door`);
+  else if (T.arr && !T.dep && S.t < T.chocks) parts.push('Engines off; chocks going in');
+  if (doing.length) parts.push(doing.join(', '));
+  return parts.length ? `<div class="meta">${parts.join(' · ')}</div>` : '';
 }
 const vehPop = document.createElement('div'); vehPop.className = 'vehpop'; vehPop.hidden = true; document.body.appendChild(vehPop);
 function vehAt(X, Y){
