@@ -1,0 +1,42 @@
+name: Fetch Geneva OSM data
+# One-off: downloads the aerodrome geometry of Geneva (LSGG) from OpenStreetMap (taxiways, aprons, stands, terminals, jet
+# bridges, airside roads, fire stations, fuel), and the Lac Léman shore, the Swiss border and the nearby towns for the
+# approach map, into the osm-data-lsgg branch: the input for the Geneva ground layout generator.
+on:
+  workflow_dispatch:
+  push:
+    branches: [geneva-lsgg]
+    paths: ['.github/workflows/lsgg-osm-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          q() {  # name query
+            for R in 1 2 3; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                curl -sSf -m 300 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.json" && return 0 || sleep 10
+              done
+            done
+            echo "FAILED $1"
+          }
+          B="46.205,6.065,46.285,6.165"
+          q aerodrome "[out:json][timeout:180];(way[aeroway]($B);node[aeroway]($B);relation[aeroway]($B);way[building]($B);way[highway]($B);way[barrier]($B);nwr[amenity~\"fire_station|fuel|bus_station\"]($B);nwr[emergency]($B);way[man_made]($B);way[landuse]($B);nwr[public_transport]($B);nwr[ref]($B)[aeroway];);out geom;"
+          q lake "[out:json][timeout:180];(relation[natural=water][name~\"L(ac|ake) L[ée]man|Genfersee|Lac de Gen\"];way[natural=coastline](45.9,5.7,46.8,7.1););out geom;"
+          q lakeways "[out:json][timeout:180];way[natural=water](46.1,5.95,46.55,6.95);out geom;"
+          q border "[out:json][timeout:180];way[boundary=administrative][admin_level=2](45.8,5.6,46.9,7.3);out geom;"
+          q towns "[out:json][timeout:120];(node[place~\"city|town\"](45.8,5.6,46.9,7.3););out;"
+          q airports "[out:json][timeout:120];(nwr[aeroway=aerodrome][icao](45.0,5.0,47.5,8.0););out center;"
+          ls -la
+      - name: Publish to osm-data-lsgg branch
+        run: |
+          cd out
+          git init -q -b osm-data-lsgg
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OSM aerodrome data for LSGG"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" osm-data-lsgg
