@@ -1154,7 +1154,7 @@ function taxiIn(ac, st, via, hold){
   if (hold) { if (pts.length > 1 || dist(ac.x, ac.y, ...pts[0]) > 0.003) setPath(ac, pts, 15, ['holdIn', { hold }]); else atHoldIn(ac, hold, true); return ac.taxiVia; }
   // a drive-through stand: in over whichever lane is the shorter way round, nose on towards the other
   let rev = false;
-  if (st.out && !rolling) { const r2 = route(from, st.out.node, undefined, face) || route(from, st.out.node);
+  if (st.out && !rolling && !APT.doorsToTerminal) { const r2 = route(from, st.out.node, undefined, face) || route(from, st.out.node);
     if (r2 && pathLen(r2.nodes) < pathLen(r.nodes) - 30/1852) { rev = true; pts.length = 0; pts.push(...r2.nodes.map(id => GN[id].p), ...st.out.pts.slice(1).reverse()); } }
   pts.push(st.p);
   setPath(ac, pts, 15, ['onStand', { st, rev }], { inR: standInR(pts, st) });

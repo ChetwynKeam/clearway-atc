@@ -322,7 +322,8 @@ function sendHome(v, wait = 0){
 // to the next aircraft's nose for a push
 const VEH_GO = {
   home: (v, n) => { const a = vgNear([v.x, v.y], 400), r = a && vroute(a, n); v.pts = r ? routePts(r, v) : [VG[n].p.slice()]; v.parked = false; },
-  tug: (v, ac) => { const s = slotAt(ac, 'tug'); driveTo(v, s.p, s.h); }
+  tug: (v, ac) => { const s = slotAt(ac, 'tug'); driveTo(v, s.p, s.h); },
+  toTerm: v => { const t = termBay(); driveTo(v, t.p, t.h); v.parked = false; v.visitUntil = S.t + rnd(160, 260); }
 };
 // a vehicle out of its base at node n, heading off for point p
 function dispatch(type, p, h, job, urgent){
@@ -347,13 +348,44 @@ const heavy = ac => ac.perf.wake === 'H' || ac.perf.len > 50;
 function bussed(ac){
   const st = ac.stand; if (!st || small(ac) || st.area === 'hangar') return false;
   if (bridgeOf(st)) return false;
+  if (APT.shuttle && APT.shuttle(st)) return true;   // a satellite stand with no jet bridge: the bus comes to the aircraft
   if ((APT.remoteAreas || []).includes(st.area) || st.area === 'remote' || st.area === 'south' || st.term === 'R') return true;
   const t = VD.terms.length ? Math.min(...VD.terms.map(q => dist(...VP(q), ...st.p))) : 0;
   return t > 180*VM;
 }
+// ── satellite shuttles (profile hook APT.shuttle(stand), Geneva): the satellite stands have jet bridges, so the passengers' bus
+// does not go to the aircraft. It meets them at the satellite building beside the bridge and runs between there and the
+// terminal: for an arrival it is waiting when the doors open and drives to the terminal once loaded; for a departure it
+// comes from the terminal with the passengers ahead of boarding and is gone before the doors close.
+const shuttleStand = st => !!(st && APT.shuttle && APT.shuttle(st) && bridgeOf(st));
+const SAT_BAYS = new Map();
+function satBay(st, k){
+  const key = st.id + ':' + k; if (SAT_BAYS.has(key)) return SAT_BAYS.get(key);
+  const B = bridgeOf(st), L = dist(...B.root, ...B.rest) || 1, u = [(B.rest[0] - B.root[0])/L, (B.rest[1] - B.root[1])/L], h = brg(...B.root, ...B.rest);
+  const along = Math.min(L/VM*0.5, 14)*VM, side = (k ? -1 : 1)*6.5*VM, c = [B.root[0] + u[0]*along, B.root[1] + u[1]*along];
+  const r = { p: [c[0] + u[1]*side, c[1] - u[0]*side], h }; SAT_BAYS.set(key, r); return r;
+}
+let TERM_BAY;
+// where the shuttles load and unload at the main terminal: the terminal face nearest the stands that are not satellites
+function termBay(){
+  if (TERM_BAY !== undefined) return TERM_BAY;
+  const near = STANDS.filter(s => s.term === (APT.shuttleTerm || s.term) && !(APT.shuttle && APT.shuttle(s)) && s.area !== 'hangar');
+  if (!VD.terms.length || !near.length) return TERM_BAY = null;
+  const c = [near.reduce((a, s) => a + s.p[0], 0)/near.length, near.reduce((a, s) => a + s.p[1], 0)/near.length];
+  // not the satellites' own faces (a shuttle stand within 100 m): the main terminal's face nearest the terminal stands
+  const sat = STANDS.filter(s => APT.shuttle && APT.shuttle(s)), faces = VD.terms.map(VP).filter(q => !sat.some(s => dist(...q, ...s.p) < 100*VM));
+  const f = (faces.length ? faces : VD.terms.map(VP)).sort((a, b) => dist(...a, ...c) - dist(...b, ...c))[0], d = dist(...f, ...c) || 1;
+  return TERM_BAY = { p: [f[0] + (c[0] - f[0])/d*14*VM, f[1] + (c[1] - f[1])/d*14*VM], h: brg(...f, ...c) };
+}
+function dispatchTerm(type, p, h, job){
+  const t = termBay(); if (!t) return dispatch(type, p, h, job);
+  const v = newVeh(type, t.p, t.h, { job }); driveTo(v, p, h); return v;
+}
+// an arrival's bus, loaded: off to the terminal, a short wait, then home
+function shuttleOut(v){ v.job = { k: 'shuttle' }; v.ac = null; v.leaveAt = S.t + rnd(3, 12); v.go = ['toTerm', null]; v.endH = null; v.parked = false; v.pts = []; v.req = null; }
 function planJobs(ac, arr){
   const J = [], A = S.t, R = ac.reqAt, add = (k, type, at, until, extra) => J.push({ k, type, at, until, ...extra });
-  const L = small(ac), H = heavy(ac), bridge = bridgeOf(ac.stand), bus = bussed(ac);
+  const L = small(ac), H = heavy(ac), bridge = bridgeOf(ac.stand), bus = bussed(ac), shuttle = !L && shuttleStand(ac.stand), ST = !!(APT.shuttle && ac.stand && APT.shuttle(ac.stand));   // ST: a satellite stand's bus runs to and from the terminal
   const depart = ac.kind === 'DEP' && R != null && R < Infinity;
   const leave = depart ? R - 120 : Infinity;   // steps and bridge stay until the doors close
   if (L) {   // light aircraft and small business jets: the fuel bowser now and then, nothing else
@@ -362,7 +394,8 @@ function planJobs(ac, arr){
   }
   if (!bridge) { add('stepsF', 'steps', arr ? A + rnd(20, 50) : -1, leave); if (!isBiz(ac)) add('stepsR', 'steps', arr ? A + rnd(30, 70) : -1, leave); }
   if (arr) {
-    if (bus) { add('bus', 'bus', A + rnd(30, 60), A + rnd(6, 9)*60); if (H) add('bus2', 'bus', A + rnd(40, 80), A + rnd(7, 10)*60); }
+    if (shuttle) { add('bus', 'bus', A + rnd(15, 40), A + rnd(5, 7)*60, { bay: 0, arr: true }); add('bus2', 'bus', A + rnd(40, 80), A + rnd(8, 11)*60, { bay: 1, arr: true }); }
+    else if (bus) { add('bus', 'bus', A + rnd(30, 60), A + rnd(6, 9)*60, { term: ST, arr: true }); if (H) add('bus2', 'bus', A + rnd(40, 80), A + rnd(7, 10)*60, { term: ST, arr: true }); }
     if (!isBiz(ac)) { add('beltF', 'belt', A + rnd(60, 120), A + rnd(14, 22)*60); add('bags', 'bags', A + rnd(80, 140), A + rnd(12, 20)*60, { carts: H ? 4 : 3 }); if (H) add('beltR', 'belt', A + rnd(70, 130), A + rnd(16, 24)*60); }
     if (!bridge && isJet(ac)) add('gpu', 'gpu', A + rnd(40, 90), depart ? R - 4*60 : A + rnd(15, 25)*60);
   }
@@ -373,10 +406,11 @@ function planJobs(ac, arr){
     if (H || Math.random() < 0.35) add('lav', 'lav', Math.max(s, R - rnd(46, 52)*60), R - rnd(36, 40)*60);
     if (H) add('water', 'water', Math.max(s, R - rnd(44, 50)*60), R - rnd(34, 38)*60);
     if (!isBiz(ac)) { add('beltF', 'belt', Math.max(s, R - rnd(32, 36)*60), R - rnd(6, 9)*60); add('bagsR', 'bags', Math.max(s, R - rnd(30, 34)*60), R - rnd(7, 10)*60, { carts: H ? 4 : 3 }); }
-    if (bus) { add('bus', 'bus', Math.max(s, R - rnd(26, 30)*60), R - rnd(15, 18)*60); add('bus2', 'bus', Math.max(s, R - rnd(18, 21)*60), R - rnd(7, 9)*60); }
+    if (shuttle) { add('bus', 'bus', Math.max(s, R - rnd(38, 42)*60), R - rnd(33, 36)*60, { bay: 0 }); add('bus2', 'bus', Math.max(s, R - rnd(31, 35)*60), R - rnd(25, 28)*60, { bay: 1 }); }
+    else if (bus) { add('bus', 'bus', Math.max(s, R - rnd(26, 30)*60), R - rnd(15, 18)*60, { term: ST }); add('bus2', 'bus', Math.max(s, R - rnd(18, 21)*60), R - rnd(7, 9)*60, { term: ST }); }
     if (!bridge && isJet(ac) && !arr) add('gpu', 'gpu', -1, R - 4*60);
     if (Math.random() < 0.12) add('van', 'van', Math.max(s, R - rnd(50, 70)*60), R - rnd(25, 40)*60);
-    add('tug', 'tug', R - rnd(5, 8)*60, Infinity);
+    if (!(ac.stand && ac.stand.out)) add('tug', 'tug', R - rnd(5, 8)*60, Infinity);   // a drive-through stand has no push back, so no tug
   }
   return J;
 }
@@ -400,10 +434,10 @@ function stepTurnarounds(){
     for (const j of ac.ta.jobs) {
       if (j.done) continue;
       if (!j.started && (j.at < 0 || S.t >= j.at) && S.t < j.until - 60) {
-        j.started = true; const slot = slotAt(ac, j.k);
+        j.started = true; const slot = j.bay != null ? satBay(ac.stand, j.bay) : slotAt(ac, j.k);
         // a vehicle that should already be there when the session opens, or the bridge's own steps: in place
         if (j.at < 0 || ac.ta.first) { if (VEH.list.length < VEH.cap*1.3) { j.v = placeAt(j.type, slot, j); j.v.ac = ac; } }
-        else if (vehUnder() || j.type === 'tug' || j.type === 'amb') { j.v = dispatch(j.type, slot.p, slot.h, j); if (j.v) j.v.ac = ac; }
+        else if (vehUnder() || j.type === 'tug' || j.type === 'amb') { j.v = (j.bay != null || j.term) ? dispatchTerm(j.type, slot.p, slot.h, j) : dispatch(j.type, slot.p, slot.h, j); if (j.v) j.v.ac = ac; }
         if (j.v && j.carts) j.v.carts = j.carts;
       }
       if (j.started && S.t >= j.until) release(j);
@@ -411,7 +445,7 @@ function stepTurnarounds(){
     ac.ta.first = false;
   }
 }
-function release(j){ j.done = true; if (j.v && !j.v.attached) { sendHome(j.v, rnd(2, 10)); } j.v = null; }
+function release(j){ j.done = true; if (j.v && !j.v.attached) { if (j.arr && (j.bay != null || j.term) && !j.v.home && termBay()) shuttleOut(j.v); else sendHome(j.v, rnd(2, 10)); } j.v = null; }
 function taEnd(ac){
   // pushed or towed away (the tug stays on it), or gone: everyone else drives off
   for (const j of ac.ta.jobs) if (j.v && !j.done) { if (j.v.attached) { j.done = true; continue; } release(j); }
@@ -567,7 +601,7 @@ function stepFireTraining(){
 function vehInit(){
   vgBuild(); vehBases(); vehBridges();
   VEH.list = []; VEH.n = 0; VEH.nextRoam = S.t + rnd(30, 90); VEH.nextFire = S.t + rnd(8, 25)*60;
-  VEH.cap = Math.round(clamp(STANDS.length*1.6, 24, 160));
+  VEH.cap = Math.round(clamp(STANDS.length*1.6, 24, 160)); TERM_BAY = undefined; SAT_BAYS.clear();
   for (const B of VEH.bridges) B.end = B.rest.slice();
   for (const ac of S.acs) { ac.ta = null; ac.tugV = null; }
 }
@@ -663,6 +697,7 @@ function vehDoing(v){
   const w = { stepsF: 'Steps at the front door of', stepsR: 'Steps at the rear door of', bus: 'Bus for the passengers of', bus2: 'Second bus for', beltF: 'Belt loader at the hold of', beltR: 'Belt loader at the rear hold of',
     bags: 'Unloading the bags of', bagsR: 'Bringing the bags for', cater: 'Catering', caterR: 'Catering (rear galley)', fuel: 'Refuelling', gpu: 'Ground power for', lav: 'Toilet service for', water: 'Water service for', van: 'Engineer at', amb: 'Ambulance for', tug: 'Tug waiting at the nose of' };
   if (J && w[J.k]) return `${v.parked ? '' : 'On the way: '}${w[J.k]} ${cs}${st}`;
+  if (J && J.k === 'shuttle') return v.parked ? 'Bus unloading at the terminal' : 'Bus taking passengers to the terminal';
   if (J && J.k === 'crew') return v.parked ? 'Crew bus dropping off a crew' : 'Crew bus heading out';
   if (J && J.k === 'trip') return 'Driving across the airfield';
   return v.parked ? 'Parked' : 'Driving';
