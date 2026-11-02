@@ -67,6 +67,7 @@ const EGAA = (() => {
     REMSI: from(_BEL, _toIOM + 25, 110), MASOP: from(_BEL, _toIOM + 18, 78),                      // UP6 south-east of IOM
     NEVRI: from(_BEL, 185, 72), ABSUN: from(_BEL, 185, 38),  // N34 from the south (Dublin)
     // departure routes (VATSIM UK): S via P620 LISBO-NUMPI-NIMAT; SE via L10 LISBO-PEPOD-IOM (FL90+) or LISBO-RINGA-SLYDA-IOM (FL70-)
+    MAGEE: from(_BEL, 71, 23),                               // City's arrival hold and ILS 22 entry: BEL R071 D23 (plate 500839), 2,800 ft
     LISBO: from(_BEL, 155, 9),                               // near Lisburn: every south and south-east departure crosses it at or above 4,000 ft
     NUMPI: from(_BEL, 175, 27), NIMAT: from(_BEL, 185, 45),
     PEPOD: from(_BEL, _toIOM + 4, 34), SLYDA: from(_BEL, _toIOM, 58),
@@ -98,11 +99,13 @@ const EGAA = (() => {
   FIX.INT22 = from(RWYS.EGAC[0].thr['22'], 36, 12.5);
   FIX.INT04 = from(RWYS.EGAC[0].thr['04'], 216, 13.5);
 
-  // ── holds (plates): BEL, the 050° hold at 3,000 ft or above (turn direction not on the plates: right-hand assumed);
-  // HB, City's hold at 3,000 ft (inbound track not on the plates: 036° mag, the final approach course, assumed, right)
+  // ── holds: BEL, the 050° hold at 3,000 ft or above, MSL to FL140 (plates; turn direction not published: right-hand assumed);
+  // HB 038°/right at 3,000 ft and MAGEE 253°/left at 3,000 ft (IVAO EGAC local procedure). inb is the TRUE inbound track:
+  // true = magnetic - 1.1° (variation is west).
   const HOLDS_AIR = {
-    BEL: { inb: 50 + VAR, turn: 'R', min: 3000, max: 10000, maxKt: 220 },
-    HB:  { inb: 36 + VAR, turn: 'R', min: 3000, max: 10000, maxKt: 220 }
+    BEL:   { inb: 50 - VAR,  turn: 'R', min: 3000, max: 14000, maxKt: 220 },
+    HB:    { inb: 38 - VAR,  turn: 'R', min: 3000, max: 10000, maxKt: 220 },
+    MAGEE: { inb: 253 - VAR, turn: 'L', min: 3000, max: 10000, maxKt: 220 }
   };
 
   // ── approaches. ILS/DME 25 (500868) I-AG, ILS/DME/VOR 17 (500856) I-FT, ILS/DME/NDB(L) 04 (500829) I-HBD and 22 (500839)
@@ -146,16 +149,17 @@ const EGAA = (() => {
     'SE 07': { apt: 'EGAA', rwy: '07', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['LISBO', 6000], ['LIRGU', 4000]] },
     'S 07':  { apt: 'EGAA', rwy: '07', from: 'S',  pts: [['NEVRI', 12000], ['ABSUN', 8000], ['LIRGU', 4000]] },
     'W 07':  { apt: 'EGAA', rwy: '07', from: 'W',  pts: [['B300D40', 8000], ['VAGMO', 4000]] },
-    // ── City 22: the final points north-east up the Lough; everything not from the north-east flies a downwind past it
-    'NE 22': { apt: 'EGAC', rwy: '22', from: 'NE', pts: [['TRN', 12000], ['BLACA', 8000], ['INT22', 2800]] },
-    'SE 22': { apt: 'EGAC', rwy: '22', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['22LA', 4000], ['22LB', 3000], ['INT22', 2800]] },
-    'S 22':  { apt: 'EGAC', rwy: '22', from: 'S',  pts: [['NEVRI', 12000], ['ABSUN', 8000], ['22LA', 4000], ['22LB', 3000], ['INT22', 2800]] },
-    'W 22':  { apt: 'EGAC', rwy: '22', from: 'W',  pts: [['B300D40', 8000], ['22RA', 4000], ['22RB', 3000], ['INT22', 2800]] },
-    // ── City 04: the final points south-west, so south traffic is straight in; the rest come round a downwind
-    'NE 04': { apt: 'EGAC', rwy: '04', from: 'NE', pts: [['TRN', 12000], ['BLACA', 8000], ['04LA', 4000], ['04LB', 3000], ['INT04', 3000]] },
-    'SE 04': { apt: 'EGAC', rwy: '04', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['04RA', 4000], ['04RB', 3000], ['INT04', 3000]] },
+    // ── City: every route ends at the MAGEE hold (BEL R071 D23, plate 500839; IVAO "BLACA - MAGEE", "IOM - RINGA - MAGEE"), then vectors.
+    // 22: MAGEE lies on the 22 final's north-east approach, so it is straight in. 04: down the east side of the Lough in a
+    // right-hand circuit. (Base leg or visual: 2,500 ft until established; 04 intercept at 1,500 ft by 5 DME.)
+    'NE 22': { apt: 'EGAC', rwy: '22', from: 'NE', pts: [['TRN', 12000], ['BLACA', 8000], ['MAGEE', 3000], ['INT22', 2800]] },
+    'SE 22': { apt: 'EGAC', rwy: '22', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['MAGEE', 3000], ['INT22', 2800]] },
+    'S 22':  { apt: 'EGAC', rwy: '22', from: 'S',  pts: [['NEVRI', 12000], ['ABSUN', 8000], ['MAGEE', 3000], ['INT22', 2800]] },
+    'W 22':  { apt: 'EGAC', rwy: '22', from: 'W',  pts: [['B300D40', 8000], ['MAGEE', 3000], ['INT22', 2800]] },
+    'NE 04': { apt: 'EGAC', rwy: '04', from: 'NE', pts: [['TRN', 12000], ['BLACA', 8000], ['MAGEE', 3000], ['04RA', 3000], ['04RB', 3000], ['INT04', 3000]] },
+    'SE 04': { apt: 'EGAC', rwy: '04', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['MAGEE', 3000], ['04RA', 3000], ['04RB', 3000], ['INT04', 3000]] },
     'S 04':  { apt: 'EGAC', rwy: '04', from: 'S',  pts: [['NEVRI', 12000], ['ABSUN', 8000], ['INT04', 3000]] },
-    'W 04':  { apt: 'EGAC', rwy: '04', from: 'W',  pts: [['B300D40', 8000], ['04LA', 4000], ['04LB', 3000], ['INT04', 3000]] }
+    'W 04':  { apt: 'EGAC', rwy: '04', from: 'W',  pts: [['B300D40', 8000], ['MAGEE', 3000], ['04RA', 3000], ['04RB', 3000], ['INT04', 3000]] }
   };
   // the high-level alternatives (level bands as the sources give them; the simulator picks by the flight's cruise level)
   const STAR_ALT = { SE: [{ min: 8000, via: ['NELBO'] }, { min: 25000, via: ['REMSI', 'MASOP', 'NELBO'] }], NE: [], S: [] };
@@ -181,25 +185,48 @@ const EGAA = (() => {
     night: { from: '22:00', to: '07:00', mtowOverKg: 5700, straightAheadTo: 2000 },        // noise: climb straight ahead to 2,000 ft before turning
     clearance: (dest, airway, rwyHdg) => `cleared to ${dest} via ${airway}, climb straight ahead, runway heading ${rwyHdg}`
   };
-  // the straight-ahead point and the SIDs built on it: climb straight ahead to the turn altitude (2,000 ft at Aldergrove; City's
-  // is not published, 3,000 ft assumed), then a turn to the first fix, then the route. T<rwy> is where the climb reaches it.
+  // ── City (EGAC) departures. No SIDs; every departure needs a release from Aldergrove Radar (City departures are not free flow)
+  // and is handed to it straight after take-off, no later than 2,000 ft. Standard routes (IVAO EGAC local procedure, VATSIM UK):
+  // 04 turns RIGHT and 22 turns LEFT, direct to the first fix: north BLACA then TRN (P600); south NUMPI then NIMAT (P620);
+  // south-east L10 via PEPOD to IOM (FL90 and above; IVAO has DUFFY first at FL75+) or via RINGA, SLYDA to IOM (below FL75).
+  // They skip LISBO. Initial climb (Boeing noise page): 04 turns left to track 034°M at 500 ft QNH or 0.4 DME, 22 goes straight
+  // ahead; then climb to 1,500 ft (propeller 13,000 kg or less), 2,000 ft (propeller over) or 3,000 ft (jets) before any turn.
+  const DEP_ROUTES_EGAC = {
+    N:    { airway: 'P600', via: ['BLACA', 'TRN'],             note: 'direct BLACA' },
+    S:    { airway: 'P620', via: ['NUMPI', 'NIMAT'],           note: 'direct NUMPI' },
+    SE_H: { airway: 'L10',  via: ['PEPOD', 'IOM'],             note: 'cruise FL90 and above (IVAO: DUFFY at FL75+)', minFL: 90 },
+    SE_L: { airway: 'L10',  via: ['RINGA', 'SLYDA', 'IOM'],    note: 'cruise below FL75', maxFL: 70 }
+  };
+  const EGAC_RULES = {
+    release: 'Aldergrove Radar', transferByFt: 2000, minutesBetween: { diverging45: 1, similar: 2 },
+    turnAlt: { propLight: 1500, propHeavy: 2000, jet: 3000 }, initialTrack04: 34,   // 04: left to 034°M at 500 ft or 0.4 DME
+    preferredDeparture: '04', hours: ['06:30', '21:30'], speedBelowFL100: 250,
+    clearance: (dest, airway, turn, fix) => `cleared to ${dest} via ${airway}, after departure ${turn} turn direct ${fix}, climb altitude 3000 ft`
+  };
+  DEP_RULES.EGAC = EGAC_RULES;
+
+  // the straight-ahead point and the SIDs built on it: climb straight ahead to the turn altitude (2,000 ft at Aldergrove, 3,000 ft
+  // for City's jets), then a turn to the first fix, then the route. T<rwy> is where the climb reaches it.
   const DEP_TURN_ALT = { EGAA: 2000, EGAC: 3000 };
-  const DEP_TURN_OVR = { '25 N': 'R', '22 N': 'R' };                       // north from a south-west runway: the long way round, clear of the city
+  const DEP_TURN_OVR = { '25 N': 'R' };                                    // Aldergrove north from 25: the long way round, clear of Belfast
+  const DEP_TURN_FIXED = { '04': 'R', '22': 'L' };                         // City: 04 right, 22 left, whatever the route
   const SIDS = {}, DEP_PTS = {};
   const dirOfKey = { N: 'N', S: 'S', SE_H: 'SE', SE_L: 'SE' };
   for (const [apt, rw] of Object.entries({ EGAA: ['25', '07'], EGAC: ['22', '04'] })) for (const r of rw) {
     const T = from(THR[RECIP[r]], MAGH[r], 3.5); DEP_PTS['T' + r] = T; FIX['T' + r] = T;
-    for (const [key, R] of Object.entries(DEP_ROUTES)) {
-      const first = FIX[R.via[0]], dEnd = THR[RECIP[r]];
+    for (const [key, R] of Object.entries(apt === 'EGAC' ? DEP_ROUTES_EGAC : DEP_ROUTES)) {
+      const first = FIX[R.via[0]];
       const b = (Math.atan2(Math.sin(rad(first[1] - T[1]))*Math.cos(rad(first[0])), Math.cos(rad(T[0]))*Math.sin(rad(first[0])) - Math.sin(rad(T[0]))*Math.cos(rad(first[0]))*Math.cos(rad(first[1] - T[1]))) * 180/Math.PI + 360 + VAR) % 360;
       const rel = ((b - MAGH[r] + 540) % 360) - 180;                       // + right, - left
-      const turn = DEP_TURN_OVR[`${r} ${key[0]}`] && key === 'N' ? DEP_TURN_OVR[`${r} N`] : (rel >= 0 ? 'R' : 'L');
+      const turn = apt === 'EGAC' ? DEP_TURN_FIXED[r] : (key === 'N' && DEP_TURN_OVR[`${r} N`]) || (rel >= 0 ? 'R' : 'L');
+      const turnDeg = apt === 'EGAC' ? Math.round(((turn === 'R' ? rel : -rel) + 360) % 360) : Math.round(Math.abs(rel));   // the way actually turned
       const pts = [['T' + r, DEP_TURN_ALT[apt]]];
       // a turn of more than 120° is flown as two: out to a wide-turn point 3.5 NM off the climb-out line, then on to the first fix
-      if (Math.abs(rel) > 120) { const X = from(T, (MAGH[r] + (turn === 'R' ? 90 : 270)) % 360, 3.5); FIX[`X${r}${turn}`] = X; pts.push([`X${r}${turn}`, DEP_TURN_ALT[apt] + 1000]); }
-      R.via.forEach((f, i) => pts.push([f, i === 0 && key !== 'N' ? DEP_RULES.lisboMin : (i === R.via.length - 1 ? (key === 'N' ? 8000 : 7000) : 6000)]));
-      SIDS[`${r} ${key}`] = { apt, rwy: r, dir: dirOfKey[key], airway: R.airway, turn, turnDeg: Math.round(Math.abs(rel)), wide: Math.abs(rel) > 120, pts, note: R.note,
-        spoken: `${R.airway}, runway ${r}`, cond: key.startsWith('SE') ? { kelly: DEP_RULES.kelly } : null };
+      if (turnDeg > 120) { const X = from(T, (MAGH[r] + (turn === 'R' ? 90 : 270)) % 360, 3.5); FIX[`X${r}${turn}`] = X; pts.push([`X${r}${turn}`, DEP_TURN_ALT[apt] + 1000]); }
+      R.via.forEach((f, i) => pts.push([f, apt === 'EGAA' && i === 0 && key !== 'N' ? DEP_RULES.lisboMin : (i === R.via.length - 1 ? (key === 'N' ? 8000 : 7000) : 6000)]));
+      SIDS[`${r} ${key}`] = { apt, rwy: r, dir: dirOfKey[key], airway: R.airway, turn, turnDeg, wide: turnDeg > 120, pts, note: R.note,
+        spoken: `${R.airway}, runway ${r}`, cond: key.startsWith('SE') ? { kelly: DEP_RULES.kelly } : null, release: apt === 'EGAC' ? EGAC_RULES.release : null,
+        initialTrack: r === '04' ? EGAC_RULES.initialTrack04 : null };
     }
   }
 
@@ -235,7 +262,7 @@ const EGAA = (() => {
       EGAA: { name: 'Belfast International (Aldergrove)', iata: 'BFS', arp: P('543927N', '0061257W'), elev: 268, rwys: RWYS.EGAA },
       EGAC: { name: 'Belfast City (George Best)',         iata: 'BHD', arp: P('543705N', '0055221W'), elev: 15,  rwys: RWYS.EGAC }
     },
-    VAR, from, FIX, NAV, HOLDS_AIR, ILS, RNP07, STARS, STAR_ALT, APP_SPEEDS, RWY_USE, DEP_ROUTES, DEP_RULES, DEP_PTS, SIDS, fin, off, DIR, PLACE_DIR, dirFor, UNITS, TA, TZ, ALTERNATES,
+    VAR, from, FIX, NAV, HOLDS_AIR, ILS, RNP07, STARS, STAR_ALT, APP_SPEEDS, RWY_USE, DEP_ROUTES, DEP_ROUTES_EGAC, DEP_RULES, DEP_PTS, SIDS, fin, off, DIR, PLACE_DIR, dirFor, UNITS, TA, TZ, ALTERNATES,
     // not yet built: TIMETABLE / EXTRA / EXERCISES / WX_PRESETS / TYPES / PLACES / AIRPORTS, the airside layout
     // (belfast-ground.js) and the engine adapter (egaa-engine.js)
     features: { dualAirport: true, roadCrossing: false, sra: true, ils: true, rnavSids: false, singleRunway: false, mixedMode: true }
