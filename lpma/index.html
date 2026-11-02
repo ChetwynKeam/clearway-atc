@@ -10931,7 +10931,7 @@ function standDoorDist(s, e){
 const REST_F = Lm => Math.min(1, Math.max(6/Lm, Math.min(0.5, 1 - 22/Lm)));
 function vehBridges(){
   VEH.bridges = []; VEH.bridgeBy = new Map();
-  const cand = STANDS.filter(s => s.p && s.hdg != null && s.area !== 'hangar');
+  const cand = STANDS.filter(s => s.p && s.hdg != null && s.area !== 'hangar' && !(VD.nobr || []).includes(s.id));   // (nobr: stands that lie inside a building outline have no bridge)
   for (const [a, b] of VD.bridges) {
     const pa = VP(a), pb = VP(b); let best = null;
     for (const s of cand) for (const [r, e] of [[pa, pb], [pb, pa]]) { const d = standDoorDist(s, e); if (!best || d < best.d) best = { s, r, e, d }; }
@@ -10969,6 +10969,19 @@ function bridgePlan(ac, hdg){
     for (const B of Bs) { if (used.has(B)) continue; const k = dockFor(B, M, h, P, door); if (k && (!best || Math.abs(k.len - B.L/VM) < Math.abs(best.k.len - best.B.L/VM))) best = { B, k }; }
     if (best) { used.add(best.B); out.push({ bi: VEH.bridges.indexOf(best.B), ...best.k }); }
   }
+  // two bridges to one aircraft run side by side to their own doors, never across each other: swap their doors when they would cross, and drop the second if they still do
+  const xs = (a, b, c, d) => { const o = (p, q, r) => (q[0] - p[0])*(r[1] - p[1]) - (q[1] - p[1])*(r[0] - p[0]); return o(a, b, c)*o(a, b, d) < 0 && o(c, d, a)*o(c, d, b) < 0; };
+  const cross = (u, v) => xs(VEH.bridges[u.bi].root, u.dock, VEH.bridges[v.bi].root, v.dock);
+  for (let pass = 0; pass < 3; pass++) {
+    let moved = false;
+    for (let i = 0; i < out.length; i++) for (let j = i + 1; j < out.length; j++) if (cross(out[i], out[j])) {
+      const di = D.find(d => d.id === out[i].door), dj = D.find(d => d.id === out[j].door), ki = dockFor(VEH.bridges[out[i].bi], M, h, P, dj), kj = dockFor(VEH.bridges[out[j].bi], M, h, P, di);
+      if (ki && kj) { const a = { bi: out[i].bi, ...ki }, b = { bi: out[j].bi, ...kj }; if (!cross(a, b)) { out[i] = a; out[j] = b; moved = true; } }
+    }
+    if (!moved) break;
+  }
+  for (let j = out.length - 1; j > 0; j--) if (out.slice(0, j).some(u => cross(u, out[j]))) out.splice(j, 1);
+  out.sort((a, b) => b.f - a.f);
   return out;
 }
 // how the cab sits on its approach: perp metres off the line from the stand-off point to the door, t how far along it (0 stand-off, 1 docked)
