@@ -11037,14 +11037,17 @@ function airwayPts(pts, seed, keepLast){
   return out;
 }
 function smoothPts(pts, keepLast){
-  // each corner rounded off: a curve from a point before the turning point to one after it (up to 35 NM either side,
-  // never more than a third of either leg), so the heading changes gradually through the turn
+  // each corner rounded off: a curve from a point before the turning point to one after it (never more than about a third
+  // of either leg), so the heading changes gradually through the turn
   if (pts.length < 3) return pts;
   pts = pts.map(p => p.slice()); for (let i = 1; i < pts.length; i++) { while (pts[i][1] - pts[i-1][1] > 180) pts[i][1] -= 360; while (pts[i][1] - pts[i-1][1] < -180) pts[i][1] += 360; }   // longitudes made continuous over the date line
   const out = [pts[0]];
   for (let i = 1; i < pts.length - 1; i++) {
     const A = pts[i-1], V = pts[i], B = pts[i+1], la = gcDist(A, V), lb = gcDist(V, B);
-    const c = Math.min(35, la/2.2, (keepLast && i === pts.length - 2 ? lb/3 : lb/2.2)); if (c < 0.15) { out.push(V); continue; }
+    // a fly-by turn as an airliner flies it: straight to the turning point, round at about a 6 NM radius (25 degrees of bank at
+    // cruise speed), straight on again; the turn starts radius x tan(half the change of course) before the point
+    const turn = Math.abs(angDiff(gcBrg(A, V), gcBrg(V, B)))*D2R;
+    const c = Math.min(6*Math.tan(Math.min(turn, 2.6)/2), la/2.2, (keepLast && i === pts.length - 2 ? lb/3 : lb/2.2)); if (c < 0.15) { out.push(V); continue; }
     const P = gcAt(V, A, c/la), Q = gcAt(V, B, c/lb);
     const n = clamp(Math.ceil(c/1.2), 12, 60);   // about a point a mile, so a wide curve has no visible facets close in
     for (let k = 0; k <= n; k++) { const t = k/n, u = 1 - t;   // quadratic through the corner, in degrees (short distances)
@@ -11087,7 +11090,7 @@ function addDepGhost(ac, at){
   // (a steady turn), then the airway route on from there
   const lead = [];
   if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150) { let p = p0, h = ac.hdg;
-    for (let k = 0; k < 40; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 8) break; h = norm(h + Math.sign(d)*Math.min(8, Math.abs(d))); p = gcDest(p, h, 6); lead.push(p); } }
+    for (let k = 0; k < 40; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); lead.push(p); } }
   // the turn off its heading and the airway route on from there, smoothed as one so the join is not a corner
   const leg = makeLeg(smoothPts([p0, ...lead.slice(0, -1), ...airwayPts([lead.length ? lead[lead.length - 1] : p0, ...via, AP[ac.d].slice(0, 2)], ac.cs + ac.d, false)])), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
@@ -11115,7 +11118,7 @@ function crowFly(from, to, alt0, alt1, climb){
   return legPts(L, 0, L.D, x => climb ? Math.min(alt0 + x*330, 40000, Math.max(0, (L.D - x)*300)) : Math.max(alt1, alt0 - x*330));
 }
 // ── a flight's route on from where it is, flown the way an aircraft flies it: the points it is still cleared to, then a
-// steady turn off its heading (15 degrees each 6 NM) onto the airway route to its destination. Unknown destination: on
+// steady turn off its heading (about a 6 NM radius) onto the airway route to its destination. Unknown destination: on
 // the way it is going. Corners are all rounded, so the line never has a sharp angle.
 function wayOn(o, dest, seed){
   const here = toLL([o.x, o.y]); let p = here, h = o.trk ?? o.hdg ?? 0; const pts = [here];
@@ -11132,7 +11135,7 @@ function wayOn(o, dest, seed){
       pts.length = 0; pts.push(...flyPts(toLL(R.rm(R.len*0.5, 0)), rh, [endR, gcDest(endR, rh, 1), ...fx.map(id => toLL(WP[id].p))], 0.3));
       p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
       if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-      for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 8) break; h = norm(h + Math.sign(d)*Math.min(8, Math.abs(d))); p = gcDest(p, h, 6); pts.push(p); }
+      for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
       const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
       return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
     }
@@ -11145,7 +11148,7 @@ function wayOn(o, dest, seed){
     else { pts.push(q); h = gcBrg(p, q); }
     p = q; }
   if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-  for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 8) break; h = norm(h + Math.sign(d)*Math.min(8, Math.abs(d))); p = gcDest(p, h, 6); pts.push(p); }
+  for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
   return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
 }
@@ -11155,7 +11158,7 @@ function wayIn(o, from, end, dir){
   const O = from, D = gcDist(O, end);
   const via = (VIA[o.o] || []).filter(p => !nearGib(p) && gcDist(p, end) > 40 && gcDist(p, O) > 30).slice().reverse();
   // a short hop: worked back from where we saw it, a steady turn round towards its origin, so it meets its track in line
-  if (D < 70) return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/45, 0.5, 1.4)));
+  if (D < 70) return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
   // the airway route to a point well back along the line it was flying, then a steady turn to intercept that line
   // (only a long way back when the track it was flying points along the way in from its origin: a vector or downwind leg
   // close in says nothing about the route it flew to get there)
