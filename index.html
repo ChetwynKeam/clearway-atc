@@ -9534,6 +9534,9 @@ const AW = (() => {
   // airport beyond the covered region: the join is on the great circle to it, costed by what is left to fly.
   // A start or goal that is not on any airway joins the network by the nearest fixes in its direction. Returns
   // { fixes, start: tag, goal: tag } or null.
+  // a steady pseudo-random number in [0, 1) for a leg and a seed: flights with different seeds fan out over the airways that
+  // are nearly as short as each other (the way real flights take different filed routes to the same place)
+  function jit(seed, a, b){ let h = 2166136261; const t = seed + a + '>' + b; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 10007)/10007; }
   function search(o){
     if (!READY) return null;
     const { from, to, starts, goals, hi = true, farFrom, farTo } = o, rf = o.rf || 90, rt = o.rt || 90;
@@ -9563,7 +9566,7 @@ const AW = (() => {
       const cu = dist0.get(u); if (k >= bestC) break;
       if (goalCost.has(u) && cu + goalCost.get(u) < bestC) { bestC = cu + goalCost.get(u); best = u; }
       for (const [v, , d, l, t] of ADJ[u] || []) { if (done.has(v)) continue;
-        add(v, cu + d*(hi && l === 'L' ? 1.1 : !hi && l === 'U' ? 1.2 : 1)*(t === 'C' ? 1.04 : 1) + 2, u); }
+        add(v, cu + d*(hi && l === 'L' ? 1.1 : !hi && l === 'U' ? 1.2 : 1)*(t === 'C' ? 1.04 : 1)*(o.seed ? 1 + 0.22*jit(o.seed, u, v) : 1) + 2, u); }
     }
     if (!best) return null;
     const fixes = [best]; let c = best; while (prev.get(c)) { c = prev.get(c); fixes.unshift(c); }
@@ -9583,7 +9586,7 @@ const AW = (() => {
     const ia = inCover(a), ib = inCover(b);
     const sA = ia ? a : edgeOf(a, b), sB = ib ? b : edgeOf(b, a);
     if (!sA || !sB || gcNM(sA, sB) < 30) return [];
-    const r = search({ from: sA, to: sB, hi: o.hi !== false, farFrom: ia ? null : a, farTo: ib ? null : b, rf: o.rf || 90, rt: o.rt || 90 });
+    const r = search({ from: sA, to: sB, hi: o.hi !== false, farFrom: ia ? null : a, farTo: ib ? null : b, rf: o.rf || 90, rt: o.rt || 90, seed: o.seed });
     if (!r) return [];
     return r.fixes.map(f => [FIX[f][0], FIX[f][1], f]);
   }
@@ -15452,7 +15455,7 @@ function airwayPts(pts, seed, keepLast){
   for (let i = 1; i < pts.length; i++) {
     const A = pts[i-1], B = pts[i], D = gcDist(A, B), last = keepLast && i === pts.length - 1;
     if (!last && D >= 60 && typeof AW !== 'undefined' && AW.ready) {
-      let fx = []; try { fx = AW.legBetween([A[0], A[1]], [B[0], B[1]], { rf: 70, rt: 70 }); } catch (e) { fx = []; }
+      let fx = []; try { fx = AW.legBetween([A[0], A[1]], [B[0], B[1]], { rf: 70, rt: 70, seed: String(seed) }); } catch (e) { fx = []; }
       // no doubling back: a joining fix behind the start or beyond the end is dropped
       fx = fx.filter(q => gcDist(A, q) < D + 40 && gcDist(q, B) < D + 40);
       if (fx.length) { for (const q of fx) out.push([q[0], q[1]]); out.push(B); continue; }
