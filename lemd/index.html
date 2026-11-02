@@ -9964,6 +9964,20 @@ function drawApronSlabs(path){
   cx.fillStyle = pat; for (const a of AD.aprons) { path(a); cx.fill(); }
 }
 
+// the dashed turn-in curves of a stand: from a point on the lane each way, through the lead-in's start, to a point on the lead-in
+function standDashes(t){
+  if (t.noLead || !t.lp || !GN[t.node]) return null;
+  const L0 = t.lp, M = 1/M2NM, at = (P, b, k) => [P[0] + Math.sin(b*D2R)*k*M2NM, P[1] + Math.cos(b*D2R)*k*M2NM];
+  const pts = t.line && t.line.length > 1 ? t.line : [L0, t.p];
+  if (dist(...L0, ...t.p)*M < 14) return null;
+  let q = pts[pts.length - 1]; for (const c of pts.slice(1)) if (dist(...L0, ...c)*M > 8) { q = c; break; }
+  const lead = brg(...L0, ...q), out = [], seen = [];
+  for (const [v] of waysOn(t.lane || t.node)) { const w = GN[v].p; if (dist(...L0, ...w)*M < 3) continue;
+    const b = brg(...L0, ...w), a = Math.abs(angDiff(b, lead)); if (a < 25 || a > 155 || seen.some(x => Math.abs(angDiff(x, b)) < 20)) continue;
+    seen.push(b); out.push([at(L0, b, Math.min(15, dist(...L0, ...w)*M*0.9)), L0, at(L0, lead, 10)]); }
+  return out.length ? out : null;
+}
+
 // ── stands: lead-in, stop bar, safety box, number box; service road ──
 function drawStandDetail(c, path, mpx, box = true){
   const sc = V.scale;
@@ -9973,6 +9987,14 @@ function drawStandDetail(c, path, mpx, box = true){
   for (const o of [120, 130]) { path([[1108, o], [1313, o]], false); cx.stroke(); }
   cx.setLineDash([3*mpx, 3*mpx]); path([[1108, 125], [1313, 125]], false); cx.stroke(); cx.setLineDash([]);
   if (sc > 350) { cx.font = `600 ${Math.max(8, 2.6*mpx)}px ${FONT_L}`; cx.fillStyle = C.gWhite; cx.textAlign = 'center'; const q = c(1270, 125); cx.save(); cx.translate(...q); cx.rotate(RWY_ANGLE()*Math.PI/180); cx.fillText('SERVICE ROAD', 0, Math.max(3, 0.9*mpx)); cx.restore(); cx.textAlign = 'left'; }
+  }
+  // the turn-in curves off the taxilane into each stand: short dashed lines that start on the lane's own centreline
+  if (sc > 120) {
+    for (const t of STANDS) if (t.dash === undefined) t.dash = standDashes(t);
+    groundLines(Math.max(1, 0.3*mpx), () => { cx.setLineDash([2.5*mpx, 2*mpx]);
+      for (const t of STANDS) if (t.dash) for (const [a, k, b] of t.dash) { cx.beginPath(); for (let i = 0; i <= 10; i++) { const u = i/10, w = 1 - u;
+        cx[i ? 'lineTo' : 'moveTo'](sx(w*w*a[0] + 2*w*u*k[0] + u*u*b[0]), sy(w*w*a[1] + 2*w*u*k[1] + u*u*b[1])); } cx.stroke(); }
+      cx.setLineDash([]); });
   }
   for (const s of STANDS) {
     const sz = standSize(s), h = s.hdg*D2R, P = [sx(s.p[0]), sy(s.p[1])];

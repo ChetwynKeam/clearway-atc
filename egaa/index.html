@@ -5201,7 +5201,7 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
       t.node = sid; t.lp = X; t.hdg = H; t.h0 = H; t.line = null; t.noLead = false; t.tang = dirv(fwd); t.curved = true;
       // a straight painted lead-in square off the taxiway, with the turn-in curves from each way along A as short dashed lines
       const T = dirv(fwd), at = (P, d, k) => [P[0] + d[0]*k*M2NM, P[1] + d[1]*k*M2NM];
-      t.dash = [-1, 1].map(sg => [at(X, T, 15*sg), X, at(X, u, 10)]);
+      t.lane = fid;
     }
     // the apron's inner taxilanes (labelled A in the data) are not painted: the stands lead straight in off A
     { const f0 = 'CfC' + CS[0].id.slice(1), f1 = 'Cf' + CS[CS.length - 1].id, nodes = (() => { if (!GN[f0] || !GN[f1]) return null; const dd = { [f0]: 0 }, pv = {}, todo = new Set([f0]), done = new Set();
@@ -5249,7 +5249,7 @@ const nearHolds = rw => { const R = RWYS_BY_END(rw); return Object.keys(HOLDS).f
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
 // lead-in lines: from the taxilane a stand's line curves onto the stand's own heading and runs straight to the stop bar, as painted
 for (const s of STANDS) {
-  if (s.noLead || s.curved) continue;
+  if (true) continue;   // (stands are a straight lead-in with dashed turn-in curves: see standDashes)
   const pts = s.line || [s.lp, s.p], P0 = pts[0], Pe = pts[pts.length - 1], u = dirv(s.hdg), M = 1/M2NM;
   let T = null, bd = 90;
   if (s.tang) { T = s.tang; bd = Math.abs(angDiff(Math.atan2(T[0], T[1])/D2R, s.hdg)); } else
@@ -5465,7 +5465,6 @@ function drawBelfast(){
       cx.setLineDash([]);
     }
     groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); } });
-    groundLines(lw(0.3), () => { cx.setLineDash([2.5*mpx, 2*mpx]); for (const s of STANDS) if (s.dash) for (const [a, c, b] of s.dash) { cx.beginPath(); for (let k = 0; k <= 10; k++) { const t = k/10, w = 1 - t; cx[k ? 'lineTo' : 'moveTo'](...P2([w*w*a[0] + 2*w*t*c[0] + t*t*b[0], w*w*a[1] + 2*w*t*c[1] + t*t*b[1]])); } cx.stroke(); } cx.setLineDash([]); });
     cx.save(); if (IMG) clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx, false); cx.restore();   // stand paint stops at the terminal walls
     drawGroundSigns();
     cx.font = `600 11px ${FONT_L}`;
@@ -10085,6 +10084,20 @@ function drawApronSlabs(path){
   cx.fillStyle = pat; for (const a of AD.aprons) { path(a); cx.fill(); }
 }
 
+// the dashed turn-in curves of a stand: from a point on the lane each way, through the lead-in's start, to a point on the lead-in
+function standDashes(t){
+  if (t.noLead || !t.lp || !GN[t.node]) return null;
+  const L0 = t.lp, M = 1/M2NM, at = (P, b, k) => [P[0] + Math.sin(b*D2R)*k*M2NM, P[1] + Math.cos(b*D2R)*k*M2NM];
+  const pts = t.line && t.line.length > 1 ? t.line : [L0, t.p];
+  if (dist(...L0, ...t.p)*M < 14) return null;
+  let q = pts[pts.length - 1]; for (const c of pts.slice(1)) if (dist(...L0, ...c)*M > 8) { q = c; break; }
+  const lead = brg(...L0, ...q), out = [], seen = [];
+  for (const [v] of waysOn(t.lane || t.node)) { const w = GN[v].p; if (dist(...L0, ...w)*M < 3) continue;
+    const b = brg(...L0, ...w), a = Math.abs(angDiff(b, lead)); if (a < 25 || a > 155 || seen.some(x => Math.abs(angDiff(x, b)) < 20)) continue;
+    seen.push(b); out.push([at(L0, b, Math.min(15, dist(...L0, ...w)*M*0.9)), L0, at(L0, lead, 10)]); }
+  return out.length ? out : null;
+}
+
 // ── stands: lead-in, stop bar, safety box, number box; service road ──
 function drawStandDetail(c, path, mpx, box = true){
   const sc = V.scale;
@@ -10094,6 +10107,14 @@ function drawStandDetail(c, path, mpx, box = true){
   for (const o of [120, 130]) { path([[1108, o], [1313, o]], false); cx.stroke(); }
   cx.setLineDash([3*mpx, 3*mpx]); path([[1108, 125], [1313, 125]], false); cx.stroke(); cx.setLineDash([]);
   if (sc > 350) { cx.font = `600 ${Math.max(8, 2.6*mpx)}px ${FONT_L}`; cx.fillStyle = C.gWhite; cx.textAlign = 'center'; const q = c(1270, 125); cx.save(); cx.translate(...q); cx.rotate(RWY_ANGLE()*Math.PI/180); cx.fillText('SERVICE ROAD', 0, Math.max(3, 0.9*mpx)); cx.restore(); cx.textAlign = 'left'; }
+  }
+  // the turn-in curves off the taxilane into each stand: short dashed lines that start on the lane's own centreline
+  if (sc > 120) {
+    for (const t of STANDS) if (t.dash === undefined) t.dash = standDashes(t);
+    groundLines(Math.max(1, 0.3*mpx), () => { cx.setLineDash([2.5*mpx, 2*mpx]);
+      for (const t of STANDS) if (t.dash) for (const [a, k, b] of t.dash) { cx.beginPath(); for (let i = 0; i <= 10; i++) { const u = i/10, w = 1 - u;
+        cx[i ? 'lineTo' : 'moveTo'](sx(w*w*a[0] + 2*w*u*k[0] + u*u*b[0]), sy(w*w*a[1] + 2*w*u*k[1] + u*u*b[1])); } cx.stroke(); }
+      cx.setLineDash([]); });
   }
   for (const s of STANDS) {
     const sz = standSize(s), h = s.hdg*D2R, P = [sx(s.p[0]), sy(s.p[1])];
