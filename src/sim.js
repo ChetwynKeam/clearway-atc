@@ -121,6 +121,8 @@ const parallelEnd = rw => { const m = /^(\d\d)([LRC])$/.exec(rw || ''); if (!m) 
 const openRw = rw => { const B = S.emg && S.emg.rwyBlock; if (!B || B.id == null || !rw || rwyOf(rw).id !== B.id) return rw; const p = parallelEnd(rw); return p || rw; };
 const baseLandRw = ac => (ac && ac.app) || openRw((ac && APT.landRwyOf && APT.landRwyOf(ac)) || S.rwy);
 // (an AI Approach arrival due just after a MAYDAY expects the parallel: the MAYDAY's runway closes after it, ai.js)
+// the runway key of an aircraft's arrival route: its own landing runway at an airport with two airfields (Belfast), else the flow's
+const arrKey = o => (APT.arrRoute && o && APT.arrRoute(o)) || S.rwy;
 const landRw = ac => { const rw = baseLandRw(ac); return ac && !ac.app && typeof mayRw === 'function' ? mayRw(ac, rw) : rw; };
 // ── runways. A one-runway airport is described by its profile's globals (rm, mOf, offOf, RU, RW_LO/RW_HI, TURN_W/E);
 // an airport with several runways (New York JFK) lists them in APT.runways, each with its own frame along the runway
@@ -358,7 +360,7 @@ const PRE_NM = 35, PRE_LEAD = 6.5*60;
 const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + tzOffH(S.start + S.t*1000)) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
-  const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][S.rwy][0]];
+  const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][arrKey(f)][0]];
   const left = f.m*60 - S.t;
   if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
     const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
@@ -383,10 +385,10 @@ function spawnArrival(f){
   return ac;
 }
 function makeInbound(ac, keepAlt){
-  const first = WP[ARR_ROUTE[ac.gate][S.rwy][0]];
+  const first = WP[ARR_ROUTE[ac.gate][arrKey(ac)][0]];
   ac.tgtAlt = ac.cleared = keepAlt ? Math.round(ac.alt/100)*100 : APT.inboundAlt(ac.gate); ac.freq = 'RAD';
   ac.state = 'INBOUND';
-  ac.route = ARR_ROUTE[ac.gate][S.rwy].slice();
+  ac.route = ARR_ROUTE[ac.gate][arrKey(ac)].slice();
   // handed over at (or just short of) the route's first fix: that fix is behind it now, so it flies on to the next one
   // rather than turning round for it (a heading of 000 when it sits on the fix itself, then a loop back)
   while (ac.route.length > 1 && WP[ac.route[0]] && dist(ac.x, ac.y, ...WP[ac.route[0]].p) < 2) ac.route.shift();
@@ -1271,7 +1273,7 @@ function commandRun(str){
   if (toks.length === 1 && /^(REMOVE|DELETE|DEL)$/.test(toks[0])) { removeAc(ac); return; }   // works on any flight, yours or not
   if (outOfCtl(ac)) { sys(`${ac.cs} has been transferred to ${NEXT_UNIT[ac.gate][0]}: it is no longer under your control.`); return; }
   if (!aiCtx && aiOwns(ac)) takeOver(ac);   // an instruction to a flight the AI is working: you take it back
-  if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][S.rwy][0] ? 'the boundary' : 'entry'}.`); return; }
+  if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][arrKey(ac)][0] ? 'the boundary' : 'entry'}.`); return; }
   if (!aiCtx) select(ac);
   const said = [], reads = [];
   const air = ac.airborne;

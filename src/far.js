@@ -221,7 +221,7 @@ function meet(A, ha, B, hb, st, tight){
 function arrIn(o, first, dir, f0){
   const O = AP[o.o].slice(0, 2), home = AP[APT.icao].slice(0, 2), bo = gcBrg(home, O);
   const gt = Object.keys(ENTRY).sort((a, b) => Math.abs(angDiff(brg(...RADAR_REF, ...ENTRY[a]), bo)) - Math.abs(angDiff(brg(...RADAR_REF, ...ENTRY[b]), bo)))[0];
-  const ids = gt && ARR_ROUTE[gt] ? (ARR_ROUTE[gt][S.rwy] || []).filter(id => WP[id]) : [];
+  const ids = gt && ARR_ROUTE[gt] ? (ARR_ROUTE[gt][arrKey(o)] || []).filter(id => WP[id]) : [];
   if (gt && gcDist(O, home) > 60) {
     const ch = [ENTRY[gt], ...ids.map(id => WP[id].p)]; let bi = 1, bd = Infinity;
     for (let i = 1; i < ch.length; i++) { const d = segDist(f0, ch[i-1], ch[i]); if (d < bd - 0.01) { bd = d; bi = i; } }
@@ -284,7 +284,7 @@ function trkRoute(o){
     const rec = (g.track || []).concat(legPts(g.leg, 0, d, alt));
     // ahead: the rest of the same route (to the pending-track point, then on to the airport for an inbound)
     const ext = [legPts(g.leg, d, D, alt)];
-    if (g.kind === 'ARR') { const e = legAt(g.leg, D).ll, fx = ((g.f && ARR_ROUTE[g.f.gate] && ARR_ROUTE[g.f.gate][S.rwy]) || []).filter(id => WP[id]).map(id => toLL(WP[id].p)), lastP = fx.length ? fx[fx.length - 1] : e, inH = fx.length ? gcBrg(fx.length > 1 ? fx[fx.length - 2] : e, lastP) : legAt(g.leg, D).hdg, L = ptsLeg([...smoothPts([e, ...fx]).slice(0, -1), ...ontoFinal(lastP, inH, FINAL[S.rwy], home)]); ext.push(legPts(L, 0, L.D, x => Math.max(0, (g.endAlt || 6000) - x*300))); }
+    if (g.kind === 'ARR') { const e = legAt(g.leg, D).ll, fx = ((g.f && ARR_ROUTE[g.f.gate] && ARR_ROUTE[g.f.gate][arrKey(g.f)]) || []).filter(id => WP[id]).map(id => toLL(WP[id].p)), lastP = fx.length ? fx[fx.length - 1] : e, inH = fx.length ? gcBrg(fx.length > 1 ? fx[fx.length - 2] : e, lastP) : legAt(g.leg, D).hdg, L = ptsLeg([...smoothPts([e, ...fx]).slice(0, -1), ...ontoFinal(lastP, inH, FINAL[S.rwy], home)]); ext.push(legPts(L, 0, L.D, x => Math.max(0, (g.endAlt || 6000) - x*300))); }
     return { rec, ext };
   }
   let rec = o.track || [];
@@ -299,7 +299,7 @@ function trkRoute(o){
     rec = o._tb.pts.concat(rec);
     // ahead: what it is cleared to (drawn as the clearance line) when in radar cover, else its arrival route to the airport
     if (o.airborne && (o.state === 'PRE' || (typeof outsideRadar === 'function' && outsideRadar(o)))) {
-      const fx = ((o.route && o.route.length ? o.route : (ARR_ROUTE[o.gate] && ARR_ROUTE[o.gate][S.rwy])) || []).filter(id => WP[id]).map(id => toLL(WP[id].p));
+      const fx = ((o.route && o.route.length ? o.route : (ARR_ROUTE[o.gate] && ARR_ROUTE[o.gate][arrKey(o)])) || []).filter(id => WP[id]).map(id => toLL(WP[id].p));
       const lastP = fx.length ? fx[fx.length - 1] : here, prevP = fx.length > 1 ? fx[fx.length - 2] : here, inH = fx.length ? gcBrg(prevP, lastP) : (o.trk ?? o.hdg ?? 0);
       const L = ptsLeg([...smoothPts([here, ...fx]).slice(0, -1), ...ontoFinal(lastP, inH, FINAL[landRw(o)], home)]); ext.push(legPts(L, 0, L.D, x => Math.max(0, o.alt - x*300)));
     }

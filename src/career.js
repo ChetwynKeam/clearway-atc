@@ -33,9 +33,10 @@ const BADGES = [
   { id: 'alternation', ap: 'EGLL', name: 'Runway alternation', d: 'Land at least three arrivals on each runway (27R or 09L, and 27L or 09R) in one Heathrow session, across the 15:00 runway switch, with no loss of separation.', ic: 'M7 21V3M17 21V3M4 7l3-4 3 4M14 17l3 4 3-4' },
   { id: 'heathrow', ap: 'EGLL', name: 'Heathrow endorsement', d: 'Complete the three London Heathrow guided exercises.', ic: 'M2 21h20M4 21V12h5v9M10 21V8h4v13M15 21v-6h5v6M12 8V3' },
   { id: 'hillfog',  ap: 'EGGD', name: 'Hill fog',          d: 'Land five arrivals at Bristol in one session in low cloud or fog: a cloud base below 500 ft or visibility under 3 km.', ic: 'M3 10h18M5 14h14M3 18h18M8 6l4-3 4 3' },
+  { id: 'aldergrove', ap: 'EGAA', name: 'Aldergrove endorsement', d: 'Complete the three Belfast guided exercises.', ic: 'M2 18h20M4 18l4-7h8l4 7M11 11V6h2v5M7 6h10' },
   { id: 'lulsgate', ap: 'EGGD', name: 'Lulsgate endorsement', d: 'Complete the three Bristol guided exercises.',         ic: 'M2 18h20M4 18l4-7h8l4 7M11 11V6h2v5M7 6h10' }
 ];
-const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', YSSY: 'Sydney', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester', EGLL: 'London Heathrow', EGGD: 'Bristol' };
+const AP_NAME = { LXGB: 'Gibraltar', LPMA: 'Madeira', EGLC: 'London City', LOWI: 'Innsbruck', KJFK: 'New York JFK', YSSY: 'Sydney', EGKK: 'London Gatwick', LEMD: 'Madrid-Barajas', EGCC: 'Manchester', EGLL: 'London Heathrow', EGGD: 'Bristol', EGAA: 'Belfast' };
 function careerLoad(){ try { const c = JSON.parse(localStorage.getItem(CAREER_KEY)); if (c && Array.isArray(c.sessions)) return { badges: {}, ex: {}, ...c }; } catch(e) {} return { sessions: [], badges: {}, ex: {} }; }
 function careerSave(c){ try { localStorage.setItem(CAREER_KEY, JSON.stringify(c)); } catch(e) {} }
 let CAR = careerLoad(), carCur = null, carDirty = false;
@@ -83,6 +84,7 @@ function careerCheck(){
   if (['rdep','rarr','rmix'].every(k => CAR.ex[k])) careerAward('ringway');
   if (['hdep','harr','hmix'].every(k => CAR.ex[k])) careerAward('heathrow');
   if (['bdep','barr','bmix'].every(k => CAR.ex[k])) careerAward('lulsgate');
+  if (['fdep','farr','fmix'].every(k => CAR.ex[k])) careerAward('aldergrove');
   if (T.secs >= 3600) careerAward('hour');
   if (T.secs >= 36000) careerAward('ten');
   if (T.mov >= 100) careerAward('century');

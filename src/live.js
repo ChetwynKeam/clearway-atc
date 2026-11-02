@@ -259,7 +259,7 @@ function adoptArr(a, p, row){
     ac.mode = 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360; ac.state = 'VECTORS'; ac.route = [];
     liveCall(ac, `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)}${ac.tgtAlt < ac.alt - 200 ? ' descending ' + altShort(ac.tgtAlt) : ''}, heading ${hdg3(ac.tgtHdg)}, information ${phonetic(S.atis)}`);
   } else {   // on its arrival route: from the leg it is on
-    ac.mode = 'NAV'; ac.state = 'INBOUND'; ac.route = routeOn(p, ENTRY[gate], ARR_ROUTE[gate][S.rwy]); easeOn(ac);
+    ac.mode = 'NAV'; ac.state = 'INBOUND'; ac.route = routeOn(p, ENTRY[gate], ARR_ROUTE[gate][arrKey(ac)]); easeOn(ac);
     liveCall(ac, PH.checkIn(ac));
   }
   ac.need = 'Initial call';

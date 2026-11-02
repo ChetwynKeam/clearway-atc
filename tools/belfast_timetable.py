@@ -37,7 +37,8 @@ def rows_for(path, day, ap):
     for x in dep:
         if x['cs'] in used: continue
         if x['tm'] < 11*60: out.append([None, None, None, x['cs'], x['place'], hh(x['tm']), x['t'], '1234567', None, ap])
-        else: out.append([None, None, None, x['cs'], x['place'], hh(x['tm']), x['t'], '1234567', None, ap])
+        else:                                                  # it came in from the same place about 90 minutes earlier, as the previous number
+            n = int(x['cs'][3:]); out.append([x['al'] + str(n - 1), x['place'], hh(x['tm'] - 90), x['cs'], x['place'], hh(x['tm']), x['t'], '1234567', None, ap])
     return out
 day = sys.argv[3]
 rows = rows_for(sys.argv[1], day, 'A') + rows_for(sys.argv[2], day, 'C')

@@ -127,7 +127,7 @@ function drawRockRelief(){
 function drawProcedures(){
   const sc = V.scale; if (sc > 400) return;
   cx.lineWidth = 1;
-  for (const g of Object.keys(ARR_ROUTE)) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][S.rwy].map(id => WP[id].p), false); cx.stroke(); }
+  for (const g of Object.keys(ARR_ROUTE)) for (const rk of (APT.arrRoutes ? APT.arrRoutes() : [S.rwy])) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][rk].map(id => WP[id].p), false); cx.stroke(); }
   cx.setLineDash([]);
   for (const k of RW_ENDS) {
     const F = FINAL[k]; if (!F) continue; cx.strokeStyle = k === S.rwy ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = k === S.rwy ? 1.3 : 1;
@@ -734,7 +734,7 @@ function renderAtis(){
 function setRwy(r){
   // New York: the landing runway brings its departure runway
   if (S.rwy === r) return; S.rwy = r; if (APT.depFor) S.depRwy = APT.depFor(r); nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
-  for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][r]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
+  for (const ac of S.acs) if (ac.kind === 'ARR' && !ac.app && ac.mode === 'NAV' && ac.airborne) { const rt = ARR_ROUTE[ac.gate][arrKey(ac)]; const j = rt.findIndex(id => ac.route.includes(id)); ac.route = j >= 0 ? rt.slice(j) : rt.slice(-1); }
   renderAtis(); emit('rwy', r);
 }
 // airports that land one way and depart the other (Innsbruck) choose the departure runway separately
