@@ -499,7 +499,8 @@ function holdFixFor(ac){
   const on = (ac.route || []).find(id => WP[id] && WP[id].hold);
   if (on) return on;
   let best = null, bd = 1e9;
-  const all = PUB_HOLDS(), list = all.length ? all : Object.values(WP).filter(w => w.hold && w.p);   // Bristol: only BRI, over the field
+  let all = PUB_HOLDS(); if (APT.holdOk) { const f = all.filter(w => APT.holdOk(ac, w.id)); if (f.length) all = f; }   // Belfast: each airfield's own holds
+  const list = all.length ? all : Object.values(WP).filter(w => w.hold && w.p);   // Bristol: only BRI, over the field
   for (const w of list) { const d = dist(ac.x, ac.y, ...w.p); if (d < bd) { bd = d; best = w.id; } }
   return best;
 }

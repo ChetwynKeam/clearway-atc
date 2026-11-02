@@ -268,7 +268,7 @@ function adoptArr(a, p, row){
 }
 function adoptDepAir(a, p, row){
   const gate = row ? gateFor(row.ap) : depGateOf(p, a.trk || 0), ac = liveAc(a, p, row, 'DEP', gate), d = dist(...p, ...RADAR_REF);
-  const drw = depRw(ac); Object.assign(ac, { depRwy: drw, sid: sidName(gate, drw), cto: true, turned: true, pushed: true, leftStand: true, state: 'AIRBORNE', reqDct: true, onSid: false });
+  const drw = depRw(ac); Object.assign(ac, { depRwy: drw, sid: sidName(gate, drw, ac), cto: true, turned: true, pushed: true, leftStand: true, state: 'AIRBORNE', reqDct: true, onSid: false });
   const top = sidTop(ac); ac.tgtAlt = ac.cleared = a.alt > top - 300 ? Math.ceil((a.alt + 1500)/1000)*1000 : top;
   ac.route = routeOn(p, RADAR_REF, exitRouteOf(ac)); easeOn(ac); ac.mode = ac.route.length ? 'NAV' : 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360;
   if (d < 4 && a.alt < ELEV + 2500) { ac.freq = 'TWR'; ac.calledAir = false; }   // just airborne: still with Tower, transfer it to Radar
@@ -289,7 +289,7 @@ function adoptGround(a, p){
       const dep = exDep ? true : exArr ? false : gs > a.pgs + 2;
       const m = R.mOf(p), q = R.rm(m, clamp(R.offOf(p), -8, 8));
       if (dep) { const row = exDep || liveRow(a, 'DEP', 0, 30), gate = row ? gateFor(row.ap) : depGateOf(p, a.trk || 0), ac = liveAc(a, q, row, 'DEP', gate);
-        Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'TAKEOFF', cto: true, depRwy: rw, sid: sidName(gate, rw), pushed: true, leftStand: true, hdg: crsOf(rw), mode: 'GROUND', ias: gs, freq: 'TWR' });
+        Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'TAKEOFF', cto: true, depRwy: rw, sid: sidName(gate, rw, ac), pushed: true, leftStand: true, hdg: crsOf(rw), mode: 'GROUND', ias: gs, freq: 'TWR' });
         return ac; }
       const row = exArr || liveRow(a, 'ARR', -2, 25), ac = liveAc(a, q, row, 'ARR', nearGate(p));
       Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'ROLLOUT', app: rw, rollDir: dir, hdg: crsOf(rw), mode: 'GROUND', ias: gs, freq: 'TWR', checked: true, ctl: true });
@@ -298,7 +298,7 @@ function adoptGround(a, p){
     const lrw = depRwys().find(r => rwyOf(r) === R);
     if (gs <= 30 && along && !exArr && lrw) {   // stopped on the runway, lined up: a departure waiting for take-off clearance
       const row = exDep || liveRow(a, 'DEP', 3, 30), gate = row ? gateFor(row.ap) : depGateOf(p, crsOf(lrw)), ac = liveAc(a, R.rm(R.mOf(p), 0), row, 'DEP', gate);
-      Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'LINEDUP', depRwy: lrw, hdg: crsOf(lrw), sid: sidName(gate, lrw), pushed: true, leftStand: true, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0, need: 'Lined up' });
+      Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'LINEDUP', depRwy: lrw, hdg: crsOf(lrw), sid: sidName(gate, lrw, ac), pushed: true, leftStand: true, mode: 'GROUND', freq: 'TWR', gs: 0, ias: 0, need: 'Lined up' });
       liveCall(ac, `${APT.tower[0]}, ${greet()}, lined up runway ${lrw}`);
       return ac;
     }

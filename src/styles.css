@@ -1162,3 +1162,6 @@ body .app.tabbed button:disabled { opacity: .4; }
   .sb-atis .sb-c { padding: 0 7px; }
 }
 @media (max-width: 360px) { .tabbed > .sysbar { gap: 5px; padding: 0 6px; } .sysbar .talk { display: none; } .sb-clock { font-size: 16px; } }
+
+.metars { margin-top: 6px; font: 11px/1.45 var(--mono, ui-monospace, monospace); color: var(--dim, #8a97a6); word-break: break-word; }
+.metars b { color: var(--ink, inherit); margin-right: 4px; }

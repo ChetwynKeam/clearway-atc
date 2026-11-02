@@ -61,8 +61,13 @@ for (const x of Object.values(EGAA.EXERCISES)) for (const s of x.sched) if (s.ap
 for (const d of [{ cs: 'EIN106' }]) void d;
 const isCity = ac => !!ac && (CITY.has(ac.cs) || ac.ap === 'EGAC' || (ac.stand && ac.stand.term === 'C') || (ac.hp && HOLDS[ac.hp] && HOLDS[ac.hp].on === '0422'));
 const apOf = ac => isCity(ac) ? 'EGAC' : 'EGAA';
-const landOf = ac => CFG[cfgNow()].land[apOf(ac)];
-const depOf = ac => CFG[cfgNow()].dep[apOf(ac)];
+// each airfield has its own runway in use: Aldergrove's is S.rwy (25 or 07), City's is S.rwyC (22 or 04); the two are
+// chosen separately (the pickers in the ATIS panel) and start from the same flow. Take-offs and landings share a runway.
+const cityRw = () => S.rwyC || CFG[cfgNow()].land.EGAC;
+const alderRw = () => S.rwy;
+const landOf = ac => apOf(ac) === 'EGAC' ? cityRw() : alderRw();
+const depOf = landOf;
+const bothRwys = () => [alderRw(), cityRw()];
 
 // ═════════════════════════ taxiways, holding points, stands (egaa-ground.js) ═════════════════════════
 const inF0 = (e, n) => { const p = EN(e, n); return [mOf(p), offOf(p)]; };
@@ -295,10 +300,14 @@ const STAR_OF = g => EGAA.STARS[`${g} ${landOf({ cs: '' })}`] || STAR_LIST[0];
 
 // ── departures: no SIDs. The airway route with the tactical initial climb: straight ahead to the turn point, then the route.
 const sidDirOf = g => (EGAA.DIR[g] || EGAA.DIR.SE).dep === 'SE' ? 'SE_H' : (EGAA.DIR[g] || EGAA.DIR.SE).dep;
-const sidName = (gate, rwy) => `${rwy || depRw()} ${sidDirOf(gate)}`;
+// south-east departures take L10 high (FL90+, via PEPOD) or low (FL70 and below, via RINGA-SLYDA): turboprops and short sectors go low
+const CITY_ALT_ELEV = EGAA.airfields.EGAC.elev;
+const nmTo = ll => { const r = Math.PI/180, a = EGAA.airfields.EGAA.arp, p = a, dl = (ll[1] - p[1])*r*Math.cos(p[0]*r), dp = (ll[0] - p[0])*r; return Math.hypot(dl, dp)*3440.07; };
+const lowSE = ac => !!ac && ((ac.perf && ac.perf.cruise && ac.perf.cruise < 330) || (AP[ac.d] && nmTo(AP[ac.d]) < 170));
+const sidName = (gate, rwy, ac) => { const d = sidDirOf(gate); return `${rwy || depRw()} ${d === 'SE_H' && lowSE(ac) ? 'SE_L' : d}`; };
 const sidSpoken = n => (EGAA.SIDS[n] || {}).spoken || n;
 const sidTopOf = n => 6000;
-const exitRoute = (g, rwy) => (EGAA.SIDS[sidName(g, rwy)] || { pts: [] }).pts.map(p => p[0]);
+const exitRoute = (g, rwy, ac) => (EGAA.SIDS[sidName(g, rwy, ac)] || { pts: [] }).pts.map(p => p[0]);
 const EXIT_ROUTE = {}, EXIT_FIX = {};
 for (const g of GATES) {
   Object.defineProperty(EXIT_ROUTE, g, { enumerable: true, get: () => exitRoute(g, depRw()) });
@@ -332,7 +341,7 @@ function standAt(ac, t){
   const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
   return best[Math.floor(Math.random()*best.length)] || null;
 }
-const flowText = c => `Aldergrove ${CFG[c].land.EGAA} and City ${CFG[c].land.EGAC}`;
+const flowText = c => `Aldergrove ${alderRw()} and City ${cityRw()}`;
 const UN = EGAA.UNITS;
 const APT = {
   arrAlt: { ...arrAltOf(STAR_LIST), ...FEED_ALT },
@@ -346,6 +355,7 @@ const APT = {
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the approach minima', reqApp: rw => rw === '07' ? 'RNP approach' : 'ILS approach',
   minsLong: 'Weather is below the approach minima (ILS CAT I: 200 ft and RVR 550 m; the RNP 07: 250 ft).',
   markCity: cs => CITY.add(cs),
+  holdOk: (ac, id) => isCity(ac) ? (id === 'MAGEE' || id === 'HB') : id === 'BEL',
   liveName: 'Belfast Airport', liveThin: 22, atisFreq: UN.EGAA.atis.freq, turbName: 'Belfast',
   sessionHours: Array.from({ length: 17 }, (_, i) => i + 5),
   view: { app: [0, 0, 120], twr: [0, 0.2, 2.2], gnd: [mOf(EN(0, 250)), offOf(EN(0, 250)), 2600, 1500] },
@@ -353,7 +363,8 @@ const APT = {
   // Aldergrove departures are released by the SID-less tactical clearance, Belfast City's by Aldergrove Radar
   needRel: ac => isCity(ac),
   sidAlt: ac => sidTopOf(ac.sid),
-  exitRouteOf: ac => exitRoute(ac.gate, depRw(ac)),
+  exitRouteOf: ac => exitRoute(ac.gate, depRw(ac), ac),
+  elevOf: ac => isCity(ac) ? CITY_ALT_ELEV : ELEV,
   remoteAreas: [],
   areaNames: { civil: 'stands' },
   termName: t => TERM_NAME[t] || 'Apron ' + t,
@@ -366,9 +377,12 @@ const APT = {
   splitRwy: true, rwyFor, depFor: rw => CFG[configOf(rw)].dep.EGAA, configOf, arrRoute: o => landOf(o),
   rwyConfigs: ['west', 'east'].map(c => ({ key: c, name: CFG[c].name, land: CFG[c].land.EGAA, lands: [CFG[c].land.EGAA, CFG[c].land.EGAC], deps: [CFG[c].dep.EGAA, CFG[c].dep.EGAC] })),
   depRwyOf, landRwyOf,
-  appRwys: () => [CFG[cfgNow()].land.EGAA, CFG[cfgNow()].land.EGAC], arrRoutes: () => [CFG[cfgNow()].land.EGAA, CFG[cfgNow()].land.EGAC],
-  activeRwys: () => [CFG[cfgNow()].land.EGAA, CFG[cfgNow()].land.EGAC, CFG[cfgNow()].dep.EGAA, CFG[cfgNow()].dep.EGAC],
-  depRwys: () => [CFG[cfgNow()].dep.EGAA, CFG[cfgNow()].dep.EGAC],
+  appRwys: bothRwys, arrRoutes: bothRwys, activeRwys: bothRwys, depRwys: bothRwys,
+  // one runway switch per airfield
+  rwyPickers: [{ key: 'EGAA', label: 'Aldergrove', opts: ['25', '07'], get: alderRw, set: r => setRwy(r) },
+               { key: 'EGAC', label: 'City', opts: ['22', '04'], get: cityRw, set: r => setCityRwy(r) }],
+  onStart(newRwy, live){ S.rwyC = bestCity(S.wx); S.metarC = null; },
+  altMetar: () => S.metarC || (S.wx && S.wx.raw ? { raw: S.wx.raw.replace(/^EGAA /, 'EGAC '), sim: true } : null),
   vacExits: ac => { const rw = ac.app || landOf(ac), R = RWYS_BY_END(rw), m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1;
     return exitsFor(rw).filter(k => (HOLDS[k].m - m)*dir > 30).slice(0, 4); },
   vacPrefs: (st, ac) => exitsFor(ac && ac.app || landOf(ac || {})),
@@ -402,14 +416,16 @@ const APT = {
     startReq: ac => `${isCity(ac) ? 'Belfast Ground' : 'Aldergrove Ground'}, stand ${ac.stand.id}, ${ac.perf.name} to ${AP[ac.d] ? AP[ac.d][2] : ac.d}, information ${phonetic(S.atis)}, request start-up and push back`
   },
   atisPanel(w){
-    const c = cfgNow(), cw = Math.max(...[CFG[c].land.EGAA, CFG[c].land.EGAC].map(r => Math.abs(windComp(w, crsOf(r)).crossG))), bad = !minsOk(w, S.rwy), r = rwyFor(w);
-    return `<div class="warnline${bad ? ' bad' : ''}">${CFG[c].name}: ${flowText(c)}${configOf(r.land) !== c ? ` (wind favours the ${CFG[configOf(r.land)].name.toLowerCase()})` : ''} · ${bad ? 'below the approach minima' : 'ILS and RNP approaches'} · crosswind ${Math.round(cw)} kt. Two airfields share one approach: 14 NM apart, keep their arrivals apart.</div>`;
+    const c = cfgNow(), cw = Math.max(...bothRwys().map(r => Math.abs(windComp(w, crsOf(r)).crossG))), bad = !minsOk(w, S.rwy), r = rwyFor(w);
+    const m = APT.altMetar(), esc2 = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    return `<div class="warnline${bad ? ' bad' : ''}">Aldergrove ${alderRw()} · City ${cityRw()}${configOf(r.land) !== c ? ` (wind favours the ${CFG[configOf(r.land)].name.toLowerCase()})` : ''} · ${bad ? 'below the approach minima' : 'ILS and RNP approaches'} · crosswind ${Math.round(cw)} kt. Two airfields share one approach, 14 NM apart: keep their arrivals apart.</div>`
+      + `<div class="metars"><div><b>EGAA</b> ${esc2(S.wx.raw.replace(/^(METAR |SPECI )?EGAA /, ''))}</div>${m ? `<div><b>EGAC</b> ${esc2(m.raw.replace(/^(METAR |SPECI )?EGAC /, ''))}${m.sim ? ' <i>(same weather; City’s own report loads in Real world mode)</i>' : ''}</div>` : ''}</div>`;
   },
   atisLines({ w, L, E, wind, vis, cloud }){
     const c = cfgNow(), tl = w.qnh >= 1013 ? 70 : w.qnh >= 978 ? 80 : 90;
     const out = [
       `This is Belfast Aldergrove information ${L}, time ${zt(S.t).slice(0,5).replace(':', '')}.`,
-      `Runway in use ${CFG[c].land.EGAA}. ${CFG[c].land.EGAA === '07' ? 'RNP' : 'ILS'} approach runway ${CFG[c].land.EGAA}. Belfast City: runway ${CFG[c].land.EGAC}.`,
+      `Runway in use ${alderRw()}. ${alderRw() === '07' ? 'RNP' : 'ILS'} approach runway ${alderRw()}. Belfast City: runway ${cityRw()}.`,
       `Surface wind ${wind}. Visibility ${vis}. ${cloud}.`,
       `Temperature ${w.temp}, dew point ${w.dew}. QNH ${w.qnh} hectopascals. Transition level ${tl}.`
     ];
@@ -448,6 +464,12 @@ const APT = {
     cmdHint: 'Command, e.g. CFE1394 H240 A40 · EZY6201 TAXI A1 · / to focus, Tab cycles flights'
   }
 };
+// City's better runway for the wind: 22 or 04
+function bestCity(w){ const hw = r => windComp(w, crsOf(r)).head; return hw('22') + 3 >= hw('04') ? '22' : '04'; }
+function setCityRwy(r){
+  if (S.rwyC === r) return; S.rwyC = r; nextAtis(false); sys(`Belfast City: runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
+  rerouteArrivals(); renderAtis(); emit('rwy', r);
+}
 // the runway pair in use for a METAR: Aldergrove's landing runway names the flow
 function rwyFor(w){
   const c = cfg => Math.max(...[CFG[cfg].land.EGAA, CFG[cfg].land.EGAC].map(r => -windComp(w, crsOf(r)).head));

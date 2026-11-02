@@ -279,13 +279,15 @@ const LIVE_SRC = ['metar.txt', `https://metar.vatsim.net/${APT.icao}`, `https://
 const liveBox = $('liveWx'), liveSt = $('liveWxSt');
 let liveTimer = null, liveLast = '', liveFailed = false;
 function liveStatus(t, cls){ liveSt.hidden = !t; liveSt.textContent = t; liveSt.className = 'fine' + (cls ? ' ' + cls : ''); }
-async function fetchMetar(){
-  for (const url of LIVE_SRC) {
+// a second airfield in the same session (Belfast City): its own report, shown beside the main one
+const ALT_SRC = APT.icaoAlt ? ['metar-' + APT.icaoAlt.toLowerCase() + '.txt', `https://metar.vatsim.net/${APT.icaoAlt}`, `https://aviationweather.gov/api/data/metar?ids=${APT.icaoAlt}&format=raw&hours=3`] : [];
+async function fetchMetar(icao = APT.icao, srcs = LIVE_SRC){
+  for (const url of srcs) {
     try {
       const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
       const r = await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Date.now(), { signal: ctl.signal, cache: 'no-store' }); clearTimeout(to);
       if (!r.ok) continue;
-      const line = (await r.text()).split('\n').map(x => x.trim()).find(x => new RegExp(`^(METAR |SPECI )?${APT.icao} \\d{6}Z`).test(x));
+      const line = (await r.text()).split('\n').map(x => x.trim()).find(x => new RegExp(`^(METAR |SPECI )?${icao} \\d{6}Z`).test(x));
       if (line) return line.replace(/^(METAR|SPECI) /, '').replace(/=$/, '');
     } catch(e) {}
   }
@@ -309,6 +311,7 @@ async function pollLive(){
     liveFailed = true; return;
   }
   liveFailed = false;
+  if (ALT_SRC.length) fetchMetar(APT.icaoAlt, ALT_SRC).then(a => { if (a) { S.metarC = { raw: a }; if (S.running) renderAtis(); } });
   const z = new Date().toISOString().substr(11,5);
   liveStatus(`Live · ${m} · checked ${z}Z`, 'ok');
   if (m !== liveLast) { liveLast = m; applyLiveMetar(m); }
