@@ -612,6 +612,7 @@ const APT = {
   shear(ac, rw, w){ return turbExcess(w) > 4 && Math.random() < 0.2 ? 'windshear on short final' : null; },
   shearWhy: rw => 'windshear on short final',
   faceHold: (st, f) => depHold({ stand: st, leftStand: false, x: st.p[0], y: st.p[1], cs: st.term === 'C' ? 'C' : '' }),
+  pushFaces: ['east', 'west', 'north', 'south'],
   faceWord: f => f,
   faceHdg: (st, f) => norm(laneDir(st, f) + 180),
   taxiHolds: (south, ac) => { const rw = depRw(ac), ks = (endHolds(rw).length ? endHolds(rw) : nearHolds(rw)), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;

@@ -241,7 +241,7 @@ function pushDir(ac, tok){
   if (!APT.faceHdg || !ac.stand) return named;
   const H = { N: 0, NORTH: 0, NE: 45, E: 90, EAST: 90, SE: 135, S: 180, SOUTH: 180, SW: 225, W: 270, WEST: 270, NW: 315 }[tok];
   if (H == null) return undefined;
-  return ['east', 'west'].sort((a, b) => Math.abs(angDiff(APT.faceHdg(ac.stand, a), H)) - Math.abs(angDiff(APT.faceHdg(ac.stand, b), H)))[0];
+  return (APT.pushFaces || ['east', 'west']).slice().sort((a, b) => Math.abs(angDiff(APT.faceHdg(ac.stand, a), H)) - Math.abs(angDiff(APT.faceHdg(ac.stand, b), H)))[0];
 }
 const PH = Object.assign({
   altim: () => `QNH ${S.wx.qnh}`,
