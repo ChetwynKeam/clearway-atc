@@ -872,6 +872,14 @@ function drawBridges(mpx){
     if (Math.max(a[0], b[0]) < -50 || Math.min(a[0], b[0]) > W + 50 || Math.max(a[1], b[1]) < -50 || Math.min(a[1], b[1]) > H + 50) continue;
     const w = Math.max(2, 3.6*mpx), h = Math.atan2(b[1] - a[1], b[0] - a[0]), at = f => [a[0] + (b[0] - a[0])*f, a[1] + (b[1] - a[1])*f];
     cx.save(); cx.lineCap = 'butt';
+    // on the drawn chart (no imagery) the terminal may not be drawn here: a stub of the building face the rotunda stands on, so the bridge is never left floating
+    if (typeof IMG === 'undefined' || !IMG) {
+      cx.save(); cx.translate(...a); cx.rotate(h); const m = mpx;
+      cx.fillStyle = 'rgba(84,92,106,.95)'; cx.strokeStyle = 'rgba(30,34,40,.85)'; cx.lineWidth = 0.9;
+      cx.fillRect(-9*m, -7*m, 8.2*m, 14*m); cx.strokeRect(-9*m, -7*m, 8.2*m, 14*m);
+      cx.fillStyle = 'rgba(120,130,146,.9)'; cx.fillRect(-1.5*m, -7*m, 0.7*m, 14*m);   // the glazed face towards the apron
+      cx.restore();
+    }
     // the tunnel in three telescoping sections, each a little narrower than the one it slides into, with the drive wheels at the cab end
     const secs = [[0, 0.4, 1], [0.4, 0.75, 0.92], [0.75, 1, 0.84]], tone = B.up ? ['#cdd5df', '#c2cad5'] : ['#b4bcc7', '#a9b1bc'];   // the A380's upper-deck bridge is a little paler, high over the others
     for (const [f0, f1, k] of secs) {
