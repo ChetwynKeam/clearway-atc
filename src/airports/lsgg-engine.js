@@ -95,6 +95,53 @@ const LEADS = (() => {
   }
   return out;
 })();
+// ── taxiway centrelines, cleaned once: the mapped links overlap (parallel and doubled ways, the same lane mapped twice, links
+// from two holds over the same path). Every edge is cut into short pieces, a piece lying along one already kept (within 2.5 m, nearly
+// the same heading) is dropped, taxiways ahead of aprons, and what is left is joined back into continuous chains through the
+// junctions, so each lane is painted once and smoothly.
+const CLINES = (() => {
+  const M = 1852, pieces = [], grid = new Map(), K = 3, cell = 6;
+  const gk = (x, y) => Math.floor(x/cell) + ',' + Math.floor(y/cell);
+  const edges = GE.filter(e => !e.bare).sort((a, b) => (a.tw === 'APRON') - (b.tw === 'APRON'));
+  const kept = [];
+  for (const e of edges) {
+    const a = GN[e.a].p.map(v => v*M), b = GN[e.b].p.map(v => v*M), L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.05) continue;
+    const n = Math.max(1, Math.round(L/4)), hd = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    for (let i = 0; i < n; i++) {
+      const p = [a[0] + (b[0] - a[0])*i/n, a[1] + (b[1] - a[1])*i/n], q = [a[0] + (b[0] - a[0])*(i + 1)/n, a[1] + (b[1] - a[1])*(i + 1)/n];
+      const c = [(p[0] + q[0])/2, (p[1] + q[1])/2]; let dup = false;
+      for (let gx = -1; gx <= 1 && !dup; gx++) for (let gy = -1; gy <= 1 && !dup; gy++) {
+        for (const o of grid.get(gk(c[0] + gx*cell, c[1] + gy*cell)) || []) {
+          let da = Math.abs(o.hd - hd) % Math.PI; da = Math.min(da, Math.PI - da);
+          if (da < 0.35 && Math.hypot(o.c[0] - c[0], o.c[1] - c[1]) < 2.5 + (L/n)*0.5*(da > 0.1 ? 0 : 0)) { dup = true; break; }
+        }
+      }
+      if (dup) continue;
+      const pc = { p, q, c, hd, e }; kept.push(pc); const key = gk(c[0], c[1]); if (!grid.has(key)) grid.set(key, []); grid.get(key).push(pc);
+    }
+  }
+  // join into chains through nodes of degree two
+  const ek = pt => Math.round(pt[0]*2) + ',' + Math.round(pt[1]*2), ends = new Map();
+  kept.forEach((pc, i) => { for (const pt of [pc.p, pc.q]) { const k = ek(pt); if (!ends.has(k)) ends.set(k, []); ends.get(k).push(i); } });
+  const used = new Set(), chains = [];
+  const other = (i, k) => (ends.get(k) || []).filter(j => j !== i);
+  for (let i = 0; i < kept.length; i++) {
+    if (used.has(i)) continue;
+    // walk to one end of the chain first
+    let cur = i, from = ek(kept[i].p), guard = 0;
+    while (guard++ < 5000) { const nx = other(cur, from); if (nx.length !== 1 || (ends.get(from) || []).length !== 2 || used.has(nx[0])) break; const j = nx[0], pj = kept[j]; from = ek(pj.p) === from ? ek(pj.q) : ek(pj.p); cur = j; if (cur === i) break; }
+    const line = []; let at = cur, enter = from; guard = 0;
+    while (guard++ < 5000) {
+      used.add(at); const pc = kept[at], forward = ek(pc.p) === enter;
+      if (!line.length) line.push(forward ? pc.p : pc.q); line.push(forward ? pc.q : pc.p);
+      const leave = forward ? ek(pc.q) : ek(pc.p), nx = other(at, leave);
+      if (nx.length !== 1 || (ends.get(leave) || []).length !== 2 || used.has(nx[0])) break;
+      at = nx[0]; enter = leave;
+    }
+    if (line.length > 1) chains.push(line.map(pt => [pt[0]/M, pt[1]/M]));
+  }
+  return chains;
+})();
 // stands: the terminal (T), the three round satellites (S: drive-through stands, bussed passengers), the east (E) and west (W)
 // aprons and the north apron (N, business aviation)
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const p = EN(e, n);
@@ -243,7 +290,7 @@ function drawLsgg(){
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
     groundLines(lw(0.35), () => LEADS.forEach(l => strokeSmooth(l.map(p => P2(R.rm(...p))))));
     // taxiway centrelines, stopping at the runway edges
-    paintEdgeLines(lw(0.35));
+    groundLines(lw(0.35), () => CLINES.forEach(c => strokeSmooth(c.map(P2))));
     // runway holding positions (pattern A): two solid lines on the taxiway side and two dashed on the runway side, across
     // the taxiway (GX is on G where it runs alongside the runway, so it isn't simply parallel to it)
     cx.strokeStyle = C.yellow;
