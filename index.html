@@ -10105,6 +10105,7 @@ function preVec(f){
   const e = ENTRY[f.gate], L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L];
   const A = typeof AP !== 'undefined' && f.o && AP[f.o]; if (!A || typeof llxy !== 'function') return { u, nm: PRE_NM };
   const o = llxy(A[0], A[1]), od = Math.hypot(o[0] - RADAR_REF[0], o[1] - RADAR_REF[1]);
+  if (APT.preToOrigin) { const de = Math.hypot(o[0] - e[0], o[1] - e[1]); if (de > 20) return { u: [(o[0] - e[0])/de, (o[1] - e[1])/de], nm: clamp(de - 6, 6, PRE_NM) }; }   // straight in from where it came from, however the entry sits (Geneva: BENOT is north-east, London and Paris north-west)
   if (od > L + PRE_NM + 30 || od < 5) return { u, nm: PRE_NM };
   const u2 = [(o[0] - RADAR_REF[0])/od, (o[1] - RADAR_REF[1])/od];
   if (Math.abs(angDiff(brg(0, 0, ...u), brg(0, 0, ...u2))) > 70) return { u, nm: PRE_NM };
@@ -14914,16 +14915,18 @@ function standDoorDist(s, e){
   for (const [P, i] of [[REF_NARROW, 0], [REF_WIDE, 0], [REF_WIDE, 1]]) { const d = doorsOf(P).pax[i], w = fusW(P)/2; for (const g of [-1, 1]) best = Math.min(best, dist(...mPt(s.p, s.hdg, d.f, g*w), ...e)/VM); }
   return best;
 }
+// the tunnel folds back to its shortest when idle: the cab stops 22 m or more short of the door's mapped place (the tunnel at its shortest, about 6 m), well clear of any aircraft's nose and wings
+const REST_F = Lm => Math.min(1, Math.max(6/Lm, Math.min(0.5, 1 - 22/Lm)));
 function vehBridges(){
   VEH.bridges = []; VEH.bridgeBy = new Map();
-  const cand = STANDS.filter(s => s.p && s.hdg != null && s.area !== 'hangar');
+  const cand = STANDS.filter(s => s.p && s.hdg != null && s.area !== 'hangar' && !(VD.nobr || []).includes(s.id));   // (nobr: stands that lie inside a building outline have no bridge)
   for (const [a, b] of VD.bridges) {
     const pa = VP(a), pb = VP(b); let best = null;
     for (const s of cand) for (const [r, e] of [[pa, pb], [pb, pa]]) { const d = standDoorDist(s, e); if (!best || d < best.d) best = { s, r, e, d }; }
     if (!best || best.d > 45) continue;
     if (VEH.bridges.some(o => dist(...o.end0, ...best.e)/VM < 4 && dist(...o.root, ...best.r)/VM < 4)) continue;   // the same bridge mapped twice
     // parked back from the door, as they are with no aircraft on the stand
-    const root = best.r, end = best.e, rest = [root[0] + (end[0] - root[0])*0.72, root[1] + (end[1] - root[1])*0.72];
+    const root = best.r, end = best.e, rest = [root[0] + (end[0] - root[0])*REST_F(dist(...root, ...end)/VM), root[1] + (end[1] - root[1])*REST_F(dist(...root, ...end)/VM)];
     const B = { st: best.s, root, end0: end, rest, end: rest.slice(), want: rest, L: dist(...root, ...end) };
     B.sts = cand.filter(s => standDoorDist(s, end) <= Math.min(45, best.d + 6));   // every stand (a MARS centre and its halves) the bridge serves
     VEH.bridges.push(B);
@@ -14936,7 +14939,7 @@ function dockFor(B, M, h, P, door){
   const w = fusW(P)/2, R = toFS(M, h, B.root), g = -1;
   if (R[1] > 0) return null;   // passenger doors are on the left only: a bridge on the aircraft's right has no door to reach
   if (Math.abs(R[1]) < w + 5) return null;   // the rotunda is in the aircraft's way, not beside it
-  const D = mPt(M, h, door.f, g*(w + 1)), A = mPt(M, h, door.f, g*(w + 4.5)), len = dist(...B.root, ...D)/VM, L0 = B.L/VM;
+  const D = mPt(M, h, door.f, g*(w + 1)), A = mPt(M, h, door.f, g*(w + 7.5)), len = dist(...B.root, ...D)/VM, L0 = B.L/VM;
   if (len < Math.max(6, L0*0.5) || len > L0*1.3 + 8) return null;   // more or less than the tunnel telescopes to
   const hull = hullOf(P);
   for (const k of [0.34, 0.67, 1]) { const e = toFS(M, h, [B.rest[0] + (A[0] - B.rest[0])*k, B.rest[1] + (A[1] - B.rest[1])*k]); for (const poly of hull) if (segHits(R, e, poly)) return null; }
@@ -14954,6 +14957,19 @@ function bridgePlan(ac, hdg){
     for (const B of Bs) { if (used.has(B)) continue; const k = dockFor(B, M, h, P, door); if (k && (!best || Math.abs(k.len - B.L/VM) < Math.abs(best.k.len - best.B.L/VM))) best = { B, k }; }
     if (best) { used.add(best.B); out.push({ bi: VEH.bridges.indexOf(best.B), ...best.k }); }
   }
+  // two bridges to one aircraft run side by side to their own doors, never across each other: swap their doors when they would cross, and drop the second if they still do
+  const xs = (a, b, c, d) => { const o = (p, q, r) => (q[0] - p[0])*(r[1] - p[1]) - (q[1] - p[1])*(r[0] - p[0]); return o(a, b, c)*o(a, b, d) < 0 && o(c, d, a)*o(c, d, b) < 0; };
+  const cross = (u, v) => xs(VEH.bridges[u.bi].root, u.dock, VEH.bridges[v.bi].root, v.dock);
+  for (let pass = 0; pass < 3; pass++) {
+    let moved = false;
+    for (let i = 0; i < out.length; i++) for (let j = i + 1; j < out.length; j++) if (cross(out[i], out[j])) {
+      const di = D.find(d => d.id === out[i].door), dj = D.find(d => d.id === out[j].door), ki = dockFor(VEH.bridges[out[i].bi], M, h, P, dj), kj = dockFor(VEH.bridges[out[j].bi], M, h, P, di);
+      if (ki && kj) { const a = { bi: out[i].bi, ...ki }, b = { bi: out[j].bi, ...kj }; if (!cross(a, b)) { out[i] = a; out[j] = b; moved = true; } }
+    }
+    if (!moved) break;
+  }
+  for (let j = out.length - 1; j > 0; j--) if (out.slice(0, j).some(u => cross(u, out[j]))) out.splice(j, 1);
+  out.sort((a, b) => b.f - a.f);
   return out;
 }
 // how the cab sits on its approach: perp metres off the line from the stand-off point to the door, t how far along it (0 stand-off, 1 docked)
@@ -14970,7 +14986,7 @@ function stepBridges(dt){
       const [ac, k] = u, T = ac.ta; on = !!(T.dock && T.dock.some(([a, b]) => S.t >= a && S.t < b) && onStandNow(ac) && !(T.brd && S.t >= T.brd.dc + 70));   // never docked once the doors are shut
       const lg = legOf(B.end, k.appr, k.dock), inLeg = lg.perp < 0.7 && lg.t > -0.05, outLeg = lg.perp < 0.7 && lg.t > 0.03, dD = dist(...B.end, ...k.dock)/VM;
       face = norm(ac.hdg + (k.side < 0 ? 90 : -90)); B.up = k.door === 'U1';
-      if (on) { if (dD < 0.12) want = k.dock; else if (inLeg) { want = k.dock; spd = 0.2; } else want = k.appr; }
+      if (on) { if (dD < 0.12) want = k.dock; else if (inLeg) { want = k.dock; spd = 0.3; } else want = k.appr; }
       else if (outLeg) { want = k.appr; spd = 0.25; }   // backs off the door before it swings away
     }
     const d = dist(...B.end, ...want), mv = spd*VM*dt;   // a bridge drives at walking pace
@@ -15119,16 +15135,8 @@ function drawBridges(mpx){
   for (const B of VEH.bridges) {
     const a = [sx(B.root[0]), sy(B.root[1])], b = [sx(B.end[0]), sy(B.end[1])];
     if (Math.max(a[0], b[0]) < -50 || Math.min(a[0], b[0]) > W + 50 || Math.max(a[1], b[1]) < -50 || Math.min(a[1], b[1]) > H + 50) continue;
-    const w = Math.max(2, 3.6*mpx), h = Math.atan2(b[1] - a[1], b[0] - a[0]), at = f => [a[0] + (b[0] - a[0])*f, a[1] + (b[1] - a[1])*f];
+    const w = Math.max(1.5, 2.3*mpx), h = Math.atan2(b[1] - a[1], b[0] - a[0]), at = f => [a[0] + (b[0] - a[0])*f, a[1] + (b[1] - a[1])*f];
     cx.save(); cx.lineCap = 'butt';
-    // on the drawn chart (no imagery) the terminal may not be drawn here: a stub of the building face the rotunda stands on, so the bridge is never left floating
-    if (typeof IMG === 'undefined' || !IMG) {
-      cx.save(); cx.translate(...a); cx.rotate(h); const m = mpx;
-      cx.fillStyle = 'rgba(84,92,106,.95)'; cx.strokeStyle = 'rgba(30,34,40,.85)'; cx.lineWidth = 0.9;
-      cx.fillRect(-9*m, -7*m, 8.2*m, 14*m); cx.strokeRect(-9*m, -7*m, 8.2*m, 14*m);
-      cx.fillStyle = 'rgba(120,130,146,.9)'; cx.fillRect(-1.5*m, -7*m, 0.7*m, 14*m);   // the glazed face towards the apron
-      cx.restore();
-    }
     // the tunnel in three telescoping sections, each a little narrower than the one it slides into, with the drive wheels at the cab end
     const secs = [[0, 0.4, 1], [0.4, 0.75, 0.92], [0.75, 1, 0.84]], tone = B.up ? ['#cdd5df', '#c2cad5'] : ['#b4bcc7', '#a9b1bc'];   // the A380's upper-deck bridge is a little paler, high over the others
     for (const [f0, f1, k] of secs) {
@@ -15832,7 +15840,7 @@ function addArrGhost(f){
   const endLL = toLL([e[0] + u[0]*preNM, e[1] + u[1]*preNM]);
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
   // it joins the entry point flying in along the same line the pending track then follows, with no turn at the handover
-  const join = gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
+  const join = !APT.preToOrigin && gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
   // the airways to the join point on the entry line (leaving them only from fixes behind it), no hairpin out to a fix and back
   const raw = airwayPts([AP[f.o].slice(0, 2), ...via.filter(p => gcDist(p, join[0] || endLL) > 60), ...join, endLL], f.cs + f.o, true, join[0] ? gcBrg(join[0], endLL) : null);
   for (let i = 1; i < raw.length - 1; i++) if (Math.abs(angDiff(gcBrg(raw[i - 1], raw[i]), gcBrg(raw[i], raw[i + 1]))) > 100 && (i === raw.length - 2 || gcDist(raw[i], endLL) > gcDist(raw[i - 1], endLL) - 1)) { raw.splice(i, 1); i = Math.max(0, i - 2); }
