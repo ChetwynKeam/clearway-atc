@@ -151,7 +151,7 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
       t.node = sid; t.lp = X; t.hdg = H; t.h0 = H; t.line = null; t.noLead = false; t.tang = dirv(fwd); t.curved = true;
       // a straight painted lead-in square off the taxiway, with the turn-in curves from each way along A as short dashed lines
       const T = dirv(fwd), at = (P, d, k) => [P[0] + d[0]*k*M2NM, P[1] + d[1]*k*M2NM];
-      t.dash = [-1, 1].map(sg => [at(X, T, 15*sg), X, at(X, u, 10)]);
+      t.lane = fid;
     }
     // the apron's inner taxilanes (labelled A in the data) are not painted: the stands lead straight in off A
     { const f0 = 'CfC' + CS[0].id.slice(1), f1 = 'Cf' + CS[CS.length - 1].id, nodes = (() => { if (!GN[f0] || !GN[f1]) return null; const dd = { [f0]: 0 }, pv = {}, todo = new Set([f0]), done = new Set();
@@ -199,7 +199,7 @@ const nearHolds = rw => { const R = RWYS_BY_END(rw); return Object.keys(HOLDS).f
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
 // lead-in lines: from the taxilane a stand's line curves onto the stand's own heading and runs straight to the stop bar, as painted
 for (const s of STANDS) {
-  if (s.noLead || s.curved) continue;
+  if (true) continue;   // (stands are a straight lead-in with dashed turn-in curves: see standDashes)
   const pts = s.line || [s.lp, s.p], P0 = pts[0], Pe = pts[pts.length - 1], u = dirv(s.hdg), M = 1/M2NM;
   let T = null, bd = 90;
   if (s.tang) { T = s.tang; bd = Math.abs(angDiff(Math.atan2(T[0], T[1])/D2R, s.hdg)); } else
@@ -415,7 +415,6 @@ function drawBelfast(){
       cx.setLineDash([]);
     }
     groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); } });
-    groundLines(lw(0.3), () => { cx.setLineDash([2.5*mpx, 2*mpx]); for (const s of STANDS) if (s.dash) for (const [a, c, b] of s.dash) { cx.beginPath(); for (let k = 0; k <= 10; k++) { const t = k/10, w = 1 - t; cx[k ? 'lineTo' : 'moveTo'](...P2([w*w*a[0] + 2*w*t*c[0] + t*t*b[0], w*w*a[1] + 2*w*t*c[1] + t*t*b[1]])); } cx.stroke(); } cx.setLineDash([]); });
     cx.save(); if (IMG) clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx, false); cx.restore();   // stand paint stops at the terminal walls
     drawGroundSigns();
     cx.font = `600 11px ${FONT_L}`;
