@@ -4874,9 +4874,9 @@ const EGAA = (() => {
 
   // ── where each destination is: the gateway an arrival is brought in through and the SIDs that leave to it
   const DIR = {
-    NE: { dep: 'N', gate: 'B050D40', ctr: 'sc', name: 'Scotland, the Hebrides and the north of England' },
-    SE: { dep: 'SE', gate: 'B120D40', ctr: 'lon', name: 'England, Wales and the near continent' },
-    S:  { dep: 'S', gate: 'B190D40', ctr: 'sc', name: 'Dublin, the south of Ireland, Iberia and the Canaries' },
+    NE: { dep: 'N', gate: 'TRN', ctr: 'sc', name: 'Scotland, the Hebrides and the north of England' },
+    SE: { dep: 'SE', gate: 'IOM', ctr: 'lon', name: 'England, Wales and the near continent' },
+    S:  { dep: 'S', gate: 'NEVRI', ctr: 'sc', name: 'Dublin, the south of Ireland, Iberia and the Canaries' },
     W:  { dep: 'N', gate: 'B300D40', ctr: 'sc', name: 'the Atlantic and North America' }
   };
   const PLACE_DIR = {
@@ -5129,7 +5129,45 @@ for (const [k, [node, rwy, on, m, off, dirs, end, tw]] of Object.entries(G.holds
   HOLDS[k] = { node, rwy, on, m, off, dirs: dirs.split(','), end: end || null, ref: k.replace(/~\d+$/, '').replace(/@C$/, ''), tw, city: /@C/.test(k) };
   const Rh = RWY_LIST.find(R => R.id === on) || R0;            // hlink is m/off in its own runway's frame: carry it into R0's
   chain(rwy, (G.hlink[k] || []).map(([m, o]) => { const p = Rh.rm(m, o); return [mOf(p), offOf(p)]; }), node, HOLDS[k].ref);
-  FIL[k] = { W: G.fil[k], E: G.fil[k] };
+  FIL[k] = { W: [], E: [] };
+}
+// ── fillets: every entry gets a smooth curve each way (W starts west of the link, E east of it), tangent to the runway
+// centreline and to the taxiway, so the yellow lead lines and the aircraft run along true arcs. An entry the surveyed
+// layout gives as a curve keeps that curve for its own side; a straight stub gets an arc of its own each way, and at a
+// runway end only the side that stays on the runway is made.
+function arcFil(m1, o1, u, side, R){
+  const h0 = side === 'W' ? 1 : -1, sg = Math.sign(o1) || 1, th = Math.atan2(u[1]*sg, h0*u[0]);
+  if (!(th > 0.26 && th < 2.7)) return [];
+  const r = Math.min(110, Math.max(30, Math.abs(o1)/(1 - Math.cos(th)))), al = r*Math.sin(th), s0 = m1 - h0*al;
+  const out = []; for (let i = 0; i <= 10; i++) { const a = th*i/10; out.push([+(s0 + h0*r*Math.sin(a)).toFixed(1), +(sg*r*(1 - Math.cos(a))).toFixed(1)]); }
+  out[out.length - 1] = [m1, o1]; out[0][1] = 0;
+  return out;
+}
+function buildFil(k, f){
+  const H = HOLDS[k], R = RWY_LIST.find(r => r.id === H.on) || R0, S0 = f[0], P = f[f.length - 1], n = f.length;
+  const q = f[Math.max(0, n - 3)], uL = Math.hypot(P[0] - q[0], P[1] - q[1]) || 1, u = [(P[0] - q[0])/uL, (P[1] - q[1])/uL];
+  const stub = n <= 3 || Math.abs(P[0] - S0[0]) < 0.7*Math.abs(P[1] - S0[1]), ok = s => !H.end || (s.length && s[0][0] > 4 && s[0][0] < R.len - 4);
+  const W = [], E = [];
+  if (stub) { const w = arcFil(P[0], P[1], u, 'W', R), ee = arcFil(P[0], P[1], u, 'E', R); return { W: ok(w) ? w : [], E: ok(ee) ? ee : [] }; }
+  return S0[0] < P[0] ? { W: f, E: [] } : { W: [], E: f };
+}
+for (const k of Object.keys(HOLDS)) FIL[k] = buildFil(k, G.fil[k]);
+// ── the crossing runway: most Aldergrove landings on 25 turn off at the 17/35 intersection and taxi up the runway to
+// taxiway C. Its own exit (X17), on 07/25 at the intersection, with a curve each way onto the 17/35 centreline.
+{
+  const Rs = RWY_LIST.find(r => r.id === '1735'), R = R0;
+  const offAt = s => offOf(Rs.rm(s, 0));
+  let lo = 0, hi = Rs.len; for (let i = 0; i < 40; i++) { const mid = (lo + hi)/2; (offAt(mid) > 0) === (offAt(0) > 0) ? lo = mid : hi = mid; }
+  const sx = (lo + hi)/2, sg = Math.sign(offAt(0)), find = d => { let a = sx, b = 0; for (let i = 0; i < 40; i++) { const mid = (a + b)/2; Math.abs(offAt(mid)) < d ? a = mid : b = mid; } return (a + b)/2; };
+  const s1 = find(58), pm = s => mOf(Rs.rm(s, 0)), po = s => offOf(Rs.rm(s, 0));
+  const hs = s1 - 55, tgt = RWY_LIST.length && G.holds.C1 ? G.holds.C1[0] : null;
+  gn('XR', pm(s1), po(s1)); gn('XH', pm(hs), po(hs));
+  chain('XR', [], 'XH', 'C');
+  chain('XH', [], 'k117', 'C');                                 // up the runway to the crossing node by taxiways C1 and D2
+  const dm = pm(s1) - pm(sx), up = [(pm(s1 - 1) - pm(s1)), (po(s1 - 1) - po(s1))], ul = Math.hypot(...up); const u = [up[0]/ul, up[1]/ul];
+  const m1 = pm(s1), o1 = po(s1);
+  HOLDS.X17 = { node: 'XH', rwy: 'XR', on: R.id, m: mOf(Rs.rm(sx, 0)), off: o1, dirs: ['07', '25'], end: null, ref: 'X17', tw: 'C', city: false, exitOnly: true };
+  FIL.X17 = { W: arcFil(m1, o1, u, 'W', R), E: arcFil(m1, o1, u, 'E', R) };
 }
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
 // stands: Aldergrove's apron stands by the terminal (M) and City's 1 to 10, 21 and 24 (C1... here)
@@ -5164,9 +5202,21 @@ PHON.APRON = 'the apron';
 
 // ── departure entries: a holding point at the departure end of the runway (the nearest by taxi route), or the one the aircraft
 // is already at
-const endHolds = rw => Object.keys(HOLDS).filter(k => HOLDS[k].end === rw && HOLDS[k].dirs.includes(rw));
-const nearHolds = rw => { const R = RWYS_BY_END(rw); return Object.keys(HOLDS).filter(k => HOLDS[k].on === R.id && HOLDS[k].dirs.includes(rw)); };
+const endHolds = rw => Object.keys(HOLDS).filter(k => !HOLDS[k].exitOnly && HOLDS[k].end === rw && HOLDS[k].dirs.includes(rw));
+const nearHolds = rw => { const R = RWYS_BY_END(rw); return Object.keys(HOLDS).filter(k => !HOLDS[k].exitOnly && HOLDS[k].on === R.id && HOLDS[k].dirs.includes(rw)); };
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
+// lead-in lines: from the taxilane a stand's line curves onto the stand's own heading and runs straight to the stop bar, as painted
+for (const s of STANDS) {
+  if (s.noLead) continue;
+  const pts = s.line || [s.lp, s.p], P0 = pts[0], Pe = pts[pts.length - 1], u = dirv(s.hdg), M = 1/M2NM;
+  let T = null, bd = 90;
+  for (const [v] of waysOn(s.node)) { const d = brg(...P0, ...GN[v].p), a = Math.abs(angDiff(d, s.hdg)); if (a < bd) { bd = a; T = dirv(d); } }
+  const Ls = Math.min(32, 0.5*dist(...P0, ...Pe)*M), Q = [Pe[0] - u[0]*Ls*M2NM, Pe[1] - u[1]*Ls*M2NM], D = dist(...P0, ...Q)*M;
+  if (!T || bd < 12 || D < 12 || Ls < 8) continue;
+  const c1 = [P0[0] + T[0]*0.45*D*M2NM, P0[1] + T[1]*0.45*D*M2NM], c2 = [Q[0] - u[0]*0.45*D*M2NM, Q[1] - u[1]*0.45*D*M2NM], out = [];
+  for (let k = 0; k <= 12; k++) { const t = k/12, w = 1 - t; out.push([w*w*w*P0[0] + 3*w*w*t*c1[0] + 3*w*t*t*c2[0] + t*t*t*Q[0], w*w*w*P0[1] + 3*w*w*t*c1[1] + 3*w*t*t*c2[1] + t*t*t*Q[1]]); }
+  s.line = [...out, Pe];
+}
 const fromNode = ac => ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode([ac.x, ac.y], n => !/^[A-Za-z]*R\d/.test(n.id)) || {}).id;
 function depRwyOf(ac){
   if (ac.cto && ac.depRwy) return ac.depRwy;
@@ -5218,6 +5268,80 @@ function exitFor(ac, name){
   return ks.sort((a, b) => (Math.sign(HOLDS[b].off) === R.side) - (Math.sign(HOLDS[a].off) === R.side) || (HOLDS[a].m - HOLDS[b].m)*dir)[0] || null;
 }
 
+
+// ═════════════════════════ smooth taxiway paint ═════════════════════════
+// The taxi graph is made of short straight pieces, with a sharp corner wherever the surveyed centreline bends. For drawing,
+// each stretch of one taxiway between junctions is joined into one line with its corners rounded to a real turn radius, and
+// where a taxiway meets another one at a T the branch's centreline curves onto the through line each way (a lead-on and a
+// lead-off, as painted) instead of running straight into it. The aircraft keep to the graph; this is the paint and the paving.
+let SMOOTH = null;
+function smoothTaxiways(){
+  if (SMOOTH) return SMOOTH;
+  const M = 1/M2NM, live = e => !e.bare, nb = id => GN[id].adj.filter(([, e]) => live(e));
+  const used = new Set(), chains = [];
+  const other = (e, id) => e.a === id ? e.b : e.a;
+  const edgesAt = id => nb(id).map(([, e]) => e);
+  const walk = (e0, from) => {                         // follow pass-through nodes (two edges of the same taxiway) from node `from`
+    const ids = [from]; let e = e0, cur = from; const es = [];
+    for (;;) { used.add(e); es.push(e); cur = other(e, cur); ids.push(cur);
+      const es2 = edgesAt(cur); if (es2.length !== 2 || /^R\d|^CR\d|^XR$/.test(cur)) break;
+      const nx = es2.find(x => x !== e); if (!nx || used.has(nx) || nx.tw !== e.tw) break; e = nx; }
+    return { ids, tw: es[0].tw };
+  };
+  for (const e of GE) { if (!live(e) || used.has(e)) continue;
+    // start from a junction or end if there is one on this edge; otherwise anywhere
+    const a = walk(e, e.a); chains.push(a); }
+  // rounded corners: each interior vertex becomes a quadratic arc of the turn radius R metres (shortened on short legs)
+  const round = (pts, R) => {
+    if (pts.length < 3) return pts.slice();
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const a = pts[i-1], b = pts[i], c = pts[i+1];
+      const v1 = [(b[0]-a[0])*M, (b[1]-a[1])*M], v2 = [(c[0]-b[0])*M, (c[1]-b[1])*M], l1 = Math.hypot(...v1), l2 = Math.hypot(...v2);
+      if (l1 < 0.5 || l2 < 0.5) { out.push(b); continue; }
+      const cs = (v1[0]*v2[0] + v1[1]*v2[1])/(l1*l2), th = Math.acos(Math.max(-1, Math.min(1, cs)));   // turning angle
+      if (th < 0.05) { out.push(b); continue; }
+      const t = Math.min(R*Math.tan(th/2), 0.48*l1, 0.48*l2);
+      const p0 = [b[0] - v1[0]/l1*t*M2NM, b[1] - v1[1]/l1*t*M2NM], p1 = [b[0] + v2[0]/l2*t*M2NM, b[1] + v2[1]/l2*t*M2NM];
+      for (let k = 0; k <= 8; k++) { const u = k/8, w = 1 - u; out.push([w*w*p0[0] + 2*w*u*b[0] + u*u*p1[0], w*w*p0[1] + 2*w*u*b[1] + u*u*p1[1]]); }
+    }
+    out.push(pts[pts.length - 1]); return out;
+  };
+  const res = chains.map(c => ({ tw: c.tw, ids: c.ids, pts: round(c.ids.map(id => GN[id].p), 28) }));
+  // T junctions: a branch ending at a node where two other lines run through, roughly straight on
+  const at = new Map();
+  for (const c of res) for (const end of [0, 1]) { const id = end ? c.ids[c.ids.length - 1] : c.ids[0]; (at.get(id) || at.set(id, []).get(id)).push({ c, end }); }
+  const dirOut = ({ c, end }) => { const P = end ? c.pts.slice().reverse() : c.pts, a = P[0]; let q = P[1]; for (let i = 1; i < P.length; i++) { q = P[i]; if (Math.hypot(q[0]-a[0], q[1]-a[1])*M > 6) break; }
+    const d = [q[0]-a[0], q[1]-a[1]], l = Math.hypot(...d) || 1; return [d[0]/l, d[1]/l]; };
+  const along = ({ c, end }, dm) => { const P = end ? c.pts.slice().reverse() : c.pts; let acc = 0;
+    for (let i = 1; i < P.length; i++) { const L = Math.hypot(P[i][0]-P[i-1][0], P[i][1]-P[i-1][1])*M; if (acc + L >= dm) { const k = (dm - acc)/L; return [P[i-1][0] + (P[i][0]-P[i-1][0])*k, P[i-1][1] + (P[i][1]-P[i-1][1])*k, i]; } acc += L; }
+    return null; };
+  const lenOf = c => { let s = 0; for (let i = 1; i < c.pts.length; i++) s += Math.hypot(c.pts[i][0]-c.pts[i-1][0], c.pts[i][1]-c.pts[i-1][1])*M; return s; };
+  const paint = res.map(c => ({ ...c, trim: [0, 0] })), curves = [];
+  const meet = new Map();
+  for (const [id, L] of at) {
+    if (L.length !== 3) continue;
+    const D = L.map(dirOut); let best = null;
+    for (let i = 0; i < 3; i++) { const j = (i + 1) % 3, k = (i + 2) % 3, cs = D[j][0]*D[k][0] + D[j][1]*D[k][1]; if (cs < -0.9 && (!best || cs < best.cs)) best = { br: i, j, k, cs }; }
+    if (!best) continue;
+    const B = L[best.br], r = 40;
+    if (lenOf(B.c) < r + 6) continue;
+    const pb = along(B, r), jp = GN[id].p, th = [along(L[best.j], r), along(L[best.k], r)];
+    if (!pb || !th[0] || !th[1]) continue;
+    for (const t of th) curves.push([[pb[0], pb[1]], [jp[0], jp[1]], [t[0], t[1]]]);
+    meet.set(B.c, (meet.get(B.c) || []).concat([[B.end, r]]));
+  }
+  // the branch lines stop where their curves start
+  for (const c of paint) for (const [end, r] of meet.get(res.find(x => x.ids === c.ids)) || []) {
+    const P = end ? c.pts.slice().reverse() : c.pts; let acc = 0, cut = -1, pt = null;
+    for (let i = 1; i < P.length; i++) { const L = Math.hypot(P[i][0]-P[i-1][0], P[i][1]-P[i-1][1])*M; if (acc + L >= r) { const k = (r - acc)/L; pt = [P[i-1][0] + (P[i][0]-P[i-1][0])*k, P[i-1][1] + (P[i][1]-P[i-1][1])*k]; cut = i; break; } acc += L; }
+    if (!pt) continue; const np = [pt, ...P.slice(cut)]; c.pts = end ? np.reverse() : np;
+  }
+  const quad = ([a, b, c]) => { const o = []; for (let k = 0; k <= 10; k++) { const u = k/10, w = 1 - u; o.push([w*w*a[0] + 2*w*u*b[0] + u*u*c[0], w*w*a[1] + 2*w*u*b[1] + u*u*c[1]]); } return o; };
+  SMOOTH = { pave: res, paint: paint.map(c => ({ tw: c.tw, pts: c.pts })).concat(curves.map(c => ({ tw: 'curve', pts: quad(c) }))) };
+  return SMOOTH;
+}
+
 // ═════════════════════════ aerodrome drawing ═════════════════════════
 const AD_SITE = { pave: { w: 23 }, aprons: APRONS, roads: [], buildings: [], twyExtra: [], shoulder: [0, RWY_M], serviceRoad: false, paag: [], floods: [], twyLabels: [], hotspots: [], labels: [] };
 const HOTSPOTS = [['HS1', LL([54 + 39/60 + 28.5/3600, -(6 + 13/60 + 39/3600)])], ['HS2', LL([54 + 39/60 + 19/3600, -(6 + 13/60 + 29/3600)])]];   // AD 2-EGAA-2-1: hold-to-runway distance at D2; the 17/07 intersection
@@ -5237,11 +5361,11 @@ function drawBelfast(){
     cx.lineWidth = lw(44); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
     cx.strokeStyle = C.asphalt;
     cx.lineWidth = lw(23);
-    for (const e of GE) { if (e.tw === 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-    for (const k in FIL) { const R = RWYS_BY_END(HOLDS[k] ? HOLDS[k].dirs[0] || HOLDS[k].on : '25'); const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0; pathP(FIL[k].W.map(([m, o]) => Rr.rm(m, o)), false); cx.stroke(); }
+    for (const c of smoothTaxiways().pave) { if (c.tw === 'APRON') continue; pathP(c.pts, false); cx.stroke(); }
+    for (const k in FIL) { const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0; for (const sd of ['W', 'E']) if (FIL[k][sd].length) { pathP(FIL[k][sd].map(([m, o]) => Rr.rm(m, o)), false); cx.stroke(); } }
   } else {
-    const lines = GE.filter(e => e.tw !== 'APRON').map(e => ({ pts: [P2(GN[e.a].p), P2(GN[e.b].p)], w: paveWidth(e.tw) }));
-    for (const k in FIL) { const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0; lines.push({ pts: FIL[k].W.map(([m, o]) => P2(Rr.rm(m, o))), w: paveWidth() }); }
+    const lines = smoothTaxiways().pave.filter(c => c.tw !== 'APRON').map(c => ({ pts: c.pts.map(P2), w: paveWidth(c.tw) }));
+    for (const k in FIL) { const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0; for (const sd of ['W', 'E']) if (FIL[k][sd].length) lines.push({ pts: FIL[k][sd].map(([m, o]) => P2(Rr.rm(m, o))), w: paveWidth() }); }
     drawPavement(lines, G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n)))), mpx);
   }
   cx.fillStyle = C.rwy; for (const R of RWY_LIST) { pathP(rwyPoly(R, R.width)); cx.fill(); }
@@ -5261,10 +5385,13 @@ function drawBelfast(){
       }
       for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 60], [R.hi, R.thr[R.hi] - 60]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
     }
-    { const seen = new Set(), leads = []; for (const k in FIL) { const f = FIL[k].W, key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
-      const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0; leads.push(leadLine(f).map(p => P2(Rr.rm(...p)))); }
+    { const seen = new Set(), leads = [];
+      for (const k in FIL) { const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0;
+        for (const sd of ['W', 'E']) { const f = FIL[k][sd]; if (!f.length) continue; const key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
+          // the curve onto the centreline, then 60 m on along it (never past the runway end)
+          const ln = leadLine(f); ln[0][0] = Math.min(Rr.len, Math.max(0, ln[0][0])); leads.push(ln.map(p => P2(Rr.rm(...p)))); } }
       groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
-    paintEdgeLines(lw(0.35));
+    groundLines(lw(0.35), () => { for (const c of smoothTaxiways().paint) { if (c.pts.length < 2) continue; cx.beginPath(); c.pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](...P2(q))); cx.stroke(); } });
     cx.strokeStyle = C.yellow;
     for (const [id, [u, v]] of Object.entries(HOLD_AXIS)) {
       const n = GN[id]; if (!n) continue; const at = (a, b) => [n.p[0] + (v*a + u*b)*M2NM, n.p[1] + (-u*a + v*b)*M2NM];
@@ -5435,7 +5562,11 @@ const APT = {
   altMetar: () => S.metarC || (S.wx && S.wx.raw ? { raw: S.wx.raw.replace(/^EGAA /, 'EGAC '), sim: true } : null),
   vacExits: ac => { const rw = ac.app || landOf(ac), R = RWYS_BY_END(rw), m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1;
     return exitsFor(rw).filter(k => (HOLDS[k].m - m)*dir > 30).slice(0, 4); },
-  vacPrefs: (st, ac) => exitsFor(ac && ac.app || landOf(ac || {})),
+  // most 25 landings (about four in five) turn off onto the crossing runway at its intersection and taxi up it
+  vacPrefs: (st, ac) => { const rw = ac && ac.app || landOf(ac || {}), L = exitsFor(rw).filter(k => k !== 'X17');
+    if (!ac || rw !== '25' || !exitsFor(rw).includes('X17')) return L;
+    if (ac.xPref == null) ac.xPref = Math.random() < 0.8;
+    return ac.xPref ? ['X17', ...L] : L; },
   exitFor,
   lineUpWords: hp => 'line up and wait',
   terrain: null, restricted: null,
@@ -7904,13 +8035,14 @@ function drawProcedures(){
   cx.lineWidth = 1;
   for (const g of Object.keys(ARR_ROUTE)) for (const rk of (APT.arrRoutes ? APT.arrRoutes() : [S.rwy])) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][rk].map(id => WP[id].p), false); cx.stroke(); }
   cx.setLineDash([]);
+  const inUse = APT.appRwys ? APT.appRwys() : [S.rwy];   // every landing runway in use (Belfast has one at each airfield)
   for (const k of RW_ENDS) {
-    const F = FINAL[k]; if (!F) continue; cx.strokeStyle = k === S.rwy ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = k === S.rwy ? 1.3 : 1;
+    const F = FINAL[k]; if (!F) continue; const on = inUse.includes(k); cx.strokeStyle = on ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = on ? 1.3 : 1;
     poly(F.pts, false); cx.stroke();
     if (F.ticks) { const ob = norm(crsOf(k) + 180), nx = Math.cos(ob*D2R), ny = Math.sin(ob*D2R); for (let n = 1; n <= 10; n++) { const p = add(F.pts[F.pts.length-1], ob, n), L = n % 5 === 0 ? 7 : 4; cx.beginPath(); cx.moveTo(sx(p[0]) - nx*L, sy(p[1]) - ny*L); cx.lineTo(sx(p[0]) + nx*L, sy(p[1]) + ny*L); cx.stroke(); } }
   }
   // RNP AR paths to the runway in use (dashed), and the one the selected flight is cleared for (solid)
-  for (const F of Object.values(FINAL)) if (F.rnp && F.rwy === S.rwy) {
+  for (const F of Object.values(FINAL)) if (F.rnp && inUse.includes(F.rwy)) {
     const mine = S.sel && finOf(S.sel) === F; cx.strokeStyle = rgba('proc', mine ? .8 : .35); cx.lineWidth = mine ? 1.4 : 1; cx.setLineDash(mine ? [] : [6, 4]);
     poly(F.pts, false); cx.stroke(); if (mine) { cx.setLineDash([2, 4]); poly(F.missPts, false); cx.stroke(); }
     cx.setLineDash([]);
@@ -9260,10 +9392,11 @@ function renderSysbar(d){
 // runway status over the map: each runway in use, clear or who is on it
 function renderPills(){
   const el = $('rwyPills'); if (!el) return;
-  const dep = typeof depRw === 'function' ? depRw() : S.rwy, ends = dep === S.rwy ? [S.rwy] : [S.rwy, dep];
+  const dep = typeof depRw === 'function' ? depRw() : S.rwy, multi = APT.activeRwys && [...new Set(APT.activeRwys())],
+    ends = multi && multi.length > 1 ? multi : dep === S.rwy ? [S.rwy] : [S.rwy, dep];
   const html = ends.map(r => {
     const occ = S.acs.find(o => onRunway(o, r)), shut = S.emg && S.emg.rwyBlock && typeof blockRw === 'function' && blockRw() === r;
-    const lbl = ends.length === 1 ? r : r === S.rwy ? r + ' ARR' : r + ' DEP';
+    const lbl = ends.length === 1 || multi ? r : r === S.rwy ? r + ' ARR' : r + ' DEP';
     return `<span class="rp ${shut ? 'shut' : occ ? 'occ' : 'clr'}"><i></i>${lbl} · ${shut ? 'CLOSED' : occ ? 'OCCUPIED ' + esc(occ.cs) : 'CLEAR'}</span>`;
   }).join('');
   if (el.innerHTML !== html) el.innerHTML = html;

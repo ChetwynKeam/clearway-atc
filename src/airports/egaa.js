@@ -232,9 +232,9 @@ const EGAA = (() => {
 
   // ── where each destination is: the gateway an arrival is brought in through and the SIDs that leave to it
   const DIR = {
-    NE: { dep: 'N', gate: 'B050D40', ctr: 'sc', name: 'Scotland, the Hebrides and the north of England' },
-    SE: { dep: 'SE', gate: 'B120D40', ctr: 'lon', name: 'England, Wales and the near continent' },
-    S:  { dep: 'S', gate: 'B190D40', ctr: 'sc', name: 'Dublin, the south of Ireland, Iberia and the Canaries' },
+    NE: { dep: 'N', gate: 'TRN', ctr: 'sc', name: 'Scotland, the Hebrides and the north of England' },
+    SE: { dep: 'SE', gate: 'IOM', ctr: 'lon', name: 'England, Wales and the near continent' },
+    S:  { dep: 'S', gate: 'NEVRI', ctr: 'sc', name: 'Dublin, the south of Ireland, Iberia and the Canaries' },
     W:  { dep: 'N', gate: 'B300D40', ctr: 'sc', name: 'the Atlantic and North America' }
   };
   const PLACE_DIR = {

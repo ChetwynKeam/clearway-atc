@@ -7722,13 +7722,14 @@ function drawProcedures(){
   cx.lineWidth = 1;
   for (const g of Object.keys(ARR_ROUTE)) for (const rk of (APT.arrRoutes ? APT.arrRoutes() : [S.rwy])) { cx.strokeStyle = rgba('proc', .26); cx.setLineDash([4,5]); poly(ARR_ROUTE[g][rk].map(id => WP[id].p), false); cx.stroke(); }
   cx.setLineDash([]);
+  const inUse = APT.appRwys ? APT.appRwys() : [S.rwy];   // every landing runway in use (Belfast has one at each airfield)
   for (const k of RW_ENDS) {
-    const F = FINAL[k]; if (!F) continue; cx.strokeStyle = k === S.rwy ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = k === S.rwy ? 1.3 : 1;
+    const F = FINAL[k]; if (!F) continue; const on = inUse.includes(k); cx.strokeStyle = on ? rgba('proc', .75) : rgba('lab', .2); cx.lineWidth = on ? 1.3 : 1;
     poly(F.pts, false); cx.stroke();
     if (F.ticks) { const ob = norm(crsOf(k) + 180), nx = Math.cos(ob*D2R), ny = Math.sin(ob*D2R); for (let n = 1; n <= 10; n++) { const p = add(F.pts[F.pts.length-1], ob, n), L = n % 5 === 0 ? 7 : 4; cx.beginPath(); cx.moveTo(sx(p[0]) - nx*L, sy(p[1]) - ny*L); cx.lineTo(sx(p[0]) + nx*L, sy(p[1]) + ny*L); cx.stroke(); } }
   }
   // RNP AR paths to the runway in use (dashed), and the one the selected flight is cleared for (solid)
-  for (const F of Object.values(FINAL)) if (F.rnp && F.rwy === S.rwy) {
+  for (const F of Object.values(FINAL)) if (F.rnp && inUse.includes(F.rwy)) {
     const mine = S.sel && finOf(S.sel) === F; cx.strokeStyle = rgba('proc', mine ? .8 : .35); cx.lineWidth = mine ? 1.4 : 1; cx.setLineDash(mine ? [] : [6, 4]);
     poly(F.pts, false); cx.stroke(); if (mine) { cx.setLineDash([2, 4]); poly(F.missPts, false); cx.stroke(); }
     cx.setLineDash([]);
@@ -9078,10 +9079,11 @@ function renderSysbar(d){
 // runway status over the map: each runway in use, clear or who is on it
 function renderPills(){
   const el = $('rwyPills'); if (!el) return;
-  const dep = typeof depRw === 'function' ? depRw() : S.rwy, ends = dep === S.rwy ? [S.rwy] : [S.rwy, dep];
+  const dep = typeof depRw === 'function' ? depRw() : S.rwy, multi = APT.activeRwys && [...new Set(APT.activeRwys())],
+    ends = multi && multi.length > 1 ? multi : dep === S.rwy ? [S.rwy] : [S.rwy, dep];
   const html = ends.map(r => {
     const occ = S.acs.find(o => onRunway(o, r)), shut = S.emg && S.emg.rwyBlock && typeof blockRw === 'function' && blockRw() === r;
-    const lbl = ends.length === 1 ? r : r === S.rwy ? r + ' ARR' : r + ' DEP';
+    const lbl = ends.length === 1 || multi ? r : r === S.rwy ? r + ' ARR' : r + ' DEP';
     return `<span class="rp ${shut ? 'shut' : occ ? 'occ' : 'clr'}"><i></i>${lbl} · ${shut ? 'CLOSED' : occ ? 'OCCUPIED ' + esc(occ.cs) : 'CLEAR'}</span>`;
   }).join('');
   if (el.innerHTML !== html) el.innerHTML = html;
