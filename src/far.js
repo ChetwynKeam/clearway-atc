@@ -124,7 +124,7 @@ function addArrGhost(f){
   const endLL = toLL([e[0] + u[0]*preNM, e[1] + u[1]*preNM]);
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
   // it joins the entry point flying in along the same line the pending track then follows, with no turn at the handover
-  const join = gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
+  const join = !APT.preToOrigin && gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
   // the airways to the join point on the entry line (leaving them only from fixes behind it), no hairpin out to a fix and back
   const raw = airwayPts([AP[f.o].slice(0, 2), ...via.filter(p => gcDist(p, join[0] || endLL) > 60), ...join, endLL], f.cs + f.o, true, join[0] ? gcBrg(join[0], endLL) : null);
   for (let i = 1; i < raw.length - 1; i++) if (Math.abs(angDiff(gcBrg(raw[i - 1], raw[i]), gcBrg(raw[i], raw[i + 1]))) > 100 && (i === raw.length - 2 || gcDist(raw[i], endLL) > gcDist(raw[i - 1], endLL) - 1)) { raw.splice(i, 1); i = Math.max(0, i - 2); }

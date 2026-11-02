@@ -492,7 +492,7 @@ const APT = {
   areaNames: { civil: 'stands' },
   standWord: 'stand',
   // satellite stands: jet bridges and apron buses between the satellite building and the terminal (vehicles.js satBay, shuttleOut)
-  via: {},   // no turning points inherited from the Gibraltar routes (Biscay, Iberia): inbounds fly direct from where they started
+  via: {}, preToOrigin: true,   // no turning points inherited from the Gibraltar routes (Biscay, Iberia): inbounds fly direct from where they started
   doorsToTerminal: true, shuttle: st => st.term === 'S', shuttleTerm: 'T',
   termName: t => TERM_NAME[t] || 'Apron ' + t,
   prefArea: ac => { const t = termOf(ac); return { key: t, name: TERM_NAME[t], has: s => s.term === t }; },
