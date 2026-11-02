@@ -165,8 +165,10 @@ function standDashes(t){
   const pts = t.line && t.line.length > 1 ? t.line : [L0, t.p];
   if (dist(...L0, ...t.p)*M < 14) return null;
   let q = pts[pts.length - 1]; for (const c of pts.slice(1)) if (dist(...L0, ...c)*M > 8) { q = c; break; }
+  const lane = GN[t.lane || t.node], ways = waysOn(t.lane || t.node);
+  if (ways.length !== 2 || STANDS.some(o => o !== t && o.lp && dist(...o.lp, ...L0)*M < 6)) return null;   // only where the lead-in leaves a plain lane on its own, not at a junction or a shared spur end
   const lead = brg(...L0, ...q), out = [], seen = [];
-  for (const [v] of waysOn(t.lane || t.node)) { const w = GN[v].p; if (dist(...L0, ...w)*M < 3) continue;
+  for (const [v] of ways) { const w = GN[v].p; if (dist(...L0, ...w)*M < 3) continue;
     const b = brg(...L0, ...w), a = Math.abs(angDiff(b, lead)); if (a < 25 || a > 155 || seen.some(x => Math.abs(angDiff(x, b)) < 20)) continue;
     seen.push(b); out.push([at(L0, b, Math.min(15, dist(...L0, ...w)*M*0.9)), L0, at(L0, lead, 10)]); }
   return out.length ? out : null;
