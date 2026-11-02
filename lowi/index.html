@@ -5406,10 +5406,14 @@ const onRunway = (o, rw) => o.onRwy && (o.rwyId || RWYS[0].id) === rwyOf(rw).id;
 const luM = o => { const rw = depRw(o), R = rwyOf(rw), dir = rw === R.lo ? 1 : -1, H = HOLDS[o.hp];
   return dir*R.mOf(!o.onRwy && H && GN[H.rwy] ? GN[H.rwy].p : [o.x, o.y]); };
 const luOthers = ac => S.acs.filter(o => o !== ac && o.kind === 'DEP' && o.ground && (o.state === 'LINEUP' || o.state === 'LINEDUP' || o.luq || o.luAfter) && depRw(o) === depRw(ac));
-// at most two lined up on a runway at once, and from different holding points: why this one can't join them (or null)
-const luFull = ac => { const o = luOthers(ac), same = o.find(x => x.hp && x.hp === ac.hp);
-  return o.length >= 2 ? `${o[0].cs} and ${o[1].cs} are already lined up on runway ${depRw(ac)}` : same ? `${same.cs} is already lining up from ${ac.hp}` : null; };
 const NUM_WORD = ['zero', 'one', 'two', 'three', 'four', 'five'];
+// how many may be lined up on one runway at once, each from its own holding point: three at the big airports with long
+// runways and several intersections (Heathrow, Gatwick, Manchester, JFK, Madrid, Sydney), two elsewhere
+const LU_MAX = APT.luMax || (['EGLL', 'EGKK', 'EGCC', 'KJFK', 'LEMD', 'YSSY'].includes(APT.icao) ? 3 : 2);
+const luMaxWord = () => NUM_WORD[LU_MAX] || String(LU_MAX);
+// why this one can't join those already lined up (or null)
+const luFull = ac => { const o = luOthers(ac), same = o.find(x => x.hp && x.hp === ac.hp);
+  return o.length >= LU_MAX ? `${o.slice(0, -1).map(x => x.cs).join(', ')} and ${o[o.length - 1].cs} are already lined up on runway ${depRw(ac)}` : same ? `${same.cs} is already lining up from ${ac.hp}` : null; };
 // conditional line-up ("behind the landing A350, line up and wait behind"): the traffic on, or about to be on, this
 // runway the same way round, a departure rolling or an arrival on short final or rolling out. passed: it is past the
 // point where this one enters, so lining up now is safe; until then the departure waits at the holding point
@@ -6733,7 +6737,7 @@ function commandRun(str){
       if (ac.state !== 'HOLDPT' && !luTaxi(ac)) { sys(`${ac.cs} is not at${ac.state === 'TAXI' ? ', or taxiing to,' : ''} a holding point${ac.state === 'TAXI' && (ac.holdAt || (ac.path && ac.path.ihp)) ? ' for the runway: taxi it on to one first' : ''}.`); continue; }
       if (ac.luq || ac.luAfter || (ac.cto && ac.state === 'TAXI')) { sys(`${ac.cs} is already cleared onto the runway.`); continue; }
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
-      { const f = luFull(ac); if (f) { sys(`${f}: no more than two at once, each from its own holding point.`, true); continue; } }
+      { const f = luFull(ac); if (f) { sys(`${f}: no more than ${luMaxWord()} at once, each from its own holding point.`, true); continue; } }
       const others = luOthers(ac), me = luM(ac), near = others.find(o => Math.abs(luM(o) - me) < 300), tr = luTraffic(ac);
       if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)) && !others.includes(o) && !(tr && o === tr.o) && !xFar(o, ac))) sys('Careful: the runway is occupied.', true);
       else if (near) sys(`Careful: ${near.cs} is lined up at about the same point as ${ac.cs}.`, true);
@@ -6751,7 +6755,7 @@ function commandRun(str){
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
       // a departure stop from the next unit: the controller knows, so it isn't given
       { const fs = typeof flowStop === 'function' && flowStop(ac); if (fs) { sys(`${fs.who} has stopped ${flowWhat(fs)} until ${flowEnd(fs)}Z (${fs.why}): ${ac.cs} can't go yet. Hold it${ac.onRwy ? ', or vacate the runway (VAC)' : ''}.`, true); continue; } }
-      { const f = (ac.state === 'HOLDPT' || luTaxi(ac)) && luFull(ac); if (f) { sys(`${f}: no more than two at once, each from its own holding point.`, true); continue; } }
+      { const f = (ac.state === 'HOLDPT' || luTaxi(ac)) && luFull(ac); if (f) { sys(`${f}: no more than ${luMaxWord()} at once, each from its own holding point.`, true); continue; } }
       { const me = luM(ac), ahead = luOthers(ac).find(o => o.onRwy && luM(o) > me + 50);   // one lined up further down the runway goes first
         if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
@@ -10918,6 +10922,19 @@ function wayOn(o, dest, seed){
   const mine = !(typeof outOfCtl === 'function' && outOfCtl(o)) && !(typeof outsideRadar === 'function' && outsideRadar(o));
   const cleared = !mine ? [] : o.kind === 'DEP' && !o.ground ? ((o.mode === 'NAV' && o.route && o.route.length ? o.route : (o.onSid ? exitRouteOf(o) || [] : [])) || []) : (o.mode === 'NAV' && o.route ? o.route : []);
   let firstFix = true;
+  // a departure still on the ground: from the runway it will take, along its SID's fixes, then on as below
+  if (o.kind === 'DEP' && o.ground && mine && typeof exitRouteOf === 'function') {
+    const rw = depRw(o), R = rwyOf(rw), up = rw === R.lo, fx = (exitRouteOf(o) || []).filter(id => WP[id]);
+    if (R && R.rm && fx.length) {
+      const endR = toLL(R.rm(up ? R.len : 0, 0)), rh = crsOf(rw);
+      pts.length = 0; pts.push(...flyPts(toLL(R.rm(R.len*0.5, 0)), rh, [endR, gcDest(endR, rh, 1), ...fx.map(id => toLL(WP[id].p))], 0.3));
+      p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
+      if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
+      for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 8) break; h = norm(h + Math.sign(d)*Math.min(8, Math.abs(d))); p = gcDest(p, h, 6); pts.push(p); }
+      const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
+      return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
+    }
+  }
   for (const id of cleared) { if (!WP[id]) continue; const q = toLL(WP[id].p);
     const off = Math.abs(angDiff(h, gcBrg(p, q))), dq = gcDist(p, q);
     if (dq < 1 || off > 95 || (off > 45 && dq < 4)) continue;   // behind it already, or too close to turn for
@@ -10938,11 +10955,47 @@ function wayIn(o, from, end, dir){
   // a short hop: worked back from where we saw it, a steady turn round towards its origin, so it meets its track in line
   if (D < 70) return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/45, 0.5, 1.4)));
   // the airway route to a point well back along the line it was flying, then a steady turn to intercept that line
-  const J = gcDest(end, dir + 180, D > 190 ? 110 : Math.min(45, D/2.2));
+  // (only a long way back when the track it was flying points along the way in from its origin: a vector or downwind leg
+  // close in says nothing about the route it flew to get there)
+  const al = Math.abs(angDiff(dir, gcBrg(O, end))), back = D > 190 ? (al < 30 ? 110 : al < 60 ? 45 : 15) : Math.min(al < 60 ? 45 : 15, D/2.2);
+  const J = gcDest(end, dir + 180, back);
   const vv = via.filter(p => gcDist(p, J) > 60 && gcDist(p, end) > gcDist(J, end));
   // J lies on that line, so the airway's last leg meets it at a corner: rounded off as one wide curve that ends up along the
   // line, rather than an autopilot intercept begun at J itself (which overshot and looped round to come back to it)
   return makeLeg(smoothPts([...airwayPts([O, ...vv, J], o.cs + (o.o || ''), false), end]));
+}
+// a smooth way from A (flying ha) to B (arriving on hb): drawn from both ends at once, onward from A and backwards from B,
+// each end turning steadily towards the other until they meet, so it leaves A and reaches B on their headings, no corners
+function meet(A, ha, B, hb, st, tight){
+  const ha0 = ha, hb0 = hb, A0 = A, B0 = B, fa = [A], fb = [B]; hb = norm(hb + 180); let ta = 0, tb = 0;
+  for (let k = 0; k < 240 && gcDist(A, B) > st*2.2; k++) {
+    let d = angDiff(ha, gcBrg(A, B)), t = Math.sign(d)*Math.min(11, Math.abs(d)); ha = norm(ha + t); ta += t; A = gcDest(A, ha, st); fa.push(A);
+    if (gcDist(A, B) <= st*2.2) break;
+    d = angDiff(hb, gcBrg(B, A)); t = Math.sign(d)*Math.min(11, Math.abs(d)); hb = norm(hb + t); tb += t; B = gcDest(B, hb, st); fb.push(B);
+    // circling round each other (too close for the turn): give up and join the two directly, rounded off
+    if (Math.abs(ta) > 270 || Math.abs(tb) > 270) return tight ? smoothPts([A0, B0]) : meet(A0, ha0, B0, hb0, Math.max(0.1, st/3), true); }
+  return [...fa, ...fb.reverse()];
+}
+// an arrival picked up close in, drawn in by the procedure: the airway route from its origin to the arrival gate on that
+// side (its stack or feed fix), down that gate's arrival route as far as the leg nearest where we saw it, then onto the
+// track it was flying there. Picked up further out than that (still on its way in): the airway route straight to its track
+function arrIn(o, first, dir, f0){
+  const O = AP[o.o].slice(0, 2), home = AP[APT.icao].slice(0, 2), bo = gcBrg(home, O);
+  const gt = Object.keys(ENTRY).sort((a, b) => Math.abs(angDiff(brg(...RADAR_REF, ...ENTRY[a]), bo)) - Math.abs(angDiff(brg(...RADAR_REF, ...ENTRY[b]), bo)))[0];
+  const ids = gt && ARR_ROUTE[gt] ? (ARR_ROUTE[gt][S.rwy] || []).filter(id => WP[id]) : [];
+  if (gt && gcDist(O, home) > 60) {
+    const ch = [ENTRY[gt], ...ids.map(id => WP[id].p)]; let bi = 1, bd = Infinity;
+    for (let i = 1; i < ch.length; i++) { const d = segDist(f0, ch[i-1], ch[i]); if (d < bd - 0.01) { bd = d; bi = i; } }
+    if (bd < 15 || dist(...f0, ...RADAR_REF) < 30) {
+      const pre = [ENTRY[gt], ...ids.slice(0, bi - 1).map(id => WP[id].p)].map(p => toLL(p)).filter(q => gcDist(q, first) > 4);
+      if (pre.length) {
+        const head = wayIn(o, O, pre[0], gcBrg(pre[0], pre[1] || first)), last = pre[pre.length - 1];
+        const hL = gcBrg(pre.length > 1 ? pre[pre.length - 2] : head.pts[Math.max(0, head.pts.length - 2)], last);
+        return makeLeg(smoothPts([...head.pts.slice(0, -1), ...pre.slice(0, -1), ...meet(last, hL, first, dir, clamp(gcDist(last, first)/24, 0.3, 1))]));
+      }
+    }
+  }
+  return wayIn(o, O, first, dir);
 }
 // the last stretch of an inbound: from its last arrival point, a steady turn to intercept the final approach course
 function ontoFinal(from, h, F, home){
@@ -10967,13 +11020,21 @@ function intercept(p, h, to, crs, step = 0.4){
 }
 // flown as an aircraft turns: from p on heading h, round at a steady rate (radius about 2.5 NM) until it points at the
 // target, then straight there. Used where a line has to turn a long way in a short distance (out of a SID, onto final).
-function flyTurn(p, h, target, step = 0.5){
+function flyTurn(p, h, target, step = 0.5, side = 0){
+  // side: the way a procedure turns (1 right, -1 left), kept while the target is well round behind
   const out = [p];
   for (let k = 0; k < 80 && gcDist(p, target) > step*2; k++) {
     const d = angDiff(h, gcBrg(p, target)); if (Math.abs(d) < 4) break;
-    h = norm(h + Math.sign(d)*Math.min(11, Math.abs(d))); p = gcDest(p, h, step); out.push(p);
+    h = norm(h + (side && Math.abs(d) > 110 ? side : Math.sign(d))*Math.min(11, Math.abs(d))); p = gcDest(p, h, step); out.push(p);
   }
   out.push(target); return out;
+}
+// flown through a list of points the way an aircraft flies them: from p on heading h, a steady turn towards each in turn
+// (radius about 5 x step), then straight to it; so a procedure's hairpin (out west, back east) is a real turn, not a corner
+function flyPts(p, h, targets, step = 0.3){
+  const out = [p];
+  for (const t of targets) { if (gcDist(p, t) < 0.2) continue; const T = flyTurn(p, h, t, step); out.push(...T.slice(1)); h = gcBrg(T[Math.max(0, T.length - 2)], t); p = t; }
+  return out;
 }
 // the destination of a departure: its airport, or none when we don't know where it is
 const destOf = o => AP[o.d] ? AP[o.d].slice(0, 2) : null;
@@ -10993,7 +11054,7 @@ function trkRoute(o){
   if (o.kind === 'ARR' && AP[o.o]) {
     // the whole way in from its origin: the route its en-route plane flew, else one built to meet its track smoothly
     if (!o._tb || o._tb.o !== o.o || o._tb.n0 !== (rec[0] || here)[0]) { const g = FAR.list.find(g => g.cs === o.cs && g.kind === 'ARR');
-      const L = g && g.leg && gcDist(legAt(g.leg, g.leg.D).ll, first) < 8 ? g.leg : wayIn(o, AP[o.o].slice(0, 2), first, dir);
+      const L = g && g.leg && gcDist(legAt(g.leg, g.leg.D).ll, first) < 8 ? g.leg : arrIn(o, first, dir, rec[0] ? [rec[0][0], rec[0][1]] : [o.x, o.y]);
       const a0 = rec.length ? rec[0][2] : o.alt || 6000, c = Math.min(cr[1], 9000 + L.D*75);
       o._tb = { o: o.o, n0: (rec[0] || here)[0], pts: legPts(L, 0, L.D, x => Math.max(0, Math.min(c, 1500 + x*330, a0 + (L.D - x)*300))) }; }
     rec = o._tb.pts.concat(rec);
@@ -11007,16 +11068,28 @@ function trkRoute(o){
     // a real departure picked up already airborne: from the runway to where we first saw it
     if (!o.ground && rec.length && gcDist(first, home) > 2 && !(rec[0] && rec[0][3])) {
       if (!o._db || o._db.n0 !== rec[0][0]) { const rh = crsOf(depRw(o)), D0 = gcDist(home, first), out = gcDest(home, rh, Math.min(3, D0/4)), back = gcDest(first, dir + 180, Math.min(5, D0/4));
-        // off the runway, a steady turn round onto the line it was flying when we picked it up
-        // drawn from both ends at once: off the runway on its heading, and backwards from where we saw it along the track it was
-        // flying, each end turning steadily towards the other until they meet, so it leaves the runway and arrives on its track
-        // with smooth turns and no corner anywhere
-        const st = clamp(D0/24, 0.3, 1.2), fa = [out], fb = [first]; let A = out, B = first, ha = rh, hb = norm(dir + 180);
-        for (let k = 0; k < 240 && gcDist(A, B) > st*2.2; k++) {
-          let d = angDiff(ha, gcBrg(A, B)); ha = norm(ha + Math.sign(d)*Math.min(11, Math.abs(d))); A = gcDest(A, ha, st); fa.push(A);
-          if (gcDist(A, B) <= st*2.2) break;
-          d = angDiff(hb, gcBrg(B, A)); hb = norm(hb + Math.sign(d)*Math.min(11, Math.abs(d))); B = gcDest(B, hb, st); fb.push(B); }
-        const L = ptsLeg(smoothPts([home, ...fa, ...fb.reverse()]));
+        // flown by the procedure: off the runway it took, along its SID's fixes as far as the leg nearest where we saw it,
+        // then onto the track it was flying there; the corners are rounded as an aircraft turns
+        const rw = depRw(o), R = rwyOf(rw), up = rw === R.lo, lift = toLL(R.rm(R.len*(up ? 0.55 : 0.45), 0)), endR = toLL(R.rm(up ? R.len : 0, 0));
+        const fx = (exitRouteOf(o) || []).filter(id => WP[id]), ch = [R.rm(up ? R.len : 0, 0), ...fx.map(id => WP[id].p)], f0 = [rec[0][0], rec[0][1]];
+        let bi = 1, bd = Infinity;
+        for (let i = 1; i < ch.length; i++) { const d = segDist(f0, ch[i-1], ch[i]); if (d < bd - 0.01) { bd = d; bi = i; } }
+        // the SID as far as it is behind where we saw it when it was on it (within 3 NM of a leg); vectored off it, only its
+        // first fix, which sets the way the procedure turns off the runway (unless that is already past where we saw it)
+        const n = bi === 1 ? 0 : bd < 3 ? bi - 1 : 1, pre = fx.slice(0, n).map(id => toLL(WP[id].p)).filter(q => gcDist(q, first) > 3);
+        const S0 = [lift, endR, gcDest(endR, rh, 1), ...pre], A0 = S0[S0.length - 1], hA = gcBrg(S0[S0.length - 2], A0);
+        // then a steady turn towards a point a few miles back along the track it was flying when we saw it, and along that
+        // track to where it appeared; every corner rounded as it would fly it
+        const J = gcDest(first, norm(dir + 180), clamp(gcDist(A0, first)/3, 1.5, 6));
+        // the way the SID itself turns there (or, not yet at its first fix, the way it turns at that fix)
+        const ll = id => toLL(WP[id].p), side = pre.length ? (n < fx.length ? Math.sign(angDiff(hA, gcBrg(A0, ll(fx[n])))) : 0)
+          : fx.length > 1 ? Math.sign(angDiff(gcBrg(endR, ll(fx[0])), gcBrg(ll(fx[0]), ll(fx[1])))) : 0;
+        const T = gcDist(A0, J) > 1 ? flyTurn(A0, hA, J, clamp(D0/30, 0.3, 0.9), side) : [A0, J];
+        const F = flyPts(lift, rh, S0.slice(1), 0.3), hF = gcBrg(F[Math.max(0, F.length - 2)], A0);
+        // the procedure's own turn first (when it turns back on itself), then a smooth join onto its track from both ends
+        const T2 = side && Math.abs(angDiff(hF, gcBrg(A0, first))) > 110 ? flyTurn(A0, hF, first, 0.3, side).slice(0, -1) : [A0];
+        const P2 = T2[T2.length - 1], h2 = T2.length > 1 ? gcBrg(T2[T2.length - 2], P2) : hF;
+        const L = ptsLeg(smoothPts([...F, ...T2.slice(1), ...meet(P2, h2, first, dir, clamp(gcDist(P2, first)/24, 0.3, 0.9)).slice(1)]));
         o._db = { n0: rec[0][0], pts: legPts(L, 0, L.D, x => Math.min(rec[0][2], x*350)) }; }
       rec = o._db.pts.concat(rec);
     }
@@ -13336,7 +13409,7 @@ if (typeof depHold === 'function') {
 }
 // ── the plan follows the runways: at the start and whenever they change
 S.listeners.push(ev => { if (ev === 'start' || ev === 'rwy' || ev === 'rwyblock' || ev === 'rwyopen') { try { gfPlan(ev !== 'rwy'); } catch (e) { console.error(e); } } });
-// ── drawn with the procedures on, close in: arrows along the one-way taxiways, a dashed bar at each precautionary hold
+// ── drawn with the procedures on, close in: arrows along the one-way taxiways
 function drawGFlow(){
   if (!GFLOW.ready || !S.showProc || V.scale < 260) return;
   const mpx = V.scale/1852;
@@ -13348,11 +13421,8 @@ function drawGFlow(){
     for (let k = 1; k <= n; k++) { const f = k/(n + 1), X = sx(A[0] + (B[0] - A[0])*f), Y = sy(A[1] + (B[1] - A[1])*f), s = Math.max(4, 5*mpx);
       cx.beginPath(); cx.moveTo(X - Math.sin(h - 0.5)*s, Y + Math.cos(h - 0.5)*s); cx.lineTo(X, Y); cx.lineTo(X - Math.sin(h + 0.5)*s, Y + Math.cos(h + 0.5)*s); cx.stroke(); }
   }
-  cx.strokeStyle = C.name === 'dark' ? 'rgba(255,200,90,.85)' : 'rgba(194,112,10,.9)'; cx.lineWidth = Math.max(1.4, 1.6*mpx); cx.setLineDash([Math.max(2, 2*mpx), Math.max(2, 2*mpx)]);
-  for (const E of GFLOW.entries) {
-    const w = 11/1852, px = Math.cos(E.h*D2R)*w, py = -Math.sin(E.h*D2R)*w;
-    cx.beginPath(); cx.moveTo(sx(E.p[0] - px), sy(E.p[1] - py)); cx.lineTo(sx(E.p[0] + px), sy(E.p[1] + py)); cx.stroke();
-  }
+  // (the AI's precautionary hold points are not drawn: they have no published names, so they read as holding points a
+  // controller can't use)
   cx.restore();
 }
 
