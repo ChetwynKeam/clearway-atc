@@ -120,11 +120,65 @@ for (const k of Object.keys(HOLDS)) FIL[k] = buildFil(k, G.fil[k]);
   FIL.X17 = { W: arcFil(m1, o1, u, 'W', R), E: arcFil(m1, o1, u, 'E', R) };
 }
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
+// taxiway L where its spur meets the parallel taxiway: a 7 m dog-leg (k18) and a dead-end stub (n20) tangled the curves, so the spur runs straight in
+if (GN.n19 && GN.k18 && GN.k17 && GN.n20 && GN.k18.adj.length === 2 && GN.n20.adj.length === 1) {
+  const dropE = e => { GE.splice(GE.indexOf(e), 1); for (const id of [e.a, e.b]) GN[id].adj = GN[id].adj.filter(([, x]) => x !== e); };
+  for (const e of GE.filter(e => [e.a, e.b].some(n => n === 'k18' || n === 'n20'))) dropE(e);
+  delete GN.k18; delete GN.n20; ge('k17', 'n19', 'L');
+  // and the second, twin link from the same fork (k4 to k7) that rejoined the parallel taxiway 50 m on, a loop on the chart: n14 reaches n15 through n19
+  const twin = ['k4', 'k5', 'k6', 'k7'];
+  if (twin.every(k => GN[k] && GN[k].adj.length === 2) && !Object.values(HOLDS).some(h => twin.includes(h.node)) && !G.gates.some(g => twin.includes(g[3]))) {
+    for (const e of GE.filter(e => twin.includes(e.a) || twin.includes(e.b))) dropE(e);
+    for (const k of twin) delete GN[k];
+  }
+}
 // stands: Aldergrove's apron stands by the terminal (M) and City's 1 to 10, 21 and 24 (C1... here)
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const p = EN(e, n);
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null, noLead: !line, h0: hdg, line: line ? line.map(([e, n]) => EN(e, n)) : null,
     ...(out ? { out: { node: out[0], pts: out[1].map(([e, n]) => EN(e, n)) } } : {}) }; });
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
+// City's stands nose in at an angle to the terminal, each with its own lead-in off taxiway A (as on the ground): the heading is the
+// terminal face turned a right angle and 28 degrees on, the stand hangs off a new junction on A where its centreline meets it, and the apron
+// lanes the old stands hung off are dropped
+{ const CS = STANDS.filter(t => /^C([1-9]|10)$/.test(t.id)).sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
+  if (CS.length > 3) {
+    const H = (brg(...CS[0].p, ...CS[CS.length - 1].p) + 90 + 28) % 360, u = dirv(H), M = 1/M2NM;
+    const drop = e => { GE.splice(GE.indexOf(e), 1); for (const id of [e.a, e.b]) GN[id].adj = GN[id].adj.filter(([, x]) => x !== e); };
+    for (const t of CS) {
+      let best = null;
+      for (const e of GE) { if (e.tw !== 'A') continue;
+        const a = GN[e.a].p, b = GN[e.b].p, d = [b[0]-a[0], b[1]-a[1]], w = [t.p[0]-a[0], t.p[1]-a[1]], det = u[0]*d[1] - u[1]*d[0];   // t.p = a + d*q + u*r
+        if (Math.abs(det) < 1e-14) continue;
+        const r = (w[0]*d[1] - w[1]*d[0])/det, q = (u[0]*w[1] - u[1]*w[0])/det;
+        if (r > 15*M2NM && r < 220*M2NM && q > 0.02 && q < 0.98 && (!best || r > best.r)) best = { e, q, r, a, b }; }   // the outermost lane: taxiway A itself
+      if (!best) continue;
+      const { e, q, a, b } = best, X = [a[0] + (b[0]-a[0])*q, a[1] + (b[1]-a[1])*q], fid = 'Cf' + t.id, sid = 'Cx' + t.id;
+      const old = { a: e.a, b: e.b, tw: e.tw, bare: e.bare, line: e.line, k: e.k };
+      drop(e);
+      gn(fid, mOf(X), offOf(X)); GN[fid].p = X;
+      for (const [x, y] of [[old.a, fid], [fid, old.b]]) { ge(x, y, old.tw); const ne = GE[GE.length - 1]; if (old.bare) ne.bare = old.bare; if (old.k) ne.k = old.k; }   // no copy of the old edge line: each half would carry the whole detour
+      for (const [v, ev] of GN[t.node].adj.slice()) if (ev.tw === 'APRON') drop(ev);
+      gn(sid, mOf(t.p), offOf(t.p)); GN[sid].p = t.p; ge(fid, sid, 'APRON'); GE[GE.length - 1].bare = true;
+      const br = brg(...a, ...b), fwd = Math.abs(angDiff(br, H)) < 90 ? br : (br + 180) % 360;
+      t.node = sid; t.lp = X; t.hdg = H; t.h0 = H; t.line = null; t.noLead = false; t.tang = dirv(fwd); t.curved = true;
+      // a straight painted lead-in square off the taxiway, with the turn-in curves from each way along A as short dashed lines
+      const T = dirv(fwd), at = (P, d, k) => [P[0] + d[0]*k*M2NM, P[1] + d[1]*k*M2NM];
+      t.lane = fid;
+    }
+    // the apron's inner taxilanes (labelled A in the data) are not painted: the stands lead straight in off A
+    { const f0 = 'CfC' + CS[0].id.slice(1), f1 = 'Cf' + CS[CS.length - 1].id, nodes = (() => { if (!GN[f0] || !GN[f1]) return null; const dd = { [f0]: 0 }, pv = {}, todo = new Set([f0]), done = new Set();
+        while (todo.size) { let u = null; for (const x of todo) if (u === null || dd[x] < dd[u]) u = x; todo.delete(u); if (u === f1) break; done.add(u);
+          for (const [v, ev] of GN[u].adj) { if (done.has(v) || /^R|^CR/.test(v)) continue; const nd = dd[u] + ev.len; if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; pv[v] = u; todo.add(v); } } }
+        if (pv[f1] === undefined) return null; const out = [f1]; while (out[0] !== f0) out.unshift(pv[out[0]]); return out; })();
+      if (nodes) { const main = new Set(); for (let i = 1; i < nodes.length; i++) main.add([nodes[i-1], nodes[i]].sort().join('|'));
+        const c0 = GN[f0].p, near = id => Math.hypot(GN[id].p[0]-c0[0], GN[id].p[1]-c0[1])/M2NM < 450;
+        const holdN = new Set(Object.values(HOLDS).flatMap(h => [h.node]));
+        for (const e of GE) if ((e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b) && !main.has([e.a, e.b].sort().join('|')) && !holdN.has(e.a) && !holdN.has(e.b) && !/^Cx|^Cf/.test(e.a + e.b)) e.bare = true; } }
+    // the lanes that led to the old stands are left as dead ends: take them out (only the apron's own chain and lane nodes)
+    const keep = new Set([...STANDS.map(t => t.node), ...Object.values(HOLDS).flatMap(h => [h.node, h.rwy])]);
+    for (let again = true; again;) { again = false;
+      for (const id of Object.keys(GN)) { if (keep.has(id) || !/^(k\d+|Cn\d+)$/.test(id)) continue;
+        const ad = GN[id].adj; if (ad.length === 1) { drop(ad[0][1]); again = true; } else if (ad.length === 0) continue; } } } }
 { const at = new Map();
   for (const t of STANDS) {
     const u = dirv(t.hdg); let lat = Infinity, near = Infinity;
@@ -157,9 +211,10 @@ const nearHolds = rw => { const R = RWYS_BY_END(rw); return Object.keys(HOLDS).f
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
 // lead-in lines: from the taxilane a stand's line curves onto the stand's own heading and runs straight to the stop bar, as painted
 for (const s of STANDS) {
-  if (s.noLead) continue;
+  if (true) continue;   // (stands are a straight lead-in with dashed turn-in curves: see standDashes)
   const pts = s.line || [s.lp, s.p], P0 = pts[0], Pe = pts[pts.length - 1], u = dirv(s.hdg), M = 1/M2NM;
   let T = null, bd = 90;
+  if (s.tang) { T = s.tang; bd = Math.abs(angDiff(Math.atan2(T[0], T[1])/D2R, s.hdg)); } else
   for (const [v] of waysOn(s.node)) { const d = brg(...P0, ...GN[v].p), a = Math.abs(angDiff(d, s.hdg)); if (a < bd) { bd = a; T = dirv(d); } }
   const Ls = Math.min(32, 0.5*dist(...P0, ...Pe)*M), Q = [Pe[0] - u[0]*Ls*M2NM, Pe[1] - u[1]*Ls*M2NM], D = dist(...P0, ...Q)*M;
   if (!T || bd < 12 || D < 12 || Ls < 8) continue;
@@ -192,7 +247,17 @@ function laneDir(st, face){
   for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
   return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
 }
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
+function pushPath(ac, face){
+  const st = ac.stand, lp = st.lp, ld = laneDir(st, face), end = add(lp, ld, 40*M2NM);
+  // the tail swings round onto the lane: the tug backs it down the stand line, then in an arc onto the lane (not a corner on the lane's edge)
+  const toStand = brg(...lp, ...st.p), dd = dist(...lp, ...st.p)*(1/M2NM);
+  if (Math.abs(angDiff(toStand, ld)) > 25 && dd > 28) {
+    const a = add(lp, toStand, 22*M2NM), b = add(lp, ld, 22*M2NM), arc = [];
+    for (let k = 0; k <= 8; k++) { const t = k/8, u = 1 - t; arc.push([u*u*a[0] + 2*u*t*lp[0] + t*t*b[0], u*u*a[1] + 2*u*t*lp[1] + t*t*b[1]]); }
+    return [...arc, end];
+  }
+  return [lp, end];
+}
 function pushRec(ac){
   const st = ac.stand, h = depHold(ac), to = h && HOLDS[h].node; if (!to) return 'east';
   const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
@@ -326,9 +391,11 @@ function drawBelfast(){
   cx.lineJoin = 'round'; cx.lineCap = 'round';
   if (!IMG) {
     cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
-    cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
-    for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-    cx.lineWidth = lw(44); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
+    // flat ends so the strokes do not leave round scallops out on the grass
+    cx.lineCap = 'butt'; cx.strokeStyle = C.concrete; cx.lineWidth = lw(46);
+    for (const e of GE) { if (e.tw !== 'APRON' || e.bare) continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    cx.lineWidth = lw(58); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
+    cx.lineCap = 'round';
     cx.strokeStyle = C.asphalt;
     cx.lineWidth = lw(23);
     for (const c of smoothTaxiways().pave) { if (c.tw === 'APRON') continue; pathP(c.pts, false); cx.stroke(); }
@@ -357,6 +424,7 @@ function drawBelfast(){
     }
     { const seen = new Set(), leads = [], drawnEnd = new Set();
       for (const k in FIL) { const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0;
+        if (HOLDS[k].on === '1735') continue;   // 17/35 is taxi and crossing only: no line-up lines onto it
         for (const sd of ['W', 'E']) { const f = FIL[k][sd]; if (!f.length) continue; const key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
           // at a runway end the line-up lines only point the way the runway points: a curve that would turn the aircraft back towards the end is left off
           if (HOLDS[k].end) { const inw = HOLDS[k].m < Rr.len/2 ? 1 : -1; if (Math.sign(f[0][0] - f[f.length - 1][0]) !== inw) continue;
@@ -484,7 +552,8 @@ const minsOk = (w, rw) => { const rnp = rw === '07'; return w.vis >= (rnp ? 800 
 const sraMinsOk = w => minsOk(w, '25');
 
 // ═════════════════════════ engine hooks ═════════════════════════
-const termOf = ac => isCity(ac) ? 'C' : 'M';
+// an arrival goes to the apron of the airport it lands at, whoever it is flagged as
+const termOf = ac => ac && ac.kind === 'ARR' && ac.rwyId ? (ac.rwyId === '0422' ? 'C' : 'M') : isCity(ac) ? 'C' : 'M';
 function standAt(ac, t){
   const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
   const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
@@ -494,6 +563,7 @@ const flowText = c => `Aldergrove ${alderRw()} and City ${cityRw()}`;
 const UN = EGAA.UNITS;
 const APT = {
   arrAlt: { ...arrAltOf(STAR_LIST), ...FEED_ALT },
+  apOf: ac => ((ac.kind === 'ARR' && ['04', '22'].includes(ac.app)) || ac.rwyId === '0422' || (!(ac.kind === 'ARR' && ac.app) && isCity(ac))) ? 'EGAC' : 'EGAA',
   icao: 'EGAA', icaoAlt: 'EGAC', name: 'Belfast', coordName: 'Belfast', radarName: 'BFS', utcOff: 0, tz: 'Europe/London',
   radar: [UN.EGAA.app.name, UN.EGAA.app.freq], depRadar: [UN.EGAA.app.name, UN.EGAA.app.freq],
   tower: [UN.EGAA.twr.name, UN.EGAA.twr.freq], gnd: ['Aldergrove Ground', '121.755'],
@@ -552,6 +622,7 @@ const APT = {
   shear(ac, rw, w){ return turbExcess(w) > 4 && Math.random() < 0.2 ? 'windshear on short final' : null; },
   shearWhy: rw => 'windshear on short final',
   faceHold: (st, f) => depHold({ stand: st, leftStand: false, x: st.p[0], y: st.p[1], cs: st.term === 'C' ? 'C' : '' }),
+  pushFaces: ['east', 'west', 'north', 'south'],
   faceWord: f => f,
   faceHdg: (st, f) => norm(laneDir(st, f) + 180),
   taxiHolds: (south, ac) => { const rw = depRw(ac), ks = (endHolds(rw).length ? endHolds(rw) : nearHolds(rw)), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;

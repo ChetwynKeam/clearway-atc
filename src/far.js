@@ -70,6 +70,9 @@ function airwayPts(pts, seed, keepLast){
   }
   return out;
 }
+// how fast an aircraft turns on its way (degrees per NM flown): a steady 25 degrees of bank at its speed, so a slow climbing departure
+// turns tight (about a 2 NM radius at 250 kt) and a cruising one wide (about 6 NM at 450 kt); it rolls into the turn over the first few miles
+const turnRate = (gs, k) => clamp(57.3/(Math.pow(clamp(gs || 250, 180, 480)*0.5144, 2)/(9.81*0.466)/1852), 7, 30)*Math.min(1, 0.3 + 0.35*k);
 function smoothPts(pts, keepLast){
   // each corner rounded off: a curve from a point before the turning point to one after it (never more than about a third
   // of either leg), so the heading changes gradually through the turn
@@ -101,8 +104,8 @@ function legAt(L, d){
 function addArrGhost(f){
   if (!AP[f.o] || !(f.m > 0)) return;
   const tEnd = f.m*60 - PRE_LEAD; if (tEnd <= 0) return;
-  const e = ENTRY[f.gate], L0 = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L0, (e[1] - RADAR_REF[1])/L0];
-  const endLL = toLL([e[0] + u[0]*PRE_NM, e[1] + u[1]*PRE_NM]);
+  const e = ENTRY[f.gate], { u, nm: preNM } = preVec(f);
+  const endLL = toLL([e[0] + u[0]*preNM, e[1] + u[1]*preNM]);
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
   // it joins the entry point flying in along the same line the pending track then follows, with no turn at the handover
   const join = gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
@@ -123,8 +126,8 @@ function addDepGhost(ac, at){
   // it turns from the heading it left with onto its way to the destination as an aircraft does: 15 degrees each 6 NM
   // (a steady turn), then the airway route on from there
   const lead = [];
-  if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150) { let p = p0, h = ac.hdg;
-    for (let k = 0; k < 40; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); lead.push(p); } }
+  if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150) { let p = p0, h = ac.trk ?? ac.hdg;
+    for (let k = 0; k < 90; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(ac.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); lead.push(p); } }
   // the turn off its heading and the airway route on from there, smoothed as one so the join is not a corner
   const leg = makeLeg(smoothPts([p0, ...lead.slice(0, -1), ...airwayPts([lead.length ? lead[lead.length - 1] : p0, ...via, AP[ac.d].slice(0, 2)], ac.cs + ac.d, false)])), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
@@ -169,7 +172,7 @@ function wayOn(o, dest, seed){
       pts.length = 0; pts.push(...flyPts(toLL(R.rm(R.len*0.5, 0)), rh, [endR, gcDest(endR, rh, 1), ...fx.map(id => toLL(WP[id].p))], 0.3));
       p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
       if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-      for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
+      for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
       const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
       return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
     }
@@ -182,7 +185,7 @@ function wayOn(o, dest, seed){
     else { pts.push(q); h = gcBrg(p, q); }
     p = q; }
   if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-  for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
+  for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
   return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
 }
@@ -192,7 +195,13 @@ function wayIn(o, from, end, dir){
   const O = from, D = gcDist(O, end);
   const via = (VIA[o.o] || []).filter(p => !nearGib(p) && gcDist(p, end) > 40 && gcDist(p, O) > 30).slice().reverse();
   // a short hop: worked back from where we saw it, a steady turn round towards its origin, so it meets its track in line
-  if (D < 70) return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
+  if (D < 70) {
+    // lined up with where it came from: a steady turn onto its track. Well off that line (it is flying across the way in from its origin) the
+    // route goes straight to a point just back along its track, not out and round to come back on it
+    const a0 = Math.abs(angDiff(dir, gcBrg(O, end)));
+    if (a0 > 20) return makeLeg(smoothPts([O, gcDest(end, dir + 180, Math.min(6, D/6)), end]));
+    return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
+  }
   // the airway route to a point well back along the line it was flying, then a steady turn to intercept that line
   // (only a long way back when the track it was flying points along the way in from its origin: a vector or downwind leg
   // close in says nothing about the route it flew to get there)

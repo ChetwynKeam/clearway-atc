@@ -241,7 +241,7 @@ function pushDir(ac, tok){
   if (!APT.faceHdg || !ac.stand) return named;
   const H = { N: 0, NORTH: 0, NE: 45, E: 90, EAST: 90, SE: 135, S: 180, SOUTH: 180, SW: 225, W: 270, WEST: 270, NW: 315 }[tok];
   if (H == null) return undefined;
-  return ['east', 'west'].sort((a, b) => Math.abs(angDiff(APT.faceHdg(ac.stand, a), H)) - Math.abs(angDiff(APT.faceHdg(ac.stand, b), H)))[0];
+  return (APT.pushFaces || ['east', 'west']).slice().sort((a, b) => Math.abs(angDiff(APT.faceHdg(ac.stand, a), H)) - Math.abs(angDiff(APT.faceHdg(ac.stand, b), H)))[0];
 }
 const PH = Object.assign({
   altim: () => `QNH ${S.wx.qnh}`,
@@ -359,14 +359,25 @@ class Aircraft {
 // arrivals show on radar about 35 NM beyond the boundary as pending tracks (not on frequency, no control) and call
 // Gibraltar Radar when they reach the entry point inside the radar rings
 const PRE_NM = 35, PRE_LEAD = 6.5*60;
+// where a pending arrival waits beyond its entry point: along the entry's own bearing, unless its origin is close in (Glasgow for Belfast), when it
+// sits just short of that airport on the line to it, so it is never spawned beyond where it came from and made to double back
+function preVec(f){
+  const e = ENTRY[f.gate], L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L];
+  const A = typeof AP !== 'undefined' && f.o && AP[f.o]; if (!A || typeof llxy !== 'function') return { u, nm: PRE_NM };
+  const o = llxy(A[0], A[1]), od = Math.hypot(o[0] - RADAR_REF[0], o[1] - RADAR_REF[1]);
+  if (od > L + PRE_NM + 30 || od < 5) return { u, nm: PRE_NM };
+  const u2 = [(o[0] - RADAR_REF[0])/od, (o[1] - RADAR_REF[1])/od];
+  if (Math.abs(angDiff(brg(0, 0, ...u), brg(0, 0, ...u2))) > 70) return { u, nm: PRE_NM };
+  return { u: u2, nm: clamp(od - L - 4, 6, PRE_NM) };
+}
 const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + tzOffH(S.start + S.t*1000)) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
   const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][arrKey(f)][0]];
   const left = f.m*60 - S.t;
   if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
-    const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
-    ac.x = e[0] + u[0]*PRE_NM*frac; ac.y = e[1] + u[1]*PRE_NM*frac;
+    const { u, nm } = preVec(f), frac = clamp(left/PRE_LEAD, 0, 1);
+    ac.x = e[0] + u[0]*nm*frac; ac.y = e[1] + u[1]*nm*frac;
     // another pending track on top of it (the same minute, or two flows sharing the entry point): in trail, 8 NM behind
     for (let k = 0; k < 6 && S.acs.some(o => o.state === 'PRE' && Math.hypot(o.x - ac.x, o.y - ac.y) < 5); k++) { ac.x += u[0]*8; ac.y += u[1]*8; }
     ac.alt = ENTRY_ALT[f.gate] + (PRE_ALT[f.gate] - ENTRY_ALT[f.gate])*frac; ac.ias = 300; ac.gs = 330;
@@ -1127,7 +1138,15 @@ function taxiIn(ac, st, via, hold){
   // no taxiways named: over the runway crossing that suits the traffic, not always the shortest way
   const r = via && via.length ? rt(viaPen(via)) : xBest(ac, rt); if (!r) return null; xNote(ac, r);
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
-  const pts = r.nodes.map(id => GN[id].p);
+  let pts = r.nodes.map(id => GN[id].p);
+  // a stand lane that leaves the taxiway at a sharp angle (the herringbone stands): the corner is swept round as one curve, not a V
+  if (!hold) for (let i = r.nodes.length - 2; i > 0; i--) if (/^Cf/.test(r.nodes[i])) {
+    const A = pts[i - 1], C = pts[i], B = pts[i + 1], M = 1/M2NM, la = dist(...A, ...C)*M, lb = dist(...C, ...B)*M;
+    if (Math.abs(angDiff(brg(...A, ...C), brg(...C, ...B))) < 50 || la < 12 || lb < 12) break;
+    const k = Math.min(30, la*0.8, lb*0.8), P0 = [C[0] + (A[0] - C[0])*k/la, C[1] + (A[1] - C[1])*k/la], P2 = [C[0] + (B[0] - C[0])*k/lb, C[1] + (B[1] - C[1])*k/lb], arc = [];
+    for (let j = 0; j <= 8; j++) { const t = j/8, u = 1 - t; arc.push([u*u*P0[0] + 2*u*t*C[0] + t*t*P2[0], u*u*P0[1] + 2*u*t*C[1] + t*t*P2[1]]); }
+    pts = [...pts.slice(0, i), ...arc, ...pts.slice(i + 1)]; break;
+  }
   if (rolling) pts.splice(0, 1, ...ac.path.pts.filter(p => !p.ext));
   else if (pts.length > 1 && (dist(ac.x, ac.y, ...pts[0]) < 0.01 || (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90))) pts.shift();   // already there, or passed it
   ac.taxiIn = true; ac.need = null; ac.held = false; ac.holdAt = null; ac.taxiVia = viaOf(r.tws, ac.exit);

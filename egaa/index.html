@@ -5170,11 +5170,65 @@ for (const k of Object.keys(HOLDS)) FIL[k] = buildFil(k, G.fil[k]);
   FIL.X17 = { W: arcFil(m1, o1, u, 'W', R), E: arcFil(m1, o1, u, 'E', R) };
 }
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
+// taxiway L where its spur meets the parallel taxiway: a 7 m dog-leg (k18) and a dead-end stub (n20) tangled the curves, so the spur runs straight in
+if (GN.n19 && GN.k18 && GN.k17 && GN.n20 && GN.k18.adj.length === 2 && GN.n20.adj.length === 1) {
+  const dropE = e => { GE.splice(GE.indexOf(e), 1); for (const id of [e.a, e.b]) GN[id].adj = GN[id].adj.filter(([, x]) => x !== e); };
+  for (const e of GE.filter(e => [e.a, e.b].some(n => n === 'k18' || n === 'n20'))) dropE(e);
+  delete GN.k18; delete GN.n20; ge('k17', 'n19', 'L');
+  // and the second, twin link from the same fork (k4 to k7) that rejoined the parallel taxiway 50 m on, a loop on the chart: n14 reaches n15 through n19
+  const twin = ['k4', 'k5', 'k6', 'k7'];
+  if (twin.every(k => GN[k] && GN[k].adj.length === 2) && !Object.values(HOLDS).some(h => twin.includes(h.node)) && !G.gates.some(g => twin.includes(g[3]))) {
+    for (const e of GE.filter(e => twin.includes(e.a) || twin.includes(e.b))) dropE(e);
+    for (const k of twin) delete GN[k];
+  }
+}
 // stands: Aldergrove's apron stands by the terminal (M) and City's 1 to 10, 21 and 24 (C1... here)
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const p = EN(e, n);
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null, noLead: !line, h0: hdg, line: line ? line.map(([e, n]) => EN(e, n)) : null,
     ...(out ? { out: { node: out[0], pts: out[1].map(([e, n]) => EN(e, n)) } } : {}) }; });
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
+// City's stands nose in at an angle to the terminal, each with its own lead-in off taxiway A (as on the ground): the heading is the
+// terminal face turned a right angle and 28 degrees on, the stand hangs off a new junction on A where its centreline meets it, and the apron
+// lanes the old stands hung off are dropped
+{ const CS = STANDS.filter(t => /^C([1-9]|10)$/.test(t.id)).sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
+  if (CS.length > 3) {
+    const H = (brg(...CS[0].p, ...CS[CS.length - 1].p) + 90 + 28) % 360, u = dirv(H), M = 1/M2NM;
+    const drop = e => { GE.splice(GE.indexOf(e), 1); for (const id of [e.a, e.b]) GN[id].adj = GN[id].adj.filter(([, x]) => x !== e); };
+    for (const t of CS) {
+      let best = null;
+      for (const e of GE) { if (e.tw !== 'A') continue;
+        const a = GN[e.a].p, b = GN[e.b].p, d = [b[0]-a[0], b[1]-a[1]], w = [t.p[0]-a[0], t.p[1]-a[1]], det = u[0]*d[1] - u[1]*d[0];   // t.p = a + d*q + u*r
+        if (Math.abs(det) < 1e-14) continue;
+        const r = (w[0]*d[1] - w[1]*d[0])/det, q = (u[0]*w[1] - u[1]*w[0])/det;
+        if (r > 15*M2NM && r < 220*M2NM && q > 0.02 && q < 0.98 && (!best || r > best.r)) best = { e, q, r, a, b }; }   // the outermost lane: taxiway A itself
+      if (!best) continue;
+      const { e, q, a, b } = best, X = [a[0] + (b[0]-a[0])*q, a[1] + (b[1]-a[1])*q], fid = 'Cf' + t.id, sid = 'Cx' + t.id;
+      const old = { a: e.a, b: e.b, tw: e.tw, bare: e.bare, line: e.line, k: e.k };
+      drop(e);
+      gn(fid, mOf(X), offOf(X)); GN[fid].p = X;
+      for (const [x, y] of [[old.a, fid], [fid, old.b]]) { ge(x, y, old.tw); const ne = GE[GE.length - 1]; if (old.bare) ne.bare = old.bare; if (old.k) ne.k = old.k; }   // no copy of the old edge line: each half would carry the whole detour
+      for (const [v, ev] of GN[t.node].adj.slice()) if (ev.tw === 'APRON') drop(ev);
+      gn(sid, mOf(t.p), offOf(t.p)); GN[sid].p = t.p; ge(fid, sid, 'APRON'); GE[GE.length - 1].bare = true;
+      const br = brg(...a, ...b), fwd = Math.abs(angDiff(br, H)) < 90 ? br : (br + 180) % 360;
+      t.node = sid; t.lp = X; t.hdg = H; t.h0 = H; t.line = null; t.noLead = false; t.tang = dirv(fwd); t.curved = true;
+      // a straight painted lead-in square off the taxiway, with the turn-in curves from each way along A as short dashed lines
+      const T = dirv(fwd), at = (P, d, k) => [P[0] + d[0]*k*M2NM, P[1] + d[1]*k*M2NM];
+      t.lane = fid;
+    }
+    // the apron's inner taxilanes (labelled A in the data) are not painted: the stands lead straight in off A
+    { const f0 = 'CfC' + CS[0].id.slice(1), f1 = 'Cf' + CS[CS.length - 1].id, nodes = (() => { if (!GN[f0] || !GN[f1]) return null; const dd = { [f0]: 0 }, pv = {}, todo = new Set([f0]), done = new Set();
+        while (todo.size) { let u = null; for (const x of todo) if (u === null || dd[x] < dd[u]) u = x; todo.delete(u); if (u === f1) break; done.add(u);
+          for (const [v, ev] of GN[u].adj) { if (done.has(v) || /^R|^CR/.test(v)) continue; const nd = dd[u] + ev.len; if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; pv[v] = u; todo.add(v); } } }
+        if (pv[f1] === undefined) return null; const out = [f1]; while (out[0] !== f0) out.unshift(pv[out[0]]); return out; })();
+      if (nodes) { const main = new Set(); for (let i = 1; i < nodes.length; i++) main.add([nodes[i-1], nodes[i]].sort().join('|'));
+        const c0 = GN[f0].p, near = id => Math.hypot(GN[id].p[0]-c0[0], GN[id].p[1]-c0[1])/M2NM < 450;
+        const holdN = new Set(Object.values(HOLDS).flatMap(h => [h.node]));
+        for (const e of GE) if ((e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b) && !main.has([e.a, e.b].sort().join('|')) && !holdN.has(e.a) && !holdN.has(e.b) && !/^Cx|^Cf/.test(e.a + e.b)) e.bare = true; } }
+    // the lanes that led to the old stands are left as dead ends: take them out (only the apron's own chain and lane nodes)
+    const keep = new Set([...STANDS.map(t => t.node), ...Object.values(HOLDS).flatMap(h => [h.node, h.rwy])]);
+    for (let again = true; again;) { again = false;
+      for (const id of Object.keys(GN)) { if (keep.has(id) || !/^(k\d+|Cn\d+)$/.test(id)) continue;
+        const ad = GN[id].adj; if (ad.length === 1) { drop(ad[0][1]); again = true; } else if (ad.length === 0) continue; } } } }
 { const at = new Map();
   for (const t of STANDS) {
     const u = dirv(t.hdg); let lat = Infinity, near = Infinity;
@@ -5207,9 +5261,10 @@ const nearHolds = rw => { const R = RWYS_BY_END(rw); return Object.keys(HOLDS).f
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
 // lead-in lines: from the taxilane a stand's line curves onto the stand's own heading and runs straight to the stop bar, as painted
 for (const s of STANDS) {
-  if (s.noLead) continue;
+  if (true) continue;   // (stands are a straight lead-in with dashed turn-in curves: see standDashes)
   const pts = s.line || [s.lp, s.p], P0 = pts[0], Pe = pts[pts.length - 1], u = dirv(s.hdg), M = 1/M2NM;
   let T = null, bd = 90;
+  if (s.tang) { T = s.tang; bd = Math.abs(angDiff(Math.atan2(T[0], T[1])/D2R, s.hdg)); } else
   for (const [v] of waysOn(s.node)) { const d = brg(...P0, ...GN[v].p), a = Math.abs(angDiff(d, s.hdg)); if (a < bd) { bd = a; T = dirv(d); } }
   const Ls = Math.min(32, 0.5*dist(...P0, ...Pe)*M), Q = [Pe[0] - u[0]*Ls*M2NM, Pe[1] - u[1]*Ls*M2NM], D = dist(...P0, ...Q)*M;
   if (!T || bd < 12 || D < 12 || Ls < 8) continue;
@@ -5242,7 +5297,17 @@ function laneDir(st, face){
   for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
   return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
 }
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
+function pushPath(ac, face){
+  const st = ac.stand, lp = st.lp, ld = laneDir(st, face), end = add(lp, ld, 40*M2NM);
+  // the tail swings round onto the lane: the tug backs it down the stand line, then in an arc onto the lane (not a corner on the lane's edge)
+  const toStand = brg(...lp, ...st.p), dd = dist(...lp, ...st.p)*(1/M2NM);
+  if (Math.abs(angDiff(toStand, ld)) > 25 && dd > 28) {
+    const a = add(lp, toStand, 22*M2NM), b = add(lp, ld, 22*M2NM), arc = [];
+    for (let k = 0; k <= 8; k++) { const t = k/8, u = 1 - t; arc.push([u*u*a[0] + 2*u*t*lp[0] + t*t*b[0], u*u*a[1] + 2*u*t*lp[1] + t*t*b[1]]); }
+    return [...arc, end];
+  }
+  return [lp, end];
+}
 function pushRec(ac){
   const st = ac.stand, h = depHold(ac), to = h && HOLDS[h].node; if (!to) return 'east';
   const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
@@ -5376,9 +5441,11 @@ function drawBelfast(){
   cx.lineJoin = 'round'; cx.lineCap = 'round';
   if (!IMG) {
     cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
-    cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
-    for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-    cx.lineWidth = lw(44); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
+    // flat ends so the strokes do not leave round scallops out on the grass
+    cx.lineCap = 'butt'; cx.strokeStyle = C.concrete; cx.lineWidth = lw(46);
+    for (const e of GE) { if (e.tw !== 'APRON' || e.bare) continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    cx.lineWidth = lw(58); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
+    cx.lineCap = 'round';
     cx.strokeStyle = C.asphalt;
     cx.lineWidth = lw(23);
     for (const c of smoothTaxiways().pave) { if (c.tw === 'APRON') continue; pathP(c.pts, false); cx.stroke(); }
@@ -5407,6 +5474,7 @@ function drawBelfast(){
     }
     { const seen = new Set(), leads = [], drawnEnd = new Set();
       for (const k in FIL) { const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0;
+        if (HOLDS[k].on === '1735') continue;   // 17/35 is taxi and crossing only: no line-up lines onto it
         for (const sd of ['W', 'E']) { const f = FIL[k][sd]; if (!f.length) continue; const key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
           // at a runway end the line-up lines only point the way the runway points: a curve that would turn the aircraft back towards the end is left off
           if (HOLDS[k].end) { const inw = HOLDS[k].m < Rr.len/2 ? 1 : -1; if (Math.sign(f[0][0] - f[f.length - 1][0]) !== inw) continue;
@@ -5534,7 +5602,8 @@ const minsOk = (w, rw) => { const rnp = rw === '07'; return w.vis >= (rnp ? 800 
 const sraMinsOk = w => minsOk(w, '25');
 
 // ═════════════════════════ engine hooks ═════════════════════════
-const termOf = ac => isCity(ac) ? 'C' : 'M';
+// an arrival goes to the apron of the airport it lands at, whoever it is flagged as
+const termOf = ac => ac && ac.kind === 'ARR' && ac.rwyId ? (ac.rwyId === '0422' ? 'C' : 'M') : isCity(ac) ? 'C' : 'M';
 function standAt(ac, t){
   const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
   const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
@@ -5544,6 +5613,7 @@ const flowText = c => `Aldergrove ${alderRw()} and City ${cityRw()}`;
 const UN = EGAA.UNITS;
 const APT = {
   arrAlt: { ...arrAltOf(STAR_LIST), ...FEED_ALT },
+  apOf: ac => ((ac.kind === 'ARR' && ['04', '22'].includes(ac.app)) || ac.rwyId === '0422' || (!(ac.kind === 'ARR' && ac.app) && isCity(ac))) ? 'EGAC' : 'EGAA',
   icao: 'EGAA', icaoAlt: 'EGAC', name: 'Belfast', coordName: 'Belfast', radarName: 'BFS', utcOff: 0, tz: 'Europe/London',
   radar: [UN.EGAA.app.name, UN.EGAA.app.freq], depRadar: [UN.EGAA.app.name, UN.EGAA.app.freq],
   tower: [UN.EGAA.twr.name, UN.EGAA.twr.freq], gnd: ['Aldergrove Ground', '121.755'],
@@ -5602,6 +5672,7 @@ const APT = {
   shear(ac, rw, w){ return turbExcess(w) > 4 && Math.random() < 0.2 ? 'windshear on short final' : null; },
   shearWhy: rw => 'windshear on short final',
   faceHold: (st, f) => depHold({ stand: st, leftStand: false, x: st.p[0], y: st.p[1], cs: st.term === 'C' ? 'C' : '' }),
+  pushFaces: ['east', 'west', 'north', 'south'],
   faceWord: f => f,
   faceHdg: (st, f) => norm(laneDir(st, f) + 180),
   taxiHolds: (south, ac) => { const rw = depRw(ac), ks = (endHolds(rw).length ? endHolds(rw) : nearHolds(rw)), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
@@ -5925,7 +5996,7 @@ function pushDir(ac, tok){
   if (!APT.faceHdg || !ac.stand) return named;
   const H = { N: 0, NORTH: 0, NE: 45, E: 90, EAST: 90, SE: 135, S: 180, SOUTH: 180, SW: 225, W: 270, WEST: 270, NW: 315 }[tok];
   if (H == null) return undefined;
-  return ['east', 'west'].sort((a, b) => Math.abs(angDiff(APT.faceHdg(ac.stand, a), H)) - Math.abs(angDiff(APT.faceHdg(ac.stand, b), H)))[0];
+  return (APT.pushFaces || ['east', 'west']).slice().sort((a, b) => Math.abs(angDiff(APT.faceHdg(ac.stand, a), H)) - Math.abs(angDiff(APT.faceHdg(ac.stand, b), H)))[0];
 }
 const PH = Object.assign({
   altim: () => `QNH ${S.wx.qnh}`,
@@ -6043,14 +6114,25 @@ class Aircraft {
 // arrivals show on radar about 35 NM beyond the boundary as pending tracks (not on frequency, no control) and call
 // Gibraltar Radar when they reach the entry point inside the radar rings
 const PRE_NM = 35, PRE_LEAD = 6.5*60;
+// where a pending arrival waits beyond its entry point: along the entry's own bearing, unless its origin is close in (Glasgow for Belfast), when it
+// sits just short of that airport on the line to it, so it is never spawned beyond where it came from and made to double back
+function preVec(f){
+  const e = ENTRY[f.gate], L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L];
+  const A = typeof AP !== 'undefined' && f.o && AP[f.o]; if (!A || typeof llxy !== 'function') return { u, nm: PRE_NM };
+  const o = llxy(A[0], A[1]), od = Math.hypot(o[0] - RADAR_REF[0], o[1] - RADAR_REF[1]);
+  if (od > L + PRE_NM + 30 || od < 5) return { u, nm: PRE_NM };
+  const u2 = [(o[0] - RADAR_REF[0])/od, (o[1] - RADAR_REF[1])/od];
+  if (Math.abs(angDiff(brg(0, 0, ...u), brg(0, 0, ...u2))) > 70) return { u, nm: PRE_NM };
+  return { u: u2, nm: clamp(od - L - 4, 6, PRE_NM) };
+}
 const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + tzOffH(S.start + S.t*1000)) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
   const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][arrKey(f)][0]];
   const left = f.m*60 - S.t;
   if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
-    const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
-    ac.x = e[0] + u[0]*PRE_NM*frac; ac.y = e[1] + u[1]*PRE_NM*frac;
+    const { u, nm } = preVec(f), frac = clamp(left/PRE_LEAD, 0, 1);
+    ac.x = e[0] + u[0]*nm*frac; ac.y = e[1] + u[1]*nm*frac;
     // another pending track on top of it (the same minute, or two flows sharing the entry point): in trail, 8 NM behind
     for (let k = 0; k < 6 && S.acs.some(o => o.state === 'PRE' && Math.hypot(o.x - ac.x, o.y - ac.y) < 5); k++) { ac.x += u[0]*8; ac.y += u[1]*8; }
     ac.alt = ENTRY_ALT[f.gate] + (PRE_ALT[f.gate] - ENTRY_ALT[f.gate])*frac; ac.ias = 300; ac.gs = 330;
@@ -6811,7 +6893,15 @@ function taxiIn(ac, st, via, hold){
   // no taxiways named: over the runway crossing that suits the traffic, not always the shortest way
   const r = via && via.length ? rt(viaPen(via)) : xBest(ac, rt); if (!r) return null; xNote(ac, r);
   if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
-  const pts = r.nodes.map(id => GN[id].p);
+  let pts = r.nodes.map(id => GN[id].p);
+  // a stand lane that leaves the taxiway at a sharp angle (the herringbone stands): the corner is swept round as one curve, not a V
+  if (!hold) for (let i = r.nodes.length - 2; i > 0; i--) if (/^Cf/.test(r.nodes[i])) {
+    const A = pts[i - 1], C = pts[i], B = pts[i + 1], M = 1/M2NM, la = dist(...A, ...C)*M, lb = dist(...C, ...B)*M;
+    if (Math.abs(angDiff(brg(...A, ...C), brg(...C, ...B))) < 50 || la < 12 || lb < 12) break;
+    const k = Math.min(30, la*0.8, lb*0.8), P0 = [C[0] + (A[0] - C[0])*k/la, C[1] + (A[1] - C[1])*k/la], P2 = [C[0] + (B[0] - C[0])*k/lb, C[1] + (B[1] - C[1])*k/lb], arc = [];
+    for (let j = 0; j <= 8; j++) { const t = j/8, u = 1 - t; arc.push([u*u*P0[0] + 2*u*t*C[0] + t*t*P2[0], u*u*P0[1] + 2*u*t*C[1] + t*t*P2[1]]); }
+    pts = [...pts.slice(0, i), ...arc, ...pts.slice(i + 1)]; break;
+  }
   if (rolling) pts.splice(0, 1, ...ac.path.pts.filter(p => !p.ext));
   else if (pts.length > 1 && (dist(ac.x, ac.y, ...pts[0]) < 0.01 || (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[0]))) > 90 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, ...pts[1]))) < 90))) pts.shift();   // already there, or passed it
   ac.taxiIn = true; ac.need = null; ac.held = false; ac.holdAt = null; ac.taxiVia = viaOf(r.tws, ac.exit);
@@ -8697,8 +8787,8 @@ function renderSel(){
   const ac = S.sel, el = $('sel');
   el.classList.toggle('empty', !ac || !S.acs.includes(ac));
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
-  const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → ${APT.icao}` : `${APT.icao} → ${ac.d}`;
-  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><span class="selnav"><button data-nav="-1" aria-label="Previous flight">‹</button><button data-nav="1" aria-label="Next flight">›</button></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
+  const air = ac.airborne, ap = APT.apOf ? APT.apOf(ac) : APT.icao, route = ac.kind === 'ARR' ? `${ac.o} → ${ap}` : `${ap} → ${ac.d}`;
+  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span>${APT.apOf ? `<span class="chip">${ap}</span>` : ''}<span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><span class="selnav"><button data-nav="-1" aria-label="Previous flight">‹</button><button data-nav="1" aria-label="Next flight">›</button></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline${aiOwns(ac) ? ' ai' : ''}">◆ ${esc(ac.need)}</div>`;
@@ -9044,7 +9134,7 @@ function makeStrip(ac, doc = document){
   d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
   d.querySelector('.cs').textContent = ac.cs;
   d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
-  d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
+  d.querySelector('.rte').textContent = (a => ac.kind === 'ARR' ? `${ac.o} › ${a}` : `${a} › ${ac.d}`)(APT.apOf ? APT.apOf(ac) : APT.icao);
   d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? (ac.stand.area === 'hangar' ? 'Hangar ' : 'Stand ')+ac.stand.id : towOn(ac) ? 'Tow › '+(ac.path && ac.towTgt ? ac.towTgt : ac.tow.to.id) : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
   // arrivals show the stand they are going to, once it is planned
   if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
@@ -10041,6 +10131,22 @@ function drawApronSlabs(path){
   cx.fillStyle = pat; for (const a of AD.aprons) { path(a); cx.fill(); }
 }
 
+// the dashed turn-in curves of a stand: from a point on the lane each way, through the lead-in's start, to a point on the lead-in
+function standDashes(t){
+  if (t.noLead || !t.lp || !GN[t.node]) return null;
+  const L0 = t.lp, M = 1/M2NM, at = (P, b, k) => [P[0] + Math.sin(b*D2R)*k*M2NM, P[1] + Math.cos(b*D2R)*k*M2NM];
+  const pts = t.line && t.line.length > 1 ? t.line : [L0, t.p];
+  if (dist(...L0, ...t.p)*M < 14) return null;
+  let q = pts[pts.length - 1]; for (const c of pts.slice(1)) if (dist(...L0, ...c)*M > 8) { q = c; break; }
+  const lane = GN[t.lane || t.node], ways = waysOn(t.lane || t.node);
+  if (ways.length !== 2 || STANDS.some(o => o !== t && o.lp && dist(...o.lp, ...L0)*M < 6)) return null;   // only where the lead-in leaves a plain lane on its own, not at a junction or a shared spur end
+  const lead = brg(...L0, ...q), out = [], seen = [];
+  for (const [v] of ways) { const w = GN[v].p; if (dist(...L0, ...w)*M < 3) continue;
+    const b = brg(...L0, ...w), a = Math.abs(angDiff(b, lead)); if (a < 25 || a > 155 || seen.some(x => Math.abs(angDiff(x, b)) < 20)) continue;
+    seen.push(b); out.push([at(L0, b, Math.min(15, dist(...L0, ...w)*M*0.9)), L0, at(L0, lead, 10)]); }
+  return out.length ? out : null;
+}
+
 // ── stands: lead-in, stop bar, safety box, number box; service road ──
 function drawStandDetail(c, path, mpx, box = true){
   const sc = V.scale;
@@ -10050,6 +10156,14 @@ function drawStandDetail(c, path, mpx, box = true){
   for (const o of [120, 130]) { path([[1108, o], [1313, o]], false); cx.stroke(); }
   cx.setLineDash([3*mpx, 3*mpx]); path([[1108, 125], [1313, 125]], false); cx.stroke(); cx.setLineDash([]);
   if (sc > 350) { cx.font = `600 ${Math.max(8, 2.6*mpx)}px ${FONT_L}`; cx.fillStyle = C.gWhite; cx.textAlign = 'center'; const q = c(1270, 125); cx.save(); cx.translate(...q); cx.rotate(RWY_ANGLE()*Math.PI/180); cx.fillText('SERVICE ROAD', 0, Math.max(3, 0.9*mpx)); cx.restore(); cx.textAlign = 'left'; }
+  }
+  // the turn-in curves off the taxilane into each stand: short dashed lines that start on the lane's own centreline
+  if (sc > 120) {
+    for (const t of STANDS) if (t.dash === undefined) t.dash = standDashes(t);
+    groundLines(Math.max(1, 0.3*mpx), () => { cx.setLineDash([2.5*mpx, 2*mpx]);
+      for (const t of STANDS) if (t.dash) for (const [a, k, b] of t.dash) { cx.beginPath(); for (let i = 0; i <= 10; i++) { const u = i/10, w = 1 - u;
+        cx[i ? 'lineTo' : 'moveTo'](sx(w*w*a[0] + 2*w*u*k[0] + u*u*b[0]), sy(w*w*a[1] + 2*w*u*k[1] + u*u*b[1])); } cx.stroke(); }
+      cx.setLineDash([]); });
   }
   for (const s of STANDS) {
     const sz = standSize(s), h = s.hdg*D2R, P = [sx(s.p[0]), sy(s.p[1])];
@@ -10149,7 +10263,7 @@ function vgBuild(){
   VD.nodes.forEach((q, i) => vgAdd('r:' + i, VP(q), true));
   for (const [a, b] of VD.edges) vgLink('r:' + a, 'r:' + b, 'r');
   // the taxiways (never the runway itself): a vehicle drives along their edge where the roads don't reach
-  for (const id in GN) if (id[0] !== 'R') vgAdd('t:' + id, GN[id].p, false);
+  for (const id in GN) if (id[0] !== 'R' && GN[id].adj.length) vgAdd('t:' + id, GN[id].p, false);   // (a node left with no taxiway is not somewhere to drive)
   for (const e of GE) if (VG['t:' + e.a] && VG['t:' + e.b] && !crossesRwy(GN[e.a].p, GN[e.b].p)) vgLink('t:' + e.a, 't:' + e.b, 't');
   // across a runway where a taxiway crosses it: from the taxiway node one side, over the runway's own nodes, to the
   // taxiway node the other side (only ever driven with the tower's clearance)
@@ -10352,8 +10466,12 @@ function vehBases(){
   const terms = baseNodes(VD.terms);
   // no terminal faces in the map: the road nodes nearest the middle of the contact stands
   if (!terms.length && STANDS.length) {
-    const c = STANDS.filter(s => s.area === 'civil'), L = c.length ? c : STANDS, m = L.reduce((a, s) => [a[0] + s.p[0]/L.length, a[1] + s.p[1]/L.length], [0, 0]);
-    const n = vgNear(m, 800, N => N.road) || vgNear(m, 800); if (n) terms.push(n);
+    const c = STANDS.filter(s => s.area === 'civil'), A = c.length ? c : STANDS;
+    // one base per terminal where an airport has two (Belfast: Aldergrove and City), not one between them
+    for (const t of [...new Set(A.map(s => s.term || ''))]) {
+      const L = A.filter(s => (s.term || '') === t), m = L.reduce((a, s) => [a[0] + s.p[0]/L.length, a[1] + s.p[1]/L.length], [0, 0]);
+      const n = vgNear(m, 800, N => N.road) || vgNear(m, 800); if (n && !terms.includes(n)) terms.push(n);
+    }
   }
   VBASE.hand = terms;
   VBASE.fire = baseNodes(VD.fire); VBASE.fuel = baseNodes(VD.fuel); VBASE.cater = baseNodes(VD.catering); VBASE.maint = baseNodes(VD.hangars);
@@ -10820,7 +10938,7 @@ function rcEntry(R, from){
 // OPS1 out to the runway: rw (an end designator), why (log text), auto (the runway is closed: no clearance needed)
 function opsCheck(rw, why, auto){
   if (S.rc) { if (auto) S.rc.auto = true; return S.rc; }
-  const R = rwyOf(rw || S.rwy), base = baseFor('ops', [0, 0]); if (!base) return null;
+  const R = rwyOf(rw || S.rwy), base = baseFor('ops', R.rm(rLen(R)/2, 0)); if (!base) return null;
   const hp = rcEntry(R, base); if (!hp) return null;
   const v = newVeh('ops', VG[base].p, 0, { cs: 'OPS1' });
   const r = vroute(base, 't:' + HOLDS[hp].node, true);
@@ -10934,7 +11052,13 @@ function stepRadio(){
   const C = S.rc;
   if (S.rtow && S.running) {   // not in the Academy exercises
     if (S.rcNext == null) S.rcNext = S.t + rnd(12, 30)*60;
-    if (!C && S.t >= S.rcNext) { S.rcNext = S.t + rnd(70, 130)*60; if (!rwyBlocked(S.rwy)) opsCheck(S.rwy, 'routine runway inspection'); }
+    if (!C && S.t >= S.rcNext) {
+      S.rcNext = S.t + rnd(70, 130)*60;
+      // each runway in use in turn, not always the same one
+      const use = typeof rwysInUse === 'function' ? rwysInUse() : [S.rwy]; let rw = S.rwy;
+      if (use.length > 1) rw = use.find(r => rwyOf(r).id !== S.rcLastRw) || use[0];
+      if (!rwyBlocked(rw)) { S.rcLastRw = rwyOf(rw).id; opsCheck(rw, 'routine runway inspection'); }
+    }
   }
   if (C && C.st === 'READY' && C.asked != null && S.t - C.asked > 240) { C.asked = S.t; vcall(C.v, `still holding at ${hpWords(C.hp)} for the runway inspection`); }
   if (C && C.st === 'ON') for (const ac of S.acs) {
@@ -11290,6 +11414,9 @@ function airwayPts(pts, seed, keepLast){
   }
   return out;
 }
+// how fast an aircraft turns on its way (degrees per NM flown): a steady 25 degrees of bank at its speed, so a slow climbing departure
+// turns tight (about a 2 NM radius at 250 kt) and a cruising one wide (about 6 NM at 450 kt); it rolls into the turn over the first few miles
+const turnRate = (gs, k) => clamp(57.3/(Math.pow(clamp(gs || 250, 180, 480)*0.5144, 2)/(9.81*0.466)/1852), 7, 30)*Math.min(1, 0.3 + 0.35*k);
 function smoothPts(pts, keepLast){
   // each corner rounded off: a curve from a point before the turning point to one after it (never more than about a third
   // of either leg), so the heading changes gradually through the turn
@@ -11321,8 +11448,8 @@ function legAt(L, d){
 function addArrGhost(f){
   if (!AP[f.o] || !(f.m > 0)) return;
   const tEnd = f.m*60 - PRE_LEAD; if (tEnd <= 0) return;
-  const e = ENTRY[f.gate], L0 = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L0, (e[1] - RADAR_REF[1])/L0];
-  const endLL = toLL([e[0] + u[0]*PRE_NM, e[1] + u[1]*PRE_NM]);
+  const e = ENTRY[f.gate], { u, nm: preNM } = preVec(f);
+  const endLL = toLL([e[0] + u[0]*preNM, e[1] + u[1]*preNM]);
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
   // it joins the entry point flying in along the same line the pending track then follows, with no turn at the handover
   const join = gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
@@ -11343,8 +11470,8 @@ function addDepGhost(ac, at){
   // it turns from the heading it left with onto its way to the destination as an aircraft does: 15 degrees each 6 NM
   // (a steady turn), then the airway route on from there
   const lead = [];
-  if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150) { let p = p0, h = ac.hdg;
-    for (let k = 0; k < 40; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); lead.push(p); } }
+  if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150) { let p = p0, h = ac.trk ?? ac.hdg;
+    for (let k = 0; k < 90; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(ac.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); lead.push(p); } }
   // the turn off its heading and the airway route on from there, smoothed as one so the join is not a corner
   const leg = makeLeg(smoothPts([p0, ...lead.slice(0, -1), ...airwayPts([lead.length ? lead[lead.length - 1] : p0, ...via, AP[ac.d].slice(0, 2)], ac.cs + ac.d, false)])), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
@@ -11389,7 +11516,7 @@ function wayOn(o, dest, seed){
       pts.length = 0; pts.push(...flyPts(toLL(R.rm(R.len*0.5, 0)), rh, [endR, gcDest(endR, rh, 1), ...fx.map(id => toLL(WP[id].p))], 0.3));
       p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
       if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-      for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
+      for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
       const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
       return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
     }
@@ -11402,7 +11529,7 @@ function wayOn(o, dest, seed){
     else { pts.push(q); h = gcBrg(p, q); }
     p = q; }
   if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-  for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
+  for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
   return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
 }
@@ -11412,7 +11539,13 @@ function wayIn(o, from, end, dir){
   const O = from, D = gcDist(O, end);
   const via = (VIA[o.o] || []).filter(p => !nearGib(p) && gcDist(p, end) > 40 && gcDist(p, O) > 30).slice().reverse();
   // a short hop: worked back from where we saw it, a steady turn round towards its origin, so it meets its track in line
-  if (D < 70) return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
+  if (D < 70) {
+    // lined up with where it came from: a steady turn onto its track. Well off that line (it is flying across the way in from its origin) the
+    // route goes straight to a point just back along its track, not out and round to come back on it
+    const a0 = Math.abs(angDiff(dir, gcBrg(O, end)));
+    if (a0 > 20) return makeLeg(smoothPts([O, gcDest(end, dir + 180, Math.min(6, D/6)), end]));
+    return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
+  }
   // the airway route to a point well back along the line it was flying, then a steady turn to intercept that line
   // (only a long way back when the track it was flying points along the way in from its origin: a vector or downwind leg
   // close in says nothing about the route it flew to get there)
@@ -13008,6 +13141,8 @@ function aiDepart(ac){
   // the departure is away. Higher up it passes over, and the departure is stopped below it on the climb if need be
   const dh = parseInt(rw, 10)*10, over = S.acs.find(o => o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.handed && o.alt < ELEV + 3000 && dist(o.x, o.y, ac.x, ac.y) < (o.app ? 6 + (o.gs || 180)*depSecs(ac)/3600 : 3) && Math.abs(((o.hdg - dh + 540) % 360) - 180) > 90);
   if (over) return why(`${over.cs} passing overhead`);
+  // the inspection car is waiting at a holding point for this runway: the departures hold, so there is a gap for it
+  { const C = S.rc; if (!lined && C && C.st === 'READY' && C.v.need && C.R === R && S.t - (C.asked || S.t) < 420) return why('holding for the runway inspection'); }
   const a = arrNear(R, ac), need = clearS(ac);
   const last = S.aiDep && S.aiDep[R.id], gap = last ? (last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
   // a departure lined up behind this one (further back up the runway: multiple line-ups) doesn't stop it going
@@ -13129,7 +13264,7 @@ function aiTowerVehicles(){
     const R = v.req.R; if (rwyClearFor(R) && !rwyBusy(R) && arrNear(R).eta > 120) aiVeh('TWR', () => vehApprove(v));
   }
   const C = S.rc;
-  if (C && C.st === 'READY' && C.v.need && aiDue(C.v, 'enter' + C.t, 5, 10)) { if (!rwyBusy(C.R) && arrNear(C.R).eta > 300) aiVeh('TWR', () => command('OPS1 ENTER')); }
+  if (C && C.st === 'READY' && C.v.need && aiDue(C.v, 'enter' + C.t, 5, 10)) { if (!rwyBusy(C.R) && arrNear(C.R).eta > (S.t - (C.asked || S.t) > 150 ? 210 : 300)) aiVeh('TWR', () => command('OPS1 ENTER')); }
   if (C && C.st === 'ON' && arrNear(C.R).nm < 4 && aiDue(C.v, 'vac' + C.t, 1, 3)) aiVeh('TWR', () => command('OPS1 VACATE'));
 }
 function aiGroundVehicles(){
@@ -13519,11 +13654,34 @@ function aiDeparture(ac){
   }
   // a hold on or near its way out (Heathrow's Detling departures pass BIG): stopped a level under the lowest one there
   const cap = depHoldCap(ac);
+  // a hold on its way: rather than stay low in a straight line right through it, turned away round the side of it (about a right angle
+  // off the line to the hold) until it is no longer ahead of it, and then the climb is given as normal
+  if (cap != null && ac.mode === 'NAV' && !ac.aiLev && !ac.aiAround && !ac.need && ac.alt > ELEV + 1800 && S.t >= (ac.aiNext || 0)) {
+    let near = null, nd = 1e9;
+    for (const o of S.acs) { if (o.kind !== 'ARR' || !o.airborne || o.mode !== 'HOLD' || o.app || lvlOf(o) < ac.alt - 900 || (o.hold && holdOnEntry(o.hold.name))) continue;
+      const c = o.hold && o.hold.c ? o.hold.c : [o.x, o.y], d = dist(...c, ac.x, ac.y); if (d < nd) { nd = d; near = c; } }
+    if (near && nd > 3.5) {
+      const b = brg(ac.x, ac.y, ...near), side = angDiff(ac.trk ?? ac.hdg, b) >= 0 ? -1 : 1, h = Math.round(norm(b + side*105));
+      if (aiDo('DEP', ac, `H${String(h || 360).padStart(3, '0')}`)) { ac.aiAround = { t: S.t, c: near }; ac.aiWhy = 'turned round the hold'; return; }
+    }
+  }
+  if (ac.aiAround && cap == null) { const A = ac.aiAround; ac.aiAround = null; ac.aiAroundT = S.t; ac.aiNewRte = true; ac.aiWhy = ''; if (S.t - A.t > 5) { aiDo('DEP', ac, `C${Math.round((ac.reqClimb ? climbTop() : sidTop(ac))/100)}`); return; } }
   if (cap != null && (ac.tgtAlt ?? ac.alt) > cap + 50) { ac.aiWhy = 'kept below the hold'; return aiDo('DEP', ac, `A${Math.round(cap/100)}`); }
   if (ac.aiLev) return;   // levelled off for traffic: the climb and the direct wait until it is clear
   if (n === 'Request climb' && cap != null) return;
   if (n.startsWith('Request direct') && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, 'DCT ' + n.split(' ').pop());
   if (n === 'Request climb' && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, `C${Math.round(climbTop()/100)}`);
+  // gone round a hold: given a new way on, the first fix of its route that the line to does not run through the hold (the old route
+  // where that makes sense), not back onto the old line through it
+  if (ac.aiNewRte && !ac.need && aiDue(ac, 'newrte', 2, 5)) {
+    const holds = S.acs.filter(o => o.kind === 'ARR' && o.airborne && o.mode === 'HOLD' && dist(o.x, o.y, ac.x, ac.y) < 45).map(o => o.hold && o.hold.c ? o.hold.c : [o.x, o.y]);
+    const clearOf = P => holds.every(c => { const ax = P[0] - ac.x, ay = P[1] - ac.y, l2 = ax*ax + ay*ay || 1, t = clamp(((c[0] - ac.x)*ax + (c[1] - ac.y)*ay)/l2, 0, 1); return Math.hypot(ac.x + ax*t - c[0], ac.y + ay*t - c[1]) > 9; });
+    const fx = (exitRouteOf(ac) || []).filter(id => WP[id] && Math.abs(angDiff(ac.trk ?? ac.hdg, brg(ac.x, ac.y, ...WP[id].p))) < 100 && dist(ac.x, ac.y, ...WP[id].p) > 3);
+    const pick = fx.find(id => clearOf(WP[id].p));
+    if (pick && ac.alt > ELEV + 2500) { ac.aiNewRte = false; if (aiDo('DEP', ac, 'DCT ' + pick)) { ac.aiWhy = 'new route round the hold'; return; } }
+    else if (!holds.length || S.t - (ac.aiAroundT || 0) > 600) ac.aiNewRte = false;
+    if (ac.aiNewRte) return;   // still on its heading round the hold until a fix is clear of it
+  }
   aiDirect(ac, 'DEP');   // further along its way out when the airspace allows
 }
 
