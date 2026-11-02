@@ -5175,6 +5175,48 @@ const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null, noLead: !line, h0: hdg, line: line ? line.map(([e, n]) => EN(e, n)) : null,
     ...(out ? { out: { node: out[0], pts: out[1].map(([e, n]) => EN(e, n)) } } : {}) }; });
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
+// City's stands nose in at an angle to the terminal, each with its own lead-in off taxiway A (as on the ground): the heading is the
+// terminal face turned a right angle and 28 degrees on, the stand hangs off a new junction on A where its centreline meets it, and the apron
+// lanes the old stands hung off are dropped
+{ const CS = STANDS.filter(t => /^C([1-9]|10)$/.test(t.id)).sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
+  if (CS.length > 3) {
+    const H = (brg(...CS[0].p, ...CS[CS.length - 1].p) + 90 + 28) % 360, u = dirv(H), M = 1/M2NM;
+    const drop = e => { GE.splice(GE.indexOf(e), 1); for (const id of [e.a, e.b]) GN[id].adj = GN[id].adj.filter(([, x]) => x !== e); };
+    for (const t of CS) {
+      let best = null;
+      for (const e of GE) { if (e.tw !== 'A') continue;
+        const a = GN[e.a].p, b = GN[e.b].p, d = [b[0]-a[0], b[1]-a[1]], w = [t.p[0]-a[0], t.p[1]-a[1]], det = u[0]*d[1] - u[1]*d[0];   // t.p = a + d*q + u*r
+        if (Math.abs(det) < 1e-14) continue;
+        const r = (w[0]*d[1] - w[1]*d[0])/det, q = (u[0]*w[1] - u[1]*w[0])/det;
+        if (r > 15*M2NM && r < 220*M2NM && q > 0.02 && q < 0.98 && (!best || r > best.r)) best = { e, q, r, a, b }; }   // the outermost lane: taxiway A itself
+      if (!best) continue;
+      const { e, q, a, b } = best, X = [a[0] + (b[0]-a[0])*q, a[1] + (b[1]-a[1])*q], fid = 'Cf' + t.id, sid = 'Cx' + t.id;
+      const old = { a: e.a, b: e.b, tw: e.tw, bare: e.bare, line: e.line, k: e.k };
+      drop(e);
+      gn(fid, mOf(X), offOf(X)); GN[fid].p = X;
+      for (const [x, y] of [[old.a, fid], [fid, old.b]]) { ge(x, y, old.tw); const ne = GE[GE.length - 1]; if (old.bare) ne.bare = old.bare; if (old.line) ne.line = old.line; if (old.k) ne.k = old.k; }
+      for (const [v, ev] of GN[t.node].adj.slice()) if (ev.tw === 'APRON') drop(ev);
+      gn(sid, mOf(t.p), offOf(t.p)); GN[sid].p = t.p; ge(fid, sid, 'APRON'); GE[GE.length - 1].bare = true;
+      const br = brg(...a, ...b), fwd = Math.abs(angDiff(br, H)) < 90 ? br : (br + 180) % 360;
+      t.node = sid; t.lp = X; t.hdg = H; t.h0 = H; t.line = null; t.noLead = false; t.tang = dirv(fwd); t.curved = true;
+      // a straight painted lead-in square off the taxiway, with the turn-in curves from each way along A as short dashed lines
+      const T = dirv(fwd), at = (P, d, k) => [P[0] + d[0]*k*M2NM, P[1] + d[1]*k*M2NM];
+      t.dash = [-1, 1].map(sg => [at(X, T, 15*sg), X, at(X, u, 10)]);
+    }
+    // the apron's inner taxilanes (labelled A in the data) are not painted: the stands lead straight in off A
+    { const f0 = 'CfC' + CS[0].id.slice(1), f1 = 'Cf' + CS[CS.length - 1].id, nodes = (() => { if (!GN[f0] || !GN[f1]) return null; const dd = { [f0]: 0 }, pv = {}, todo = new Set([f0]), done = new Set();
+        while (todo.size) { let u = null; for (const x of todo) if (u === null || dd[x] < dd[u]) u = x; todo.delete(u); if (u === f1) break; done.add(u);
+          for (const [v, ev] of GN[u].adj) { if (done.has(v) || /^R|^CR/.test(v)) continue; const nd = dd[u] + ev.len; if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; pv[v] = u; todo.add(v); } } }
+        if (pv[f1] === undefined) return null; const out = [f1]; while (out[0] !== f0) out.unshift(pv[out[0]]); return out; })();
+      if (nodes) { const main = new Set(); for (let i = 1; i < nodes.length; i++) main.add([nodes[i-1], nodes[i]].sort().join('|'));
+        const c0 = GN[f0].p, near = id => Math.hypot(GN[id].p[0]-c0[0], GN[id].p[1]-c0[1])/M2NM < 450;
+        const holdN = new Set(Object.values(HOLDS).flatMap(h => [h.node]));
+        for (const e of GE) if ((e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b) && !main.has([e.a, e.b].sort().join('|')) && !holdN.has(e.a) && !holdN.has(e.b) && !/^Cx|^Cf/.test(e.a + e.b)) e.bare = true; } }
+    // the lanes that led to the old stands are left as dead ends: take them out (only the apron's own chain and lane nodes)
+    const keep = new Set([...STANDS.map(t => t.node), ...Object.values(HOLDS).flatMap(h => [h.node, h.rwy])]);
+    for (let again = true; again;) { again = false;
+      for (const id of Object.keys(GN)) { if (keep.has(id) || !/^(k\d+|Cn\d+)$/.test(id)) continue;
+        const ad = GN[id].adj; if (ad.length === 1) { drop(ad[0][1]); again = true; } else if (ad.length === 0) continue; } } } }
 { const at = new Map();
   for (const t of STANDS) {
     const u = dirv(t.hdg); let lat = Infinity, near = Infinity;
@@ -5207,9 +5249,10 @@ const nearHolds = rw => { const R = RWYS_BY_END(rw); return Object.keys(HOLDS).f
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
 // lead-in lines: from the taxilane a stand's line curves onto the stand's own heading and runs straight to the stop bar, as painted
 for (const s of STANDS) {
-  if (s.noLead) continue;
+  if (s.noLead || s.curved) continue;
   const pts = s.line || [s.lp, s.p], P0 = pts[0], Pe = pts[pts.length - 1], u = dirv(s.hdg), M = 1/M2NM;
   let T = null, bd = 90;
+  if (s.tang) { T = s.tang; bd = Math.abs(angDiff(Math.atan2(T[0], T[1])/D2R, s.hdg)); } else
   for (const [v] of waysOn(s.node)) { const d = brg(...P0, ...GN[v].p), a = Math.abs(angDiff(d, s.hdg)); if (a < bd) { bd = a; T = dirv(d); } }
   const Ls = Math.min(32, 0.5*dist(...P0, ...Pe)*M), Q = [Pe[0] - u[0]*Ls*M2NM, Pe[1] - u[1]*Ls*M2NM], D = dist(...P0, ...Q)*M;
   if (!T || bd < 12 || D < 12 || Ls < 8) continue;
@@ -5377,7 +5420,7 @@ function drawBelfast(){
   if (!IMG) {
     cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
     cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
-    for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
+    for (const e of GE) { if (e.tw !== 'APRON' || e.bare) continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
     cx.lineWidth = lw(44); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
     cx.strokeStyle = C.asphalt;
     cx.lineWidth = lw(23);
@@ -5422,6 +5465,7 @@ function drawBelfast(){
       cx.setLineDash([]);
     }
     groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); } });
+    groundLines(lw(0.3), () => { cx.setLineDash([2.5*mpx, 2*mpx]); for (const s of STANDS) if (s.dash) for (const [a, c, b] of s.dash) { cx.beginPath(); for (let k = 0; k <= 10; k++) { const t = k/10, w = 1 - t; cx[k ? 'lineTo' : 'moveTo'](...P2([w*w*a[0] + 2*w*t*c[0] + t*t*b[0], w*w*a[1] + 2*w*t*c[1] + t*t*b[1]])); } cx.stroke(); } cx.setLineDash([]); });
     cx.save(); if (IMG) clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx, false); cx.restore();   // stand paint stops at the terminal walls
     drawGroundSigns();
     cx.font = `600 11px ${FONT_L}`;
