@@ -319,9 +319,13 @@ function drawLsgg(){
     // from the lane either side of the start of the lead-in
     groundLines(lw(0.3), () => { for (const s of STANDS) if (s.out && s.line) {
       pathP([s.p, s.out.pts[s.out.pts.length - 1]], false); cx.stroke();
-      const L0 = s.line[0], dx = s.p[0] - L0[0], dy = s.p[1] - L0[1], Ld = Math.hypot(dx, dy) || 1, d = [dx/Ld, dy/Ld], q = [-d[1], d[0]], Rr = 25;
-      for (const sd of [-1, 1]) { const pts = []; for (let i = 0; i <= 12; i++) { const t = i/12*Math.PI/2, a = -Rr*Math.sin(t), b = sd*Rr*(1 - Math.cos(t));
-        pts.push([L0[0] + (d[0]*a + q[0]*b)*M2NM, L0[1] + (d[1]*a + q[1]*b)*M2NM]); } pathP(pts, false); cx.stroke(); }
+      const L0 = s.line[0], E1 = s.out.pts[s.out.pts.length - 1], dx = s.p[0] - L0[0], dy = s.p[1] - L0[1], Ld = Math.hypot(dx, dy) || 1, d = [dx/Ld, dy/Ld], q = [-d[1], d[0]], Rr = 22;
+      cx.setLineDash([2*mpx + 2, 2*mpx + 2]);
+      // quarter circles centred where the cross line meets the lead line at the nose end and at the exit end, on the aircraft's side
+      for (const [C, sg] of [[L0, 1], [E1, -1]]) for (const sd of [-1, 1]) { const pts = [];
+        for (let i = 0; i <= 12; i++) { const t = i/12*Math.PI/2, u = Rr*Math.cos(t)*sg, v = sd*Rr*Math.sin(t);
+          pts.push([C[0] + (d[0]*u + q[0]*v)*M2NM, C[1] + (d[1]*u + q[1]*v)*M2NM]); } pathP(pts, false); cx.stroke(); }
+      cx.setLineDash([]);
     } });
     cx.save(); if (IMG) clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx, false); cx.restore();   // stand paint stops at the terminal walls
     drawGroundSigns();
