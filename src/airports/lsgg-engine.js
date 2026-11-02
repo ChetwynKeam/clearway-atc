@@ -120,6 +120,20 @@ const CLINES = (() => {
       const pc = { p, q, c, hd, e }; kept.push(pc); const key = gk(c[0], c[1]); if (!grid.has(key)) grid.set(key, []); grid.get(key).push(pc);
     }
   }
+  // not inside the runway (the lead lines are the markings there), and where two lanes cross without a junction the lesser one gives
+  // way for 14 m either side, so a lane turning in is one curve and never an X through another
+  const rank = e => e.tw === 'APRON' ? 4 : /^(LINK|INNER|OUTER)/.test(e.tw) ? 3 : 1;
+  for (let i = kept.length - 1; i >= 0; i--) { const o = Math.abs(R0.offOf(kept[i].c.map(v => v/M))), m = R0.mOf(kept[i].c.map(v => v/M)); if (o < 31 && m > -5 && m < R0.len + 5) kept.splice(i, 1); }
+  const cut = new Set();
+  for (let i = 0; i < kept.length; i++) for (let j = i + 1; j < kept.length; j++) {
+    const s1 = kept[i], t = kept[j]; if (s1.e === t.e || Math.abs(s1.c[0] - t.c[0]) > 8 || Math.abs(s1.c[1] - t.c[1]) > 8) continue;
+    let da = Math.abs(s1.hd - t.hd) % Math.PI; da = Math.min(da, Math.PI - da); if (da < 0.45) continue;
+    const d = (a, b, c) => (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0]);
+    if (!(d(s1.p, s1.q, t.p)*d(s1.p, s1.q, t.q) < 0 && d(t.p, t.q, s1.p)*d(t.p, t.q, s1.q) < 0)) continue;
+    const loser = rank(s1.e) > rank(t.e) ? s1 : rank(t.e) > rank(s1.e) ? t : t, X = s1.c;
+    for (const k of kept) if (k.e.tw === loser.e.tw && Math.hypot(k.c[0] - X[0], k.c[1] - X[1]) < 14 && !(k.e !== loser.e && k.e.tw !== loser.e.tw)) cut.add(k);
+  }
+  for (let i = kept.length - 1; i >= 0; i--) if (cut.has(kept[i])) kept.splice(i, 1);
   // join into chains through nodes of degree two
   const ek = pt => Math.round(pt[0]*2) + ',' + Math.round(pt[1]*2), ends = new Map();
   kept.forEach((pc, i) => { for (const pt of [pc.p, pc.q]) { const k = ek(pt); if (!ends.has(k)) ends.set(k, []); ends.get(k).push(i); } });
@@ -301,6 +315,14 @@ function drawLsgg(){
     }
     // stand lead-in lines and numbers
     groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); } });
+    // drive-through satellite stands, as painted: the lead line runs straight through and on out the far side, with a turn-in arc
+    // from the lane either side of the start of the lead-in
+    groundLines(lw(0.3), () => { for (const s of STANDS) if (s.out && s.line) {
+      pathP([s.p, s.out.pts[s.out.pts.length - 1]], false); cx.stroke();
+      const L0 = s.line[0], dx = s.p[0] - L0[0], dy = s.p[1] - L0[1], Ld = Math.hypot(dx, dy) || 1, d = [dx/Ld, dy/Ld], q = [-d[1], d[0]], Rr = 25;
+      for (const sd of [-1, 1]) { const pts = []; for (let i = 0; i <= 12; i++) { const t = i/12*Math.PI/2, a = -Rr*Math.sin(t), b = sd*Rr*(1 - Math.cos(t));
+        pts.push([L0[0] + (d[0]*a + q[0]*b)*M2NM, L0[1] + (d[1]*a + q[1]*b)*M2NM]); } pathP(pts, false); cx.stroke(); }
+    } });
     cx.save(); if (IMG) clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx, false); cx.restore();   // stand paint stops at the terminal walls
     drawGroundSigns();
     cx.font = `600 11px ${FONT_L}`;
