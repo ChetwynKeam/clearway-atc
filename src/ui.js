@@ -928,6 +928,22 @@ function holdPts(ac, h){   // the racetrack: one-minute legs at its present spee
   const o1 = add(h.c, h.inb + 90*s, r), e1 = add(o1, h.inb + 90*s, r), e2 = add(e1, h.inb + 180, L), o2 = add(e2, h.inb + 180 + 90*s, r);
   return [h.c, ...arc(o1, h.inb - 90*s), e2, ...arc(o2, h.inb + 90*s), h.c];
 }
+// the corners of a route drawn as they are flown: each is a fly-by arc (tangent length R x tan(half the turn), the radius
+// from the speed at 25° of bank), not the sharp corner of a line between fixes; the same turn the aircraft is given in stepAir
+function flyArcs(pts, R){
+  if (pts.length < 3) return pts;
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length - 1; i++) {
+    const a = pts[i-1], b = pts[i], c = pts[i+1], l1 = dist(...a, ...b), l2 = dist(...b, ...c); if (l1 < 0.01 || l2 < 0.01) { out.push(b); continue; }
+    const h1 = brg(...a, ...b), h2 = brg(...b, ...c), dc = angDiff(h1, h2), th = Math.abs(dc)*D2R;
+    let t = Math.abs(dc) < 3 ? 0 : R*Math.tan(th/2); t = Math.min(t, l1*(i > 1 ? 0.5 : 0.92), l2*(i < pts.length - 2 ? 0.5 : 0.92), 6);
+    if (t < 0.05) { out.push(b); continue; }
+    const r = t/Math.tan(th/2), u1 = [(b[0]-a[0])/l1, (b[1]-a[1])/l1], u2 = [(c[0]-b[0])/l2, (c[1]-b[1])/l2];
+    const p0 = [b[0] - u1[0]*t, b[1] - u1[1]*t], n = Math.max(3, Math.ceil(Math.abs(dc)/6)), da = dc/n; let q = p0, hh = h1 + da/2; out.push(p0);
+    for (let k = 0; k < n; k++) { const ds = r*th/n; q = [q[0] + Math.sin(hh*D2R)*ds, q[1] + Math.cos(hh*D2R)*ds]; out.push(q); hh += da; }
+  }
+  out.push(pts[pts.length - 1]); return out;
+}
 function airRoute(ac){
   if (outOfCtl(ac) || ac.state === 'PRE' || (typeof outsideRadar === 'function' && outsideRadar(ac))) return null;
   const me = [ac.x, ac.y], rw = ac.kind === 'ARR' ? landRw(ac) : null, F = ac.kind === 'ARR' && !ac.diverting && ac.state !== 'DIVERTING' ? (ac.app ? finOf(ac) : FINAL[rw]) : null;
@@ -939,6 +955,7 @@ function airRoute(ac){
     pts = [me, ...fixes.map(id => WP[id].p)];
     if (F && ac.kind === 'ARR') pts.push(...finFrom(F, pts[pts.length - 1]));
     else what = fixes[fixes.length - 1];
+    pts = flyArcs(pts, Math.max(60, ac.ias*(1 + ac.alt/1000*0.018))**2/(11.26*Math.tan(25*D2R))/6076);
   }
   else if (ac.mode === 'HOLD' && ac.hold) {
     pts = [...(ac.hold.ph === 'in' ? [me] : []), ...holdPts(ac, ac.hold)];

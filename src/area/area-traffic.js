@@ -141,6 +141,11 @@ function spawnFlight(F, st){
   const ac = new Aircraft({ cs: F.cs, t: F.t, dep: F.dep, arr: F.arr, la: st.la, lo: st.lo, alt: Math.round(st.alt/100)*100, hdg: st.h, route: F.R.pts.map(p => p.slice()), ri: st.i,
     rfl: F.rfl, sid: F.R.sid, star: F.R.star, holdFix: F.R.holdFix, src: 'plan' });
   ac.tas = tasTarget(ac); ac.gs = ac.tas;
+  // it appears on its leg, flying the track with the wind allowed for (the nose points off the track, as it really does),
+  // and the leg is anchored at the fix behind it so the line it follows is the airway, not a line from where it appeared
+  { const W = windAt(Math.round(st.alt/100)*100), wx = -Math.sin(W.dir*D2R)*W.kt, wy = -Math.cos(W.dir*D2R)*W.kt, cw = wx*Math.cos(st.h*D2R) - wy*Math.sin(st.h*D2R);
+    ac.hdg = norm(st.h - Math.asin(clamp(cw/Math.max(100, ac.tas), -0.4, 0.4))*R2D); ac.trk = st.h; }
+  { const a = F.R.pts[st.i - 1], b = F.R.pts[st.i]; if (a && b) { ac.legFrom = [a[0], a[1]]; ac.legTo = ac.route[ac.ri]; } }
   ac.past = pastWithAlt([...F.R.pts.slice(0, st.i), [st.la, st.lo, null]], st.alt);
   if (st.climbing) ac.cfl = F.rfl; else if (st.desc) ac.cfl = Math.max(2000, Math.floor(ac.alt/1000)*1000); else ac.cfl = F.rfl;
   ac.alt = Math.min(ac.alt, ac.cfl > ac.alt ? ac.alt : ac.alt);

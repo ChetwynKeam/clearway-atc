@@ -49,20 +49,27 @@ const nearGib = ll => gcDist(ll, AP[APT.icao]) < 70;
 const gcDest = ([a, o], b, nm) => { const d = nm/3440.065, p1 = a*D2R, l1 = o*D2R, t = b*D2R, p2 = Math.asin(Math.sin(p1)*Math.cos(d) + Math.cos(p1)*Math.sin(d)*Math.cos(t));
   return [p2*R2D, (l1 + Math.atan2(Math.sin(t)*Math.sin(d)*Math.cos(p1), Math.cos(d) - Math.sin(p1)*Math.sin(p2)))*R2D]; };
 const hashOf = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+// The route between points is the real airway network (awy.js: the UK AIP / sector-file ATS routes, Dijkstra between the two
+// nearest joins), so far flights follow the airways the way they are filed; where there are none (the ocean, beyond the
+// data) it is the great circle with a gentle zig-zag of turning points, as before. Corners are flown as fly-by turns.
+if (typeof AWYDATA !== 'undefined' && typeof AW !== 'undefined' && !AW.ready) { try { AW.init(AWYDATA); } catch (e) { /* the old routes */ } }
 function airwayPts(pts, seed, keepLast){
-  // turning points every 100-140 NM or so (about 250 over the oceans), each a few miles to one side, the way an
-  // airway route zig-zags gently between its waypoints: many small changes of heading rather than a few big ones.
-  // The offsets drift (each follows on from the last) so the route wanders a little, never doubling back
   let rnd = hashOf(seed); const rn = () => ((rnd = Math.imul(rnd ^ (rnd >>> 15), 2246822507) >>> 0) / 4294967296)*2 - 1;
   const out = [pts[0]];
   for (let i = 1; i < pts.length; i++) {
     const A = pts[i-1], B = pts[i], D = gcDist(A, B), last = keepLast && i === pts.length - 1;
+    if (!last && D >= 60 && typeof AW !== 'undefined' && AW.ready) {
+      let fx = []; try { fx = AW.legBetween([A[0], A[1]], [B[0], B[1]], { rf: 70, rt: 70 }); } catch (e) { fx = []; }
+      // no doubling back: a joining fix behind the start or beyond the end is dropped
+      fx = fx.filter(q => gcDist(A, q) < D + 40 && gcDist(q, B) < D + 40);
+      if (fx.length) { for (const q of fx) out.push([q[0], q[1]]); out.push(B); continue; }
+    }
+    // the great circle broken into legs whose turning points sit a little to one side or the other (as airways do)
     const legNM = D > 1800 ? 250 : 120, n = last || D < 150 ? 1 : Math.max(2, Math.round(D/legNM));
     let off = 0;
     for (let j = 1; j < n; j++) {
       const L = D/n, cap = Math.min(D > 1800 ? 18 : 9, L*0.075);
       off = clamp(off*0.6 + rn()*cap, -cap*1.4, cap*1.4);
-      // the ends stay on the line, so the route leaves its first point and reaches its last one straight
       const k = Math.min(1, j, n - j)*(j === 1 || j === n - 1 ? 0.5 : 1);
       const q = gcAt(A, B, j/n), h = gcBrg(gcAt(A, B, j/n - 0.01), q); out.push(gcDest(q, h + 90, off*k));
     }
@@ -414,7 +421,16 @@ function farTag(X, Y, l1, l2, l3, col){
   cx.fillStyle = col; cx.fillText(l1, lx, ly); cx.fillText(l2, lx, ly + 13); if (l3) cx.fillText(l3, lx, ly + 26);
 }
 const FL = a => String(Math.max(0, Math.round(a/100))).padStart(3, '0');
+// the airway chart under the far traffic when zoomed out to the wider picture (the same chart as Area Control: awy.js)
+function drawAirwayChart(){
+  if (typeof AW === 'undefined' || !AW.ready || V.scale >= 4 || ground3()) return;
+  const P = (la, lo) => { const q = llxy(la, lo); return [sx(q[0]), sy(q[1])]; };
+  const mine = new Set(); for (const g of FAR.list) if (g.names) for (const n of g.names) mine.add(n);
+  AW.drawChart({ cx, P, W, H, dark: C.name === 'dark', lvl: 'U', scale: V.scale, mine, label: V.scale > 0.5 });
+}
+const ground3 = () => V.scale > 70;
 function drawFar(){
+  drawAirwayChart();
   const tags = V.scale > 0.6;
   for (const g of FAR.list) {
     const st = farState(g); if (!st) continue;

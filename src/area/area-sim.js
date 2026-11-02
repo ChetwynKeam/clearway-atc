@@ -92,14 +92,23 @@ function stepAc(ac, dt){
     if (!p) { ac.mode = 'HDG'; ac.tgtHdg = ac.hdg; }
     else {
       const d = nm(ac.la, ac.lo, p[0], p[1]), b = crs(ac.la, ac.lo, p[0], p[1]);
-      // turn early so the next leg is joined without overshooting (rate one at this speed)
-      const q = ac.route[ac.ri + 1], rate = turnRate(ac), r = ac.tas/3600/(rate*D2R);
-      const lead = q ? Math.min(12, r*Math.tan(Math.abs(angDiff(b, crs(p[0], p[1], q[0], q[1])))/2*D2R)) : 0.6;
+      // the leg is the line from the point it was joined at (or the last fix) to the next fix: it is flown along that
+      // line, intercepted gently and held there, not re-aimed at the fix from wherever the wind has put it
+      if (ac.legTo !== p) { ac.legFrom = [ac.la, ac.lo]; ac.legTo = p; }
+      // turn early (fly-by): the lead is the tangent length of the turn onto the next leg at this speed, 25° bank
+      const q = ac.route[ac.ri + 1], lead = q ? Math.min(25, AW.turnLead(AW.turnRadius(ac.tas, 25), AW.angDiff(b, crs(p[0], p[1], q[0], q[1])))) : 0.6;
       if (d < Math.max(0.6, lead) || (d < 6 && Math.abs(angDiff(ac.trk, b)) > 100)) {
         if (ac.holdAt && p[2] === ac.holdAt.fix) { startHold(ac, ac.holdAt); }
-        else { ac.ri++; emit('fix', { ac, p }); }
+        else { ac.ri++; ac.legFrom = [p[0], p[1]]; ac.legTo = ac.route[ac.ri] || null; emit('fix', { ac, p }); }
       }
-      tgt = b; track = true;
+      const X = AW.xtk([ac.la, ac.lo], ac.legFrom, [p[0], p[1]]);
+      if (X.len > 3 && d > 3 && X.atd > -1) {
+        // aim at a point ahead on the line: the nearer to it, the shorter the look-ahead (never more than a 45° intercept)
+        const la_ = Math.max(2.5, ac.gs/3600*40), aim = AW.gcAt(ac.legFrom, [p[0], p[1]], Math.min(1, Math.max(0, (X.atd + la_)/X.len)));
+        tgt = crs(ac.la, ac.lo, aim[0], aim[1]);
+        if (Math.abs(angDiff(tgt, X.crs)) > 45) tgt = norm(X.crs + Math.sign(angDiff(X.crs, tgt))*45);
+      } else tgt = b;
+      track = true;
     }
   } else if (ac.mode === 'HDG') { tgt = ac.tgtHdg ?? ac.hdg; }
   else if (ac.mode === 'HOLD') { tgt = holdSteer(ac, dt); track = true; }
@@ -138,7 +147,7 @@ function rejoin(ac){
     const p = ac.route[i], d = nm(ac.la, ac.lo, p[0], p[1]), ahead = Math.abs(angDiff(ac.trk, crs(ac.la, ac.lo, p[0], p[1]))) < 100;
     if (ahead && d < bd + (i - ac.ri)*3) { bd = d; bi = i; break; }
   }
-  ac.ri = Math.min(bi, ac.route.length - 1); ac.mode = 'NAV'; ac.hold = null; ac.tgtHdg = null; ac.turnDir = 0;
+  ac.ri = Math.min(bi, ac.route.length - 1); ac.mode = 'NAV'; ac.hold = null; ac.tgtHdg = null; ac.turnDir = 0; ac.legTo = null;
 }
 // fly direct to a point: on the route it skips ahead to it, off the route it goes there and then on to the nearest route
 // point beyond (or to the destination)
@@ -152,7 +161,7 @@ function directTo(ac, name){
     for (let j = ac.ri; j < ac.route.length; j++) { const p = ac.route[j], d = nm(f[0], f[1], p[0], p[1]) + nm(p[0], p[1], dest[0], dest[1])*0.2; if (nm(f[0], f[1], dest[0], dest[1]) > nm(p[0], p[1], dest[0], dest[1]) && d < bd) { bd = d; k = j; } }
     ac.route = [...ac.route.slice(0, ac.ri), [f[0], f[1], name], ...ac.route.slice(k)];
   }
-  ac.mode = 'NAV'; ac.hold = null; ac.holdAt = null; ac.tgtHdg = null; ac.turnDir = 0;
+  ac.mode = 'NAV'; ac.hold = null; ac.holdAt = null; ac.tgtHdg = null; ac.turnDir = 0; ac.legTo = null;
   return true;
 }
 
