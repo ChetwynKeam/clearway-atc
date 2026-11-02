@@ -5852,14 +5852,25 @@ class Aircraft {
 // arrivals show on radar about 35 NM beyond the boundary as pending tracks (not on frequency, no control) and call
 // Gibraltar Radar when they reach the entry point inside the radar rings
 const PRE_NM = 35, PRE_LEAD = 6.5*60;
+// where a pending arrival waits beyond its entry point: along the entry's own bearing, unless its origin is close in (Glasgow for Belfast), when it
+// sits just short of that airport on the line to it, so it is never spawned beyond where it came from and made to double back
+function preVec(f){
+  const e = ENTRY[f.gate], L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L];
+  const A = typeof AP !== 'undefined' && f.o && AP[f.o]; if (!A || typeof llxy !== 'function') return { u, nm: PRE_NM };
+  const o = llxy(A[0], A[1]), od = Math.hypot(o[0] - RADAR_REF[0], o[1] - RADAR_REF[1]);
+  if (od > L + PRE_NM + 30 || od < 5) return { u, nm: PRE_NM };
+  const u2 = [(o[0] - RADAR_REF[0])/od, (o[1] - RADAR_REF[1])/od];
+  if (Math.abs(angDiff(brg(0, 0, ...u), brg(0, 0, ...u2))) > 70) return { u, nm: PRE_NM };
+  return { u: u2, nm: clamp(od - L - 4, 6, PRE_NM) };
+}
 const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + tzOffH(S.start + S.t*1000)) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
   const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][arrKey(f)][0]];
   const left = f.m*60 - S.t;
   if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
-    const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
-    ac.x = e[0] + u[0]*PRE_NM*frac; ac.y = e[1] + u[1]*PRE_NM*frac;
+    const { u, nm } = preVec(f), frac = clamp(left/PRE_LEAD, 0, 1);
+    ac.x = e[0] + u[0]*nm*frac; ac.y = e[1] + u[1]*nm*frac;
     // another pending track on top of it (the same minute, or two flows sharing the entry point): in trail, 8 NM behind
     for (let k = 0; k < 6 && S.acs.some(o => o.state === 'PRE' && Math.hypot(o.x - ac.x, o.y - ac.y) < 5); k++) { ac.x += u[0]*8; ac.y += u[1]*8; }
     ac.alt = ENTRY_ALT[f.gate] + (PRE_ALT[f.gate] - ENTRY_ALT[f.gate])*frac; ac.ias = 300; ac.gs = 330;
@@ -11143,6 +11154,9 @@ function airwayPts(pts, seed, keepLast){
   }
   return out;
 }
+// how fast an aircraft turns on its way (degrees per NM flown): a steady 25 degrees of bank at its speed, so a slow climbing departure
+// turns tight (about a 2 NM radius at 250 kt) and a cruising one wide (about 6 NM at 450 kt); it rolls into the turn over the first few miles
+const turnRate = (gs, k) => clamp(57.3/(Math.pow(clamp(gs || 250, 180, 480)*0.5144, 2)/(9.81*0.466)/1852), 7, 30)*Math.min(1, 0.3 + 0.35*k);
 function smoothPts(pts, keepLast){
   // each corner rounded off: a curve from a point before the turning point to one after it (never more than about a third
   // of either leg), so the heading changes gradually through the turn
@@ -11174,8 +11188,8 @@ function legAt(L, d){
 function addArrGhost(f){
   if (!AP[f.o] || !(f.m > 0)) return;
   const tEnd = f.m*60 - PRE_LEAD; if (tEnd <= 0) return;
-  const e = ENTRY[f.gate], L0 = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L0, (e[1] - RADAR_REF[1])/L0];
-  const endLL = toLL([e[0] + u[0]*PRE_NM, e[1] + u[1]*PRE_NM]);
+  const e = ENTRY[f.gate], { u, nm: preNM } = preVec(f);
+  const endLL = toLL([e[0] + u[0]*preNM, e[1] + u[1]*preNM]);
   const via = (VIA[f.o] || []).filter(p => !nearGib(p) && gcDist(p, endLL) > 40).slice().reverse();
   // it joins the entry point flying in along the same line the pending track then follows, with no turn at the handover
   const join = gcDist(AP[f.o], endLL) > 190 ? [toLL([e[0] + u[0]*(PRE_NM + 90), e[1] + u[1]*(PRE_NM + 90)])] : [];
@@ -11196,8 +11210,8 @@ function addDepGhost(ac, at){
   // it turns from the heading it left with onto its way to the destination as an aircraft does: 15 degrees each 6 NM
   // (a steady turn), then the airway route on from there
   const lead = [];
-  if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150) { let p = p0, h = ac.hdg;
-    for (let k = 0; k < 40; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); lead.push(p); } }
+  if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 150) { let p = p0, h = ac.trk ?? ac.hdg;
+    for (let k = 0; k < 90; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(ac.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); lead.push(p); } }
   // the turn off its heading and the airway route on from there, smoothed as one so the join is not a corner
   const leg = makeLeg(smoothPts([p0, ...lead.slice(0, -1), ...airwayPts([lead.length ? lead[lead.length - 1] : p0, ...via, AP[ac.d].slice(0, 2)], ac.cs + ac.d, false)])), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
@@ -11242,7 +11256,7 @@ function wayOn(o, dest, seed){
       pts.length = 0; pts.push(...flyPts(toLL(R.rm(R.len*0.5, 0)), rh, [endR, gcDest(endR, rh, 1), ...fx.map(id => toLL(WP[id].p))], 0.3));
       p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
       if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-      for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
+      for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
       const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
       return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
     }
@@ -11255,7 +11269,7 @@ function wayOn(o, dest, seed){
     else { pts.push(q); h = gcBrg(p, q); }
     p = q; }
   if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-  for (let k = 0; k < 40 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(10, Math.abs(d))); p = gcDest(p, h, 1); pts.push(p); }
+  for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
   return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
 }
@@ -13391,12 +13405,13 @@ function aiDeparture(ac){
       if (aiDo('DEP', ac, `H${String(h || 360).padStart(3, '0')}`)) { ac.aiAround = { t: S.t, c: near }; ac.aiWhy = 'turned round the hold'; return; }
     }
   }
-  if (ac.aiAround && cap == null) { const A = ac.aiAround; ac.aiAround = null; ac.aiWhy = ''; if (S.t - A.t > 5) { aiDo('DEP', ac, `C${Math.round((ac.reqClimb ? climbTop() : sidTop(ac))/100)}`); return; } }
+  if (ac.aiAround && cap == null) { const A = ac.aiAround; ac.aiAround = null; ac.aiAroundT = S.t; ac.aiWhy = ''; if (S.t - A.t > 5) { aiDo('DEP', ac, `C${Math.round((ac.reqClimb ? climbTop() : sidTop(ac))/100)}`); return; } }
   if (cap != null && (ac.tgtAlt ?? ac.alt) > cap + 50) { ac.aiWhy = 'kept below the hold'; return aiDo('DEP', ac, `A${Math.round(cap/100)}`); }
   if (ac.aiLev) return;   // levelled off for traffic: the climb and the direct wait until it is clear
   if (n === 'Request climb' && cap != null) return;
   if (n.startsWith('Request direct') && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, 'DCT ' + n.split(' ').pop());
   if (n === 'Request climb' && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, `C${Math.round(climbTop()/100)}`);
+  if (ac.aiAroundT && S.t - ac.aiAroundT < 300 && S.acs.some(o => o.kind === 'ARR' && o.airborne && o.mode === 'HOLD' && dist(o.x, o.y, ac.x, ac.y) < 25)) return;   // round a hold: not straight back at it
   aiDirect(ac, 'DEP');   // further along its way out when the airspace allows
 }
 
