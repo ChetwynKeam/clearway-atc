@@ -365,6 +365,7 @@ function preVec(f){
   const e = ENTRY[f.gate], L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L];
   const A = typeof AP !== 'undefined' && f.o && AP[f.o]; if (!A || typeof llxy !== 'function') return { u, nm: PRE_NM };
   const o = llxy(A[0], A[1]), od = Math.hypot(o[0] - RADAR_REF[0], o[1] - RADAR_REF[1]);
+  if (APT.preToOrigin) { const de = Math.hypot(o[0] - e[0], o[1] - e[1]); if (de > 20) return { u: [(o[0] - e[0])/de, (o[1] - e[1])/de], nm: clamp(de - 6, 6, PRE_NM) }; }   // straight in from where it came from, however the entry sits (Geneva: BENOT is north-east, London and Paris north-west)
   if (od > L + PRE_NM + 30 || od < 5) return { u, nm: PRE_NM };
   const u2 = [(o[0] - RADAR_REF[0])/od, (o[1] - RADAR_REF[1])/od];
   if (Math.abs(angDiff(brg(0, 0, ...u), brg(0, 0, ...u2))) > 70) return { u, nm: PRE_NM };
