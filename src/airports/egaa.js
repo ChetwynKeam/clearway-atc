@@ -256,6 +256,134 @@ const EGAA = (() => {
   const TA = 6000, TZ = 'Europe/London';
   const ALTERNATES = [['Dublin', 'EIDW', 'B190D40'], ['Derry', 'EGAE', 'B300D40'], ['Glasgow', 'EGPF', 'B050D40']];
 
+
+  // ── traffic: the real boards of Belfast International and Belfast City on Monday 2 November 2026 (avionio.com; times UTC, which
+  // is local in winter), paired by tools/belfast_timetable.py: each arrival with a later departure of the same airline to the same
+  // place, an unpaired departure before 11:00 night-stopped. Row: [arrival, from, arrival UTC, departure, to, departure UTC, type,
+  // days, stand, airfield (A Aldergrove, C City)]. The scheduled flight feed (egaa/flights.json, both airports) takes over in Real
+  // world mode.
+  const TIMETABLE = [
+    ['EZY985', 'EGKK', '09:00', 'EZY802', 'EGKK', '09:45', 'A20N', '1234567', null, 'C'],
+    ['RUK129', 'EGSS', '09:10', null, null, null, 'B738', '1234567', null, 'A'],
+    ['EZY221', 'EGGD', '09:10', null, null, null, 'A319', '1234567', null, 'A'],
+    ['KLM947', 'EHAM', '09:10', null, null, null, 'E190', '1234567', null, 'C'],
+    ['EZY68', 'EGNT', '09:15', 'EZY69', 'EGNT', '10:15', 'A319', '1234567', null, 'A'],
+    [null, null, null, 'EZY49', 'EGNM', '09:15', 'A20N', '1234567', null, 'A'],
+    ['EIN3651', 'EGPH', '09:20', 'EIN3652', 'EGPH', '10:55', 'AT76', '1234567', null, 'C'],
+    ['EZY26', 'EGBB', '09:25', 'EZY27', 'EGBB', '10:45', 'A319', '1234567', null, 'A'],
+    [null, null, null, 'CFE1393', 'EGLL', '09:25', 'E190', '1234567', null, 'C'],
+    [null, null, null, 'EZY986', 'EGKK', '09:30', 'A319', '1234567', null, 'C'],
+    ['RYR9561', 'LPFR', '09:35', null, null, null, 'B738', '1234567', null, 'A'],
+    [null, null, null, 'RUK178', 'EGPH', '09:35', 'B38M', '1234567', null, 'A'],
+    ['EZY16', 'EGKK', '09:40', 'EZY820', 'EGKK', '10:15', 'A20N', '1234567', null, 'A'],
+    [null, null, null, 'EZY222', 'EGGD', '09:40', 'A320', '1234567', null, 'A'],
+    ['EIN3671', 'EGNM', '09:40', 'EIN3672', 'EGNM', '10:25', 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'KLM948', 'EHAM', '09:40', 'E190', '1234567', null, 'C'],
+    ['EIN3611', 'EGCC', '09:50', 'EIN3612', 'EGCC', '11:30', 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'EIN3622', 'EGPF', '09:50', 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'EZY3051', 'EHAM', '09:55', 'A320', '1234567', null, 'A'],
+    ['EIN3641', 'EGBB', '09:55', null, null, null, 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'RYR9560', 'LPFR', '10:00', 'B38M', '1234567', null, 'A'],
+    [null, null, null, 'EXS301', 'LEAL', '10:00', 'A21N', '1234567', null, 'A'],
+    [null, null, null, 'EZY39', 'EGKK', '10:00', 'A320', '1234567', null, 'A'],
+    ['CFE8752', 'EGLL', '10:05', 'CFE8753', 'EGLL', '10:40', 'E190', '1234567', null, 'C'],
+    ['EZY819', 'EGKK', '10:10', null, null, null, 'A320', '1234567', null, 'A'],
+    [null, null, null, 'EIN3642', 'EGBB', '10:10', 'AT76', '1234567', null, 'C'],
+    ['EIN3621', 'EGFF', '10:25', null, null, null, 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'EIN3604', 'EGHI', '10:25', 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'EZY51', 'EGPH', '10:40', 'A320', '1234567', null, 'A'],
+    ['CFE1394', 'EGLL', '10:45', 'CFE1395', 'EGLL', '11:40', 'E190', '1234567', null, 'C'],
+    ['EZY419', 'EGPF', '11:15', 'EZY420', 'EGPF', '12:05', 'A319', '1234567', null, 'A'],
+    ['EZY703', 'EGCC', '11:20', null, null, null, 'A20N', '1234567', null, 'A'],
+    ['EZY50', 'EGNM', '11:35', null, null, null, 'A319', '1234567', null, 'A'],
+    ['RUK179', 'EGPH', '11:45', null, null, null, 'B738', '1234567', null, 'A'],
+    [null, null, null, 'EZY704', 'EGCC', '11:50', 'A319', '1234567', null, 'A'],
+    ['LOG85', 'EGPD', '11:50', null, null, null, 'E145', '1234567', null, 'C'],
+    ['EIN3623', 'EGPF', '12:00', null, null, null, 'AT76', '1234567', null, 'C'],
+    ['EZY343', 'EGPH', '12:20', null, null, null, 'A20N', '1234567', null, 'C'],
+    [null, null, null, 'LOG162', 'EGPE', '12:20', 'E145', '1234567', null, 'C'],
+    ['EZY70', 'EGNT', '12:35', 'EZY71', 'EGNT', '15:05', 'A20N', '1234567', null, 'A'],
+    [null, null, null, 'EZY344', 'EGPH', '12:50', 'A319', '1234567', null, 'C'],
+    ['EZY52', 'EGPH', '12:55', null, null, null, 'A20N', '1234567', null, 'A'],
+    ['EZY40', 'EGKK', '13:10', 'EZY41', 'EGKK', '15:05', 'A20N', '1234567', null, 'A'],
+    ['EIN3643', 'EGBB', '13:10', 'EIN3644', 'EGBB', '14:00', 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'EZY3019', 'GCRR', '13:15', 'A20N', '1234567', null, 'A'],
+    ['EIN3653', 'EGPH', '13:15', 'EIN3656', 'EGPH', '15:20', 'AT76', '1234567', null, 'C'],
+    ['EIN3673', 'EGNM', '13:15', 'EIN3676', 'EGNM', '14:50', 'AT76', '1234567', null, 'C'],
+    ['EZY28', 'EGBB', '13:25', 'EZY29', 'EGBB', '14:35', 'A20N', '1234567', null, 'A'],
+    ['CFE8756', 'EGLL', '13:30', 'CFE8757', 'EGLL', '14:35', 'E190', '1234567', null, 'C'],
+    ['EZY889', 'EGKK', '13:35', 'EZY890', 'EGKK', '14:20', 'A20N', '1234567', null, 'C'],
+    [null, null, null, 'EZY3015', 'GCFV', '13:40', 'A320', '1234567', null, 'A'],
+    [null, null, null, 'EIN3680', 'EGNX', '13:40', 'AT76', '1234567', null, 'C'],
+    ['EXS362', 'LEPA', '13:45', null, null, null, 'B738', '1234567', null, 'A'],
+    ['EZY3006', 'LEAL', '13:45', null, null, null, 'A320', '1234567', null, 'A'],
+    ['EZY533', 'EGGP', '13:45', 'EZY534', 'EGGP', '14:20', 'A319', '1234567', null, 'C'],
+    ['RUK9559', 'LEAL', '13:50', null, null, null, 'B738', '1234567', null, 'A'],
+    ['EZY821', 'EGKK', '13:50', 'EZY632', 'EGKK', '15:20', 'A319', '1234567', null, 'A'],
+    ['CFE1398', 'EGLL', '13:50', 'CFE1399', 'EGLL', '14:50', 'E190', '1234567', null, 'C'],
+    ['EZY3052', 'EHAM', '13:55', null, null, null, 'A20N', '1234567', null, 'A'],
+    [null, null, null, 'RUK130', 'EGSS', '14:00', 'B38M', '1234567', null, 'A'],
+    ['EZY503', 'EGGP', '14:05', null, null, null, 'A319', '1234567', null, 'A'],
+    ['EIN3605', 'EGHI', '14:10', null, null, null, 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'EIN3614', 'EGCC', '14:20', 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'EZY3017', 'GCTS', '14:25', 'A319', '1234567', null, 'A'],
+    ['EIN3613', 'EGCC', '14:25', null, null, null, 'AT76', '1234567', null, 'C'],
+    ['EXS388', 'LEMG', '14:35', null, null, null, 'B738', '1234567', null, 'A'],
+    [null, null, null, 'EZY3385', 'LIRF', '14:35', 'A20N', '1234567', null, 'A'],
+    [null, null, null, 'EXS379', 'LTBS', '14:40', 'A21N', '1234567', null, 'A'],
+    [null, null, null, 'RUK571', 'GCRR', '14:40', 'B738', '1234567', null, 'A'],
+    [null, null, null, 'EZY3013', 'LEMG', '14:40', 'A20N', '1234567', null, 'A'],
+    ['EZY631', 'EGKK', '14:50', null, null, null, 'A20N', '1234567', null, 'A'],
+    [null, null, null, 'EZY91', 'EGCC', '15:00', 'A20N', '1234567', null, 'A'],
+    ['EZY429', 'EGPF', '15:00', null, null, null, 'A320', '1234567', null, 'C'],
+    [null, null, null, 'EIN3646', 'EGBB', '15:00', 'AT76', '1234567', null, 'C'],
+    ['LOG161', 'EGPE', '15:05', null, null, null, 'E145', '1234567', null, 'C'],
+    [null, null, null, 'EXS321', 'LGIR', '15:25', 'A21N', '1234567', null, 'A'],
+    [null, null, null, 'EZY430', 'EGPF', '15:30', 'A20N', '1234567', null, 'C'],
+    [null, null, null, 'LOG86', 'EGPD', '15:35', 'E145', '1234567', null, 'C'],
+    ['EZY505', 'EGGP', '15:45', null, null, null, 'A20N', '1234567', null, 'A'],
+    ['EIN3681', 'EGNX', '16:40', null, null, null, 'AT76', '1234567', null, 'C'],
+    ['KLM949', 'EHAM', '16:45', null, null, null, 'E190', '1234567', null, 'C'],
+    ['EZY331', 'EGPH', '16:50', null, null, null, 'A20N', '1234567', null, 'A'],
+    ['CFE1402', 'EGLL', '16:50', null, null, null, 'E190', '1234567', null, 'C'],
+    ['RUK131', 'EGSS', '17:05', null, null, null, 'B738', '1234567', null, 'A'],
+    ['EXS302', 'LEAL', '17:20', null, null, null, 'B738', '1234567', null, 'A'],
+    ['EIN3615', 'EGCC', '17:20', null, null, null, 'AT76', '1234567', null, 'C'],
+    [null, null, null, 'RUK158', 'EGSS', '17:30', 'B38M', '1234567', null, 'A'],
+    ['EXS378', 'GCTS', '19:00', null, null, null, 'B738', '1234567', null, 'A'],
+    ['RUK159', 'EGSS', '20:35', null, null, null, 'B738', '1234567', null, 'A'],
+    ['RUK193', 'EGCC', '21:40', null, null, null, 'B738', '1234567', null, 'A'],
+    [null, null, null, 'RUK192', 'EGCC', '22:05', 'B38M', '1234567', null, 'A'],
+    ['RUK570', 'GCRR', '23:55', null, null, null, 'B38M', '1234567', null, 'A']
+  ];
+  const LONG_STAY = [];
+  const EXTRA = [
+    { cs: 'EZY6215', t: 'A20N', k: 'ARR', o: 'LEMG', ap: 'EGAA' }, { cs: 'RYR4561', t: 'B38M', k: 'DEP', d: 'LEPA', ap: 'EGAA' }, { cs: 'EXS1866', t: 'B738', k: 'ARR', o: 'GCTS', ap: 'EGAA' },
+    { cs: 'EZY6231', t: 'A320', k: 'DEP', d: 'LPFR', ap: 'EGAA' }, { cs: 'EIN3683', t: 'AT76', k: 'ARR', o: 'EGPH', ap: 'EGAC' }, { cs: 'CFE1409', t: 'E190', k: 'DEP', d: 'EGLL', ap: 'EGAC' },
+    { cs: 'LOG87', t: 'E145', k: 'ARR', o: 'EGPD', ap: 'EGAC' }, { cs: 'EZY6249', t: 'A21N', k: 'DEP', d: 'GCRR', ap: 'EGAA' }, { cs: 'KLM951', t: 'E190', k: 'DEP', d: 'EHAM', ap: 'EGAC' },
+    { cs: 'RYR8125', t: 'B738', k: 'ARR', o: 'LEAL', ap: 'EGAA' }
+  ];
+  const EXERCISES = {
+    dep: { name: 'Belfast 1 · Off 25 at Aldergrove', wx: 'west', rwy: '25', sched: [{ cs: 'EZY6201', t: 'A320', k: 'DEP', d: 'EGKK', m: 0, ap: 'EGAA' }] },
+    arr: { name: 'Belfast 2 · From BLACA to the ILS 22 at City', wx: 'west', rwy: '25', sched: [{ cs: 'CFE1394', t: 'E190', k: 'ARR', o: 'EGLL', m: 0, ap: 'EGAC' }] },
+    mix: { name: 'Belfast 3 · Two airports, one approach', wx: 'west', rwy: '25', sched: [{ cs: 'EZY2819', t: 'A20N', k: 'ARR', o: 'EGKK', m: 0, ap: 'EGAA' },
+      { cs: 'EIN3651', t: 'AT76', k: 'ARR', o: 'EGPH', m: 0, ap: 'EGAC' }, { cs: 'EZY6233', t: 'A320', k: 'DEP', d: 'EGGD', m: 0, ap: 'EGAA' }, { cs: 'CFE1395', t: 'E190', k: 'DEP', d: 'EGLL', m: 0, ap: 'EGAC' }] }
+  };
+  const WX_PRESETS = {
+    west:  { name: 'South-westerly: runway 25 at Aldergrove, 22 at City', short: 'Westerly',  metar: 'EGAA 021250Z 24012KT 9999 FEW022 SCT040 11/07 Q1014' },
+    east:  { name: 'Easterly: runway 07 at Aldergrove, 04 at City',       short: 'Easterly',  metar: 'EGAA 021250Z 07010KT 9999 SCT035 09/03 Q1028' },
+    low:   { name: 'Low cloud: ILS near the minima',                      short: 'Low cloud', metar: 'EGAA 021250Z 23008KT 2000 -DZ BR OVC003 10/10 Q1009' },
+    fog:   { name: 'Thick fog: below the ILS minima',                     short: 'Fog',       metar: 'EGAA 020550Z 20003KT 0300 R25/0350N FG VV001 07/07 Q1018' },
+    storm: { name: 'Atlantic gale: gusty crosswind',                      short: 'Storm',     metar: 'EGAA 021250Z 20028G44KT 8000 -RA BKN010 11/09 Q0988' },
+    calm:  { name: 'High pressure, light and variable',                   short: 'Calm',      metar: 'EGAA 021250Z VRB02KT 9999 FEW040 08/02 Q1031' }
+  };
+  const TEL = { EZY: 'Easy', RUK: 'Ryanair', RYR: 'Ryanair', EXS: 'Channex', EIN: 'Shamrock', CFE: 'Flyer', BAW: 'Speedbird', KLM: 'KLM', LOG: 'Logan' };
+  const AIRLINE_ICAO = { U2: 'EZY', RK: 'RUK', FR: 'RYR', LS: 'EXS', EI: 'EIN', BA: 'CFE', CJ: 'CFE', KL: 'KLM', LM: 'LOG' };
+  const AIRLINE_TYPE = { EZY: 'A320', RUK: 'B738', RYR: 'B38M', EXS: 'B738', EIN: 'AT76', CFE: 'E190', BAW: 'A320', KLM: 'E190', LOG: 'E145' };
+  const TYPES = {"B38M":{"name":"737 MAX 8","wake":"M","vapp":145,"vr":150,"climb":2400,"desc":2100,"cruise":290,"span":35.9,"len":39.5,"shape":"jet"},"E190":{"name":"Embraer 190","wake":"M","vapp":128,"vr":135,"climb":2500,"desc":2000,"cruise":280,"span":28.7,"len":36.2,"shape":"jet"},"E145":{"name":"Embraer 145","wake":"M","vapp":125,"vr":130,"climb":2400,"desc":2000,"cruise":270,"span":20,"len":29.9,"shape":"jet"}};
+  const PLACES = {"aberdeen":"EGPD","agadir":"GMAD","alicante":"LEAL","amsterdam":"EHAM","antalya":"LTAI","athens":"LGAV","barcelona":"LEBL","belfast":"EGAA","belfast city":"EGAC","bergerac":"LFBE","berlin":"EDDB","bilbao":"LEBB","bodrum":"LTFE","bordeaux":"LFBD","bucharest":"LROP","bydgoszcz":"EPBY","chania":"LGSA","copenhagen":"EKCH","corfu":"LGKR","cork":"EICK","dalaman":"LTBS","dublin":"EIDW","dubrovnik":"LDDU","edinburgh":"EGPH","enfidha":"DTNH","faro":"LPFR","geneva":"LSGG","gibraltar":"LXGB","girona":"LEGE","glasgow":"EGPF","gran canaria":"GCLP","guernsey":"EGJB","heraklion":"LGIR","hurghada":"HEGN","ibiza":"LEIB","inverness":"EGPE","isle of man":"EGNS","jersey":"EGJJ","kerkyra":"LGKR","knock":"EIKN","kos":"LGKO","krakow":"EPKK","krakow/balice":"EPKK","lanzarote":"GCRR","larnaca":"LCLK","lisbon":"LPPT","london":"EGLL","madrid":"LEMD","malaga":"LEMG","malta":"LMML","manchester":"EGCC","marrakech":"GMMX","milan":"LIMC","munich":"EDDM","murcia":"LEMI","newcastle":"EGNT","nice":"LFMN","palma":"LEPA","palma de mallorca":"LEPA","paphos":"LCPH","paris":"LFPG","pisa":"LIRP","porto":"LPPR","poznan":"EPPO","prague":"LKPR","preveza/lefkada":"LGPZ","reus":"LERS","rhodes":"LGRP","rome":"LIRF","sal island":"GVAC","shannon":"EINN","sharm el-sheikh":"HESH","skiathos":"LGSK","sofia":"LBSF","tenerife":"GCTS","venice":"LIPZ","verona":"LIPX","wroclaw":"EPWR","leeds/bradford":"EGNM","liverpool":"EGGP","nottingham":"EGNX","southampton":"EGHI","fuerteventura":"GCFV","cardiff":"EGFF","derry":"EGAE","london heathrow":"EGLL","london gatwick":"EGKK","london stansted":"EGSS","belfast international":"EGAA"};
+  const AIRPORTS = {"EGGD":[51.3827,-2.7191,"Bristol"],"EGFF":[51.3967,-3.3433,"Cardiff"],"EGTE":[50.7344,-3.4139,"Exeter"],"EPPO":[52.4211,16.8263,"Poznań"],"EPBY":[53.0968,17.9777,"Bydgoszcz"],"LFBE":[44.8253,0.5186,"Bergerac"],"EIDW":[53.4213,-6.2701,"Dublin"],"LEMG":[36.6749,-4.4991,"Málaga"],"LPFR":[37.0144,-7.9659,"Faro"],"EPKK":[50.0777,19.7848,"Kraków"],"EGJJ":[49.2079,-2.1955,"Jersey"],"GCTS":[28.0445,-16.5725,"Tenerife South"],"LEAL":[38.2822,-0.5582,"Alicante"],"EGAA":[54.6575,-6.2158,"Belfast International"],"EPWR":[51.1027,16.8858,"Wrocław"],"EGJB":[49.435,-2.6019,"Guernsey"],"LEBL":[41.2971,2.0785,"Barcelona"],"EGPH":[55.95,-3.3725,"Edinburgh"],"EGNT":[55.0375,-1.6917,"Newcastle"],"LPPT":[38.7742,-9.1342,"Lisbon"],"EHAM":[52.3086,4.7639,"Amsterdam"],"EGPF":[55.8719,-4.4331,"Glasgow"],"EGPD":[57.2019,-2.1978,"Aberdeen"],"LBSF":[42.6967,23.4114,"Sofia"],"LEPA":[39.5517,2.7388,"Palma"],"LMML":[35.8575,14.4775,"Malta"],"LGRP":[36.4054,28.0862,"Rhodes"],"GMMX":[31.6069,-8.0363,"Marrakech"],"LEIB":[38.8729,1.3731,"Ibiza"],"GCRR":[28.9455,-13.6052,"Lanzarote"],"LCPH":[34.718,32.4857,"Paphos"],"GCLP":[27.9319,-15.3866,"Gran Canaria"],"HESH":[27.9773,34.395,"Sharm el-Sheikh"],"HEGN":[27.1783,33.7994,"Hurghada"],"LTBS":[36.7131,28.7925,"Dalaman"],"LGSA":[35.5317,24.1497,"Chania"],"LTAI":[36.8987,30.8005,"Antalya"],"GVAC":[16.7414,-22.9494,"Sal"],"LEGE":[41.901,2.7605,"Girona"],"LSGG":[46.2381,6.109,"Geneva"],"LFPG":[49.0097,2.5479,"Paris CDG"],"LIRP":[43.6839,10.3927,"Pisa"],"LIPX":[45.3957,10.8885,"Verona"],"LEBB":[43.3011,-2.9106,"Bilbao"],"LXGB":[36.1512,-5.3497,"Gibraltar"],"DTNH":[36.0758,10.4386,"Enfidha"],"LGKR":[39.6019,19.9117,"Corfu"],"LGPZ":[38.9255,20.7653,"Preveza"],"GMAD":[30.325,-9.4131,"Agadir"],"LGAV":[37.9364,23.9445,"Athens"],"LGSK":[39.1771,23.5037,"Skiathos"],"LGIR":[35.3397,25.1803,"Heraklion"],"LTFE":[37.2506,27.6643,"Bodrum"],"LGKO":[36.7933,27.0917,"Kos"],"EGPE":[57.5425,-4.0475,"Inverness"],"LKPR":[50.1008,14.26,"Prague"],"LIMC":[45.6306,8.7281,"Milan Malpensa"],"LERS":[41.1474,1.1672,"Reus"],"EIKN":[53.9103,-8.8185,"Knock"],"LEMI":[37.803,-1.125,"Murcia"],"LDDU":[42.5614,18.2682,"Dubrovnik"],"EICK":[51.8413,-8.4911,"Cork"],"LFMN":[43.6584,7.2159,"Nice"],"LEMD":[40.4983,-3.5676,"Madrid"],"LIPZ":[45.5053,12.3519,"Venice"],"LROP":[44.5711,26.085,"Bucharest"],"EDDM":[48.3538,11.7861,"Munich"],"EDDB":[52.3667,13.5033,"Berlin"],"LFBD":[44.8283,-0.7156,"Bordeaux"],"EKCH":[55.6181,12.6561,"Copenhagen"],"LIRF":[41.8003,12.2389,"Rome"],"LPPR":[41.2481,-8.6814,"Porto"],"EGLL":[51.47,-0.4543,"London Heathrow"],"LCLK":[34.8751,33.6249,"Larnaca"],"EGKK":[51.1481,-0.1903,"London Gatwick"],"EGCC":[53.3537,-2.275,"Manchester"],"EGSS":[51.885,0.235,"London Stansted"],"EGHH":[50.78,-1.8425,"Bournemouth"],"EGBB":[52.4539,-1.748,"Birmingham"],"EGAC":[54.6181,-5.8725,"Belfast City"],"EGNS":[54.0833,-4.6239,"Isle of Man"],"EINN":[52.702,-8.9248,"Shannon"],"EGNM":[53.8659,-1.6606,"Leeds Bradford"],"EGGP":[53.3336,-2.8497,"Liverpool"],"EGNX":[52.8311,-1.3281,"East Midlands"],"EGHI":[50.9503,-1.3568,"Southampton"],"GCFV":[28.4527,-13.8638,"Fuerteventura"],"EGAE":[55.0428,-7.1611,"Derry"]};
+
   return {
     icao: 'EGAA', icaoAlt: 'EGAC', iata: 'BFS', name: 'Belfast', city: 'Belfast', country: 'United Kingdom',
     airfields: {
@@ -263,8 +391,8 @@ const EGAA = (() => {
       EGAC: { name: 'Belfast City (George Best)',         iata: 'BHD', arp: P('543705N', '0055221W'), elev: 15,  rwys: RWYS.EGAC }
     },
     VAR, from, FIX, NAV, HOLDS_AIR, ILS, RNP07, STARS, STAR_ALT, APP_SPEEDS, RWY_USE, DEP_ROUTES, DEP_ROUTES_EGAC, DEP_RULES, DEP_PTS, SIDS, fin, off, DIR, PLACE_DIR, dirFor, UNITS, TA, TZ, ALTERNATES,
-    // not yet built: TIMETABLE / EXTRA / EXERCISES / WX_PRESETS / TYPES / PLACES / AIRPORTS, the airside layout
-    // (belfast-ground.js) and the engine adapter (egaa-engine.js)
+    TIMETABLE, LONG_STAY, EXTRA, EXERCISES, WX_PRESETS, TEL, AIRLINE_ICAO, AIRLINE_TYPE, TYPES, PLACES, AIRPORTS,
+    data: { metar: 'egaa/metar.txt', flights: 'egaa/flights.json' },
     features: { dualAirport: true, roadCrossing: false, sra: true, ils: true, rnavSids: false, singleRunway: false, mixedMode: true }
   };
 })();
