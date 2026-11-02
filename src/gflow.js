@@ -198,7 +198,7 @@ if (typeof depHold === 'function') {
 }
 // ── the plan follows the runways: at the start and whenever they change
 S.listeners.push(ev => { if (ev === 'start' || ev === 'rwy' || ev === 'rwyblock' || ev === 'rwyopen') { try { gfPlan(ev !== 'rwy'); } catch (e) { console.error(e); } } });
-// ── drawn with the procedures on, close in: arrows along the one-way taxiways, a dashed bar at each precautionary hold
+// ── drawn with the procedures on, close in: arrows along the one-way taxiways
 function drawGFlow(){
   if (!GFLOW.ready || !S.showProc || V.scale < 260) return;
   const mpx = V.scale/1852;
@@ -210,10 +210,7 @@ function drawGFlow(){
     for (let k = 1; k <= n; k++) { const f = k/(n + 1), X = sx(A[0] + (B[0] - A[0])*f), Y = sy(A[1] + (B[1] - A[1])*f), s = Math.max(4, 5*mpx);
       cx.beginPath(); cx.moveTo(X - Math.sin(h - 0.5)*s, Y + Math.cos(h - 0.5)*s); cx.lineTo(X, Y); cx.lineTo(X - Math.sin(h + 0.5)*s, Y + Math.cos(h + 0.5)*s); cx.stroke(); }
   }
-  cx.strokeStyle = C.name === 'dark' ? 'rgba(255,200,90,.85)' : 'rgba(194,112,10,.9)'; cx.lineWidth = Math.max(1.4, 1.6*mpx); cx.setLineDash([Math.max(2, 2*mpx), Math.max(2, 2*mpx)]);
-  for (const E of GFLOW.entries) {
-    const w = 11/1852, px = Math.cos(E.h*D2R)*w, py = -Math.sin(E.h*D2R)*w;
-    cx.beginPath(); cx.moveTo(sx(E.p[0] - px), sy(E.p[1] - py)); cx.lineTo(sx(E.p[0] + px), sy(E.p[1] + py)); cx.stroke();
-  }
+  // (the AI's precautionary hold points are not drawn: they have no published names, so they read as holding points a
+  // controller can't use)
   cx.restore();
 }

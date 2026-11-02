@@ -162,10 +162,14 @@ const onRunway = (o, rw) => o.onRwy && (o.rwyId || RWYS[0].id) === rwyOf(rw).id;
 const luM = o => { const rw = depRw(o), R = rwyOf(rw), dir = rw === R.lo ? 1 : -1, H = HOLDS[o.hp];
   return dir*R.mOf(!o.onRwy && H && GN[H.rwy] ? GN[H.rwy].p : [o.x, o.y]); };
 const luOthers = ac => S.acs.filter(o => o !== ac && o.kind === 'DEP' && o.ground && (o.state === 'LINEUP' || o.state === 'LINEDUP' || o.luq || o.luAfter) && depRw(o) === depRw(ac));
-// at most two lined up on a runway at once, and from different holding points: why this one can't join them (or null)
-const luFull = ac => { const o = luOthers(ac), same = o.find(x => x.hp && x.hp === ac.hp);
-  return o.length >= 2 ? `${o[0].cs} and ${o[1].cs} are already lined up on runway ${depRw(ac)}` : same ? `${same.cs} is already lining up from ${ac.hp}` : null; };
 const NUM_WORD = ['zero', 'one', 'two', 'three', 'four', 'five'];
+// how many may be lined up on one runway at once, each from its own holding point: three at the big airports with long
+// runways and several intersections (Heathrow, Gatwick, Manchester, JFK, Madrid, Sydney), two elsewhere
+const LU_MAX = APT.luMax || (['EGLL', 'EGKK', 'EGCC', 'KJFK', 'LEMD', 'YSSY'].includes(APT.icao) ? 3 : 2);
+const luMaxWord = () => NUM_WORD[LU_MAX] || String(LU_MAX);
+// why this one can't join those already lined up (or null)
+const luFull = ac => { const o = luOthers(ac), same = o.find(x => x.hp && x.hp === ac.hp);
+  return o.length >= LU_MAX ? `${o.slice(0, -1).map(x => x.cs).join(', ')} and ${o[o.length - 1].cs} are already lined up on runway ${depRw(ac)}` : same ? `${same.cs} is already lining up from ${ac.hp}` : null; };
 // conditional line-up ("behind the landing A350, line up and wait behind"): the traffic on, or about to be on, this
 // runway the same way round, a departure rolling or an arrival on short final or rolling out. passed: it is past the
 // point where this one enters, so lining up now is safe; until then the departure waits at the holding point
@@ -1489,7 +1493,7 @@ function commandRun(str){
       if (ac.state !== 'HOLDPT' && !luTaxi(ac)) { sys(`${ac.cs} is not at${ac.state === 'TAXI' ? ', or taxiing to,' : ''} a holding point${ac.state === 'TAXI' && (ac.holdAt || (ac.path && ac.path.ihp)) ? ' for the runway: taxi it on to one first' : ''}.`); continue; }
       if (ac.luq || ac.luAfter || (ac.cto && ac.state === 'TAXI')) { sys(`${ac.cs} is already cleared onto the runway.`); continue; }
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
-      { const f = luFull(ac); if (f) { sys(`${f}: no more than two at once, each from its own holding point.`, true); continue; } }
+      { const f = luFull(ac); if (f) { sys(`${f}: no more than ${luMaxWord()} at once, each from its own holding point.`, true); continue; } }
       const others = luOthers(ac), me = luM(ac), near = others.find(o => Math.abs(luM(o) - me) < 300), tr = luTraffic(ac);
       if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)) && !others.includes(o) && !(tr && o === tr.o) && !xFar(o, ac))) sys('Careful: the runway is occupied.', true);
       else if (near) sys(`Careful: ${near.cs} is lined up at about the same point as ${ac.cs}.`, true);
@@ -1507,7 +1511,7 @@ function commandRun(str){
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
       // a departure stop from the next unit: the controller knows, so it isn't given
       { const fs = typeof flowStop === 'function' && flowStop(ac); if (fs) { sys(`${fs.who} has stopped ${flowWhat(fs)} until ${flowEnd(fs)}Z (${fs.why}): ${ac.cs} can't go yet. Hold it${ac.onRwy ? ', or vacate the runway (VAC)' : ''}.`, true); continue; } }
-      { const f = (ac.state === 'HOLDPT' || luTaxi(ac)) && luFull(ac); if (f) { sys(`${f}: no more than two at once, each from its own holding point.`, true); continue; } }
+      { const f = (ac.state === 'HOLDPT' || luTaxi(ac)) && luFull(ac); if (f) { sys(`${f}: no more than ${luMaxWord()} at once, each from its own holding point.`, true); continue; } }
       { const me = luM(ac), ahead = luOthers(ac).find(o => o.onRwy && luM(o) > me + 50);   // one lined up further down the runway goes first
         if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
