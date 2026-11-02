@@ -166,6 +166,17 @@ const nearGate = p => Object.keys(ENTRY).sort((g1, g2) => dist(...ENTRY[g1], ...
 // distance from q to the line through p along track trk (NM), and how far ahead along it q is
 const lineTo = (p, trk, q) => { const ux = Math.sin(trk*D2R), uy = Math.cos(trk*D2R), dx = q[0] - p[0], dy = q[1] - p[1]; return { off: Math.abs(dx*uy - dy*ux), ahead: dx*ux + dy*uy }; };
 const segDist = (p, a, b) => { const L = dist(...a, ...b) || 1e-9, t = clamp(((p[0]-a[0])*(b[0]-a[0]) + (p[1]-a[1])*(b[1]-a[1]))/(L*L), 0, 1); return dist(...p, a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t); };
+// a real flight picked up in the air keeps flying the way it was going and turns onto the route it was given gently,
+// as on the line drawn ahead of it (never a sudden rate-one swing where it was first seen): points it has already passed,
+// or is too close to turn for, are dropped, and the turn onto the first one is flown at a radius set by how far off it is
+function easeOn(ac){
+  const h = ac.hdg;
+  while (ac.route.length > 1) { const q = WP[ac.route[0]].p, d = dist(ac.x, ac.y, ...q), off = Math.abs(angDiff(h, brg(ac.x, ac.y, ...q)));
+    if (d < 1 || off > 95 || (off > 45 && d < 4)) ac.route.shift(); else break; }
+  if (!ac.route.length) return;
+  const d = dist(ac.x, ac.y, ...WP[ac.route[0]].p);
+  ac.ease = ac.route[0]; ac.easeR = clamp(d/30, 0.5, 1.5)*5.2;
+}
 // the rest of a route from where the aircraft is: from the leg it is nearest to
 function routeOn(p, from, names){
   const pts = [from, ...names.map(n => WP[n].p)]; let bi = 1, bd = Infinity;
@@ -248,7 +259,7 @@ function adoptArr(a, p, row){
     ac.mode = 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360; ac.state = 'VECTORS'; ac.route = [];
     liveCall(ac, `${APT.radar[0]}, ${greet()}, ${altShort(Math.round(ac.alt/100)*100)}${ac.tgtAlt < ac.alt - 200 ? ' descending ' + altShort(ac.tgtAlt) : ''}, heading ${hdg3(ac.tgtHdg)}, information ${phonetic(S.atis)}`);
   } else {   // on its arrival route: from the leg it is on
-    ac.mode = 'NAV'; ac.state = 'INBOUND'; ac.route = routeOn(p, ENTRY[gate], ARR_ROUTE[gate][S.rwy]);
+    ac.mode = 'NAV'; ac.state = 'INBOUND'; ac.route = routeOn(p, ENTRY[gate], ARR_ROUTE[gate][S.rwy]); easeOn(ac);
     liveCall(ac, PH.checkIn(ac));
   }
   ac.need = 'Initial call';
@@ -258,7 +269,7 @@ function adoptDepAir(a, p, row){
   const gate = row ? gateFor(row.ap) : depGateOf(p, a.trk || 0), ac = liveAc(a, p, row, 'DEP', gate), d = dist(...p, ...RADAR_REF);
   const drw = depRw(ac); Object.assign(ac, { depRwy: drw, sid: sidName(gate, drw), cto: true, turned: true, pushed: true, leftStand: true, state: 'AIRBORNE', reqDct: true, onSid: false });
   const top = sidTop(ac); ac.tgtAlt = ac.cleared = a.alt > top - 300 ? Math.ceil((a.alt + 1500)/1000)*1000 : top;
-  ac.route = routeOn(p, RADAR_REF, exitRouteOf(ac)); ac.mode = ac.route.length ? 'NAV' : 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360;
+  ac.route = routeOn(p, RADAR_REF, exitRouteOf(ac)); easeOn(ac); ac.mode = ac.route.length ? 'NAV' : 'HDG'; ac.tgtHdg = Math.round(a.trk || 0) || 360;
   if (d < 4 && a.alt < ELEV + 2500) { ac.freq = 'TWR'; ac.calledAir = false; }   // just airborne: still with Tower, transfer it to Radar
   else { ac.freq = 'RAD'; ac.calledAir = ac.calledRad = true; ac.state = 'CLIMB'; ac.reqClimb = ac.tgtAlt > top; liveCall(ac, PH.depCall(ac)); }
   return ac;
