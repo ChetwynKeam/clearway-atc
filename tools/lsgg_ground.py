@@ -69,7 +69,6 @@ HP = {}
 for e in E:
     t = e.get('tags', {})
     if e['type'] == 'node' and t.get('aeroway') == 'holding_position':
-        if t.get('holding_position:type') == 'ILS': continue        # the ILS critical-area holds: not used
         HP[e['id']] = tname(t.get('ref'))
 for n, r in list(HP.items()):                                      # unnamed ones take their taxiway's name
     if not r: HP[n] = next((tname(w['tags'].get('ref')) for w in taxi if n in w['nodes'] and w['tags'].get('ref') and tname(w['tags'].get('ref')) != 'APRON'), None)
@@ -209,18 +208,25 @@ for h, used in hold_used:
     for t in used[:last + 1]: keep.add(id(t))
 drop -= keep
 print('kept as taxiway', len(keep))
-# crossings: holding positions either side of one runway that reach the same centreline point
+# crossings: holding positions either side of the runway, joined through one centreline node. At Geneva the taxiways do not
+# meet head-on (Q1/Q2 on the North Apron come in 110-140 m from E on the apron side, P1/P2 20-45 m from C), so each hold
+# is paired with the nearest one on the other side along the runway (within 160 m), a south hold serving at most two.
 xedges, XN, pairs = [], {}, set()
+cand = []
 for h1, c1, k1, r1d in paths:
     for h2, c2, k2, r2d in paths:
-        if r1d != r2d or (h1, h2) in pairs or h1 >= h2: continue
+        if r1d != r2d or h1 == h2: continue
         R = FR[r1d]; mo = R['mo']
-        if abs(c1[0] - c2[0]) < 15 and mo(NODE[h1])[1]*mo(NODE[h2])[1] < 0:
-            pairs.add((h1, h2)); x = 'x%d' % len(XN); a, U, N = R['a'], R['U'], R['N']
-            XN[x] = (a[0] + U[0]*c1[0], a[1] + U[1]*c1[0])
-            for h, k in ((h1, k1), (h2, k2)):
-                Rr = fil[k] + holds[k][7]
-                xedges.append([x, NID(h), holds[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr[1:]]])
+        if mo(NODE[h1])[1] > 0 and mo(NODE[h2])[1] < 0 and abs(c1[0] - c2[0]) < 160: cand.append((abs(c1[0] - c2[0]), h1, c1, k1, h2, c2, k2, r1d))
+cand.sort(key=lambda c: c[0]); used_n, used_s = collections.Counter(), collections.Counter()
+for d, h1, c1, k1, h2, c2, k2, r1d in cand:
+    if used_n[h1] >= 1 or used_s[h2] >= 2: continue
+    used_n[h1] += 1; used_s[h2] += 1; R = FR[r1d]; mo = R['mo']
+    x = 'x%d' % len(XN); a, U, N = R['a'], R['U'], R['N']
+    XN[x] = (a[0] + U[0]*c1[0], a[1] + U[1]*c1[0])
+    for h, k in ((h1, k1), (h2, k2)):
+        Rr = fil[k] + holds[k][7]
+        xedges.append([x, NID(h), holds[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr[1:]]])
 print('holds', len(holds), 'crossings', len(XN))
 def runway_seg(s): return id(s) in drop or any(onAny(NODE[n]) for n in [s[0], s[1]] + s[3])
 edges = []
@@ -290,27 +296,9 @@ def crosses(a, b, skip):
             Lab = math.dist(a, b)
             if 6 < tt*Lab < Lab - 6: return True
     return False
-# AD 2-EGGD-2-2 gives coordinates for most stands, and they are where the nose stops (the T-bar): every stand with
-# coordinates stops there. OSM's stand lines agree with them on the Main Apron's 1-3 and the far west 38-40, but on the
-# West Apron they show the layout before it was re-marked (lines 25-30 m east of the chart's, the W3/W4 lane mapped
-# ~15 m east) and on 17-20 and 22-25 they end 11-14 m away. So a stand with coordinates is drawn as the chart has it: a
-# straight lead-in from its lane to the T-bar, along the stand's heading. The heading is the chart's (AIP_HDG) on the
-# West Apron, otherwise that of the mapped line through the T-bar. Drive-through lines with two stop marks (28, 31, 33:
-# W and E) take the E mark, entered from the west. The stands the AIP has still "to be surveyed" (5-12, 14-16, the East
-# Apron) keep their OSM lines, which match the chart there. The MARS alternatives (26L/26R, 28W, 31W, 33W, E1-E3,
-# W1-W8) are left out: each is drawn as its main stand.
-AIP_ALL = {m[0]: P(m[1], m[2]) for m in re.findall(r'\b(\d{1,2}[EW]?)\s+(\d{6}\.\d{2}N)\s+(\d{7}\.\d{2}W)', open(STANDS_TXT).read())}
-# a stand with its own line in OpenStreetMap is placed by that line (the street map under the chart shows the same paint);
-# the AIP coordinate only for one OpenStreetMap does not have
+# Geneva stands come from OpenStreetMap parking_position lines (and nodes/boxes); there is no AIP coordinate list here.
+AIP_STANDS, AIP_HDG = {}, {}
 _osm_refs = {w.get('tags', {}).get('ref') for w in ways if tagged(w, 'parking_position') and w['nodes'][0] != w['nodes'][-1]}
-AIP_ALL = {k: v for k, v in AIP_ALL.items() if re.sub(r'[EW]$', '', k) not in _osm_refs or k in ('34', '40')}
-AIP_STANDS = {k: v for k, v in AIP_ALL.items() if re.match(r'^\d{1,2}$', k)}
-for k in ('28', '31', '33'):
-    if k + 'E' in AIP_ALL: AIP_STANDS[k] = AIP_ALL[k + 'E']
-# true headings into the stand from the chart (AD 2-EGGD-2-2, West Apron): 28-31 and 33 east off the lanes (along
-# taxiway Z's line, 087°), 32 west off the W3/W4 lane, 34-36 west-north-west off W1, 37 north-west from Z; and 17 and
-# 18 (East Apron, not mapped) north off Z like 19 and 20
-AIP_HDG = {'17': 356.5, '18': 356.5, '28': 87, '29': 87, '30': 87, '31': 87, '33': 87, '32': 267, '34': 297, '35': 285, '36': 285, '37': 312}
 lines = []
 # a stand's painted line takes the number of the stand box it lies in: OpenStreetMap has some lines one number out from
 # their boxes (37-39 drawn in the boxes of 38-40, 35 and 36 swapped), and the box is what the map shows the number on
@@ -321,12 +309,17 @@ def _inpoly(p, poly):
         if (y1 > y) != (y2 > y) and x < (x2-x1)*(y-y1)/(y2-y1) + x1: c = not c
     return c
 _boxes = [(w['tags'].get('ref'), [NODE[n] for n in w['nodes']]) for w in ways if tagged(w, 'parking_position') and w['nodes'][0] == w['nodes'][-1] and w.get('tags', {}).get('ref')]
+STAND_RE = re.compile(r'^(\d{1,3}[A-C]?|[A-G]\d{1,2}|L\d{1,2}|P[CEF]\d{1,2})$')
+_RW = FR['0422']
+def _north_side(p): return _RW['mo'](p)[1] > 40           # left of the runway (04 -> 22 frame): the North Apron side
 for w in ways:
     if not tagged(w, 'parking_position') or w['nodes'][0] == w['nodes'][-1]: continue
+    if w.get('tags', {}).get('disused') == 'yes': continue
     pts = [NODE[n] for n in w['nodes']]
     if len(pts) < 2: continue
-    r = w.get('tags', {}).get('ref'); inb = [b for b, bp in _boxes if _inpoly(pts[-1], bp) or _inpoly(pts[0], bp)]
-    if r and re.match(r'^\d{1,2}$', r) and len(inb) == 1 and re.match(r'^\d{1,2}$', inb[0]) and inb[0] != r: print('stand line', r, 'is in box', inb[0]); r = inb[0]
+    r = w.get('tags', {}).get('ref')
+    if r == '73TO76' or r == '74TO76' or not r or not STAND_RE.match(r) or r[0] == 'D' and len(r) == 2: continue
+    if _north_side(pts[0]) and r[0].isdigit(): r = 'N' + r
     lines.append((r, pts))
 def seg_near(p):
     """the mapped stand line segment nearest p: (distance, a, b)"""
@@ -354,18 +347,27 @@ for sid, ap in AIP_STANDS.items():
     for k, (r, q) in enumerate(lines):
         if (r in (None, sid)) and min(math.dist(ap, q[0]), math.dist(ap, q[-1])) < 20: used.add(k)
 for k, (r, q) in enumerate(lines):
-    if k in used or not r or not re.match(r'^\d{1,2}$', r) or r in pp: continue
+    if k in used or not r or r in pp: continue
     pp[r] = (q, sum(math.dist(q[i], q[i+1]) for i in range(len(q)-1)))
 # AD 2-EGGD-2-2: the Main Apron in front of the terminal (1-6, 21-26), the East Apron (7-20, E1-E3) and the West Apron
 # (28-40, W1-W8)
-def term(sid):
-    if sid.startswith('E'): return 'E'
-    if sid.startswith('W'): return 'W'
-    n = int(re.match(r'\d+', sid)[0])
-    if n <= 6 or 21 <= n <= 26: return 'M'
-    if n <= 20: return 'E'
-    return 'W'
+SATC = []                                                          # the three round satellites: centres (Satellite 30, 40 and the unnamed one)
+for _w in ways:
+    if _w['id'] in (14363411, 26163558, 26163505):
+        _p = [NODE[n] for n in _w['nodes']]; SATC.append((sum(x for x, y in _p)/len(_p), sum(y for x, y in _p)/len(_p)))
+print('satellite centres', [(round(x), round(y)) for x, y in SATC])
+def sat_dist(p): return min(math.dist(p, c) for c in SATC)
+def term(sid, p):
+    if sid in SATLINES: return 'S'
+    if sid[0] == 'N' or sid[0] in 'EFGL': return 'N'
+    m = _RW['mo'](p)[0]
+    if m < 0 and _RW['mo'](p)[1] < -700 and False: return 'W'
+    u = (p[0]*0.728 + p[1]*0.685)
+    if u < -1050: return 'W'
+    if u > 300: return 'E'
+    return 'T'
 gates, splits = [], []
+SATLINES = set()
 outs = {}
 def along(pl, d):
     """the point d metres along a polyline, and the index of the segment it is on"""
@@ -377,13 +379,16 @@ def along(pl, d):
 TPTS = [NODE[n] for w in ways if w.get('tags', {}).get('aeroway') == 'terminal' for n in w['nodes'] if n in NODE]
 def tdist(p): return min((math.dist(p, t) for t in TPTS), default=1e9)
 def bear(a, b): return math.degrees(math.atan2(b[0]-a[0], b[1]-a[1])) % 360
-for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0])[0]), kv[0])):
+for sid, (q, L) in sorted(pp.items(), key=lambda kv: (kv[0].lstrip('0123456789') != '', int((re.search(r'\d+', kv[0]) or ['0'])[0]), kv[0])):
     line = None
+    if len(q) > 1 and L < 110 and min(sat_dist(q[0]), sat_dist(q[-1])) < 70: continue   # a radial nose-in line on a satellite: the satellite stands are the tangent drive-through lines
     if len(q) > 1:
         n0, n1 = nearest_seg(q[0]), nearest_seg(q[-1])
         # (within 55 m of a lane at both ends: the west remote ramp's 70-74, 80 and 231 groups, whose left and right
         # lines end short of the far lane, stop where their centre lines do)
-        if n0[0] < 55 and n1[0] < 55 and L > 60:
+        mid_ = along(q, L/2)[0]
+        if n0[0] < 55 and n1[0] < 55 and L > 60 and sat_dist(mid_) < 110:
+            SATLINES.add(sid)
             # the mapped line runs from one lane to another (the lane behind the Terminal 1-2-3 stands, the remote ramps'
             # drive-through stands): the aircraft comes in from the lane further from a terminal building and stops at the
             # line's middle vertex (halfway along it when it has none)
@@ -396,6 +401,7 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0
             outs[sid] = ([p] + q[k+1:], (n1[0], n1[1], n1[2], n1[3])); print('drive-through stand', sid)
         else:
             if n0[0] > n1[0]: q = q[::-1]; n0, n1 = n1, n0          # q runs from the lane end to the stop point
+            elif n0[0] < 55 and n1[0] < 55 and tdist(q[-1]) > tdist(q[0]): q = q[::-1]; n0, n1 = n1, n0   # a line between two lanes: nose in toward the terminal
             p = q[-1]; line = q
             hd = bear(q[-2], q[-1]) if math.dist(q[-2], q[-1]) > 2 else bear(q[0], q[-1])
             if n0[0] <= 30: hit = (n0[0], n0[1], n0[2], n0[3])      # the painted line meets its lane here
@@ -422,7 +428,7 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0
     if paint and any(crosses(paint[j], paint[j+1], e) for j in range(len(paint) - 1)): paint = None
     splits.append((sid, hit))
     if sid in outs: splits.append((sid + '>', outs[sid][1]))
-    gates.append([sid, term(sid), [r1(p[0]), r1(p[1])], hit, round(hd, 1), [[r1(x) for x in pt] for pt in paint] if paint else 0])
+    gates.append([sid, term(sid, p), [r1(p[0]), r1(p[1])], hit, round(hd, 1), [[r1(x) for x in pt] for pt in paint] if paint else 0])
 byedge = collections.defaultdict(list)
 for sid, (t, e, i, u) in splits: byedge[id(e)].append((i + u, sid, e))
 newedges, gnode, POS = [], {}, {}
@@ -470,21 +476,21 @@ out = {'runways': runways, 'nodes': nodes, 'edges': edges, 'rnodes': rnodes,
        'holds': {k: h[:7] + [h[8]] for k, h in holds.items()}, 'hlink': {k: h[7] for k, h in holds.items() if h[7]}, 'fil': fil, 'hs': hs,
        'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds}
 with open(OUT, 'w') as fo:
-    fo.write('''// ═════════════════════════ Bristol (EGGD): aerodrome layout ═════════════════════════
-// Generated by tools/eggd_ground.py from OpenStreetMap (taxiways, holding positions, parking positions, aprons, terminals,
-// hangars) with the runway thresholds from AIP AD 2-EGGD-2-1. Positions are metres east and north of the ARP
-// (51°22'58"N 002°43'09"W).
+    fo.write('''// ═════════════════════════ Geneva (LSGG): aerodrome layout ═════════════════════════
+// Generated by tools/lsgg_ground.py from OpenStreetMap (taxiways, holding positions, parking positions, aprons, terminals,
+// hangars) with the runway thresholds from the AIP AD 2 LSGG charts (displaced 04 threshold). Positions are metres east and north of the ARP
+// (46°14'17"N 006°06'33"E).
 // runways: pavement ends a (the low-numbered end) and b, length, thresholds in metres from a, elevations (ft)
 // nodes [id, east, north] (x: on a runway centreline, s: a stand's lead-in, c: a crossover's end), edges [a, b, taxiway,
 // intermediate points],
 // rnodes: runway-edge points 40 m out on each entry/exit; holds key: [hold node, runway-edge node, runway, m along it,
 // offset, directions that can turn off there, runway end it serves, taxiway]; hlink: the bend between the runway edge and
 // the holding point; fil: centreline to runway-edge fillet in the runway frame; hs: holding positions before a runway;
-// gates: [stand, apron (M main, E east, W west), stop point [e, n], lead-in node, heading into the stand, the painted lead-in line from the lane (0: none)]; ihps: [name, node] holding points away
+// gates: [stand, apron (T terminal, S satellites, E east, W west, N north apron), stop point [e, n], lead-in node, heading into the stand, the painted lead-in line from the lane (0: none)]; ihps: [name, node] holding points away
 // from the runways.
-const EGGD_GROUND = ''')
+const LSGG_GROUND = ''')
     fo.write(json.dumps(out, separators=(',', ':')))
-    fo.write(';\nif (typeof module !== \'undefined\') module.exports = EGGD_GROUND;\n')
+    fo.write(';\nif (typeof module !== \'undefined\') module.exports = LSGG_GROUND;\n')
 print('nodes', len(nodes), 'edges', len(edges), 'holds', len(holds), 'gates', len(gates), 'ihps', len(ihps), 'blds', len(blds))
 for rid in FR:
     print(rid, sorted([(k, h[3], h[4], h[5], h[6]) for k, h in holds.items() if h[2] == rid], key=lambda x: x[1]))
