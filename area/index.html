@@ -3423,10 +3423,12 @@ const AW = (() => {
 
   // ── the network ──
   let FIX = {}, AWYS = {}, AP = {}, RWY = {}, ADJ = {}, SEGS = [], NODES = [], DEG = {}, READY = false;
-  const COVER = { la: [48.2, 61.5], lo: [-13.5, 4.8] };
+  let COVER = { la: [48.2, 61.5], lo: [-13.5, 4.8] };
   const inCover = p => p[0] > COVER.la[0] && p[0] < COVER.la[1] && p[1] > COVER.lo[0] && p[1] < COVER.lo[1];
   function init(D){
     FIX = D.fix || {}; AWYS = D.awy || {}; AP = D.ap || {}; RWY = D.rwy || {};
+    // the region the airways cover (data may bring its own: the airport consoles carry the wider Europe network)
+    COVER = D.cover ? { la: [D.cover[0], D.cover[1]], lo: [D.cover[2], D.cover[3]] } : { la: [48.2, 61.5], lo: [-13.5, 4.8] };
     ADJ = {}; SEGS = []; DEG = {};
     const seen = new Set();
     for (const [name, A] of Object.entries(AWYS)) for (const s of A.s) for (let i = 1; i < s.length; i++) {
@@ -3437,6 +3439,20 @@ const AW = (() => {
       SEGS.push({ a, b, n: name, l: A.l, t: A.t, d, c: gcBrg(pa, pb), bb: [Math.min(pa[0], pb[0]), Math.min(pa[1], pb[1]), Math.max(pa[0], pb[0]), Math.max(pa[1], pb[1])] });
       (DEG[a] ||= new Set()).add(name); (DEG[b] ||= new Set()).add(name);
     }
+    // Networks from different sources (the UK file and the rest of Europe) meet at the border, mostly without a shared point: the
+    // nearest points of different networks within 35 NM are joined by a short direct leg (not drawn), so routes cross the border
+    { const comp = {}; let nc = 0;
+      for (const n of Object.keys(ADJ)) { if (comp[n] != null) continue; const st = [n]; comp[n] = nc; while (st.length) { const u = st.pop(); for (const e of ADJ[u]) if (comp[e[0]] == null) { comp[e[0]] = nc; st.push(e[0]); } } nc++; }
+      if (nc > 1) {
+        const ns = Object.keys(ADJ), grid = new Map(), key = (la, lo) => Math.floor(la/0.6) + ':' + Math.floor(lo/0.9);
+        for (const n of ns) { const q = FIX[n], k = key(q[0], q[1]); (grid.get(k) || grid.set(k, []).get(k)).push(n); }
+        const links = [];
+        for (const a of ns) { const pa = FIX[a], ka = key(pa[0], pa[1]).split(':').map(Number), near = [];
+          for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const b of grid.get((ka[0] + i) + ':' + (ka[1] + j)) || []) {
+            if (comp[b] === comp[a] || a >= b) continue; const d = gcNM(pa, FIX[b]); if (d < 35) near.push([d, b]); }
+          near.sort((x, y) => x[0] - y[0]); for (const [d, b] of near.slice(0, 2)) links.push([a, b, d]); }
+        for (const [a, b, d] of links) { (ADJ[a] ||= []).push([b, '', d, 'U', 'C']); (ADJ[b] ||= []).push([a, '', d, 'U', 'C']); }
+      } }
     NODES = Object.keys(ADJ); READY = true;
   }
   // a min-heap
