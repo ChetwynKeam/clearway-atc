@@ -5317,10 +5317,30 @@ function smoothTaxiways(){
     for (let i = 1; i < P.length; i++) { const L = Math.hypot(P[i][0]-P[i-1][0], P[i][1]-P[i-1][1])*M; if (acc + L >= dm) { const k = (dm - acc)/L; return [P[i-1][0] + (P[i][0]-P[i-1][0])*k, P[i-1][1] + (P[i][1]-P[i-1][1])*k, i]; } acc += L; }
     return null; };
   const lenOf = c => { let s = 0; for (let i = 1; i < c.pts.length; i++) s += Math.hypot(c.pts[i][0]-c.pts[i-1][0], c.pts[i][1]-c.pts[i-1][1])*M; return s; };
-  const paint = res.map(c => ({ ...c, trim: [0, 0] })), curves = [];
+  // the hold-to-runway link is painted only as far as where the lead lines (the fillet curves) start: they carry the centreline on
+  const holdOf = id => Object.keys(HOLDS).find(h => HOLDS[h].node === id && FIL[h] && (FIL[h].W.length || FIL[h].E.length));
+  const isRn = id => /^R\d|^CR\d|^XR$/.test(id);
+  const paint = res.map(c => {
+    const a = c.ids[0], z = c.ids[c.ids.length - 1];
+    if (c.ids.length > 5 || !((isRn(a) && holdOf(z)) || (isRn(z) && holdOf(a)))) return { ...c, trim: [0, 0] };
+    const k = holdOf(isRn(a) ? z : a), f = FIL[k], Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0, far = (f.W.length ? f.W : f.E).slice(-1)[0], P = Rr.rm(far[0], far[1]);
+    const pts = isRn(a) ? c.pts.slice().reverse() : c.pts.slice();     // from the hold node towards the runway
+    let bi = 0, bd = 1e9; pts.forEach((q, n) => { const d = Math.hypot(q[0]-P[0], q[1]-P[1]); if (d < bd) { bd = d; bi = n; } });
+    // where the lead lines start on a line already painted (the taxiway runs on past the hold) there is no link to paint
+    const near = res.some(o => o !== c && !((isRn(o.ids[0]) || isRn(o.ids[o.ids.length - 1])) && o.ids.length <= 5) && o.pts.some((q, n) => { if (!n) return false; const a = o.pts[n-1];
+      const dx = q[0]-a[0], dy = q[1]-a[1], l2 = dx*dx + dy*dy || 1, t = Math.max(0, Math.min(1, ((P[0]-a[0])*dx + (P[1]-a[1])*dy)/l2));
+      return Math.hypot(a[0] + dx*t - P[0], a[1] + dy*t - P[1])*M < 6; }));
+    if (near) return { ...c, pts: [P, P], trim: [0, 0] };
+    // a curve, not a chord: it arrives at P pointing the way the lead line sets off
+    const fl = (f.W.length ? f.W : f.E), Q = Rr.rm(...fl[fl.length - 2]), a0 = pts[0], tl = Math.hypot(Q[0]-P[0], Q[1]-P[1]) || 1, dd = Math.hypot(P[0]-a0[0], P[1]-a0[1]);
+    const Cc = [P[0] - (Q[0]-P[0])/tl*dd*0.5, P[1] - (Q[1]-P[1])/tl*dd*0.5], seg = [];
+    for (let n = 0; n <= 10; n++) { const u = n/10, w = 1 - u; seg.push([w*w*a0[0] + 2*w*u*Cc[0] + u*u*P[0], w*w*a0[1] + 2*w*u*Cc[1] + u*u*P[1]]); }
+    return { ...c, pts: seg, trim: [0, 0] };
+  }), curves = [];
   const meet = new Map();
   for (const [id, L] of at) {
     if (L.length !== 3) continue;
+    if (L.some(({ c }) => isRn(c.ids[0]) || isRn(c.ids[c.ids.length - 1]))) continue;   // a hold: the lead lines carry the centreline on
     const D = L.map(dirOut); let best = null;
     for (let i = 0; i < 3; i++) { const j = (i + 1) % 3, k = (i + 2) % 3, cs = D[j][0]*D[k][0] + D[j][1]*D[k][1]; if (cs < -0.9 && (!best || cs < best.cs)) best = { br: i, j, k, cs }; }
     if (!best) continue;
@@ -5385,9 +5405,12 @@ function drawBelfast(){
       }
       for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 60], [R.hi, R.thr[R.hi] - 60]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
     }
-    { const seen = new Set(), leads = [];
+    { const seen = new Set(), leads = [], drawnEnd = new Set();
       for (const k in FIL) { const Rr = RWY_LIST.find(r => r.id === HOLDS[k].on) || R0;
         for (const sd of ['W', 'E']) { const f = FIL[k][sd]; if (!f.length) continue; const key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
+          // at a runway end the line-up lines only point the way the runway points: a curve that would turn the aircraft back towards the end is left off
+          if (HOLDS[k].end) { const inw = HOLDS[k].m < Rr.len/2 ? 1 : -1; if (Math.sign(f[0][0] - f[f.length - 1][0]) !== inw) continue;
+            const nk = HOLDS[k].node + inw; if (drawnEnd.has(nk)) continue; drawnEnd.add(nk); }
           // the curve onto the centreline, then 60 m on along it (never past the runway end)
           const ln = leadLine(f); ln[0][0] = Math.min(Rr.len, Math.max(0, ln[0][0])); leads.push(ln.map(p => P2(Rr.rm(...p)))); } }
       groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
