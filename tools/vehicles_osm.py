@@ -219,7 +219,7 @@ for p in terms:
 terms = ded
 bridges = []
 for w in ways:
-    if T(w).get('aeroway') != 'jet_bridge': continue
+    if T(w).get('aeroway') != 'jet_bridge' or ICAO == 'LSGG': continue   # Geneva's satellites are walk-out/bus stands: no bridges drawn
     pts = [en(g) for g in w['geometry']]
     bridges.append([[round(pts[0][0], 1), round(pts[0][1], 1)], [round(pts[-1][0], 1), round(pts[-1][1], 1)]])
 data = {'nodes': nodes, 'edges': edges, 'fire': fire, 'firetrain': firetrain, 'hangars': hangars, 'fuel': fuel, 'catering': catering, 'terms': terms, 'bridges': bridges}

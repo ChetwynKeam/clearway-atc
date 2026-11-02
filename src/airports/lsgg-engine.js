@@ -53,11 +53,48 @@ for (const [k, [node, rwy, on, m, off, dirs, end, tw]] of Object.entries(G.holds
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
 // each holding position's axis: the unit vector along the taxiway towards the runway (from the mapped link to it)
 const HOLD_AXIS = {};
+// the axis is read from the taxiway 25 m or more out from the holding position, so a kink in the mapped link next to it can't skew the bars
+const axisPt = (k, p) => { const hl = (G.hlink[k] || []).map(q => rm(...q)).reverse(); for (const q of hl) if (dist(...p, ...q) >= 25) return q; return hl.length ? hl[hl.length - 1] : GN[HOLDS[k].rwy].p; };
 for (const [k, H] of Object.entries(HOLDS)) {
   if (HOLD_AXIS[H.node] || !GN[H.node]) continue;
-  const p = GN[H.node].p, hl = G.hlink[k] || [], q = hl.length ? rm(...hl[hl.length - 1]) : GN[H.rwy].p, L = dist(...p, ...q) || 1;
+  const p = GN[H.node].p, q = axisPt(k, p), L = dist(...p, ...q) || 1;
   HOLD_AXIS[H.node] = [(q[0] - p[0])/L, (q[1] - p[1])/L];
 }
+// ── lead-on / lead-off lines: one clean curve from the taxiway centreline to the runway centreline, joining it tangentially and
+// running on along it for 60 m. A way in square to the runway gets a curve each way (radius 40 m); an angled one a single curve.
+const LEADS = (() => {
+  const out = [], seen = new Set(), RUN = 60;
+  const bez = (P0, P1, P2, P3) => { const a = []; for (let i = 0; i <= 24; i++) { const t = i/24, u = 1 - t;
+    a.push([u*u*u*P0[0] + 3*u*u*t*P1[0] + 3*u*t*t*P2[0] + t*t*t*P3[0], u*u*u*P0[1] + 3*u*u*t*P1[1] + 3*u*t*t*P2[1] + t*t*t*P3[1]]); } return a; };
+  const order = Object.keys(FIL).sort((x, y) => G.holds[x][5].includes(',') - G.holds[y][5].includes(','));   // the angled ways first
+  const angled = [];
+  for (const k of order) {
+    const f = G.fil[k], C = f[0], T = f[f.length - 1], key = Math.round(C[0]/3) + ',' + Math.round(T[0]/3) + ',' + Math.sign(T[1]);
+    if (seen.has(key)) continue; seen.add(key);
+    const hl = G.hlink[k] || [], side = Math.sign(T[1]) || 1, cm = C[0], tm = T[0], to = T[1];
+    // taxiway direction where it reaches T (away from the runway), from the last 12+ m of the mapped link or fillet
+    let u = null; const tail = [...f.slice(0, -1).reverse().map(q => q), ...[]];
+    const ref = [...hl, ...[]].find(q => dist(q[0], q[1], tm, to) >= 12) || tail.find(q => dist(q[0], q[1], tm, to) >= 12) || [tm, to - side*20];
+    u = [tm - ref[0], to - ref[1]]; { const L = Math.hypot(...u) || 1; u = [u[0]/L, u[1]/L]; }
+    if (hl.length) { const r2 = hl.find(q => dist(q[0], q[1], tm, to) >= 12); if (r2) { u = [r2[0] - tm, r2[1] - to]; const L = Math.hypot(...u) || 1; u = [u[0]/L, u[1]/L]; } }
+    if (u[1]*side < 0.2) u = [Math.sign(u[0]) * 0.8, side*0.6];                      // never let it run back towards the runway
+    const both = G.holds[k][5].includes(',');
+    if (both && Math.abs(tm - cm) < 30 && Math.abs(u[1]) > 0.85) {
+      const R = Math.abs(to) - 1, ax = tm;
+      for (const s of [-1, 1]) {
+        if (ax + s*R < 15 || ax + s*R > R0.len - 15 || angled.some(([m, sd]) => sd === side && Math.abs(m - ax) < 90)) continue;                 // no way along the runway there: it is the end
+        const k1 = 0.5523*R, P = bez([ax, to], [ax, to - side*k1], [ax + s*(R - k1), 0], [ax + s*R, 0]);
+        out.push([...P, [Math.max(0, Math.min(R0.len, ax + s*(R + RUN))), 0]]);
+      }
+    } else {
+      const sx = Math.sign(tm - cm) || 1, dm = Math.abs(tm - cm), d = Math.abs(to);
+      const k1 = Math.min(0.5*dm + 0.15*d, 0.62*Math.hypot(dm, d)), k2 = Math.min(0.5*d/Math.max(Math.abs(u[1]), 0.4), 0.5*Math.hypot(dm, d));
+      const P = bez([cm, 0], [cm + sx*k1, 0], [tm - u[0]*k2, to - u[1]*k2], [tm, to]);
+      out.push([[Math.max(0, Math.min(R0.len, cm - sx*RUN)), 0], ...P]); angled.push([(cm + tm)/2, side]);
+    }
+  }
+  return out;
+})();
 // stands: the terminal (T), the three round satellites (S: drive-through stands, bussed passengers), the east (E) and west (W)
 // aprons and the north apron (N, business aviation)
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const p = EN(e, n);
@@ -204,9 +241,7 @@ function drawLsgg(){
     }
     for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 60], [R.hi, R.thr[R.hi] - 60]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
     // lead-on and lead-off lines: the mapped fillet curves carried over the runway to its centreline
-    { const seen = new Set(), leads = []; for (const k in FIL) { const f = FIL[k].W, key = JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
-      leads.push(leadLine(f).map(p => P2(R.rm(...p)))); }
-      groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
+    groundLines(lw(0.35), () => LEADS.forEach(l => strokeSmooth(l.map(p => P2(R.rm(...p))))));
     // taxiway centrelines, stopping at the runway edges
     paintEdgeLines(lw(0.35));
     // runway holding positions (pattern A): two solid lines on the taxiway side and two dashed on the runway side, across
