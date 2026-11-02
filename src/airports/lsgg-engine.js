@@ -99,7 +99,7 @@ const LEADS = (() => {
 // from two holds over the same path). Every edge is cut into short pieces, a piece lying along one already kept (within 2.5 m, nearly
 // the same heading) is dropped, taxiways ahead of aprons, and what is left is joined back into continuous chains through the
 // junctions, so each lane is painted once and smoothly.
-const CLINES = (() => {
+const CL = (() => {
   const M = 1852, pieces = [], grid = new Map(), K = 3, cell = 6;
   const gk = (x, y) => Math.floor(x/cell) + ',' + Math.floor(y/cell);
   const edges = GE.filter(e => !e.bare).sort((a, b) => (a.tw === 'APRON') - (b.tw === 'APRON'));
@@ -124,8 +124,8 @@ const CLINES = (() => {
   // way for 14 m either side, so a lane turning in is one curve and never an X through another
   const rank = e => e.tw === 'APRON' ? 4 : /^(LINK|INNER|OUTER)/.test(e.tw) ? 3 : 1;
   for (let i = kept.length - 1; i >= 0; i--) { const o = Math.abs(R0.offOf(kept[i].c.map(v => v/M))), m = R0.mOf(kept[i].c.map(v => v/M)); if (o < 31 && m > -5 && m < R0.len + 5) kept.splice(i, 1); }
-  const cut = new Set();
-  for (let i = 0; i < kept.length; i++) for (let j = i + 1; j < kept.length; j++) {
+  const cut = new Set(), all = kept.slice();   // all: the pieces before the runway is cleared, for the pavement
+  if (false) for (let i = 0; i < kept.length; i++) for (let j = i + 1; j < kept.length; j++) {
     const s1 = kept[i], t = kept[j]; if (s1.e === t.e || Math.abs(s1.c[0] - t.c[0]) > 8 || Math.abs(s1.c[1] - t.c[1]) > 8) continue;
     let da = Math.abs(s1.hd - t.hd) % Math.PI; da = Math.min(da, Math.PI - da); if (da < 0.45) continue;
     const d = (a, b, c) => (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0]);
@@ -135,27 +135,29 @@ const CLINES = (() => {
   }
   for (let i = kept.length - 1; i >= 0; i--) if (cut.has(kept[i])) kept.splice(i, 1);
   // join into chains through nodes of degree two
-  const ek = pt => Math.round(pt[0]*2) + ',' + Math.round(pt[1]*2), ends = new Map();
-  kept.forEach((pc, i) => { for (const pt of [pc.p, pc.q]) { const k = ek(pt); if (!ends.has(k)) ends.set(k, []); ends.get(k).push(i); } });
-  const used = new Set(), chains = [];
-  const other = (i, k) => (ends.get(k) || []).filter(j => j !== i);
-  for (let i = 0; i < kept.length; i++) {
-    if (used.has(i)) continue;
-    // walk to one end of the chain first
-    let cur = i, from = ek(kept[i].p), guard = 0;
-    while (guard++ < 5000) { const nx = other(cur, from); if (nx.length !== 1 || (ends.get(from) || []).length !== 2 || used.has(nx[0])) break; const j = nx[0], pj = kept[j]; from = ek(pj.p) === from ? ek(pj.q) : ek(pj.p); cur = j; if (cur === i) break; }
-    const line = []; let at = cur, enter = from; guard = 0;
-    while (guard++ < 5000) {
-      used.add(at); const pc = kept[at], forward = ek(pc.p) === enter;
-      if (!line.length) line.push(forward ? pc.p : pc.q); line.push(forward ? pc.q : pc.p);
-      const leave = forward ? ek(pc.q) : ek(pc.p), nx = other(at, leave);
-      if (nx.length !== 1 || (ends.get(leave) || []).length !== 2 || used.has(nx[0])) break;
-      at = nx[0]; enter = leave;
+  const chainify = list => {
+    const ek = pt => Math.round(pt[0]*2) + ',' + Math.round(pt[1]*2), ends = new Map();
+    list.forEach((pc, i) => { for (const pt of [pc.p, pc.q]) { const k = ek(pt); if (!ends.has(k)) ends.set(k, []); ends.get(k).push(i); } });
+    const used = new Set(), chains = [], other = (i, k) => (ends.get(k) || []).filter(j => j !== i);
+    for (let i = 0; i < list.length; i++) {
+      if (used.has(i)) continue;
+      let cur = i, from = ek(list[i].p), guard = 0;
+      while (guard++ < 5000) { const nx = other(cur, from); if (nx.length !== 1 || (ends.get(from) || []).length !== 2 || used.has(nx[0])) break; const j = nx[0], pj = list[j]; from = ek(pj.p) === from ? ek(pj.q) : ek(pj.p); cur = j; if (cur === i) break; }
+      const line = []; let at = cur, enter = from; guard = 0;
+      while (guard++ < 5000) {
+        used.add(at); const pc = list[at], forward = ek(pc.p) === enter;
+        if (!line.length) line.push(forward ? pc.p : pc.q); line.push(forward ? pc.q : pc.p);
+        const leave = forward ? ek(pc.q) : ek(pc.p), nx = other(at, leave);
+        if (nx.length !== 1 || (ends.get(leave) || []).length !== 2 || used.has(nx[0])) break;
+        at = nx[0]; enter = leave;
+      }
+      if (line.length > 1) chains.push(line.map(pt => [pt[0]/M, pt[1]/M]));
     }
-    if (line.length > 1) chains.push(line.map(pt => [pt[0]/M, pt[1]/M]));
-  }
-  return chains;
+    return chains;
+  };
+  return { paint: chainify(kept), pave: chainify(all.filter(pc => pc.e.tw !== 'APRON')) };
 })();
+const CLINES = CL.paint;
 // stands: the terminal (T), the three round satellites (S: drive-through stands, bussed passengers), the east (E) and west (W)
 // aprons and the north apron (N, business aviation)
 const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const p = EN(e, n);
@@ -290,7 +292,7 @@ function drawLsgg(){
     for (const k in FIL) { pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
   } else {
     // over the street map: taxiways at their real width, clear of the buildings; the aprons are the map's own
-    const lines = GE.filter(e => e.tw !== 'APRON').map(e => ({ pts: [P2(GN[e.a].p), P2(GN[e.b].p)], w: paveWidth(e.tw) }));
+    const lines = CL.pave.map(c => ({ pts: c.map(P2), w: paveWidth() }));   // the cleaned, continuous centrelines: one band per taxiway, no breaks
     for (const k in FIL) lines.push({ pts: FIL[k].W.map(([m, o]) => P2(R.rm(m, o))), w: paveWidth() });
     drawPavement(lines, G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n)))), mpx);
   }
@@ -327,7 +329,7 @@ function drawLsgg(){
     cx.strokeStyle = C.yellow;
     for (const [id, [u, v]] of Object.entries(HOLD_AXIS)) {
       const n = GN[id]; if (!n) continue; const at = (a, b) => [n.p[0] + (v*a + u*b)*M2NM, n.p[1] + (-u*a + v*b)*M2NM];   // a across, b along
-      for (const [d, dash] of [[-0.9, false], [-0.3, false], [0.3, true], [0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([at(-11, d), at(11, d)], false); cx.stroke(); }
+      for (const [d, dash] of [[-0.9, false], [-0.3, false], [0.3, true], [0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([at(-9, d), at(9, d)], false); cx.stroke(); }
       cx.setLineDash([]);
     }
     // stand lead-in lines and numbers
