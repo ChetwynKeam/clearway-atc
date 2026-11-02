@@ -11978,6 +11978,7 @@ function farTag(X, Y, l1, l2, l3, col){
 }
 const FL = a => String(Math.max(0, Math.round(a/100))).padStart(3, '0');
 // the airway chart under the far traffic when zoomed out to the wider picture (the same chart as Area Control: awy.js)
+const SHOW_AIRWAYS = false;
 function drawAirwayChart(){
   if (typeof AW === 'undefined' || !AW.ready || V.scale >= 4 || ground3()) return;
   const P = (la, lo) => { const q = llxy(la, lo); return [sx(q[0]), sy(q[1])]; };
@@ -11986,7 +11987,7 @@ function drawAirwayChart(){
 }
 const ground3 = () => V.scale > 70;
 function drawFar(){
-  drawAirwayChart();
+  if (SHOW_AIRWAYS) drawAirwayChart();   // off: far flights fly the airways but the chart is not drawn (the Europe data is old)
   const tags = V.scale > 0.6;
   for (const g of FAR.list) {
     const st = farState(g); if (!st) continue;
