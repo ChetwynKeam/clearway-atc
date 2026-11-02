@@ -62,6 +62,21 @@ def nearest_free(p, left, lo, hi):   # a face point on the left, in the reach, w
 src = open(OUT).read(); m = re.search(r'const VEH_DATA = (\{.*\});', src)
 data = json.loads(m.group(1)); real = list(data['bridges'])
 stands = json.load(open(STANDS_F)); new = []
+def segd2(a, b, c, d):   # the closest two segments come, metres
+    def ps(p, q, r):
+        dx, dy = r[0]-q[0], r[1]-q[1]; L = dx*dx + dy*dy; t = 0 if L == 0 else max(0, min(1, ((p[0]-q[0])*dx + (p[1]-q[1])*dy)/L)); return math.dist(p, (q[0] + t*dx, q[1] + t*dy))
+    o = lambda p, q, r: (q[0]-p[0])*(r[1]-p[1]) - (q[1]-p[1])*(r[0]-p[0])
+    if o(a, b, c)*o(a, b, d) < 0 and o(c, d, a)*o(c, d, b) < 0: return 0
+    return min(ps(a, c, d), ps(b, c, d), ps(c, a, b), ps(d, a, b))
+def over_stand(me, a, b):   # does the tunnel a-b pass through another stand's fuselage?
+    for o in stands:
+        if o is me or o.get('area') != 'civil' or math.dist((o['x'], o['y']), (me['x'], me['y'])) < 14: continue
+        sp = o.get('span') or 36; Lo = 72.7 if sp >= 78 else 63.7 if sp > 52 else 37.5; ho = math.radians(o['hdg'])
+        for i in range(13):
+            p = (a[0] + (b[0]-a[0])*i/12 - o['x'], a[1] + (b[1]-a[1])*i/12 - o['y'])
+            f = p[0]*math.sin(ho) + p[1]*math.cos(ho); sd = p[0]*math.cos(ho) - p[1]*math.sin(ho)
+            if abs(f) < Lo/2 + 3 and abs(sd) < fusw(Lo)/2 + 2.5: return True
+    return False
 def fusw(L): return max(2.2, min(6.2, L*0.1))
 for s in stands:
     if s.get('area') != 'civil': continue
@@ -77,7 +92,8 @@ for s in stands:
         hit = nearest_free(A, left, 9, 44)
         if not hit: continue
         root = hit[1]
-        if any(math.dist(root, n[0]) < 4.5 for n in real + new): continue
+        if any(math.dist(root, n[0]) < 6 for n in real + new): continue
+        if over_stand(s, root, D) or any(segd2(root, D, b[0], b[1]) < 3.5 for b in real + new): continue   # never across a neighbour's aircraft or another tunnel
         new.append([[round(root[0], 1), round(root[1], 1)], [round(D[0], 1), round(D[1], 1)]])
 n0 = len(real); merged = []
 for b in new:
