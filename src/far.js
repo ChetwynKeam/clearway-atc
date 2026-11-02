@@ -192,7 +192,13 @@ function wayIn(o, from, end, dir){
   const O = from, D = gcDist(O, end);
   const via = (VIA[o.o] || []).filter(p => !nearGib(p) && gcDist(p, end) > 40 && gcDist(p, O) > 30).slice().reverse();
   // a short hop: worked back from where we saw it, a steady turn round towards its origin, so it meets its track in line
-  if (D < 70) return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
+  if (D < 70) {
+    // lined up with where it came from: a steady turn onto its track. Well off that line (it is flying across the way in from its origin) the
+    // route goes straight to a point just back along its track, not out and round to come back on it
+    const a0 = Math.abs(angDiff(dir, gcBrg(O, end)));
+    if (a0 > 20) return makeLeg(smoothPts([O, gcDest(end, dir + 180, Math.min(6, D/6)), end]));
+    return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
+  }
   // the airway route to a point well back along the line it was flying, then a steady turn to intercept that line
   // (only a long way back when the track it was flying points along the way in from its origin: a vector or downwind leg
   // close in says nothing about the route it flew to get there)

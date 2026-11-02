@@ -369,9 +369,11 @@ function drawBelfast(){
   cx.lineJoin = 'round'; cx.lineCap = 'round';
   if (!IMG) {
     cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
-    cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
+    // flat ends so the strokes do not leave round scallops out on the grass
+    cx.lineCap = 'butt'; cx.strokeStyle = C.concrete; cx.lineWidth = lw(46);
     for (const e of GE) { if (e.tw !== 'APRON' || e.bare) continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
-    cx.lineWidth = lw(44); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
+    cx.lineWidth = lw(58); for (const s of STANDS) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); }
+    cx.lineCap = 'round';
     cx.strokeStyle = C.asphalt;
     cx.lineWidth = lw(23);
     for (const c of smoothTaxiways().pave) { if (c.tw === 'APRON') continue; pathP(c.pts, false); cx.stroke(); }
@@ -527,7 +529,8 @@ const minsOk = (w, rw) => { const rnp = rw === '07'; return w.vis >= (rnp ? 800 
 const sraMinsOk = w => minsOk(w, '25');
 
 // ═════════════════════════ engine hooks ═════════════════════════
-const termOf = ac => isCity(ac) ? 'C' : 'M';
+// an arrival goes to the apron of the airport it lands at, whoever it is flagged as
+const termOf = ac => ac && ac.kind === 'ARR' && ac.rwyId ? (ac.rwyId === '0422' ? 'C' : 'M') : isCity(ac) ? 'C' : 'M';
 function standAt(ac, t){
   const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
   const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
@@ -537,6 +540,7 @@ const flowText = c => `Aldergrove ${alderRw()} and City ${cityRw()}`;
 const UN = EGAA.UNITS;
 const APT = {
   arrAlt: { ...arrAltOf(STAR_LIST), ...FEED_ALT },
+  apOf: ac => ((ac.kind === 'ARR' && ['04', '22'].includes(ac.app)) || ac.rwyId === '0422' || (!(ac.kind === 'ARR' && ac.app) && isCity(ac))) ? 'EGAC' : 'EGAA',
   icao: 'EGAA', icaoAlt: 'EGAC', name: 'Belfast', coordName: 'Belfast', radarName: 'BFS', utcOff: 0, tz: 'Europe/London',
   radar: [UN.EGAA.app.name, UN.EGAA.app.freq], depRadar: [UN.EGAA.app.name, UN.EGAA.app.freq],
   tower: [UN.EGAA.twr.name, UN.EGAA.twr.freq], gnd: ['Aldergrove Ground', '121.755'],

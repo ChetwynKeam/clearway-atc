@@ -8635,8 +8635,8 @@ function renderSel(){
   const ac = S.sel, el = $('sel');
   el.classList.toggle('empty', !ac || !S.acs.includes(ac));
   if (!ac || !S.acs.includes(ac)) { el.innerHTML = `<div class="ph"><span class="lbl">Selected flight</span></div><p class="empty">Click a target on the scope or a strip below. Flights marked <b class="need-dot">◆</b> are waiting on you. <kbd>Tab</kbd> cycles flights.</p>`; return; }
-  const air = ac.airborne, route = ac.kind === 'ARR' ? `${ac.o} → ${APT.icao}` : `${APT.icao} → ${ac.d}`;
-  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span><span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><span class="selnav"><button data-nav="-1" aria-label="Previous flight">‹</button><button data-nav="1" aria-label="Next flight">›</button></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
+  const air = ac.airborne, ap = APT.apOf ? APT.apOf(ac) : APT.icao, route = ac.kind === 'ARR' ? `${ac.o} → ${ap}` : `${ap} → ${ac.d}`;
+  let html = `<div class="sel-head"><span class="cs ${ac.kind}">${ac.cs}</span><span class="chip ${ac.kind}">${ac.kind === 'ARR' ? 'Arrival' : 'Departure'}</span>${APT.apOf ? `<span class="chip">${ap}</span>` : ''}<span class="chip">${stateLabel(ac)}</span>${ac.kind === 'ARR' && ac.stand && ac.state !== 'ONSTAND' && !ac.handed ? `<span class="chip stand">Stand ${ac.stand.id}</span>` : ''}<span class="grow"></span><span class="selnav"><button data-nav="-1" aria-label="Previous flight">‹</button><button data-nav="1" aria-label="Next flight">›</button></span><button class="rm" data-rm title="Remove this flight from the session (if it gets stuck)" aria-label="Remove ${ac.cs}">Remove</button><span class="lbl">${ac.state === 'PRE' ? 'Not on frequency' : ac.freq === 'TWR' ? `${APT.tower[0].split(' ').pop()} ${APT.tower[1]}` : `${APT.radar[0].split(' ').pop()} ${APT.radar[1]}`}</span></div>
     <div class="meta">${ac.perf.name} · ${ac.t}/${ac.perf.wake} · ${route} · sqk ${ac.sqk}${ac.reg ? ' · '+ac.reg : ''}<br>“${spoken(ac.cs)}”</div>`;
   if (ac.emerg && !ac.emerg.done) html += `<div class="emgline"><b>${ac.emerg.k}</b> ${esc(ac.emerg.why)}${ac.emerg.ack ? '' : ` <button data-c="ROG" class="danger">Roger ${ac.emerg.k}</button>`}</div>`;
   if (ac.need && !(ac.emerg && /^(MAYDAY|PAN)/.test(ac.need))) html += `<div class="needline${aiOwns(ac) ? ' ai' : ''}">◆ ${esc(ac.need)}</div>`;
@@ -8982,7 +8982,7 @@ function makeStrip(ac, doc = document){
   d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
   d.querySelector('.cs').textContent = ac.cs;
   d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
-  d.querySelector('.rte').textContent = ac.kind === 'ARR' ? `${ac.o} › ${APT.icao}` : `${APT.icao} › ${ac.d}`;
+  d.querySelector('.rte').textContent = (a => ac.kind === 'ARR' ? `${ac.o} › ${a}` : `${a} › ${ac.d}`)(APT.apOf ? APT.apOf(ac) : APT.icao);
   d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? (ac.stand.area === 'hangar' ? 'Hangar ' : 'Stand ')+ac.stand.id : towOn(ac) ? 'Tow › '+(ac.path && ac.towTgt ? ac.towTgt : ac.tow.to.id) : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
   // arrivals show the stand they are going to, once it is planned
   if (ac.kind === 'ARR' && ac.stand && !outOfCtl(ac)) { const r = d.querySelector('.rte'); r.title = `${r.textContent}, to stand ${ac.stand.id}`; r.textContent = `Stand ${ac.stand.id}`; }
@@ -9986,8 +9986,10 @@ function standDashes(t){
   const pts = t.line && t.line.length > 1 ? t.line : [L0, t.p];
   if (dist(...L0, ...t.p)*M < 14) return null;
   let q = pts[pts.length - 1]; for (const c of pts.slice(1)) if (dist(...L0, ...c)*M > 8) { q = c; break; }
+  const lane = GN[t.lane || t.node], ways = waysOn(t.lane || t.node);
+  if (ways.length !== 2 || STANDS.some(o => o !== t && o.lp && dist(...o.lp, ...L0)*M < 6)) return null;   // only where the lead-in leaves a plain lane on its own, not at a junction or a shared spur end
   const lead = brg(...L0, ...q), out = [], seen = [];
-  for (const [v] of waysOn(t.lane || t.node)) { const w = GN[v].p; if (dist(...L0, ...w)*M < 3) continue;
+  for (const [v] of ways) { const w = GN[v].p; if (dist(...L0, ...w)*M < 3) continue;
     const b = brg(...L0, ...w), a = Math.abs(angDiff(b, lead)); if (a < 25 || a > 155 || seen.some(x => Math.abs(angDiff(x, b)) < 20)) continue;
     seen.push(b); out.push([at(L0, b, Math.min(15, dist(...L0, ...w)*M*0.9)), L0, at(L0, lead, 10)]); }
   return out.length ? out : null;
@@ -11374,7 +11376,13 @@ function wayIn(o, from, end, dir){
   const O = from, D = gcDist(O, end);
   const via = (VIA[o.o] || []).filter(p => !nearGib(p) && gcDist(p, end) > 40 && gcDist(p, O) > 30).slice().reverse();
   // a short hop: worked back from where we saw it, a steady turn round towards its origin, so it meets its track in line
-  if (D < 70) return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
+  if (D < 70) {
+    // lined up with where it came from: a steady turn onto its track. Well off that line (it is flying across the way in from its origin) the
+    // route goes straight to a point just back along its track, not out and round to come back on it
+    const a0 = Math.abs(angDiff(dir, gcBrg(O, end)));
+    if (a0 > 20) return makeLeg(smoothPts([O, gcDest(end, dir + 180, Math.min(6, D/6)), end]));
+    return makeLeg(intercept(O, gcBrg(O, end), end, dir, clamp(D/60, 0.4, 1)));
+  }
   // the airway route to a point well back along the line it was flying, then a steady turn to intercept that line
   // (only a long way back when the track it was flying points along the way in from its origin: a vector or downwind leg
   // close in says nothing about the route it flew to get there)
