@@ -4869,7 +4869,9 @@ const EGAA = (() => {
   // Right-hand circuit = downwind on the right of the landing direction and right turns; left-hand likewise.
   const CIRC = { '25': 14, '22': 12.5, '04': 13.5 };
   for (const r of Object.keys(CIRC)) for (const sd of ['L', 'R']) { FIX[`${r}${sd}A`] = off(r, 0, 4, sd); FIX[`${r}${sd}B`] = off(r, CIRC[r], 4.5, sd); }
-  FIX.S25BA = off('25', 9, 6, 'L'); FIX.INT25S = fin('25', 9);                       // from the south: base leg across to D9
+  FIX.S25BA = off('25', 9, 6, 'L'); FIX.INT25S = fin('25', 9);
+  // (S25BA/INT25S above: from the south, base leg across to D9)
+  FIX.SE25B = off('25', 18, 6.5, 'L');                                                // from the south-east: a long base leg up from the south, short of the City 22 final, never over the Lough
 
   // ── arrival tracks (Clearway "real" routing, standing in for the radar vectors). Key = direction + runway.
   // Entry legs are the standard initial routes (VATSIM UK / IVAO); after the last of them the controller vectors, written here as
@@ -4879,7 +4881,7 @@ const EGAA = (() => {
   const STARS = {
     // ── Aldergrove 25: the 25 final points north-east, so P600 traffic is straight in; Lough traffic turns left onto it
     'NE 25': { apt: 'EGAA', rwy: '25', from: 'NE', pts: [['TRN', 12000], ['BLACA', 8000], ['INT25', 4000]] },
-    'SE 25': { apt: 'EGAA', rwy: '25', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['LOUGH', 5000], ['INT25', 4000]] },
+    'SE 25': { apt: 'EGAA', rwy: '25', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['SE25B', 5000], ['INT25', 4000]] },
     'S 25':  { apt: 'EGAA', rwy: '25', from: 'S',  pts: [['NEVRI', 12000], ['ABSUN', 8000], ['S25BA', 5000], ['INT25S', 3000]] },
     'W 25':  { apt: 'EGAA', rwy: '25', from: 'W',  pts: [['B300D40', 8000], ['BEL', 5000], ['25RA', 4500], ['25RB', 4000], ['INT25', 4000]] },
     // ── Aldergrove 07: the RNP initial approach fixes (the plate's IAFs) are the end of the route
@@ -5319,7 +5321,15 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
       if (nodes) { const main = new Set(); for (let i = 1; i < nodes.length; i++) main.add([nodes[i-1], nodes[i]].sort().join('|'));
         const c0 = GN[f0].p, near = id => Math.hypot(GN[id].p[0]-c0[0], GN[id].p[1]-c0[1])/M2NM < 450;
         const holdN = new Set(Object.values(HOLDS).flatMap(h => [h.node]));
-        for (const e of GE) if ((e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b) && !main.has([e.a, e.b].sort().join('|')) && !holdN.has(e.a) && !holdN.has(e.b) && !/^Cx|^Cf/.test(e.a + e.b)) e.bare = true; } }
+        for (const e of GE) if ((e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b) && !main.has([e.a, e.b].sort().join('|')) && !holdN.has(e.a) && !holdN.has(e.b) && !/^Cx|^Cf/.test(e.a + e.b)) e.bare = true;
+        for (const e of GE) if (e.bare && (e.tw === 'A' || e.tw === 'APRON') && near(e.a) && near(e.b)) e.k = Math.max(e.k || 1, 4);   // the unpainted inner lanes are a last resort: routes and tows keep to the painted chain
+        // each hold's link must stay painted all the way to the main apron chain (A1, A2, A3 stubs join A)
+        const mainN = new Set(nodes);
+        for (const h of Object.values(HOLDS)) { const s0 = h.node; if (!GN[s0] || !near(s0) || mainN.has(s0)) continue;
+          const dd = { [s0]: 0 }, pv = {}, todo = new Set([s0]), done = new Set(); let hit = null;
+          while (todo.size) { let u = null; for (const x of todo) if (u === null || dd[x] < dd[u]) u = x; todo.delete(u); if (mainN.has(u)) { hit = u; break; } done.add(u);
+            for (const [v, ev] of GN[u].adj) { if (done.has(v) || /^R|^CR/.test(v) || (ev.tw !== 'A' && ev.tw !== 'APRON')) continue; const nd = dd[u] + ev.len; if (dd[v] === undefined || nd < dd[v]) { dd[v] = nd; pv[v] = [u, ev]; todo.add(v); } } }
+          for (let u = hit; u && u !== s0; u = pv[u] && pv[u][0]) if (pv[u]) delete pv[u][1].bare; } } }
     // the lanes that led to the old stands are left as dead ends: take them out (only the apron's own chain and lane nodes)
     const keep = new Set([...STANDS.map(t => t.node), ...Object.values(HOLDS).flatMap(h => [h.node, h.rwy])]);
     for (let again = true; again;) { again = false;
