@@ -359,14 +359,25 @@ class Aircraft {
 // arrivals show on radar about 35 NM beyond the boundary as pending tracks (not on frequency, no control) and call
 // Gibraltar Radar when they reach the entry point inside the radar rings
 const PRE_NM = 35, PRE_LEAD = 6.5*60;
+// where a pending arrival waits beyond its entry point: along the entry's own bearing, unless its origin is close in (Glasgow for Belfast), when it
+// sits just short of that airport on the line to it, so it is never spawned beyond where it came from and made to double back
+function preVec(f){
+  const e = ENTRY[f.gate], L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L];
+  const A = typeof AP !== 'undefined' && f.o && AP[f.o]; if (!A || typeof llxy !== 'function') return { u, nm: PRE_NM };
+  const o = llxy(A[0], A[1]), od = Math.hypot(o[0] - RADAR_REF[0], o[1] - RADAR_REF[1]);
+  if (od > L + PRE_NM + 30 || od < 5) return { u, nm: PRE_NM };
+  const u2 = [(o[0] - RADAR_REF[0])/od, (o[1] - RADAR_REF[1])/od];
+  if (Math.abs(angDiff(brg(0, 0, ...u), brg(0, 0, ...u2))) > 70) return { u, nm: PRE_NM };
+  return { u: u2, nm: clamp(od - L - 4, 6, PRE_NM) };
+}
 const greet = () => { const h = ((new Date(S.start + S.t*1000).getUTCHours() + tzOffH(S.start + S.t*1000)) % 24 + 24) % 24; return h < 12 ? 'good morning' : h < 18 ? 'good afternoon' : 'good evening'; };
 function spawnArrival(f){
   const ac = new Aircraft(f); ac.kind = 'ARR';
   const e = ENTRY[f.gate], first = WP[ARR_ROUTE[f.gate][arrKey(f)][0]];
   const left = f.m*60 - S.t;
   if (f.m > 0 && left > 5) { // pending: outside the boundary, inbound to the entry point
-    const L = Math.hypot(e[0] - RADAR_REF[0], e[1] - RADAR_REF[1]), u = [(e[0] - RADAR_REF[0])/L, (e[1] - RADAR_REF[1])/L], frac = clamp(left/PRE_LEAD, 0, 1);
-    ac.x = e[0] + u[0]*PRE_NM*frac; ac.y = e[1] + u[1]*PRE_NM*frac;
+    const { u, nm } = preVec(f), frac = clamp(left/PRE_LEAD, 0, 1);
+    ac.x = e[0] + u[0]*nm*frac; ac.y = e[1] + u[1]*nm*frac;
     // another pending track on top of it (the same minute, or two flows sharing the entry point): in trail, 8 NM behind
     for (let k = 0; k < 6 && S.acs.some(o => o.state === 'PRE' && Math.hypot(o.x - ac.x, o.y - ac.y) < 5); k++) { ac.x += u[0]*8; ac.y += u[1]*8; }
     ac.alt = ENTRY_ALT[f.gate] + (PRE_ALT[f.gate] - ENTRY_ALT[f.gate])*frac; ac.ias = 300; ac.gs = 330;

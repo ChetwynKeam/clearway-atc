@@ -247,7 +247,17 @@ function laneDir(st, face){
   for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
   return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
 }
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
+function pushPath(ac, face){
+  const st = ac.stand, lp = st.lp, ld = laneDir(st, face), end = add(lp, ld, 40*M2NM);
+  // the tail swings round onto the lane: the tug backs it down the stand line, then in an arc onto the lane (not a corner on the lane's edge)
+  const toStand = brg(...lp, ...st.p), dd = dist(...lp, ...st.p)*(1/M2NM);
+  if (Math.abs(angDiff(toStand, ld)) > 25 && dd > 28) {
+    const a = add(lp, toStand, 22*M2NM), b = add(lp, ld, 22*M2NM), arc = [];
+    for (let k = 0; k <= 8; k++) { const t = k/8, u = 1 - t; arc.push([u*u*a[0] + 2*u*t*lp[0] + t*t*b[0], u*u*a[1] + 2*u*t*lp[1] + t*t*b[1]]); }
+    return [...arc, end];
+  }
+  return [lp, end];
+}
 function pushRec(ac){
   const st = ac.stand, h = depHold(ac), to = h && HOLDS[h].node; if (!to) return 'east';
   const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };

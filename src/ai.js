@@ -885,12 +885,13 @@ function aiDeparture(ac){
       if (aiDo('DEP', ac, `H${String(h || 360).padStart(3, '0')}`)) { ac.aiAround = { t: S.t, c: near }; ac.aiWhy = 'turned round the hold'; return; }
     }
   }
-  if (ac.aiAround && cap == null) { const A = ac.aiAround; ac.aiAround = null; ac.aiWhy = ''; if (S.t - A.t > 5) { aiDo('DEP', ac, `C${Math.round((ac.reqClimb ? climbTop() : sidTop(ac))/100)}`); return; } }
+  if (ac.aiAround && cap == null) { const A = ac.aiAround; ac.aiAround = null; ac.aiAroundT = S.t; ac.aiWhy = ''; if (S.t - A.t > 5) { aiDo('DEP', ac, `C${Math.round((ac.reqClimb ? climbTop() : sidTop(ac))/100)}`); return; } }
   if (cap != null && (ac.tgtAlt ?? ac.alt) > cap + 50) { ac.aiWhy = 'kept below the hold'; return aiDo('DEP', ac, `A${Math.round(cap/100)}`); }
   if (ac.aiLev) return;   // levelled off for traffic: the climb and the direct wait until it is clear
   if (n === 'Request climb' && cap != null) return;
   if (n.startsWith('Request direct') && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, 'DCT ' + n.split(' ').pop());
   if (n === 'Request climb' && aiDue(ac, n, 3, 7)) return aiDo('DEP', ac, `C${Math.round(climbTop()/100)}`);
+  if (ac.aiAroundT && S.t - ac.aiAroundT < 300 && S.acs.some(o => o.kind === 'ARR' && o.airborne && o.mode === 'HOLD' && dist(o.x, o.y, ac.x, ac.y) < 25)) return;   // round a hold: not straight back at it
   aiDirect(ac, 'DEP');   // further along its way out when the airspace allows
 }
 
