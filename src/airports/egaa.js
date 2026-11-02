@@ -131,7 +131,9 @@ const EGAA = (() => {
   // Right-hand circuit = downwind on the right of the landing direction and right turns; left-hand likewise.
   const CIRC = { '25': 14, '22': 12.5, '04': 13.5 };
   for (const r of Object.keys(CIRC)) for (const sd of ['L', 'R']) { FIX[`${r}${sd}A`] = off(r, 0, 4, sd); FIX[`${r}${sd}B`] = off(r, CIRC[r], 4.5, sd); }
-  FIX.S25BA = off('25', 9, 6, 'L'); FIX.INT25S = fin('25', 9);                       // from the south: base leg across to D9
+  FIX.S25BA = off('25', 9, 6, 'L'); FIX.INT25S = fin('25', 9);
+  // (S25BA/INT25S above: from the south, base leg across to D9)
+  FIX.SE25B = off('25', 18, 6.5, 'L');                                                // from the south-east: a long base leg up from the south, short of the City 22 final, never over the Lough
 
   // ── arrival tracks (Clearway "real" routing, standing in for the radar vectors). Key = direction + runway.
   // Entry legs are the standard initial routes (VATSIM UK / IVAO); after the last of them the controller vectors, written here as
@@ -141,7 +143,7 @@ const EGAA = (() => {
   const STARS = {
     // ── Aldergrove 25: the 25 final points north-east, so P600 traffic is straight in; Lough traffic turns left onto it
     'NE 25': { apt: 'EGAA', rwy: '25', from: 'NE', pts: [['TRN', 12000], ['BLACA', 8000], ['INT25', 4000]] },
-    'SE 25': { apt: 'EGAA', rwy: '25', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['LOUGH', 5000], ['INT25', 4000]] },
+    'SE 25': { apt: 'EGAA', rwy: '25', from: 'SE', pts: [['IOM', 12000], ['RINGA', 8000], ['SE25B', 5000], ['INT25', 4000]] },
     'S 25':  { apt: 'EGAA', rwy: '25', from: 'S',  pts: [['NEVRI', 12000], ['ABSUN', 8000], ['S25BA', 5000], ['INT25S', 3000]] },
     'W 25':  { apt: 'EGAA', rwy: '25', from: 'W',  pts: [['B300D40', 8000], ['BEL', 5000], ['25RA', 4500], ['25RB', 4000], ['INT25', 4000]] },
     // ── Aldergrove 07: the RNP initial approach fixes (the plate's IAFs) are the end of the route
