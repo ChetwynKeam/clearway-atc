@@ -11945,10 +11945,12 @@ function airwayPts(pts, seed, keepLast, finalCourse){
     // the great circle broken into legs whose turning points sit a little to one side or the other (as airways do)
     // beyond the airway data: long-haul and oceanic legs (over 1,800 NM) are a great circle, as they are filed; shorter legs over
     // the continent bend a little at turning points every 120 NM or so, the way airway routes do
-    const legNM = 120, n = last || D < 150 || D > 1800 ? 1 : Math.max(2, Math.round(D/legNM));
+    // (a long great circle is still laid down as points every 120 NM or so, on the circle itself: a single long segment is drawn
+    // as a straight chord on the flat map, and wraps right across it over the date line)
+    const legNM = 120, n = last || D < 150 ? 1 : Math.max(2, Math.round(D/legNM)), GC = D > 1800;
     let off = 0;
     for (let j = 1; j < n; j++) {
-      const L = D/n, cap = Math.min(D > 1800 ? 18 : 9, L*0.075);
+      const L = D/n, cap = GC ? 0 : Math.min(9, L*0.075);
       off = clamp(off*0.6 + rn()*cap, -cap*1.4, cap*1.4);
       const k = Math.min(1, j, n - j)*(j === 1 || j === n - 1 ? 0.5 : 1);
       const q = gcAt(A, B, j/n), h = gcBrg(gcAt(A, B, j/n - 0.01), q); out.push(gcDest(q, h + 90, off*k));
@@ -11973,6 +11975,7 @@ function smoothPts(pts, keepLast){
     const turn = Math.abs(angDiff(gcBrg(A, V), gcBrg(V, B)))*D2R;
     const c = Math.min(6*Math.tan(Math.min(turn, 2.6)/2), la/2.2, (keepLast && i === pts.length - 2 ? lb/3 : lb/2.2)); if (c < 0.15) { out.push(V); continue; }
     const P = gcAt(V, A, c/la), Q = gcAt(V, B, c/lb);
+    P[1] += 360*Math.round((V[1] - P[1])/360); Q[1] += 360*Math.round((V[1] - Q[1])/360);   // on the same side of the date line as the corner
     const n = clamp(Math.ceil(c/1.2), 12, 60);   // about a point a mile, so a wide curve has no visible facets close in
     for (let k = 0; k <= n; k++) { const t = k/n, u = 1 - t;   // quadratic through the corner, in degrees (short distances)
       out.push([u*u*P[0] + 2*u*t*V[0] + t*t*Q[0], u*u*P[1] + 2*u*t*V[1] + t*t*Q[1]]); }
