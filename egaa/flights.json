@@ -1,311 +1,63 @@
 {
- "updated": "2026-11-03T15:41:45Z",
+ "updated": "2026-11-03T21:17:42Z",
  "source": "avionio.com",
  "days": {
   "2026-11-03": {
    "utcOffsetMin": 0,
    "arr": [
     {
-     "place": "Manchester",
-     "flight": "EI3617",
-     "sched": "15:00",
-     "status": "Landed",
-     "expected": "14:44",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "BA1400",
-     "sched": "15:55",
-     "status": "Landed",
-     "expected": "15:24",
-     "air": "C"
-    },
-    {
-     "place": "Glasgow",
-     "flight": "U2421",
-     "sched": "16:15",
-     "status": "Estimated",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Manchester",
-     "flight": "U2703",
-     "sched": "16:25",
-     "status": "Estimated",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "U2249",
-     "sched": "16:35",
-     "status": "Estimated",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Alicante",
-     "flight": "RK7706",
-     "sched": "16:40",
-     "status": "Estimated",
-     "expected": "16:24",
-     "air": "A"
-    },
-    {
-     "place": "Nottingham",
-     "flight": "EI3681",
-     "sched": "16:40",
-     "status": "Estimated",
-     "expected": "16:20",
-     "air": "C"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL949",
-     "sched": "16:45",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EI3645",
-     "sched": "17:05",
-     "status": "Estimated",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Manchester",
-     "flight": "EI3615",
-     "sched": "17:20",
-     "status": "Estimated",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Lanzarote",
-     "flight": "LS310",
-     "sched": "17:25",
-     "status": "Estimated",
-     "expected": "18:25",
-     "air": "A"
-    },
-    {
-     "place": "London",
-     "flight": "BA1402",
-     "sched": "17:25",
-     "status": "Estimated",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "EI3657",
-     "sched": "17:50",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "U2821",
-     "sched": "17:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EI3647",
-     "sched": "18:00",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "BA1406",
-     "sched": "18:35",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "U232",
-     "sched": "18:45",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Tenerife",
-     "flight": "LS382",
-     "sched": "19:00",
-     "status": "Estimated",
-     "expected": "18:51",
-     "air": "A"
-    },
-    {
-     "place": "Liverpool",
-     "flight": "U2535",
-     "sched": "19:05",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Manchester",
-     "flight": "RK193",
-     "sched": "19:10",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Prague",
-     "flight": "U23092",
-     "sched": "19:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "London",
-     "flight": "U2635",
-     "sched": "19:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Liverpool",
-     "flight": "U2509",
-     "sched": "20:05",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "London",
-     "flight": "RK131",
-     "sched": "20:10",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "London",
-     "flight": "CJ8758",
-     "sched": "20:10",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Leeds/Bradford",
-     "flight": "EI3679",
-     "sched": "20:10",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Bristol",
-     "flight": "U2223",
-     "sched": "20:15",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Manchester",
-     "flight": "U2707",
-     "sched": "20:15",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Antalya",
-     "flight": "LS364",
-     "sched": "20:30",
-     "status": "Estimated",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "London",
-     "flight": "U2805",
-     "sched": "20:30",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Newcastle",
-     "flight": "U272",
-     "sched": "20:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
      "place": "Birmingham",
      "flight": "EI3649",
      "sched": "21:00",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Landed",
+     "expected": "20:51",
      "air": "C"
     },
     {
      "place": "Edinburgh",
      "flight": "EI3659",
      "sched": "21:00",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Landed",
+     "expected": "20:45",
      "air": "C"
     },
     {
      "place": "Manchester",
      "flight": "EI3619",
      "sched": "21:05",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Landed",
+     "expected": "20:42",
      "air": "C"
     },
     {
      "place": "London",
      "flight": "U2837",
      "sched": "21:15",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Landed",
+     "expected": "20:44",
      "air": "A"
     },
     {
      "place": "Southampton",
      "flight": "EI3607",
      "sched": "21:15",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Landed",
+     "expected": "21:00",
      "air": "C"
     },
     {
      "place": "London",
      "flight": "U246",
      "sched": "21:30",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Estimated",
+     "expected": "21:16",
      "air": "A"
     },
     {
      "place": "Birmingham",
      "flight": "U234",
      "sched": "22:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": "",
      "air": "A"
     },
@@ -313,251 +65,59 @@
      "place": "Gran Canaria",
      "flight": "U23022",
      "sched": "23:05",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Estimated",
+     "expected": "23:21",
+     "air": "A"
+    },
+    {
+     "place": "Enfidha",
+     "flight": "U23072",
+     "sched": "23:45",
+     "status": "Estimated",
+     "expected": "23:09",
      "air": "A"
     }
    ],
    "dep": [
     {
-     "place": "Birmingham",
-     "flight": "EI3646",
-     "sched": "15:00",
-     "status": "Departed",
-     "expected": "14:59",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "BA1399",
-     "sched": "15:05",
-     "status": "Departed",
-     "expected": "15:04",
-     "air": "C"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "EI3656",
-     "sched": "15:20",
-     "status": "Estimated",
-     "expected": "15:20",
-     "air": "C"
-    },
-    {
-     "place": "Enfidha",
-     "flight": "U23071",
-     "sched": "15:25",
-     "status": "Estimated",
-     "expected": "15:37",
-     "air": "A"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "U231",
-     "sched": "15:55",
-     "status": "Estimated",
-     "expected": "15:55",
-     "air": "A"
-    },
-    {
-     "place": "Manchester",
-     "flight": "RK192",
-     "sched": "16:45",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Glasgow",
-     "flight": "U2422",
-     "sched": "16:45",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Manchester",
-     "flight": "U2704",
-     "sched": "16:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "London",
-     "flight": "BA1401",
-     "sched": "16:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "RK130",
-     "sched": "17:05",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Leeds/Bradford",
-     "flight": "EI3678",
-     "sched": "17:10",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL950",
-     "sched": "17:15",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "U2250",
-     "sched": "17:25",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Southampton",
-     "flight": "EI3606",
-     "sched": "17:35",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "U2838",
-     "sched": "17:40",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EI3648",
-     "sched": "17:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "C"
-    },
-    {
      "place": "London",
      "flight": "BA1403",
      "sched": "18:15",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Departed",
+     "expected": "18:15",
      "air": "C"
     },
     {
      "place": "Manchester",
      "flight": "EI3618",
      "sched": "18:20",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Departed",
+     "expected": "18:26",
      "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "U245",
-     "sched": "18:25",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
     },
     {
      "place": "Edinburgh",
      "flight": "EI3658",
      "sched": "18:30",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Departed",
+     "expected": "18:34",
      "air": "C"
-    },
-    {
-     "place": "Newcastle",
-     "flight": "U271",
-     "sched": "18:35",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
     },
     {
      "place": "London",
      "flight": "BA1407",
      "sched": "19:30",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Departed",
+     "expected": "19:24",
      "air": "C"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "U233",
-     "sched": "19:40",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
     },
     {
      "place": "Liverpool",
      "flight": "U2536",
      "sched": "19:40",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Departed",
+     "expected": "19:31",
      "air": "C"
-    },
-    {
-     "place": "Nottingham",
-     "flight": "DJ6977",
-     "sched": "19:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Nottingham",
-     "flight": "D02507",
-     "sched": "20:10",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Liverpool",
-     "flight": "U2510",
-     "sched": "20:35",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "London",
-     "flight": "U2636",
-     "sched": "20:35",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Bristol",
-     "flight": "U2224",
-     "sched": "20:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
-    },
-    {
-     "place": "Manchester",
-     "flight": "U2708",
-     "sched": "20:55",
-     "status": "Scheduled",
-     "expected": "",
-     "air": "A"
     }
    ]
   },
@@ -568,8 +128,8 @@
      "place": "Hurghada",
      "flight": "U23078",
      "sched": "00:55",
-     "status": "Scheduled",
-     "expected": "",
+     "status": "Estimated",
+     "expected": "00:29",
      "air": "A"
     },
     {
