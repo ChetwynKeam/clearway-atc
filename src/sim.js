@@ -1397,7 +1397,7 @@ function commandRun(str){
         continue;
       }
       if (ac.kind === 'DEP' && ac.freq === 'TWR') { ac.freq = 'RAD'; if (ac.need && /^(Airborne|Back on)/.test(ac.need)) ac.need = null; }
-      else if (ac.kind === 'DEP') { ac.hoBy = aiCtx ? S.aiScore : S.score; ac.handed = true; ac.need = null; }
+      else if (ac.kind === 'DEP') { ac.hoBy = aiCtx ? S.aiScore : S.score; ac.handed = true; ac.need = null; ac.aiLev = null; ac.aiWhy = ''; ac.tgtAlt = ac.cleared = Math.max(ac.tgtAlt ?? 0, ac.cleared ?? 0, (APT.climbFL || 80)*100); }   // the next unit climbs it on
       else { ac.freq = 'TWR'; if (ac.need === 'Back on frequency') ac.need = null; }
       said.push(`contact ${unit[0]} ${unit[1]}`); reads.push(`${unit[1]}, ${ac.handed ? 'good day' : 'thanks'}`);
     } else if (t === 'TOW') {

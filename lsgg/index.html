@@ -7473,7 +7473,7 @@ function commandRun(str){
         continue;
       }
       if (ac.kind === 'DEP' && ac.freq === 'TWR') { ac.freq = 'RAD'; if (ac.need && /^(Airborne|Back on)/.test(ac.need)) ac.need = null; }
-      else if (ac.kind === 'DEP') { ac.hoBy = aiCtx ? S.aiScore : S.score; ac.handed = true; ac.need = null; }
+      else if (ac.kind === 'DEP') { ac.hoBy = aiCtx ? S.aiScore : S.score; ac.handed = true; ac.need = null; ac.aiLev = null; ac.aiWhy = ''; ac.tgtAlt = ac.cleared = Math.max(ac.tgtAlt ?? 0, ac.cleared ?? 0, (APT.climbFL || 80)*100); }   // the next unit climbs it on
       else { ac.freq = 'TWR'; if (ac.need === 'Back on frequency') ac.need = null; }
       said.push(`contact ${unit[0]} ${unit[1]}`); reads.push(`${unit[1]}, ${ac.handed ? 'good day' : 'thanks'}`);
     } else if (t === 'TOW') {
@@ -14400,6 +14400,8 @@ function climbTop(){ return (APT.climbFL || 80)*100; }
 function aiDeparture(ac){
   const n = ac.need || '';
   if (n === 'Ready for transfer' && aiDue(ac, n, 2, 6)) {
+    // held low for traffic: kept until it has climbed, not handed on at 2,000 ft (for a few minutes at most)
+    if (ac.aiLev && ac.alt < 5000) { ac.aiNeedT = ac.aiNeedT || S.t; if (S.t - ac.aiNeedT < 240) return; }
     // a hold ahead above it: kept on its level and on frequency until it is past (the next unit would climb it through)
     const st = stackAhead(ac); if (st) { ac.aiWhy = `staying below the hold, ${st.cs} above`; ac.aiNeedT = ac.aiNeedT || S.t; if (S.t - ac.aiNeedT < 600) return; }
     return aiDo('DEP', ac, 'HO');

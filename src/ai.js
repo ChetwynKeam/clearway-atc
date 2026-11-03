@@ -868,6 +868,8 @@ function climbTop(){ return (APT.climbFL || 80)*100; }
 function aiDeparture(ac){
   const n = ac.need || '';
   if (n === 'Ready for transfer' && aiDue(ac, n, 2, 6)) {
+    // held low for traffic: kept until it has climbed, not handed on at 2,000 ft (for a few minutes at most)
+    if (ac.aiLev && ac.alt < 5000) { ac.aiNeedT = ac.aiNeedT || S.t; if (S.t - ac.aiNeedT < 240) return; }
     // a hold ahead above it: kept on its level and on frequency until it is past (the next unit would climb it through)
     const st = stackAhead(ac); if (st) { ac.aiWhy = `staying below the hold, ${st.cs} above`; ac.aiNeedT = ac.aiNeedT || S.t; if (S.t - ac.aiNeedT < 600) return; }
     return aiDo('DEP', ac, 'HO');
