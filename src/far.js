@@ -53,7 +53,7 @@ const hashOf = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.ch
 // nearest joins), so far flights follow the airways the way they are filed; where there are none (the ocean, beyond the
 // data) it is the great circle with a gentle zig-zag of turning points, as before. Corners are flown as fly-by turns.
 if (typeof AWYDATA !== 'undefined' && typeof AW !== 'undefined' && !AW.ready) { try { AW.init(AWYDATA); } catch (e) { /* the old routes */ } }
-function airwayPts(pts, seed, keepLast, finalCourse){
+function airwayPts(pts, seed, keepLast, finalCourse, startHdg){
   let rnd = hashOf(seed); const rn = () => ((rnd = Math.imul(rnd ^ (rnd >>> 15), 2246822507) >>> 0) / 4294967296)*2 - 1;
   const out = [pts[0]];
   for (let i = 1; i < pts.length; i++) {
@@ -63,9 +63,11 @@ function airwayPts(pts, seed, keepLast, finalCourse){
       // no doubling back: a joining fix behind the start or beyond the end is dropped
       fx = fx.filter(q => gcDist(A, q) < D + 40 && gcDist(q, B) < D + 40);
       // and no hairpin: a joining fix that would turn the flight back on itself (over 100°) is skipped
-      { const seq = [A, ...fx.map(q => [q[0], q[1]]), B];
-        for (let i = 1; i < seq.length - 1; i++) if (Math.abs(angDiff(gcBrg(seq[i - 1], seq[i]), gcBrg(seq[i], seq[i + 1]))) > 100) { seq.splice(i, 1); i = Math.max(0, i - 2); }
-        fx = seq.slice(1, -1); }
+      // (the first leg of a flight already under way also counts the way it is flying into the start, so it never joins a fix behind it)
+      { const pre = i === 1 && startHdg != null ? [gcDest(A, startHdg + 180, 5)] : [], k0 = pre.length, seq = [...pre, A, ...fx.map(q => [q[0], q[1]]), B];
+        for (let j = Math.max(1, k0), g = 0; j < seq.length - 1 && g < 60; j++, g++) if (Math.abs(angDiff(gcBrg(seq[j - 1], seq[j]), gcBrg(seq[j], seq[j + 1]))) > 100) {
+          const rm = j === k0 ? j + 1 : j; if (rm >= seq.length - 1) break; seq.splice(rm, 1); j = Math.max(k0 ? 0 : 0, j - 2); }
+        fx = seq.slice(k0 + 1, -1); }
       if (fx.length) { for (const q of fx) out.push([q[0], q[1]]); out.push(B); continue; }
     }
     // the great circle broken into legs whose turning points sit a little to one side or the other (as airways do)
@@ -148,7 +150,7 @@ function addDepGhost(ac, at){
   if (!at && ac.hdg != null && gcDist(p0, AP[ac.d]) > 25) { let p = p0, h = ac.trk ?? ac.hdg;
     for (let k = 0; k < 90; k++) { const d = angDiff(h, gcBrg(p, AP[ac.d])); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(ac.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); lead.push(p); } }
   // the turn off its heading and the airway route on from there, smoothed as one so the join is not a corner
-  const leg = makeLeg(smoothPts([p0, ...lead.slice(0, -1), ...airwayPts([lead.length ? lead[lead.length - 1] : p0, ...via, AP[ac.d].slice(0, 2)], ac.cs + ac.d, false)])), [spd, fl] = CRUISE[ac.t] || [450, 37000];
+  const leg = makeLeg(smoothPts([p0, ...lead.slice(0, -1), ...airwayPts([lead.length ? lead[lead.length - 1] : p0, ...via, AP[ac.d].slice(0, 2)], ac.cs + ac.d, false, null, lead.length > 1 ? gcBrg(lead[lead.length - 2], lead[lead.length - 1]) : ac.hdg)])), [spd, fl] = CRUISE[ac.t] || [450, 37000];
   const t0 = S.t + (at ? ac.dt0 || 0 : 0);
   FAR.list.push({ cs: ac.cs, t: ac.t, from: ac.from || APT.icao, to: ac.d, kind: ac.from ? 'DIV' : 'DEP', track: ac.track, leg, tStart: t0, tEnd: t0 + leg.D/spd*3600, spd, cruise: Math.min(fl, 9000 + leg.D*75), startAlt: at ? APT.initClimb : ac.alt, endAlt: 0 });
 }
@@ -191,9 +193,11 @@ function wayOn(o, dest, seed){
       pts.length = 0; pts.push(...flyPts(toLL(R.rm(R.len*0.5, 0)), rh, [endR, gcDest(endR, rh, 1), ...fx.map(id => toLL(WP[id].p))], 0.3));
       p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
       if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-      for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
       const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
-      return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
+      const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1), tg = rest.length ? rest[0] : dest;
+      // a steady turn onto the first leg of the route (the way the flight is already heading decides the airway it joins), then the route
+      for (let k = 0; k < 90 && gcDist(p, tg) > 4; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
+      return smoothPts([...pts, ...rest]);
     }
   }
   for (const id of cleared) { if (!WP[id]) continue; const q = toLL(WP[id].p);
@@ -204,20 +208,24 @@ function wayOn(o, dest, seed){
     else { pts.push(q); h = gcBrg(p, q); }
     p = q; }
   if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
-  for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
-  return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
+  const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1), tg = rest.length ? rest[0] : dest;
+  // a steady turn onto the first leg of the route (the way the flight is already heading decides the airway it joins), then the route
+  for (let k = 0; k < 90 && gcDist(p, tg) > 4; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
+  return smoothPts([...pts, ...rest]);
 }
 // the way a departure carries on in radar cover once its SID has run out: the same airway route the flight is drawn on beyond
 // it, as hidden waypoints (about 4 NM apart) up to the edge of cover, so it follows its route instead of flying straight on
 function depOnward(ac){
   const dest = destOf(ac); if (!dest || ac.ground) return null;
-  let p = toLL([ac.x, ac.y]), h = ac.trk ?? ac.hdg ?? 0; const ids = []; let last = [ac.x, ac.y];
-  const add = (q, force) => { const P = xy(q[0], q[1]); if (!force && dist(...last, ...P) < 4) return; const id = '~' + ac.cs + ids.length; WP[id] = { id, p: P, hide: true, note: 'onward' }; ids.push(id); last = P; };
-  // a steady turn onto the line to the destination (the same turn the flight is drawn making), then straight along it to the edge of cover
-  // (a departure leaves by a SID, so the airways beyond cover take over there, as on the map beyond)
-  for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(ac.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); add(p); }
-  for (let k = 0; k < 60; k++) { p = gcDest(p, gcBrg(p, dest), 4); const P = xy(p[0], p[1]); add(p, true); if (dist(...P, ...RADAR_REF) > RADAR_NM + 12 || gcDist(p, dest) < 20) break; }
+  let pts; try { pts = wayOn(ac, dest, ac.cs + (ac.d || '')); } catch (e) { return null; }
+  const ids = []; let last = [ac.x, ac.y];
+  for (let i = 1; i < pts.length; i++) {
+    const p = xy(pts[i][0], pts[i][1]), out = dist(...p, ...RADAR_REF) > RADAR_NM + 12;
+    if (dist(...last, ...p) < 4 && !out && i < pts.length - 1) continue;
+    const id = '~' + ac.cs + ids.length; WP[id] = { id, p, hide: true, note: 'onward' }; ids.push(id); last = p;
+    if (out) break;
+  }
   return ids.length ? ids : null;
 }
 // ── where a flight came from: its origin, the airway route, and a last stretch that arrives along the way it was flying

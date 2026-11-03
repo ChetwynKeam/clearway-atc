@@ -56,16 +56,16 @@ const AW = (() => {
       (DEG[a] ||= new Set()).add(name); (DEG[b] ||= new Set()).add(name);
     }
     // Networks from different sources (the UK file and the rest of Europe) meet at the border, mostly without a shared point: the
-    // nearest points of different networks within 35 NM are joined by a short direct leg (not drawn), so routes cross the border
+    // nearest points of different networks within 85 NM are joined by a short direct leg (not drawn), so routes cross the border
     { const comp = {}; let nc = 0;
       for (const n of Object.keys(ADJ)) { if (comp[n] != null) continue; const st = [n]; comp[n] = nc; while (st.length) { const u = st.pop(); for (const e of ADJ[u]) if (comp[e[0]] == null) { comp[e[0]] = nc; st.push(e[0]); } } nc++; }
       if (nc > 1) {
-        const ns = Object.keys(ADJ), grid = new Map(), key = (la, lo) => Math.floor(la/0.6) + ':' + Math.floor(lo/0.9);
+        const ns = Object.keys(ADJ), grid = new Map(), key = (la, lo) => Math.floor(la/1.5) + ':' + Math.floor(lo/2.4);
         for (const n of ns) { const q = FIX[n], k = key(q[0], q[1]); (grid.get(k) || grid.set(k, []).get(k)).push(n); }
         const links = [];
         for (const a of ns) { const pa = FIX[a], ka = key(pa[0], pa[1]).split(':').map(Number), near = [];
           for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const b of grid.get((ka[0] + i) + ':' + (ka[1] + j)) || []) {
-            if (comp[b] === comp[a] || a >= b) continue; const d = gcNM(pa, FIX[b]); if (d < 35) near.push([d, b]); }
+            if (comp[b] === comp[a] || a >= b) continue; const d = gcNM(pa, FIX[b]); if (d < 85) near.push([d, b]); }
           near.sort((x, y) => x[0] - y[0]); for (const [d, b] of near.slice(0, 2)) links.push([a, b, d]); }
         for (const [a, b, d] of links) { (ADJ[a] ||= []).push([b, '', d, 'U', 'C']); (ADJ[b] ||= []).push([a, '', d, 'U', 'C']); }
       } }
