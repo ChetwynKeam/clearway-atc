@@ -1830,7 +1830,7 @@ function stepAir(ac, dt){
           ac.mode = 'HOLD'; ac.state = 'HOLDING'; ac.hold = { c: w.p, inb: named ? w.hold.inb : ac.hdg, left: named && !!w.hold.left, ph: named ? 'in' : 'turn1', name: /final/.test(w.note||'') ? w.note : hf, t: 0 };
           pilot(ac, `no approach clearance, holding at ${ac.hold.name}, ${altShort(Math.round(ac.alt/100)*100)}, request ${APT.appName}`); ac.need = 'Request approach';
         }
-        else { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
+        else { const on = ac.kind === 'DEP' && !ac.onwardTried && typeof depOnward === 'function' && (ac.onwardTried = true) && depOnward(ac); if (on) { ac.route = on; ac.legW = null; } else { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); } }
       }
     }
   }
@@ -1911,7 +1911,7 @@ function stepAir(ac, dt){
     if (ac.onSid && ac.mode === 'HDG' && clearRock && (ac.alt > 3500 || !crossesRock(ac, WP[exitRouteOf(ac)[0]].p))) { ac.onSid = false; ac.reqDct = true; ac.mode = 'NAV'; ac.route = exitRouteOf(ac).slice(); }
     if (ac.calledRad && !ac.reqDct && ac.mode === 'HDG' && clearRock) { ac.reqDct = true; const fx = exitRouteOf(ac)[0]; pilot(ac, `request direct ${fx}`); ac.need = `Request direct ${fx}`; }
     if (ac.calledRad && !ac.handed && !ac.reqClimb && !ac.need && ac.alt > sidTop(ac) - 400 && (ac.tgtAlt ?? 0) <= sidTop(ac)) { ac.reqClimb = true; pilot(ac, `${ac.sid ? 'on the ' + sidSpoken(ac.sid) + ', ' : ''}request further climb`); ac.need = 'Request climb'; }
-    if (ac.mode === 'NAV' && !ac.route.length) { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); }
+    if (ac.mode === 'NAV' && !ac.route.length) { const on = !ac.onwardTried && typeof depOnward === 'function' && (ac.onwardTried = true) && depOnward(ac); if (on) ac.route = on; else { ac.mode = 'HDG'; ac.tgtHdg = Math.round(ac.hdg); } }
     if (ac.calledRad && !ac.handed && dGBR > APT.handoffNM && !ac.askedHo) { ac.askedHo = true; ac.need = 'Ready for transfer'; }
   }
 

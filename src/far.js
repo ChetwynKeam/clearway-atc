@@ -208,6 +208,18 @@ function wayOn(o, dest, seed){
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
   return smoothPts([...pts.slice(0, -1), ...airwayPts([p, ...via, dest], seed, false)]);
 }
+// the way a departure carries on in radar cover once its SID has run out: the same airway route the flight is drawn on beyond
+// it, as hidden waypoints (about 4 NM apart) up to the edge of cover, so it follows its route instead of flying straight on
+function depOnward(ac){
+  const dest = destOf(ac); if (!dest || ac.ground) return null;
+  let p = toLL([ac.x, ac.y]), h = ac.trk ?? ac.hdg ?? 0; const ids = []; let last = [ac.x, ac.y];
+  const add = (q, force) => { const P = xy(q[0], q[1]); if (!force && dist(...last, ...P) < 4) return; const id = '~' + ac.cs + ids.length; WP[id] = { id, p: P, hide: true, note: 'onward' }; ids.push(id); last = P; };
+  // a steady turn onto the line to the destination (the same turn the flight is drawn making), then straight along it to the edge of cover
+  // (a departure leaves by a SID, so the airways beyond cover take over there, as on the map beyond)
+  for (let k = 0; k < 90 && gcDist(p, dest) > 15; k++) { const d = angDiff(h, gcBrg(p, dest)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(ac.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); add(p); }
+  for (let k = 0; k < 60; k++) { p = gcDest(p, gcBrg(p, dest), 4); const P = xy(p[0], p[1]); add(p, true); if (dist(...P, ...RADAR_REF) > RADAR_NM + 12 || gcDist(p, dest) < 20) break; }
+  return ids.length ? ids : null;
+}
 // ── where a flight came from: its origin, the airway route, and a last stretch that arrives along the way it was flying
 // where we first saw it (no kink where the line meets its track)
 function wayIn(o, from, end, dir){

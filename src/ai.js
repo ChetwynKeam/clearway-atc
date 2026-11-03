@@ -898,6 +898,7 @@ function aiDeparture(ac){
     const clearOf = P => holds.every(c => { const ax = P[0] - ac.x, ay = P[1] - ac.y, l2 = ax*ax + ay*ay || 1, t = clamp(((c[0] - ac.x)*ax + (c[1] - ac.y)*ay)/l2, 0, 1); return Math.hypot(ac.x + ax*t - c[0], ac.y + ay*t - c[1]) > 9; });
     const fx = (exitRouteOf(ac) || []).filter(id => WP[id] && Math.abs(angDiff(ac.trk ?? ac.hdg, brg(ac.x, ac.y, ...WP[id].p))) < 100 && dist(ac.x, ac.y, ...WP[id].p) > 3);
     const pick = fx.find(id => clearOf(WP[id].p));
+    if (!pick && !fx.length && ac.alt > ELEV + 2500 && typeof depOnward === 'function') { const on = depOnward(ac); if (on && clearOf(WP[on[Math.min(2, on.length - 1)]].p)) { ac.onwardTried = true; ac.aiNewRte = false; ac.route = on; ac.legW = null; ac.mode = 'NAV'; ac.aiWhy = 'on its way to ' + ac.d; return; } }
     if (pick && ac.alt > ELEV + 2500) { ac.aiNewRte = false; if (aiDo('DEP', ac, 'DCT ' + pick)) { ac.aiWhy = 'new route round the hold'; return; } }
     else if (!holds.length || S.t - (ac.aiAroundT || 0) > 600) ac.aiNewRte = false;
     if (ac.aiNewRte) return;   // still on its heading round the hold until a fix is clear of it
