@@ -1,30 +1,23 @@
 {
- "updated": "2026-11-04T07:42:42Z",
+ "updated": "2026-11-04T15:45:56Z",
  "source": "gibraltarairport.gi",
  "days": {
   "2026-11-04": {
    "utcOffsetMin": 60,
    "arr": [
     {
-     "place": "London Gatwick",
-     "flight": "EZY8791",
-     "sched": "10:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "London Heathrow",
      "flight": "BA490",
      "sched": "10:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "10:07"
     },
     {
      "place": "London Heathrow",
      "flight": "BA492",
      "sched": "15:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "15:26"
     }
    ],
    "dep": [
@@ -32,22 +25,22 @@
      "place": "London Gatwick",
      "flight": "EZY8792",
      "sched": "11:00",
-     "status": "Scheduled",
+     "status": "Departed",
      "expected": ""
     },
     {
      "place": "London Heathrow",
      "flight": "BA491",
      "sched": "11:15",
-     "status": "Scheduled",
+     "status": "Departed",
      "expected": ""
     },
     {
      "place": "London Heathrow",
      "flight": "BA493",
-     "sched": "16:25",
-     "status": "Scheduled",
-     "expected": ""
+     "sched": "16:20",
+     "status": "Departed",
+     "expected": "16:15"
     }
    ]
   },
