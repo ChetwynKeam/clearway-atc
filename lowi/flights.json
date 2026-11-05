@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-05T01:43:10Z",
+ "updated": "2026-11-05T08:30:12Z",
  "source": "avionio.com",
  "days": {
   "2026-11-05": {
@@ -7,18 +7,60 @@
    "arr": [
     {
      "place": "Vienna",
-     "flight": "OS101",
-     "sched": "07:45",
+     "flight": "OS105",
+     "sched": "14:00",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Amsterdam",
-     "flight": "HV6609",
-     "sched": "08:40",
+     "place": "Larnaca",
+     "flight": "QAJ9",
+     "sched": "17:16",
      "status": "Scheduled",
      "expected": ""
     },
+    {
+     "place": "Vienna",
+     "flight": "OS107",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Jerez",
+     "flight": "TYW431",
+     "sched": "09:10",
+     "status": "Estimated",
+     "expected": "09:15"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "09:30",
+     "status": "Estimated",
+     "expected": "09:30"
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-11-06": {
+   "utcOffsetMin": 60,
+   "arr": [
     {
      "place": "Vienna",
      "flight": "OS105",
@@ -35,13 +77,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Vienna",
-     "flight": "OS102",
-     "sched": "08:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
     {
      "place": "Vienna",
      "flight": "OS106",
