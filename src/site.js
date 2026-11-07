@@ -1,12 +1,12 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'egaa', 'lsgg', 'yssy', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'egaa', 'lsgg', 'yssy', 'sim', 'training', 'career'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live, #resume.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
 const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd', EGAA: 'egaa', LSGG: 'lsgg', YSSY: 'yssy' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
-// an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
-const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
+// an airport still in development (status 'dev' on the Airports list) shows in the Academy only on its own page
+const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao;
 const IS_HOST = APT.icao === SITE_HOST, EMBED = location.hash.startsWith('#embed');
 const SIM_HASH = /^(sim|ex\/|wx\/|live$|resume$)/;
 const otherPage = h => IS_HOST || EMBED || SIM_HASH.test(h) ? null : SITE[SITE_HOST] + '#' + (h || HOME_RT);
@@ -49,6 +49,16 @@ function fromHash(){
   go(curRoute || 'home');
 }
 window.addEventListener('hashchange', fromHash);
+// An edge swipe (or the browser's back button) must not drop a running session back to the website. While a position is open
+// there is always one spare history entry behind the console: going back lands on it, we put it back, and the session stays.
+// The Leave button (tgExit) sets simLeaving so it can go.
+let simLeaving = false, simGuarded = false, simGuardMsg = 0;
+setInterval(() => { if (!simGuarded && S.running && curRoute === 'sim' && !EMBED) { try { history.pushState({ cwSim: 1 }, '', '#sim'); simGuarded = true; } catch (e) {} } else if (simGuarded && !S.running) simGuarded = false; }, 1000);
+window.addEventListener('popstate', () => {
+  if (!simGuarded || simLeaving || !S.running || curRoute !== 'sim') return;
+  try { history.pushState({ cwSim: 1 }, '', '#sim'); } catch (e) {}
+  if (Date.now() - simGuardMsg > 8000) { simGuardMsg = Date.now(); sys('Swiping back is switched off while a position is open. Use the ‹ button at the top left to leave.'); }
+});
 
 // top bar clock: real UTC, so the site feels like a live position
 function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + d.toISOString().substr(11,5) + 'Z'; }
@@ -104,13 +114,12 @@ function rwyDiagram(ap){
   out.push('</svg>'); return out.join('');
 }
 function apCard(ap){
-  // an airport in development that is already built opens as a preview for the owner and early access members
-  const rt = AP_ROUTE[ap.icao], pv = ap.status === 'dev' && !!rt && typeof cwPreview === 'function' && cwPreview();
-  const live = ap.status === 'live' || pv, tag = live ? 'a' : 'div';
+  const rt = AP_ROUTE[ap.icao];
+  const live = ap.status === 'live', tag = live ? 'a' : 'div';
   const href = live ? '#' + rt : '';
   return `<${tag} class="ap${live ? '' : ' off'}"${live ? ` href="${href}"` : ''}>
     <div class="dia">${rwyDiagram(ap)}</div>
-    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${pv ? '<span class="badge new">Preview</span>' : ''}${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
+    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
     <h3>${esc(ap.name)}</h3><div class="ctry">${esc(ap.ctry)} · ${esc(ap.region)}</div><p>${esc(ap.blurb)}</p>
     <div class="ft">${ap.pos.map(p => `<span class="pos">${p}</span>`).join('')}<span>RWY ${ap.rwys.join(' · ')}</span><span class="diff" title="Difficulty ${ap.diff} of 5">${[1,2,3,4,5].map(i => `<i class="${i <= ap.diff ? 'on' : ''}"></i>`).join('')}</span></div></div>
   </${tag}>`;
@@ -879,7 +888,7 @@ function airportChrome(){
   if (APT.site && APT.site.cmdHint) $('cmd').placeholder = APT.site.cmdHint;
   $('exGroup').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<option value="${k}">Exercise ${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</option>`).join('');
   const others = LIVE_APS.filter(k => k !== APT.icao);
-  $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b>${others.map(k => `<a href="${SITE[k]}#sim">Switch to ${ENDORSE[k].name}</a>`).join('')}`;
+  $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b><span class="apsw">${others.map(k => `<a href="${SITE[k]}#sim" aria-label="Switch to ${ENDORSE[k].name}">${ENDORSE[k].name}</a>`).join('')}</span>`;
   // on another airport's page, site links go to the host page; on the host, another airport's position and Live now
   // buttons open its own simulator, and its "Academy" buttons open its endorsement
   document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -901,7 +910,7 @@ function canFull(){ return !!(document.documentElement.requestFullscreen && docu
 function enterFull(){ if (canFull() && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); }
 function exitFull(){ if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); }
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="#sim"]'); if (a) enterFull(); });
-$('tgExit').onclick = () => { exitFull(); location.hash = '#' + HOME_RT; };
+$('tgExit').onclick = () => { simLeaving = true; exitFull(); location.hash = '#' + HOME_RT; setTimeout(() => { simLeaving = false; }, 1500); };
 $('tgFull').onclick = () => document.fullscreenElement ? exitFull() : enterFull();
 function syncFull(){ const b = $('tgFull'); b.hidden = !canFull(); b.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; b.classList.toggle('on', !!document.fullscreenElement); }
 document.addEventListener('fullscreenchange', () => { syncFull(); if (curRoute === 'sim') resize(); });

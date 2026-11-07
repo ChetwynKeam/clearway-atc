@@ -14,8 +14,6 @@ import re, urllib.parse
 _logo = re.search(r'<svg class="logo".*?</svg>', r('site.html')).group(0).replace(' class="logo"', '').replace(' aria-hidden="true"', '').replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ', 1).replace('"', "'")
 fav = 'data:image/svg+xml,' + urllib.parse.quote(_logo, safe=" =:/'.,-")
 import json
-# subscriptions, feedback and analytics settings (see SUBSCRIPTIONS.md)
-SUBS = json.loads((root/'subs.json').read_text())
 fonts = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap'
 AIRPORTS = {
     'LXGB': dict(title='Clearway ATC Simulator', desc='Clearway: browser-based air traffic control simulation at real airports: Gibraltar (LXGB), Madeira (LPMA), London City (EGLC), Innsbruck (LOWI), New York JFK (KJFK), London Gatwick (EGKK), Madrid-Barajas (LEMD), Manchester (EGCC), London Heathrow (EGLL) and Bristol (EGGD).',
@@ -68,21 +66,12 @@ def links(icao, absolute):
     if absolute: return {k: SITE_URL + ('' if v['page'] == 'index.html' else v['page'].rsplit('/', 1)[0] + '/') for k, v in AIRPORTS.items()}
     up = '../' * AIRPORTS[icao]['page'].count('/')
     return {k: (up or './') if v['page'] == 'index.html' else up + v['page'].rsplit('/', 1)[0] + '/' for k, v in AIRPORTS.items()}
-def cwcfg(live):
-    c = {k: SUBS[k] for k in ('enabled', 'feedback', 'api', 'supabase_url', 'supabase_anon_key', 'currency', 'prices', 'trial_days', 'contact_email', 'analytics_token', 'legal_date')}
-    c['offer'] = SUBS.get('offer')
-    c['commission'] = SUBS.get('commission', 25)
-    c['upgrade_offer'], c['releases'] = SUBS.get('upgrade_offer'), SUBS.get('releases', [])
-    c['site'] = SITE_URL
-    if not live: c['enabled'] = False; c['test_switch'] = False
-    return json.dumps(c, ensure_ascii=False)
-# search and social sharing: canonical address, Open Graph / Twitter card, structured data, optional cookieless analytics
+# search and social sharing: canonical address, Open Graph / Twitter card, structured data
 def seo(icao, A):
     url = SITE_URL + ('' if A['page'] == 'index.html' else A['page'].rsplit('/', 1)[0] + '/')
-    p = SUBS['prices']
     ld = {'@context': 'https://schema.org', '@type': 'VideoGame', 'name': 'Clearway ATC Simulator', 'url': SITE_URL, 'description': A['desc'],
           'applicationCategory': 'GameApplication', 'gamePlatform': 'Web browser', 'operatingSystem': 'Any', 'genre': ['Simulation'],
-          'image': SITE_URL + 'og.png', 'offers': {'@type': 'AggregateOffer', 'priceCurrency': 'GBP', 'lowPrice': p['a1'], 'highPrice': p['all'], 'offerCount': 5}}
+          'image': SITE_URL + 'og.png'}
     t = A['title']
     tags = [f'<link rel="canonical" href="{url}">', '<meta name="theme-color" content="#0b2a4a">',
             '<meta property="og:type" content="website">', '<meta property="og:site_name" content="Clearway">', f'<meta property="og:title" content="{t}">',
@@ -90,11 +79,10 @@ def seo(icao, A):
             '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">', '<meta name="twitter:card" content="summary_large_image">',
             f'<meta name="twitter:title" content="{t}">', f'<meta name="twitter:description" content="{A["desc"]}">', f'<meta name="twitter:image" content="{SITE_URL}og.png">']
     if A['page'] == 'index.html': tags.append('<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False) + '</script>')
-    if SUBS.get('analytics_token'): tags.append(f'<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon=\'{{"token": "{SUBS["analytics_token"]}"}}\'></script>')
     return '\n'.join(tags)
 # installable app (Chrome "Install Clearway", Android "Add to home screen"): one app for the whole site, opening at the
 # home page, with a shortcut to every airport's simulator. Icons come from tools/app_icons.py; src/sw.js is the
-# service worker (pages network-first with an offline fallback; live data, sign-in and payments never cached).
+# service worker (pages network-first with an offline fallback; live data never cached).
 def manifest():
     icons = [dict(src=f'icons/{n}-{z}.png', sizes=f'{z}x{z}', type='image/png', purpose=pu) for n, pu in (('icon', 'any'), ('maskable', 'maskable')) for z in (192, 512)]
     name = lambda k, A: A['title'].split(' · ')[0] if ' · ' in A['title'] else 'Gibraltar'
@@ -127,15 +115,13 @@ def page(icao, A):
 <link rel="stylesheet" href="{fonts}">
 <style>
 {r('styles.css')}
-{r('account.css')}
 </style>
 <style>[data-only]:not([data-only~="{icao}"]){{display:none!important}}</style>
-{r('site.html').replace('</main>', r('account.html') + '</main>').replace('@@AREA@@', '@@AREALINK@@')}
+{r('site.html').replace('@@AREA@@', '@@AREALINK@@')}
 <script>
 const AIRPORT = '{icao}';
 const SITE = @@SITE@@;
 const SITE_HOST = '{HOST}';
-const CW_CFG = @@CWCFG@@;
 const GEO = {r(A['geo']).strip()};
 {r('core.js')}
 {prof}
@@ -160,16 +146,14 @@ const AP_DATA = {ap_data};
 {r('gflow.js')}
 {r('voice.js')}
 {r('radio.js')}
-{r('account.js')}
 {r('site.js')}
 {site}
 {r('stint.js')}
 </script>
 '''
     (root/'dist').mkdir(exist_ok=True)
-    # the claude.ai artifact is a private preview: no paywall there
-    (root/'dist'/A['artifact']).write_text(out.replace('@@AREALINK@@', SITE_URL + 'area/').replace('@@SITE@@', json.dumps(links(icao, True))).replace('@@CWCFG@@', cwcfg(False)).replace('@@PWA@@\n', ''))
-    out = out.replace('@@AREALINK@@', '../'*A['page'].count('/') + 'area/').replace('@@SITE@@', json.dumps(links(icao, False))).replace('@@CWCFG@@', cwcfg(True))
+    (root/'dist'/A['artifact']).write_text(out.replace('@@AREALINK@@', SITE_URL + 'area/').replace('@@SITE@@', json.dumps(links(icao, True))).replace('@@PWA@@\n', ''))
+    out = out.replace('@@AREALINK@@', '../'*A['page'].count('/') + 'area/').replace('@@SITE@@', json.dumps(links(icao, False)))
     out = out.replace('@@PWA@@', pwa(icao))
     head, body = out.split('<style>', 1)
     standalone = ('<!doctype html>\n<html lang="en">\n<head>\n' + head.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">')

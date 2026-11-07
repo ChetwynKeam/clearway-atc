@@ -1195,133 +1195,52 @@ body .app.tabbed button:disabled { opacity: .4; }
 .metars { margin-top: 6px; font: 11px/1.45 var(--mono, ui-monospace, monospace); color: var(--dim, #8a97a6); word-break: break-word; }
 .metars b { color: var(--ink, inherit); margin-right: 4px; }
 
-/* ═════ accounts, pricing, feedback, airport requests (account.html / account.js) ═════ */
-.topbar .status .btn.ghost { box-shadow: none; padding: 9px 14px; font-size: 14px; }
-.cw-note { display: inline-block; background: var(--accent-soft); color: var(--accent-2); border: 1px solid #c9d8ff; border-radius: 8px; padding: 10px 14px; font-size: 15px; font-weight: 500; }
-.pagehead h1 em { font-style: normal; color: var(--accent); }
-.cw-plans { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
-.cw-plan { position: relative; display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px; padding: 22px 20px; box-shadow: var(--shadow-1); }
-.cw-plan.hot { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-2); }
-.cw-plan > .badge { position: absolute; top: -12px; left: 18px; }
-.cw-plan h3 { font-size: 24px; margin: 0; }
-.cw-plan .price { display: flex; align-items: baseline; gap: 4px; margin-top: 6px; }
-.cw-plan .price b { font-family: var(--font-head); font-size: clamp(26px, 2.2vw, 34px); letter-spacing: -.03em; color: var(--brand); }
-.cw-plan .price span { color: var(--dim); font-size: 14px; white-space: nowrap; }
-.cw-plan .price s, .cw-tchip s { color: var(--faint); font-weight: 500; margin-right: 4px; }
-.cw-plan .price { flex-wrap: wrap; row-gap: 0; }
-.cw-plan .price s { font-size: 16px; flex-basis: 100%; }
-.cw-off { font-size: 13px; font-weight: 600; color: #0d7a52; }
-.cw-offer { background: #e3f6ee; color: #0d7a52; border-color: #b8e6d2; margin: 0 8px 8px 0; }
-.cw-teaser-off { margin: -24px 0 20px; font-weight: 600; color: #0d7a52; }
-.cw-teaser-off:empty { display: none; }
-.cw-plan .per { font-size: 13px; color: var(--dim); }
-.cw-plan p { color: var(--ink-2); font-size: 14.5px; margin: 8px 0 14px; flex: 1; }
-.cw-plan .btn { width: 100%; }
-.cw-early-pick { display: flex; gap: 10px; align-items: flex-start; margin: 20px 0 0; padding: 14px 16px; border: 1px dashed var(--line-2); border-radius: 10px; color: var(--ink-2); font-size: 15px; cursor: pointer; }
-.cw-early-pick input { margin-top: 4px; }
-.cw-early { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 40px; align-items: center; margin-top: 48px; padding: 40px 44px; border-radius: 18px; background: var(--brand); color: #fff;
-  background-image: radial-gradient(600px 300px at 95% 0%, rgba(31,94,255,.45), transparent 70%); }
-.cw-early h2 { color: #fff; font-size: clamp(26px, 3vw, 34px); margin: 10px 0; }
-.cw-early p { color: rgba(255,255,255,.78); margin: 0; }
-.cw-early .eyebrow { color: #9bb8ff; }
-.cw-ticks { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.cw-ticks li { padding-left: 28px; position: relative; color: rgba(255,255,255,.9); }
-.cw-ticks li::before { content: "✓"; position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.14); display: grid; place-items: center; font-size: 12px; color: #9bb8ff; }
-.cw-faq { max-width: 760px; margin-top: 56px; }
-.cw-faq h2 { font-size: 30px; margin-bottom: 12px; }
-.cw-faq details { border-bottom: 1px solid var(--line); padding: 14px 0; }
-.cw-faq summary { cursor: pointer; font-weight: 600; font-size: 16.5px; }
-.cw-faq p { color: var(--ink-2); margin: 10px 0 2px; }
-
-.cw-acc, .cw-req { max-width: 860px; display: grid; gap: 18px; }
-.cw-box { background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px; padding: 22px 24px; box-shadow: var(--shadow-1); }
-.cw-box h2 { font-size: 20px; margin: 0 0 12px; }
-.cw-box h3 { font-size: 24px; margin: 8px 0 2px; }
-.cw-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.cw-row .grow, .cw-acc .grow { flex: 1; }
-.cw-sub { color: var(--dim); margin: 4px 0 0; font-size: 14.5px; }
-.cw-msg { color: var(--accent-2); font-size: 14.5px; margin: 8px 0 0; min-height: 1em; }
-.cw-form { display: grid; gap: 14px; }
-.cw-form label { display: grid; gap: 6px; font-weight: 600; font-size: 14.5px; color: var(--ink-2); }
-.cw-form label .lbl { display: inline; }
-.cw-form input, .cw-form textarea { font: inherit; font-weight: 400; color: var(--ink); background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 10px 12px; width: 100%; box-sizing: border-box; }
-.cw-form input:focus, .cw-form textarea:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
-.cw-form > .btn, .cw-form .cw-row .btn { justify-self: start; }
-#cwEmailForm, #cwCodeForm { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-#cwCodeForm .btn + .btn { grid-column: 1 / -1; justify-self: start; }
-.cw-two { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; }
-.cw-planrow { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: flex-end; }
-.cw-earlyrow { display: flex; justify-content: space-between; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
-.cw-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 12px; }
-.cw-pick { display: grid; gap: 2px; text-align: left; font: inherit; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--bg-2); color: var(--ink); cursor: pointer; text-decoration: none; }
-.cw-pick b { font-family: var(--font-data); }
-.cw-pick span { color: var(--dim); font-size: 14px; }
-.cw-pick.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
-.cw-reqlist { display: grid; gap: 4px; }
-.cw-reqrow { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(60px, 160px) 36px auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
-#cwRoadmap .cw-reqrow { grid-template-columns: 56px minmax(0, 1fr) auto; }
-.cw-reqrow b { font-family: var(--font-data); }
-.cw-reqrow i { display: block; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--accent) var(--w), var(--panel-3) var(--w)); }
-.cw-reqrow .n { font-family: var(--font-data); text-align: right; color: var(--ink-2); }
-.cw-prose { max-width: 760px; }
-.cw-prose h2 { font-size: 21px; margin: 28px 0 8px; }
-.cw-prose p, .cw-prose li { color: var(--ink-2); line-height: 1.65; }
-.cw-teaser-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 28px; }
-.cw-tchip { display: grid; gap: 2px; padding: 18px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line-2); text-decoration: none; color: var(--ink); box-shadow: var(--shadow-1); }
-.cw-tchip b { font-family: var(--font-head); font-size: 32px; color: var(--brand); line-height: 1; }
-.cw-tchip span { color: var(--dim); font-size: 14px; }
-.cw-tchip em { font-style: normal; font-weight: 600; margin-top: 8px; }
-.cw-tchip:hover { border-color: var(--accent); }
-
-/* a new airport is out */
-.cw-new + .cw-new { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
-.cw-new h3 { margin: 8px 0 4px; }
-.cw-new code { font-family: var(--font-data); background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; }
-.cw-new .btn s { opacity: .7; margin-right: 2px; }
-
-/* commissioned airports */
-.cw-own { display: flex; gap: 32px; align-items: center; justify-content: space-between; margin-top: 24px; padding: 32px 36px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line-2); box-shadow: var(--shadow-1); }
-.cw-own h2 { font-size: clamp(22px, 2.4vw, 28px); margin: 8px 0; }
-.cw-own p { color: var(--ink-2); margin: 0; max-width: 680px; }
-.cw-own .btn { flex: none; }
-.cw-coms { display: grid; gap: 4px; }
-.cw-com { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
-.cw-com b { font-family: var(--font-data); }
-.cw-com .btn { flex: none; white-space: nowrap; }
-.cw-com .badge { margin-left: 6px; }
-.cw-coms > .cw-row { margin-top: 12px; }
-
-/* the private test switch (?cwtest=on) */
-.cw-testpill { position: fixed; left: 18px; bottom: 18px; z-index: 40; padding: 8px 14px; border-radius: 999px; background: #b45309; color: #fff; font: 600 13px var(--font-body); text-decoration: none; box-shadow: var(--shadow-3); }
-body[data-route="sim"] .cw-testpill { bottom: auto; top: 64px; }
-
-/* feedback */
-.cw-fbbtn { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 0; background: var(--brand); color: #fff; font: 600 14px var(--font-body); cursor: pointer; box-shadow: var(--shadow-3); }
-.cw-fbbtn svg { width: 16px; height: 16px; }
-body[data-route="sim"] .cw-fbbtn { display: none; }
-.cw-modal { position: fixed; inset: 0; z-index: 60; background: rgba(12,27,46,.45); display: flex; align-items: center; justify-content: center; padding: 16px; }
-.cw-modal[hidden] { display: none; }
-.cw-modal .card { max-width: 560px; }
-.cw-modal h2 { margin: 0; font-family: var(--font-head); font-size: 22px; letter-spacing: -.01em; text-transform: none; color: var(--ink); }
-.cw-stars { display: flex; align-items: center; gap: 2px; }
-.cw-stars .lbl { margin-right: 10px; }
-.cw-stars button { border: 0; background: none; font-size: 24px; line-height: 1; color: var(--line-2); cursor: pointer; padding: 2px; }
-.cw-stars button.on { color: #f0a020; }
-.cw-pay .card h1 { font-size: 30px; }
-.cw-pay[hidden] { display: none; }
-
-@media (max-width: 1100px) { .cw-plans { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 760px) {
-  .cw-plans, .cw-teaser-row { grid-template-columns: minmax(0, 1fr); }
-  .cw-teaser-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .cw-early { grid-template-columns: minmax(0, 1fr); padding: 28px 22px; gap: 22px; }
-  .cw-own, .cw-com { flex-direction: column; align-items: flex-start; }
-  .cw-own { padding: 26px 22px; gap: 18px; }
-  #cwEmailForm, #cwCodeForm, .cw-two { grid-template-columns: minmax(0, 1fr); }
-  .cw-reqrow { grid-template-columns: 52px minmax(0, 1fr) 32px auto; }
-  .cw-reqrow i { display: none; }
-  .cw-fbbtn { right: 12px; bottom: 12px; padding: 9px 13px; }
+/* ═════════════ phones and touch screens ═════════════ */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+a, button, input, select, textarea, summary, label, [role="button"] { touch-action: manipulation; }   /* no double-tap zoom or tap delay on controls */
+body[data-route="sim"] { overscroll-behavior: none; }   /* a swipe on the console never pulls the page or reloads it */
+@media (hover: none) and (pointer: coarse) {
+  input, select, textarea { font-size: 16px !important; }   /* below 16px iOS Safari zooms the whole page when a field takes focus */
+  .btn, .chips button, .viewsw button { min-height: 44px; }
+  .pop .opt, .pop .pop-x, .atis-card .pop-x, .wm-pop .x { min-width: 40px; min-height: 40px; }
+  .wm-zoom button { width: 44px; height: 44px; }
 }
+.apline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.apline .apsw { display: flex; flex-wrap: wrap; gap: 6px; flex-basis: 100%; margin-top: 6px; }
+.apline .apsw a { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 999px; font-size: 13.5px; text-decoration: none; white-space: nowrap; }
+.apline .apsw a:hover { border-color: var(--accent); }
+.tabbed > .side, .tabbed > .bottom, .tabbed .cmd { min-width: 0; }
+.tabbed > .bottom { overflow-x: hidden; }
+@media (max-width: 680px) {   /* the site header: the links scroll sideways and Launch stays on screen */
+  .topbar { gap: 8px; padding: 0 10px 0 14px; }
+  .nav { flex: 1 1 auto; min-width: 0; gap: 0; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent); }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex: none; white-space: nowrap; padding: 10px 10px; font-size: 14.5px; }
+  .topbar .status { margin-left: 0; flex: none; gap: 0; }
+  .topbar .status .btn.primary { display: inline-flex; min-height: 40px; padding: 9px 14px; }
+}
+@media (max-width: 900px) {   /* the start screen: airports in one sideways row, and Open the position always within reach */
+  .apline .apsw { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding: 2px 4px; }
+  .apline .apsw::-webkit-scrollbar { display: none; }
+  #setup .card { overflow: visible; }
+  #setup .row:has(#startBtn) { position: sticky; bottom: -18px; z-index: 2; margin-inline: -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--panel); border-top: 1px solid var(--line); flex-wrap: wrap; }
+  #setup .row:has(#startBtn) #startBtn { flex: 1 1 180px; min-height: 46px; }
+}
+html:has(body[data-route="sim"]) { overscroll-behavior: none; }   /* Android's swipe-back and pull-to-refresh stay out of the console */
+.app #sel .rm-end { display: block; margin-top: 16px; order: 99; align-self: flex-start; }
+@media (hover: none) and (pointer: coarse) {
+  .app #sel .btns { gap: 8px; }
+  .app #sel .btns button, .app #sel .ailine button, .app #sel .emgline button { min-height: 44px; padding: 8px 14px; font-size: 13px; }
+  .app #sel .ctl input { min-height: 44px; }
+  .app .selnav button { min-width: 48px; min-height: 44px; }
+  .app .sel-head .selnav { margin-right: 6px; }
+  .app #sel .rm-end { min-height: 44px; padding: 8px 16px; font-size: 13px; }
+  .strip .ctr { width: 36px; height: 36px; top: 0; right: 0; border-radius: 0 4px 0 8px; }
+  .app button.strip { min-height: 52px; }
+  .app .strips-head button, .app .sb-bay button { min-height: 40px; }
+}
+@media (max-width: 480px) { #setup .row:has(#startBtn) { flex-wrap: nowrap; gap: 8px; } #setup .row:has(#startBtn) #startBtn { flex: 1 1 auto; } #setup .row:has(#startBtn) .btn:not(#startBtn) { flex: none; } #setup .row:has(#startBtn) a.btn[href="#training"] { display: none; } }
 
 </style>
 </head>
@@ -1337,11 +1256,9 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     <a href="../area/">Area Control</a>
     <a href="#training" data-route="training">Academy</a>
     <a href="#career" data-route="career">Career</a>
-    <a href="#pricing" data-route="pricing">Pricing</a>
   </nav>
   <div class="status">
     <span class="live clk"><i></i><span id="topClock">--:--Z</span></span>
-    <a class="btn ghost" href="#account" id="cwAccLink" hidden>Sign in</a>
     <a class="btn primary" href="#sim">Launch</a>
   </div>
 </header>
@@ -1417,7 +1334,7 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
   <div class="section"><div class="wrap">
     <div class="section-head">
       <div><div class="eyebrow">The network</div><h2>Choose your airport.</h2></div>
-      <p>Each airport is built separately from its own aerodrome charts, procedures and local rules. Gibraltar, Madeira, London City, Innsbruck, New York JFK and London Gatwick are open now. The rest are on the roadmap, and you can vote for the next one or commission it.</p>
+      <p>Each airport is built separately from its own aerodrome charts, procedures and local rules. Gibraltar, Madeira, London City, Innsbruck, New York JFK and London Gatwick are open now. The rest are on the roadmap.</p>
     </div>
     <div class="apgrid" id="apFeatured"></div>
     <div class="more"><a class="btn" href="#airports">View all airports</a></div>
@@ -1619,22 +1536,15 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
       </ol>
     </div>
   </div></div>
-  <div class="section cw-teaser"><div class="wrap">
-    <div class="section-head"><div><div class="eyebrow">Plans</div><h2>Choose your airports. Try one free for <span data-cw="trial">2</span> days.</h2></div>
-      <p>Pick one airport, three, five, ten or the whole network, and change your mind any month. Early access opens airports while they are still being built.</p></div>
-    <p class="cw-teaser-off" id="cwTeaserOff"></p>
-    <div class="cw-teaser-row" id="cwTeaser"></div>
-    <div class="ctas"><a class="btn primary" href="#pricing">See plans and pricing</a><a class="btn" href="#request">Request an airport</a></div>
-  </div></div>
   <div class="section" style="padding-top:0"><div class="wrap"><div class="cta-band">
     <div><h2>Take the frequency at Gibraltar, Madeira, London City, Innsbruck, New York JFK, London Gatwick, Madrid-Barajas, Manchester, London Heathrow or Bristol.</h2><p>Nothing to download. Open the position in your browser on a computer, tablet or phone, pick the weather and start working traffic.</p></div>
     <div class="ctas"><a class="btn primary" href="#sim">Launch the simulator</a><a class="btn ghost" href="#training">Start with the Academy</a></div>
   </div></div></div>
   <footer class="footer2"><div class="wrap">
     <div class="fcol brandcol"><div class="fbrand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="cwg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#123a66"/><stop offset="1" stop-color="#0b2a4a"/></linearGradient></defs><rect width="40" height="40" rx="10" fill="url(#cwg2)"/><path d="M8.5 13.5 A14 14 0 0 1 31.5 13.5" fill="none" stroke="#5b8cff" stroke-width="2.2" stroke-linecap="round"/><path d="M12.6 15.6 A9 9 0 0 1 27.4 15.6" fill="none" stroke="#5b8cff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/><path d="M17.6 17 H22.4 L27 34 H13 Z" fill="#fff"/><path d="M20 19.5 V21.5 M20 24 V26.5 M20 29 V31" stroke="#0b2a4a" stroke-width="1.1"/><path d="M15 32.6 h2.2 M22.8 32.6 h2.2" stroke="#0b2a4a" stroke-width="1.3"/><circle cx="20" cy="11" r="1.8" fill="#ffb547"/></svg>Clearway</div><p>ATC simulation for the browser. A training game, not for real-world navigation, and not affiliated with any air navigation service provider, airport or airline.</p></div>
-    <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a><a href="#pricing">Pricing</a><a href="#request">Request an airport</a></div>
+    <div class="fcol"><div class="lbl">Product</div><a href="#airports">Airports</a><a href="#sim">Simulator</a><a href="#training">Academy</a></div>
     <div class="fcol"><div class="lbl">Open now</div><a href="#lxgb">Gibraltar · LXGB</a><a href="#lpma">Madeira · LPMA</a><a href="#eglc">London City · EGLC</a><a href="#lowi">Innsbruck · LOWI</a><a href="#kjfk">New York JFK · KJFK</a><a href="#egkk">London Gatwick · EGKK</a><a href="#lemd">Madrid-Barajas · LEMD</a><a href="#egcc">Manchester · EGCC</a><a href="#egll">London Heathrow · EGLL</a><a href="#eggd">Bristol · EGGD</a><a href="#egaa">Belfast · EGAA · EGAC</a><a href="#yssy">Sydney · YSSY</a></div>
-    <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span><a href="#terms">Terms</a><a href="#privacy">Privacy</a></div>
+    <div class="fcol"><div class="lbl">Data</div><span>Aerodrome data from national AIPs</span><span>Map data © OpenStreetMap contributors</span><span>Live traffic: adsb.lol, adsb.fi</span></div>
   </div></footer>
 </section>
 
@@ -4359,158 +4269,12 @@ body[data-route="sim"] .cw-fbbtn { display: none; }
     </section>
 <footer class="footer"><div class="wrap"><span>Clearway Academy</span><span data-apt="LXGB">Gibraltar endorsement based on UK Mil AIP AD 2 LXGB. Not for real-world navigation.</span><span data-apt="LPMA">Madeira endorsement based on AIP Portugal AD 2 LPMA. Not for real-world navigation.</span><span data-apt="EGLC">London City endorsement based on UK AIP AD 2 EGLC. Not for real-world navigation.</span><span data-apt="LOWI">Innsbruck endorsement based on AIP Austria AD 2 LOWI. Not for real-world navigation.</span><span data-apt="KJFK">New York JFK endorsement based on the FAA terminal procedures for KJFK. Not for real-world navigation.</span><span data-apt="EGKK">London Gatwick endorsement based on UK AIP AD 2 EGKK. Not for real-world navigation.</span><span data-apt="LEMD">Madrid-Barajas endorsement based on AIP España AD 2 LEMD. Not for real-world navigation.</span><span data-apt="EGCC">Manchester endorsement based on UK AIP AD 2 EGCC. Not for real-world navigation.</span><span data-apt="EGGD">Bristol endorsement based on UK AIP AD 2 EGGD. Not for real-world navigation.</span><span data-apt="EGLL">London Heathrow endorsement based on UK AIP AD 2 EGLL. Not for real-world navigation.</span><span data-apt="YSSY">Sydney endorsement based on the Airservices Australia AIP for YSSY. Not for real-world navigation.</span></div></footer>
 </section>
-<!-- ═════════════════════ PRICING ═════════════════════ -->
-<section class="page" id="page-pricing" data-page="pricing" hidden>
-  <div class="pagehead"><div class="wrap">
-    <div class="eyebrow">Pricing</div>
-    <h1>Pick your airports. <em>Try one airport free for <span data-cw="trial">2</span> days.</em></h1>
-    <p>Every plan includes the full simulator at the airports you choose: approach, tower and ground, live weather, real-world traffic, the timetable, guided exercises and your career logbook. Briefings and the Academy reading are free for everyone.</p>
-    <div class="cw-note cw-offer" id="cwOfferNote" hidden></div>
-    <div class="cw-note" id="cwPreviewNote" hidden>Clearway is in open preview: every airport is free to control while subscriptions are being set up.</div>
-  </div></div>
-  <div class="wrap">
-    <div class="cw-plans" id="cwPlans"></div>
-    <label class="cw-early-pick" id="cwEarlyPick"><input type="checkbox" id="cwEarlyBox"> <span><b>Add Foxtrot</b> (early access) for <span data-cw="early-price"></span> a month: play airports while they are still being built, and your airport requests count double. Included with Echo.</span></label>
-    <div class="cw-early">
-      <div><div class="eyebrow">Foxtrot · early access</div>
-        <h2>Control tomorrow’s airports today.</h2>
-        <p>Foxtrot members open airports marked <b>In development</b> as soon as their first build is playable, see new features before everyone else, and help decide what comes next: their airport requests carry double weight and their feedback goes to the top of the pile.</p></div>
-      <ul class="cw-ticks"><li>Airports in development, from the first playable build</li><li>New features and engine changes first</li><li>Double weight on airport requests</li><li>Priority feedback, read by the developer</li></ul>
-    </div>
-    <div class="cw-own">
-      <div><div class="eyebrow">Your own airport</div>
-        <h2>Want an airport we have not built? Commission it.</h2>
-        <p>Tell us your local airport, or the one you have always wanted to work, and save a card. We build it, and <span data-cw="commission-price">£25</span> is taken once, only when we release it to you. Then it is yours for good, whatever plan you are on, even with none, and you get it a month before anyone else.</p></div>
-      <a class="btn primary" href="#request">Commission an airport</a>
-    </div>
-    <div class="cw-faq">
-      <h2>Questions</h2>
-      <details><summary>How does the free trial work?</summary><p>Choose a plan and start your trial. For <span data-cw="trial">2</span> days you can control one airport of your choice, free. Cancel from your account before the trial ends and you pay nothing. Otherwise your plan starts, the rest of its airports unlock, and it renews monthly until you cancel. The trial is available once per player.</p></details>
-      <details><summary>How do I choose my airports?</summary><p>After you subscribe, open <a href="#account">your account</a> and tick the airports your plan includes. You can fill empty places at any time. Swapping an airport out is free during the trial and then once every 30 days. Unlimited includes every airport, including new ones as they open.</p></details>
-      <details><summary>What happens when a new airport opens?</summary><p>On a plan with a set number of airports, you choose. Swap the new airport in for one of yours from <a href="#account">your account</a> (one swap a month). Or keep everything and move up a plan with the new airport’s code: 50% off your new plan for the first 3 months, shown on your account when it opens. Echo already includes every new airport.</p></details>
-      <details><summary>Can I change or cancel my plan?</summary><p>Yes. Open <a href="#account">your account</a> and choose Manage billing to move up or down a plan, update your card, download invoices or cancel. A cancelled plan stays active until the end of the month you have paid for.</p></details>
-      <details><summary>How does commissioning an airport work?</summary><p>Sign in, send us the airport from the <a href="#request">Request page</a> and save a card with our payment provider, Stripe. Nothing is taken then. We check it can be built from published charts; if it cannot, we tell you and nothing is ever charged. When it is built we release it to you and take a one-off <span data-cw="commission-price">£25</span> from the saved card, with no subscription needed. It is then yours to control for good, whatever plan you are on, and only you can control it for its first month before it opens to subscribers. You can withdraw any time before release.</p></details>
-      <details><summary>What is free?</summary><p>The website, every airport briefing, the Academy reading, the airport map and your career logbook. Opening a position at an airport needs a trial or a plan.</p></details>
-      <details><summary>Is this real air traffic control training?</summary><p>No. Clearway is a simulation game built from published charts. It is not approved for real-world training or navigation and is not affiliated with any air navigation service provider, airport or airline.</p></details>
-    </div>
-  </div>
-  <div style="height:72px"></div>
-</section>
-
-<!-- ═════════════════════ ACCOUNT ═════════════════════ -->
-<section class="page" id="page-account" data-page="account" hidden>
-  <div class="pagehead"><div class="wrap">
-    <div class="eyebrow">Account</div>
-    <h1 id="cwAccH">Sign in to Clearway</h1>
-    <p id="cwAccP">We email you a sign-in link: no password to remember.</p>
-  </div></div>
-  <div class="wrap cw-acc">
-    <div class="cw-box" id="cwSignIn">
-      <form id="cwEmailForm" class="cw-form"><label>Email<input type="email" id="cwEmail" required autocomplete="email" placeholder="you@example.com"></label><button class="btn primary">Email me a sign-in link</button></form>
-      <form id="cwCodeForm" class="cw-form" hidden><label>Or type the code from your email<input id="cwCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" required placeholder="123456"></label><button class="btn primary">Sign in</button><button type="button" class="btn" id="cwCodeBack">Use another email</button></form>
-      <p class="cw-msg" id="cwSignMsg"></p>
-    </div>
-    <div id="cwAccount" hidden>
-      <div class="cw-box"><div class="cw-row"><div><div class="lbl">Signed in as</div><b id="cwWho"></b></div><span class="grow"></span><button class="btn" id="cwSignOut">Sign out</button></div></div>
-      <div class="cw-box"><h2>Your plan</h2><div id="cwPlanBox"></div></div>
-      <div class="cw-box" id="cwNewBox" hidden></div>
-      <div class="cw-box" id="cwPickBox" hidden><h2>Your airports</h2><p class="cw-sub" id="cwPickSub"></p><div class="cw-picks" id="cwPicks"></div><p class="cw-msg" id="cwPickMsg"></p></div>
-      <div class="cw-box" id="cwComBox" hidden><h2>Your commissioned airports</h2><div id="cwComs" class="cw-coms"></div><p class="cw-msg" id="cwComMsg"></p></div>
-    </div>
-  </div>
-  <div style="height:72px"></div>
-</section>
-
-<!-- ═════════════════════ AIRPORT REQUESTS ═════════════════════ -->
-<section class="page" id="page-request" data-page="request" hidden>
-  <div class="pagehead"><div class="wrap">
-    <div class="eyebrow">Roadmap</div>
-    <h1>Which airport should we build next?</h1>
-    <p>Tell us the airport you most want to control and why. The most requested airports move up the roadmap, and early access members’ requests count double. Or commission it and have it built for you.</p>
-  </div></div>
-  <div class="wrap cw-req">
-    <form class="cw-box cw-form" id="cwReqForm">
-      <h2>Request an airport</h2>
-      <div class="cw-two"><label>ICAO code<input id="cwReqIcao" maxlength="4" required placeholder="LEMG" autocapitalize="characters" spellcheck="false"></label><label>Airport<input id="cwReqName" maxlength="80" placeholder="Málaga"></label></div>
-      <label>What makes it a good one to control? <span class="lbl">optional</span><textarea id="cwReqWhy" rows="3" maxlength="600" placeholder="A short runway between mountains, summer peaks, a tricky approach…"></textarea></label>
-      <div class="cw-row"><button class="btn primary">Send request</button><span class="cw-msg" id="cwReqMsg"></span></div>
-    </form>
-    <form class="cw-box cw-form" id="cwComForm">
-      <h2>Or commission it: <span data-cw="commission-price">£25</span> once, yours for good</h2>
-      <p class="cw-sub" style="margin:0">Don’t want to wait for the vote? Save a card and we build the airport for you. Nothing is taken until we release it to you. It then stays on your account whatever plan you are on, and you get it a month before everyone else.</p>
-      <div class="cw-two"><label>ICAO code<input id="cwComIcao" maxlength="4" required placeholder="EGHI" autocapitalize="characters" spellcheck="false"></label><label>Airport<input id="cwComName" maxlength="80" placeholder="Southampton"></label></div>
-      <label>Anything we should know? <span class="lbl">optional</span><textarea id="cwComWhy" rows="3" maxlength="1500" placeholder="Why this airport, the positions you want to work, local procedures you know well…"></textarea></label>
-      <div class="cw-row"><button class="btn primary">Commission and save a card</button><span class="cw-msg" id="cwComNote"></span></div>
-      <p class="cw-msg" id="cwComOut"></p>
-    </form>
-    <div class="cw-box"><h2>Most requested</h2><div id="cwReqList" class="cw-reqlist"><p class="cw-sub">Loading…</p></div></div>
-    <div class="cw-box"><h2>Already on the roadmap</h2><div id="cwRoadmap" class="cw-reqlist"></div></div>
-  </div>
-  <div style="height:72px"></div>
-</section>
-
-<!-- ═════════════════════ OWNER (not linked) ═════════════════════ -->
-<section class="page" id="page-admin" data-page="admin" hidden>
-  <div class="pagehead"><div class="wrap"><div class="eyebrow">Clearway team</div><h1>Commissions</h1><p>Build each airport, then release it: the player’s saved card is charged once and the airport unlocks on their account.</p></div></div>
-  <div class="wrap cw-acc"><div class="cw-box"><div id="cwAdmin" class="cw-coms"></div><p class="cw-msg" id="cwAdminMsg"></p></div></div>
-  <div style="height:72px"></div>
-</section>
-
-<!-- ═════════════════════ LEGAL ═════════════════════ -->
-<section class="page cw-legal" id="page-terms" data-page="terms" hidden>
-  <div class="pagehead"><div class="wrap"><div class="eyebrow">Legal</div><h1>Terms of service</h1><p>Last updated <span data-cw="legal-date"></span>.</p></div></div>
-  <div class="wrap cw-prose">
-    <p>These terms cover your use of Clearway (the website at <span data-cw="site"></span> and its simulators). By creating an account or subscribing you agree to them.</p>
-    <h2>The service</h2><p>Clearway is an air traffic control simulation game. It is built from published aeronautical information and open map data, simplified for play. It must not be used for real-world navigation, flight planning or controller training, and it is not affiliated with any air navigation service provider, airport or airline.</p>
-    <h2>Accounts</h2><p>You sign in with your email address. Keep access to that email secure: anyone who can read it can sign in as you. One account is for one person.</p>
-    <h2>Subscriptions and the free trial</h2><p>Plans are billed monthly in advance through our payment provider, Stripe, and renew automatically until you cancel. New players can try one airport of their choice free for <span data-cw="trial">2</span> days, once, on the plan they choose; if you do not cancel before the trial ends, the first monthly payment is taken then and the rest of the plan’s airports unlock. You can change plan, update your card or cancel at any time from your account. Cancelling stops the next renewal and your plan stays active until the end of the period you have paid for. Prices include any VAT that applies and may change with at least 30 days’ notice by email.</p>
-    <h2>Your right to cancel</h2><p>If you are a consumer in the UK or EU you normally have 14 days to cancel a new subscription. Because Clearway gives you access to digital content straight away, you agree when subscribing that access starts immediately and that you lose that right once it has started, except where the law says otherwise. The free trial gives you time to decide before paying. If something has gone wrong, contact us and we will look at a refund.</p>
-    <h2>Airports and early access</h2><p>Your plan lets you open the number of airports it includes. Airports in development, offered through early access, are unfinished and may change or be withdrawn. We may update, improve or retire features; if we withdraw an airport you have chosen you can pick another. When a new airport opens you can swap it in for one of your chosen airports (one swap a month), or move up a plan using that airport’s offer code, which gives the stated discount on your new plan for the stated number of months and then renews at the normal price.</p>
-    <h2>Commissioned airports</h2><p>You can ask us to build an airport for a one-off price, shown when you ask. When you ask, you save a card with Stripe and authorise us to charge that price to it once, when the airport is built and released to you. Nothing is taken before then, and you can withdraw at any time before release. We may decline a request, for example if there is not enough published information to build it; nothing is charged in that case. If the charge needs your confirmation or fails, the airport waits on your account until you pay. A paid airport is added to your account for as long as Clearway runs it, whatever plan you are on, including none. For its first month only you can control it; after that we may open it to other players. It is built to the same standard as other Clearway airports and may be updated like them. Because it is made to your request and you can play it straight away, the 14-day right to cancel does not apply once you have paid and it is unlocked, except where the law says otherwise.</p>
-    <h2>Fair use</h2><p>Do not share your account, copy or resell the simulator, try to get around access controls, or disrupt the service.</p>
-    <h2>Feedback</h2><p>Feedback and airport requests you send may be used to improve Clearway without payment to you.</p>
-    <h2>Liability</h2><p>Clearway is provided as it is. Nothing in these terms limits liability that cannot be limited by law. Otherwise our total liability to you is limited to what you paid us in the 12 months before the claim.</p>
-    <h2>Contact</h2><p data-cw="contact-line">Contact us through the feedback button on any page.</p>
-  </div>
-  <div style="height:72px"></div>
-</section>
-<section class="page cw-legal" id="page-privacy" data-page="privacy" hidden>
-  <div class="pagehead"><div class="wrap"><div class="eyebrow">Legal</div><h1>Privacy</h1><p>Last updated <span data-cw="legal-date"></span>.</p></div></div>
-  <div class="wrap cw-prose">
-    <h2>What we keep</h2><ul>
-      <li><b>Your account:</b> your email address, your plan, the airports you have chosen and when your trial and billing period end.</li>
-      <li><b>Payments:</b> handled by Stripe. We never see or store your card number; Stripe tells us your plan’s status.</li>
-      <li><b>Feedback and airport requests:</b> what you write, the page you were on, your browser type and, if you give it or are signed in, your email so we can reply. Anonymous senders are recorded only as a one-way hash, to prevent spam.</li>
-      <li><b>Commissioned airports:</b> the airport you asked for, your notes, its progress and when you paid.</li>
-      <li><b>Your career logbook and settings</b> stay in your browser and are not sent to us.</li>
-    </ul>
-    <h2>Who processes it</h2><p>Supabase (accounts and database), Stripe (payments), Vercel (our server functions) and GitHub Pages (the website). Map tiles come from OpenStreetMap, and live traffic and weather from public aviation data feeds; those requests include your IP address, as any web request does.</p>
-    <h2>Cookies and analytics</h2><p>We do not use advertising or tracking cookies. Signing in stores a session token in your browser’s local storage. <span data-cw="analytics-line"></span></p>
-    <h2>Your rights</h2><p>You can ask for a copy of your data, or for your account and data to be deleted, at any time. Cancel any subscription first, then contact us. We keep payment records for as long as tax law requires.</p>
-    <h2>Contact</h2><p data-cw="contact-line">Contact us through the feedback button on any page.</p>
-  </div>
-  <div style="height:72px"></div>
-</section>
-
-<!-- feedback: the floating button on site pages, and the Feedback button on the console -->
-<button class="cw-fbbtn" id="cwFbBtn" type="button" aria-haspopup="dialog"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Feedback</button>
-<div class="cw-modal" id="cwFb" hidden role="dialog" aria-modal="true" aria-labelledby="cwFbH">
-  <form class="card cw-form" id="cwFbForm">
-    <div class="cw-row"><h2 id="cwFbH">Send feedback</h2><span class="grow"></span><button type="button" class="btn" data-close aria-label="Close">✕</button></div>
-    <div class="chips" id="cwFbKind" role="radiogroup" aria-label="Type"><button type="button" data-k="bug">Something’s wrong</button><button type="button" data-k="idea" class="on">Idea</button><button type="button" data-k="praise">I like it</button><button type="button" data-k="other">Other</button></div>
-    <div class="cw-stars" id="cwFbStars" role="radiogroup" aria-label="How is Clearway so far?"><span class="lbl">How is Clearway so far?</span></div>
-    <label>Your message<textarea id="cwFbMsg" rows="5" maxlength="4000" required placeholder="What happened, or what would make Clearway better?"></textarea></label>
-    <label id="cwFbEmailL">Email for a reply <span class="lbl">optional</span><input type="email" id="cwFbEmail" autocomplete="email"></label>
-    <div class="cw-row"><button class="btn primary">Send</button><span class="cw-msg" id="cwFbMsgOut"></span><span class="grow"></span><a href="#request" data-close>Request an airport instead</a></div>
-  </form>
-</div>
 </main>
 
 <script>
 const AIRPORT = 'LEMD';
 const SITE = {"LXGB": "../", "LPMA": "../lpma/", "EGLC": "../eglc/", "LOWI": "../lowi/", "KJFK": "../kjfk/", "YSSY": "../yssy/", "EGKK": "../egkk/", "LEMD": "../lemd/", "EGCC": "../egcc/", "EGLL": "../egll/", "EGAA": "../egaa/", "EGGD": "../eggd/", "LSGG": "../lsgg/"};
 const SITE_HOST = 'LXGB';
-const CW_CFG = {"enabled": false, "feedback": true, "api": "https://clearway-atc.vercel.app/api", "supabase_url": "https://aqwdnicarvfpclqwljxe.supabase.co", "supabase_anon_key": "sb_publishable_dFOE16aBVYg8FUgElz5SPA_sJD0CuF3", "currency": "£", "prices": {"a1": 4.99, "a3": 9.99, "a5": 14.99, "a10": 24.99, "all": 29.99, "early": 4.99}, "trial_days": 2, "contact_email": "", "analytics_token": "", "legal_date": "5 October 2026", "offer": {"percent": 30, "months": 3, "label": "Launch offer"}, "commission": 25, "upgrade_offer": {"percent": 50, "months": 3, "days": 30}, "releases": [{"icao": "KJFK", "date": "2026-10-05", "code": "NEWKJFK"}], "site": "https://www.clearway-atc.co.uk/"};
 const GEO = {"land":[[[[-7.5,38.0],[0.0,38.0],[0.0,43.0],[-7.5,43.0],[-7.5,38.0]]]],"coast":[],"borders":[],"towns":[["MADRID",-3.7038,40.4168],["ALCALA DE HENARES",-3.364,40.482],["TORREJON",-3.4977,40.4554],["GETAFE",-3.7323,40.3083],["GUADALAJARA",-3.1667,40.6333],["TOLEDO",-4.0273,39.8628],["SEGOVIA",-4.1184,40.9429],["AVILA",-4.7003,40.6565],["ARANJUEZ",-3.6024,40.0311],["ALCOBENDAS",-3.6418,40.5475],["COSLADA",-3.5613,40.4237],["TRES CANTOS",-3.7085,40.6007],["COLMENAR VIEJO",-3.7656,40.659],["MOSTOLES",-3.8649,40.3223],["LEGANES",-3.7635,40.3272],["FUENLABRADA",-3.7941,40.2842],["VALDEMORO",-3.6739,40.1908],["ARGANDA",-3.4382,40.3008],["CUENCA",-2.1374,40.0704],["TALAVERA",-4.8303,39.9635],["VALLADOLID",-4.7245,41.6523]],"airports":[["LETO",-3.4459,40.4967],["LEGT",-3.7239,40.2944],["LECU",-3.7856,40.3706],["LEVD",-4.8519,41.7061]]};
 "use strict";
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -8898,7 +8662,7 @@ function stateLabel(ac){
 // ═════════════════════════ console UI ═════════════════════════
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
-function select(ac){ if (ac && outOfCtl(ac)) return; S.trk = null; S.sel = ac; renderSel(); renderStrips(true); cmdPrefill(); }
+function select(ac){ if (ac && outOfCtl(ac)) return; selStamp = performance.now(); S.trk = null; S.sel = ac; renderSel(); renderStrips(true); cmdPrefill(); }
 // the selected flight's callsign waits in the command box, so you only type the instruction after it. Only text the
 // box put there itself (or a bare callsign) is replaced; anything you have started typing is left alone. On a mouse,
 // the box takes the focus unless you are typing in another field; on a touch screen it doesn't, so no keyboard pops up.
@@ -9087,7 +8851,8 @@ function renderSel(){
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
   const wireRm = () => { el.querySelectorAll('[data-ai]').forEach(b => b.onclick = () => { if (b.dataset.ai === 'take') takeOver(ac); else handToAi(ac); renderSel(); renderStrips(true); });
     el.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => cycleSel(+b.dataset.nav));
-    const r = el.querySelector('[data-rm]'); if (r) r.onclick = () => { if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
+    const r = el.querySelector('[data-rm]'); if (r) { r.classList.add('rm-end'); el.appendChild(r); }   // away from the flight buttons, the way back to the map and the strips
+    if (r) r.onclick = () => { if (performance.now() - selStamp < 900) return; if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and ${ac.slotHold ? 'is holding outside your airspace until you release it on the Flights board' : `calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now`}.</p>`; wireRm(); return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–') + (ac.via && ac.app ? ' via procedure' : '')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
@@ -9710,7 +9475,6 @@ function resetSession(){
   STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
-  if (!S.running && !cwGate()) return;   // opening a position needs a plan that includes this airport (account.js)
   const pasted = $('wxPaste').value.trim();
   const mode = $('trafficSel').value;
   const ex = EXERCISES[mode];
@@ -9764,13 +9528,19 @@ $('startBtn').onclick = async () => {
 };
 $('newBtn').onclick = () => { S.running = false; resetSession(); openSetup(); renderAtis(); renderSel(); renderStrips(true); };
 
+// the flight panel and strips redraw twice a second; a redraw between finger-down and finger-up replaces the button being
+// pressed, so the tap never lands (or lands on whatever now sits there). Leave them alone while a finger is on them.
+let uiHold = 0;
+for (const id of ['sel', 'strips']) { const n = $(id); if (n) n.addEventListener('pointerdown', () => { uiHold = performance.now() + 2500; }, true); }
+for (const ev of ['pointerup', 'pointercancel']) document.addEventListener(ev, () => { if (uiHold > performance.now()) uiHold = performance.now() + 250; }, true);
+let selStamp = 0;   // when a flight was last picked: a Remove tap right after is almost certainly the same touch
 let last = performance.now(), uiT = 0;
 function frame(now){
   const dtr = Math.min(0.25, (now - last)/1000); last = now;
   if (S.running && !S.paused) { let t = dtr*S.speed; while (t > 0) { const h = Math.min(0.2, t); step(h); t -= h; } }
   uiT += dtr; if (typeof careerTick === 'function') careerTick(dtr);
   if (document.body.dataset.route === 'sim') {
-    if (uiT > 0.5) { uiT = 0; renderStrips(); renderScore(); if (S.sel) { const a = document.activeElement; if (!(a && a.closest && a.closest('#sel'))) renderSel(); } emit('tick'); }
+    if (uiT > 0.5) { uiT = 0; const held = performance.now() < uiHold; if (!held) renderStrips(); renderScore(); if (S.sel && !held) { const a = document.activeElement; if (!(a && a.closest && a.closest('#sel'))) renderSel(); } emit('tick'); }
     if (cv.clientWidth && (Math.abs(cv.clientWidth - W) > 1 || Math.abs(cv.clientHeight - H) > 1)) resize();
     draw();
   }
@@ -15159,473 +14929,15 @@ function closeAtis(){ atisPop.hidden = true; try { speechSynthesis.cancel(); } c
 atisPop.addEventListener('click', e => { if (e.target === atisPop) closeAtis(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !atisPop.hidden) closeAtis(); });
 
-// ═════════════════════════ accounts: plans, sign-in, airport access, feedback, airport requests ═════════════════════════
-// CW_CFG comes from subs.json via build.py. With enabled: false every airport stays open (the preview) and nothing is sold.
-// Sign-in is Supabase email codes (or the magic link); plans, payments and the airport check go through the Clearway API
-// (api/account.js on Vercel). The check runs in the browser, so it keeps honest players honest rather than locking the code.
-// Private test switch: ?cwtest=on turns accounts on in this browser only (for trying Stripe test payments), ?cwtest=off undoes it
-const CW_TEST = (() => { if (CW_CFG.test_switch === false) return false; try {
-  const q = (location.search.match(/[?&]cwtest=(on|off)/) || [])[1];
-  if (q === 'on') localStorage.setItem('cw-test', '1'); else if (q === 'off') localStorage.removeItem('cw-test');
-  return !CW_CFG.enabled && localStorage.getItem('cw-test') === '1'; } catch(e) { return false; } })();
-const CW_ON = !!((CW_CFG.enabled || CW_TEST) && CW_CFG.supabase_url && CW_CFG.supabase_anon_key && CW_CFG.api);
-const CW_FB = !!(CW_CFG.feedback && CW_CFG.api);
-const CW_PLANS = [
-  { k: 'a1', n: 1, name: 'Alpha', p: 'One airport of your choice' },
-  { k: 'a3', n: 3, name: 'Bravo', p: 'Three airports of your choice', hot: true },
-  { k: 'a5', n: 5, name: 'Charlie', p: 'Five airports of your choice' },
-  { k: 'a10', n: 10, name: 'Delta', p: 'Ten airports of your choice' },
-  { k: 'all', n: 0, name: 'Echo', p: 'Every airport, including new ones as they open, with Foxtrot early access included' },
-];
-const cwPrice = k => CW_CFG.currency + (+CW_CFG.prices[k]).toFixed(2);
-// a launch offer (subs.json "offer"): percent off the first N months, applied in Stripe by the STRIPE_COUPON coupon
-const CW_OFF = CW_CFG.offer && +CW_CFG.offer.percent > 0 ? CW_CFG.offer : null;
-const cwOffer = k => CW_CFG.currency + (Math.round(CW_CFG.prices[k]*(100 - CW_OFF.percent))/100).toFixed(2);
-const cwOfferTerm = () => CW_OFF.months ? `for your first ${CW_OFF.months} month${CW_OFF.months > 1 ? 's' : ''}` : 'for as long as you subscribe';
-const CW = { ses: null, ent: null, loading: false, want: null };
-const cwLS = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } },
-  set(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} } };
-CW.ses = cwLS.get('cw-session');
-// the magic link brings the player back with #access_token=...; keep the session and show the account page
-(() => {
-  const h = location.hash;
-  if (!/^#(access_token|error)=/.test(h) || !CW_ON) return;
-  const p = new URLSearchParams(h.slice(1));
-  if (p.get('access_token')) cwKeep({ access_token: p.get('access_token'), refresh_token: p.get('refresh_token'), expires_in: +p.get('expires_in') || 3600 });
-  else CW.signErr = p.get('error_description') || 'That sign-in link has expired. Ask for a new code.';
-  history.replaceState(null, '', location.pathname + location.search + '#account');
-})();
-function cwKeep(s){
-  const email = (() => { try { return JSON.parse(atob(s.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).email; } catch(e) { return ''; } })();
-  CW.ses = { at: s.access_token, rt: s.refresh_token, exp: Date.now()/1000 + (s.expires_in || 3600), email: (s.user && s.user.email) || email };
-  cwLS.set('cw-session', CW.ses);
-}
-async function cwAuth(path, body){
-  const res = await fetch(CW_CFG.supabase_url.replace(/\/$/, '') + '/auth/v1/' + path, { method: 'POST',
-    headers: { apikey: CW_CFG.supabase_anon_key, 'content-type': 'application/json' }, body: JSON.stringify(body) });
-  const j = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(j.msg || j.error_description || j.message || 'Sign-in failed. Please try again.');
-  return j;
-}
-async function cwToken(){
-  if (!CW.ses) return null;
-  if (CW.ses.exp - 60 < Date.now()/1000) {
-    try { cwKeep(await cwAuth('token?grant_type=refresh_token', { refresh_token: CW.ses.rt })); }
-    catch(e) { cwSignOut(); return null; }
-  }
-  return CW.ses.at;
-}
-async function cwApi(path, body){
-  const t = await cwToken();
-  // text/plain keeps anonymous posts a "simple" request (no CORS preflight); the server reads the JSON either way
-  let res;
-  try { res = await fetch(CW_CFG.api.replace(/\/$/, '') + '/' + path, { method: body ? 'POST' : 'GET',
-    headers: { ...(t ? { authorization: 'Bearer ' + t } : {}), ...(body ? { 'content-type': 'text/plain;charset=UTF-8' } : {}) }, body: body ? JSON.stringify(body) : undefined }); }
-  catch(e) {
-    // a short code tells us why without the browser console: does a plain request get through when this one did not?
-    const plain = await fetch(CW_CFG.api.replace(/\/$/, '') + '/feedback?requests').then(r => 'P' + r.status, x => 'PX').catch(() => 'PX');
-    throw new Error(`Clearway’s server could not be reached. Check your connection, or allow this site in any ad or tracker blocker, and try again. (Code ${t ? 'A' : 'N'}${body ? 'W' : 'R'}-${plain}: ${e && e.message || e})`);
-  }
-  const j = await res.json().catch(() => ({}));
-  if (!res.ok) { const e = new Error(j.error || 'Something went wrong. Please try again.'); e.status = res.status; throw e; }
-  return j;
-}
-function cwSignOut(){ CW.ses = null; CW.ent = null; cwLS.set('cw-session', null); cwLS.set('cw-ent', null); cwRefreshUI(); }
-// the player's plan: cached for 10 minutes, and for up to 3 days if the API cannot be reached
-async function cwLoad(force){
-  if (!CW_ON || !CW.ses) { CW.ent = null; return null; }
-  const c = cwLS.get('cw-ent');
-  if (!force && c && c.email === CW.ses.email && Date.now() - c.at < 10*60e3) { CW.ent = c.ent; return CW.ent; }
-  CW.loading = true;
-  try { CW.ent = await cwApi('account'); cwLS.set('cw-ent', { at: Date.now(), email: CW.ses.email, ent: CW.ent }); }
-  catch(e) {
-    if (e.status === 401) cwSignOut();
-    else if (c && c.email === CW.ses.email && Date.now() - c.at < 3*864e5) CW.ent = c.ent;
-  } finally { CW.loading = false; }
-  return CW.ent;
-}
-const cwStatusOf = icao => (AIRPORTS_NET.find(a => a.icao === icao) || {}).status || 'live';
-function cwCanPlay(icao){
-  if (!CW_ON) return true;
-  const e = CW.ent; if (!e) return false;
-  if (e.owner) return true;   // the site owner opens every airport, in development too
-  if ((e.owned || []).includes(icao)) return true;   // a commissioned airport is the player's whatever their plan
-  if (!e.active) return false;
-  if (cwStatusOf(icao) === 'dev') return !!e.early;
-  return e.airports === '*' || e.airports.includes(icao);
-}
-// airports in development that this player may preview: the owner, and Foxtrot (early access) members
-const cwPreview = () => !!(CW_ON && CW.ent && (CW.ent.owner || (CW.ent.active && CW.ent.early)));
-// called by start(): opening a position needs a plan that includes this airport
-function cwGate(){ if (cwCanPlay(APT.icao)) return true; cwPaywall(); return false; }
-const cwHost = h => (IS_HOST ? '' : SITE[SITE_HOST]) + '#' + h;
-const cwDate = s => s ? new Date(s).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) : '';
-
-// ── the paywall over the console ──
-function cwPaywall(){
-  if (!CW_ON || EMBED) return;
-  let el = $('cwPay');
-  if (!el) { el = document.createElement('div'); el.className = 'overlay cw-pay'; el.id = 'cwPay'; $('setup').parentNode.appendChild(el); }
-  if (cwCanPlay(APT.icao)) { el.hidden = true; return; }
-  el.hidden = false;
-  const e = CW.ent, name = APT.name, trial = CW_CFG.trial_days, dev = cwStatusOf(APT.icao) === 'dev';
-  let h = '', btns = '';
-  if (CW.ses && !e && CW.loading) { h = `<h1>${esc(name)}</h1><p>Checking your plan…</p>`; }
-  else if (!CW.ses) { h = `<h1>Control ${esc(name)}</h1><p>Opening a position needs a plan. Try one airport of your choice free for ${trial} days, then pick one airport, three, five, ten or the whole network.</p>`;
-    btns = `<a class="btn primary" href="${cwHost('pricing')}">Start your ${trial}-day free trial</a><a class="btn" href="${cwHost('account')}">Sign in</a>`; }
-  else if (!e || !e.active) { h = `<h1>Control ${esc(name)}</h1><p>Your account has no active plan${e && e.trial_used ? '' : `. Try one airport of your choice free for ${trial} days`}.</p>`;
-    btns = `<a class="btn primary" href="${cwHost('pricing')}">See plans</a><a class="btn" href="${cwHost('account')}">Your account</a>`; }
-  else if (dev) { h = `<h1>${esc(name)} is in development</h1><p>Airports in development are open to Foxtrot (early access) members.</p>`;
-    btns = `<a class="btn primary" href="${cwHost('account')}">Add Foxtrot</a>`; }
-  else if (e.airports.length < e.limit) { h = `<h1>Add ${esc(name)} to your ${e.trial ? 'trial' : 'plan'}?</h1><p>${e.trial ? `Your free trial includes one airport of your choice.` : `Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''} and you have chosen ${e.airports.length}${e.airports.length ? ': ' + e.airports.join(', ') : ''}.`}</p>`;
-    btns = `<button class="btn primary" id="cwPayAdd">Add ${esc(name)}</button><a class="btn" href="${cwHost('account')}">Choose on your account</a>`; }
-  else { h = `<h1>${esc(name)} is not in your ${e.trial ? 'trial' : 'plan'}</h1><p>${e.trial ? `Your free trial is for one airport, ${e.airports.join(', ')}. The rest of your plan’s airports unlock when the trial ends, or you can swap airports on your account during the trial.` : `Your plan includes ${e.limit} airport${e.limit > 1 ? 's' : ''}: ${e.airports.join(', ')}. Swap one on your account, or move up a plan.`}</p>`;
-    btns = `<a class="btn primary" href="${cwHost('account')}">Your airports</a><a class="btn" href="${cwHost('pricing')}">Plans</a>`; }
-  el.innerHTML = `<div class="card"><div class="eyebrow">${APT.icao}</div>${h}<p class="cw-msg" id="cwPayMsg"></p><div class="row">${btns}<a class="btn" href="${cwHost(HOME_RT)}">Airport briefing</a></div></div>`;
-  const add = $('cwPayAdd');
-  if (add) add.onclick = async () => {
-    add.disabled = true;
-    try { CW.ent = { ...CW.ent, ...await cwApi('account', { action: 'airports', airports: [...e.airports, APT.icao] }) }; cwLS.set('cw-ent', { at: Date.now(), email: CW.ses.email, ent: CW.ent }); cwPaywall(); }
-    catch(err) { $('cwPayMsg').textContent = err.message; add.disabled = false; }
-  };
-}
-function cwOnRoute(){
-  const r = document.body.dataset.route, pay = $('cwPay');
-  if (r === 'airports' && cwPreview()) renderAirports();   // previews unlock once the plan has loaded
-  if (r === 'sim' && CW_ON && !cwCanPlay(APT.icao) && !S.running) cwPaywall(); else if (pay) pay.hidden = true;
-  if (r === 'pricing') cwRenderPricing();
-  if (r === 'account') cwRenderAccount();
-  if (r === 'request') { cwRenderRequests(); cwRenderCommission(); }
-  if (r === 'admin') cwRenderAdmin();
-}
-
-// ── pricing ──
-function cwRenderPricing(){
-  $('cwPreviewNote').hidden = CW_ON;
-  $('cwOfferNote').hidden = !CW_OFF;
-  if (CW_OFF) $('cwOfferNote').innerHTML = `<b>${esc(CW_OFF.label || 'Offer')}:</b> ${CW_OFF.percent}% off every plan ${cwOfferTerm()}${CW_ON ? ', applied at checkout' : ' when subscriptions open'}.`;
-  $('cwEarlyPick').hidden = !CW_ON;
-  const e = CW.ent, cur = e && e.active ? e.plan : null, trial = !(e && e.trial_used);
-  $('cwPlans').innerHTML = CW_PLANS.map(p => {
-    const per = p.n ? `<span class="per">${CW_CFG.currency}${(CW_CFG.prices[p.k]/p.n).toFixed(2)} per airport</span>` : '<span class="per">Every airport · Foxtrot included</span>';
-    const btn = !CW_ON ? `<a class="btn" href="#airports">Free during the preview</a>`
-      : cur === p.k ? `<button class="btn" disabled>Your plan</button>`
-      : `<button class="btn${p.hot ? ' primary' : ''}" data-plan="${p.k}">${cur ? 'Switch to ' + p.name : trial ? `Start ${CW_CFG.trial_days}-day free trial` : 'Choose ' + p.name}</button>`;
-    return `<div class="cw-plan${p.hot ? ' hot' : ''}">${p.hot ? '<span class="badge new">Most popular</span>' : ''}
-      <div class="lbl">${p.n ? p.n + ' airport' + (p.n > 1 ? 's' : '') : 'All airports'}</div><h3>${p.name}</h3>
-      <div class="price">${CW_OFF ? `<s>${cwPrice(p.k)}</s><b>${cwOffer(p.k)}</b>` : `<b>${cwPrice(p.k)}</b>`}<span>/month</span></div>${CW_OFF ? `<span class="cw-off">${CW_OFF.percent}% off ${cwOfferTerm()}, then ${cwPrice(p.k)}</span>` : ''}${per}<p>${p.p}.</p>${btn}</div>`;
-  }).join('');
-  $('cwPlans').querySelectorAll('[data-plan]').forEach(b => b.onclick = () => cwChoose(b.dataset.plan, $('cwEarlyBox').checked, b));
-}
-async function cwChoose(plan, early, btn){
-  if (!CW.ses) { try { sessionStorage.setItem('cw-want', JSON.stringify({ plan, early })); } catch(e) {} location.hash = '#account'; return; }
-  if (btn) { btn.disabled = true; btn.textContent = 'Opening secure checkout…'; }
-  try { const { url } = await cwApi('account', { action: 'checkout', plan, early }); try { sessionStorage.setItem('cw-paying', 'plan'); } catch(_) {} location.href = url; }
-  catch(e) { if (btn) { btn.disabled = false; btn.textContent = e.message; } }
-}
-
-// ── account ──
-const CW_ST = { trialing: 'Free trial', active: 'Active', past_due: 'Payment failed', canceled: 'Ended', unpaid: 'Unpaid', incomplete: 'Waiting for payment' };
-async function cwRenderAccount(){
-  const signed = !!CW.ses;
-  $('cwSignIn').hidden = signed; $('cwAccount').hidden = !signed;
-  $('cwAccH').textContent = signed ? 'Your account' : 'Sign in to Clearway';
-  $('cwAccP').textContent = !CW_ON ? 'Accounts open with subscriptions. Every airport is free during the preview.' : signed ? 'Your plan, your airports and billing.' : 'We email you a sign-in link: no password to remember.';
-  if (!CW_ON) { $('cwSignIn').hidden = true; return; }
-  if (CW.signErr) { $('cwSignMsg').textContent = CW.signErr; CW.signErr = null; }
-  if (!signed) return;
-  $('cwWho').textContent = CW.ses.email;
-  const done = /(checkout|card)=done/.test(location.search);
-  if (!CW.ent || done) $('cwPlanBox').innerHTML = '<p class="cw-sub">Loading your plan…</p>';
-  await cwLoad(true);   // the account page always asks the server, so releases and plan changes show at once
-  // just back from Stripe: the webhook can take a few seconds to land
-  // a commission payment is back when that airport is owned; a plan when it is active
-  const paying = (() => { try { return sessionStorage.getItem('cw-paying'); } catch(_) { return null; } })();
-  const card = /card=done/.test(location.search);
-  const landed = () => CW.ent && (card ? !(CW.ent.commissions || []).some(c => c.status === 'card')
-    : paying && paying !== 'plan' ? (CW.ent.owned || []).includes(paying) : CW.ent.active);
-  for (let i = 0; done && i < 6 && !landed(); i++) { await new Promise(r => setTimeout(r, 2000)); await cwLoad(true); }
-  if (done) try { sessionStorage.removeItem('cw-paying'); } catch(_) {}
-  if (done) history.replaceState(null, '', location.pathname + '#account');
-  const e = CW.ent;
-  if (!e) { $('cwPlanBox').innerHTML = '<p class="cw-sub">Your plan could not be loaded. Please try again shortly.</p>'; return; }
-  const want = (() => { try { const w = JSON.parse(sessionStorage.getItem('cw-want')); sessionStorage.removeItem('cw-want'); return w; } catch(_) { return null; } })();
-  if (want && !e.active) return cwChoose(want.plan, want.early);
-  const plan = CW_PLANS.find(p => p.k === e.plan);
-  if (e.owner && !e.active) {
-    $('cwPlanBox').innerHTML = `<div class="cw-planrow"><div><span class="badge live">Owner</span><h3>Every airport</h3><p class="cw-sub">As the site owner you can open every airport without a plan, including airports still in development.</p></div>
-      <div class="cw-row"><a class="btn primary" href="#airports">Airports</a><a class="btn" href="#admin">Commissions</a></div></div>`;
-  } else if (!e.active) {
-    $('cwPlanBox').innerHTML = `<p>${e.status === 'canceled' ? 'Your plan has ended.' : 'You have no plan yet.'} ${e.trial_used ? '' : `Every plan starts with a free ${CW_CFG.trial_days}-day trial of one airport of your choice.`}</p><div class="cw-row"><a class="btn primary" href="#pricing">See plans</a>${e.billing ? '<button class="btn" data-portal>Billing history</button>' : ''}</div>`;
-  } else {
-    const when = e.status === 'trialing' ? `Free trial until ${cwDate(e.trial_end)}${e.cancel_at ? ', then ends' : CW_OFF ? `, then ${cwOffer(e.plan)} a month ${cwOfferTerm().replace('your ', 'the ')} and ${cwPrice(e.plan)} after that` : ', then ' + cwPrice(e.plan) + ' a month'}`
-      : e.cancel_at ? `Ends on ${cwDate(e.cancel_at)}` : e.status === 'past_due' ? 'Your last payment failed: please update your card' : `Renews on ${cwDate(e.period_end)}`;
-    $('cwPlanBox').innerHTML = `<div class="cw-planrow"><div><span class="badge ${e.status === 'past_due' ? 'dev' : 'live'}">${CW_ST[e.status] || e.status}</span><h3>${plan ? plan.name : e.plan}</h3><p class="cw-sub">${when}.</p></div>
-      <div class="cw-row"><button class="btn primary" data-portal>Manage billing</button><a class="btn" href="#pricing">Compare plans</a></div></div>
-      <div class="cw-earlyrow"><div><b>Foxtrot</b> (early access)<p class="cw-sub">${e.plan === 'all' ? 'Included with Echo.' : e.early ? 'On: airports in development are open to you.' : `Play airports in development, for ${cwPrice('early')} a month.`}</p></div>
-      ${e.plan === 'all' ? '' : `<button class="btn" id="cwEarlyTog">${e.early ? 'Remove Foxtrot' : 'Add Foxtrot'}</button>`}</div>`;
-    const t = $('cwEarlyTog');
-    if (t) t.onclick = async () => { t.disabled = true; try { CW.ent = await cwApi('account', { action: 'early', on: !e.early }); cwLS.set('cw-ent', null); await cwLoad(true); cwRenderAccount(); } catch(err) { t.textContent = err.message; } };
-  }
-  $('cwPlanBox').querySelectorAll('[data-portal]').forEach(b => b.onclick = async () => { b.disabled = true; try { location.href = (await cwApi('account', { action: 'portal' })).url; } catch(err) { b.disabled = false; b.textContent = err.message; } });
-  cwRenderPicks(); cwRenderNew(); cwRenderCommissions();
-}
-function cwRenderPicks(){
-  const e = CW.ent, box = $('cwPickBox');
-  box.hidden = !(e && (e.active || e.owner));
-  if (box.hidden) return;
-  const live = AIRPORTS_NET.filter(a => a.status === 'live'), dev = AIRPORTS_NET.filter(a => a.status === 'dev');
-  if (e.airports === '*' || e.owner) {
-    const prev = cwPreview() ? dev.filter(a => SITE[a.icao]) : [];
-    $('cwPickSub').textContent = e.owner ? 'Every airport is open to you.' + (prev.length ? ' Airports in development are marked Preview.' : '') : 'Every airport is included in your plan.';
-    $('cwPicks').innerHTML = [...live, ...prev].map(a => `<a class="cw-pick on" href="${SITE[a.icao] || '#'}#sim"><b>${a.icao}</b><span>${esc(a.name)}${a.status === 'dev' ? ' · Preview' : ''}</span></a>`).join('');
-  } else {
-    let sel = [...e.airports];
-    const draw = () => {
-      $('cwPickSub').textContent = e.trial ? `Your free trial includes one airport of your choice; swap it as often as you like. The rest of your plan’s ${e.plan_airports || ''} airports unlock when the trial ends.`.replace('plan’s  airports', 'plan’s airports') : `${sel.length} of ${e.limit} chosen. Fill empty places at any time; you can swap an airport once every 30 days.`;
-      $('cwPicks').innerHTML = live.map(a => `<button type="button" class="cw-pick${sel.includes(a.icao) ? ' on' : ''}" data-i="${a.icao}" aria-pressed="${sel.includes(a.icao)}"><b>${a.icao}</b><span>${esc(a.name)}</span></button>`).join('')
-        + `<div class="cw-row" style="grid-column:1/-1"><button class="btn primary" id="cwPickSave"${String(sel) === String(e.airports) ? ' disabled' : ''}>Save my airports</button></div>`;
-      $('cwPicks').querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
-        const i = b.dataset.i;
-        if (sel.includes(i)) sel = sel.filter(x => x !== i); else if (sel.length < e.limit) sel.push(i); else { $('cwPickMsg').textContent = `Your plan includes ${e.limit}. Untick one first, or move up a plan.`; return; }
-        $('cwPickMsg').textContent = ''; draw();
-      });
-      $('cwPickSave').onclick = async () => {
-        try { CW.ent = { ...CW.ent, ...await cwApi('account', { action: 'airports', airports: sel }) }; cwLS.set('cw-ent', { at: Date.now(), email: CW.ses.email, ent: CW.ent }); $('cwPickMsg').textContent = 'Saved.'; cwRenderPicks(); }
-        catch(err) { $('cwPickMsg').textContent = err.message; }
-      };
-    };
-    draw();
-  }
-  if (e.early && dev.length) $('cwPicks').insertAdjacentHTML('beforeend', `<p class="cw-sub" style="grid-column:1/-1">Early access: ${dev.map(a => esc(a.name)).join(', ')} open${dev.length === 1 ? 's' : ''} to you as soon as its first build is playable.</p>`);
-}
-// ── a new airport is out: swap it in (once a month) or move up a plan with its code (subs.json releases + upgrade_offer) ──
-const CW_UP = CW_CFG.upgrade_offer || { percent: 50, months: 3, days: 30 };
-const cwNewAirports = () => (CW_CFG.releases || []).filter(r => Date.now() - Date.parse(r.date) < (CW_UP.days || 30)*864e5 && AIRPORTS_NET.some(a => a.icao === r.icao && a.status === 'live'));
-function cwRenderNew(){
-  const e = CW.ent, box = $('cwNewBox'), news = e && e.active && e.limit !== 0 ? cwNewAirports() : [];
-  box.hidden = !news.length;
-  if (box.hidden) return;
-  const cur = CW_PLANS.findIndex(p => p.k === e.plan), bigger = CW_PLANS.slice(cur + 1);
-  const last = e.airports_changed_at ? Date.parse(e.airports_changed_at) : 0, next = last + 30*864e5;
-  box.innerHTML = news.map(r => {
-    const ap = AIRPORTS_NET.find(a => a.icao === r.icao), mine = e.airports.includes(r.icao);
-    const swap = mine ? `<p class="cw-sub">${esc(ap.name)} is already one of your airports.</p>`
-      : `<p class="cw-sub"><b>Swap it in:</b> replace one of your airports with ${esc(ap.name)} in <a href="#account" data-swap>Your airports</a> below.${!e.trial && Date.now() < next ? ` Your next swap is free from ${cwDate(new Date(next))} (one swap a month).` : ' You can swap one airport a month.'}</p>`;
-    const up = bigger.length ? `<p class="cw-sub"><b>Or add it by moving up a plan:</b> ${CW_UP.percent}% off for ${CW_UP.months} months with code <code>${esc(r.code)}</code>.</p>
-      <div class="cw-row">${bigger.map(p => `<button class="btn${p === bigger[0] ? ' primary' : ''}" data-up="${p.k}" data-code="${esc(r.code)}">${p.name} (${p.n || 'all'} airports): <s>${cwPrice(p.k)}</s> ${CW_CFG.currency}${(CW_CFG.prices[p.k]*(100 - CW_UP.percent)/100).toFixed(2)}</button>`).join('')}</div>` : '';
-    return `<div class="cw-new"><span class="badge new">New airport</span><h3>${esc(ap.name)} (${r.icao}) is open</h3>${swap}${up}</div>`;
-  }).join('') + '<p class="cw-msg" id="cwNewMsg"></p>';
-  box.querySelectorAll('[data-up]').forEach(b => b.onclick = async () => {
-    const p = CW_PLANS.find(x => x.k === b.dataset.up);
-    if (!confirm(`Move up to ${p.name} with code ${b.dataset.code}? You get ${CW_UP.percent}% off for ${CW_UP.months} months and the difference for the rest of this month is added to your next bill.`)) return;
-    b.disabled = true; $('cwNewMsg').textContent = 'Updating your plan…';
-    try { CW.ent = { ...CW.ent, ...await cwApi('account', { action: 'upgrade', plan: p.k, code: b.dataset.code }) }; cwLS.set('cw-ent', null); await cwLoad(true); cwRenderAccount(); }
-    catch(err) { b.disabled = false; $('cwNewMsg').textContent = err.message; }
-  });
-  const sw = box.querySelector('[data-swap]'); if (sw) sw.onclick = ev => { ev.preventDefault(); $('cwPickBox').scrollIntoView({ behavior: 'smooth' }); };
-}
-
-// ── commissioned airports: card saved on request, charged once on release, then the player's for good ──
-const cwComPrice = () => CW_CFG.currency + (+CW_CFG.commission || 25);
-const cwPence = c => CW_CFG.currency + ((c.price_pence || 2500)/100).toFixed(0);
-const CW_CST = { card: ['Card needed', 'dev'], requested: ['Requested', 'soon'], building: ['Being built', 'dev'], ready: ['Payment needed', 'new'], paid: ['Yours', 'live'], launched: ['Yours', 'live'], declined: ['Not possible', 'soon'] };
-function cwSaveEnt(patch){ CW.ent = { ...CW.ent, ...patch }; cwLS.set('cw-ent', { at: Date.now(), email: CW.ses.email, ent: CW.ent }); }
-function cwRenderCommissions(){
-  const e = CW.ent, box = $('cwComBox'), list = (e && e.commissions) || [];
-  box.hidden = !e;
-  if (!e) return;
-  const owned = (e.owned || []).filter(i => !list.some(c => c.icao === i && (c.status === 'paid' || c.status === 'launched')));
-  const row = c => {
-    const [txt, cls] = CW_CST[c.status] || [c.status, 'soon'], mine = c.status === 'paid' || c.status === 'launched';
-    const when = c.status === 'card' ? 'Add a card to send your request. Nothing is taken until the airport is released to you.'
-      : c.status === 'requested' ? `Asked on ${cwDate(c.created_at)}. Your card is saved; ${cwPence(c)} is taken only when we release it to you.`
-      : c.status === 'building' ? `We are building it now. ${cwPence(c)} is taken from your saved card when we release it to you.`
-      : c.status === 'ready' ? `Built and released, but your bank needs you to confirm the ${cwPence(c)} payment. Pay once and it is yours for good.`
-      : c.status === 'paid' ? `Yours for good. Only you can control it until ${cwDate(c.public_from)}, then it opens to everyone.`
-      : c.status === 'launched' ? 'Yours for good, whatever plan you are on.' : 'We could not build this one.';
-    const btn = c.status === 'ready' ? `<button class="btn primary" data-cpay="${c.id}" data-icao="${esc(c.icao)}">Pay ${cwPence(c)}</button>`
-      : c.status === 'card' ? `<span class="cw-row"><button class="btn primary" data-ccard="${c.id}">Add card</button><button class="btn" data-cdel="${c.id}">Withdraw</button></span>`
-      : mine && SITE[c.icao] ? `<a class="btn" href="${SITE[c.icao]}#sim">Control ${esc(c.icao)}</a>`
-      : c.status === 'requested' || c.status === 'building' ? `<button class="btn" data-cdel="${c.id}">Withdraw</button>` : '';
-    return `<div class="cw-com"><div><b>${esc(c.icao)}</b> ${esc(c.name || '')} <span class="badge ${cls}">${txt}</span><p class="cw-sub">${when}${c.reply ? ' ' + esc(c.reply) : ''}</p></div>${btn}</div>`;
-  };
-  $('cwComs').innerHTML = list.map(row).join('') + owned.map(i => row({ icao: i, status: 'launched' })).join('')
-    + (list.length || owned.length ? '' : `<p class="cw-sub">Want an airport we have not built? Commission it: save a card, we build it, and ${cwComPrice()} is taken once when we release it to you. It is yours whatever plan you are on.</p>`)
-    + `<div class="cw-row"><a class="btn" href="#request">Commission an airport</a></div>`;
-  $('cwComs').querySelectorAll('[data-cpay]').forEach(b => b.onclick = async () => {
-    b.disabled = true; b.textContent = 'Opening secure checkout…';
-    try { const { url } = await cwApi('account', { action: 'commission_pay', id: +b.dataset.cpay });
-      try { sessionStorage.setItem('cw-paying', b.dataset.icao); } catch(_) {} location.href = url; } catch(err) { b.disabled = false; $('cwComMsg').textContent = err.message; b.textContent = 'Pay'; }
-  });
-  $('cwComs').querySelectorAll('[data-ccard]').forEach(b => b.onclick = async () => {
-    b.disabled = true; b.textContent = 'Opening secure checkout…';
-    try { location.href = (await cwApi('account', { action: 'commission_card', id: +b.dataset.ccard })).url; } catch(err) { b.disabled = false; b.textContent = 'Add card'; $('cwComMsg').textContent = err.message; }
-  });
-  $('cwComs').querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
-    if (!confirm('Withdraw this commission? Nothing is charged and your saved card is removed.')) return;
-    b.disabled = true;
-    try { cwSaveEnt(await cwApi('account', { action: 'commission_cancel', id: +b.dataset.cdel })); cwRenderCommissions(); } catch(err) { b.disabled = false; $('cwComMsg').textContent = err.message; }
-  });
-}
-// the commission form on the Request page
-function cwRenderCommission(){
-  const f = $('cwComForm'), go = f.querySelector('button'), note = $('cwComNote');
-  document.querySelectorAll('[data-cw="commission-price"]').forEach(el => el.textContent = cwComPrice());
-  go.disabled = !CW_ON;
-  note.innerHTML = !CW_ON ? 'Commissions open with subscriptions.' : CW.ses ? '' : `<a href="#account">Sign in</a> to commission an airport, so we can tell you when it is ready.`;
-  if (CW_ON && !CW.ses) go.disabled = true;
-}
-function cwCommissionForm(){
-  $('cwComIcao').oninput = e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); };
-  $('cwComForm').onsubmit = async ev => {
-    ev.preventDefault(); const out = $('cwComOut');
-    const icao = $('cwComIcao').value, known = AIRPORTS_NET.find(a => a.icao === icao);
-    if (known && known.status === 'live') { out.textContent = `${known.name} is already open: pick it in your plan.`; return; }
-    out.textContent = 'Opening secure checkout to save your card…';
-    // Stripe saves the card; nothing is taken until the airport is released
-    try { location.href = (await cwApi('account', { action: 'commission', icao, name: $('cwComName').value, notes: $('cwComWhy').value })).url; }
-    catch(e) { out.textContent = e.message; }
-  };
-}
-// ── the owner's page (#admin, not linked): commissions to build and release. The API checks ADMIN_EMAILS. ──
-async function cwRenderAdmin(){
-  const box = $('cwAdmin');
-  if (!CW_ON) { box.innerHTML = '<p class="cw-sub">Accounts are switched off in subs.json.</p>'; return; }
-  if (!CW.ses) { box.innerHTML = '<p class="cw-sub"><a href="#account">Sign in</a> with an admin email first.</p>'; return; }
-  box.innerHTML = '<p class="cw-sub">Loading…</p>';
-  try { cwDrawAdmin((await cwApi('admin')).commissions); } catch(e) { box.innerHTML = `<p class="cw-sub">${esc(e.message)}</p>`; }
-}
-function cwDrawAdmin(list){
-  const box = $('cwAdmin'), st = s => (CW_CST[s] || [s])[0];
-  box.innerHTML = list.length ? list.map(c => {
-    const open = ['requested', 'building'].includes(c.status);
-    return `<div class="cw-com"><div><b>${esc(c.icao)}</b> ${esc(c.name || '')} <span class="badge">${esc(st(c.status))}</span>
-      <p class="cw-sub">${esc(c.email || '')} · ${cwDate(c.created_at)} · ${cwPence(c)}${c.paid_at ? ' · paid ' + cwDate(c.paid_at) : ''}${c.public_from ? ' · public from ' + cwDate(c.public_from) : ''}</p>
-      ${c.notes ? `<p class="cw-sub">“${esc(c.notes)}”</p>` : ''}${c.reply ? `<p class="cw-sub">Your note: ${esc(c.reply)}</p>` : ''}</div>
-      <span class="cw-row">${c.status === 'requested' ? `<button class="btn" data-a="building" data-id="${c.id}">Building</button>` : ''}
-      ${open ? `<button class="btn primary" data-a="release" data-id="${c.id}">Release and charge ${cwPence(c)}</button>` : ''}
-      ${['card', 'requested', 'building'].includes(c.status) ? `<button class="btn" data-a="declined" data-id="${c.id}">Decline</button>` : ''}
-      ${c.status === 'paid' ? `<button class="btn" data-a="launched" data-id="${c.id}">Opened to everyone</button>` : ''}</span></div>`;
-  }).join('') : '<p class="cw-sub">No commissions yet.</p>';
-  box.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
-    const a = b.dataset.a, id = +b.dataset.id, msg = $('cwAdminMsg');
-    let reply;
-    if (a === 'release' && !confirm('Release this airport to the player and charge their card?')) return;
-    if (a === 'declined' && (reply = prompt('Why can it not be built? The player sees this.', '')) === null) return;
-    b.disabled = true; msg.textContent = 'Working…';
-    try {
-      cwLS.set('cw-ent', null);   // the owner may also be the player: forget the cached account
-      const r = await cwApi('admin', a === 'release' ? { action: 'release', id } : { action: 'status', id, status: a, ...(reply != null ? { reply } : {}) });
-      msg.textContent = a !== 'release' ? 'Saved.' : r.paid ? 'Charged and released: it is on their account.' : 'Released, but the card could not be charged without the player. Their account now shows a Pay button; email them to let them know.';
-      cwDrawAdmin(r.commissions);
-    } catch(e) { b.disabled = false; msg.textContent = e.message; }
-  });
-}
-function cwSignInForms(){
-  let email = '';
-  $('cwEmailForm').onsubmit = async ev => {
-    ev.preventDefault(); email = $('cwEmail').value.trim(); $('cwSignMsg').textContent = 'Sending…';
-    // the link comes back to this page (and keeps the test switch on); Supabase must list the site under Redirect URLs
-    const back = location.origin + location.pathname + (CW_TEST ? '?cwtest=on' : '');
-    try { await cwAuth('otp?redirect_to=' + encodeURIComponent(back), { email, create_user: true }); $('cwEmailForm').hidden = true; $('cwCodeForm').hidden = false; $('cwCode').focus();
-      $('cwSignMsg').textContent = `We have emailed a sign-in link to ${email}. Open it on this device to sign in, or type the code if your email shows one. It can take a minute; check your spam folder too.`; }
-    catch(e) { $('cwSignMsg').textContent = e.message; }
-  };
-  $('cwCodeForm').onsubmit = async ev => {
-    ev.preventDefault(); $('cwSignMsg').textContent = 'Checking…';
-    try { cwKeep(await cwAuth('verify', { type: 'email', email, token: $('cwCode').value.trim() })); $('cwSignMsg').textContent = ''; $('cwCodeForm').hidden = true; $('cwEmailForm').hidden = false; cwRefreshUI(); }
-    catch(e) { $('cwSignMsg').textContent = e.message; }
-  };
-  $('cwCodeBack').onclick = () => { $('cwCodeForm').hidden = true; $('cwEmailForm').hidden = false; $('cwSignMsg').textContent = ''; };
-  $('cwSignOut').onclick = cwSignOut;
-}
-function cwRefreshUI(){
-  const a = $('cwAccLink');
-  if (a) { a.hidden = !CW_ON; a.textContent = CW.ses ? 'Account' : 'Sign in'; }
-  if (document.body.dataset.route) cwOnRoute();
-  if (typeof renderAirports === 'function' && $('apGrid')) renderAirports();   // previews of airports in development
-}
-
-// ── feedback ──
-function cwFeedback(){
-  const m = $('cwFb'); let kind = 'idea', rating = 0;
-  $('cwFbStars').insertAdjacentHTML('beforeend', [1, 2, 3, 4, 5].map(n => `<button type="button" data-r="${n}" aria-label="${n} of 5">★</button>`).join(''));
-  const open = () => { m.hidden = false; $('cwFbEmailL').hidden = !!CW.ses; $('cwFbMsgOut').textContent = ''; setTimeout(() => $('cwFbMsg').focus(), 30); };
-  const close = () => { m.hidden = true; };
-  $('cwFbBtn').onclick = open;
-  // the console gets its own Feedback button
-  const tb = $('tgFull'); if (tb) { const b = document.createElement('button'); b.id = 'tgFeedback'; b.textContent = 'Feedback'; b.title = 'Tell us what works and what does not'; b.onclick = open; tb.before(b); }
-  m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) close(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !m.hidden) close(); });
-  $('cwFbKind').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; kind = b.dataset.k; $('cwFbKind').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
-  $('cwFbStars').onclick = e => { const b = e.target.closest('[data-r]'); if (!b) return; rating = +b.dataset.r; $('cwFbStars').querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r <= rating)); };
-  $('cwFbForm').onsubmit = async ev => {
-    ev.preventDefault(); const out = $('cwFbMsgOut'); out.textContent = 'Sending…';
-    try {
-      await cwApi('feedback', { kind, rating, message: $('cwFbMsg').value, email: $('cwFbEmail').value, page: document.body.dataset.route || '', airport: APT.icao });
-      out.textContent = 'Thank you. Every message is read.'; $('cwFbMsg').value = ''; setTimeout(close, 1600);
-    } catch(e) { out.textContent = e.message; }
-  };
-}
-
-// ── airport requests ──
-async function cwRenderRequests(){
-  const road = AIRPORTS_NET.filter(a => a.status !== 'live');
-  $('cwRoadmap').innerHTML = road.map(a => `<div class="cw-reqrow"><b>${a.icao}</b><span>${esc(a.name)} · ${esc(a.ctry)}</span><span class="badge ${a.status}">${STATUS_TXT[a.status]}</span></div>`).join('');
-  if (!CW_FB) { $('cwReqList').innerHTML = '<p class="cw-sub">Requests open soon.</p>'; $('cwReqForm').querySelector('button').disabled = true; return; }
-  try { cwDrawReq((await cwApi('feedback?requests')).requests); } catch(e) { $('cwReqList').innerHTML = `<p class="cw-sub">${esc(e.message)}</p>`; }
-}
-function cwDrawReq(list){
-  const top = Math.max(1, ...list.map(r => r.votes));
-  $('cwReqList').innerHTML = list.length ? list.map(r => {
-    const known = AIRPORTS_NET.find(a => a.icao === r.icao);
-    return `<div class="cw-reqrow"><b>${esc(r.icao)}</b><span>${esc(r.name || (known && known.name) || '')}</span><i style="--w:${(r.votes/top*100).toFixed(0)}%"></i><span class="n">${r.votes}</span>${known ? `<span class="badge ${known.status}">${STATUS_TXT[known.status]}</span>` : ''}</div>`;
-  }).join('') : '<p class="cw-sub">No requests yet: be the first.</p>';
-}
-function cwRequestForm(){
-  $('cwReqIcao').oninput = e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); const k = AIRPORTS_NET.find(a => a.icao === e.target.value); if (k && !$('cwReqName').value) $('cwReqName').value = k.name; };
-  $('cwReqForm').onsubmit = async ev => {
-    ev.preventDefault(); const out = $('cwReqMsg'); out.textContent = 'Sending…';
-    try { const r = await cwApi('feedback', { kind: 'request', icao: $('cwReqIcao').value, name: $('cwReqName').value, reason: $('cwReqWhy').value });
-      cwDrawReq(r.requests); out.textContent = 'Thanks! Your vote is in.'; $('cwReqForm').reset(); }
-    catch(e) { out.textContent = e.message; }
-  };
-}
-
-// ── boot (after site.js has set up the routes) ──
-function cwInit(){
-  if (EMBED) return;
-  if (CW_TEST) document.body.insertAdjacentHTML('beforeend', '<a class="cw-testpill" href="?cwtest=off" title="Only this browser sees sign-in and plans">Test mode: accounts on · turn off</a>');
-  document.querySelectorAll('[data-cw="trial"]').forEach(el => el.textContent = CW_CFG.trial_days);
-  document.querySelectorAll('[data-cw="early-price"]').forEach(el => el.textContent = cwPrice('early'));
-  document.querySelectorAll('[data-cw="commission-price"]').forEach(el => el.textContent = cwComPrice());
-  document.querySelectorAll('[data-cw="site"]').forEach(el => el.textContent = CW_CFG.site.replace(/^https?:\/\//, '').replace(/\/$/, ''));
-  document.querySelectorAll('[data-cw="legal-date"]').forEach(el => el.textContent = CW_CFG.legal_date);
-  if (CW_CFG.contact_email) document.querySelectorAll('[data-cw="contact-line"]').forEach(el => el.innerHTML = `Email <a href="mailto:${esc(CW_CFG.contact_email)}">${esc(CW_CFG.contact_email)}</a>, or use the feedback button on any page.`);
-  document.querySelectorAll('[data-cw="analytics-line"]').forEach(el => el.textContent = CW_CFG.analytics_token ? 'We count visits with Cloudflare Web Analytics, which uses no cookies and does not track you across sites.' : 'We do not run analytics.');
-  $('cwTeaser').innerHTML = CW_PLANS.map(p => `<a class="cw-tchip" href="#pricing"><b>${p.n || 'All'}</b><span>${p.n ? 'airport' + (p.n > 1 ? 's' : '') : 'airports'}</span><em>${CW_OFF ? `<s>${cwPrice(p.k)}</s> ${cwOffer(p.k)}` : cwPrice(p.k)}/mo</em></a>`).join('');
-  if (CW_OFF) $('cwTeaserOff').textContent = `${CW_OFF.label || 'Offer'}: ${CW_OFF.percent}% off ${cwOfferTerm()}.`;
-  document.querySelectorAll('[data-cw-fb]').forEach(el => el.hidden = !CW_FB);
-  $('cwFbBtn').hidden = !CW_FB;
-  if (CW_FB) cwFeedback();
-  cwSignInForms(); cwRequestForm(); cwCommissionForm();
-  new MutationObserver(cwOnRoute).observe(document.body, { attributes: true, attributeFilter: ['data-route'] });
-  cwRefreshUI();
-  // load the plan, then re-check the console (a player may have arrived on #sim before it loaded)
-  if (CW_ON && CW.ses) cwLoad().then(() => { if (CW.ent && CW.ent.early || CW.ent && CW.ent.owner) renderAirports(); if (document.body.dataset.route === 'sim' || document.body.dataset.route === 'pricing') cwOnRoute(); });
-}
-setTimeout(cwInit, 0);
-
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'egaa', 'lsgg', 'yssy', 'sim', 'training', 'career', 'pricing', 'account', 'request', 'terms', 'privacy', 'admin'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'egaa', 'lsgg', 'yssy', 'sim', 'training', 'career'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live, #resume.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
 const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd', EGAA: 'egaa', LSGG: 'lsgg', YSSY: 'yssy' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
-// an airport still in development (status 'dev' on the Airports list) shows in the Academy only to those who may preview it
-const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao || (typeof cwPreview === 'function' && cwPreview());
+// an airport still in development (status 'dev' on the Airports list) shows in the Academy only on its own page
+const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao;
 const IS_HOST = APT.icao === SITE_HOST, EMBED = location.hash.startsWith('#embed');
 const SIM_HASH = /^(sim|ex\/|wx\/|live$|resume$)/;
 const otherPage = h => IS_HOST || EMBED || SIM_HASH.test(h) ? null : SITE[SITE_HOST] + '#' + (h || HOME_RT);
@@ -15668,6 +14980,16 @@ function fromHash(){
   go(curRoute || 'home');
 }
 window.addEventListener('hashchange', fromHash);
+// An edge swipe (or the browser's back button) must not drop a running session back to the website. While a position is open
+// there is always one spare history entry behind the console: going back lands on it, we put it back, and the session stays.
+// The Leave button (tgExit) sets simLeaving so it can go.
+let simLeaving = false, simGuarded = false, simGuardMsg = 0;
+setInterval(() => { if (!simGuarded && S.running && curRoute === 'sim' && !EMBED) { try { history.pushState({ cwSim: 1 }, '', '#sim'); simGuarded = true; } catch (e) {} } else if (simGuarded && !S.running) simGuarded = false; }, 1000);
+window.addEventListener('popstate', () => {
+  if (!simGuarded || simLeaving || !S.running || curRoute !== 'sim') return;
+  try { history.pushState({ cwSim: 1 }, '', '#sim'); } catch (e) {}
+  if (Date.now() - simGuardMsg > 8000) { simGuardMsg = Date.now(); sys('Swiping back is switched off while a position is open. Use the ‹ button at the top left to leave.'); }
+});
 
 // top bar clock: real UTC, so the site feels like a live position
 function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + d.toISOString().substr(11,5) + 'Z'; }
@@ -15723,13 +15045,12 @@ function rwyDiagram(ap){
   out.push('</svg>'); return out.join('');
 }
 function apCard(ap){
-  // an airport in development that is already built opens as a preview for the owner and early access members
-  const rt = AP_ROUTE[ap.icao], pv = ap.status === 'dev' && !!rt && typeof cwPreview === 'function' && cwPreview();
-  const live = ap.status === 'live' || pv, tag = live ? 'a' : 'div';
+  const rt = AP_ROUTE[ap.icao];
+  const live = ap.status === 'live', tag = live ? 'a' : 'div';
   const href = live ? '#' + rt : '';
   return `<${tag} class="ap${live ? '' : ' off'}"${live ? ` href="${href}"` : ''}>
     <div class="dia">${rwyDiagram(ap)}</div>
-    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${pv ? '<span class="badge new">Preview</span>' : ''}${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
+    <div class="bd"><div class="id"><span class="icao">${ap.icao}</span><span class="icao" style="color:var(--faint)">${ap.iata}</span><span class="badge ${ap.status}">${STATUS_TXT[ap.status]}</span>${ap.isNew ? '<span class="badge new">New</span>' : ''}</div>
     <h3>${esc(ap.name)}</h3><div class="ctry">${esc(ap.ctry)} · ${esc(ap.region)}</div><p>${esc(ap.blurb)}</p>
     <div class="ft">${ap.pos.map(p => `<span class="pos">${p}</span>`).join('')}<span>RWY ${ap.rwys.join(' · ')}</span><span class="diff" title="Difficulty ${ap.diff} of 5">${[1,2,3,4,5].map(i => `<i class="${i <= ap.diff ? 'on' : ''}"></i>`).join('')}</span></div></div>
   </${tag}>`;
@@ -16498,7 +15819,7 @@ function airportChrome(){
   if (APT.site && APT.site.cmdHint) $('cmd').placeholder = APT.site.cmdHint;
   $('exGroup').innerHTML = Object.entries(EXERCISES).map(([k, e], i) => `<option value="${k}">Exercise ${i + 1} · ${esc(e.name.replace(/^.*?·\s*/, ''))}</option>`).join('');
   const others = LIVE_APS.filter(k => k !== APT.icao);
-  $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b>${others.map(k => `<a href="${SITE[k]}#sim">Switch to ${ENDORSE[k].name}</a>`).join('')}`;
+  $('setupAp').innerHTML = `<span class="lbl">Airport</span><b>${esc(APT.name)} · ${APT.icao}</b><span class="apsw">${others.map(k => `<a href="${SITE[k]}#sim" aria-label="Switch to ${ENDORSE[k].name}">${ENDORSE[k].name}</a>`).join('')}</span>`;
   // on another airport's page, site links go to the host page; on the host, another airport's position and Live now
   // buttons open its own simulator, and its "Academy" buttons open its endorsement
   document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -16520,7 +15841,7 @@ function canFull(){ return !!(document.documentElement.requestFullscreen && docu
 function enterFull(){ if (canFull() && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); }
 function exitFull(){ if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); }
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="#sim"]'); if (a) enterFull(); });
-$('tgExit').onclick = () => { exitFull(); location.hash = '#' + HOME_RT; };
+$('tgExit').onclick = () => { simLeaving = true; exitFull(); location.hash = '#' + HOME_RT; setTimeout(() => { simLeaving = false; }, 1500); };
 $('tgFull').onclick = () => document.fullscreenElement ? exitFull() : enterFull();
 function syncFull(){ const b = $('tgFull'); b.hidden = !canFull(); b.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; b.classList.toggle('on', !!document.fullscreenElement); }
 document.addEventListener('fullscreenchange', () => { syncFull(); if (curRoute === 'sim') resize(); });
@@ -16689,7 +16010,6 @@ function stintDrop(ap){ try { localStorage.removeItem(STINT_PRE + ap); } catch (
 function stintContinue(){
   const j = stintRead(APT.icao); if (!j) return false;
   if (S.running) { sys('A session is already open. Use New session first to continue your last stint.', true); return false; }
-  if (!cwGate()) return false;   // continuing needs a plan that includes this airport, like opening a position (account.js)
   let D;
   try { D = stintDecode(j.data); }
   catch (e) { console.warn('Stint not restored:', e); stintDrop(APT.icao); sys('Your last stint could not be continued: the simulator has changed since it was saved. Open a new position below.', true); return false; }
