@@ -1,7 +1,7 @@
 // Clearway service worker: makes the site installable as an app and lets the last-opened pages load without a network.
 // Pages are network-first (an update is live on the next launch); the cache is only the offline fallback.
-// Everything else (flights.json, metar.txt, the Clearway API, Supabase, Stripe, ADS-B, map tiles, fonts) is never
-// touched here, so live data and sign-in behave exactly as in a browser tab.
+// Everything else (flights.json, metar.txt, the Clearway API, ADS-B, map tiles, fonts) is never
+// touched here, so live data behaves exactly as in a browser tab.
 const CACHE = 'clearway-pages-v1';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil((async () => {

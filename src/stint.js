@@ -119,7 +119,6 @@ function stintDrop(ap){ try { localStorage.removeItem(STINT_PRE + ap); } catch (
 function stintContinue(){
   const j = stintRead(APT.icao); if (!j) return false;
   if (S.running) { sys('A session is already open. Use New session first to continue your last stint.', true); return false; }
-  if (!cwGate()) return false;   // continuing needs a plan that includes this airport, like opening a position (account.js)
   let D;
   try { D = stintDecode(j.data); }
   catch (e) { console.warn('Stint not restored:', e); stintDrop(APT.icao); sys('Your last stint could not be continued: the simulator has changed since it was saved. Open a new position below.', true); return false; }

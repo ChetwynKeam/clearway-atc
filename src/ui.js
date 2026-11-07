@@ -603,7 +603,7 @@ function stateLabel(ac){
 // ═════════════════════════ console UI ═════════════════════════
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
-function select(ac){ if (ac && outOfCtl(ac)) return; S.trk = null; S.sel = ac; renderSel(); renderStrips(true); cmdPrefill(); }
+function select(ac){ if (ac && outOfCtl(ac)) return; selStamp = performance.now(); S.trk = null; S.sel = ac; renderSel(); renderStrips(true); cmdPrefill(); }
 // the selected flight's callsign waits in the command box, so you only type the instruction after it. Only text the
 // box put there itself (or a bare callsign) is replaced; anything you have started typing is left alone. On a mouse,
 // the box takes the focus unless you are typing in another field; on a touch screen it doesn't, so no keyboard pops up.
@@ -792,7 +792,8 @@ function renderSel(){
   const b = (c, label, en=true, cls='') => `<button class="${cls}" data-c="${c}" ${en ? '' : 'disabled'}>${label}</button>`;
   const wireRm = () => { el.querySelectorAll('[data-ai]').forEach(b => b.onclick = () => { if (b.dataset.ai === 'take') takeOver(ac); else handToAi(ac); renderSel(); renderStrips(true); });
     el.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => cycleSel(+b.dataset.nav));
-    const r = el.querySelector('[data-rm]'); if (r) r.onclick = () => { if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
+    const r = el.querySelector('[data-rm]'); if (r) { r.classList.add('rm-end'); el.appendChild(r); }   // away from the flight buttons, the way back to the map and the strips
+    if (r) r.onclick = () => { if (performance.now() - selStamp < 900) return; if (confirm(`Remove ${ac.cs} from the session? Use this if it is stuck: its stand and anything it was blocking are freed.`)) command(ac.cs + ' REMOVE'); }; };
   if (ac.state === 'PRE') { el.innerHTML = html + `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft</span><span>GS <b>${Math.round(ac.gs)}</b></span><span><b>${Math.round(Math.hypot(ac.x-RADAR_REF[0], ac.y-RADAR_REF[1]))}</b> NM</span></div><p class="empty">Not on your frequency yet. It is still with the previous sector and ${ac.slotHold ? 'is holding outside your airspace until you release it on the Flights board' : `calls ${APT.radar[0]} at the boundary, about ${Math.max(1, Math.round((ac.preAt - S.t)/60))} min from now`}.</p>`; wireRm(); return; }
   if (air) {
     html += `<div class="readout"><span><b>${Math.round(ac.alt)}</b> ft ${ac.vs > 300 ? ICON.up : ac.vs < -300 ? ICON.dn : ''}→ ${ac.mode === 'FINAL' ? (ac.appId ? finOf(ac).short : APT.appShort) + ' profile' : (ac.tgtAlt ?? '–') + (ac.via && ac.app ? ' via procedure' : '')}</span><span>HDG <b>${hdg3(ac.hdg)}</b></span><span>IAS <b>${Math.round(ac.ias)}</b></span><span>GS <b>${Math.round(ac.gs)}</b></span></div>
@@ -1415,7 +1416,6 @@ function resetSession(){
   STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
-  if (!S.running && !cwGate()) return;   // opening a position needs a plan that includes this airport (account.js)
   const pasted = $('wxPaste').value.trim();
   const mode = $('trafficSel').value;
   const ex = EXERCISES[mode];
@@ -1469,13 +1469,19 @@ $('startBtn').onclick = async () => {
 };
 $('newBtn').onclick = () => { S.running = false; resetSession(); openSetup(); renderAtis(); renderSel(); renderStrips(true); };
 
+// the flight panel and strips redraw twice a second; a redraw between finger-down and finger-up replaces the button being
+// pressed, so the tap never lands (or lands on whatever now sits there). Leave them alone while a finger is on them.
+let uiHold = 0;
+for (const id of ['sel', 'strips']) { const n = $(id); if (n) n.addEventListener('pointerdown', () => { uiHold = performance.now() + 2500; }, true); }
+for (const ev of ['pointerup', 'pointercancel']) document.addEventListener(ev, () => { if (uiHold > performance.now()) uiHold = performance.now() + 250; }, true);
+let selStamp = 0;   // when a flight was last picked: a Remove tap right after is almost certainly the same touch
 let last = performance.now(), uiT = 0;
 function frame(now){
   const dtr = Math.min(0.25, (now - last)/1000); last = now;
   if (S.running && !S.paused) { let t = dtr*S.speed; while (t > 0) { const h = Math.min(0.2, t); step(h); t -= h; } }
   uiT += dtr; if (typeof careerTick === 'function') careerTick(dtr);
   if (document.body.dataset.route === 'sim') {
-    if (uiT > 0.5) { uiT = 0; renderStrips(); renderScore(); if (S.sel) { const a = document.activeElement; if (!(a && a.closest && a.closest('#sel'))) renderSel(); } emit('tick'); }
+    if (uiT > 0.5) { uiT = 0; const held = performance.now() < uiHold; if (!held) renderStrips(); renderScore(); if (S.sel && !held) { const a = document.activeElement; if (!(a && a.closest && a.closest('#sel'))) renderSel(); } emit('tick'); }
     if (cv.clientWidth && (Math.abs(cv.clientWidth - W) > 1 || Math.abs(cv.clientHeight - H) > 1)) resize();
     draw();
   }
