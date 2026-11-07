@@ -6235,7 +6235,7 @@ function makeInbound(ac, keepAlt){
   // rather than turning round for it (a heading of 000 when it sits on the fix itself, then a loop back)
   while (ac.route.length > 1 && WP[ac.route[0]] && dist(ac.x, ac.y, ...WP[ac.route[0]].p) < 2) ac.route.shift();
   const to = WP[ac.route[0]] || first;
-  ac.ias = 260; if (dist(ac.x, ac.y, ...to.p) > 0.2) ac.hdg = brg(ac.x, ac.y, ...to.p); ac.trk = ac.hdg;
+  ac.ias = 260; if (!ac.fromPre && dist(ac.x, ac.y, ...to.p) > 0.2) ac.hdg = brg(ac.x, ac.y, ...to.p); ac.trk = ac.hdg;   // (one handed over from outside keeps flying its heading and turns onto the first leg, no snap)
   pilot(ac, PH.checkIn(ac));
   ac.need = 'Initial call';
 }
@@ -6277,7 +6277,7 @@ function stepPending(ac, dt){
   if (busy ? S.t >= ac.preAt + 600 : d <= mv + 0.05 || (S.t >= ac.preAt + 90 && d < 3)) {
     // still blocked after the wait: handed over 1,000 ft above the traffic, and it stays there until you descend it
     ac.x = e[0]; ac.y = e[1]; ac.alt = ENTRY_ALT[ac.gate]; let up = false; while (entryBusy(ac, e, ac.alt)) { ac.alt += 1000; up = true; }
-    makeInbound(ac, up); return;
+    ac.fromPre = true; makeInbound(ac, up); ac.legFrom = [e[0], e[1]]; ac.legW = WP[ac.route[0]] || null; return;
   }
   // along its heading while it is still turning back onto the inbound line (out of a hold), straight in once it is on it
   if (Math.abs(angDiff(ac.hdg, inb)) > 5) { ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv; }
@@ -11994,9 +11994,10 @@ function wayOn(o, dest, seed){
       p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
       if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
       const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
-      const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1), tg = rest.length ? rest[0] : dest;
+      const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1); while (rest.length > 1 && gcDist(p, rest[0]) < 18 && Math.abs(angDiff(h, gcBrg(p, rest[0]))) > 35) rest.shift();   // (a fix too close to turn onto is skipped, not circled)
+      const tg = rest.length ? rest[0] : dest;
       // a steady turn onto the first leg of the route (the way the flight is already heading decides the airway it joins), then the route
-      for (let k = 0; k < 90 && gcDist(p, tg) > 4; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
+      for (let k = 0, tot = 0; k < 90 && gcDist(p, tg) > 4 && tot < 200; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; const dh = Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d)); tot += Math.abs(dh); h = norm(h + dh); p = gcDest(p, h, 0.5); pts.push(p); }
       return smoothPts([...pts, ...rest]);
     }
   }
@@ -12009,9 +12010,10 @@ function wayOn(o, dest, seed){
     p = q; }
   if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
-  const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1), tg = rest.length ? rest[0] : dest;
+  const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1); while (rest.length > 1 && gcDist(p, rest[0]) < 18 && Math.abs(angDiff(h, gcBrg(p, rest[0]))) > 35) rest.shift();   // (a fix too close to turn onto is skipped, not circled)
+      const tg = rest.length ? rest[0] : dest;
   // a steady turn onto the first leg of the route (the way the flight is already heading decides the airway it joins), then the route
-  for (let k = 0; k < 90 && gcDist(p, tg) > 4; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
+  for (let k = 0, tot = 0; k < 90 && gcDist(p, tg) > 4 && tot < 200; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; const dh = Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d)); tot += Math.abs(dh); h = norm(h + dh); p = gcDest(p, h, 0.5); pts.push(p); }
   return smoothPts([...pts, ...rest]);
 }
 // the way a departure carries on in radar cover once its SID has run out: the same airway route the flight is drawn on beyond
@@ -14273,6 +14275,7 @@ function aiProbe(){
       const n1 = Math.round(ac.alt/1000)*1000, cands = (ac.kind === 'DEP' ? [n1, d1, r1, r1 + 1000, r1 + 2000] : ac.app && ac.state !== 'MISSED' ? [r1, n1].filter(l => l <= ac.alt + 300) : [n1, r1, d1, r1 + 1000, d1 - 1000, r1 + 2000].filter(l => l >= floor)).filter((l, i, A) => A.indexOf(l) === i);
       const lv = safeLevel(ac, cands);
       if (lv != null && Math.abs(lv - (ac.tgtAlt ?? ac.alt)) >= 200) { if (aiDo(s, ac, `A${Math.round(lv/100)}`)) { ac.aiLev = { t: S.t, o: hit.cs }; ac.aiWhy = `kept clear of ${hit.cs}`; } }
+      else if (lv == null && ac.kind === 'ARR' && ac.mode !== 'HOLD' && ac.ias > 205 && S.t > (ac.aiSpdT || 0)) { ac.aiSpdT = S.t + 90; if (aiDo(s, ac, ac.ias > 250 ? 'S210' : 'S180')) ac.aiWhy = `slowed to keep clear of ${hit.cs}`; }   // no level is clear: it gives way with speed
       else if (ac.aiLev) ac.aiLev.t = S.t;
     } else if (ac.aiLev && S.t - ac.aiLev.t > 40) {
       // clear again: back down the published profile, or on with the climb (if that is clear too)

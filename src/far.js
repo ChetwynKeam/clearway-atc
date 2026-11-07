@@ -194,9 +194,10 @@ function wayOn(o, dest, seed){
       p = pts[pts.length - 1]; h = gcBrg(pts[pts.length - 2], p);
       if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
       const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
-      const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1), tg = rest.length ? rest[0] : dest;
+      const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1); while (rest.length > 1 && gcDist(p, rest[0]) < 18 && Math.abs(angDiff(h, gcBrg(p, rest[0]))) > 35) rest.shift();   // (a fix too close to turn onto is skipped, not circled)
+      const tg = rest.length ? rest[0] : dest;
       // a steady turn onto the first leg of the route (the way the flight is already heading decides the airway it joins), then the route
-      for (let k = 0; k < 90 && gcDist(p, tg) > 4; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
+      for (let k = 0, tot = 0; k < 90 && gcDist(p, tg) > 4 && tot < 200; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; const dh = Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d)); tot += Math.abs(dh); h = norm(h + dh); p = gcDest(p, h, 0.5); pts.push(p); }
       return smoothPts([...pts, ...rest]);
     }
   }
@@ -209,9 +210,10 @@ function wayOn(o, dest, seed){
     p = q; }
   if (!dest) { pts.push(gcDest(p, h, 300)); return smoothPts(pts); }
   const via = (VIA[o.d] || []).filter(q => !nearGib(q) && gcDist(q, p) > 30 && gcDist(q, dest) < gcDist(p, dest));
-  const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1), tg = rest.length ? rest[0] : dest;
+  const rest = airwayPts([p, ...via, dest], seed, false, null, h).slice(1); while (rest.length > 1 && gcDist(p, rest[0]) < 18 && Math.abs(angDiff(h, gcBrg(p, rest[0]))) > 35) rest.shift();   // (a fix too close to turn onto is skipped, not circled)
+      const tg = rest.length ? rest[0] : dest;
   // a steady turn onto the first leg of the route (the way the flight is already heading decides the airway it joins), then the route
-  for (let k = 0; k < 90 && gcDist(p, tg) > 4; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; h = norm(h + Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d))); p = gcDest(p, h, 0.5); pts.push(p); }
+  for (let k = 0, tot = 0; k < 90 && gcDist(p, tg) > 4 && tot < 200; k++) { const d = angDiff(h, gcBrg(p, tg)); if (Math.abs(d) < 2) break; const dh = Math.sign(d)*Math.min(turnRate(o.gs, k/2)*0.5*0.4, Math.abs(d)); tot += Math.abs(dh); h = norm(h + dh); p = gcDest(p, h, 0.5); pts.push(p); }
   return smoothPts([...pts, ...rest]);
 }
 // the way a departure carries on in radar cover once its SID has run out: the same airway route the flight is drawn on beyond

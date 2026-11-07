@@ -985,6 +985,7 @@ function aiProbe(){
       const n1 = Math.round(ac.alt/1000)*1000, cands = (ac.kind === 'DEP' ? [n1, d1, r1, r1 + 1000, r1 + 2000] : ac.app && ac.state !== 'MISSED' ? [r1, n1].filter(l => l <= ac.alt + 300) : [n1, r1, d1, r1 + 1000, d1 - 1000, r1 + 2000].filter(l => l >= floor)).filter((l, i, A) => A.indexOf(l) === i);
       const lv = safeLevel(ac, cands);
       if (lv != null && Math.abs(lv - (ac.tgtAlt ?? ac.alt)) >= 200) { if (aiDo(s, ac, `A${Math.round(lv/100)}`)) { ac.aiLev = { t: S.t, o: hit.cs }; ac.aiWhy = `kept clear of ${hit.cs}`; } }
+      else if (lv == null && ac.kind === 'ARR' && ac.mode !== 'HOLD' && ac.ias > 205 && S.t > (ac.aiSpdT || 0)) { ac.aiSpdT = S.t + 90; if (aiDo(s, ac, ac.ias > 250 ? 'S210' : 'S180')) ac.aiWhy = `slowed to keep clear of ${hit.cs}`; }   // no level is clear: it gives way with speed
       else if (ac.aiLev) ac.aiLev.t = S.t;
     } else if (ac.aiLev && S.t - ac.aiLev.t > 40) {
       // clear again: back down the published profile, or on with the climb (if that is clear too)

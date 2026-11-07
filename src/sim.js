@@ -411,7 +411,7 @@ function makeInbound(ac, keepAlt){
   // rather than turning round for it (a heading of 000 when it sits on the fix itself, then a loop back)
   while (ac.route.length > 1 && WP[ac.route[0]] && dist(ac.x, ac.y, ...WP[ac.route[0]].p) < 2) ac.route.shift();
   const to = WP[ac.route[0]] || first;
-  ac.ias = 260; if (dist(ac.x, ac.y, ...to.p) > 0.2) ac.hdg = brg(ac.x, ac.y, ...to.p); ac.trk = ac.hdg;
+  ac.ias = 260; if (!ac.fromPre && dist(ac.x, ac.y, ...to.p) > 0.2) ac.hdg = brg(ac.x, ac.y, ...to.p); ac.trk = ac.hdg;   // (one handed over from outside keeps flying its heading and turns onto the first leg, no snap)
   pilot(ac, PH.checkIn(ac));
   ac.need = 'Initial call';
 }
@@ -453,7 +453,7 @@ function stepPending(ac, dt){
   if (busy ? S.t >= ac.preAt + 600 : d <= mv + 0.05 || (S.t >= ac.preAt + 90 && d < 3)) {
     // still blocked after the wait: handed over 1,000 ft above the traffic, and it stays there until you descend it
     ac.x = e[0]; ac.y = e[1]; ac.alt = ENTRY_ALT[ac.gate]; let up = false; while (entryBusy(ac, e, ac.alt)) { ac.alt += 1000; up = true; }
-    makeInbound(ac, up); return;
+    ac.fromPre = true; makeInbound(ac, up); ac.legFrom = [e[0], e[1]]; ac.legW = WP[ac.route[0]] || null; return;
   }
   // along its heading while it is still turning back onto the inbound line (out of a hold), straight in once it is on it
   if (Math.abs(angDiff(ac.hdg, inb)) > 5) { ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv; }
