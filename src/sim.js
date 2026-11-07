@@ -1768,6 +1768,8 @@ function step(dt){
   for (let i = 0; i < air.length; i++) for (let j = i+1; j < air.length; j++) {
     const a = air[i], b = air[j], d = dist(a.x,a.y,b.x,b.y);
     if (Math.abs(a.alt-b.alt) >= 950 || d >= 3) continue;
+    // given levels a thousand feet apart and still in that order, it is separated: one a few feet short of the full thousand while it climbs or descends to its own level is not a loss
+    { const dz = a.alt - b.alt, tz = (a.tgtAlt ?? a.alt) - (b.tgtAlt ?? b.alt); if (Math.abs(dz) >= 700 && Math.abs(tz) >= 950 && Math.sign(dz) === Math.sign(tz) && a.mode !== 'FINAL' && b.mode !== 'FINAL') continue; }
     if (a.mode === 'FINAL' && b.mode === 'FINAL' && d >= 2.5) continue;
     if (APT.sepOk && APT.sepOk(a, b, d)) continue;   // independent parallel approaches or departures (Madrid)
     conf.add(a.cs); conf.add(b.cs);
