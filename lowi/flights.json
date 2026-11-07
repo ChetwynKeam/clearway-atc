@@ -1,17 +1,10 @@
 {
- "updated": "2026-11-07T01:53:31Z",
+ "updated": "2026-11-07T08:05:53Z",
  "source": "avionio.com",
  "days": {
   "2026-11-07": {
    "utcOffsetMin": 60,
    "arr": [
-    {
-     "place": "Amsterdam",
-     "flight": "HV6609",
-     "sched": "08:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
     {
      "place": "Vienna",
      "flight": "OS105",
@@ -22,9 +15,58 @@
    ],
    "dep": [
     {
+     "place": "Tirana",
+     "flight": "TYW431",
+     "sched": "09:10",
+     "status": "Estimated",
+     "expected": "09:15"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "09:25",
+     "status": "Estimated",
+     "expected": "09:25"
+    },
+    {
      "place": "Vienna",
      "flight": "OS106",
      "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-11-08": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Vienna",
+     "flight": "OS105",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS107",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
      "status": "Scheduled",
      "expected": ""
     }
