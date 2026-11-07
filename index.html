@@ -1247,6 +1247,11 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .sysbar > button, .sysbar > .seg, .sysbar > .sb-clock { flex-shrink: 0; }
 @media (max-width: 560px) { .sysbar.has-road .sb-atis .sb-c { display: none; } .sb-atis .sb-c:nth-of-type(n+3) { display: none; } }
 @media (max-width: 430px) { body .app.tabbed > .sysbar { gap: 4px; padding-inline: 6px; } }
+@media (max-width: 900px) {   /* the Flights board: the header and slot controls can be taller than the screen, so the whole board scrolls, with the table below them at full height */
+  .fids { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+  .fids-wrap { flex: none; overflow-x: auto; touch-action: pan-x pan-y; }
+  .fids .fids-hd { position: sticky; top: 0; z-index: 3; background: #0b1a2c; }
+}
 
 </style>
 </head>
