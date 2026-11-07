@@ -1181,6 +1181,58 @@ body .app.tabbed button:disabled { opacity: .4; }
 .metars { margin-top: 6px; font: 11px/1.45 var(--mono, ui-monospace, monospace); color: var(--dim, #8a97a6); word-break: break-word; }
 .metars b { color: var(--ink, inherit); margin-right: 4px; }
 
+/* ═════════════ phones and touch screens ═════════════ */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+a, button, input, select, textarea, summary, label, [role="button"] { touch-action: manipulation; }   /* no double-tap zoom or tap delay on controls */
+body[data-route="sim"] { overscroll-behavior: none; }   /* a swipe on the console never pulls the page or reloads it */
+@media (hover: none) and (pointer: coarse) {
+  input, select, textarea { font-size: 16px !important; }   /* below 16px iOS Safari zooms the whole page when a field takes focus */
+  .btn, .chips button, .viewsw button { min-height: 44px; }
+  .pop .opt, .pop .pop-x, .atis-card .pop-x, .wm-pop .x { min-width: 40px; min-height: 40px; }
+  .wm-zoom button { width: 44px; height: 44px; }
+}
+.apline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.apline .apsw { display: flex; flex-wrap: wrap; gap: 6px; flex-basis: 100%; margin-top: 6px; }
+.apline .apsw a { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 999px; font-size: 13.5px; text-decoration: none; white-space: nowrap; }
+.apline .apsw a:hover { border-color: var(--accent); }
+.tabbed > .side, .tabbed > .bottom, .tabbed .cmd { min-width: 0; }
+@media (max-width: 680px) {   /* the site header: the links scroll sideways and Launch stays on screen */
+  .topbar { gap: 8px; padding: 0 10px 0 14px; }
+  .nav { flex: 1 1 auto; min-width: 0; gap: 0; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent); }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex: none; white-space: nowrap; padding: 10px 10px; font-size: 14.5px; }
+  .topbar .status { margin-left: 0; flex: none; gap: 0; }
+  .topbar .status .btn.primary { display: inline-flex; min-height: 40px; padding: 9px 14px; }
+}
+@media (max-width: 900px) {   /* the start screen: airports in one sideways row, and Open the position always within reach */
+  .apline .apsw { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding: 2px 4px; }
+  .apline .apsw::-webkit-scrollbar { display: none; }
+  #setup .card { overflow: visible; }
+  #setup .row:has(#startBtn) { position: sticky; bottom: -18px; z-index: 2; margin-inline: -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--panel); border-top: 1px solid var(--line); flex-wrap: wrap; }
+  #setup .row:has(#startBtn) #startBtn { flex: 1 1 180px; min-height: 46px; }
+}
+html:has(body[data-route="sim"]) { overscroll-behavior: none; }   /* Android's swipe-back and pull-to-refresh stay out of the console */
+.app #sel .rm-end { display: block; margin-top: 16px; order: 99; align-self: flex-start; }
+@media (hover: none) and (pointer: coarse) {
+  .app #sel .btns { gap: 8px; }
+  .app #sel .btns button, .app #sel .ailine button, .app #sel .emgline button { min-height: 44px; padding: 8px 14px; font-size: 13px; }
+  .app #sel .ctl input { min-height: 44px; }
+  .app .selnav button { min-width: 48px; min-height: 44px; }
+  .app .sel-head .selnav { margin-right: 6px; }
+  .app #sel .rm-end { min-height: 44px; padding: 8px 16px; font-size: 13px; }
+  .strip .ctr { width: 36px; height: 36px; top: 0; right: 0; border-radius: 0 4px 0 8px; }
+  .app button.strip { min-height: 52px; }
+  .app .strips-head button, .app .sb-bay button { min-height: 40px; }
+}
+@media (max-width: 480px) { #setup .row:has(#startBtn) { flex-wrap: nowrap; gap: 8px; } #setup .row:has(#startBtn) #startBtn { flex: 1 1 auto; } #setup .row:has(#startBtn) .btn:not(#startBtn) { flex: none; } #setup .row:has(#startBtn) a.btn[href="#training"] { display: none; } }
+/* the console is one fixed screen: nothing on it may pan the page, or a slightly sliding tap on a menu button turns into a pan and the tap is cancelled */
+html:has(body[data-route="sim"]), body[data-route="sim"] { overflow: hidden; }
+body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-route="sim"] .mtabs, body[data-route="sim"] .cmd { touch-action: none; }
+.sysbar > button, .sysbar > .seg, .sysbar > .sb-clock { flex-shrink: 0; }
+@media (max-width: 560px) { .sysbar.has-road .sb-atis .sb-c { display: none; } .sb-atis .sb-c:nth-of-type(n+3) { display: none; } }
+@media (max-width: 430px) { body .app.tabbed > .sysbar { gap: 4px; padding-inline: 6px; } }
+
 /* Clearway Area Control: the landing page and the extras the area console needs on top of the shared styles */
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); }
@@ -1326,7 +1378,6 @@ body .app.area #sel .lvrow [data-c="rfl"] { grid-column: span 2; }
     <a href="../#airports">Tower &amp; Approach</a>
     <a href="./" class="on" aria-current="page">Area Control</a>
     <a href="../#training">Academy</a>
-    <a href="../#pricing">Pricing</a>
   </nav>
   <div class="status"><span class="live clk"><i></i><span id="topClock">--:--Z</span></span><a class="btn primary" href="#pick">Start a sector</a></div>
 </header>
