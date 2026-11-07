@@ -872,7 +872,7 @@ const PATH_DONE = {
   depOff: (ac, { ex }) => { ac.depVac = null; ac.onRwy = false; ac.xing = null; ac.holdAt = ex; ac.need = `Holding at ${ex.replace(/~\d+$/, '')}`; pilot(ac, `runway vacated via ${exitWord(ex)}, holding`); emit('depoff', ac); },
   atIhp: (ac, { ihp }) => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); },
   atHp: (ac, { hp }, v) => { ac.state = 'HOLDPT'; if (ac.luAfter) { ac.gs = ac.ias = 0; return; } if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); },
-  pushed: ac => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); },
+  pushed: ac => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); if (deiceNeeded() && Math.random() < 0.85) ac.deice = { st: 'ASK' }; },
   pulled: (ac, { st }) => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); },
   // a tow: pushed back off the stand first (towOn), then towed along its route at a tug's pace
   towOn: (ac, { pts, done, o }) => { ac.towNext = null; setPath(ac, pts, TOW_KT, done, o); },
@@ -1381,6 +1381,21 @@ function removeAc(ac){
   if (typeof renderSel === 'function') { renderSel(); renderStrips(true); }
   return true;
 }
+// ── de-icing. In freezing conditions with precipitation or freezing fog a departure is de-iced before it taxis: it asks, the
+// controller approves (DEICE), it waits at the pad, and the holdover time runs from the end. A departure that waits
+// past it is not allowed to take off and asks to be de-iced again.
+function deiceNeeded(){
+  const w = S.wx, wxs = (w.wx || []).join(' ') + ' ' + w.raw;
+  return w.temp <= 3 && (/\b[-+]?(SN|SG|FZ[A-Z]*|GS|PL|IC)\b/.test(wxs) || (w.temp <= 0 && w.temp - w.dew <= 2 && w.vis < 5000));
+}
+const deiceHoldover = () => /\+SN|\+FZ|FZRA|FZDZ/.test(S.wx.raw) ? 15 : /SN|FZ/.test(S.wx.raw) ? 25 : 45;
+const deiceWords = () => 'ground,';
+function deiceStart(ac, said, reads){
+  if (!ac.deice || ac.deice.st === 'DONE') { sys(`${ac.cs} does not need de-icing.`); return; }
+  const mins = ac.state === 'READY' ? rnd(7, 11) : rnd(3, 5);
+  ac.deice = { st: 'ON', end: S.t + mins*60 }; ac.need = null;
+  said.push('cleared to the de-icing pad, report when complete'); reads.push(`to the de-icing pad, will call when complete`);
+}
 // ── readback errors
 const RB_RATE = 0.05;
 const rbKind = t => /^[ACD]\d{1,5}$/.test(t) ? 'alt' : /^S\d{2,3}$/.test(t) ? 'spd' : /^[HLR]\d{1,3}$/.test(t) ? 'hdg' : null;
@@ -1426,6 +1441,7 @@ function commandRun(str){
   const said = [], reads = [];
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
+  if (ac.deice && ac.deice.st === 'ON' && !toks.every(t => t === 'DEICE' || t === 'DI')) { pilot(ac, 'standing by, we are still being de-iced'); return; }
   const snap = garbleable(ac, toks) && Math.random() < 0.05 ? { ...ac } : null;   // the crew misses it now and then
   // "negative" / "correction" before a re-issued instruction: the crew had it wrong and is being put right
   while (toks.length > 1 && /^(NEGATIVE|NEG|CORRECTION|CORR)$/.test(toks[0])) toks.shift();
@@ -1630,6 +1646,7 @@ function commandRun(str){
       if (ac.stand && ac.stand.occ === ac) ac.stand.occ = null;
       const vw = viaOf(rt.tws, hp); if (via.line && vw.includes(via.line[0])) vw.line = via.line;
       { const [sa, ra] = ihp ? PH.taxiHold(ac, ihp, vw) : PH.taxi(ac, hp, vw); said.push(sa); reads.push(ra); }
+    } else if ((t === 'DEICE' || t === 'DI') && !air) { deiceStart(ac, said, reads);
     } else if (t === 'CROSS' || t === 'X') {
       if (air || !ac.path) { sys(`${ac.cs} is not taxiing.`); continue; }
       const want = RW_ENDS.includes(toks[i+1]) ? rwyOf(toks[++i]).id : ac.hsAt || (xingAhead(ac) >= 0 ? ac.path.pts[xingAhead(ac)].hs : null);
@@ -1673,6 +1690,7 @@ function commandRun(str){
       { const me = luM(ac), ahead = luOthers(ac).find(o => o.onRwy && luM(o) > me + 50);   // one lined up further down the runway goes first
         if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
+      if (ac.deice && ac.deice.st === 'DONE' && S.t > ac.deice.until) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, our de-icing holdover time has expired, we need de-icing again'); ac.deice = { st: 'ASK' }; ac.need = 'Request de-icing'; SC(ac).pts -= 5; return; }
       if (S.wx.vis < toVisMin()) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, visibility is below our ${toVisMin().toLocaleString('en-GB')} metre departure minimum`); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(depRw(ac)); if (blk) { sys(`Runway ${depRw(ac)} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
@@ -2201,7 +2219,15 @@ const bodyHdg = ac => ac.nose && ac.bh != null ? ac.bh : ac.hdg;
 const acMid = ac => { if (!ac.nose) return [ac.x, ac.y]; const h = bodyHdg(ac)*D2R; return [ac.x - Math.sin(h)*ac.nose*M2NM, ac.y - Math.cos(h)*ac.nose*M2NM]; };
 function stepGround(ac, dt){
   if (ac.state === 'PARKED' && ac.kind === 'DEP' && !ac.need && !ac.tow && S.t >= ac.reqAt) { ac.need = 'Request start-up'; pilot(ac, PH.startReq(ac)); }
-  if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt) { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
+  if (ac.deice && ac.deice.st === 'ON' && S.t >= ac.deice.end) {   // de-icing finished: the holdover time starts now
+    const hold = deiceHoldover(); ac.deice = { st: 'DONE', until: S.t + hold*60 };
+    pilot(ac, `de-icing complete, holdover time ${hold} minutes, ${ac.state === 'READY' ? 'ready to taxi' : 'ready for departure'}`);
+    ac.need = ac.state === 'READY' ? 'Ready to taxi' : 'Ready for departure'; SC(ac).pts += 5;
+  }
+  if (ac.state === 'READY' && !ac.need && S.t >= ac.readyAt && !(ac.deice && ac.deice.st === 'ON')) {
+    if (ac.deice && ac.deice.st === 'ASK') { ac.need = 'Request de-icing'; pilot(ac, `${deiceWords()} request de-icing before taxi`); }
+    else { ac.need = 'Ready to taxi'; pilot(ac, 'ready to taxi'); }
+  }
   if (ac.path) {
     const tgt = ac.path.pts[0], d = dist(ac.x, ac.y, ...tgt);
     let spd = ac.path.reverse ? ac.path.spd : Math.min(ac.path.spd, taxiLimit(ac));

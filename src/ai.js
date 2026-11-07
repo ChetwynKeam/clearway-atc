@@ -317,6 +317,7 @@ function aiGround(ac){
     if (!aiDo('GND', ac, 'PUSH')) aiDo('GND', ac, aiTaxiCmd(ac));
     return;
   }
+  if (n === 'Request de-icing' && aiDue(ac, n, 3, 7)) return aiDo('GND', ac, 'DEICE');
   if (n === 'Ready to taxi' && aiDue(ac, n, 3, 7)) return aiDo('GND', ac, aiTaxiCmd(ac));
   if (n === 'Asking for the delay' && aiDue(ac, n + ac.flowTold, 3, 7)) return aiDo('GND', ac, 'DLY');
   // off the runway again in a departure stop: back to the holding point once it is nearly over
@@ -344,6 +345,8 @@ function aiGround(ac){
 function aiDepart(ac){
   const rw = depRw(ac), R = rwyOf(rw), lined = ac.state === 'LINEDUP', why = t => { ac.aiWhy = t; };
   if ((APT.toLimit && APT.toLimit(rw)) || S.wx.vis < toVisMin() || windLimit(ac, rw)) return why('weather or wind out of limits');
+  if (ac.deice && ac.deice.st === 'ON') return why('being de-iced');
+  if (ac.deice && ac.deice.st === 'DONE' && S.t > ac.deice.until - 30) return why('de-icing holdover expiring');
   if (rwyBlocked(rw)) return why('runway closed');
   // a departure stop from the next unit: wait. Lined up, it leaves the runway if an arrival or a departure the stop
   // doesn't hold needs it, or the stop has a while to run
