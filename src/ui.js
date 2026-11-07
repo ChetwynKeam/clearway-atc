@@ -715,6 +715,7 @@ function renderAtis(){
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${blockRw()} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
+    ${(() => { const b = wxBest(); return b ? `<div class="warnline bad">Tailwind on ${S.rwy}: wind favours ${b} <button id="wxChg" class="rops-btn">Change to ${b}</button></div>` : ''; })()}
     ${wxLines().map(l => `<div class="warnline">${esc(l)}</div>`).join('')}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
@@ -733,6 +734,7 @@ function renderAtis(){
   else if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
   else { $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO); }
   if ($('drHi')) { $('drHi').onclick = () => setDepRwy(RW_HI); $('drLo').onclick = () => setDepRwy(RW_LO); }
+  if ($('wxChg')) $('wxChg').onclick = () => setRwy(wxBest());
   if ($('ropsBtn')) $('ropsBtn').onclick = () => { S.ropsOpen = !S.ropsOpen; renderAtis(); };
   $('atis').querySelectorAll('[data-rop]').forEach(bt => bt.onclick = () => setRops(bt.dataset.rop, bt.dataset.m));
   if ($('ropsReset')) $('ropsReset').onclick = ropsReset;
@@ -1464,7 +1466,7 @@ function renderSlots(){
 daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListener('change', renderSlots);
 renderSlots();
 function resetSession(){
-  S.rops = null; S.ropsV++; S.ropsOpen = false;
+  S.rops = null; S.ropsV++; S.ropsOpen = false; S.wshift = null;
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
   S.emg = null; S.flow = null; S.rtow = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
@@ -1497,6 +1499,7 @@ function start(){
     for (const l of wxLines()) sys(l, true);
     emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
     S.rtow = ex ? null : { next: rnd(4, 10)*60 };   // random tows around the apron (sim.js stepRandomTows)
+    windInit(ex || live || wxSel.value === 'live' ? 'off' : ($('windSel') ? $('windSel').value : 'some'));
     flowInit(ex ? 'off' : ($('flowSel') ? $('flowSel').value : 'some'));
     if (S.flow.rate) sys(`Area control may stop departures now and then this session (${S.flow.level === 'often' ? 'often' : 'occasionally'}): take-offs are refused until the stop ends, so hold them, or vacate the runway (VAC) and taxi back later.`);
     if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);

@@ -2881,6 +2881,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
             <button type="button" class="btn ghost" id="cnShuffle" title="Make a new set of callsigns, types and times">Shuffle</button>
           </div>
           <label><span class="lbl">Emergencies</span><select id="emgSel"><option value="off">Off · routine flights only</option><option value="some" selected>Occasional · about every 20 minutes</option><option value="often">Frequent · about every 10 minutes</option></select></label>
+          <label><span class="lbl">Wind shifts</span><select id="windSel" title="The wind veers during the session: the ATIS changes and the runway in use may get a tailwind"><option value="off">Off · steady wind</option><option value="some" selected>Occasional · about every 40 minutes</option><option value="often">Frequent · about every 20 minutes</option></select></label>
           <label><span class="lbl">Area control flow stops</span><select id="flowSel" title="The next unit stops departures for a few minutes: airspace full, storms on the routes, military activity"><option value="off">Off · departures always released</option><option value="some" selected>Occasional · about every 40 minutes</option><option value="often">Frequent · about every 15 minutes</option></select></label>
         </div>
         <h2>Positions</h2>
@@ -6093,6 +6094,35 @@ const depRwys = () => APT.depRwys ? APT.depRwys() : [depRw()];
 // the lowest visibility a departure may start in (an LVP-equipped airport sets APT.toVis)
 const toVisMin = () => APT.toVis || 1000;
 const wxLvp = () => APT.lvp ? !!APT.lvp(S.wx) : (S.wx.vis < 800 || S.wx.ceil < 200);
+// ── Wind shifts. Now and then the wind veers or backs (a front, a sea breeze): the ATIS changes and the runway in use may
+// have a tailwind. The player picks the new runway (the Flow buttons or Runways); an AI tower does it after a few minutes.
+function windInit(level){
+  S.wshift = level === 'off' || !level ? null : { level, next: rnd(...(level === 'often' ? [12, 25] : [25, 50]))*60, n: 0, auto: 0 };
+}
+function wxBest(){
+  const c = windComp(S.wx, crsOf(S.rwy)), calm = S.wx.vrb || S.wx.spd < 4;
+  if (calm || c.headG > -5) return null;   // the runway in use is fine
+  let best = null;
+  if (APT.rwyFor) { const r = APT.rwyFor(S.wx); if (r && r.land !== S.rwy) best = r.land; }
+  else { const lo = windComp(S.wx, CRS_LO).head, hi = windComp(S.wx, CRS_HI).head, b = lo > hi ? RW_LO : RW_HI; if (b !== S.rwy) best = b; }
+  return best;
+}
+function stepWindShift(){
+  const W = S.wshift; if (!W || !S.running) return;
+  if (W.auto && S.t >= W.auto) { W.auto = 0; const b = wxBest(); if (b && AI_SEATS.every(k => S.seats[k] === 'AI')) { setRwy(b); sys(`Tower (automatic): runway ${b} now in use for the wind.`); } }
+  if (S.t < W.next) return;
+  W.n++; W.next = S.t + rnd(...(W.level === 'often' ? [20, 40] : [40, 70]))*60;
+  const w = S.wx, calm = w.vrb || w.spd < 5, dir = calm ? Math.round(rnd(0, 360)/10)*10 : (Math.round((w.dir + (Math.random() < 0.5 ? -1 : 1)*rnd(70, 130))/10)*10 + 360) % 360 || 360;
+  const spd = calm ? Math.round(rnd(10, 16)) : Math.max(w.spd, Math.round(rnd(9, 15))), gust = spd >= 14 && Math.random() < 0.5 ? spd + Math.round(rnd(6, 12)) : 0;
+  const tok = String(dir).padStart(3, '0') + String(spd).padStart(2, '0') + (gust ? 'G' + gust : '') + 'KT';
+  const raw = w.raw.replace(/\b(VRB|\d{3})\d{2,3}(G\d+)?KT\b/, tok);
+  if (raw === w.raw) return;
+  S.wx = parseMetar(raw); nextAtis(true);
+  sys(`Wind shift: now ${String(dir).padStart(3, '0')}° ${spd}${gust ? ' gusting ' + gust : ''} kt. Information ${phonetic(S.atis)} is current.`, true);
+  const b = wxBest();
+  if (b) { sys(`Tailwind on runway ${S.rwy}: the wind now favours ${b}.`, true); W.auto = S.t + rnd(4, 8)*60; }
+  if (typeof renderAtis === 'function') renderAtis();
+}
 function wxXwind(){ try { return windComp(S.wx, crsOf(S.rwy)).crossG; } catch (e) { return 0; } }
 const wxSlow = () => (wxLvp() ? 1.5 : 1) * (wxXwind() >= 20 ? 1.15 : 1);
 function wxLines(){
@@ -7636,6 +7666,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
+  stepWindShift();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && S.t < (S.liveWait || 0)) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
@@ -8924,6 +8955,7 @@ function renderAtis(){
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${blockRw()} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
+    ${(() => { const b = wxBest(); return b ? `<div class="warnline bad">Tailwind on ${S.rwy}: wind favours ${b} <button id="wxChg" class="rops-btn">Change to ${b}</button></div>` : ''; })()}
     ${wxLines().map(l => `<div class="warnline">${esc(l)}</div>`).join('')}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
@@ -8942,6 +8974,7 @@ function renderAtis(){
   else if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
   else { $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO); }
   if ($('drHi')) { $('drHi').onclick = () => setDepRwy(RW_HI); $('drLo').onclick = () => setDepRwy(RW_LO); }
+  if ($('wxChg')) $('wxChg').onclick = () => setRwy(wxBest());
   if ($('ropsBtn')) $('ropsBtn').onclick = () => { S.ropsOpen = !S.ropsOpen; renderAtis(); };
   $('atis').querySelectorAll('[data-rop]').forEach(bt => bt.onclick = () => setRops(bt.dataset.rop, bt.dataset.m));
   if ($('ropsReset')) $('ropsReset').onclick = ropsReset;
@@ -9673,7 +9706,7 @@ function renderSlots(){
 daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListener('change', renderSlots);
 renderSlots();
 function resetSession(){
-  S.rops = null; S.ropsV++; S.ropsOpen = false;
+  S.rops = null; S.ropsV++; S.ropsOpen = false; S.wshift = null;
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
   S.emg = null; S.flow = null; S.rtow = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
@@ -9706,6 +9739,7 @@ function start(){
     for (const l of wxLines()) sys(l, true);
     emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
     S.rtow = ex ? null : { next: rnd(4, 10)*60 };   // random tows around the apron (sim.js stepRandomTows)
+    windInit(ex || live || wxSel.value === 'live' ? 'off' : ($('windSel') ? $('windSel').value : 'some'));
     flowInit(ex ? 'off' : ($('flowSel') ? $('flowSel').value : 'some'));
     if (S.flow.rate) sys(`Area control may stop departures now and then this session (${S.flow.level === 'often' ? 'often' : 'occasionally'}): take-offs are refused until the stop ends, so hold them, or vacate the runway (VAC) and taxi back later.`);
     if (S.emg.rate) sys(`Emergencies are ${S.emg.level === 'often' ? 'frequent' : 'occasional'} this session: expect MAYDAYs, medical diversions, bird strikes and runway closures.`);

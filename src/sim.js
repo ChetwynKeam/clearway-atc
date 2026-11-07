@@ -228,6 +228,35 @@ const depRwys = () => APT.depRwys ? APT.depRwys() : [depRw()];
 // the lowest visibility a departure may start in (an LVP-equipped airport sets APT.toVis)
 const toVisMin = () => APT.toVis || 1000;
 const wxLvp = () => APT.lvp ? !!APT.lvp(S.wx) : (S.wx.vis < 800 || S.wx.ceil < 200);
+// ── Wind shifts. Now and then the wind veers or backs (a front, a sea breeze): the ATIS changes and the runway in use may
+// have a tailwind. The player picks the new runway (the Flow buttons or Runways); an AI tower does it after a few minutes.
+function windInit(level){
+  S.wshift = level === 'off' || !level ? null : { level, next: rnd(...(level === 'often' ? [12, 25] : [25, 50]))*60, n: 0, auto: 0 };
+}
+function wxBest(){
+  const c = windComp(S.wx, crsOf(S.rwy)), calm = S.wx.vrb || S.wx.spd < 4;
+  if (calm || c.headG > -5) return null;   // the runway in use is fine
+  let best = null;
+  if (APT.rwyFor) { const r = APT.rwyFor(S.wx); if (r && r.land !== S.rwy) best = r.land; }
+  else { const lo = windComp(S.wx, CRS_LO).head, hi = windComp(S.wx, CRS_HI).head, b = lo > hi ? RW_LO : RW_HI; if (b !== S.rwy) best = b; }
+  return best;
+}
+function stepWindShift(){
+  const W = S.wshift; if (!W || !S.running) return;
+  if (W.auto && S.t >= W.auto) { W.auto = 0; const b = wxBest(); if (b && AI_SEATS.every(k => S.seats[k] === 'AI')) { setRwy(b); sys(`Tower (automatic): runway ${b} now in use for the wind.`); } }
+  if (S.t < W.next) return;
+  W.n++; W.next = S.t + rnd(...(W.level === 'often' ? [20, 40] : [40, 70]))*60;
+  const w = S.wx, calm = w.vrb || w.spd < 5, dir = calm ? Math.round(rnd(0, 360)/10)*10 : (Math.round((w.dir + (Math.random() < 0.5 ? -1 : 1)*rnd(70, 130))/10)*10 + 360) % 360 || 360;
+  const spd = calm ? Math.round(rnd(10, 16)) : Math.max(w.spd, Math.round(rnd(9, 15))), gust = spd >= 14 && Math.random() < 0.5 ? spd + Math.round(rnd(6, 12)) : 0;
+  const tok = String(dir).padStart(3, '0') + String(spd).padStart(2, '0') + (gust ? 'G' + gust : '') + 'KT';
+  const raw = w.raw.replace(/\b(VRB|\d{3})\d{2,3}(G\d+)?KT\b/, tok);
+  if (raw === w.raw) return;
+  S.wx = parseMetar(raw); nextAtis(true);
+  sys(`Wind shift: now ${String(dir).padStart(3, '0')}° ${spd}${gust ? ' gusting ' + gust : ''} kt. Information ${phonetic(S.atis)} is current.`, true);
+  const b = wxBest();
+  if (b) { sys(`Tailwind on runway ${S.rwy}: the wind now favours ${b}.`, true); W.auto = S.t + rnd(4, 8)*60; }
+  if (typeof renderAtis === 'function') renderAtis();
+}
 function wxXwind(){ try { return windComp(S.wx, crsOf(S.rwy)).crossG; } catch (e) { return 0; } }
 const wxSlow = () => (wxLvp() ? 1.5 : 1) * (wxXwind() >= 20 ? 1.15 : 1);
 function wxLines(){
@@ -1771,6 +1800,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
+  stepWindShift();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && S.t < (S.liveWait || 0)) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
