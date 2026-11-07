@@ -1237,3 +1237,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .rops-row .seg.sm button { padding: 2px 6px; font-size: 11px; }
 .rops-row .seg.sm button.off.on { background: var(--alert, #d62d2d); color: #fff; }
 .rops-note { margin-top: 6px; font-size: 11px; opacity: .75; }
+.togap { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 12px; }
+.togap .tg b { font-variant-numeric: tabular-nums; }
+.togap .tg.wait b { color: var(--warn, #b75f00); }
+.togap .tg.go b { color: var(--ok, #12805c); }

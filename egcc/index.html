@@ -1266,6 +1266,10 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .rops-row .seg.sm button { padding: 2px 6px; font-size: 11px; }
 .rops-row .seg.sm button.off.on { background: var(--alert, #d62d2d); color: #fff; }
 .rops-note { margin-top: 6px; font-size: 11px; opacity: .75; }
+.togap { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 12px; }
+.togap .tg b { font-variant-numeric: tabular-nums; }
+.togap .tg.wait b { color: var(--warn, #b75f00); }
+.togap .tg.go b { color: var(--ok, #12805c); }
 
 </style>
 </head>
@@ -7534,7 +7538,51 @@ function willIntercept(ac, F){
 }
 function crossesRock(ac, p){ const T = APT.terrain; if (!T) return false; for (let f = 0; f <= 1; f += 0.02) { if (inPoly([ac.x + (p[0]-ac.x)*f, ac.y + (p[1]-ac.y)*f], T.poly)) return true; } return false; }
 // v: rolling onto the runway, it carries its speed into the take-off run (a rolling take-off)
-function beginTakeoff(ac, v){ ac.state = 'TAKEOFF'; ac.cto = true; ac.ias = v || 0; ac.depRwy = depRw(ac); ac.hdg = crsOf(ac.depRwy); ac.path = null; ac.need = null; emit('takeoff', ac); }
+// ── Departure intervals. After a take-off the next one on that runway must wait: 75 s, 2 min behind a heavy (or a medium
+// when it is a light), 90 s on the same SID (the first aircraft's speed may be lower), all stretched in poor weather.
+// The Tower's countdown (ATIS panel) shows what is left; starting the roll early costs points when a person is working.
+const humanWorking = () => !AI_SEATS.every(k => S.seats[k] === 'AI');
+function toGapS(last, ac){
+  if (!last) return 0;
+  const lw = last.wake, w = ac.perf.wake; let g = 75;
+  if (lw === 'H' && w !== 'H') g = 120; else if (lw === 'H') g = 90; else if (lw === 'M' && w === 'L') g = 120;
+  const sid = ac.sid || (typeof sidName === 'function' ? sidName(ac.gate, depRw(ac), ac) : null);
+  if (sid && last.sid && sid === last.sid) g = Math.max(g, 90);
+  return Math.round(g*wxSlow());
+}
+function toGapWhy(last, ac){
+  const lw = last.wake, w = ac.perf.wake, sid = ac.sid || (typeof sidName === 'function' ? sidName(ac.gate, depRw(ac), ac) : null);
+  return lw === 'H' && w !== 'H' ? 'wake behind a heavy' : lw === 'H' ? 'heavy behind a heavy' : lw === 'M' && w === 'L' ? 'wake behind a medium' : sid && last.sid === sid ? 'same SID' : 'departure interval';
+}
+function recordTakeoff(ac){
+  const R = rwyOf(ac.depRwy), last = (S.lastTO || {})[R.id];
+  if (last && humanWorking() && !ac.toInfr) {
+    const need = toGapS(last, ac), got = S.t - last.t;
+    if (got < need*0.8) { ac.toInfr = true; SC(ac).infr++; SC(ac).pts -= 20; sys(`Departure interval: ${ac.cs} rolled ${Math.round(got)} s after ${last.cs} (${toGapWhy(last, ac)}, needs ${need} s).`, true); }
+    else if (need) SC(ac).pts += 3;
+  }
+  (S.lastTO ||= {})[R.id] = { t: S.t, wake: ac.perf.wake, cs: ac.cs, sid: ac.sid || (typeof sidName === 'function' ? sidName(ac.gate, ac.depRwy, ac) : null) };
+}
+// the next departure at each departure runway and the seconds before it may roll
+function toCountdowns(){
+  return [...new Set(depRwys().map(r => rwyOf(r).id))].map(id => {
+    const R = rwyById(id), rw = depRwys().find(r => rwyOf(r).id === id), last = (S.lastTO || {})[id];
+    const nxt = S.acs.find(a => a.kind === 'DEP' && a.ground && !a.cto && ['HOLDPT', 'LINEUP', 'LINEDUP', 'READY'].includes(a.state) && rwyOf(depRw(a)).id === id);
+    const left = last && nxt ? Math.max(0, toGapS(last, nxt) - (S.t - last.t)) : last ? Math.max(0, toGapS(last, { perf: { wake: 'M' }, gate: null }) - (S.t - last.t)) : 0;
+    return { id, rw, left, why: last && nxt && left > 0 ? toGapWhy(last, nxt) : '' };
+  });
+}
+// a landing: whoever is next on the same final should be a wake gap behind
+function checkFinalGap(lead, rw){
+  if (!humanWorking()) return;
+  let nx = null, nd = 99;
+  for (const o of S.acs) if (o !== lead && o.kind === 'ARR' && o.mode === 'FINAL' && o.airborne && landRw(o) === rw) { const d = dist(lead.x, lead.y, o.x, o.y); if (d < nd) { nd = d; nx = o; } }
+  if (!nx || nd > 8) return;
+  const need = (typeof WAKE_NM !== 'undefined' && WAKE_NM[(lead.perf.wake || 'M') + (nx.perf.wake || 'M')]) || 3, req = Math.max(2.5, need*(wxLvp() ? 1.5 : 1));
+  if (nd < req*0.8 && !nx.wkInfr) { nx.wkInfr = true; SC(nx).infr++; SC(nx).pts -= 15; sys(`Spacing on final: ${nx.cs} was ${nd.toFixed(1)} NM behind ${lead.cs} at touchdown (needs ${req.toFixed(1)} NM).`, true); }
+  else if (nd >= req && nd < req + 2.5) SC(nx).pts += 2;   // tight but legal: well sequenced
+}
+function beginTakeoff(ac, v){ ac.state = 'TAKEOFF'; ac.cto = true; ac.ias = v || 0; ac.depRwy = depRw(ac); ac.hdg = crsOf(ac.depRwy); ac.path = null; ac.need = null; recordTakeoff(ac); emit('takeoff', ac); }
 function windLimit(ac, rw){ if (APT.windLimit) return APT.windLimit(ac, rw); const c = windComp(S.wx, crsOf(rw)); if (c.headG < -10) return 'tailwind out of limits'; if (c.crossG > (ac.perf.wake === 'L' ? 22 : 33)) return 'crosswind out of limits'; return null; }
 function goAround(ac, why){
   if (ac.state === 'MISSED' || (ac.gaT && S.t - ac.gaT < 30)) return;
@@ -7865,7 +7913,7 @@ function stepAir(ac, dt){
     if (fin.togo < -0.12 && ac.alt < tdElev(rw) + 70) { // touchdown
       const R = rwyOf(rw); ac.ground = true; ac.onRwy = true; ac.rwyId = R.id; ac.alt = tdElev(rw); ac.state = 'ROLLOUT'; ac.mode = 'GROUND'; ac.vs = 0;
       ac.rollDir = rw === R.lo ? 1 : -1; ac.hdg = crsOf(rw); { const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]); [ac.x, ac.y] = R.rm(m, clamp(off, -8, 8)); } SC(ac).landed++; SC(ac).pts += 25; ac.need = null;
-      emit('landed', ac); planVac(ac);
+      checkFinalGap(ac, rw); emit('landed', ac); planVac(ac);
     }
   }
   { const Rz = APT.restricted; if (Rz && ac.alt < Rz.top && !(Rz.ok && Rz.ok(ac)) && inPoly([ac.x, ac.y], Rz.poly)) { if (!ac.infr) { ac.infr = true; SC(ac).infr++; SC(ac).pts -= 40; sys(Rz.msg(ac), true); } } else ac.infr = false; }
@@ -8905,6 +8953,7 @@ function renderAtis(){
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${blockRw()} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
     ${(() => { const b = wxBest(); return b ? `<div class="warnline bad">Tailwind on ${S.rwy}: wind favours ${b} <button id="wxChg" class="rops-btn">Change to ${b}</button></div>` : ''; })()}
+    <div class="togap" id="toGap"></div>
     ${wxLines().map(l => `<div class="warnline">${esc(l)}</div>`).join('')}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
@@ -9522,6 +9571,7 @@ function renderScore(){
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
   renderSysbar(d);
   $('clockz').textContent = 'local ' + new Date(d.getTime() + tzOffH(d.getTime())*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
+  { const g = $('toGap'); if (g) { const c = S.running ? toCountdowns() : []; g.innerHTML = c.map(k => `<span class="tg ${k.left > 0 ? 'wait' : 'go'}" title="Seconds before the next departure may start its roll">${k.rw} next take-off: <b>${k.left > 0 ? Math.ceil(k.left) + ' s' : 'now'}</b>${k.why ? ' · ' + k.why : ''}</span>`).join(''); } }
   if (S.xing.st === 'CLOSING' || S.xing.st === 'OPENING') { const el = $('xCount'); if (el) el.textContent = Math.max(0, Math.ceil(S.xing.t - S.t)); const bar = document.querySelector('.xing .bar i'); if (bar) bar.style.width = Math.round((S.xing.st === 'CLOSING' ? clamp(1 - (S.xing.t - S.t)/150, 0, 1) : clamp((S.xing.t - S.t)/15, 0, 1))*100)+'%'; }
 }
 

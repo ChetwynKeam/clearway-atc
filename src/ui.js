@@ -716,6 +716,7 @@ function renderAtis(){
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${blockRw()} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
     ${(() => { const b = wxBest(); return b ? `<div class="warnline bad">Tailwind on ${S.rwy}: wind favours ${b} <button id="wxChg" class="rops-btn">Change to ${b}</button></div>` : ''; })()}
+    <div class="togap" id="toGap"></div>
     ${wxLines().map(l => `<div class="warnline">${esc(l)}</div>`).join('')}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
@@ -1333,6 +1334,7 @@ function renderScore(){
   $('clock').textContent = d.toISOString().substr(11,8)+'Z';
   renderSysbar(d);
   $('clockz').textContent = 'local ' + new Date(d.getTime() + tzOffH(d.getTime())*3600e3).toISOString().substr(11,5) + ' · ' + (S.paused ? 'paused' : S.speed+'×');
+  { const g = $('toGap'); if (g) { const c = S.running ? toCountdowns() : []; g.innerHTML = c.map(k => `<span class="tg ${k.left > 0 ? 'wait' : 'go'}" title="Seconds before the next departure may start its roll">${k.rw} next take-off: <b>${k.left > 0 ? Math.ceil(k.left) + ' s' : 'now'}</b>${k.why ? ' · ' + k.why : ''}</span>`).join(''); } }
   if (S.xing.st === 'CLOSING' || S.xing.st === 'OPENING') { const el = $('xCount'); if (el) el.textContent = Math.max(0, Math.ceil(S.xing.t - S.t)); const bar = document.querySelector('.xing .bar i'); if (bar) bar.style.width = Math.round((S.xing.st === 'CLOSING' ? clamp(1 - (S.xing.t - S.t)/150, 0, 1) : clamp((S.xing.t - S.t)/15, 0, 1))*100)+'%'; }
 }
 
