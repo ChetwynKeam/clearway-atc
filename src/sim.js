@@ -222,6 +222,20 @@ const luClear = ac => { const o = ac.luAfter; if (!o || !S.acs.includes(o) || o.
 // runways in use for landing or departure: taxiing traffic holds short of these until cleared to cross
 const rwysInUse = () => APT.activeRwys ? APT.activeRwys() : [S.rwy, depRw()];
 const depRwys = () => APT.depRwys ? APT.depRwys() : [depRw()];
+// ── Weather that slows the flow: low visibility procedures (RVR under 800 m or a cloud base under 200 ft; an airport may set
+// its own APT.lvp) protect the ILS sensitive areas, so landings and departures need bigger gaps; a strong gusty crosswind
+// slows the flow too. wxSlow() is the factor the controllers (ai.js) apply to every gap.
+// the lowest visibility a departure may start in (an LVP-equipped airport sets APT.toVis)
+const toVisMin = () => APT.toVis || 1000;
+const wxLvp = () => APT.lvp ? !!APT.lvp(S.wx) : (S.wx.vis < 800 || S.wx.ceil < 200);
+function wxXwind(){ try { return windComp(S.wx, crsOf(S.rwy)).crossG; } catch (e) { return 0; } }
+const wxSlow = () => (wxLvp() ? 1.5 : 1) * (wxXwind() >= 20 ? 1.15 : 1);
+function wxLines(){
+  const L = [];
+  if (wxLvp()) L.push(`Low visibility procedures: arrival and departure gaps about 50% wider, slower taxi, ${APT.lvpNote || 'ILS sensitive areas protected'}.`);
+  const x = wxXwind(); if (x >= 20) L.push(`Crosswind ${Math.round(x)} kt (gusts) on ${S.rwy}: crews fly slower and the flow slows by about 15%.`);
+  return L;
+}
 
 // ── Runway operations. Every runway end of a multi-runway airport can be set to Arrivals, Departures, Mixed or Closed
 // (S.rops = { end: 'ARR'|'DEP'|'MIX'|'OFF' }; null = the airport's own flow). The overlay below feeds the airport's own
@@ -1585,7 +1599,7 @@ function commandRun(str){
       { const me = luM(ac), ahead = luOthers(ac).find(o => o.onRwy && luM(o) > me + 50);   // one lined up further down the runway goes first
         if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
-      if (S.wx.vis < 1000) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
+      if (S.wx.vis < toVisMin()) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, visibility is below our ${toVisMin().toLocaleString('en-GB')} metre departure minimum`); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(depRw(ac)); if (blk) { sys(`Runway ${depRw(ac)} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
       if (needRel(ac)) { const R = ac.rel, who = relUnit(ac);
@@ -2096,6 +2110,7 @@ function stepGround(ac, dt){
     if (spd > 0 && !ac.path.reverse && !ac.path.tug && !ac.onRwy && typeof gflowGate === 'function') spd = gflowGate(ac, spd);
     if (spd > 0) ac.waiting = null;
     // speed builds up and drops off gradually; a stop for traffic brakes harder
+    if (spd > 12 && !ac.onRwy && wxLvp()) spd = Math.max(12, spd*0.75);   // low visibility: crews taxi slower
     const cur = ac.gs || 0, v = spd >= cur ? Math.min(spd, cur + TAXI_ACC*dt) : Math.max(spd, cur - (spd === 0 || cur > spd + 8 ? 6 : TAXI_DEC)*dt);   // well over the limit for the turn ahead (off a runway at speed): firm braking
     const mv = v/3600*dt; ac.gs = v; ac.ias = v;
     const done = () => {

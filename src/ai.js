@@ -220,7 +220,7 @@ function holdGap(R, gap){
 }
 const WAKE_NM = { HH: 4, HM: 5, HL: 6, MH: 3, MM: 3, ML: 5, LH: 3, LM: 3, LL: 3 };
 // the time between two landings: wake (or radar) spacing plus a mile at the approach speed, or the runway occupancy
-const landGapS = (lead, trail, R) => Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25);
+const landGapS = (lead, trail, R) => wxSlow()*Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25);
 // where it is heading next on its way in: the first fix of the route estToGo measures, else the start of the final
 function nextFixP(ac, F){
   if (!F) return null;
@@ -343,7 +343,7 @@ function aiGround(ac){
 // ── Tower: line-up and take-off, landing clearances, go-arounds, runway crossings, transfers, the road at Gibraltar
 function aiDepart(ac){
   const rw = depRw(ac), R = rwyOf(rw), lined = ac.state === 'LINEDUP', why = t => { ac.aiWhy = t; };
-  if ((APT.toLimit && APT.toLimit(rw)) || S.wx.vis < 1000 || windLimit(ac, rw)) return why('weather or wind out of limits');
+  if ((APT.toLimit && APT.toLimit(rw)) || S.wx.vis < toVisMin() || windLimit(ac, rw)) return why('weather or wind out of limits');
   if (rwyBlocked(rw)) return why('runway closed');
   // a departure stop from the next unit: wait. Lined up, it leaves the runway if an arrival or a departure the stop
   // doesn't hold needs it, or the stop has a while to run
@@ -364,7 +364,7 @@ function aiDepart(ac){
   // the inspection car is waiting at a holding point for this runway: the departures hold, so there is a gap for it
   { const C = S.rc; if (!lined && C && C.st === 'READY' && C.v.need && C.R === R && S.t - (C.asked || S.t) < 420) return why('holding for the runway inspection'); }
   const a = arrNear(R, ac), need = clearS(ac);
-  const last = S.aiDep && S.aiDep[R.id], gap = last ? (last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
+  const last = S.aiDep && S.aiDep[R.id], gap = last ? wxSlow()*(last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
   // a departure lined up behind this one (further back up the runway: multiple line-ups) doesn't stop it going
   // (not one already cleared to go: it rolls first)
   const me = luM(ac), behind = o => o.kind === 'DEP' && !o.cto && (o.state === 'LINEUP' || o.state === 'LINEDUP') && depRw(o) === rw && luM(o) < me - 50;

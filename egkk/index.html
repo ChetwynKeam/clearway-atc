@@ -5858,6 +5858,20 @@ const luClear = ac => { const o = ac.luAfter; if (!o || !S.acs.includes(o) || o.
 // runways in use for landing or departure: taxiing traffic holds short of these until cleared to cross
 const rwysInUse = () => APT.activeRwys ? APT.activeRwys() : [S.rwy, depRw()];
 const depRwys = () => APT.depRwys ? APT.depRwys() : [depRw()];
+// ── Weather that slows the flow: low visibility procedures (RVR under 800 m or a cloud base under 200 ft; an airport may set
+// its own APT.lvp) protect the ILS sensitive areas, so landings and departures need bigger gaps; a strong gusty crosswind
+// slows the flow too. wxSlow() is the factor the controllers (ai.js) apply to every gap.
+// the lowest visibility a departure may start in (an LVP-equipped airport sets APT.toVis)
+const toVisMin = () => APT.toVis || 1000;
+const wxLvp = () => APT.lvp ? !!APT.lvp(S.wx) : (S.wx.vis < 800 || S.wx.ceil < 200);
+function wxXwind(){ try { return windComp(S.wx, crsOf(S.rwy)).crossG; } catch (e) { return 0; } }
+const wxSlow = () => (wxLvp() ? 1.5 : 1) * (wxXwind() >= 20 ? 1.15 : 1);
+function wxLines(){
+  const L = [];
+  if (wxLvp()) L.push(`Low visibility procedures: arrival and departure gaps about 50% wider, slower taxi, ${APT.lvpNote || 'ILS sensitive areas protected'}.`);
+  const x = wxXwind(); if (x >= 20) L.push(`Crosswind ${Math.round(x)} kt (gusts) on ${S.rwy}: crews fly slower and the flow slows by about 15%.`);
+  return L;
+}
 
 // ── Runway operations. Every runway end of a multi-runway airport can be set to Arrivals, Departures, Mixed or Closed
 // (S.rops = { end: 'ARR'|'DEP'|'MIX'|'OFF' }; null = the airport's own flow). The overlay below feeds the airport's own
@@ -7221,7 +7235,7 @@ function commandRun(str){
       { const me = luM(ac), ahead = luOthers(ac).find(o => o.onRwy && luM(o) > me + 50);   // one lined up further down the runway goes first
         if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
-      if (S.wx.vis < 1000) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, visibility is below our 1,000 metre departure minimum'); return; }
+      if (S.wx.vis < toVisMin()) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, visibility is below our ${toVisMin().toLocaleString('en-GB')} metre departure minimum`); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(depRw(ac)); if (blk) { sys(`Runway ${depRw(ac)} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
       if (needRel(ac)) { const R = ac.rel, who = relUnit(ac);
@@ -7732,6 +7746,7 @@ function stepGround(ac, dt){
     if (spd > 0 && !ac.path.reverse && !ac.path.tug && !ac.onRwy && typeof gflowGate === 'function') spd = gflowGate(ac, spd);
     if (spd > 0) ac.waiting = null;
     // speed builds up and drops off gradually; a stop for traffic brakes harder
+    if (spd > 12 && !ac.onRwy && wxLvp()) spd = Math.max(12, spd*0.75);   // low visibility: crews taxi slower
     const cur = ac.gs || 0, v = spd >= cur ? Math.min(spd, cur + TAXI_ACC*dt) : Math.max(spd, cur - (spd === 0 || cur > spd + 8 ? 6 : TAXI_DEC)*dt);   // well over the limit for the turn ahead (off a runway at speed): firm braking
     const mv = v/3600*dt; ac.gs = v; ac.ias = v;
     const done = () => {
@@ -8680,6 +8695,7 @@ function renderAtis(){
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${blockRw()} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
+    ${wxLines().map(l => `<div class="warnline">${esc(l)}</div>`).join('')}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the ${APT.turbName || 'Special Procedures'} limit. Expect windshear on final.</div>` : ''}
@@ -9458,6 +9474,7 @@ function start(){
     if (turbExcess(S.wx) > 0) sys(`Wind exceeds the ${APT.turbName || 'Special Procedures'} turbulence limit: expect windshear on final and go-arounds.`);
     if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong.replace(/\.$/, '') + (APT.rnp && APT.rnpMinsOk(S.wx, S.rwy) ? ': arrivals will ask for an RNP approach.' : ': arrivals will not be able to land.'));
     if (APT.windLimit && windLimit({ perf: { wake: 'M' } }, S.rwy)) sys(`Wind is outside the ${APT.name} limits for runway ${S.rwy}: landings and take-offs are not allowed until it eases.`, true);
+    for (const l of wxLines()) sys(l, true);
     emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
     S.rtow = ex ? null : { next: rnd(4, 10)*60 };   // random tows around the apron (sim.js stepRandomTows)
     flowInit(ex ? 'off' : ($('flowSel') ? $('flowSel').value : 'some'));
@@ -13425,7 +13442,7 @@ function holdGap(R, gap){
 }
 const WAKE_NM = { HH: 4, HM: 5, HL: 6, MH: 3, MM: 3, ML: 5, LH: 3, LM: 3, LL: 3 };
 // the time between two landings: wake (or radar) spacing plus a mile at the approach speed, or the runway occupancy
-const landGapS = (lead, trail, R) => Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25);
+const landGapS = (lead, trail, R) => wxSlow()*Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25);
 // where it is heading next on its way in: the first fix of the route estToGo measures, else the start of the final
 function nextFixP(ac, F){
   if (!F) return null;
@@ -13548,7 +13565,7 @@ function aiGround(ac){
 // ── Tower: line-up and take-off, landing clearances, go-arounds, runway crossings, transfers, the road at Gibraltar
 function aiDepart(ac){
   const rw = depRw(ac), R = rwyOf(rw), lined = ac.state === 'LINEDUP', why = t => { ac.aiWhy = t; };
-  if ((APT.toLimit && APT.toLimit(rw)) || S.wx.vis < 1000 || windLimit(ac, rw)) return why('weather or wind out of limits');
+  if ((APT.toLimit && APT.toLimit(rw)) || S.wx.vis < toVisMin() || windLimit(ac, rw)) return why('weather or wind out of limits');
   if (rwyBlocked(rw)) return why('runway closed');
   // a departure stop from the next unit: wait. Lined up, it leaves the runway if an arrival or a departure the stop
   // doesn't hold needs it, or the stop has a while to run
@@ -13569,7 +13586,7 @@ function aiDepart(ac){
   // the inspection car is waiting at a holding point for this runway: the departures hold, so there is a gap for it
   { const C = S.rc; if (!lined && C && C.st === 'READY' && C.v.need && C.R === R && S.t - (C.asked || S.t) < 420) return why('holding for the runway inspection'); }
   const a = arrNear(R, ac), need = clearS(ac);
-  const last = S.aiDep && S.aiDep[R.id], gap = last ? (last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
+  const last = S.aiDep && S.aiDep[R.id], gap = last ? wxSlow()*(last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
   // a departure lined up behind this one (further back up the runway: multiple line-ups) doesn't stop it going
   // (not one already cleared to go: it rolls first)
   const me = luM(ac), behind = o => o.kind === 'DEP' && !o.cto && (o.state === 'LINEUP' || o.state === 'LINEDUP') && depRw(o) === rw && luM(o) < me - 50;

@@ -542,6 +542,7 @@ const APT = {
   view: { app: [0, 0, 80], twr: [0, -0.4, 4.2], gnd: [mOf(EN(-200, -650)), offOf(EN(-200, -650)), 5200, 3600] },
   minsOk,
   // the landing runway and the departure runway: S.rwy lands, S.depRwy departs
+  toVis: 125,   // departures continue in low visibility procedures (RVR 125 m)
   splitRwy: true, rwyFor, depFor, configOf: rw => isEast(configOf(rw)) ? 'E' : 'W',
   // the Flow buttons pick the direction only: the alternation picks which runway lands (read when the panel is drawn)
   rwyConfigs: [false, true].map(east => ({ key: east ? 'E' : 'W', name: east ? 'Easterly' : 'Westerly',

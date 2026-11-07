@@ -715,6 +715,7 @@ function renderAtis(){
       <div class="tile"><div class="lbl">Temp / Dew</div><div class="v">${w.temp}° / ${w.dew}°</div></div>
     </div>
     ${S.emg && S.emg.rwyBlock ? `<div class="warnline bad">Runway ${blockRw()} closed: ${esc(S.emg.rwyBlock.why)}. Reopens in about ${Math.max(1, Math.ceil((S.emg.rwyBlock.until - S.t)/60))} min.</div>` : ''}
+    ${wxLines().map(l => `<div class="warnline">${esc(l)}</div>`).join('')}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the ${APT.turbName || 'Special Procedures'} limit. Expect windshear on final.</div>` : ''}
@@ -1493,6 +1494,7 @@ function start(){
     if (turbExcess(S.wx) > 0) sys(`Wind exceeds the ${APT.turbName || 'Special Procedures'} turbulence limit: expect windshear on final and go-arounds.`);
     if (!APT.minsOk(S.wx, S.rwy)) sys(APT.minsLong.replace(/\.$/, '') + (APT.rnp && APT.rnpMinsOk(S.wx, S.rwy) ? ': arrivals will ask for an RNP approach.' : ': arrivals will not be able to land.'));
     if (APT.windLimit && windLimit({ perf: { wake: 'M' } }, S.rwy)) sys(`Wind is outside the ${APT.name} limits for runway ${S.rwy}: landings and take-offs are not allowed until it eases.`, true);
+    for (const l of wxLines()) sys(l, true);
     emgInit(ex ? 'off' : ($('emgSel') ? $('emgSel').value : 'some'));
     S.rtow = ex ? null : { next: rnd(4, 10)*60 };   // random tows around the apron (sim.js stepRandomTows)
     flowInit(ex ? 'off' : ($('flowSel') ? $('flowSel').value : 'some'));
