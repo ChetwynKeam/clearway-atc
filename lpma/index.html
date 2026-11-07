@@ -1241,6 +1241,12 @@ html:has(body[data-route="sim"]) { overscroll-behavior: none; }   /* Android's s
   .app .strips-head button, .app .sb-bay button { min-height: 40px; }
 }
 @media (max-width: 480px) { #setup .row:has(#startBtn) { flex-wrap: nowrap; gap: 8px; } #setup .row:has(#startBtn) #startBtn { flex: 1 1 auto; } #setup .row:has(#startBtn) .btn:not(#startBtn) { flex: none; } #setup .row:has(#startBtn) a.btn[href="#training"] { display: none; } }
+/* the console is one fixed screen: nothing on it may pan the page, or a slightly sliding tap on a menu button turns into a pan and the tap is cancelled */
+html:has(body[data-route="sim"]), body[data-route="sim"] { overflow: hidden; }
+body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-route="sim"] .mtabs, body[data-route="sim"] .cmd { touch-action: none; }
+.sysbar > button, .sysbar > .seg, .sysbar > .sb-clock { flex-shrink: 0; }
+@media (max-width: 560px) { .sysbar.has-road .sb-atis .sb-c { display: none; } .sb-atis .sb-c:nth-of-type(n+3) { display: none; } }
+@media (max-width: 430px) { body .app.tabbed > .sysbar { gap: 4px; padding-inline: 6px; } }
 
 </style>
 </head>
