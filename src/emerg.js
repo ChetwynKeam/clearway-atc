@@ -58,6 +58,14 @@ const EVENTS = {
     declare(ac, 'MAYDAY', why, `${altShort(Math.round(ac.alt/100)*100)}, request ${ret ? 'immediate return, ' : ''}priority landing runway ${S.rwy}`);
     return true;
   },
+  gear(){
+    const c = S.acs.filter(a => a.airborne && !a.emerg && a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state) && !a.handed && Math.hypot(a.x - RADAR_REF[0], a.y - RADAR_REF[1]) > 12);
+    if (!c.length) return false;
+    const ac = c[Math.floor(Math.random()*c.length)];
+    ac.gearPass = {};
+    declare(ac, 'PAN', 'landing gear unsafe indication', 'request a low pass past the tower for a gear check, then emergency services standing by');
+    return true;
+  },
   medical(){
     const c = S.acs.filter(a => a.airborne && !a.emerg && a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state));
     if (!c.length) return false;
@@ -127,7 +135,7 @@ function stepEmerg(dt){
   if (E.rate && S.t >= E.next && S.running) {
     E.next = S.t + E.rate*rnd(0.7, 1.3);
     const w = S.wx, windy = (w.dir >= 40 && w.dir <= 140 && w.spd >= 15) || (w.gust || 0) >= 25;
-    const bag = ['mayday','medical','medical','divert','bird','bird','fod','incursion','incursion', ...(windy ? ['windshear','windshear','windshear'] : [])];
+    const bag = ['mayday','medical','medical','divert','bird','bird','gear','fod','incursion','incursion', ...(windy ? ['windshear','windshear','windshear'] : [])];
     for (let n = 0; n < 6; n++) { const k = bag.splice(Math.floor(Math.random()*bag.length), 1)[0]; if (k && EVENTS[k]()) break; }
   }
 }

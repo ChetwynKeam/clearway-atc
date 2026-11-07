@@ -2132,6 +2132,11 @@ function stepAir(ac, dt){
     }
     if (fin.togo < 0.9 && !ac.ctl && !ac.warnedCtl) { ac.warnedCtl = true; pilot(ac, `short final runway ${rw}, request landing clearance`); ac.need = 'Short final, no clearance'; }
     { const blk = rwyBlocked(rw); if (blk && fin.togo < 0.45) return emgBlockedFinal(ac, blk); }
+    if (fin.togo < 0.45 && ac.gearPass && !ac.gearPass.done) {   // the gear-problem low pass for the tower to look at the gear
+      ac.gearPass.done = true; goAround(ac, null); SC(ac).ga--; ac.gaCount = 0; ac.emgStop = true;
+      pilot(ac, `low pass complete, climbing ${altShort(APT.gaAlt)}, request vectors for another approach`);
+      sys(`${ac.cs} low pass: the gear is down and looks normal from the tower. Bring it round for landing; the fire service will meet it.`, true); if (ac.emerg && ac.emerg.ack) SC(ac).pts += 15; return;
+    }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && (S.acs.some(o => o !== ac && onRunway(o, rw)) || (typeof vehOnRwy === 'function' && vehOnRwy(rw)))) return goAround(ac, typeof vehOnRwy === 'function' && vehOnRwy(rw) ? 'vehicle on the runway' : 'runway occupied');
     if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { SC(ac).incidents++; SC(ac).pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }
