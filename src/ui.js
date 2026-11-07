@@ -921,8 +921,11 @@ function standLine(ac){
   const grp = s => s.term ? (APT.termName ? APT.termName(s.term) : 'Terminal ' + s.term) : (APT.areaNames || AREA_NAMES)[s.area] || s.area;
   const opt = s => `<option value="${s.id}"${ac.stand === s ? ' selected' : ''}>${s.id}${pa.has(s) ? '' : ' · ' + grp(s)}</option>`;
   const mine = ch.filter(s => pa.has(s)), rest = ch.filter(s => !pa.has(s)), locked = ac.taxiIn;
+  // the airline's own stands that are taken, and when they should free up (a departure's push-back is its call time)
+  const busyWhy = s => { const o = s.occ; if (!o || !o.cs) return 'blocked'; if (o.kind === 'DEP') { const w = o.state === 'PARKED' ? Math.max(0, Math.round(((o.reqAt || S.t) - S.t)/60)) : 0; return `${o.cs} ${o.state === 'PARKED' ? 'pushes in ~' + w + ' min' : 'pushing now'}`; } return `${o.cs} on stand`; };
+  const busy = STANDS.filter(s => s.occ && s.occ !== ac && pa.has(s)).slice(0, 8);
   return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b><span class="pref">prefers ${esc(pa.name)}</span>
-    <span class="pick"><select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}</select><button id="iStandAuto" class="auto" title="Let the sim pick a free ${sw} that fits, in its airline's usual area first"${locked ? ' disabled' : ''}>Auto</button></span></div>`;
+    <span class="pick"><select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}${busy.length ? `<optgroup label="Occupied: its airline's ${sw}s">${busy.map(s => `<option disabled>${s.id} · ${esc(busyWhy(s))}</option>`).join('')}</optgroup>` : ''}</select><button id="iStandAuto" class="auto" title="Let the sim pick a free ${sw} that fits, in its airline's usual area first"${locked ? ' disabled' : ''}>Auto</button></span></div>`;
 }
 // ── clearance pop-outs (push direction, taxi routing) ──
 function drawPreview(pv){
