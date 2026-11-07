@@ -836,6 +836,7 @@ function renderSel(){
   if (S.running && !EXERCISES[S.mode] && seatOf(ac)) { const k = seatOf(ac);
     html += aiOwns(ac) ? `<div class="ailine"><span><b>AI ${AI_NAME[k]}</b> is working this flight${ac.aiWhy ? `<i>${esc(ac.aiWhy[0].toUpperCase() + ac.aiWhy.slice(1))}</i>` : ''}</span><button data-ai="take" class="go">Take over</button></div>`
       : `<div class="ailine me"><span>You are working it as ${AI_NAME[k]}</span><button data-ai="give">Hand to AI</button></div>`; }
+  if (ac.airborne) html += `<div class="restr"><b>Restrictions</b> ${restrLines(ac).map(esc).join(' · ')}</div>`;
   if (ac.kind === 'ARR' && !['PRE', 'ONSTAND', 'DIVERTING', 'TOW'].includes(ac.state)) html += standLine(ac);
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense

@@ -542,6 +542,12 @@ const APT = {
   view: { app: [0, 0, 80], twr: [0, -0.4, 4.2], gnd: [mOf(EN(-200, -650)), offOf(EN(-200, -650)), 5200, 3600] },
   minsOk,
   // the landing runway and the departure runway: S.rwy lands, S.depRwy departs
+  procRestr: ac => {
+    const out = [];
+    if (ac.kind === 'ARR' && DIR[ac.gate]) { const st = STAR_OF(ac.gate); if (st) out.push(`${DIR[ac.gate].star}: ` + st.pts.filter(p => p[1]).map(p => `${p[0]} ${p[1] > EGLL.TA ? 'FL' + p[1]/100 : p[1].toLocaleString('en-GB') + ' ft'} max`).join(', ')); }
+    if (ac.kind === 'DEP' && ac.sid && EGLL.SIDS[ac.sid]) { const p = EGLL.SIDS[ac.sid].pts.filter(q => q[1]).map(q => `${q[0]} ${q[1].toLocaleString('en-GB')} ft`); if (p.length) out.push('Levels: ' + p.join(', ')); }
+    return out;
+  },
   toVis: 125,   // departures continue in low visibility procedures (RVR 125 m)
   splitRwy: true, rwyFor, depFor, configOf: rw => isEast(configOf(rw)) ? 'E' : 'W',
   // the Flow buttons pick the direction only: the alternation picks which runway lands (read when the panel is drawn)

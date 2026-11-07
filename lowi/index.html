@@ -1270,6 +1270,8 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .togap .tg b { font-variant-numeric: tabular-nums; }
 .togap .tg.wait b { color: var(--warn, #b75f00); }
 .togap .tg.go b { color: var(--ok, #12805c); }
+.restr { margin-top: 6px; font-size: 11.5px; opacity: .8; line-height: 1.35; }
+.restr b { margin-right: 4px; }
 
 </style>
 </head>
@@ -6019,6 +6021,16 @@ function coord(text, who){ log('coord', text, who); say(text, 'tel:' + who); }
 // New York calls for release only on flights under a flow restriction)
 const needRel = ac => !APT.needRel || APT.needRel(ac);
 // the altitude a SID climbs to (Gatwick: each SID's own stop altitude), otherwise the airport's initial climb
+// the restrictions an aircraft is flying, for the flight panel: the procedure's own where the airport has them (APT.procRestr:
+// Heathrow's chart levels), then the standing speed rules
+function restrLines(ac){
+  const L = [];
+  if (ac.kind === 'DEP' && ac.sid) L.push(`${sidSpoken(ac.sid)}: climb to ${altShort(sidTop(ac))} initially`);
+  if (APT.procRestr) { try { L.push(...APT.procRestr(ac)); } catch (e) {} }
+  L.push('250 kt max below FL100' + (APT.inHg ? ', 200 kt max within 4 NM below 2,500 ft' : ''));
+  if (ac.kind === 'ARR') L.push('Holds: 230 kt max (below FL140)');
+  return L;
+}
 const sidTop = ac => APT.sidAlt && ac.sid ? APT.sidAlt(ac) : APT.initClimb;
 function requestRelease(ac){
   const who = relUnit(ac), sid = sidName(ac.gate, depRw(ac), ac);
@@ -7024,8 +7036,10 @@ function commandRun(str){
       const q = a <= APT.ta && ac.alt > APT.ta ? `, ${PH.altim()}` : '', [sa, ra] = PH.alt(a, up, ac);
       said.push(sa + q); reads.push(ra + q);
     } else if ((r = t.match(/^S(\d{2,3})$/)) && air && +r[1] > 0) {
-      const s = clamp(+r[1], ac.perf.vapp, 330); ac.tgtSpd = s; ac.spdAssigned = true;
-      { const [sa, ra] = PH.speed(s, ac); said.push(sa); reads.push(ra); }
+      let s = clamp(+r[1], ac.perf.vapp, 330);
+      if (s > 250 && ac.alt < 9900 && !isMil(ac)) { s = 250; said.push('speed 250 knots'); reads.push('unable more than 250 knots below flight level 100, speed 250'); ac.tgtSpd = 250; ac.spdAssigned = true; }
+      else { ac.tgtSpd = s; ac.spdAssigned = true;
+      { const [sa, ra] = PH.speed(s, ac); said.push(sa); reads.push(ra); } }
     } else if ((t === 'SN' || t === 'S0') && air) { ac.spdAssigned = false; ac.tgtSpd = null; said.push('no speed restriction'); reads.push('no speed restriction'); }
     else if (t === 'DCT' && air) {
       const id = toks[i+1], w = id && WP[id];
@@ -7542,6 +7556,9 @@ function stepAir(ac, dt){
     else tgtS = dGBR < 14 ? 190 : dGBR < 25 ? 220 : 250;
     tgtS = Math.min(tgtS, Pf.cruise);
   }
+  if (ac.alt < 9900 && !ac.ground && !isMil(ac)) tgtS = Math.min(tgtS, 250);   // 250 kt below FL100 (the speed limit crews fly)
+  if (APT.inHg && !ac.ground && ac.alt < ELEV + 2500 && dGBR < 4) tgtS = Math.min(tgtS, 200);   // US: 200 kt within 4 NM below 2,500 ft
+  if (ac.mode === 'HOLD' && ac.alt < 14000) tgtS = Math.min(tgtS, 230);   // holding speed
   if (fin && fin.togo < 4) tgtS = Math.min(tgtS, Pf.vapp + (fin.togo > 2.5 ? 15 : 0));
   ac.ias += clamp(tgtS - ac.ias, -1.3*dt, 2.0*dt);
 
@@ -8872,6 +8889,7 @@ function renderSel(){
   if (S.running && !EXERCISES[S.mode] && seatOf(ac)) { const k = seatOf(ac);
     html += aiOwns(ac) ? `<div class="ailine"><span><b>AI ${AI_NAME[k]}</b> is working this flight${ac.aiWhy ? `<i>${esc(ac.aiWhy[0].toUpperCase() + ac.aiWhy.slice(1))}</i>` : ''}</span><button data-ai="take" class="go">Take over</button></div>`
       : `<div class="ailine me"><span>You are working it as ${AI_NAME[k]}</span><button data-ai="give">Hand to AI</button></div>`; }
+  if (ac.airborne) html += `<div class="restr"><b>Restrictions</b> ${restrLines(ac).map(esc).join(' · ')}</div>`;
   if (ac.kind === 'ARR' && !['PRE', 'ONSTAND', 'DIVERTING', 'TOW'].includes(ac.state)) html += standLine(ac);
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
