@@ -1238,6 +1238,21 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
   .fids .fids-hd { position: sticky; top: 0; z-index: 3; background: #0b1a2c; }
 }
 
+/* runway operations */
+.rops-btn { margin-left: 6px; padding: 2px 8px; font-size: 11px; border: 1px solid var(--line, #8883); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+.rops-btn.on { border-color: var(--accent, #3b82f6); color: var(--accent, #3b82f6); }
+.rops { margin: 8px 0 4px; padding: 8px; border: 1px solid var(--line, #8883); border-radius: 8px; }
+.rops-head { display: flex; align-items: center; margin-bottom: 6px; }
+.rops-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px 12px; max-height: 190px; overflow-y: auto; }
+.rops-row { display: flex; align-items: center; gap: 8px; }
+.rops-row.closed .rops-end { opacity: .5; }
+.rops-end { min-width: 34px; font-variant-numeric: tabular-nums; }
+.rops-wx { min-width: 42px; font-size: 11px; opacity: .75; font-variant-numeric: tabular-nums; }
+.rops-wx.bad, .rops .bad { color: var(--alert, #d62d2d); opacity: 1; }
+.rops-row .seg.sm button { padding: 2px 6px; font-size: 11px; }
+.rops-row .seg.sm button.off.on { background: var(--alert, #d62d2d); color: #fff; }
+.rops-note { margin-top: 6px; font-size: 11px; opacity: .75; }
+
 /* Clearway Area Control: the landing page and the extras the area console needs on top of the shared styles */
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); }

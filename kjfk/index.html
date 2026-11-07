@@ -1252,6 +1252,21 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
   .fids .fids-hd { position: sticky; top: 0; z-index: 3; background: #0b1a2c; }
 }
 
+/* runway operations */
+.rops-btn { margin-left: 6px; padding: 2px 8px; font-size: 11px; border: 1px solid var(--line, #8883); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+.rops-btn.on { border-color: var(--accent, #3b82f6); color: var(--accent, #3b82f6); }
+.rops { margin: 8px 0 4px; padding: 8px; border: 1px solid var(--line, #8883); border-radius: 8px; }
+.rops-head { display: flex; align-items: center; margin-bottom: 6px; }
+.rops-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px 12px; max-height: 190px; overflow-y: auto; }
+.rops-row { display: flex; align-items: center; gap: 8px; }
+.rops-row.closed .rops-end { opacity: .5; }
+.rops-end { min-width: 34px; font-variant-numeric: tabular-nums; }
+.rops-wx { min-width: 42px; font-size: 11px; opacity: .75; font-variant-numeric: tabular-nums; }
+.rops-wx.bad, .rops .bad { color: var(--alert, #d62d2d); opacity: 1; }
+.rops-row .seg.sm button { padding: 2px 6px; font-size: 11px; }
+.rops-row .seg.sm button.off.on { background: var(--alert, #d62d2d); color: #fff; }
+.rops-note { margin-top: 6px; font-size: 11px; opacity: .75; }
+
 </style>
 </head>
 <body>
@@ -5774,7 +5789,7 @@ function windComp(w, crs){ const d = angDiff(crs, w.dir); const g = w.gust || w.
 const S = {
   t: 0, start: Date.UTC(2026, 9, 4, 18, 55, 0), speed: 1, paused: true, running: false,
   wx: parseMetar(WX_PRESETS[APT.defWx].metar), rwy: APT.defRwy, atis: 'K', mode: 'summer',
-  sched: [], acs: [], sel: null,
+  sched: [], acs: [], sel: null, rops: null, ropsV: 0,
   xing: { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 },
   score: { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 },
   view: { cx: 0, cy: -2, scale: 14, name: 'app' }, showProc: true, voice: false, conflictSet: new Set(), conflicts: new Set(),
@@ -5892,6 +5907,48 @@ const luClear = ac => { const o = ac.luAfter; if (!o || !S.acs.includes(o) || o.
 // runways in use for landing or departure: taxiing traffic holds short of these until cleared to cross
 const rwysInUse = () => APT.activeRwys ? APT.activeRwys() : [S.rwy, depRw()];
 const depRwys = () => APT.depRwys ? APT.depRwys() : [depRw()];
+
+// ── Runway operations. Every runway end of a multi-runway airport can be set to Arrivals, Departures, Mixed or Closed
+// (S.rops = { end: 'ARR'|'DEP'|'MIX'|'OFF' }; null = the airport's own flow). The overlay below feeds the airport's own
+// runway hooks, so the rest of the game (approach, SIDs, holds, ground, AI) sees an ordinary configuration.
+const ROPS_ON = RWYS.length > 1 && !APT.noRops;
+const ropsEnds = ROPS_ON ? RW_ENDS.filter(e => !(APT.ropsSkip || []).includes(e)) : [];
+const ropsGroup = e => APT.ropsGroup ? APT.ropsGroup(e) : 'A';
+const ropsCan = (e, role) => role === 'OFF' || (role === 'DEP' ? true : !!FINAL[e]);   // landing needs an approach
+const ropsHdg = e => (parseInt(e, 10) % 36) * 10;
+const ropsCompat = (a, b) => Math.abs(angDiff(ropsHdg(a), ropsHdg(b))) <= 50;       // opposite flows cannot both be live
+const ropsOther = e => { const R = rwyOf(e); return e === R.lo ? R.hi : R.lo; };
+const ropsList = role => ropsEnds.filter(e => S.rops && (S.rops[e] === role || S.rops[e] === 'MIX'));
+const _rops0 = ROPS_ON ? { landRwyOf: APT.landRwyOf, depRwyOf: APT.depRwyOf, appRwys: APT.appRwys, depRwys: APT.depRwys, activeRwys: APT.activeRwys } : null;
+// the modes as they stand: the custom set, else what the airport's flow is doing
+function ropsModes(){
+  if (S.rops) return { ...S.rops };
+  const L = _rops0.appRwys ? _rops0.appRwys() : [S.rwy], D = _rops0.depRwys ? _rops0.depRwys() : [S.depRwy || S.rwy], m = {};
+  for (const e of ropsEnds) { const l = L.includes(e), d = D.includes(e); m[e] = l && d ? 'MIX' : l ? 'ARR' : d ? 'DEP' : 'OFF'; }
+  return m;
+}
+// one runway per aircraft from the live ones: its own airfield's, the one it would have had if that is live, else the quietest
+function ropsPick(ac, role, own){
+  const list = ropsList(role), key = role === 'ARR' ? 'ropsL' : 'ropsD';
+  if (!list.length) return undefined;
+  if (ac[key + 'V'] === S.ropsV && list.includes(ac[key])) return ac[key];
+  let c = list; const g = own && ropsGroup(own); if (g) { const f = list.filter(e => ropsGroup(e) === g); if (f.length) c = f; }
+  let pick;
+  if (own && c.includes(own) && (c.length === 1 || APT.ropsPerAc)) pick = own;
+  else {
+    const load = e => S.acs.reduce((n, a) => n + (a !== ac && a.kind === ac.kind && a[key] === e && a[key + 'V'] === S.ropsV && (role === 'ARR' ? a.airborne && !a.onRwy : !a.airborne) ? 1 : 0), 0);
+    pick = c.reduce((b, e) => b == null || load(e) < load(b) ? e : b, null);
+  }
+  ac[key] = pick; ac[key + 'V'] = S.ropsV; return pick;
+}
+if (ROPS_ON) {
+  APT.landRwyOf = ac => { const o = _rops0.landRwyOf ? _rops0.landRwyOf(ac) : undefined; return S.rops && ac ? ropsPick(ac, 'ARR', o || S.rwy) : o; };
+  APT.depRwyOf = ac => { if (S.rops && ac && ac.cto && ac.depRwy) return ac.depRwy; const o = _rops0.depRwyOf ? _rops0.depRwyOf(ac) : undefined; return S.rops && ac ? ropsPick(ac, 'DEP', o || S.depRwy || S.rwy) : o; };
+  if (APT.arrRoute) { const ar = APT.arrRoute; APT.arrRoute = o => S.rops ? APT.landRwyOf(o) : ar(o); }
+  APT.appRwys = () => S.rops ? ropsList('ARR') : _rops0.appRwys ? _rops0.appRwys() : [S.rwy];
+  APT.depRwys = () => S.rops ? ropsList('DEP') : _rops0.depRwys ? _rops0.depRwys() : [depRw()];
+  APT.activeRwys = () => S.rops ? ropsEnds.filter(e => S.rops[e] !== 'OFF') : _rops0.activeRwys ? _rops0.activeRwys() : [S.rwy, depRw()];
+}
 // a departure's route after its SID's initial climb: its own runway's SID where the airport has two departure runways
 const exitRouteOf = ac => APT.exitRouteOf ? APT.exitRouteOf(ac) : EXIT_ROUTE[ac.gate];
 const activeRwy = id => rwysInUse().some(r => rwyOf(r).id === id);
@@ -8657,9 +8714,10 @@ function renderAtis(){
     <div class="ph"><span class="lbl">ATIS</span><button id="atisRead" class="atis-letter" title="Read the ATIS broadcast">${S.atis}</button>${APT.splitRwy ? '' : `<span class="lbl dimmer">${phonetic(S.atis)}</span>`}
       <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">${APT.rwyConfigs ? 'Flow' : APT.splitRwy ? 'Land' : 'Runway'}</span>
       ${APT.rwyPickers ? APT.rwyPickers.map(k => `<span class="seg sm" title="${k.label}: runway in use"><span class="dimmer" style="padding:0 6px;align-self:center">${k.label}</span>${k.opts.map(r => `<button data-pk="${k.key}" data-r="${r}" class="${k.get() === r ? 'on' : ''}">${r}</button>`).join('')}</span>`).join('')
-        : APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" class="${APT.configOf(S.rwy) === c.key ? 'on' : ''}" title="Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}">${c.name}</button>`).join('')}</span>`
+        : APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" class="${!S.rops && APT.configOf(S.rwy) === c.key ? 'on' : ''}" title="Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}">${c.name}</button>`).join('')}</span>`
         : RW_ENDS.length > 2 ? `<select id="rwSel" class="rwsel" aria-label="Landing runway">${RW_ENDS.map(r => `<option${r === S.rwy ? ' selected' : ''}>${r}</option>`).join('')}</select><span class="lbl">Dep</span><select id="drSel" class="rwsel" aria-label="Departure runway">${RW_ENDS.map(r => `<option${r === depRw() ? ' selected' : ''}>${r}</option>`).join('')}</select>`
-        : `<span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span>${APT.splitRwy ? `<span class="lbl">Dep</span><span class="seg sm"><button id="drHi" class="${depRw()===RW_HI?'on':''}">${RW_HI}</button><button id="drLo" class="${depRw()===RW_LO?'on':''}">${RW_LO}</button></span>` : ''}`}</div>
+        : `<span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span>${APT.splitRwy ? `<span class="lbl">Dep</span><span class="seg sm"><button id="drHi" class="${depRw()===RW_HI?'on':''}">${RW_HI}</button><button id="drLo" class="${depRw()===RW_LO?'on':''}">${RW_LO}</button></span>` : ''}`}${ROPS_ON ? `<button id="ropsBtn" class="rops-btn${S.rops ? ' on' : ''}" title="Set each runway to arrivals, departures, mixed or closed">Runways${S.rops ? ' ·&nbsp;custom' : ''}</button>` : ''}</div>
+    ${ROPS_ON && S.ropsOpen ? ropsPanel() : ''}
     <div class="metar"></div>
     <div class="tiles">
       <div class="tile"><div class="lbl">Wind</div><div class="v">${w.vrb?'VRB':hdg3(w.dir)}°/${w.spd}${w.gust?'<small>G'+w.gust+'</small>':''}</div></div>
@@ -8688,8 +8746,58 @@ function renderAtis(){
   else if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
   else { $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO); }
   if ($('drHi')) { $('drHi').onclick = () => setDepRwy(RW_HI); $('drLo').onclick = () => setDepRwy(RW_LO); }
+  if ($('ropsBtn')) $('ropsBtn').onclick = () => { S.ropsOpen = !S.ropsOpen; renderAtis(); };
+  $('atis').querySelectorAll('[data-rop]').forEach(bt => bt.onclick = () => setRops(bt.dataset.rop, bt.dataset.m));
+  if ($('ropsReset')) $('ropsReset').onclick = ropsReset;
   if ($('atisWarn')) $('atisWarn').onclick = () => { S.atisAlert = false; sys(`ATIS information ${phonetic(S.atis)} acknowledged.`); renderAtis(); };
   if ($('xBtn')) $('xBtn').onclick = toggleXing;
+}
+// ── runway operations panel: each runway end is Arrivals / Departures / Mixed / Closed
+const ROPS_NAME = { ARR: 'Arr', DEP: 'Dep', MIX: 'Mixed', OFF: 'Closed' };
+function ropsPanel(){
+  const M = ropsModes(), w = S.wx, calm = w.vrb || w.spd < 4;
+  const rows = ropsEnds.map(e => {
+    const c = windComp(w, crsOf(e)), tail = !calm && c.headG <= -5, live = M[e] !== 'OFF';
+    const btn = m => ropsCan(e, m) ? `<button data-rop="${e}" data-m="${m}" class="${M[e] === m ? 'on' : ''}${m === 'OFF' ? ' off' : ''}">${ROPS_NAME[m]}</button>` : '';
+    return `<div class="rops-row${live ? '' : ' closed'}"><b class="rops-end">${e}</b><span class="rops-wx${tail && live ? ' bad' : ''}" title="Headwind (gust) / crosswind on ${e}">${Math.round(c.headG)} / ${Math.round(c.crossG)}</span><span class="seg sm">${['ARR', 'DEP', 'MIX', 'OFF'].map(btn).join('')}</span></div>`;
+  }).join('');
+  const tails = ropsEnds.filter(e => M[e] !== 'OFF' && !calm && windComp(w, crsOf(e)).headG <= -5);
+  return `<div class="rops"><div class="rops-head"><span class="lbl">Runway operations</span><span class="grow"></span><button id="ropsReset" class="rops-btn" title="Back to the airport's usual flow for the wind${APT.rwyConfigs ? ' (or the alternation programme)' : ''}">Reset to flow</button></div>
+    <div class="rops-grid">${rows}</div>
+    <div class="rops-note">Wind column: head / cross (kt). Opposite directions cannot both be live; choosing a runway closes the other way and carries its roles over.${tails.length ? `<span class="bad"> Tailwind of 5 kt or more on ${tails.join(', ')}.</span>` : ''}</div></div>`;
+}
+function setRops(e, mode){
+  const cur = ropsModes(), was = { ...cur }; if (cur[e] === mode) return;
+  const flipped = [];
+  cur[e] = mode;
+  if (mode !== 'OFF') for (const k of ropsEnds) {
+    if (k === e || cur[k] === 'OFF' || ropsCompat(e, k)) continue;
+    // an end of the other flow closes; its job passes to the other end of its pavement when that is free and is the right way round
+    const role = cur[k]; cur[k] = 'OFF'; flipped.push(k);
+    const o = ropsOther(k); if (o !== e && cur[o] === 'OFF' && ropsCompat(e, o) && o !== k) { const r = ropsCan(o, role) ? role : ropsCan(o, 'DEP') ? 'DEP' : 'OFF'; cur[o] = r; }
+  }
+  for (const g of new Set(ropsEnds.map(ropsGroup))) {
+    const ends = ropsEnds.filter(k => ropsGroup(k) === g), label = g === 'A' ? '' : ' at ' + g;
+    if (!ends.some(k => cur[k] === 'ARR' || cur[k] === 'MIX')) { sys(`Keep a runway open for arrivals${label}.`, true); return; }
+    if (!ends.some(k => cur[k] === 'DEP' || cur[k] === 'MIX')) { sys(`Keep a runway open for departures${label}.`, true); return; }
+  }
+  applyRops(cur, flipped.length ? `The other direction (${flipped.join(', ')}) closes.` : '');
+}
+function applyRops(cur, extra){
+  S.rops = cur; S.ropsV++;
+  const L = ropsList('ARR'), D = ropsList('DEP');
+  S.rwy = L.includes(S.rwy) ? S.rwy : L[0]; S.depRwy = D.includes(S.depRwy) ? S.depRwy : D[0];
+  nextAtis(false); rerouteArrivals();
+  const tx = ropsEnds.filter(e => cur[e] !== 'OFF').map(e => `${e} ${cur[e] === 'ARR' ? 'arrivals' : cur[e] === 'DEP' ? 'departures' : 'mixed mode'}`).join(', ');
+  sys(`Runways: ${tx}. ${extra} Information ${phonetic(S.atis)} is current.`.replace(/\s+/g, ' '));
+  const calm = S.wx.vrb || S.wx.spd < 4, tails = ropsEnds.filter(e => cur[e] !== 'OFF' && !calm && windComp(S.wx, crsOf(e)).headG <= -5);
+  if (tails.length) sys(`Tailwind of 5 kt or more on ${tails.join(', ')}: crews may refuse.`, true);
+  renderAtis(); emit('rwy', S.rwy);
+}
+function ropsReset(){
+  if (!S.rops) return; S.rops = null; S.ropsV++;
+  const RF = APT.rwyFor && APT.rwyFor(S.wx); if (RF) { S.rwy = RF.land; S.depRwy = RF.dep; }
+  nextAtis(false); rerouteArrivals(); sys(`Back to the usual runway flow: runway ${S.rwy}. Information ${phonetic(S.atis)} is current.`); renderAtis(); emit('rwy', S.rwy);
 }
 // arrivals still on their arrival route follow the runway now in use (their own airfield's)
 function rerouteArrivals(){
@@ -8697,7 +8805,8 @@ function rerouteArrivals(){
 }
 function setRwy(r){
   // New York: the landing runway brings its departure runway
-  if (S.rwy === r) return; S.rwy = r; if (APT.depFor) S.depRwy = APT.depFor(r); nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
+  const wasCustom = !!S.rops; S.rops = null; S.ropsV++;
+  if (S.rwy === r && !wasCustom) return; S.rwy = r; if (APT.depFor) S.depRwy = APT.depFor(r); nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
   rerouteArrivals();
   renderAtis(); emit('rwy', r);
 }
@@ -9368,6 +9477,7 @@ function renderSlots(){
 daySel.onchange = hourSel.onchange = renderSlots; $('trafficSel').addEventListener('change', renderSlots);
 renderSlots();
 function resetSession(){
+  S.rops = null; S.ropsV++; S.ropsOpen = false;
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
   S.emg = null; S.flow = null; S.rtow = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
   STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';

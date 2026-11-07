@@ -494,7 +494,7 @@ const depFor = rw => modeNow() === 'night' ? rw : CFG[configOf(rw)].dep;
 // they swap, 23:30 one runway for everything until 06:00. By day the direction stays as it is; at night the wind picks it
 let altWas = null;
 function stepAlternation(){
-  if (!S.running || EXERCISES[S.mode]) { altWas = null; return; }
+  if (!S.running || EXERCISES[S.mode] || S.rops) { altWas = null; return; }
   const east = isEast(cfgNow()), P = modeNow() === 'night' ? planNow(tailOf(S.wx)) : planNow({ 27: east, '09': !east }), key = P.mode + P.land;
   if (altWas && key !== altWas) {
     if (P.land !== S.rwy) setRwy(P.land);

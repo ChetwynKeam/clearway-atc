@@ -601,6 +601,7 @@ const APT = {
   divertTo: ac => isCity(ac) ? ['Belfast International', 'BEL'] : ['Belfast City', 'MAGEE'],
   firstAlt: g => ENTRY_ALT[g] - 2000,
   rolledCall: 'request taxi',
+  ropsSkip: ['17', '35'], ropsGroup: rw => rw === '22' || rw === '04' ? 'EGAC' : 'EGAA',   // 17/35 is taxiways; the City airfield's own runway
   splitRwy: true, rwyFor, depFor: rw => CFG[configOf(rw)].dep.EGAA, configOf, arrRoute: o => landOf(o),
   rwyConfigs: ['west', 'east'].map(c => ({ key: c, name: CFG[c].name, land: CFG[c].land.EGAA, lands: [CFG[c].land.EGAA, CFG[c].land.EGAC], deps: [CFG[c].dep.EGAA, CFG[c].dep.EGAC] })),
   depRwyOf, landRwyOf,

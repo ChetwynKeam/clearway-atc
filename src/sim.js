@@ -104,7 +104,7 @@ function windComp(w, crs){ const d = angDiff(crs, w.dir); const g = w.gust || w.
 const S = {
   t: 0, start: Date.UTC(2026, 9, 4, 18, 55, 0), speed: 1, paused: true, running: false,
   wx: parseMetar(WX_PRESETS[APT.defWx].metar), rwy: APT.defRwy, atis: 'K', mode: 'summer',
-  sched: [], acs: [], sel: null,
+  sched: [], acs: [], sel: null, rops: null, ropsV: 0,
   xing: { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 },
   score: { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 },
   view: { cx: 0, cy: -2, scale: 14, name: 'app' }, showProc: true, voice: false, conflictSet: new Set(), conflicts: new Set(),
@@ -222,6 +222,48 @@ const luClear = ac => { const o = ac.luAfter; if (!o || !S.acs.includes(o) || o.
 // runways in use for landing or departure: taxiing traffic holds short of these until cleared to cross
 const rwysInUse = () => APT.activeRwys ? APT.activeRwys() : [S.rwy, depRw()];
 const depRwys = () => APT.depRwys ? APT.depRwys() : [depRw()];
+
+// ── Runway operations. Every runway end of a multi-runway airport can be set to Arrivals, Departures, Mixed or Closed
+// (S.rops = { end: 'ARR'|'DEP'|'MIX'|'OFF' }; null = the airport's own flow). The overlay below feeds the airport's own
+// runway hooks, so the rest of the game (approach, SIDs, holds, ground, AI) sees an ordinary configuration.
+const ROPS_ON = RWYS.length > 1 && !APT.noRops;
+const ropsEnds = ROPS_ON ? RW_ENDS.filter(e => !(APT.ropsSkip || []).includes(e)) : [];
+const ropsGroup = e => APT.ropsGroup ? APT.ropsGroup(e) : 'A';
+const ropsCan = (e, role) => role === 'OFF' || (role === 'DEP' ? true : !!FINAL[e]);   // landing needs an approach
+const ropsHdg = e => (parseInt(e, 10) % 36) * 10;
+const ropsCompat = (a, b) => Math.abs(angDiff(ropsHdg(a), ropsHdg(b))) <= 50;       // opposite flows cannot both be live
+const ropsOther = e => { const R = rwyOf(e); return e === R.lo ? R.hi : R.lo; };
+const ropsList = role => ropsEnds.filter(e => S.rops && (S.rops[e] === role || S.rops[e] === 'MIX'));
+const _rops0 = ROPS_ON ? { landRwyOf: APT.landRwyOf, depRwyOf: APT.depRwyOf, appRwys: APT.appRwys, depRwys: APT.depRwys, activeRwys: APT.activeRwys } : null;
+// the modes as they stand: the custom set, else what the airport's flow is doing
+function ropsModes(){
+  if (S.rops) return { ...S.rops };
+  const L = _rops0.appRwys ? _rops0.appRwys() : [S.rwy], D = _rops0.depRwys ? _rops0.depRwys() : [S.depRwy || S.rwy], m = {};
+  for (const e of ropsEnds) { const l = L.includes(e), d = D.includes(e); m[e] = l && d ? 'MIX' : l ? 'ARR' : d ? 'DEP' : 'OFF'; }
+  return m;
+}
+// one runway per aircraft from the live ones: its own airfield's, the one it would have had if that is live, else the quietest
+function ropsPick(ac, role, own){
+  const list = ropsList(role), key = role === 'ARR' ? 'ropsL' : 'ropsD';
+  if (!list.length) return undefined;
+  if (ac[key + 'V'] === S.ropsV && list.includes(ac[key])) return ac[key];
+  let c = list; const g = own && ropsGroup(own); if (g) { const f = list.filter(e => ropsGroup(e) === g); if (f.length) c = f; }
+  let pick;
+  if (own && c.includes(own) && (c.length === 1 || APT.ropsPerAc)) pick = own;
+  else {
+    const load = e => S.acs.reduce((n, a) => n + (a !== ac && a.kind === ac.kind && a[key] === e && a[key + 'V'] === S.ropsV && (role === 'ARR' ? a.airborne && !a.onRwy : !a.airborne) ? 1 : 0), 0);
+    pick = c.reduce((b, e) => b == null || load(e) < load(b) ? e : b, null);
+  }
+  ac[key] = pick; ac[key + 'V'] = S.ropsV; return pick;
+}
+if (ROPS_ON) {
+  APT.landRwyOf = ac => { const o = _rops0.landRwyOf ? _rops0.landRwyOf(ac) : undefined; return S.rops && ac ? ropsPick(ac, 'ARR', o || S.rwy) : o; };
+  APT.depRwyOf = ac => { if (S.rops && ac && ac.cto && ac.depRwy) return ac.depRwy; const o = _rops0.depRwyOf ? _rops0.depRwyOf(ac) : undefined; return S.rops && ac ? ropsPick(ac, 'DEP', o || S.depRwy || S.rwy) : o; };
+  if (APT.arrRoute) { const ar = APT.arrRoute; APT.arrRoute = o => S.rops ? APT.landRwyOf(o) : ar(o); }
+  APT.appRwys = () => S.rops ? ropsList('ARR') : _rops0.appRwys ? _rops0.appRwys() : [S.rwy];
+  APT.depRwys = () => S.rops ? ropsList('DEP') : _rops0.depRwys ? _rops0.depRwys() : [depRw()];
+  APT.activeRwys = () => S.rops ? ropsEnds.filter(e => S.rops[e] !== 'OFF') : _rops0.activeRwys ? _rops0.activeRwys() : [S.rwy, depRw()];
+}
 // a departure's route after its SID's initial climb: its own runway's SID where the airport has two departure runways
 const exitRouteOf = ac => APT.exitRouteOf ? APT.exitRouteOf(ac) : EXIT_ROUTE[ac.gate];
 const activeRwy = id => rwysInUse().some(r => rwyOf(r).id === id);
