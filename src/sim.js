@@ -1381,6 +1381,33 @@ function removeAc(ac){
   if (typeof renderSel === 'function') { renderSel(); renderStrips(true); }
   return true;
 }
+// ── readback errors
+const RB_RATE = 0.05;
+const rbKind = t => /^[ACD]\d{1,5}$/.test(t) ? 'alt' : /^S\d{2,3}$/.test(t) ? 'spd' : /^[HLR]\d{1,3}$/.test(t) ? 'hdg' : null;
+const rbVal = t => { const n = +t.slice(1); return rbKind(t) === 'alt' ? clamp(n < 400 ? n*100 : n, 1000, 30000) : rbKind(t) === 'hdg' ? (n % 360 || 360) : n; };
+const rbSame = (a, b) => rbKind(a) === rbKind(b) && rbVal(a) === rbVal(b);
+function rbApply(ac, tok, reads){
+  const kind = rbKind(tok), right = rbVal(tok); let wrong, text;
+  if (kind === 'alt') {
+    const lvls = [right - 1000, right + 1000].filter(v => v >= 2000 && v <= 30000 && Math.abs(v - ac.alt) > 300); if (!lvls.length) return;
+    wrong = lvls[Math.floor(Math.random()*lvls.length)]; ac.tgtAlt = ac.cleared = wrong; ac.via = false;
+    text = PH.alt(wrong, wrong > ac.alt + 50, ac)[1];
+  } else if (kind === 'spd') {
+    wrong = clamp(right + (Math.random() < 0.5 ? -20 : 20), ac.perf.vapp, ac.alt < 9900 ? 250 : 330); if (wrong === right) return;
+    ac.tgtSpd = wrong; text = PH.speed(wrong, ac)[1];
+  } else {
+    wrong = ((right + (Math.random() < 0.5 ? -1 : 1)*Math.round(rnd(2, 4))*10) % 360 + 360) % 360 || 360; ac.tgtHdg = wrong;
+    text = `${tok[0] === 'L' ? 'turning left ' : tok[0] === 'R' ? 'turning right ' : ''}heading ${String(wrong).padStart(3, '0')}`;
+  }
+  reads.length = 0; reads.push(text);
+  ac.rbErr = { kind, right, wrong, t: S.t, tok };
+}
+function stepReadbacks(){
+  for (const ac of S.acs) { const E = ac.rbErr; if (E && S.t - E.t > 90) {
+    ac.rbErr = null; SC(ac).pts -= 15; SC(ac).infr++;
+    sys(`${ac.cs} flew ${E.kind === 'alt' ? altShort(E.wrong) : E.kind === 'spd' ? E.wrong + ' kt' : 'heading ' + E.wrong} instead of ${E.kind === 'alt' ? altShort(E.right) : E.kind === 'spd' ? E.right + ' kt' : 'heading ' + E.right}: the readback was wrong and not corrected.`, true);
+  } }
+}
 function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
 function commandRun(str){
   const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
@@ -1400,6 +1427,12 @@ function commandRun(str){
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
   const snap = garbleable(ac, toks) && Math.random() < 0.05 ? { ...ac } : null;   // the crew misses it now and then
+  // "negative" / "correction" before a re-issued instruction: the crew had it wrong and is being put right
+  while (toks.length > 1 && /^(NEGATIVE|NEG|CORRECTION|CORR)$/.test(toks[0])) toks.shift();
+  // an instruction the crew read back wrongly (see rbPlan below): re-issuing the same kind of instruction puts it right
+  if (ac.rbErr && toks.length) { const k = rbKind(toks[0]); if (k === ac.rbErr.kind) { const ok = rbSame(toks[0], ac.rbErr.right); if (ok && !aiCtx) { SC(ac).pts += 8; sys(`${ac.cs}: readback corrected.`); } ac.rbErr = null; } }
+  // now and then a crew reads back a level, heading or speed wrongly and flies it that way until put right
+  const rbPlan = !snap && !aiCtx && humanWorking() && !ac.rbErr && toks.length === 1 && garbleable(ac, toks) && rbKind(toks[0]) && Math.random() < RB_RATE ? toks[0] : null;
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]; let r;
     if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
@@ -1707,6 +1740,7 @@ function commandRun(str){
     } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
+  if (said.length && rbPlan && !snap) rbApply(ac, rbPlan, reads);
   if (said.length && snap) {
     atc(ac, said.join(', '));
     for (const k of Object.keys(ac)) if (!(k in snap)) delete ac[k];
@@ -1856,7 +1890,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
-  stepWindShift();
+  stepWindShift(); stepReadbacks();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && S.t < (S.liveWait || 0)) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
