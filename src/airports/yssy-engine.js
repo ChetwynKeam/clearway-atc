@@ -345,6 +345,7 @@ const depFor = rw => (CONFIGS.find(([l]) => l === rw) || [])[1] || parallelOf(rw
 const visTxt = v => v >= 9999 ? '10 kilometres or more' : v >= 5000 ? Math.round(v/1000) + ' kilometres' : v + ' metres';
 const firstOf = (t, i = 0) => STANDS.filter(s => s.term === t && s.area === 'civil')[i];
 const APT = {
+  toVis: 125,   // departures continue in low visibility procedures (RVR 125 m)
   arrAlt: { ...arrAltOf(STAR_LISTS.map(pts => ({ pts }))), ...FEED_ALT },
   icao: 'YSSY', name: 'Sydney', coordName: 'Sydney', radarName: 'Sydney', utcOff: 11, tz: 'Australia/Sydney',
   radar: [YSSY.UNITS.app.name, YSSY.UNITS.app.freq], depRadar: [YSSY.UNITS.dep.name, YSSY.UNITS.dep.freq],

@@ -5297,6 +5297,7 @@ function standAt(ac, t){
   return best[Math.floor(Math.random()*best.length)] || null;
 }
 const APT = {
+  toVis: 200,   // departures continue in low visibility procedures (RVR 200 m)
   // STAR levels (FL70 at BRI, 1,000 ft above the SIDs' 6,000 ft stop), then the downwind and base
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT },
   icao: 'EGGD', name: 'Bristol', coordName: 'Bristol', radarName: 'BRS', utcOff: 1, tz: 'Europe/London',

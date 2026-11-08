@@ -469,6 +469,7 @@ function standAt(ac, t){
 }
 const driveOutNow = ac => typeof driveOut === 'function' && !!driveOut(ac);
 const APT = {
+  toVis: 125,   // departures continue in low visibility procedures (RVR 125 m)
   // STAR levels, then the ILS intermediate fixes
   arrAlt: { ...arrAltOf(Object.values(LSGG.STARS)), ...FEED_ALT },
   icao: 'LSGG', name: 'Geneva', coordName: 'Geneva', radarName: 'GVA', utcOff: 1, tz: 'Europe/Zurich',

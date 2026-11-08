@@ -5234,6 +5234,7 @@ function standAt(ac, t){
   return best[Math.floor(Math.random()*best.length)] || null;
 }
 const APT = {
+  toVis: 125,   // departures continue in low visibility procedures (RVR 125 m)
   lineSay: { b: 'West', r: 'East' },   // taxilane S's side lines are S West and S East (VIA S WEST, VIA S EAST)
   arrAlt: { ...arrAltOf(GATES.map(STAR_OF)), ...FEED_ALT },   // STAR levels, then the downwind and base
   icao: 'EGKK', name: 'London Gatwick', coordName: 'Gatwick', radarName: 'LGW', utcOff: 1, tz: 'Europe/London',
