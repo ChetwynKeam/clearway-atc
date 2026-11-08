@@ -1210,7 +1210,7 @@ html:has(body[data-route="sim"]) { overscroll-behavior: none; }   /* Android's s
   .app button.strip { min-height: 52px; }
   .app .strips-head button, .app .sb-bay button { min-height: 40px; }
 }
-@media (max-width: 480px) { #setup .row:has(#startBtn) { flex-wrap: nowrap; gap: 8px; } #setup .row:has(#startBtn) #startBtn { flex: 1 1 auto; } #setup .row:has(#startBtn) .btn:not(#startBtn) { flex: none; } #setup .row:has(#startBtn) a.btn[href="#training"] { display: none; } }
+@media (max-width: 480px) { #setup .row:has(#startBtn) { flex-wrap: nowrap; gap: 8px; } #setup .row:has(#startBtn) #startBtn { flex: 1 1 auto; } #setup .row:has(#startBtn) .btn:not(#startBtn) { flex: none; } #setup .row:has(#startBtn) > a.btn { display: none; } }   /* the Training guide link is in the menu; the phone row keeps the two buttons */
 /* the console is one fixed screen: nothing on it may pan the page, or a slightly sliding tap on a menu button turns into a pan and the tap is cancelled */
 html:has(body[data-route="sim"]), body[data-route="sim"] { overflow: hidden; }
 body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-route="sim"] .mtabs, body[data-route="sim"] .cmd { touch-action: none; }
@@ -1243,3 +1243,4 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .togap .tg.go b { color: var(--ok, #12805c); }
 .restr { margin-top: 6px; font-size: 11.5px; opacity: .8; line-height: 1.35; }
 .restr b { margin-right: 4px; }
+@media (max-width: 480px) { #setup .row:has(#startBtn) #startBtn { white-space: nowrap; min-width: 0; } #setup .row:has(#startBtn) #newBtn { flex: none; white-space: nowrap; padding-inline: 12px; } }
