@@ -1462,6 +1462,7 @@ function renderSlots(){
     o.value = h; o.textContent = `${String(h % 24).padStart(2,'0')}00Z · ${lt(h)}:00 local · ${n ? n + ' scheduled' : 'quiet'}`; hourSel.appendChild(o);
   }
   hourSel.value = keep || 18;
+  if (hourSel.selectedIndex < 0) hourSel.selectedIndex = 0;   // the wanted hour is outside this airport's hours (Sydney runs 06:00 to 22:00 local): take the first one, not a blank box
   daySel.disabled = hourSel.disabled = ex || S.running;
   if ($('trafficSel').value === 'custom' && typeof renderCustomSlots === 'function') return renderCustomSlots();
   const fl = timetableFlights(d, +hourSel.value);

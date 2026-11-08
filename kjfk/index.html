@@ -1272,6 +1272,8 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .togap .tg.go b { color: var(--ok, #12805c); }
 .restr { margin-top: 6px; font-size: 11.5px; opacity: .8; line-height: 1.35; }
 .restr b { margin-right: 4px; }
+/* compact dropdowns (runway pickers on the ATIS tab, and any other in a tight row): at 16px the text overflowed their fixed height and showed blank */
+@media (hover: none) and (pointer: coarse) { select.rwsel, #atis select { height: 44px !important; min-height: 44px; line-height: 1.2; padding: 0 2px 0 12px !important; box-sizing: border-box; width: auto; min-width: 84px; } }
 
 </style>
 </head>
@@ -9652,6 +9654,7 @@ function renderSlots(){
     o.value = h; o.textContent = `${String(h % 24).padStart(2,'0')}00Z · ${lt(h)}:00 local · ${n ? n + ' scheduled' : 'quiet'}`; hourSel.appendChild(o);
   }
   hourSel.value = keep || 18;
+  if (hourSel.selectedIndex < 0) hourSel.selectedIndex = 0;   // the wanted hour is outside this airport's hours (Sydney runs 06:00 to 22:00 local): take the first one, not a blank box
   daySel.disabled = hourSel.disabled = ex || S.running;
   if ($('trafficSel').value === 'custom' && typeof renderCustomSlots === 'function') return renderCustomSlots();
   const fl = timetableFlights(d, +hourSel.value);
