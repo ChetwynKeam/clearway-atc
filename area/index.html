@@ -1225,7 +1225,7 @@ html:has(body[data-route="sim"]) { overscroll-behavior: none; }   /* Android's s
   .app button.strip { min-height: 52px; }
   .app .strips-head button, .app .sb-bay button { min-height: 40px; }
 }
-@media (max-width: 480px) { #setup .row:has(#startBtn) { flex-wrap: nowrap; gap: 8px; } #setup .row:has(#startBtn) #startBtn { flex: 1 1 auto; } #setup .row:has(#startBtn) .btn:not(#startBtn) { flex: none; } #setup .row:has(#startBtn) a.btn[href="#training"] { display: none; } }
+@media (max-width: 480px) { #setup .row:has(#startBtn) { flex-wrap: nowrap; gap: 8px; } #setup .row:has(#startBtn) #startBtn { flex: 1 1 auto; } #setup .row:has(#startBtn) .btn:not(#startBtn) { flex: none; } #setup .row:has(#startBtn) > a.btn { display: none; } }   /* the Training guide link is in the menu; the phone row keeps the two buttons */
 /* the console is one fixed screen: nothing on it may pan the page, or a slightly sliding tap on a menu button turns into a pan and the tap is cancelled */
 html:has(body[data-route="sim"]), body[data-route="sim"] { overflow: hidden; }
 body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-route="sim"] .mtabs, body[data-route="sim"] .cmd { touch-action: none; }
@@ -1260,6 +1260,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .restr b { margin-right: 4px; }
 /* compact dropdowns (runway pickers on the ATIS tab, and any other in a tight row): at 16px the text overflowed their fixed height and showed blank */
 @media (hover: none) and (pointer: coarse) { select.rwsel, #atis select { height: 44px !important; min-height: 44px; line-height: 1.2; padding: 0 2px 0 12px !important; box-sizing: border-box; width: auto; min-width: 84px; } }
+@media (max-width: 480px) { #setup .row:has(#startBtn) #startBtn { white-space: nowrap; min-width: 0; } #setup .row:has(#startBtn) #newBtn { flex: none; white-space: nowrap; padding-inline: 12px; } }
 
 /* Clearway Area Control: the landing page and the extras the area console needs on top of the shared styles */
 html, body { height: 100%; }
