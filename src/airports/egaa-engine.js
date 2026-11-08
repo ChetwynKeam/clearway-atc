@@ -570,6 +570,7 @@ function standAt(ac, t){
 const flowText = c => `Aldergrove ${alderRw()} and City ${cityRw()}`;
 const UN = EGAA.UNITS;
 const APT = {
+  toVis: 150,   // departures continue in low visibility procedures (RVR 150 m)
   arrAlt: { ...arrAltOf(STAR_LIST), ...FEED_ALT },
   apOf: ac => ((ac.kind === 'ARR' && ['04', '22'].includes(ac.app)) || ac.rwyId === '0422' || (!(ac.kind === 'ARR' && ac.app) && isCity(ac))) ? 'EGAC' : 'EGAA',
   icao: 'EGAA', icaoAlt: 'EGAC', name: 'Belfast', coordName: 'Belfast', radarName: 'BFS', utcOff: 0, tz: 'Europe/London',

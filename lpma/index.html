@@ -5192,6 +5192,7 @@ const AD_SITE = {
 
 // ═════════════════════════ engine hooks ═════════════════════════
 const APT = {
+  toVis: 400,   // departures continue in low visibility procedures (RVR 400 m)
   areaNames: { civil: 'main apron' },   // what the stand areas are called (the preferred area shown for an arrival)
   arrAlt: arrAltOf(GATES.map(STAR_OF)),   // STARs (AD 2.24.10): MA534 4000, PILIM 3000
   icao: 'LPMA', name: 'Madeira', coordName: 'Madeira', radarName: 'FUN', utcOff: 1, tz: 'Atlantic/Madeira',
