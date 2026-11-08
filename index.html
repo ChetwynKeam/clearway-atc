@@ -1280,6 +1280,22 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .rwypills .rp .rpcd { color: var(--amber, #f6cf7c); font-variant-numeric: tabular-nums; font-weight: 700; }
 .rwypills .rp.occ .rpcd { color: #ffe3a3; }
 
+/* narrow phones / enlarged system text: nothing in the ATIS tab or the map toolbar may run off the side */
+@media (max-width: 900px) {
+  .toolbar { right: 64px; }
+  #atis { overflow-x: hidden; max-width: 100%; }
+  #atis .ph { flex-wrap: wrap; row-gap: 8px; max-width: 100%; }
+  #atis .ph .grow { flex-basis: 0; min-width: 0; }
+  #atis .ph > button, #atis .ph .seg { max-width: 100%; }
+  #atis .ph > button { white-space: normal; text-align: center; }
+  #atis .rwops, #atis [class*="rwops"], #atis [class*="rops"] { max-width: 100%; box-sizing: border-box; overflow-x: hidden; }
+}
+@media (max-width: 420px) {
+  .toolbar { gap: 4px; }
+  .toolbar .seg button { padding-inline: 8px; }
+  .toolbar > button { padding-inline: 9px; }
+}
+
 </style>
 </head>
 <body>
