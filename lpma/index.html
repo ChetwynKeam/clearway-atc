@@ -5667,7 +5667,8 @@ const emit = (ev, data) => { for (const f of S.listeners) try { f(ev, data); } c
 // (APT.landRwyOf): pass the aircraft where there is one.
 // the field elevation an aircraft stands at: one value, except where two airfields share a session (Belfast)
 const gElev = ac => (APT.elevOf && APT.elevOf(ac)) ?? ELEV;
-const depRw = ac => (ac && APT.depRwyOf && APT.depRwyOf(ac)) || S.depRwy || S.rwy;
+// once lined up it keeps the runway of the holding point it entered from, even if the departure runway in use is changed meanwhile
+const depRw = ac => (ac && ac.kind === 'DEP' && ac.ground && ac.depRwy && ac.depRwyLock && ['LINEUP', 'LINEDUP', 'TAKEOFF'].includes(ac.state) && ac.depRwy) || (ac && APT.depRwyOf && APT.depRwyOf(ac)) || S.depRwy || S.rwy;
 // a parallel runway: 27L for 27R (another pavement with an approach of its own), or null
 const parallelEnd = rw => { const m = /^(\d\d)([LRC])$/.exec(rw || ''); if (!m) return null; for (const s of 'LRC') { const p = m[1] + s; if (p !== rw && FINAL[p] && rwyOf(p).id !== rwyOf(rw).id) return p; } return null; };
 // the runway an arrival expects: its approach's, else the airport's; while that one is closed, its parallel if there is one
@@ -6865,6 +6866,9 @@ function rwyTaxi(ac, B, said, reads){
   return true;
 }
 function startLineUp(ac, v){
+  // the holding point is on one runway: if the departure runway in use is another one (it was changed while this aircraft taxied), line up for the end of this runway
+  { const R0 = HOLDS[ac.hp] && holdRwy(ac.hp); ac.depRwyLock = false;
+    if (R0 && rwyOf(depRw(ac)).id !== R0.id) { const ds = (HOLDS[ac.hp].dirs || []).filter(d => rwyOf(d).id === R0.id), pick = ds.find(d => d === S.rwy) || ds[0]; if (pick) { ac.depRwy = pick; ac.depRwyLock = true; } } }
   ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw(ac)).id; ac.need = null; ac.luq = false; ac.gs = ac.ias = v || 0;
   const back = true;
   // finish on a straight stretch of centreline, so the turn onto the runway rounds out into line instead of snapping onto it
