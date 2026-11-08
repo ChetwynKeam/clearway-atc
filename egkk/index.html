@@ -1276,6 +1276,9 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 @media (hover: none) and (pointer: coarse) { select.rwsel, #atis select { height: 44px !important; min-height: 44px; line-height: 1.2; padding: 0 2px 0 12px !important; box-sizing: border-box; width: auto; min-width: 84px; } }
 @media (max-width: 480px) { #setup .row:has(#startBtn) #startBtn { white-space: nowrap; min-width: 0; } #setup .row:has(#startBtn) #newBtn { flex: none; white-space: nowrap; padding-inline: 12px; } }
 
+.rwypills .rp .rpcd { color: var(--amber, #f6cf7c); font-variant-numeric: tabular-nums; font-weight: 700; }
+.rwypills .rp.occ .rpcd { color: #ffe3a3; }
+
 </style>
 </head>
 <body>
@@ -7463,7 +7466,7 @@ function toCountdowns(){
   return [...new Set(depRwys().map(r => rwyOf(r).id))].map(id => {
     const R = rwyById(id), rw = depRwys().find(r => rwyOf(r).id === id), last = (S.lastTO || {})[id];
     const nxt = S.acs.find(a => a.kind === 'DEP' && a.ground && !a.cto && ['HOLDPT', 'LINEUP', 'LINEDUP', 'READY'].includes(a.state) && rwyOf(depRw(a)).id === id);
-    const left = last && nxt ? Math.max(0, toGapS(last, nxt) - (S.t - last.t)) : last ? Math.max(0, toGapS(last, { perf: { wake: 'M' }, gate: null }) - (S.t - last.t)) : 0;
+    const left = last && nxt ? Math.max(0, toGapS(last, nxt) - (S.t - last.t)) : last ? Math.max(0, toGapS(last, { perf: { wake: 'M' }, gate: null, sid: '-' }) - (S.t - last.t)) : 0;
     return { id, rw, left, why: last && nxt && left > 0 ? toGapWhy(last, nxt) : '' };
   });
 }
@@ -9728,7 +9731,10 @@ function renderPills(){
   const html = ends.map(r => {
     const occ = S.acs.find(o => onRunway(o, r)), shut = S.emg && S.emg.rwyBlock && typeof blockRw === 'function' && blockRw() === r;
     const lbl = ends.length === 1 || multi ? r : r === S.rwy ? r + ' ARR' : r + ' DEP';
-    return `<span class="rp ${shut ? 'shut' : occ ? 'occ' : 'clr'}"><i></i>${lbl} · ${shut ? 'CLOSED' : occ ? 'OCCUPIED ' + esc(occ.cs) : 'CLEAR'}</span>`;
+    // departure spacing: seconds before the next take-off may start its roll on this runway's pavement
+    const tc = !shut && S.running && typeof toCountdowns === 'function' ? toCountdowns().find(k => k.id === rwyOf(r).id && (k.rw === r || multi)) : null,
+      cd = tc && tc.left > 0 ? ` · <b class="rpcd" title="Seconds before the next departure may start its roll${tc.why ? ' (' + esc(tc.why) + ')' : ''}">DEP ${Math.ceil(tc.left)}s</b>` : '';
+    return `<span class="rp ${shut ? 'shut' : occ ? 'occ' : 'clr'}"><i></i>${lbl} · ${shut ? 'CLOSED' : occ ? 'OCCUPIED ' + esc(occ.cs) : 'CLEAR'}${cd}</span>`;
   }).join('');
   if (el.innerHTML !== html) el.innerHTML = html;
 }

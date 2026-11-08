@@ -1580,7 +1580,10 @@ function renderPills(){
   const html = ends.map(r => {
     const occ = S.acs.find(o => onRunway(o, r)), shut = S.emg && S.emg.rwyBlock && typeof blockRw === 'function' && blockRw() === r;
     const lbl = ends.length === 1 || multi ? r : r === S.rwy ? r + ' ARR' : r + ' DEP';
-    return `<span class="rp ${shut ? 'shut' : occ ? 'occ' : 'clr'}"><i></i>${lbl} · ${shut ? 'CLOSED' : occ ? 'OCCUPIED ' + esc(occ.cs) : 'CLEAR'}</span>`;
+    // departure spacing: seconds before the next take-off may start its roll on this runway's pavement
+    const tc = !shut && S.running && typeof toCountdowns === 'function' ? toCountdowns().find(k => k.id === rwyOf(r).id && (k.rw === r || multi)) : null,
+      cd = tc && tc.left > 0 ? ` · <b class="rpcd" title="Seconds before the next departure may start its roll${tc.why ? ' (' + esc(tc.why) + ')' : ''}">DEP ${Math.ceil(tc.left)}s</b>` : '';
+    return `<span class="rp ${shut ? 'shut' : occ ? 'occ' : 'clr'}"><i></i>${lbl} · ${shut ? 'CLOSED' : occ ? 'OCCUPIED ' + esc(occ.cs) : 'CLEAR'}${cd}</span>`;
   }).join('');
   if (el.innerHTML !== html) el.innerHTML = html;
 }

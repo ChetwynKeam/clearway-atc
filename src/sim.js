@@ -1817,7 +1817,7 @@ function toCountdowns(){
   return [...new Set(depRwys().map(r => rwyOf(r).id))].map(id => {
     const R = rwyById(id), rw = depRwys().find(r => rwyOf(r).id === id), last = (S.lastTO || {})[id];
     const nxt = S.acs.find(a => a.kind === 'DEP' && a.ground && !a.cto && ['HOLDPT', 'LINEUP', 'LINEDUP', 'READY'].includes(a.state) && rwyOf(depRw(a)).id === id);
-    const left = last && nxt ? Math.max(0, toGapS(last, nxt) - (S.t - last.t)) : last ? Math.max(0, toGapS(last, { perf: { wake: 'M' }, gate: null }) - (S.t - last.t)) : 0;
+    const left = last && nxt ? Math.max(0, toGapS(last, nxt) - (S.t - last.t)) : last ? Math.max(0, toGapS(last, { perf: { wake: 'M' }, gate: null, sid: '-' }) - (S.t - last.t)) : 0;
     return { id, rw, left, why: last && nxt && left > 0 ? toGapWhy(last, nxt) : '' };
   });
 }
