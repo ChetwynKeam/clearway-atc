@@ -391,6 +391,7 @@ const APT = {
   sessionHours: Array.from({ length: 17 }, (_, i) => i + 10),   // 1000Z to 0200Z next day: 06:00 to 22:00 in New York
   view: { app: [0, 0, 75], twr: [ARP[0] - (R0.rm(RWY_M/2)[0]), ARP[1] - (R0.rm(RWY_M/2)[1]), 3.4], gnd: [mOf(ARP), offOf(ARP), 4600, 3800] },
   minsOk,
+  toVis: 150,   // departures continue in low visibility procedures (RVR 150 m)
   splitRwy: true, rwyFor, depFor,
   appRwys: () => FINAL[parallelOf(S.rwy)] ? [S.rwy, parallelOf(S.rwy)] : [S.rwy],
   // departures need a release only on flow-restricted routes: Boston and the Washington corridor (Approval Request)

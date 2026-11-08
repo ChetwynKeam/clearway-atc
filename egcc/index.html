@@ -5391,6 +5391,7 @@ const APT = {
   view: { app: [0, 0, 80], twr: [-0.15, -0.1, 3.2], gnd: [mOf(EN(-450, -400)), offOf(EN(-450, -400)), 4200, 3000] },
   minsOk,
   // the landing runway and the departure runway: S.rwy lands, S.depRwy departs
+  toVis: 125,   // departures continue in low visibility procedures (RVR 125 m)
   splitRwy: true, rwyFor, depFor, configOf,
   rwyConfigs: ['west', 'east'].map(c => ({ key: c, name: CFG[c].name, land: CFG[c].land, lands: [CFG[c].land], deps: [CFG[c].dep] })),
   depRwyOf, landRwyOf,
