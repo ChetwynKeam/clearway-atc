@@ -1385,9 +1385,11 @@ $('tgProc').onclick = e => { S.showProc = !S.showProc; e.currentTarget.classList
 $('tgPause').onclick = e => { if (!S.running) return; S.paused = !S.paused; e.currentTarget.textContent = S.paused ? 'Resume' : 'Pause'; };
 $('tgSpeed').onclick = e => {
   if (S.running && /^live/.test(S.mode)) { S.speed = 1; e.currentTarget.textContent = '1×'; sys('Live now runs in real time, so the real flights stay in step with yours.'); return; }
-  S.speed = S.speed === 1 ? 2 : S.speed === 2 ? 4 : 1; e.currentTarget.textContent = S.speed+'×';
+  S.speed = S.speed === 1 ? 2 : S.speed === 2 ? 4 : 1; e.currentTarget.textContent = S.speed+'×'; speedLbl(); sys(`Simulation speed ${S.speed}×.`);
 };
-$('tgVoice').onclick = e => { S.voice = !S.voice; e.currentTarget.classList.toggle('on', S.voice); e.currentTarget.setAttribute('aria-pressed', S.voice); loadVoices(); if (!S.voice) try { speechSynthesis.cancel(); } catch(_) {} };
+function speedLbl(){ const m = document.querySelector('#menuPop [data-click="tgSpeed"]'); if (m) m.textContent = `Change speed · ${S.speed}×`; }
+speedLbl();
+$('tgVoice').onclick = e => { S.voice = !S.voice; e.currentTarget.classList.toggle('on', S.voice); e.currentTarget.setAttribute('aria-pressed', S.voice); loadVoices(); if (!S.voice) try { speechSynthesis.cancel(); } catch(_) {} e.currentTarget.textContent = S.voice ? 'Voice · on' : 'Voice'; sys(S.voice ? 'Voice on: pilots and controllers are spoken aloud.' : 'Voice off.'); };
 $('tgSetup').onclick = () => openSetup();
 function openSetup(){ S.paused = true; $('tgPause').textContent = 'Resume'; $('startBtn').textContent = S.running ? 'Apply weather and resume' : 'Open the position'; $('setup').hidden = false; try { renderSlots(); } catch(_) {} if (typeof stintRender === 'function') stintRender(); }
 

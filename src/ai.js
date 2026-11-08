@@ -1050,7 +1050,7 @@ function renderSeats(){
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-seat]'); if (b) { setSeat(b.dataset.seat, b.dataset.who); return; }
   const t = e.target.closest && e.target.closest('#tgSeats'); if (t) { const p = document.getElementById('seatPop'); if (p) { p.hidden = !p.hidden; renderSeats(); } return; }
-  const p = document.getElementById('seatPop'); if (p && !p.hidden && !(e.target.closest && e.target.closest('#seatPop'))) p.hidden = true;
+  const p = document.getElementById('seatPop'); if (p && !p.hidden && !(e.target.closest && (e.target.closest('#seatPop') || e.target.closest('#menuPop')))) p.hidden = true;   // a tap on the menu's Positions button opens it (through the hidden bar button): that same tap mustn't close it again
 });
 document.addEventListener('change', e => { if (e.target && e.target.id === 'aiHear') { S.aiHear = e.target.checked; try { localStorage.setItem('cw-ai-hear', S.aiHear ? '1' : '0'); } catch(_) {} } });
 renderSeats();
