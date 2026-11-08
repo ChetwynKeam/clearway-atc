@@ -45,6 +45,9 @@ for wid, lo, hi, tlo, thi, elo, ehi in RWYS:
     proj = lambda p: (p[0]-tlo[0])*U0[0] + (p[1]-tlo[1])*U0[1]
     a, b = min(allp, key=proj), max(allp, key=proj)
     L = math.dist(a, b); U = ((b[0]-a[0])/L, (b[1]-a[1])/L); N = (-U[1], U[0])
+    # the OSM way for 07/25 stops 114 m short of the 25 end (taxiways E and G4 join beyond it): extend to the AIP length
+    AIPLEN = {'0725': 2530.0}.get(lo + hi)
+    if AIPLEN and L < AIPLEN - 20: b = (a[0] + U[0]*AIPLEN, a[1] + U[1]*AIPLEN); thi = b; L = AIPLEN
     mo = (lambda a, U, N: lambda p: ((p[0]-a[0])*U[0] + (p[1]-a[1])*U[1], (p[0]-a[0])*N[0] + (p[1]-a[1])*N[1]))(a, U, N)
     thr = {lo: r1(max(0, mo(tlo)[0])), hi: r1(min(L, mo(thi)[0]))}
     rid = lo + hi
