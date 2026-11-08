@@ -6331,7 +6331,8 @@ const hdg3 = h => String(Math.round(h) % 360 || 360).padStart(3,'0');
 let sqk = 4610;
 // two flights with the same callsign on frequency at once (a timetable day can list one twice): the later one gets a
 // letter on the end, as real ATC would have it changed, so every instruction reaches the aircraft it was meant for
-const uniqCs = (cs, me) => { const used = c => S.acs.some(o => o !== me && o.cs === c);
+const uniqCs = (cs, me) => { if (typeof cs === 'string') cs = cs.replace(/\s+/g, '').toUpperCase();   // a callsign with a space in it (CAR 9) can't be typed as a command: close it up (CAR9)
+  const used = c => S.acs.some(o => o !== me && o.cs === c);
   if (!cs || !used(cs)) return cs; for (const L of 'ABCDEFGHJK') if (!used(cs + L)) return cs + L; return cs; };
 class Aircraft {
   constructor(f){
@@ -7326,6 +7327,8 @@ function command(str){ inCmd = true; try { return commandRun(str); } finally { i
 function commandRun(str){
   const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
   if (!toks.length) return;
+  // a callsign that was split by a space (CAR 9 H20): join the first words back up when together they name a flight
+  for (let n = 3; n >= 2; n--) { if (toks.length >= n) { const j = toks.slice(0, n).join(''); if (!S.acs.some(a => a.cs === toks[0]) && S.acs.some(a => a.cs === j)) { toks.splice(0, n, j); break; } } }
   if (toks.length === 2 && /^(REMOVE|DELETE|DEL)$/.test(toks[0]) && findAc(toks[1])) toks.reverse();   // "REMOVE BAW123" as well as "BAW123 REMOVE"
   if (typeof vehCommand === 'function' && vehCommand(toks)) return;   // a radio vehicle (OPS, FIRE): vehicles.js
   let ac = findAc(toks[0]);
