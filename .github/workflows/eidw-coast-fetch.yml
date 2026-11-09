@@ -1,0 +1,42 @@
+name: Fetch Dublin coast
+# One-off: the coastline round the Irish Sea for the Dublin (EIDW) approach map (Irish east coast, the Isle of Man,
+# Anglesey, north Wales and Galloway), fetched in tiles, into the osm-data-eidw-coast branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [dublin-eidw]
+    paths: ['.github/workflows/eidw-coast-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          q() {
+            S=$(date +%s)
+            while [ $(( $(date +%s) - S )) -lt 600 ]; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                if curl -sSf -m 240 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.tmp" && head -c 1 "$1.tmp" | grep -q '{'; then mv "$1.tmp" "$1.json"; echo "OK $1 from $H"; return 0; fi
+                echo "retry $1 ($H)"; sleep 8
+              done
+            done
+            echo "FAILED $1"; rm -f "$1.tmp"
+          }
+          t() { q "coast_$1" "[out:json][timeout:220];way[natural=coastline]($2);out geom;"; }
+          t a 52.30,-7.80,53.30,-6.00 &
+          t b 53.30,-7.80,54.40,-6.00 &
+          t c 52.30,-6.00,53.30,-4.00 &
+          t d 53.30,-6.00,54.40,-4.00 &
+          wait
+          ls -la
+      - name: Publish
+        run: |
+          cd out
+          git init -q -b osm-data-eidw-coast
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "Irish Sea coastline for EIDW"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" osm-data-eidw-coast

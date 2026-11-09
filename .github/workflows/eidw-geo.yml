@@ -1,0 +1,28 @@
+name: Build Dublin approach map
+# One-off: runs tools/eidw_geo.py (needs shapely) on the osm-data-eidw and osm-data-eidw-coast downloads and publishes
+# eidw.geo.json to the eidw-geo branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [dublin-eidw]
+    paths: ['.github/workflows/eidw-geo.yml', 'tools/eidw_geo.py']
+permissions:
+  contents: write
+jobs:
+  geo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          pip install shapely
+          git clone -q --depth 1 -b osm-data-eidw "https://github.com/${{ github.repository }}" /tmp/osm
+          git clone -q --depth 1 -b osm-data-eidw-coast "https://github.com/${{ github.repository }}" /tmp/coast
+          mkdir out && python3 tools/eidw_geo.py /tmp/coast /tmp/osm out/eidw.geo.json
+      - name: Publish
+        run: |
+          cd out
+          git init -q -b eidw-geo
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "eidw.geo.json"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" eidw-geo

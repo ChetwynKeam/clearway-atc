@@ -1,0 +1,45 @@
+name: Fetch Dublin OSM data
+# One-off: downloads the aerodrome geometry of Dublin (EIDW) from OpenStreetMap (runways, taxiways, aprons, stands, holding
+# positions, terminals, piers, jet bridges, airside roads, fire stations, fuel) and the Irish Sea coast, the border, the towns
+# and the nearby airfields for the approach map, into the osm-data-eidw branch: the input for the Dublin ground layout generator.
+on:
+  workflow_dispatch:
+  push:
+    branches: [dublin-eidw]
+    paths: ['.github/workflows/eidw-osm-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          q() {  # name query: tries every server a few times, at most ~8 minutes in all, and says how it went
+            S=$(date +%s)
+            while [ $(( $(date +%s) - S )) -lt 480 ]; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                if curl -sSf -m 100 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.tmp" && head -c 1 "$1.tmp" | grep -q '{'; then mv "$1.tmp" "$1.json"; echo "OK $1 from $H"; return 0; fi
+                echo "retry $1 ($H)"; sleep 5
+              done
+            done
+            echo "FAILED $1"; rm -f "$1.tmp"
+          }
+          B="53.400,-6.340,53.455,-6.190"
+          q aerodrome "[out:json][timeout:180];(way[aeroway]($B);node[aeroway]($B);relation[aeroway]($B);way[building]($B);way[highway]($B);way[barrier]($B);nwr[amenity~\"fire_station|fuel|bus_station|parking\"]($B);nwr[emergency]($B);way[man_made]($B);way[landuse]($B);nwr[public_transport]($B););out geom;" &
+          q coast "[out:json][timeout:180];way[natural=coastline](52.70,-7.40,54.30,-5.00);out geom;" &
+          q water "[out:json][timeout:180];(way[natural=water](53.00,-7.00,53.80,-5.80);way[waterway=riverbank](53.00,-7.00,53.80,-5.80);relation[natural=water](53.00,-7.00,53.80,-5.80););out geom;" &
+          q border "[out:json][timeout:180];way[boundary=administrative][admin_level=2](53.80,-8.50,54.60,-5.50);out geom;" &
+          q towns "[out:json][timeout:120];(node[place~\"city|town\"](52.70,-7.60,54.30,-5.00););out;" &
+          q airports "[out:json][timeout:120];(nwr[aeroway=aerodrome][icao](52.50,-8.00,54.80,-4.50););out center;" &
+          wait
+          ls -la
+      - name: Publish to osm-data-eidw branch
+        run: |
+          cd out
+          git init -q -b osm-data-eidw
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OSM aerodrome data for EIDW"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" osm-data-eidw

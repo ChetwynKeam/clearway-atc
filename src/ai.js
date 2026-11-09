@@ -787,6 +787,9 @@ function aiSequence(list){
     if (n === 'Initial call' || n === 'Missed approach' || n === 'Back on frequency') { if (aiDue(ac, n, 3, 7)) { const want = free(cur) && (n !== 'Initial call' || cur >= stackBase(ac)) ? cur : stackLevel(ac); aiDo('APP', ac, `A${Math.round((safeLevel(ac, [want, want + 1000, want + 2000, Math.ceil(ac.alt/1000)*1000]) ?? cur)/100)}`); } continue; }
     if (S.t - (ac.aiStack || 0) < 20) continue;
     // heading for a stack and within 40 NM of it: given its level there now, while it has room to climb or descend to it
+    // (a point merge arc ahead, Dublin's: the arc's level is kept until the arrival is sent off it, APT.aiFloor)
+    const floor = APT.aiFloor ? APT.aiFloor(ac) : 0;
+    if (floor && ac.mode !== 'HOLD') { if (cur < floor - 50 || (ac.tgtAlt ?? cur) < floor - 50) { if (aiDue(ac, 'arc', 3, 7)) { ac.aiStack = S.t; aiDo('APP', ac, `A${Math.round(floor/100)}`); } } continue; }
     if (ac.mode !== 'HOLD' && ac.aiSlot == null && ac.state !== 'MISSED' && (ac.route || []).includes(holdFixOf(ac)) && dist(ac.x, ac.y, ...holdFixP(ac)) < (stackNow(ac).some(o => o.mode === 'HOLD') ? 70 : 40)) {
       const lv = joinLevel(ac); ac.aiSlot = lv; ac.aiStack = S.t; if (Math.abs((ac.tgtAlt ?? ac.alt) - lv) >= 100) aiDo('APP', ac, `A${Math.round(lv/100)}`); continue; }
     if (ac.mode === 'HOLD' || ac.aiSlot != null) {
