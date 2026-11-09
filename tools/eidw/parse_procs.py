@@ -1,5 +1,8 @@
-import re, json, glob, sys
-D = '/home/claude/eidw/pg'
+# Every SID and STAR coding table of AIP Ireland AD 2.24 EIDW -> tools/eidw/procs.json (procedures, legs, level and speed
+# limits, fix coordinates). usage: python3 tools/eidw/parse_procs.py <dir of chart pages as text>
+# The approach coding tables and every other fix on the charts were added to procs.json the same way (fixes, apps).
+import re, json, glob, sys, os
+D = sys.argv[1] if len(sys.argv) > 1 else 'pg'   # the chart pages as text (pdftotext -layout, one file per page: <chart>-p<N>.txt)
 def dms(s, ns):
     s = s.replace(' ', '')
     if ns: d, m, x = int(s[0:2]), int(s[2:4]), float(s[4:])
@@ -46,7 +49,7 @@ for f in sorted(glob.glob(D + '/*-p[23].txt')):
                 if r2[0].isdigit(): spd = int(r2[0]); rem = r2[1] if len(r2) > 1 else ''
                 else: rem = tail[2:]
             cur['legs'].append({'fix': fx, 'pt': pt, 'fo': fb == 'Fly-Over', 'trk': trk, 'nm': dist, 'up': up, 'lo': lo_, 'spd': spd, 'rem': rem.strip(' -')})
-json.dump({'procs': procs, 'fixes': fixes}, open('/home/claude/eidw/procs.json', 'w'), indent=1)
+json.dump({'procs': procs, 'fixes': fixes}, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'procs.json'), 'w'), indent=1)
 print(len(procs), 'procedures', len(fixes), 'fixes')
 for k, p in procs.items():
     print(f"{k:16} {p['kind']:4} {p['cat']:4} {p['src']:10} " + ' '.join(f"{l['fix']}{'/'+str(l['up'] or '') + '/' + str(l['lo'] or '') if (l['up'] or l['lo']) else ''}{'@'+str(l['spd']) if l['spd'] else ''}" for l in p['legs']))
