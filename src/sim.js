@@ -762,6 +762,8 @@ const spanOf = ac => (ac && ac.perf && ac.perf.span) || 36;
 for (const t of STANDS) {
   if (!t.p) continue;
   t.nb = STANDS.filter(o => o !== t && o.p && dist(...o.p, ...t.p)/M2NM < 90).map(o => [o, dist(...o.p, ...t.p)/M2NM]);
+  // the published stand dependencies (t.vacant: Dublin's "stands 107L, 107R vacant"): never both in use at once
+  for (const id of t.vacant || []) { const o = STANDS.find(s => s.id === id); if (o && o !== t) { const e = t.nb.find(x => x[0] === o); if (e) e[1] = 0; else t.nb.push([o, 0]); } }
   let own = t.occ || null;
   Object.defineProperty(t, 'occ', { enumerable: true, configurable: true, set(v){ own = v; },
     get(){ if (own) return own; for (const [o, d] of t.nb) { const a = o.ownOcc; if (a && d < (spanOf(a) + 36)/2) return a; } return null; } });

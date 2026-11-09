@@ -109,8 +109,13 @@ function stepNorth(){
 const inF0 = (e, n) => { const p = EN(e, n); return [mOf(p), offOf(p)]; };
 for (const [id, e, n] of G.nodes) gn(id, ...inF0(e, n));
 for (const [id, e, n] of G.rnodes) gn(id, ...inF0(e, n));
-for (const [a, b, tw, mid] of G.edges) chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw);
+// a crossing between taxiways that are offset either side of the runway (P1 to W3, M1 to W2, W4 to E2) is a way over
+// the runway but not a painted line: the lead-on and lead-off curves either side are what is painted
+for (const [a, b, tw, mid] of G.edges) { const n0 = GE.length; chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw);
+  if (a[0] === 'x' || b[0] === 'x') { const [x, h] = a[0] === 'x' ? [a, b] : [b, a], R = RWY_LIST.find(Q => Math.abs(Q.offOf(GN[x].p)) < 3) || R0;
+    if (Math.abs(R.mOf(GN[h].p) - R.mOf(GN[x].p)) > 10) for (let i = n0; i < GE.length; i++) GE[i].bare = true; } }
 const HOLDS = {}, FIL = {};
+const CAT23 = new Set(G.cat23 || []);   // CAT II/III holding positions (pattern B), eidw_ground.py
 for (const [k, [node, rwy, on, m, off, dirs, end]] of Object.entries(G.holds)) {
   HOLDS[k] = { node, rwy, on, m, off, dirs: dirs.split(',').filter(Boolean), end: end || null, ref: k.replace(/~\d+$/, '') };
   HOLDS[k].base = ((G.hside || {})[HOLDS[k].ref] || [])[0];   // S1W: on taxiway S1, before runway 34
@@ -118,6 +123,9 @@ for (const [k, [node, rwy, on, m, off, dirs, end]] of Object.entries(G.holds)) {
     chain(rwy, ((G.hlink || {})[k] || []).map(([mm, oo]) => { const p = Rh.rm(mm, oo); return [mOf(p), offOf(p)]; }), node, HOLDS[k].base || HOLDS[k].ref); }
   FIL[k] = { W: G.fil[k], E: G.fil[k] };
 }
+// the rapid exit taxiways (S5, N3, N5: aerodrome chart note 4) are ways off a runway, never on: no holding position
+// marking, a no-entry bar, and never offered as a departure entry
+const RET_NODES = new Set((G.ret || []).map(k => HOLDS[k] && HOLDS[k].node).filter(Boolean));
 for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
 // stands (AD 2.24-2 and its stand table): Pier 1 (121-127) with the North Apron in front of it (105-114), Pier 2
 // (200-223), Pier 3 (311-318), Pier 4 at Terminal 2 (400-409), and the remote South Apron (411-418), North Apron by
@@ -127,7 +135,7 @@ for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
 const AREA_OF = { P1: 'civil', P2: 'civil', P3: 'civil', P4: 'civil', N: 'remote', S: 'remote', W: 'remote' };
 const STANDS = G.gates.filter(g => g[7] !== 'TT').map(g => { const [id, term, [e, n], node] = g, p = EN(e, n), sp = +g[6] || null;
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: AREA_OF[term] || 'remote', occ: null, noLead: !g[5], line: g[5] ? g[5].map(([x, y]) => EN(x, y)) : null,
-    use: g[7], h0: g[4], ...(sp ? { maxSpan: Math.round(sp*10)/10 } : {}) }; });
+    use: g[7], h0: g[4], ...(sp ? { maxSpan: Math.round(sp*10)/10 } : {}), ...((G.vac || {})[id] ? { vacant: G.vac[id] } : {}) }; });
 // the AIP gives the nose position: the aircraft's middle is set back along the lead-in by half the length of the largest
 // type the stand takes (never more than 40% of the lead-in)
 STANDS.forEach(s => { s.lp = GN[s.node].p; const L = dist(...s.lp, ...s.p)/M2NM, half = s.maxSpan ? Math.min(34, Math.max(11, s.maxSpan*0.52)) : 20, k = Math.min(half, L*0.4);
@@ -163,7 +171,7 @@ const intxWay = (k, rw) => { const R = rwyById(HOLDS[k].on), f = FIL[k].W, a = f
   return !L || dm*(rw === R.lo ? 1 : -1)/L >= -0.17; };
 const intxHolds = rw => { const R = RWYS_BY_END(rw);
   return Object.keys(HOLDS).filter(k => { const H = HOLDS[k], q = GN[H.rwy].p;
-    return H.on === R.id && !H.end && intxWay(k, rw) && intxRun(k, rw) >= INTX_MIN
+    return H.on === R.id && !H.end && !RET_NODES.has(H.node) && intxWay(k, rw) && intxRun(k, rw) >= INTX_MIN
       && RWY_LIST.every(O => O === R || Math.abs(O.offOf(q)) > 100 || O.mOf(q) < -100 || O.mOf(q) > O.len + 100); })
     .sort((a, b) => intxRun(b, rw) - intxRun(a, rw)); };
 const depHolds = rw => [...endHolds(rw), ...intxHolds(rw)];
@@ -175,7 +183,10 @@ function depHold(ac){
   const ks = endHolds(rw).length ? endHolds(rw) : depHolds(rw); let best = ks[0], bl = Infinity;
   if (!from) return best;
   const rs = routesFrom(from, ks.map(k => HOLDS[k].node));
-  for (const k of ks) { const r = rs.get(HOLDS[k].node), L = r ? pathLen(r.nodes) : Infinity; if (L < bl) { bl = L; best = k; } }
+  // an entry on the far side of the departure runway means crossing it in front of the traffic using it (34 from the
+  // terminals at B2, from the West Apron at S1 West): the one on the aircraft's own side, unless that is a long way round
+  const R = RWYS_BY_END(rw), side = Math.sign(R.offOf(GN[from].p));
+  for (const k of ks) { const r = rs.get(HOLDS[k].node), L = (r ? pathLen(r.nodes) : Infinity) + (Math.sign(HOLDS[k].off) !== side ? 1.2 : 0); if (L < bl) { bl = L; best = k; } }
   return best;
 }
 function laneDir(st, face){
@@ -265,20 +276,45 @@ function drawEidw(){
   }
   if (sc > 150) {
     { const seen = new Set(), leads = []; for (const k in FIL) { for (const f of (G.leads || {})[k] || [FIL[k].W]) { const key = HOLDS[k].on + JSON.stringify(f); if (seen.has(key)) continue; seen.add(key);
-      const R = rwyById(HOLDS[k].on); leads.push(leadLine(f).map(p => P2(R.rm(...p)))); } }
+      const R = rwyById(HOLDS[k].on), L = leadLine(f), sd = Math.sign(L[L.length - 1][1]) || 1;
+      // beside the runway centreline, 0.9 m to the taxiway's side (Annex 14 5.2.8.4), so the white centreline still shows
+      leads.push(L.map(([m, o]) => P2(R.rm(m, Math.abs(o) < 0.9 ? sd*0.9 : o)))); } }
       groundLines(lw(0.35), () => leads.forEach(strokeSmooth)); }
     paintEdgeLines(lw(0.35));
     // runway holding positions, pattern A: two solid and two dashed lines across the taxiway, the dashes on the runway side
-    cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
+    // (yellow: Annex 14 holding position markings are yellow; the rapid exits S5, N3 and N5 have none, only the no-entry bar)
+    cx.fillStyle = '#f5c518'; cx.strokeStyle = '#f5c518';
     for (const [id, rid] of Object.entries(G.hs)) {
-      const n = GN[id]; if (!n) continue; const R = rwyById(rid), m = R.mOf(n.p), o = R.offOf(n.p), s = Math.sign(o);
+      // across the taxiway, square to its centreline (as charted), the dashed lines on the runway side
+      const n = GN[id]; if (!n || RET_NODES.has(id)) continue; const R = rwyById(rid), ws = waysOn(id); if (!ws.length) continue;
+      let d = brg(...n.p, ...GN[ws[0][0]].p); if (Math.abs(R.offOf(add(n.p, d, 5*M2NM))) > Math.abs(R.offOf(n.p))) d += 180;   // d: towards the runway
+      const at = (k, w) => add(add(n.p, d, k*M2NM), d + 90, w*M2NM);
       cx.lineWidth = lw(0.3);
-      for (const [d, dash] of [[0.9, false], [0.3, false], [-0.3, true], [-0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([R.rm(m - 11, o + s*d), R.rm(m + 11, o + s*d)], false); cx.stroke(); }
+      for (const [k, dash] of [[-0.9, false], [-0.3, false], [0.3, true], [0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([at(k, -11), at(k, 11)], false); cx.stroke(); }
       cx.setLineDash([]);
     }
+    // runway-holding positions on a runway before the runway it meets (10L/28R either side of 16/34, 16/34 south of
+    // 10L/28R, 10R/28L before the 28L/34 end): pattern A across the full width, the dashes towards the other runway
+    cx.lineWidth = lw(0.3);
+    for (const [rid, m, side] of G.rrh || []) { const R = rwyById(rid), hw = R.width/2;
+      for (const [d, dash] of [[-0.9, false], [-0.3, false], [0.3, true], [0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([R.rm(m + side*d, -hw), R.rm(m + side*d, hw)], false); cx.stroke(); }
+      cx.setLineDash([]); }
+    // CAT II/III holding positions, pattern B: two solid lines with the rungs of a ladder between them, across the taxiway
+    { cx.save(); cx.lineCap = 'butt'; cx.strokeStyle = '#f5c518'; cx.lineWidth = lw(0.3);
+      for (const id of G.cat23 || []) { if (!GN[id]) continue; const p = GN[id].p, ws = waysOn(id); if (!ws.length) continue;
+        const d = brg(...p, ...GN[ws[0][0]].p), at = (k, w) => add(add(p, d, k*M2NM), d + 90, w*M2NM);
+        for (const k of [-0.75, 0.75]) { pathP([at(k, -11), at(k, 11)], false); cx.stroke(); }
+        cx.beginPath(); for (let w = -10.5; w <= 10.5; w += 1.5) { cx.moveTo(...P2(at(-0.75, w))); cx.lineTo(...P2(at(0.75, w))); } cx.stroke(); }
+      cx.restore(); }
+    // the no-entry bar where a rapid exit taxiway meets the parallel taxiway: a row of red lights across it
+    if (sc > 400) { cx.save(); cx.fillStyle = '#e0362c';
+      for (const id of RET_NODES) { const n = GN[id]; if (!n) continue; const ws = waysOn(id); if (!ws.length) continue;
+        const d = brg(...n.p, ...GN[ws[0][0]].p);
+        for (let w = -9; w <= 9; w += 3) { const [X, Y] = P2(add(n.p, d + 90, w*M2NM)); cx.beginPath(); cx.arc(X, Y, Math.max(1.2, 0.45*mpx), 0, 7); cx.fill(); } }
+      cx.restore(); }
     // the intermediate holding positions the chart does not name: a single dashed yellow line across the taxiway (no sign)
     { cx.save(); cx.lineCap = 'butt'; cx.strokeStyle = '#f5c518'; cx.lineWidth = Math.max(1.6, 0.6*mpx); cx.setLineDash([Math.max(3, 1.2*mpx), Math.max(2, 0.9*mpx)]);
-      for (const [id, node] of G.ihps || []) { if (!/^IHP\d/.test(id) || !GN[node]) continue; const p = GN[node].p, ws = waysOn(node);
+      for (const [id, node] of G.ihps || []) { if (!/^IHP\d/.test(id) || !GN[node] || CAT23.has(node)) continue; const p = GN[node].p, ws = waysOn(node);
         const d = ws.length ? brg(...p, ...GN[ws[0][0]].p) : 0, a = add(p, d + 90, 11*M2NM), b = add(p, d - 90, 11*M2NM); pathP([a, b], false); cx.stroke(); }
       cx.restore(); }
     groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { if (s.line && s.line.length > 1 && s.lineOk !== false) { if (s.lineOk == null) { const L = s.line.reduce((a, q, i) => i ? a + dist(...s.line[i-1], ...q) : 0, 0); s.lineOk = L < 1.25*dist(...s.line[0], ...s.line[s.line.length-1]) + 10*M2NM; } if (s.lineOk) { pathP(s.line, false); cx.stroke(); continue; } } const L = dist(...s.lp, ...s.p)/M2NM, f = L > 90 ? 1 - 90/L : 0; pathP([[s.lp[0] + (s.p[0] - s.lp[0])*f, s.lp[1] + (s.p[1] - s.lp[1])*f], s.p], false); cx.stroke(); } });
@@ -290,11 +326,14 @@ function drawEidw(){
 // (12 on a 45 m runway), the aiming point (400 m in from the threshold where the landing distance is 2,400 m or more,
 // 300 m on 16/34) and the touchdown zone bars (six pairs on 10/28, four on 16/34), the designators, the arrows before
 // a displaced threshold (10L 280 m, 28R 450 m) and the yellow chevrons of the stopways (10R, 28L)
+const rw16 = rw => rw === '16';
 function drawRwyPaint(R, P2, pathP, lw, mpx){
   const hw = R.width/2 - 1.5, quad = (m1, o1, m2, o2) => { pathP([R.rm(m1, o1), R.rm(m2, o1), R.rm(m2, o2), R.rm(m1, o2)]); cx.fill(); };
   cx.fillStyle = C.paint; cx.strokeStyle = C.paint;
   cx.lineWidth = lw(0.9); pathP([R.rm(0, hw), R.rm(R.len, hw)], false); cx.stroke(); pathP([R.rm(0, -hw), R.rm(R.len, -hw)], false); cx.stroke();
-  cx.setLineDash([30*mpx, 20*mpx]); pathP([R.rm(R.thr[R.lo] + 110, 0), R.rm(R.thr[R.hi] - 110, 0)], false); cx.stroke(); cx.setLineDash([]);
+  // the centreline: 30 m stripes with 20 m gaps, laid out along the runway (not as a canvas dash pattern, whose phase
+  // shifts with the view and which Chrome drops on a line running far off the screen)
+  cx.beginPath(); for (let m = R.thr[R.lo] + 110; m < R.thr[R.hi] - 120; m += 50) { const [a, b] = [P2(R.rm(m, 0)), P2(R.rm(Math.min(m + 30, R.thr[R.hi] - 110), 0))]; cx.moveTo(...a); cx.lineTo(...b); } cx.stroke();
   const long = R.id !== '1634', aim = long ? 400 : 300, tdz = long ? [[150, 3], [300, 3], [450, 2], [600, 2], [750, 1], [900, 1]] : [[150, 3], [300, 2], [450, 2], [600, 1]];
   for (const [m0, dir] of [[R.thr[R.lo], 1], [R.thr[R.hi], -1]]) {
     quad(m0, -hw, m0 + dir*1.8, hw);                                                    // the threshold bar
@@ -309,11 +348,14 @@ function drawRwyPaint(R, P2, pathP, lw, mpx){
       for (const k of [-1, 1]) { const m = m0 - dir*8; pathP([R.rm(m - dir*10, k*6), R.rm(m, k*10), R.rm(m - dir*10, k*14)], false); cx.stroke(); }
     }
   }
-  for (const [rw, m0] of [[R.lo, R.thr[R.lo] + 70], [R.hi, R.thr[R.hi] - 70]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, 16*mpx));
+  // the designator 12 m beyond the threshold stripes; 16's threshold is only 107 m short of the 10L/28R centreline, so
+  // its digits are smaller and nearer the stripes, clear of the north runway's shoulder
+  for (const [rw, m0] of [[R.lo, R.thr[R.lo] + (rw16(R.lo) ? 54 : 70)], [R.hi, R.thr[R.hi] - 70]]) drawRwyDesignator(...P2(R.rm(m0, 0)), rw, crsOf(rw), Math.max(9, (rw16(rw) ? 11 : 16)*mpx));
   // stopways: yellow chevrons pointing towards the runway
   const sw = STOPWAY[R.id];
   if (sw) { cx.save(); cx.strokeStyle = '#f5c518'; cx.lineWidth = lw(0.9);
     for (const [a, b, dir] of [[-sw[0], 0, 1], [R.len, R.len + sw[1], -1]]) for (let m = a + 10; m < b - 4; m += 15) { const tip = dir > 0 ? m + 8 : m - 8;
+      if (RWY_LIST.some(O => O !== R && Math.abs(O.offOf(R.rm(m, 0))) < 40 && O.mOf(R.rm(m, 0)) > -60 && O.mOf(R.rm(m, 0)) < O.len + 60)) continue;   // 28L's stopway runs into the 34 end (hot spot HS1): no chevrons on 16/34
       pathP([R.rm(m, -hw + 1), R.rm(tip, 0), R.rm(m, hw - 1)], false); cx.stroke(); }
     cx.restore(); }
 }
@@ -549,6 +591,8 @@ const APT = {
   terrain: { name: 'the Wicklow Mountains', poly: WICKLOW, min: 3500, low: 3000, msg: ac => `${ac.cs} is over the Wicklow Mountains at ${Math.round(ac.alt)} ft (Kippure 2,475 ft, Lugnaquilla 3,035 ft; minimum 3,500 ft)${ac.alt < 3000 ? ', TERRAIN' : ''}.` },
   restricted: null,
   drawAirport: drawEidw, drawAirportTop: drawEidwTop,
+  // an entry on the far side of the departure runway (34 at B2 from the West Apron, at S1 West from the terminals) costs a crossing
+  entryCost: (ac, k, from) => { const H = HOLDS[k], R = H && rwyById(H.on); return R && GN[from] && Math.sign(H.off) !== Math.sign(R.offOf(GN[from].p)) ? 1.2 : 0; },
   onStep: stepNorth,
   gaEarly(ac, rw){},
   // the published missed approach: straight ahead, then the turn to the plate's fixes, to its altitude

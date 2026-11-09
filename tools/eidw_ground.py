@@ -30,6 +30,56 @@ if 5123779 in _wid and 1121017724 in _wid:
     E.append({'type': 'way', 'id': -1, 'nodes': [a['nodes'][-1], b['nodes'][0]], 'geometry': [a['geometry'][-1], b['geometry'][0]], 'tags': {'aeroway': 'taxiway', 'ref': 'N4'}})
 for e in E:
     if e['type'] == 'node' and e['id'] == 10253443011: e['tags']['holding_position:type'] = 'runway'
+# the stop bar on N1 east of K (the parking/docking chart's red bar between N and N1) is mapped as N1's runway-holding
+# position, 400 m from the runway: it is an intermediate one. N1's two holding positions are at its runway end
+# (CAT I, pattern A, 103 m from the 10L/28R centreline; CAT II/III, pattern B, 138 m), positions read off AD 2.24-2.
+for e in E:
+    if e['type'] == 'node' and e['id'] == 10253454832: e['tags']['holding_position:type'] = 'intermediate'
+_ways0 = [e for e in E if e['type'] == 'way']
+def _ll(p): return (A[0] + p[1]/KY, A[1] + p[0]/KX)
+_new = [-100]
+def _nn(p, tags=None):
+    _new[0] -= 1; i = _new[0]; NODE[i] = p; la, lo = _ll(p)
+    E.append({'type': 'node', 'id': i, 'lat': la, 'lon': lo, **({'tags': tags} if tags else {})}); return i
+def osm_insert(wid, p, tags=None):
+    """a new node on way wid at its nearest point to p (en metres); returns the node id"""
+    w = next(x for x in _ways0 if x['id'] == wid); best = None
+    for i in range(len(w['nodes']) - 1):
+        a, b = NODE[w['nodes'][i]], NODE[w['nodes'][i+1]]; dx, dy = b[0]-a[0], b[1]-a[1]; L2 = dx*dx + dy*dy or 1
+        u = max(0.02, min(0.98, ((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L2)); q = (a[0] + dx*u, a[1] + dy*u)
+        if best is None or math.dist(p, q) < best[0]: best = (math.dist(p, q), i, q)
+    _, i, q = best; n = _nn(q, tags); la, lo = _ll(q)
+    w['nodes'].insert(i + 1, n); w['geometry'].insert(i + 1, {'lat': la, 'lon': lo}); return n
+CAT23 = {35354349, 10253397851, 10253397889, 10253397816, 248047533, 10253329357, 10089110388, 6425915348}   # CAT II/III holding positions (pattern B): S6, S5, S4, S3, S2, E1, N2, S7
+osm_insert(996711265, (2085.2, 1392.8), {'aeroway': 'holding_position', 'ref': 'N1', 'holding_position:type': 'runway'})
+CAT23.add(osm_insert(996711265, (2081.4, 1357.9), {'aeroway': 'holding_position', 'ref': 'N1', 'holding_position:type': 'intermediate'}))
+# W4 and E2 cross 16/34 between Link 6 and the West Apron hangars (hot spot HS2; open since November 2025: the OSM note
+# still has it as not yet open). OpenStreetMap stops both at the runway edges and has no stop bar on E2: the crossing is
+# joined over the centreline, and E2's CAT I holding position (34-16) added 94 m east of 16/34, as charted.
+_w4 = next(x for x in _ways0 if x['id'] == 63233063); _e2 = next(x for x in _ways0 if x['id'] == 1210050661)
+_a, _b = NODE[_w4['nodes'][0]], NODE[_e2['nodes'][0]]
+_r16 = next(x for x in _ways0 if x['id'] == 4841028)
+def _cl(p):   # signed offset from the 16/34 centreline
+    a, b = NODE[_r16['nodes'][0]], NODE[_r16['nodes'][-1]]; L = math.dist(a, b); return ((p[0]-a[0])*-(b[1]-a[1]) + (p[1]-a[1])*(b[0]-a[0]))/L
+_t = _cl(_a)/(_cl(_a) - _cl(_b)); _c = (_a[0] + (_b[0]-_a[0])*_t, _a[1] + (_b[1]-_a[1])*_t)
+_cn = _nn(_c)
+E.append({'type': 'way', 'id': -2, 'nodes': [_w4['nodes'][0], _cn, _e2['nodes'][0]], 'geometry': [{'lat': _ll(q)[0], 'lon': _ll(q)[1]} for q in (_a, _c, _b)], 'tags': {'aeroway': 'taxiway', 'ref': 'W4'}})
+osm_insert(1210050661, (897.1, 1122.5), {'aeroway': 'holding_position', 'ref': 'E2', 'holding_position:type': 'runway'})
+# K: the taxiway from N down to Link 7 and the North Apron (unnamed in OpenStreetMap, so it took N's name)
+for x in _ways0:
+    if x['id'] in (1102552459, 1102552460, 1102552455): x.setdefault('tags', {})['ref'] = 'K'
+# Z: the South Apron taxiway from Link 1 east past Pluto to Mars, parallel to B1 (not in OpenStreetMap; traced off AD 2.24-2)
+_z0 = osm_insert(63233001, (1494.3, 57.3)); _z1 = osm_insert(1435977450, (1830.0, 80.0))
+_zp = [NODE[_z0]] + [(1517.8, 65.4), (1576.1, 64.5), (1692.8, 63.9), (1751.2, 66.5), (1780.6, 75.1)] + [NODE[_z1]]
+_zn = [_z0] + [_nn(q) for q in _zp[1:-1]] + [_z1]
+E.append({'type': 'way', 'id': -3, 'nodes': _zn, 'geometry': [{'lat': _ll(q)[0], 'lon': _ll(q)[1]} for q in _zp], 'tags': {'aeroway': 'taxiway', 'ref': 'Z'}})
+# F1, from Link 2 down to Link 1 and Z east of 34 (open on the October 2026 charts; OpenStreetMap still has it as a closed
+# stub): without it the only way from A to B2 is over 16/34 and back
+_f1 = 13745260603
+E.append({'type': 'way', 'id': -4, 'nodes': [_f1, _z0], 'geometry': [{'lat': _ll(q)[0], 'lon': _ll(q)[1]} for q in (NODE[_f1], NODE[_z0])], 'tags': {'aeroway': 'taxiway', 'ref': 'F1'}})
+# runway-holding positions on a runway before the one it meets (mapped in OpenStreetMap off the taxiways): 10L/28R either
+# side of 16/34, 16/34 south of 10L/28R, 10R/28L west of the 28L/34 end. Painted only.
+RRH = [10253454827, 10253454828, 10253454829, 10253329346]
 ways = [e for e in E if e['type'] == 'way']
 def tagged(w, *k): return w.get('tags', {}).get('aeroway') in k
 # thresholds: the ends of the OSM runway ways, which match the aerodrome chart's threshold coordinates to a metre or so
@@ -452,7 +502,23 @@ def guess_hd(p):
     b = min(BLD_PTS, key=lambda q: math.dist(p, q), default=None)
     if b and math.dist(b, p) < 70: return bear(p, b)
     return near[0][1] if near and math.dist(near[0][0], p) < 250 else None
+# the stands OpenStreetMap does not map (or maps off the painted line): the bearing from the AIP nose position back along
+# the painted lead-in line to the lane it leaves, measured off the parking/docking chart (AD 2.24-2, georeferenced to
+# the taxiway centrelines to about 4 m). The C stands on Apron Taxiway 6 lead in diagonally, as painted.
+STAND_BACK = {'50C': 340, '51C': 332, '52': 337, '53': 334, '54': 334, '112C': 260, '113C': 248, '113R': 247, '114C': 214, '114L': 248,
+              '131C': 204, '132C': 204, '133C': 204, '134C': 204, '135C': 204, '131R': 184, '134L': 184, '132R': 184, '132L': 184, '135L': 184, '135R': 184,
+              '136L': 184, '136R': 184, '136S': 183, '138T': 221, '139L': 184, '139S': 185, '139T': 176, '141S': 186, '142L': 185, '142S': 187,
+              '144R': 165, '316': 182, '317': 173, '318L': 128, '318C': 147, '318R': 147}
 for sid, (q, L) in sorted(pp.items(), key=lambda kv: (int(re.search(r'\d+', kv[0])[0]), kv[0])):
+    if sid in STAND_BACK and sid in BAYS:
+        p = en(BAYS[sid]['lat'], BAYS[sid]['lon']); bb = math.radians(STAND_BACK[sid])
+        hit = ray_hit(p, (math.sin(bb), math.cos(bb)), 240)
+        if hit:
+            t, e, i, u = hit; q0, q1 = segpts_of(e, i); lq = (q0[0] + (q1[0]-q0[0])*u, q0[1] + (q1[1]-q0[1])*u)
+            splits.append((sid, hit)); B = BAYS[sid]
+            gates.append([sid, term(sid, p), [r1(p[0]), r1(p[1])], hit, round((STAND_BACK[sid] + 180) % 360, 1), [[r1(x) for x in lq], [r1(p[0]), r1(p[1])]], B.get('span', ''), {'TAXI IN, PUSH OUT': 'P', 'TOW IN, PUSH OUT': 'T', 'SELF MANOEUVRING': 'S', 'TOW ON, TOW OFF': 'TT', 'TOW ON, TAXI OFF': 'TS'}.get(B.get('cond'), 'P')])
+            continue
+        print('stand %s: no lane along the charted lead-in' % sid)
     line = None
     if len(q) > 1:
         n0, n1 = nearest_seg(q[0]), nearest_seg(q[-1])
@@ -645,6 +711,15 @@ edges = out_edges
 used = {x for e in edges for x in e[:2]}
 nodes = [nd for nd in nodes if nd[0] in used or nd[0] in keepN] + [nd for nd in newn if nd[0] in used]
 print('junction fillets', nfil, 'corner stubs dropped', corner_drop)
+# a stub that ends on a runway's pavement (N4's mapped way on along the 10L/28R edge towards the 16 threshold, cut where it
+# runs over the runway) leads nowhere: dropped
+while True:
+    dg = collections.Counter(x for e in edges for x in e[:2]); _p = {n[0]: (n[1], n[2]) for n in nodes + newn}
+    dead = {x for x, c in dg.items() if c == 1 and x[0] not in 'sR' and x not in (keepN - {h[0] for h in holds.values() if abs(h[4]) < 40} - {n for n in keepN if n[0] == 'x'}) and x in _p and on_rwy_pave(_p[x])}
+    if not dead: break
+    edges = [e for e in edges if e[0] not in dead and e[1] not in dead]; print('stub on a runway dropped', sorted(dead))
+used = {x for e in edges for x in e[:2]}
+nodes = [nd for nd in nodes if nd[0] in used or nd[0] in keepN]
 # ── holding point names: one name per stop bar. OSM names a holding position after its taxiway, so a taxiway that crosses
 # a runway (F, G) has one each side, and G meets two runways: where a name is shared the side of the runway it is on
 # goes after it (F West, F East: FW and FE), with a number on the end only if that is still not enough. The variants of
@@ -760,13 +835,29 @@ for x, es in xs.items():
         k = pkey[e[1]]; h = holds[k]; E = fil[k][-1]
         e[3] = [W(h[2], *E)] + [W(h[2], m, o) for m, o in h[7]]; Es.append((h[2], E[0]))
     if x in npos and Es: rid = Es[0][0]; mm = sum(m for _, m in Es)/len(Es); p = W(rid, mm, 0); npos[x][1], npos[x][2] = p[0], p[1]
+# where a crossing bends at the runway edge (the taxiways either side are offset: P1 to W3, M1 to W2), it is rounded off
+# so an aircraft sweeps through the turn instead of pivoting on the edge line (two rounds of corner cutting)
+def chaikin(pl, n=2):
+    for _ in range(n):
+        out = [pl[0]]
+        for i in range(len(pl) - 1):
+            a, b = pl[i], pl[i+1]; out += [(0.75*a[0] + 0.25*b[0], 0.75*a[1] + 0.25*b[1]), (0.25*a[0] + 0.75*b[0], 0.25*a[1] + 0.75*b[1])]
+        pl = out[:1] + out[2:-1] + [pl[-1]] if len(pl) > 2 else pl
+        pl = [pl[0]] + pl[1:-1] + [pl[-1]]
+    return pl
+_np = {n[0]: (n[1], n[2]) for n in nodes}
+for x, es in xs.items():
+    for e in es:
+        pl = [_np[x]] + [tuple(q) for q in e[3]] + [_np[e[1]]]
+        if len(pl) > 2: e[3] = [[r1(q[0]), r1(q[1])] for q in chaikin(pl)[1:-1]]
 print('crossings redrawn', len(xs))
 
 # ── the chart's names and the runway-end entries. OpenStreetMap leaves N1 (the 28R end) unnamed, so it took N's name, and
 # S1 has a stop bar before each runway it meets (28L and 34): the one before 28L is S1, the one before 34 S1 West.
 # The entries at each runway end (aerodrome chart; CAT II/III holding points 28L E1, 10R S7, 28R N2, 10L N6): 10L N7 and
 # N6 (10L's threshold is displaced 280 m, so both give the full take-off run), 28R N1 and N2, 10R S7, 28L E1, 34 B2
-# (beside the shared 28L/34 threshold, hot spot HS1) and 16 at N, where the taxiway crosses 430 m from the threshold.
+# (beside the shared 28L/34 threshold, hot spot HS1) or, from the west side without crossing 34, S1 West (240 m in), and
+# 16 at N, where the taxiway crosses 430 m from the threshold.
 RENAME = {'NS': 'N1', 'S1N': 'S1', 'N4S': 'N4'}
 # a stop bar mapped inside the runway strip (N4's north stretch, 25 m from the 10L/28R centreline) is not a holding point
 holds = {k: h for k, h in holds.items() if abs(h[4]) >= 40}; fil = {k: fil[k] for k in holds}; hs = {n: r for n, r in hs.items() if n in {h[0] for h in holds.values()}}
@@ -775,8 +866,8 @@ def _ren(k): b, _, v = k.partition('~'); return RENAME.get(b, b) + ('~' + v if v
 holds = {_ren(k): h for k, h in holds.items()}; fil = {_ren(k): f for k, f in fil.items()}; leads = {_ren(k): f for k, f in leads.items()}
 for k in RENAME: hside.pop(k, None)
 if 'S1W' in hside: hside['S1W'] = ['S1', 'runway 34']
-if 'NE' in hside: hside['NE'] = ['N', 'runway 16']
-END = {'N7': '10L', 'N6': '10L', 'N2': '28R', 'N1': '28R', 'S7': '10R', 'E1': '28L', 'B2': '34', 'NE': '16'}
+if 'NE' in hside: hside['NE'] = ['N', 'runway 16']   # (before N1 had its own holding position, N's two stop bars were NE and NS)
+END = {'N7': '10L', 'N6': '10L', 'N2': '28R', 'N1': '28R', 'S7': '10R', 'E1': '28L', 'B2': '34', 'S1W': '34', 'NE': '16', 'N': '16'}
 for k, h in holds.items():
     e = END.get(k.split('~')[0])
     if e and FR[h[2]]['lo'] in (e,) + () or (e and FR[h[2]]['hi'] == e): h[6] = e; h[5] = FR[h[2]]['lo'] + ',' + FR[h[2]]['hi']
@@ -786,9 +877,35 @@ _pos = {n[0]: (n[1], n[2]) for n in nodes}
 _named = [x for x in ihps if re.match(r'^(VENUS|NEPTUNE)', x[0])]
 _rest = sorted([x for x in ihps if x not in _named], key=lambda x: (_pos.get(x[1], (0, 0))[0], -_pos.get(x[1], (0, 0))[1]))
 ihps = [[re.sub(r'\d+$', '', a).title(), b] for a, b in _named] + [['IHP%d' % (i + 1), b] for i, (a, b) in enumerate(_rest)]
+# CAT II/III holding positions (pattern B, the ladder) on the taxiways the CAT I ones are on; the rapid exit taxiways
+# (aerodrome chart note 4: S5, N3, N5), which have no holding position marking, only the no-entry bar where they meet the
+# parallel taxiway; the runway-holding positions on a runway before another (runway, m, +1/-1: which way the other runway is)
+_nodeset = {n[0] for n in nodes}
+cat23 = sorted({nid[n] for n in CAT23 if n in nid and nid[n] in _nodeset})
+ret = sorted(k for k in holds if k.split('~')[0] in ('S5', 'N3', 'N5'))
+def _xm(R, R2):
+    a, U = R['a'], R['U']; c, V = R2['a'], R2['U']; den = U[0]*V[1] - U[1]*V[0]
+    return ((c[0]-a[0])*V[1] - (c[1]-a[1])*V[0])/den
+rrh = []
+for n in RRH:
+    p = NODE[n]
+    for rid, R in FR.items():
+        m, o = R['mo'](p)
+        if abs(o) < 6 and -50 < m < R['L'] + 50:
+            xm = min((_xm(R, R2) for r2, R2 in FR.items() if r2 != rid), key=lambda v: abs(v - m)); rrh.append([rid, r1(m), 1 if xm > m else -1])
+# the AIP's stand dependencies (stand table remarks: "STANDS 107L, 107R VACANT", "STAND 200T VACANT AT ENTRY/EXIT"):
+# a stand is not used while one it names is occupied (and the other way round)
+vac = collections.defaultdict(set); _ids = {g[0] for g in gates}
+for sid, B in BAYS.items():
+    for grp in re.findall(r'STANDS? ([0-9A-Z ,&]+?) VACANT', (B.get('rem') or '').upper()):
+        for o in re.split(r'\s*(?:,|&|AND)\s*', grp.strip()):
+            if o in _ids and sid in _ids and o != sid: vac[sid].add(o); vac[o].add(sid)
+vac = {k: sorted(v) for k, v in sorted(vac.items())}
+print('CAT II/III', len(cat23), 'RETs', ret, 'runway-runway holds', rrh, 'stand dependencies', sum(len(v) for v in vac.values())//2)
 out = {'runways': runways, 'nodes': nodes, 'edges': edges, 'rnodes': rnodes,
        'holds': {k: h[:7] + [h[8]] for k, h in holds.items()}, 'hlink': {k: h[7] for k, h in holds.items() if h[7]}, 'fil': fil, 'hs': hs,
-       'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds, 'hside': hside, 'leads': leads}
+       'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds, 'hside': hside, 'leads': leads,
+       'cat23': cat23, 'ret': ret, 'rrh': rrh, 'vac': vac}
 with open(OUT, 'w') as fo:
     fo.write('''// ═════════════════════════ Dublin (EIDW): aerodrome layout ═════════════════════════
 // Generated by tools/eidw_ground.py from OpenStreetMap (runways, taxiways, holding positions, parking positions, aprons,

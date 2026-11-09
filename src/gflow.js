@@ -191,7 +191,7 @@ if (typeof depHold === 'function') {
       const load = k => S.acs.filter(o => o !== ac && o.kind === 'DEP' && o.ground && o.hp === k && ['TAXI', 'HOLDPT', 'LINEUP', 'LINEDUP', 'HELD'].includes(o.state)).length;
       let best = base, bc = Infinity;
       for (const k of ks) { const l = L.get(k); if (!isFinite(l) || l > Lmin*1.6 + 0.3) continue;
-        const c = l + load(k)*0.25; if (c < bc - 1e-6) { bc = c; best = k; } }
+        const c = l + load(k)*0.25 + (APT.entryCost ? APT.entryCost(ac, k, from) : 0); if (c < bc - 1e-6) { bc = c; best = k; } }   // entryCost: an airport's own extra (Dublin: crossing the departure runway to reach it)
       return best;
     } catch (e) { return base; }
   };
