@@ -59,7 +59,7 @@ def tname(r):
     r = r.strip().upper()
     m = re.match(r'^LINK ([0-9A-Z])$', r)
     if m: return 'LINK' + m[1]                                      # Link 1 to Link 5, Link A, Link D (spoken "Link 4")
-    if r in ('INNER', 'OUTER'): return r[0]                       # Inner and Outer are I and O (typed and spoken: India, Oscar)
+    if r in ('INNER', 'OUTER'): return r                          # typed OUTER and INNER, spoken "Outer" and "Inner"
     if re.match(r'^(D\d|\d+TO\d+|PRKG|D1TOD5)', r): return 'APRON'
     r = re.sub(r'^([A-Z]+)-?(\d+)(-\d+)?$', r'\1\2', r).replace('-', '').replace(' ', '')
     return r
@@ -560,7 +560,7 @@ _NP = {n[0]: (n[1], n[2]) for n in nodes}
 for e in edges:
     if e[2] == 'P2': e[2] = 'P'
     elif e[2] == 'Q2': e[2] = 'Q'
-    elif e[2] in ('O', 'I', 'APRON') and all(_near_l0(q) for q in [_NP[e[0]], _NP[e[1]]] + [tuple(x) for x in e[3]]): e[2] = 'LINK0'
+    elif e[2] in ('OUTER', 'INNER', 'APRON') and all(_near_l0(q) for q in [_NP[e[0]], _NP[e[1]]] + [tuple(x) for x in e[3]]): e[2] = 'LINK0'
 for h in holds.values():
     if h[8] in ('P2', 'Q2'): h[8] = h[8][0]
 print('Link 0 edges', sum(e[2] == 'LINK0' for e in edges))

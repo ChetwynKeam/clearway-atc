@@ -161,7 +161,7 @@ function phraseToCmd(raw){
     let cmd = 'TAXI'; const g = s.match(/ (?:stand|gate) (.*)/);
     if (g) { const id = heardStand(g[1]); if (id) cmd += ' ' + id; }
     const v = s.match(/ via (.+?)( hold| $)/);
-    if (v) { const vl = []; let solo = false; let lk = false; for (const x of v[1].split(' ')) { if (LINE_WORDS[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } if (x === 'link') { lk = true; continue; } if (lk) { lk = false; const n = /^\d+$/.test(x) ? x : PHONW[x]; if (n && PHON['LINK' + n]) { vl.push('LINK' + n); solo = false; continue; } } const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
+    if (v) { const vl = []; let solo = false; let lk = false; for (const x of v[1].split(' ')) { if (LINE_WORDS[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } if (x === 'link') { lk = true; continue; } if (x.length > 2 && !PHONW[x] && PHON[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } if (lk) { lk = false; const n = /^\d+$/.test(x) ? x : PHONW[x]; if (n && PHON['LINK' + n]) { vl.push('LINK' + n); solo = false; continue; } } const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
       const vv = vl.filter(x => PHON[x] || LINE_WORDS[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
     out.push(cmd);
   } else if ((m = s.match(/ taxi .*?holding point (\S+)/)) || (m = s.match(/ taxi (to )?(\S+)/))) {
@@ -171,7 +171,7 @@ function phraseToCmd(raw){
       // two spoken letters make one taxiway where the airport has it (New York: "kilo delta" is KD); "link four" is LINK4
       // (Geneva, Dublin); "centre", "blue" or
   // "orange" after a taxiway picks its line (Manchester: "via zulu centre line")
-      if (v) { const vl = []; let solo = false; let lk = false; for (const x of v[1].split(' ')) { if (LINE_WORDS[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } if (x === 'link') { lk = true; continue; } if (lk) { lk = false; const n = /^\d+$/.test(x) ? x : PHONW[x]; if (n && PHON['LINK' + n]) { vl.push('LINK' + n); solo = false; continue; } } const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
+      if (v) { const vl = []; let solo = false; let lk = false; for (const x of v[1].split(' ')) { if (LINE_WORDS[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } if (x === 'link') { lk = true; continue; } if (x.length > 2 && !PHONW[x] && PHON[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } if (lk) { lk = false; const n = /^\d+$/.test(x) ? x : PHONW[x]; if (n && PHON['LINK' + n]) { vl.push('LINK' + n); solo = false; continue; } } const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
         const vv = vl.filter(x => PHON[x] || LINE_WORDS[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
       out.push(cmd);
     }

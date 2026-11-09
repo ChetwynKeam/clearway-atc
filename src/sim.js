@@ -1356,12 +1356,13 @@ const LINE_WORDS = { CENTRE: 'c', CENTER: 'c', MIDDLE: 'c', CENTRELINE: 'c', BLU
 let LINED = null;
 const hasLines = tw => (LINED ||= new Set(GE.filter(e => e.line).map(e => e.tw))).has(tw);
 // the taxiways after VIA (from toks[i]): returns the index of the last one read
+let TWY_NAMES = null; const twyNames = () => TWY_NAMES || (TWY_NAMES = new Set(GE.map(e => e.tw).filter(Boolean)));
 function readVia(toks, i, via){
   for (;;) {
     const t = toks[i+1];
     // Heathrow's links: LINK56, LINK 56 or L56 (when there is no taxiway L56)
     const lk = t === 'LINK' && /^\d+$/.test(toks[i+2] || '') ? 'LINK' + toks[i+2] : /^L\d+$/.test(t || '') && !PHON[t] ? 'LINK' + t.slice(1) : null;
-    if (t && (/^[A-Z]{1,2}\d{0,2}$/.test(t) || /^LINK\d+$/.test(t)) && PHON[t]) via.push(toks[++i]);
+    if (t && (/^[A-Z]{1,2}\d{0,2}$/.test(t) || /^LINK\d+$/.test(t) || (t !== 'APRON' && twyNames().has(t))) && PHON[t]) via.push(toks[++i]);   // any taxiway by its name: Geneva's OUTER, INNER, LINKA
     else if (lk && PHON[lk]) { via.push(lk); i += t === 'LINK' ? 2 : 1; }
     else if (t && LINE_WORDS[t] && via.length && hasLines(via[via.length-1])) { via.line = [via[via.length-1], LINE_WORDS[t]]; i++; if (toks[i+1] === 'LINE') i++; }
     else return i;
