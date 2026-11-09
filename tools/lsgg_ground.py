@@ -65,13 +65,19 @@ def tname(r):
     return r
 taxi = [w for w in ways if tagged(w, 'taxiway', 'taxilane') and 'geometry' in w]
 taxi = [w for w in taxi if w.get('tags', {}).get('access') != 'no']
-HP = {}
+# holding positions by OpenStreetMap type, checked against the vACC Switzerland ground charts (GND 01/02, 11 JUN 26):
+#  runway: the runway-holding positions (pattern A, solid red on the chart): G, F, E, Q1, Q2, D, C, P1, B and A
+#  ILS: the CAT II/III holding positions further back (pattern B, dashed red on the chart). Drawn; the one with a name of
+#       its own (P2, on the second lane of holding bay P) is also an intermediate holding point
+#  intermediate: unnamed pattern B lines on the taxiways, numbered IHP1, IHP2 ... (see below)
+HP, HPT = {}, {}
 for e in E:
     t = e.get('tags', {})
     if e['type'] == 'node' and t.get('aeroway') == 'holding_position':
-        HP[e['id']] = tname(t.get('ref'))
-for n, r in list(HP.items()):                                      # unnamed ones take their taxiway's name
-    if not r: HP[n] = next((tname(w['tags'].get('ref')) for w in taxi if n in w['nodes'] and w['tags'].get('ref') and tname(w['tags'].get('ref')) != 'APRON'), None)
+        HPT[e['id']] = t.get('holding_position:type', 'runway')
+        HP[e['id']] = tname(t.get('ref')) if HPT[e['id']] != 'intermediate' else None
+RWYHP = {n for n, k in HPT.items() if k == 'runway'}
+ILSHP = {n for n, k in HPT.items() if k == 'ILS'}
 use = collections.Counter(n for w in taxi for n in w['nodes'])
 ends = set(n for w in taxi for n in (w['nodes'][0], w['nodes'][-1]))
 gnodes = set(n for n, c in use.items() if c > 1) | ends | (set(HP) & set(use))
@@ -138,7 +144,7 @@ def inward(hp, R):
             if bad: continue
             o = seq[-1]
             if hit: res.append((Pp, used + [t])); continue
-            if o in HP: continue
+            if o in RWYHP: continue
             dfs(o, Pp, used + [t], depth + 1)
     dfs(hp, [mo(NODE[hp])], [], 0)
     return res
@@ -158,7 +164,7 @@ def hairpin(pl, win=80, most=150):
     return False
 hold_used = []
 byrwy = collections.defaultdict(list)
-for n in HP:
+for n in RWYHP:
     if n not in use: continue
     rid = nearest_rwy(NODE[n])
     if rid: byrwy[rid].append(n)
@@ -217,16 +223,19 @@ for h1, c1, k1, r1d in paths:
     for h2, c2, k2, r2d in paths:
         if r1d != r2d or h1 == h2: continue
         R = FR[r1d]; mo = R['mo']
-        if mo(NODE[h1])[1] > 0 and mo(NODE[h2])[1] < 0 and abs(c1[0] - c2[0]) < 160: cand.append((abs(c1[0] - c2[0]), h1, c1, k1, h2, c2, k2, r1d))
+        if mo(NODE[h1])[1] > 0 and mo(NODE[h2])[1] < 0 and abs(fil[k1][-1][0] - fil[k2][-1][0]) < 160: cand.append((abs(fil[k1][-1][0] - fil[k2][-1][0]), h1, c1, k1, h2, c2, k2, r1d))
 cand.sort(key=lambda c: c[0]); used_n, used_s = collections.Counter(), collections.Counter()
 for d, h1, c1, k1, h2, c2, k2, r1d in cand:
     if used_n[h1] >= 1 or used_s[h2] >= 2: continue
     used_n[h1] += 1; used_s[h2] += 1; R = FR[r1d]; mo = R['mo']
     x = 'x%d' % len(XN); a, U, N = R['a'], R['U'], R['N']
-    XN[x] = (a[0] + U[0]*c1[0], a[1] + U[1]*c1[0])
+    # straight across: the centreline point midway between where the two taxiways meet the runway edges (the old way
+    # ran each one's lead-on fillet, which zigzagged where they were angled opposite ways, P1 and C)
+    mx = (fil[k1][-1][0] + fil[k2][-1][0])/2
+    XN[x] = (a[0] + U[0]*mx, a[1] + U[1]*mx)
     for h, k in ((h1, k1), (h2, k2)):
-        Rr = fil[k] + holds[k][7]
-        xedges.append([x, NID(h), holds[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr[1:]]])
+        Rr = [fil[k][-1]] + holds[k][7]
+        xedges.append([x, NID(h), holds[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr]])
 print('holds', len(holds), 'crossings', len(XN))
 def runway_seg(s): return id(s) in drop or any(onAny(NODE[n]) for n in [s[0], s[1]] + s[3])
 edges = []
@@ -254,12 +263,22 @@ holds = {k: h for k, h in holds.items() if h[0] in big}
 nodes = [[k, r1(NODE[inv[k]][0]), r1(NODE[inv[k]][1])] for k in sorted({x for e in edges for x in e[:2]} | {h[0] for h in holds.values()}, key=lambda s: (s[0], int(s[1:])))]
 hs = {k: v for k, v in hs.items() if k in big}
 fil = {k: fil[k] for k in holds}
-# ── IHPs: every other named holding position on the graph (one per name)
+# ── IHPs. The vACC charts publish no intermediate holding points; OpenStreetMap has the painted ones: the CAT II/III
+# line on the second lane of holding bay P (P2) and eight unnamed pattern B lines on the taxiways, numbered here IHP1 to
+# IHP8 from the 04 end to the 22 end. Every ILS (CAT II/III) holding position is drawn (cat23).
 ihps = []
 hnodes = {h[0] for h in holds.values()}
-for n, ref in HP.items():
-    if n in nid and nid[n] in big and nid[n] not in hnodes and ref:
-        if ref not in [i[0] for i in ihps] and ref not in holds: ihps.append([ref, nid[n]])
+rkeys = {k.split('~')[0] for k in holds}
+ing = lambda n: n in nid and nid[n] in big and nid[n] not in hnodes
+for n in sorted(ILSHP, key=lambda n: FR['0422']['mo'](NODE[n])[0]):
+    ref = HP.get(n)
+    if ing(n) and ref and ref not in rkeys and ref not in [i[0] for i in ihps]: ihps.append([ref, nid[n]])
+cat23 = sorted({nid[n] for n in ILSHP if n in nid and nid[n] in big}, key=lambda k: int(k[1:]))
+INTHP = [(nid[n], NODE[n]) for n, k in HPT.items() if k == 'intermediate' and ing(n)]
+# the south side has none mapped: four added where the busy lanes meet, so traffic can be held clear of a junction:
+# Outer between Link 0 and Link 1 (west apron traffic for E and the satellites), Outer before the D junction from the
+# east, Outer before Link 5 and C, and A short of C (from the east apron and the 22 end)
+IHP_ADD_PX = [(1780, 5040), (3150, 3730), (3630, 3300), (3860, 3065)]   # parking chart pixels (CHART, below)
 # ── stands: OSM parking positions. The stop point is the end away from the taxilane; the lead-in runs back along the
 # painted line to the lane it starts from.
 segpts = []
@@ -309,7 +328,73 @@ def _inpoly(p, poly):
         if (y1 > y) != (y2 > y) and x < (x2-x1)*(y-y1)/(y2-y1) + x1: c = not c
     return c
 _boxes = [(w['tags'].get('ref'), [NODE[n] for n in w['nodes']]) for w in ways if tagged(w, 'parking_position') and w['nodes'][0] == w['nodes'][-1] and w.get('tags', {}).get('ref')]
-STAND_RE = re.compile(r'^(\d{1,3}[A-C]?|[A-G]\d{1,2}|L\d{1,2}|P[CEF]\d{1,2})$')
+# ── the stands checked against the vACC Switzerland parking chart (GND CHART NO. 02, 11 JUN 26). Its main panel is drawn
+# to scale: a similarity fitted to the three satellite centres puts the runway on the chart's runway to within a few
+# metres. CHART turns a point on that chart (pixels at 600 dpi) into metres east and north of the ARP.
+_CA, _CB = complex(0.4260926788081775, 0.008463884293381326), complex(-1464.9988418004382, 1239.1902845221707)
+def CHART(x, y): z = _CA*complex(x, -y) + _CB; return (z.real, z.imag)
+# not on the chart: 41 (satellite 40 has 42-44), the helicopter-area line OpenStreetMap numbers 2. The two Aero Club
+# stands by taxiway Q are I1 and I2 (OpenStreetMap: 11 and 12)
+DROP = {'41', 'N2'}
+RENAME_N = {'11': 'I1', '12': 'I2'}
+# stands whose mapped line is right but whose stop is not where the chart's arrow ends (OpenStreetMap draws the island
+# stands 61-68 from lane to lane, so they stopped on the far lane): [arrow tip, a point at the lane end it is entered from]
+CUT = {'61': ((3185, 3988), (3040, 3830)), '62': ((3255, 3920), (3105, 3762)), '63': ((3382, 3797), (3250, 3625)),
+       '64': ((3450, 3730), (3350, 3600)), '65': ((3548, 3640), (3430, 3510)), '66': ((3615, 3575), (3500, 3450)),
+       '67': ((3848, 3325), (3720, 3190)), '68': ((3937, 3242), (3805, 3105)), '89': ((1435, 5738), (1100, 5697)),
+       '89A': ((1315, 5705), (1100, 5697)), '89B': ((1372, 5730), (1265, 5830)), '89C': ((1445, 5800), (1350, 5880)),
+       '95E': ((788, 6192), (845, 6283))}
+# the MARS centres between two stands: the line halfway between theirs
+MID = {'3A': ('3', '4'), '64A': ('63', '64'), '66A': ('65', '66')}
+# stands OpenStreetMap lacks or has wrong, from the chart: [arrow tip (the nose), a point back along the lead-in line]
+#  9-12: the AFR/HOP stands along Inner (OpenStreetMap has three lines, numbered one out)
+#  21-28: the nose-in stands round the western satellite, on the same ground as its drive-through stands 121-127
+#  14-19: the Aile Est (East Wing) stands, each a MARS group: the widebody centre stand and two narrowbody halves,
+#         141 to the south-west and 142 to the north-east of 14, and so on
+NEW = {'9': ((2915, 4830), (2850, 4745)), '10': ((2985, 4765), (2915, 4685)), '11': ((3055, 4692), (2985, 4620)),
+       '12': ((3125, 4630), (3050, 4560)),
+       '21': ((2373, 4868), (2550, 4870)), '22': ((2378, 4938), (2548, 4940)), '23': ((2315, 4990), (2315, 5130)),
+       '24': ((2243, 4995), (2245, 5125)), '25': ((2180, 4940), (1990, 4940)), '26': ((2183, 4865), (1990, 4865)),
+       '27': ((2205, 4805), (2210, 4600)), '28': ((2280, 4808), (2288, 4640))}
+for c, (fx, fy) in {'14': (3150, 4205), '15': (3300, 4060), '16': (3440, 3945), '17': (3575, 3810), '18': (3700, 3690), '19': (3820, 3560)}.items():
+    for sfx, k in (('', 0), ('1', -1), ('2', 1)):
+        if c == '17' and sfx or c == '16' and sfx: continue        # 16 and 17 are single stands
+        x0, y0 = fx + k*45*0.72, fy - k*45*0.69
+        NEW[c + sfx] = ((x0 + 290*0.69, y0 + 290*0.72), (x0, y0))   # the nose 8-10 m off the Aile Est's wall, under its bridges
+def chart_fix(lines):
+    out = []
+    for r, q in lines:
+        if r in NEW: continue                                          # OpenStreetMap's line for a stand redrawn from the chart
+        if r in CUT:
+            tip, frm = CHART(*CUT[r][0]), CHART(*CUT[r][1])
+            if math.dist(q[-1], frm) < math.dist(q[0], frm): q = q[::-1]
+            best = None; acc = 0                                       # where along the line the tip falls
+            for i in range(len(q) - 1):
+                a, b = q[i], q[i+1]; ex, ey = b[0]-a[0], b[1]-a[1]; LL = ex*ex + ey*ey or 1
+                u = ((tip[0]-a[0])*ex + (tip[1]-a[1])*ey)/LL
+                uc = max(0, min(1, u)); d = math.dist(tip, (a[0] + ex*uc, a[1] + ey*uc))
+                if best is None or d < best[0]: best = (d, i, u)
+            d, i, u = best
+            if i == len(q) - 2 and u > 1: q = q + [tip]                # the arrow ends beyond the mapped line
+            else: q = q[:i+1] + [(q[i][0] + (q[i+1][0]-q[i][0])*u, q[i][1] + (q[i+1][1]-q[i][1])*u)]
+            CUTDONE.add(r)
+        out.append((r, q))
+    by = dict(out)
+    for m, (x, y) in MID.items():                                       # the MARS centre: halfway between its halves' lines
+        if x in by and y in by:
+            qa, qb = by[x], by[y]
+            out = [o for o in out if o[0] != m] + [(m, [((qa[0][0]+qb[0][0])/2, (qa[0][1]+qb[0][1])/2), ((qa[-1][0]+qb[-1][0])/2, (qa[-1][1]+qb[-1][1])/2)])]
+            CUTDONE.add(m)
+    # F7, the seventh stand of the F row, which OpenStreetMap stops at F6: one more step along the row
+    if 'F5' in by and 'F6' in by and 'F7' not in by:
+        dv = (by['F6'][0][0] - by['F5'][0][0], by['F6'][0][1] - by['F5'][0][1])
+        out.append(('F7', [(p[0] + dv[0], p[1] + dv[1]) for p in by['F6']]))
+    return out
+CUTDONE = set()
+for sid, (tip, frm) in NEW.items():
+    AIP_STANDS[sid] = CHART(*tip); f_ = CHART(*frm)
+    AIP_HDG[sid] = math.degrees(math.atan2(AIP_STANDS[sid][0] - f_[0], AIP_STANDS[sid][1] - f_[1])) % 360
+STAND_RE = re.compile(r'^(\d{1,3}[A-E]?|[A-G]\d{1,2}|L\d{1,2}|P[CEF]\d{1,2})$')
 _RW = FR['0422']
 def _north_side(p): return _RW['mo'](p)[1] > 40           # left of the runway (04 -> 22 frame): the North Apron side
 for w in ways:
@@ -318,9 +403,11 @@ for w in ways:
     pts = [NODE[n] for n in w['nodes']]
     if len(pts) < 2: continue
     r = w.get('tags', {}).get('ref')
-    if r == '73TO76' or r == '74TO76' or not r or not STAND_RE.match(r) or r[0] == 'D' and len(r) == 2: continue
-    if _north_side(pts[0]) and r[0].isdigit(): r = 'N' + r
+    if r == '73TO76' or r == '74TO76' or not r or not STAND_RE.match(r): continue
+    if _north_side(pts[0]) and r[0].isdigit(): r = RENAME_N.get(r, 'N' + r)
+    if r in DROP: continue
     lines.append((r, pts))
+lines = chart_fix(lines)
 def seg_near(p):
     """the mapped stand line segment nearest p: (distance, a, b)"""
     best = None
@@ -358,8 +445,8 @@ for _w in ways:
 print('satellite centres', [(round(x), round(y)) for x, y in SATC])
 def sat_dist(p): return min(math.dist(p, c) for c in SATC)
 def term(sid, p):
-    if sid in SATLINES: return 'S'
-    if sid[0] == 'N' or sid[0] in 'EFGL': return 'N'
+    if sid in SATLINES or sid in ('21', '22', '23', '24', '25', '26', '27', '28'): return 'S'
+    if sid[0] == 'N' or sid[0] in 'EFGIL': return 'N'
     m = _RW['mo'](p)[0]
     if m < 0 and _RW['mo'](p)[1] < -700 and False: return 'W'
     u = (p[0]*0.728 + p[1]*0.685)
@@ -387,7 +474,7 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (kv[0].lstrip('0123456789')
         # (within 55 m of a lane at both ends: the west remote ramp's 70-74, 80 and 231 groups, whose left and right
         # lines end short of the far lane, stop where their centre lines do)
         mid_ = along(q, L/2)[0]
-        if n0[0] < 55 and n1[0] < 55 and L > 60 and sat_dist(mid_) < 110:
+        if n0[0] < 55 and n1[0] < 55 and L > 60 and sat_dist(mid_) < 110 and sid not in CUTDONE:
             SATLINES.add(sid)
             # the mapped line runs from one lane to another (the lane behind the Terminal 1-2-3 stands, the remote ramps'
             # drive-through stands): the aircraft comes in from the lane further from a terminal building and stops at the
@@ -400,7 +487,8 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (kv[0].lstrip('0123456789')
             # a drive-through stand: taxi in from one lane, out (or in) from the other, no push back
             outs[sid] = ([p] + q[k+1:], (n1[0], n1[1], n1[2], n1[3])); print('drive-through stand', sid)
         else:
-            if n0[0] > n1[0]: q = q[::-1]; n0, n1 = n1, n0          # q runs from the lane end to the stop point
+            if sid in CUTDONE: pass                                     # already runs from its lane to the chart's stop
+            elif n0[0] > n1[0]: q = q[::-1]; n0, n1 = n1, n0          # q runs from the lane end to the stop point
             elif n0[0] < 55 and n1[0] < 55 and tdist(q[-1]) > tdist(q[0]): q = q[::-1]; n0, n1 = n1, n0   # a line between two lanes: nose in toward the terminal
             p = q[-1]; line = q
             hd = bear(q[-2], q[-1]) if math.dist(q[-2], q[-1]) > 2 else bear(q[0], q[-1])
@@ -418,7 +506,7 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (kv[0].lstrip('0123456789')
         p = q[0]; hit = None; hd = None
     if not hit:
         ns = nearest_seg(p)
-        if ns[0] > 220: continue
+        if ns[0] > 260: print("no lane for stand", sid, round(ns[0])); continue   # (PC7 and PF2, at the far side of the cargo apron: 240 m)
         hit = (ns[0], ns[1], ns[2], ns[3])
     t, e, i, u = hit; q0, q1 = segpts_of(e, i); lq = (q0[0] + (q1[0]-q0[0])*u, q0[1] + (q1[1]-q0[1])*u)
     if hd is None: hd = bear(lq, p)
@@ -426,9 +514,13 @@ for sid, (q, L) in sorted(pp.items(), key=lambda kv: (kv[0].lstrip('0123456789')
     # None where it would cross another lane
     paint = [lq] + (line[1:] if line else [p]) if line or math.dist(p, lq) <= 45 else None
     if paint and any(crosses(paint[j], paint[j+1], e) for j in range(len(paint) - 1)): paint = None
+    if re.match(r'^P[CEF]\d', sid): paint = None                  # the cargo apron's PC/PE/PF stands are self-manoeuvring: no lead-in lines
     splits.append((sid, hit))
     if sid in outs: splits.append((sid + '>', outs[sid][1]))
     gates.append([sid, term(sid, p), [r1(p[0]), r1(p[1])], hit, round(hd, 1), [[r1(x) for x in pt] for pt in paint] if paint else 0])
+IHP_ADD = [CHART(*q) for q in IHP_ADD_PX]
+for i_, q_ in enumerate(IHP_ADD):
+    ns_ = nearest_seg(q_); splits.append(('#IHP%d' % i_, (ns_[0], ns_[1], ns_[2], ns_[3])))
 byedge = collections.defaultdict(list)
 for sid, (t, e, i, u) in splits: byedge[id(e)].append((i + u, sid, e))
 newedges, gnode, POS = [], {}, {}
@@ -450,10 +542,28 @@ for e in edges:
     newedges.append([prev, e[1], e[2], [[r1(x) for x in m] for m in mids]] + e[4:])
     for j in range(k, len(lst)): gnode[lst[j][1]] = e[1]
 edges = newedges
+_pos = {n[0]: (n[1], n[2]) for n in nodes}
+_ih = INTHP + [(gnode['#IHP%d' % i_], _pos[gnode['#IHP%d' % i_]]) for i_ in range(len(IHP_ADD))]
+for i_, (n_, q_) in enumerate(sorted(_ih, key=lambda t: FR['0422']['mo'](t[1])[0])): ihps.append(['IHP%d' % (i_ + 1), n_])
+print('ihps', ihps, 'cat23', len(cat23))
 for gt in gates:
     gt[3] = gnode[gt[0]]
     gt.append([gnode[gt[0] + '>'], [[r1(x) for x in pt] for pt in outs[gt[0]][0]]] if gt[0] in outs and (gt[0] + '>') in gnode else 0)
 edges = add_crossovers(edges, nodes, gates, r1)
+# taxiway names as the chart has them: the second lanes of holding bays P and Q are part of P and Q (P2 and Q2 are their
+# holding points), and the short lane from Outer to Inner where F comes in is Link 0
+_L0 = (CHART(1490, 5305), CHART(1700, 5305))
+def _near_l0(q):
+    a, b = _L0; ex, ey = b[0]-a[0], b[1]-a[1]; LL = ex*ex + ey*ey
+    u = max(0, min(1, ((q[0]-a[0])*ex + (q[1]-a[1])*ey)/LL)); return math.dist(q, (a[0] + ex*u, a[1] + ey*u)) < 14
+_NP = {n[0]: (n[1], n[2]) for n in nodes}
+for e in edges:
+    if e[2] == 'P2': e[2] = 'P'
+    elif e[2] == 'Q2': e[2] = 'Q'
+    elif e[2] in ('OUTER', 'INNER', 'APRON') and all(_near_l0(q) for q in [_NP[e[0]], _NP[e[1]]] + [tuple(x) for x in e[3]]): e[2] = 'LINK0'
+for h in holds.values():
+    if h[8] in ('P2', 'Q2'): h[8] = h[8][0]
+print('Link 0 edges', sum(e[2] == 'LINK0' for e in edges))
 # ── aprons, buildings, hangars
 def ring(pts): return [[r1(x) for x in p] for p in pts]
 aprons_out = [ring(p) for p in aprons]
@@ -474,7 +584,7 @@ for e in E:
                 blds.append({'pts': ring([en(g['lat'], g['lon']) for g in m['geometry']]), 'h': 18, 'name': e['tags'].get('name')})
 out = {'runways': runways, 'nodes': nodes, 'edges': edges, 'rnodes': rnodes,
        'holds': {k: h[:7] + [h[8]] for k, h in holds.items()}, 'hlink': {k: h[7] for k, h in holds.items() if h[7]}, 'fil': fil, 'hs': hs,
-       'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds}
+       'gates': gates, 'ihps': ihps, 'cat23': cat23, 'aprons': aprons_out, 'buildings': blds}
 with open(OUT, 'w') as fo:
     fo.write('''// ═════════════════════════ Geneva (LSGG): aerodrome layout ═════════════════════════
 // Generated by tools/lsgg_ground.py from OpenStreetMap (taxiways, holding positions, parking positions, aprons, terminals,
@@ -489,7 +599,7 @@ with open(OUT, 'w') as fo:
 // gates: [stand, apron (T terminal, S satellites, E east, W west, N north apron), stop point [e, n], lead-in node, heading into the stand, the painted lead-in line from the lane (0: none)]; ihps: [name, node] holding points away
 // from the runways.
 const LSGG_GROUND = ''')
-    fo.write(json.dumps(out, separators=(',', ':')))
+    fo.write(json.dumps(out, separators=(',', ':')).replace('"s#IHP', '"i'))   # the added holding points' nodes: i0, i1 ...
     fo.write(';\nif (typeof module !== \'undefined\') module.exports = LSGG_GROUND;\n')
 print('nodes', len(nodes), 'edges', len(edges), 'holds', len(holds), 'gates', len(gates), 'ihps', len(ihps), 'blds', len(blds))
 for rid in FR:
