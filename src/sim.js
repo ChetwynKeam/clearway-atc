@@ -158,8 +158,10 @@ for (const h of APT.ihps || []) {
   const dir = nb.length > 1 ? brg(...nb[0], ...nb[1]) : nb.length ? brg(...GN[node].p, ...nb[0]) : 0;
   IHPS[h.id] = { id: h.id, node, tw, dir };
 }
+// a named one (Dublin's Neptune) can be typed in capitals, as every command is: a hidden alias in capitals
+for (const id of Object.keys(IHPS)) if (id !== id.toUpperCase() && !(id.toUpperCase() in IHPS)) Object.defineProperty(IHPS, id.toUpperCase(), { value: IHPS[id], enumerable: false });
 // any named holding point: a runway holding point or an intermediate one
-const holdPt = id => HOLDS[id] ? { id, node: HOLDS[id].node, rwy: true } : IHPS[id] ? { id, node: IHPS[id].node, rwy: false } : null;
+const holdPt = id => HOLDS[id] ? { id, node: HOLDS[id].node, rwy: true } : IHPS[id] ? { id: IHPS[id].id, node: IHPS[id].node, rwy: false } : null;
 // something on the pavement of the runway that rw names (either direction)
 const onRunway = (o, rw) => o.onRwy && (o.rwyId || RWYS[0].id) === rwyOf(rw).id;
 // multiple line-ups: departures lined up (or lining up) on the same runway at different points, the one furthest down
@@ -744,7 +746,7 @@ function stepRandomTows(){
 }
 // parked aircraft with nothing due in the next 15 minutes stay off the strip board
 const dormant = ac => (ac.state === 'ONSTAND' && !ac.need) || (ac.state === 'PARKED' && !ac.need && ac.reqAt - S.t > 15*60 && !(ac.tow && S.t >= ac.tow.at - 300));
-// arrivals don't get a stand by themselves: the controller assigns one (STAND), guided by the airline's usual area
+// an arrival's stand is planned on the approach (planStand), in the airline's usual area; the controller can change it (STAND)
 const AREA_NAMES = { civil: 'terminal apron', north: 'GA apron', south: 'south apron' };
 const standAreas = ac => isMil(ac) ? ['south'] : ac.perf.wake === 'L' || ac.t === 'GLF6' ? ['north','civil'] : ['civil','north'];
 function prefArea(ac){
@@ -812,13 +814,88 @@ function refreshShut(){
 function standBy(st, ac){ for (const [o, d] of st.nb || []) { const a = o.ownOcc; if (a && a !== ac && d < (spanOf(a) + spanOf(ac))/2) return a; } return null; }
 // a stand takes nothing wider than its size (st.maxSpan: published at Heathrow, from the room around it elsewhere)
 const standRoom = (st, ac) => !standBy(st, ac) && !(st.maxSpan && spanOf(ac) > st.maxSpan + 1);
-const standFree = (s, ac) => !s.occ && standRoom(s, ac);
+// (a stand an arrival is waiting for, st.waitBy, is kept for it: nothing else is given it)
+const standFree = (s, ac) => !s.occ && !(s.waitBy && s.waitBy !== ac) && standRoom(s, ac);
 const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => s.occ === ac || standFree(s, ac)).sort((a, b) => pa.has(b) - pa.has(a)); };
+// ── an arrival's stand is planned on the approach: its airline's usual one. At a small or busy airport it is fairly
+// often still taken by the departure due off it, and the inbound waits a minute or so for the push-back. Clear of the
+// runway it says so ('Stand occupied'): hold it out of the way (TAXI and a holding point) until the stand is free, or
+// give it another. ac.standWait: ac.stand is planned but still taken; st.waitBy: the arrival waiting for st. It takes
+// the stand the moment the one on it has taxied (stepStandWaits), before anything else can.
+const standHeld = ac => !!(ac.stand && ac.stand.occ && ac.stand.occ !== ac);
+// the aircraft on a stand will leave it by itself soon: a departure on stand or pushing, not held there by its slot
+const standLeaver = o => !!(o && o.cs && o.kind === 'DEP' && ['PARKED', 'PUSH', 'READY'].includes(o.state) && !o.slotHold && !o.slotCancelled && !o.tow && !inHangar(o));
+// roughly how long until a stand's departure has taxied off it: the crew calls for start-up at reqAt, and the stand is
+// clear once it has pushed and taxied, about 3½ minutes later
+const standFreeIn = o => o.state === 'PARKED' ? Math.max(30, (o.reqAt || S.t) + 210 - S.t) : 60;
+// the same in words: 'clear in about 3 min', or 'not due off for a while'
+const standFreeWords = o => { const m = Math.max(1, Math.round(standFreeIn(o)/60)); return m > 30 ? 'not due off for a while' : `clear in about ${m} min`; };
+function dropPlan(ac){ const s = ac.stand; if (!s) return; if (s.waitBy === ac) s.waitBy = null; if (s.occ === ac) s.occ = null; }
+// plan st for ac: on it if it is free, otherwise waiting for the one leaving it
+function takeStand(ac, st){
+  if (ac.stand !== st) dropPlan(ac);
+  ac.stand = st;
+  if (st.occ && st.occ !== ac) { st.waitBy = ac; ac.standWait = true; }
+  else { st.occ = ac; if (st.waitBy === ac) st.waitBy = null; ac.standWait = false; }
+}
 function assignStand(ac, st){
-  if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null;
-  st.occ = ac; ac.stand = st;
-  // waiting clear of the runway or at a holding point: now it can ask to taxi in
-  if (ac.ground && ac.vacated && !ac.path && !ac.taxiIn) ac.need = 'Request taxi';
+  takeStand(ac, st);
+  // waiting clear of the runway or at a holding point: now it can ask to taxi in (or still has to wait)
+  if (ac.ground && ac.vacated && !ac.path && !ac.taxiIn) ac.need = ac.standWait ? 'Stand occupied' : 'Request taxi';
+}
+// how likely an inbound's stand is still taken when it is planned: high where stands are few (Gibraltar, London City,
+// Bristol, Innsbruck) or the apron is nearly full, low on a big half-empty one; never in the guided exercises
+function standWaitOdds(){
+  if (EXERCISES[S.mode]) return 0;
+  if (APT.standWaitOdds != null) return APT.standWaitOdds;
+  const L = STANDS.filter(s => s.area !== 'hangar'), full = L.filter(s => s.occ).length/Math.max(1, L.length);
+  return L.length <= 30 ? 0.5 : full > 0.75 ? 0.45 : full > 0.6 ? 0.3 : 0.15;
+}
+// roughly when it will be clear of the runway, in sim seconds
+const standEta = ac => S.t + (ac.ground ? 0 : dist(ac.x, ac.y, ...RADAR_REF)/Math.max(140, ac.gs || 0)*3600) + 90;
+// one of its airline's stands still taken by a departure due to push back about when it gets in, so it will wait for
+// it a minute or so (only: that stand, if its departure is off within 10 minutes)
+function busyStand(ac, only){
+  const eta = standEta(ac), pa = prefArea(ac);
+  const ok = s => s.occ && s.occ !== ac && !(s.waitBy && s.waitBy !== ac) && s.area !== 'hangar' && standLeaver(s.occ) && standRoom(s, ac);
+  if (only) return ok(only) && S.t + standFreeIn(only.occ) - eta < 600 ? only : null;
+  // a departure off within the next 8 minutes or so after it lands, not held to a slot
+  const L = STANDS.filter(s => pa.has(s) && ok(s)).filter(s => { const o = s.occ, w = S.t + standFreeIn(o) - eta;
+    return w > 20 && w < 480 && !(typeof SLOT !== 'undefined' && SLOT[o.cs] && SLOT[o.cs].ctot != null); });
+  const st = L.length ? L[Math.floor(Math.random()*L.length)] : null;
+  // its turnaround is running to time: the crew calls for start-up so that the stand is clear a minute or two after
+  // the inbound is off the runway, rather than as late as its schedule allows
+  if (st && st.occ.state === 'PARKED') { const o = st.occ, want = eta - 210 + rnd(40, 140);
+    if (want < o.reqAt) o.reqAt = Math.max(S.t + 30, want); }
+  return st;
+}
+// a holding point out of the way to wait at for the stand: of the six intermediate ones nearest the stand, the one with
+// the shortest taxi there and on to the stand afterwards (facing the way it arrives: it can't turn round on a taxiway)
+function standWaitPt(ac){
+  const st = ac.stand; if (!st || !Object.keys(IHPS).length) return null;
+  const [from, face] = taxiStart(ac);
+  let best = null, bd = Infinity;
+  for (const id of Object.keys(IHPS).filter(id => GN[IHPS[id].node]).sort((a, b) => dist(...GN[IHPS[a].node].p, ...st.p) - dist(...GN[IHPS[b].node].p, ...st.p)).slice(0, 6)) {
+    const n = IHPS[id].node, r = route(from, n, undefined, face) || route(from, n); if (!r) continue;
+    const k = r.nodes.length, f = k > 1 ? brg(...GN[r.nodes[k-2]].p, ...GN[n].p) : face;
+    const on = (f != null && route(n, st.node, undefined, f)) || route(n, st.node);
+    const d = pathLen(r.nodes) + (on ? pathLen(on.nodes) : dist(...GN[n].p, ...st.p)*3); if (d < bd) { bd = d; best = id; }
+  }
+  return best;
+}
+// every step, before the tows: a stand an arrival waits for is its as soon as the departure on it has taxied
+function stepStandWaits(){
+  for (const s of STANDS) { const w = s.waitBy; if (w && (w.stand !== s || !w.standWait || !S.acs.includes(w))) s.waitBy = null; }
+  for (const ac of S.acs) {
+    if (ac.kind !== 'ARR' || !ac.standWait || !ac.stand) continue;
+    const st = ac.stand;
+    if (st.occ && st.occ !== ac) { st.waitBy = ac; continue; }   // still taken (a continued stint rebuilds waitBy here)
+    if (!standRoom(st, ac)) continue;
+    st.occ = ac; st.waitBy = null; ac.standWait = false;
+    const sw = APT.standWord || 'stand';
+    if (ac.ground && ac.vacated && !ac.path && !ac.taxiIn) { ac.need = 'Request taxi'; pilot(ac, `${sw} ${st.id} is free now, request taxi`); }
+    else if (ac.ground) sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is free now for ${ac.cs}.`);
+  }
 }
 function freeStand(ac){
   if (APT.standFor) { const s = APT.standFor(ac); if (s) return s; }
@@ -871,7 +948,7 @@ const PATH_DONE = {
   // pushed back clear by a tug for traffic it met nose to nose (faceOff): forward again along the way it came, then on
   backedOff: ac => { const b = ac.bk; ac.bk = null; ac.backing = null; if (!b || !b.path) return;
     ac.path = { ...b.path, pts: [...b.pts.slice(0, -1).reverse(), b.from, ...b.path.pts], prev: null }; },
-  vacated: ac => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); },
+vacated: ac => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.taxiIn) { if (ac.emgStop && typeof emgStopped === 'function') emgStopped(ac); else if (standHeld(ac)) { const sw = APT.standWord || 'stand'; ac.need = 'Stand occupied'; const v = PH.vacated(ac); pilot(ac, /request taxi/.test(v) ? v.replace(/request taxi.*$/, `${sw} ${ac.stand.id} is still occupied, request instructions`) : v.replace(/, for (stand|gate) .*$/, '') + `, ${sw} ${ac.stand.id} is still occupied, request instructions`); } else if (ac.followV && ac.stand) { ac.need = 'Request follow-me'; pilot(ac, PH.vacated(ac).replace(/request taxi.*$/, `request follow-me to ${APT.standWord || 'stand'} ${ac.stand.id}`)); } else { ac.need = ac.stand ? 'Request taxi' : 'Needs a stand'; pilot(ac, PH.vacated(ac)); } } emit('vacated', ac); },
   holdIn: (ac, { hold }) => atHoldIn(ac, hold),
   onStand: (ac, { st, rev }) => { ac.state = 'ONSTAND'; ac.hdg = st.hdg != null ? (rev ? norm(st.hdg + 180) : st.hdg) : ac.hdg; ac.inAt = S.t; ac.inGap = rnd(30, 45)*60; emit('onstand', ac); turnRound(ac); },
   linedUp: (ac, a, v) => { ac.state = 'LINEDUP'; ac.hdg = crsOf(depRw(ac)); if (ac.vacq) { const [ex, back] = ac.vacq; ac.vacq = null; depVacate(ac, ex, back); } else if (ac.cto) beginTakeoff(ac, v); else ac.need = 'Lined up'; },
@@ -1182,11 +1259,16 @@ function taxiLimit(ac){
   }
   return lim;
 }
-// an arrival's stand is planned once it is cleared for an approach, so the card and strip show where it is going
+// an arrival's stand is planned once it is cleared for an approach, so the card and strip show where it is going: the
+// one given on the Flights board (standPref) or the timetable's, else its airline's usual area. Fairly often (small or
+// busy airports, standWaitOdds) that is a stand the departure on it hasn't left yet, and it will have to wait for it.
 function planStand(ac){
-  if (ac.kind !== 'ARR' || (ac.stand && ac.stand.occ === ac)) return;
-  // standPref: given on the Flights board. Otherwise it waits for the controller, unless it has been transferred away
-  const st = (ac.standPref && STANDS.find(s => s.id === ac.standPref && !s.occ)) || (ac.handed ? freeStand(ac) : null); if (st) { st.occ = ac; ac.stand = st; }
+  if (ac.kind !== 'ARR' || ac.stand || S.t < (ac.planT || 0)) return;
+  const want = ac.standPref || (ac.turn && ac.turn.stand), w = want && STANDS.find(s => s.id === want);
+  let st = w && (standFree(w, ac) ? w : busyStand(ac, w));
+  if (!st && Math.random() < standWaitOdds()) st = busyStand(ac);
+  if (!st) st = freeStand(ac);
+  if (st) takeStand(ac, st); else ac.planT = S.t + 30;   // nothing free: it tries again in a little while
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
@@ -1244,7 +1326,7 @@ function taxiIn(ac, st, via, hold){
   const rt = pen => rt0(qp ? (pen ? e => pen(e)*qp(e) : qp) : pen);
   // no taxiways named: over the runway crossing that suits the traffic, not always the shortest way
   const r = via && via.length ? rt(viaPen(via)) : xBest(ac, rt); if (!r) return null; xNote(ac, r);
-  if (!hold) { if (ac.stand && ac.stand !== st && ac.stand.occ === ac) ac.stand.occ = null; st.occ = ac; ac.stand = st; }
+  if (!hold) takeStand(ac, st);
   let pts = r.nodes.map(id => GN[id].p);
   // a stand lane that leaves the taxiway at a sharp angle (the herringbone stands): the corner is swept round as one curve, not a V
   if (!hold) for (let i = r.nodes.length - 2; i > 0; i--) if (/^Cf/.test(r.nodes[i])) {
@@ -1270,6 +1352,8 @@ function taxiIn(ac, st, via, hold){
 }
 function atHoldIn(ac, hold, quiet){
   ac.taxiIn = false; ac.vacated = true; ac.vacNode = hold.node; ac.holdAt = hold.id; ac.path = null; ac.gs = 0;
+  // waiting there for its stand: nothing to ask for until the stand is free (stepStandWaits calls it then)
+  if (standHeld(ac)) { ac.need = null; if (!quiet) pilot(ac, `${PH.atHoldPt(ac, hold)}, waiting for ${APT.standWord || 'stand'} ${ac.stand.id}`); return; }
   ac.need = `Holding at ${hold.id.replace(/~\d+$/, '')}`; if (!quiet) pilot(ac, PH.atHoldPt(ac, hold));
 }
 // on the runway, a vacating aircraft keeps its roll-out speed (or backtracks at VAC_RWY) and brakes in time for the
@@ -1613,12 +1697,17 @@ function commandRun(str){
       // STAND AUTO (the Auto button): the sim picks, the same way as a bare STAND, but a stand outside the airline's
       // usual area is swapped for a free one inside it when there is one
       const auto = id === 'AUTO' && !STANDS.some(x => x.id.toUpperCase() === 'AUTO'), pick = () => standChoices(ac).find(x => !x.occ && prefArea(ac).has(x)) || freeStand(ac);
-      let st = auto ? (ac.stand && prefArea(ac).has(ac.stand) ? ac.stand : pick() || ac.stand) : id ? STANDS.find(x => x.id.toUpperCase() === id) : ac.stand || pick();
+      // (its planned stand still taken: a bare STAND or AUTO looks for a free one instead)
+      const held = standHeld(ac);
+      let st = auto ? (ac.stand && prefArea(ac).has(ac.stand) && !held ? ac.stand : pick() || ac.stand) : id ? STANDS.find(x => x.id.toUpperCase() === id) : held ? pick() || ac.stand : ac.stand || pick();
       if (!st) { sys(id ? `There is no ${sw} ${id}.` : `No free ${sw} for ${ac.cs}.`); continue; }
-      if (st.occ && st.occ !== ac) { sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is occupied (${st.occ.cs}).`); continue; }
+      // a stand whose departure is about to leave can be given: it waits for it
+      if (st.occ && st.occ !== ac && !(standLeaver(st.occ) && !(st.waitBy && st.waitBy !== ac))) { sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is occupied (${st.occ.cs}${st.waitBy && st.waitBy !== ac ? `, and ${st.waitBy.cs} is waiting for it` : ''}).`); continue; }
+      if (st === ac.stand && held && !id) { sys(`No free ${sw} for ${ac.cs}: it waits for ${sw} ${st.id}.`); continue; }
       if (!standRoom(st, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for ${sw} ${st.id} with ${standBy(st, ac).cs} next to it.`); continue; }
       if (ac.taxiIn && ac.stand !== st) { sys(`${ac.cs} is taxiing to ${sw} ${ac.stand.id}: re-route it with TAXI ${st.id}.`); continue; }
       assignStand(ac, st); ac.standPref = st.id;
+      if (ac.standWait) sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is still occupied by ${st.occ.cs}, ${standFreeWords(st.occ)}: ${ac.cs} will wait for it.`);
       said.push(`${sw} ${st.id}`); reads.push(`${sw} ${st.id}`);
     } else if (t === 'FOLLOW' && ac.kind === 'ARR') {
       const r = followCmd(ac); if (r.err) { sys(r.err); continue; }
@@ -1632,6 +1721,8 @@ function commandRun(str){
       if (!hold && toks[i+1] && toks[i+1] !== 'VIA') { const want = STANDS.find(x => x.id.toUpperCase() === toks[i+1]); if (!want) { sys(`There is no stand ${toks[i+1]}.`); continue; } i++;
         if (want.occ && want.occ !== ac) { sys(`Stand ${want.id} is occupied (${want.occ.cs}).`); continue; }
         if (!standRoom(want, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for stand ${want.id} with ${standBy(want, ac).cs} next to it.`); continue; } st = want; }
+      if (!hold && st && st.occ && st.occ !== ac) { const sw = APT.standWord || 'stand', o = st.occ, hp = standWaitPt(ac);
+        sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is still occupied${o.cs ? ` by ${o.cs}${standLeaver(o) ? `, ${standFreeWords(o)}` : ''}` : ''}. Taxi ${ac.cs} to a holding point to wait (${ac.cs} TAXI ${hp || '<holding point>'}), or give it another ${sw} (${ac.cs} TAXI <${sw}>).`); continue; }
       if (!st && !hold) { const sw = APT.standWord || 'stand'; sys(`${ac.cs} has no ${sw} yet. Assign one first (${ac.cs} STAND takes the first free one in its usual area; ${ac.cs} STAND ${(standChoices(ac)[0] || STANDS[0]).id} picks one), or taxi it to a holding point out of the way to wait.`); continue; }
       if (hold && hold.rwy && toks[i+1] === 'VIA' && /^(RWY|RUNWAY)$/.test(toks[i+2] || '')) { i += 2; if (!rwyTaxi(ac, hold.id, said, reads)) return; continue; }   // along the runway
       const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
@@ -1931,7 +2022,7 @@ function step(dt){
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
   }
 
-  stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt); if (S.flow) stepFlow();
+  stepStandWaits(); stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt); if (S.flow) stepFlow();
   if (typeof stepVehicles === 'function') stepVehicles(dt);
   if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
   for (const ac of S.acs) {
@@ -1960,7 +2051,7 @@ function step(dt){
   }
   S.acs = S.acs.filter(ac => {
     if (ac.state === 'ONSTAND' && S.t > ac.doneAt) { if (S.sel === ac) S.sel = null; if (ac.stand) ac.stand.occ = null; return false; }
-    if (ac.divLanded) { SC(ac).div++; sys(`${ac.cs} has landed at ${ac.divLanded.name}.`); emit('divlanded', ac); if (S.sel === ac) S.sel = null; return false; }
+    if (ac.divLanded) { dropPlan(ac); SC(ac).div++; sys(`${ac.cs} has landed at ${ac.divLanded.name}.`); emit('divlanded', ac); if (S.sel === ac) S.sel = null; return false; }
     if (ac.airborne && ac.state !== 'PRE' && Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]) > (ac.kind === 'DEP' ? APT.area.dep : ac.state === 'DIVERTING' ? APT.area.div : APT.area.arr)) {
       if (ac.kind === 'DEP') { const sc = ac.handed ? (ac.hoBy || S.score) : SC(ac); if (!ac.handed) { sc.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else sc.pts += 20; sc.departed++; }
       else { SC(ac).div++; SC(ac).pts -= ac.state === 'DIVERTING' ? 0 : 40; { const D = ac.state === 'DIVERTING' && divDest(ac); sys(D ? `${ac.cs} has left the area, flying on to ${D.name}.` : `${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); } }
