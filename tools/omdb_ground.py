@@ -627,10 +627,50 @@ def cut_at(pl, d):
 inc = collections.defaultdict(list)
 for e in edges: inc[e[0]].append(e); inc[e[1]].append(e)
 def away(e, n): pl = epl(e); return pl if e[0] == n else pl[::-1]
+def is_curve(e):
+    """a way that turns more than 25 degrees between its two ends: a mapped junction curve"""
+    pl = epl(e)
+    if len(pl) < 3 or plen(pl) < 15: return False
+    h = lambda a, b: math.atan2(b[0]-a[0], b[1]-a[1])
+    q0 = (cut_at(pl, min(10, plen(pl)*0.3)) or (pl[1],))[0]; q1 = (cut_at(pl[::-1], min(10, plen(pl)*0.3)) or (pl[-2],))[0]
+    return abs((math.degrees(h(pl[0], q0) - h(q1, pl[-1])) + 180) % 360 - 180) > 25
+def arm_nodes(n, e, reach=140):
+    """the nodes along a stretch leaving n, up to `reach` metres out through plain bends (and the first junction)"""
+    # (straight on through a junction too: where several ways cross within a few metres, the arm runs on through them)
+    def hd(x, a):
+        pl = away(x, a); q = (cut_at(pl, min(12, plen(pl)*0.5)) or (pl[1],))[0]; return math.atan2(q[0]-pl[0][0], q[1]-pl[0][1])
+    out, prev, cur, L = [], n, e, 0
+    while True:
+        nx = cur[1] if cur[0] == prev else cur[0]; L += plen(epl(cur))
+        if L > reach: break
+        out.append(nx)
+        nxt = [x for x in inc[nx] if x is not cur]
+        if not nxt: break
+        if len(nxt) > 1:
+            pl = away(cur, nx); q = (cut_at(pl, min(12, plen(pl)*0.5)) or (pl[1],))[0]; hin = math.atan2(pl[0][0]-q[0], pl[0][1]-q[1])
+            st = min(nxt, key=lambda x: abs((math.degrees(hd(x, nx) - hin) + 180) % 360 - 180))
+            if abs((math.degrees(hd(st, nx) - hin) + 180) % 360 - 180) > 30: break
+            nxt = [st]
+        prev, cur = nx, nxt[0]
+    return out
+def mapped_curve(n, ea, eb):
+    A, B = set(arm_nodes(n, ea)), set(arm_nodes(n, eb))
+    if not A or not B: return False
+    if A & B: return True          # the two arms meet again: one of them is the mapped curve
+    for a in A:
+        for x in inc[a]:
+            if x is ea or x is eb: continue
+            o = x[1] if x[0] == a else x[0]
+            if o in B and o != n and a != n: return True
+    return False
 fid = [0]; newn = []; fillets = []; cut = {}   # cut[(id(edge), node)] = distance from that node to its new point
 for n, es in inc.items():
     if n in keepN or len(es) < 2: continue
     es = [e for e in es if e[2] != 'APRON']   # apron lanes keep their own mapped paint
+    # Dubai's junctions are mapped with their curves (each turn its own way, sweeping off the straight a few tens of
+    # metres out): a node where a mapped curve starts gets no curve of its own, nor does one a few metres from another
+    # junction (the ways crossing there are one junction, its curves mapped)
+    if any(is_curve(e) for e in es) or any(m != n and len(inc[m]) >= 3 and math.dist(pos[m], pos[n]) < 28 for m in pos if abs(pos[m][0] - pos[n][0]) < 28): continue
     pairs = []
     for i in range(len(es)):
         for j in range(i + 1, len(es)):
@@ -641,6 +681,10 @@ for n, es in inc.items():
             turn = 180 - abs((math.degrees(ha - hb) + 180) % 360 - 180)   # 0: straight on, 180: back the way it came
             if 30 <= turn <= 150: pairs.append((es[i], es[j], turn))   # (above 115 an aircraft can't make the corner itself)
     for ea, eb, turn in pairs:
+        # OpenStreetMap often maps the junction's curves itself (a short way from one arm to the other, 40-120 m out):
+        # where it has, the arms already turn into each other there, and a second curve at the crossing point would
+        # draw the junction as a tangle of lines and let aircraft cut across it
+        if mapped_curve(n, ea, eb): continue
         la, lb = plen(away(ea, n)), plen(away(eb, n))
         r = min(FIL_R*(1 if turn < 100 else 0.7 if turn <= 125 else 0.55), 0.42*la, 0.42*lb)
         if r < (10 if turn <= 115 else 5): continue   # a sharp turn gets a curve however short its stretches: without one it can't be made
