@@ -750,6 +750,7 @@ body.theme-dark #page-sim code, body.theme-dark .pop code { color: var(--phos); 
 /* departure release (Sevilla / Casablanca) */
 .standline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 6px 0 2px; padding: 5px 8px; border-radius: 6px; background: var(--panel-2); font: 500 12px/1.4 var(--font-data); color: var(--ink-2); }
 .standline b { color: var(--ink); } .standline.none b { color: var(--warn); } .standline .pref { flex: 1; color: var(--ink-3, var(--ink-2)); }
+.standline .held { flex-basis: 100%; color: var(--warn); }
 .standline select { font: inherit; max-width: 160px; } .standline .pick { display: inline-flex; gap: 6px; align-items: center; }
 .standline button.auto { font: inherit; font-size: 11px; font-weight: 600; line-height: 1; padding: 4px 8px; border-radius: 5px; border: 1px solid var(--line-2); background: var(--panel); color: var(--accent); cursor: pointer; }
 .standline button.auto:hover:not(:disabled) { background: var(--accent); color: #fff; } .standline button.auto:disabled { opacity: .45; cursor: default; }
@@ -7087,6 +7088,13 @@ function busyStand(ac, only){
     if (want < o.reqAt) o.reqAt = Math.max(S.t + 30, want); }
   return st;
 }
+// the apron is full (Dublin at its peak): the stand it fits whose departure leaves first, in its airline's area if it
+// can, and it waits for that push-back
+function soonestStand(ac){
+  const pa = prefArea(ac), ok = s => s.occ && s.occ !== ac && !(s.waitBy && s.waitBy !== ac) && s.area !== 'hangar' && standLeaver(s.occ) && standRoom(s, ac);
+  const L = STANDS.filter(ok).sort((a, b) => (pa.has(b) - pa.has(a)) || standFreeIn(a.occ) - standFreeIn(b.occ));
+  return L[0] || null;
+}
 // a holding point out of the way to wait at for the stand: of the six intermediate ones nearest the stand, the one with
 // the shortest taxi there and on to the stand afterwards (facing the way it arrives: it can't turn round on a taxiway)
 function standWaitPt(ac){
@@ -7485,8 +7493,8 @@ function planStand(ac){
   const want = ac.standPref || (ac.turn && ac.turn.stand), w = want && STANDS.find(s => s.id === want);
   let st = w && (standFree(w, ac) ? w : busyStand(ac, w));
   if (!st && Math.random() < standWaitOdds()) st = busyStand(ac);
-  if (!st) st = freeStand(ac);
-  if (st) takeStand(ac, st); else ac.planT = S.t + 30;   // nothing free: it tries again in a little while
+  if (!st) st = freeStand(ac) || soonestStand(ac);
+  if (st) takeStand(ac, st); else ac.planT = S.t + 30;   // nothing it could have: it tries again in a little while
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
@@ -9813,8 +9821,8 @@ function standLine(ac){
   const busyWhy = s => { const o = s.occ; if (!o || !o.cs) return 'blocked'; if (o.kind === 'DEP') { const w = o.state === 'PARKED' ? Math.max(0, Math.round(((o.reqAt || S.t) - S.t)/60)) : 0; return `${o.cs} ${o.state === 'PARKED' ? 'pushes in ~' + w + ' min' : 'pushing now'}`; } return `${o.cs} on stand`; };
   // (a stand whose departure is about to leave can be chosen: it waits for it)
   const busy = STANDS.filter(s => s.occ && s.occ !== ac && (pa.has(s) || s === ac.stand)).slice(0, 8), canWait = s => standLeaver(s.occ) && !(s.waitBy && s.waitBy !== ac);
-  const held = standHeld(ac) ? `<span class="pref">still occupied: ${esc(busyWhy(ac.stand))}</span>` : '';
-  return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b>${held}<span class="pref">prefers ${esc(pa.name)}</span>
+  const held = standHeld(ac) ? `<span class="held">Still occupied: ${esc(busyWhy(ac.stand))}</span>` : '';
+  return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b><span class="pref">prefers ${esc(pa.name)}</span>${held}
     <span class="pick"><select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}${busy.length ? `<optgroup label="Occupied: its airline's ${sw}s">${busy.map(s => `<option${canWait(s) ? ` value="${s.id}"` : ' disabled'}${ac.stand === s ? ' selected' : ''}>${s.id} · ${esc(busyWhy(s))}</option>`).join('')}</optgroup>` : ''}</select><button id="iStandAuto" class="auto" title="Let the sim pick a free ${sw} that fits, in its airline's usual area first"${locked ? ' disabled' : ''}>Auto</button></span></div>`;
 }
 // ── clearance pop-outs (push direction, taxi routing) ──

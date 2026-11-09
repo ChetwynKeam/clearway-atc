@@ -869,6 +869,13 @@ function busyStand(ac, only){
     if (want < o.reqAt) o.reqAt = Math.max(S.t + 30, want); }
   return st;
 }
+// the apron is full (Dublin at its peak): the stand it fits whose departure leaves first, in its airline's area if it
+// can, and it waits for that push-back
+function soonestStand(ac){
+  const pa = prefArea(ac), ok = s => s.occ && s.occ !== ac && !(s.waitBy && s.waitBy !== ac) && s.area !== 'hangar' && standLeaver(s.occ) && standRoom(s, ac);
+  const L = STANDS.filter(ok).sort((a, b) => (pa.has(b) - pa.has(a)) || standFreeIn(a.occ) - standFreeIn(b.occ));
+  return L[0] || null;
+}
 // a holding point out of the way to wait at for the stand: of the six intermediate ones nearest the stand, the one with
 // the shortest taxi there and on to the stand afterwards (facing the way it arrives: it can't turn round on a taxiway)
 function standWaitPt(ac){
@@ -1267,8 +1274,8 @@ function planStand(ac){
   const want = ac.standPref || (ac.turn && ac.turn.stand), w = want && STANDS.find(s => s.id === want);
   let st = w && (standFree(w, ac) ? w : busyStand(ac, w));
   if (!st && Math.random() < standWaitOdds()) st = busyStand(ac);
-  if (!st) st = freeStand(ac);
-  if (st) takeStand(ac, st); else ac.planT = S.t + 30;   // nothing free: it tries again in a little while
+  if (!st) st = freeStand(ac) || soonestStand(ac);
+  if (st) takeStand(ac, st); else ac.planT = S.t + 30;   // nothing it could have: it tries again in a little while
 }
 function startVacate(ac, auto){
   const pts = vacatePath(ac); ac.state = 'VACATING'; ac.need = null; ac.vacAuto = !!auto; ac.xing = ac.rwyId; ac.vacated = false; ac.taxiIn = false;   // leaving the runway it landed on
