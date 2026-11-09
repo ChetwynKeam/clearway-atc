@@ -8,7 +8,7 @@ import json, math, re, sys
 ICAO, SRC, STANDS_F, OUT = sys.argv[1:5]
 ORIGIN = {'EGKK': (51 + 8/60 + 53/3600, -(11/60 + 25/3600)), 'LEMD': (40 + 28/60 + 20/3600, -(3 + 33/60 + 39/3600)),
           'EGCC': (53 + 21/60 + 13/3600, -(2 + 16/60 + 30/3600)), 'EGLL': (51 + 28/60 + 39/3600, -(27/60 + 41/3600)),
-          'KJFK': (40.639925, -73.778939), 'YSSY': (-(33 + 56/60 + 46/3600), 151 + 10/60 + 38/3600)}
+          'KJFK': (40.639925, -73.778939), 'YSSY': (-(33 + 56/60 + 46/3600), 151 + 10/60 + 38/3600), 'EIDW': (53 + 25/60 + 17/3600, -(6 + 16/60 + 12/3600))}
 LAT0, LON0 = ORIGIN[ICAO]; KX, KY = 60*1852*math.cos(math.radians(LAT0)), 60*1852
 en = lambda g: ((g['lon'] - LON0)*KX, (g['lat'] - LAT0)*KY)
 E = json.load(open(SRC))['elements']; T = lambda e: e.get('tags', {})
