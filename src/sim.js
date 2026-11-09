@@ -158,6 +158,8 @@ for (const h of APT.ihps || []) {
   const dir = nb.length > 1 ? brg(...nb[0], ...nb[1]) : nb.length ? brg(...GN[node].p, ...nb[0]) : 0;
   IHPS[h.id] = { id: h.id, node, tw, dir, quiet: !!h.quiet };   // quiet: no line or sign of its own (Dublin's CAT II/III ladders)
 }
+// other spellings an airport accepts for one (Dublin's FINNER-1 for FINNER1): hidden aliases
+for (const h of APT.ihps || []) for (const a of h.alias || []) if (IHPS[h.id] && !(a in IHPS)) Object.defineProperty(IHPS, a, { value: IHPS[h.id], enumerable: false });
 // a named one (Dublin's Neptune) can be typed in capitals, as every command is: a hidden alias in capitals
 for (const id of Object.keys(IHPS)) if (id !== id.toUpperCase() && !(id.toUpperCase() in IHPS)) Object.defineProperty(IHPS, id.toUpperCase(), { value: IHPS[id], enumerable: false });
 // any named holding point: a runway holding point or an intermediate one

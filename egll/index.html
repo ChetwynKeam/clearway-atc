@@ -4042,7 +4042,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
         <li>Approach, Director, Tower North and South, Ground North and South and Delivery are one position.</li>
         <li>Departures come back to you rather than going straight to Dublin Control passing 2,000 ft, and the Control sectors beyond the SIDs are representative.</li>
         <li>The SID clearance level (FL90) follows the charts' limit at the first turn point; the AIP's text section was not used.</li>
-        <li>220S, the self-manoeuvring stand at Pier 2, is flown as a push-back stand (the North Apron's S stands turn round on the stand along their painted hook and taxi out forwards). The intermediate holding points the chart does not name are named here by taxiway and number (FOUTER-1, N-2: <code>EIN162 TAXI FOUTER-1</code>), and the CAT II/III holding positions after the runway holding point they stand behind (<code>S4-CAT3</code>).</li>
+        <li>220S, the self-manoeuvring stand at Pier 2, is flown as a push-back stand (the North Apron's S stands turn round on the stand along their painted hook and taxi out forwards). The intermediate holding points the chart does not name are named here by taxiway and number (FINNER1, FOUTER2: <code>EIN162 TAXI FOUTER1</code>), or by a letter where the taxiway's name ends in a figure or the figure would clash with a holding point (LINK2A, AT4B, NB), and the CAT II/III holding positions after the runway holding point they stand behind (<code>S4CAT3</code>).</li>
         <li>Runway 16 departures enter from taxiway N, 430 m down the runway; the short stretch of N4 beyond the North Runway is not modelled.</li>
         <li>The night-time runway preferences and the noise rules beyond the North Runway's hours are not modelled.</li>
         <li>The timetable is the real Dublin day of Monday 9 November 2026, paired into turnarounds, with types by airline. Live now uses today's real flights and positions.</li>
@@ -6475,6 +6475,8 @@ for (const h of APT.ihps || []) {
   const dir = nb.length > 1 ? brg(...nb[0], ...nb[1]) : nb.length ? brg(...GN[node].p, ...nb[0]) : 0;
   IHPS[h.id] = { id: h.id, node, tw, dir, quiet: !!h.quiet };   // quiet: no line or sign of its own (Dublin's CAT II/III ladders)
 }
+// other spellings an airport accepts for one (Dublin's FINNER-1 for FINNER1): hidden aliases
+for (const h of APT.ihps || []) for (const a of h.alias || []) if (IHPS[h.id] && !(a in IHPS)) Object.defineProperty(IHPS, a, { value: IHPS[h.id], enumerable: false });
 // a named one (Dublin's Neptune) can be typed in capitals, as every command is: a hidden alias in capitals
 for (const id of Object.keys(IHPS)) if (id !== id.toUpperCase() && !(id.toUpperCase() in IHPS)) Object.defineProperty(IHPS, id.toUpperCase(), { value: IHPS[id], enumerable: false });
 // any named holding point: a runway holding point or an intermediate one
