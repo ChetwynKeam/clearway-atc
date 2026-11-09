@@ -206,7 +206,7 @@ const TERM_NAME = { T: 'Terminal', S: 'Satellites', E: 'East Apron', W: 'West Ap
 // taxiway names: letters spoken one by one (AX "Alfa X-ray"), digits as numbers; holding points without the ~n suffix
 const NATO = { I: 'India', O: 'Oscar', A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike',
   N: 'November', P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango', U: 'Uniform', V: 'Victor', W: 'Whiskey', X: 'X-ray', Y: 'Yankee', Z: 'Zulu' };
-const twyWords = t => { t = t.replace(/~\d+$/, ''); const L = /^LINK(\w)$/.exec(t); return L ? 'Link ' + (NATO[L[1]] || L[1]) : t.match(/[A-Z]|\d+/g).map(x => NATO[x] || x).join(' '); };   // Link 3, not Lima India November Kilo 3
+const twyWords = t => { t = t.replace(/~\d+$/, ''); const L = /^LINK(\w)$/.exec(t); return L ? t : t.match(/[A-Z]|\d+/g).map(x => NATO[x] || x).join(' '); };   // LINK3 written as on the chart and the map (spoken "link three"), not Lima India November Kilo 3
 const PHON = {};
 for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
 for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);

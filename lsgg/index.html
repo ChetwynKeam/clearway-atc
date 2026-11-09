@@ -5432,7 +5432,7 @@ const TERM_NAME = { T: 'Terminal', S: 'Satellites', E: 'East Apron', W: 'West Ap
 // taxiway names: letters spoken one by one (AX "Alfa X-ray"), digits as numbers; holding points without the ~n suffix
 const NATO = { I: 'India', O: 'Oscar', A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike',
   N: 'November', P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango', U: 'Uniform', V: 'Victor', W: 'Whiskey', X: 'X-ray', Y: 'Yankee', Z: 'Zulu' };
-const twyWords = t => { t = t.replace(/~\d+$/, ''); const L = /^LINK(\w)$/.exec(t); return L ? 'Link ' + (NATO[L[1]] || L[1]) : t.match(/[A-Z]|\d+/g).map(x => NATO[x] || x).join(' '); };   // Link 3, not Lima India November Kilo 3
+const twyWords = t => { t = t.replace(/~\d+$/, ''); const L = /^LINK(\w)$/.exec(t); return L ? t : t.match(/[A-Z]|\d+/g).map(x => NATO[x] || x).join(' '); };   // LINK3 written as on the chart and the map (spoken "link three"), not Lima India November Kilo 3
 const PHON = {};
 for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
 for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);
@@ -6529,7 +6529,7 @@ function say(text, who){
   if (!S.voice || who === 'atc') return;   // your own transmissions are only written, never spoken
   if (aiCtx && !S.aiHear) return;   // the AI controllers' frequencies: heard only if you ask for them
   try {
-    const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
+    const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')).replace(/\bLINK(\w)\b/g, 'link $1'));
     if (voices.length) u.voice = who === 'atc' ? voices[0] : voices[1 + hash(who) % Math.max(1, voices.length-1)] || voices[0];
     u.rate = 1.15; u.pitch = who === 'atc' ? 1 : 0.8 + (hash(who) % 35)/100;
     speechSynthesis.speak(u);
@@ -7588,7 +7588,7 @@ function stepReadbacks(){
 }
 function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
 function commandRun(str){
-  const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
+  const toks = str.trim().toUpperCase().replace(/\bLINK\s+([0-9A-Z])\b/g, 'LINK$1').split(/\s+/).filter(Boolean);   // "LINK 1" typed with a space is LINK1
   if (!toks.length) return;
   // a callsign that was split by a space (CAR 9 H20): join the first words back up when together they name a flight
   for (let n = 3; n >= 2; n--) { if (toks.length >= n) { const j = toks.slice(0, n).join(''); if (!S.acs.some(a => a.cs === toks[0]) && S.acs.some(a => a.cs === j)) { toks.splice(0, n, j); break; } } }
@@ -15320,7 +15320,7 @@ say = function(text, who){
   // only pilots, tugs and other stations are heard
   if (who === 'atc') return;
   try {
-    const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
+    const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')).replace(/\bLINK(\w)\b/g, 'link $1'));
     const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; if (!isEnglishVoice(v)) u.text = inEnglish(u.text); }
     u.rate = who === 'atc' ? 1.1 : 1.05 + (hash(who) % 20)/100; u.pitch = who === 'atc' ? 1 : 0.85 + (hash(who+'p') % 30)/100;
     if (!/^tel:/.test(who) && typeof radioFx === 'function') { u.onstart = () => radioFx('open'); u.onend = () => radioFx('close'); }   // landline calls have no squelch

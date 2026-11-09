@@ -50,7 +50,7 @@ say = function(text, who){
   // only pilots, tugs and other stations are heard
   if (who === 'atc') return;
   try {
-    const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
+    const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')).replace(/\bLINK(\w)\b/g, 'link $1'));
     const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; if (!isEnglishVoice(v)) u.text = inEnglish(u.text); }
     u.rate = who === 'atc' ? 1.1 : 1.05 + (hash(who) % 20)/100; u.pitch = who === 'atc' ? 1 : 0.85 + (hash(who+'p') % 30)/100;
     if (!/^tel:/.test(who) && typeof radioFx === 'function') { u.onstart = () => radioFx('open'); u.onend = () => radioFx('close'); }   // landline calls have no squelch
