@@ -141,6 +141,31 @@ const STANDS = G.gates.filter(g => g[7] !== 'TT').map(g => { const [id, term, [e
 STANDS.forEach(s => { s.lp = GN[s.node].p; const L = dist(...s.lp, ...s.p)/M2NM, half = s.maxSpan ? Math.min(34, Math.max(11, s.maxSpan*0.52)) : 20, k = Math.min(half, L*0.4);
   if (L > 12) { const u = [(s.lp[0] - s.p[0])/(L*M2NM), (s.lp[1] - s.p[1])/(L*M2NM)]; s.p = [s.p[0] + u[0]*k*M2NM, s.p[1] + u[1]*k*M2NM]; s.m = mOf(s.p); s.off = offOf(s.p); }
   s.hdg = L > 3 ? brg(...s.lp, ...s.p) : (s.h0 ?? 0); });
+// the small self-manoeuvring stands between the big ones on the North Apron (131S-136S, 138S-142S): the painted line
+// (AD 2.24-2) leaves the lane up a big stand's lead-in, sweeps over in an arch and comes back down to the S stand's
+// stop mark, so the aircraft turns round on the stand and parks nose out; it leaves forwards, straight to the lane
+const lerp = (a, b, t) => [a[0] + (b[0] - a[0])*t, a[1] + (b[1] - a[1])*t];
+for (const s of STANDS) {
+  if (s.use !== 'S' || !/^1[34]\dS$/.test(s.id)) continue;
+  // in up the lead-in of the big stand on the far side from the S stop mark (134S: up 134R, over to the left, down beside
+  // 134L; 136S: up 136L, over, down beside 136R)
+  const g = G.gates.find(x => x[0] === s.id); if (!g) continue; const nose = EN(...g[2]);
+  const Ls = ['L', 'R'].map(c => STANDS.find(o => o.id === s.id.replace(/S$/, c))).filter(Boolean)
+    .map(o => { const q = GN[o.node].p, t = EN(...G.gates.find(x => x[0] === o.id)[2]), L = dist(...q, ...t), u = [(t[0] - q[0])/L, (t[1] - q[1])/L];
+      return [o, Math.abs((nose[0] - q[0])*u[1] - (nose[1] - q[1])*u[0])]; }).sort((x, y) => y[1] - x[1])[0]?.[0]; if (!Ls) continue;
+  const a = GN[Ls.node].p, Lnose = EN(...G.gates.find(x => x[0] === Ls.id)[2]), LL = dist(...a, ...Lnose)/M2NM; if (LL < 30) continue;
+  const u = [(Lnose[0] - a[0])/(LL*M2NM), (Lnose[1] - a[1])/(LL*M2NM)];                         // up the L lead-in, away from the lane
+  const up = (q, m) => [q[0] + u[0]*m*M2NM, q[1] + u[1]*m*M2NM];
+  const proj = ((nose[0] - a[0])*u[0] + (nose[1] - a[1])*u[1])/M2NM, half = 15;                 // the S aircraft's middle: half its length up from the nose
+  const top = Math.min(LL - 4, proj + half + 16), A = up(a, top), mid = up(nose, half);
+  const side = dist(...A, ...up(nose, top - proj))/M2NM, k = Math.max(10, side*0.55);
+  const P0 = up(a, top - 12), P1 = A, C1 = up(A, k), C2 = up(nose, top - proj + k), P3 = up(nose, top - proj);   // the arch over the top
+  const arch = []; for (let j = 1; j <= 12; j++) { const t = j/12, w = 1 - t; arch.push([w*w*w*P1[0] + 3*w*w*t*C1[0] + 3*w*t*t*C2[0] + t*t*t*P3[0], w*w*w*P1[1] + 3*w*w*t*C1[1] + 3*w*t*t*C2[1] + t*t*t*P3[1]]); }
+  const out = { node: s.node, pts: [mid, s.lp] };                                                 // out forwards to the lane below it
+  s.inPts = [P0, A, ...arch]; s.node = Ls.node; s.lp = a; s.p = mid; s.m = mOf(mid); s.off = offOf(mid);
+  s.hdg = norm(brg(...a, ...Lnose) + 180); s.out = out; s.noLead = false;
+  s.line = [a, P0, A, ...arch, nose]; s.lineOk = true;
+}
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 // which side of each runway the terminals are
 { const civ = STANDS.filter(s => s.area === 'civil'), c = civ.reduce((a, s) => [a[0] + s.p[0]/civ.length, a[1] + s.p[1]/civ.length], [0, 0]); for (const R of RWY_LIST) R.side = Math.sign(R.offOf(c)) || 1; }
