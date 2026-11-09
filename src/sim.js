@@ -156,7 +156,7 @@ for (const h of APT.ihps || []) {
     return best && best.nb; })();
   nb ||= GN[node].adj.filter(([, e]) => e.tw === tw).map(([v]) => GN[v].p);
   const dir = nb.length > 1 ? brg(...nb[0], ...nb[1]) : nb.length ? brg(...GN[node].p, ...nb[0]) : 0;
-  IHPS[h.id] = { id: h.id, node, tw, dir };
+  IHPS[h.id] = { id: h.id, node, tw, dir, quiet: !!h.quiet };   // quiet: no line or sign of its own (Dublin's CAT II/III ladders)
 }
 // a named one (Dublin's Neptune) can be typed in capitals, as every command is: a hidden alias in capitals
 for (const id of Object.keys(IHPS)) if (id !== id.toUpperCase() && !(id.toUpperCase() in IHPS)) Object.defineProperty(IHPS, id.toUpperCase(), { value: IHPS[id], enumerable: false });
@@ -1521,7 +1521,7 @@ function stepReadbacks(){
 }
 function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
 function commandRun(str){
-  const toks = str.trim().toUpperCase().replace(/\bLINK\s+([0-9A-Z])\b/g, 'LINK$1').split(/\s+/).filter(Boolean);   // "LINK 1" typed with a space is LINK1
+  const toks = str.trim().toUpperCase().replace(/\bLINK\s+([0-9A-Z])\b/g, 'LINK$1').replace(/\bTAXI\s+TO\b/g, 'TAXI').split(/\s+/).filter(Boolean);   // "LINK 1" typed with a space is LINK1; "TAXI TO N2" is TAXI N2
   if (!toks.length) return;
   // a callsign that was split by a space (CAR 9 H20): join the first words back up when together they name a flight
   for (let n = 3; n >= 2; n--) { if (toks.length >= n) { const j = toks.slice(0, n).join(''); if (!S.acs.some(a => a.cs === toks[0]) && S.acs.some(a => a.cs === j)) { toks.splice(0, n, j); break; } } }

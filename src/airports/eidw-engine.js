@@ -183,7 +183,36 @@ const twyWords = t => { const b = t.replace(/~\d+$/, ''); if (SPECIAL_TW[b]) ret
 const PHON = {};
 for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
 for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);
-for (const [id] of G.ihps || []) PHON[id] = twyWords(id);
+// the intermediate holding points the chart does not name get a name to give a taxi clearance to: the taxiway and a
+// number counted along it (F-Outer's from north to south: FOUTER-1, FOUTER-2; N's from west to east), shown on a sign
+// beside the stop line. The CAT II/III holding positions behind the runway ones are <taxiway>-CAT3 (S4-CAT3), with no
+// extra sign: their ladder marking is beside the runway holding point's sign
+const IHP_NUMW = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+const IHP_LIST = (() => {
+  const out = [], byTw = {};
+  for (const [id, node] of G.ihps || []) { if (!GN[node]) continue;
+    if (!/^IHP\d/.test(id) && !CAT23.has(node)) { out.push({ id, node }); continue; }
+    // the taxiway it stands across: the names either side along the straightest line through it; where the mapped name
+    // changes there (a stop bar on F-Outer just short of Link 4), the through taxiway's rather than the link's
+    const ws = waysOn(node).filter(([, e]) => e.tw && e.tw !== 'APRON'); let pair = null, bd = -1;
+    for (let i = 0; i < ws.length; i++) for (let j = i + 1; j < ws.length; j++) { const d = Math.abs(angDiff(brg(...GN[node].p, ...GN[ws[i][0]].p), brg(...GN[node].p, ...GN[ws[j][0]].p))); if (d > bd) { bd = d; pair = [ws[i], ws[j]]; } }
+    const cand = (pair || ws.slice(0, 1)).map(([, e]) => e.tw);
+    const tw = cand.find(t => !/^LINK/.test(t)) || cand[0] || 'TWY';
+    if (CAT23.has(node)) {   // named after the runway holding point it stands behind
+      const hk = Object.keys(HOLDS).filter(k => !/~\d+$/.test(k) && GN[HOLDS[k].node]).sort((x, y) => dist(...GN[HOLDS[x].node].p, ...GN[node].p) - dist(...GN[HOLDS[y].node].p, ...GN[node].p))[0];
+      const ref = hk && dist(...GN[HOLDS[hk].node].p, ...GN[node].p) < 80*M2NM ? hk : tw;
+      out.push({ id: `${ref}-CAT3`, node, quiet: true, ph: `${twyWords(ref)}, CAT three` }); continue; }
+    (byTw[tw] ||= []).push(node); }
+  for (const [tw, ns] of Object.entries(byTw)) {
+    // number along the taxiway's run: north to south if it runs more north-south, west to east otherwise
+    const ps = ns.map(n => GN[n].p), ext = (k) => Math.max(...ps.map(p => p[k])) - Math.min(...ps.map(p => p[k]));
+    const ns2 = ns.slice().sort(ext(1) > ext(0) ? (a, b) => GN[b].p[1] - GN[a].p[1] : (a, b) => GN[a].p[0] - GN[b].p[0]);
+    ns2.forEach((n, i) => out.push({ id: `${tw}-${i + 1}`, node: n, ph: `${twyWords(tw)} ${IHP_NUMW[i + 1] || i + 1}` }));
+  }
+  const seen = {}; for (const h of out) { if (seen[h.id]) h.id += String.fromCharCode(65 + seen[h.id]++); else seen[h.id] = 1; }   // never two the same
+  return out;
+})();
+for (const h of IHP_LIST) PHON[h.id] = h.ph || twyWords(h.id);
 for (const [k, [ref, w]] of Object.entries(G.hside || {})) { PHON[k] = twyWords(ref) + (w ? ', ' + w : ''); for (const v of Object.keys(HOLDS)) if (HOLDS[v].ref === k) PHON[v] = PHON[k]; }
 PHON.APRON = 'the apron';
 
@@ -336,11 +365,6 @@ function drawEidw(){
       for (const id of RET_NODES) { const n = GN[id]; if (!n) continue; const ws = waysOn(id); if (!ws.length) continue;
         const d = brg(...n.p, ...GN[ws[0][0]].p);
         for (let w = -9; w <= 9; w += 3) { const [X, Y] = P2(add(n.p, d + 90, w*M2NM)); cx.beginPath(); cx.arc(X, Y, Math.max(1.2, 0.45*mpx), 0, 7); cx.fill(); } }
-      cx.restore(); }
-    // the intermediate holding positions the chart does not name: a single dashed yellow line across the taxiway (no sign)
-    { cx.save(); cx.lineCap = 'butt'; cx.strokeStyle = '#f5c518'; cx.lineWidth = Math.max(1.6, 0.6*mpx); cx.setLineDash([Math.max(3, 1.2*mpx), Math.max(2, 0.9*mpx)]);
-      for (const [id, node] of G.ihps || []) { if (!/^IHP\d/.test(id) || !GN[node] || CAT23.has(node)) continue; const p = GN[node].p, ws = waysOn(node);
-        const d = ws.length ? brg(...p, ...GN[ws[0][0]].p) : 0, a = add(p, d + 90, 11*M2NM), b = add(p, d - 90, 11*M2NM); pathP([a, b], false); cx.stroke(); }
       cx.restore(); }
     groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { if (s.line && s.line.length > 1 && s.lineOk !== false) { if (s.lineOk == null) { const L = s.line.reduce((a, q, i) => i ? a + dist(...s.line[i-1], ...q) : 0, 0); s.lineOk = L < 1.25*dist(...s.line[0], ...s.line[s.line.length-1]) + 10*M2NM; } if (s.lineOk) { pathP(s.line, false); cx.stroke(); continue; } } const L = dist(...s.lp, ...s.p)/M2NM, f = L > 90 ? 1 - 90/L : 0; pathP([[s.lp[0] + (s.p[0] - s.lp[0])*f, s.lp[1] + (s.p[1] - s.lp[1])*f], s.p], false); cx.stroke(); } });
     cx.save(); if (IMG) clipOut(G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n))))); drawStandDetail(null, null, mpx, false); cx.restore();   // stand paint stops at the terminal walls
@@ -565,8 +589,9 @@ const APT = {
   get tower(){ return [EIDW.UNITS.twr.name, EIDW.UNITS.twr.freq[RWYS_BY_END(S.rwy).id] || '118.605']; },
   gnd: [EIDW.UNITS.gnd.name, EIDW.UNITS.gnd.freq],
   runways: RWY_LIST, rwyHalfWidth: 22.5, holdSigns: true,
-  // the intermediate holding points the chart names (Venus and Neptune on N); the others are painted (drawEidw) but unnamed
-  ihps: (G.ihps || []).filter(([id]) => !/^IHP\d/.test(id)).map(([id, node]) => ({ id, node })),
+  // every intermediate holding point, to taxi to or hold at: Venus and Neptune on N (the chart's names), the rest by
+  // taxiway and number (FOUTER-1, LINK4-1), and the CAT II/III holding positions (S4-CAT3, no sign of their own)
+  ihps: IHP_LIST.map(({ id, node, quiet }) => ({ id, node, quiet })),
   // independent parallel runways 1.6 km apart: a departure off one and an arrival on (or going around from) the other,
   // close in, are separated by the SID and missed approach tracks; arrivals to both on final side by side likewise
   sepOk: (a, b, d) => { const rw = x => x.kind === 'ARR' ? (x.app || x.gaRwy) : depRw(x); const ra = rw(a), rb = rw(b);

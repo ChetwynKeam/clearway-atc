@@ -316,7 +316,7 @@ function drawGroundSigns(){
   const off = (p, d, m) => [p[0] + Math.sin(d*D2R)*m*M2NM, p[1] + Math.cos(d*D2R)*m*M2NM];
   // intermediate holding positions: a single dashed yellow line across the taxiway, and a sign with its name
   const fsH = clamp(3.4*mpx, 10, 16);
-  for (const h of Object.values(IHPS)) {
+  for (const h of Object.values(IHPS)) { if (h.quiet) continue;
     const p = GN[h.node].p, a = P2(off(p, h.dir + 90, 13)), b = P2(off(p, h.dir - 90, 13));
     cx.save(); cx.lineCap = 'butt';
     cx.strokeStyle = 'rgba(20,23,26,.75)'; cx.lineWidth = Math.max(4, 1.3*mpx); cx.beginPath(); cx.moveTo(...a); cx.lineTo(...b); cx.stroke();
