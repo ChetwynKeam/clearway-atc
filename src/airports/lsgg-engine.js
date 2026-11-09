@@ -206,7 +206,7 @@ const TERM_NAME = { T: 'Terminal', S: 'Satellites', E: 'East Apron', W: 'West Ap
 // taxiway names: letters spoken one by one (AX "Alfa X-ray"), digits as numbers; holding points without the ~n suffix
 const NATO = { A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike',
   N: 'November', P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango', U: 'Uniform', V: 'Victor', W: 'Whiskey', X: 'X-ray', Y: 'Yankee', Z: 'Zulu' };
-const twyWords = t => t.replace(/~\d+$/, '').match(/[A-Z]|\d+/g).map(x => NATO[x] || x).join(' ');
+const twyWords = t => { t = t.replace(/~\d+$/, ''); const L = /^LINK(\w)$/.exec(t); if (t === 'OUTER' || t === 'INNER') return t[0] + t.slice(1).toLowerCase(); return L ? t : t.match(/[A-Z]|\d+/g).map(x => NATO[x] || x).join(' '); };   // LINK3 written as on the chart and the map (spoken "link three"), not Lima India November Kilo 3
 const PHON = {};
 for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
 for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);
@@ -366,7 +366,7 @@ function drawLsgg(){
       cx.setLineDash([2*mpx + 2, 2*mpx + 2]);
       for (const nid of [s.node, s.out.node]) { const gn = GN[nid]; if (!gn) continue; const P = gn.p, lead = brg(...P, ...s.p), seen = [];
         const at = (q, bg, k) => [q[0] + Math.sin(bg*D2R)*k*M2NM, q[1] + Math.cos(bg*D2R)*k*M2NM];
-        for (const [v, e] of waysOn(nid)) { const w = GN[v] && GN[v].p; if (!w || !/^(OUTER|INNER|LINK)/.test(e.tw || '') || dist(...P, ...w)/M2NM < 3) continue;
+        for (const [v, e] of waysOn(nid)) { const w = GN[v] && GN[v].p; if (!w || !/^(OUTER|INNER|LINK\w)$/.test(e.tw || '') || dist(...P, ...w)/M2NM < 3) continue;
           const bg = brg(...P, ...w), an = Math.abs(angDiff(bg, lead)); if (an < 25 || an > 112 || seen.some(x => Math.abs(angDiff(x, bg)) < 20)) continue; seen.push(bg);
           const A = at(P, bg, Math.min(18, dist(...P, ...w)/M2NM*0.9)), B = at(P, lead, 12), pts = [];
           for (let i = 0; i <= 12; i++) { const u = i/12, q = 1 - u; pts.push([q*q*A[0] + 2*q*u*P[0] + u*u*B[0], q*q*A[1] + 2*q*u*P[1] + u*u*B[1]]); }

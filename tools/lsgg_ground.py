@@ -59,7 +59,7 @@ def tname(r):
     r = r.strip().upper()
     m = re.match(r'^LINK ([0-9A-Z])$', r)
     if m: return 'LINK' + m[1]                                      # Link 1 to Link 5, Link A, Link D (spoken "Link 4")
-    if r in ('INNER', 'OUTER'): return r
+    if r in ('INNER', 'OUTER'): return r                          # typed OUTER and INNER, spoken "Outer" and "Inner"
     if re.match(r'^(D\d|\d+TO\d+|PRKG|D1TOD5)', r): return 'APRON'
     r = re.sub(r'^([A-Z]+)-?(\d+)(-\d+)?$', r'\1\2', r).replace('-', '').replace(' ', '')
     return r

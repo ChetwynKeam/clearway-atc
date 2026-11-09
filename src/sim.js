@@ -379,7 +379,7 @@ function say(text, who){
   if (!S.voice || who === 'atc') return;   // your own transmissions are only written, never spoken
   if (aiCtx && !S.aiHear) return;   // the AI controllers' frequencies: heard only if you ask for them
   try {
-    const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')));
+    const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')).replace(/\bLINK(\w)\b/g, 'link $1'));
     if (voices.length) u.voice = who === 'atc' ? voices[0] : voices[1 + hash(who) % Math.max(1, voices.length-1)] || voices[0];
     u.rate = 1.15; u.pitch = who === 'atc' ? 1 : 0.8 + (hash(who) % 35)/100;
     speechSynthesis.speak(u);
@@ -1440,12 +1440,13 @@ const LINE_WORDS = { CENTRE: 'c', CENTER: 'c', MIDDLE: 'c', CENTRELINE: 'c', BLU
 let LINED = null;
 const hasLines = tw => (LINED ||= new Set(GE.filter(e => e.line).map(e => e.tw))).has(tw);
 // the taxiways after VIA (from toks[i]): returns the index of the last one read
+let TWY_NAMES = null; const twyNames = () => TWY_NAMES || (TWY_NAMES = new Set(GE.map(e => e.tw).filter(Boolean)));
 function readVia(toks, i, via){
   for (;;) {
     const t = toks[i+1];
     // Heathrow's links: LINK56, LINK 56 or L56 (when there is no taxiway L56)
     const lk = t === 'LINK' && /^\d+$/.test(toks[i+2] || '') ? 'LINK' + toks[i+2] : /^L\d+$/.test(t || '') && !PHON[t] ? 'LINK' + t.slice(1) : null;
-    if (t && (/^[A-Z]{1,2}\d{0,2}$/.test(t) || /^LINK\d+$/.test(t)) && PHON[t]) via.push(toks[++i]);
+    if (t && (/^[A-Z]{1,2}\d{0,2}$/.test(t) || /^LINK\d+$/.test(t) || (t !== 'APRON' && twyNames().has(t))) && PHON[t]) via.push(toks[++i]);   // any taxiway by its name: Geneva's OUTER, INNER, LINKA
     else if (lk && PHON[lk]) { via.push(lk); i += t === 'LINK' ? 2 : 1; }
     else if (t && LINE_WORDS[t] && via.length && hasLines(via[via.length-1])) { via.line = [via[via.length-1], LINE_WORDS[t]]; i++; if (toks[i+1] === 'LINE') i++; }
     else return i;
@@ -1520,7 +1521,7 @@ function stepReadbacks(){
 }
 function command(str){ inCmd = true; try { return commandRun(str); } finally { inCmd = false; } }
 function commandRun(str){
-  const toks = str.trim().toUpperCase().split(/\s+/).filter(Boolean);
+  const toks = str.trim().toUpperCase().replace(/\bLINK\s+([0-9A-Z])\b/g, 'LINK$1').split(/\s+/).filter(Boolean);   // "LINK 1" typed with a space is LINK1
   if (!toks.length) return;
   // a callsign that was split by a space (CAR 9 H20): join the first words back up when together they name a flight
   for (let n = 3; n >= 2; n--) { if (toks.length >= n) { const j = toks.slice(0, n).join(''); if (!S.acs.some(a => a.cs === toks[0]) && S.acs.some(a => a.cs === j)) { toks.splice(0, n, j); break; } } }
