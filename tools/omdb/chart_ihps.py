@@ -68,8 +68,9 @@ for i, j in zip(ri, ci):
 MANUAL = {'PD': (2033, 1005), 'NE': (2033, 1100), 'ZA': (601, 2131), 'Z1A': (535, 2216), 'UD': (3251, 2568), 'QB': (4012, 962), 'QA': (4014, 860),
           'KB': (596, 2024), 'MN': (5275, 1533), 'ZN': (4270, 2053), 'P9A': (5205, 797)}
 for k, p in MANUAL.items(): pos[k] = [p]
-# KP and NQ: the dot finder hands them a neighbour's bar; their own, in metres from the ARP, read off the chart
-MANUAL_EN = {'KP': [602.0, -705.6], 'NQ': [1748.1, -308.2]}
+# KP and NQ: the dot finder hands them a neighbour's bar (NQ's is the unnamed bar on P8 north of N; NQ's own is across
+# N west of P8); their own, in metres from the ARP, read off the chart
+MANUAL_EN = {'KP': [602.0, -705.6], 'NQ': [1634.0, -321.0]}
 # KY, NM, NS and PL: no bar of their own found (it runs into the next one); matched to OpenStreetMap's stop line by the label
 for k in ('KY', 'NM', 'NS', 'PL'): pos[k] = []
 out = {}

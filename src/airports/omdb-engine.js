@@ -116,6 +116,8 @@ for (const s of STANDS) { const m = s.id.match(/^([CE]\d+)[LR]$/); if (m && STAN
 for (const [c, hs] of Object.entries(MARS)) { const C = STANDS.find(o => o.id === c); C.vacant = [...new Set([...(C.vacant || []), ...hs])];
   for (const h of hs) { const H = STANDS.find(o => o.id === h); H.vacant = [...new Set([...(H.vacant || []), c])]; } }
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
+// the paved areas a junction's mapped curves enclose (the stop bar chart shows them paved, omdb_ground.py): pavement, not grass
+const PAVED = (G.paved || []).map(r => r.map(([e, n]) => EN(e, n)));
 // which side of each runway the terminals are
 { const civ = STANDS.filter(s => s.area === 'civil'), c = civ.reduce((a, s) => [a[0] + s.p[0]/civ.length, a[1] + s.p[1]/civ.length], [0, 0]); for (const R of RWY_LIST) R.side = Math.sign(R.offOf(c)) || 1; }
 
@@ -259,12 +261,14 @@ function drawOmdb(){
     cx.strokeStyle = C.concrete; cx.lineWidth = lw(60);
     for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
     cx.lineWidth = lw(48); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
+    cx.fillStyle = C.asphalt; for (const a of PAVED) { pathP(a); cx.fill(); }
     cx.strokeStyle = C.asphalt;
     for (const e of GE) { if (e.tw === 'APRON') continue; cx.lineWidth = lw(paveW(e.tw)); pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
     cx.lineWidth = lw(23); for (const k in FIL) { const R = rwyById(HOLDS[k].on); pathP(FIL[k].W.map(([m, o]) => R.rm(m, o)), false); cx.stroke(); }
   } else {
     const lines = GE.filter(e => e.tw !== 'APRON').map(e => ({ pts: [P2(GN[e.a].p), P2(GN[e.b].p)], w: paveWidth(e.tw) }));
     for (const k in FIL) { const R = rwyById(HOLDS[k].on); lines.push({ pts: FIL[k].W.map(([m, o]) => P2(R.rm(m, o))), w: paveWidth() }); }
+    cx.fillStyle = C.asphalt; for (const a of PAVED) { pathP(a); cx.fill(); }
     drawPavement(lines, G.buildings.map(b => b.pts.map(([e, n]) => P2(EN(e, n)))), mpx);
   }
   if (!IMG) { cx.fillStyle = C.bld; cx.strokeStyle = C.bldEdge; cx.lineWidth = 1; for (const b of G.buildings) { pathP(b.pts.map(([e, n]) => EN(e, n))); cx.fill(); cx.stroke(); } }
