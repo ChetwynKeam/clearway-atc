@@ -83,7 +83,7 @@ const LSGG = (() => {
     dep: { name: 'Geneva 1 · Taxi out from satellite stand 31', wx: 'west', rwy: '22', sched: [{ cs: 'SWR123', t: 'A320', k: 'DEP', d: 'LEBL', m: 0, stand: '31' }] },
     arr: { name: 'Geneva 2 · From BENOT to the ILS 22', wx: 'west', rwy: '22', sched: [{ cs: 'EZY8821', t: 'A319', k: 'ARR', o: 'EGLL', m: 0 }] },
     mix: { name: 'Geneva 3 · One runway, both ways', wx: 'west', rwy: '22', sched: [{ cs: 'AFR2305', t: 'A320', k: 'ARR', o: 'LFPG', m: 0 },
-      { cs: 'BAW729', t: 'A320', k: 'DEP', d: 'EGLL', m: 0, stand: '41' }, { cs: 'EZS1711', t: 'A320', k: 'DEP', d: 'EGKK', m: 0, stand: '2' }] }
+      { cs: 'BAW729', t: 'A320', k: 'DEP', d: 'EGLL', m: 0, stand: '42' }, { cs: 'EZS1711', t: 'A320', k: 'DEP', d: 'EGKK', m: 0, stand: '2' }] }
   };
   const WX_PRESETS = {
     west:  { name: 'South-westerly (la vent): runway 22',                short: 'South-west', metar: 'LSGG 021250Z 23010KT 9999 FEW040 BKN070 12/06 Q1016' },

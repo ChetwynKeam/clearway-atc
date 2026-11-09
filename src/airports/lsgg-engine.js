@@ -176,6 +176,11 @@ const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const
       s.line = [far, s.p]; s.out = { node: oldNode, pts: [s.p, oldLine[0]] }; s.node = s.outNodeWas = G.gates.find(g => g[0] === s.id)[6][0]; s.h0 = norm((s.h0 ?? brg(...oldLine[0], ...s.p)) + 180);
     } } }
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
+// the MARS groups on the parking chart: a widebody centre stand over two narrowbody halves (the Aile Est's 14 with 141 and
+// 142, 15, 18 and 19; 3A over 3 and 4, 64A over 63 and 64, 66A over 65 and 66). Never the centre and a half at once
+const MARS = { 14: [65, '141', '142'], 15: [65, '151', '152'], 18: [65, '181', '182'], 19: [65, '191', '192'], '3A': [52, '3', '4'], '64A': [52, '63', '64'], '66A': [52, '65', '66'] };
+for (const [c, [span, ...h]] of Object.entries(MARS)) { const s = STANDS.find(x => x.id === c); if (!s) continue; s.maxSpan = span; s.vacant = h;
+  for (const id of h) { const o = STANDS.find(x => x.id === id); if (o) o.vacant = [...(o.vacant || []), c]; } }
 STANDS.forEach(s => { if (s.out) s.dash = null; });         // the satellite stands get their own turn-in curves (drawLsgg)
 // the mapped stand line ends where the nose stops: the stand's point is the aircraft's middle, set back from that end by
 // the stop-bar distance of the largest aircraft the stand takes (as at Madrid and Manchester)
@@ -212,7 +217,12 @@ PHON.APRON = 'the apron';
 const endHolds = rw => Object.keys(HOLDS).filter(k => HOLDS[k].end === rw);
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
 // (27: AX or BX by the 27 end; 09: GX at the end of taxiway G), by taxi route (one multi-target search, routesFrom)
+// intersection departures (vACC GND chart: 04 TORA 3,200 m from F, 2,750 m from Q; 22 TORA 2,000 m from P/C). Aircraft
+// from the North Apron line up at Q1 (04) or P1 (22) on their own side instead of crossing to the far end
+const INTX = { '04': ['F', 'Q1'], '22': ['C', 'P1'] }, NORTH_DEP = { '04': 'Q1', '22': 'P1' };
+const northSide = ac => ac.stand && !ac.leftStand ? ac.stand.term === 'N' : Math.sign(R0.offOf([ac.x, ac.y])) === -R0.side;
 function depHold(ac){
+  if (northSide(ac) && HOLDS[NORTH_DEP[depRw()]]) return NORTH_DEP[depRw()];
   const rw = depRw(), from = ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)) || {}).id;
   const ks = endHolds(rw); if (ks.length < 2 || !from) return ks[0];
   const rs = routesFrom(from, ks.map(k => HOLDS[k].node)); let best = ks[0], bl = Infinity;
@@ -332,6 +342,19 @@ function drawLsgg(){
       for (const [d, dash] of [[-0.9, false], [-0.3, false], [0.3, true], [0.9, true]]) { cx.setLineDash(dash ? [mpx + 1, mpx + 1] : []); pathP([at(-9, d), at(9, d)], false); cx.stroke(); }
       cx.setLineDash([]);
     }
+    // CAT II/III holding positions (the chart's dashed red lines on A to G, P and Q), pattern B: two solid lines with the
+    // rungs of a ladder between them, across the taxiway
+    { cx.save(); cx.lineCap = 'butt'; cx.lineWidth = lw(0.3);
+      for (const id of G.cat23 || []) { if (!GN[id]) continue; const p = GN[id].p, ws = waysOn(id); if (!ws.length) continue;
+        const d = brg(...p, ...GN[ws[0][0]].p), at = (k, w) => add(add(p, d, k*M2NM), d + 90, w*M2NM);
+        for (const k of [-0.75, 0.75]) { pathP([at(k, -11), at(k, 11)], false); cx.stroke(); }
+        cx.beginPath(); for (let w = -10.5; w <= 10.5; w += 1.5) { cx.moveTo(...P2(at(-0.75, w))); cx.lineTo(...P2(at(0.75, w))); } cx.stroke(); }
+      cx.restore(); }
+    // the intermediate holding points IHP1 to IHP13: a single dashed line across the taxiway
+    { cx.save(); cx.lineCap = 'butt'; cx.lineWidth = Math.max(1.6, 0.6*mpx); cx.setLineDash([Math.max(3, 1.2*mpx), Math.max(2, 0.9*mpx)]);
+      for (const [id, node] of G.ihps) { if (!/^IHP\d/.test(id) || !GN[node]) continue; const p = GN[node].p, ws = waysOn(node);
+        const d = ws.length ? brg(...p, ...GN[ws[0][0]].p) : 0; pathP([add(p, d + 90, 11*M2NM), add(p, d - 90, 11*M2NM)], false); cx.stroke(); }
+      cx.restore(); }
     // stand lead-in lines and numbers
     groundLines(lw(0.3), () => { for (const s of STANDS) if (!s.noLead) { pathP(s.line || [s.lp, s.p], false); cx.stroke(); } });
     // drive-through satellite stands, as painted: the lead line runs straight through and on out the far side, with a turn-in arc
@@ -502,9 +525,11 @@ const APT = {
   divertTo: ac => ['NE', 'N', 'E'].includes(ac.gate) ? ['Zurich', 'FRIBU'] : ['Lyon', 'CBY'],
   firstAlt: g => ENTRY_ALT[g] - 2000,
   rolledCall: 'request taxi',
-  vacExits: ac => { const R = R0, rw = ac.app || S.rwy, m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1;
-    return exitsFor(rw).filter(k => (HOLDS[k].m - m)*dir > 30 && Math.sign(HOLDS[k].off) === R.side).slice(0, 4); },
-  vacPrefs: (st, ac) => exitsFor(ac && ac.app || S.rwy),
+  // exits on the side of its stand: Q or P for the North Apron, the south-east exits for everyone else
+  vacExits: ac => { const R = R0, rw = ac.app || S.rwy, m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1, side = ac.stand && ac.stand.term === 'N' ? -R.side : R.side;
+    const ks = exitsFor(rw).filter(k => (HOLDS[k].m - m)*dir > 30);
+    return (ks.some(k => Math.sign(HOLDS[k].off) === side) ? ks.filter(k => Math.sign(HOLDS[k].off) === side) : ks.filter(k => Math.sign(HOLDS[k].off) === R.side)).slice(0, 4); },
+  vacPrefs: (st, ac) => { const L = exitsFor(ac && ac.app || S.rwy); return st && st.term === 'N' ? [...L.filter(k => Math.sign(HOLDS[k].off) !== R0.side), ...L.filter(k => Math.sign(HOLDS[k].off) === R0.side)] : L; },
   exitFor,
   lineUpWords: hp => 'line up and wait',
   terrain: null,
@@ -524,8 +549,10 @@ const APT = {
   faceHdg: (st, f) => norm(laneDir(st, f) + 180),
   // the departure-end holding points nearest the aircraft
   taxiHolds: (south, ac) => { const ks = endHolds(depRw()), p = ac ? (ac.stand && !ac.leftStand ? ac.stand.lp : [ac.x, ac.y]) : ARP;
-    const rec = ac && depHold(ac); return [...new Set([rec, ...ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p))].filter(Boolean))].slice(0, 3); },
-  taxiHint: rw => rw === '22' ? 'Runway 22 departures taxi north-east along the parallel taxiway to Alfa at the end of the runway.' : 'Runway 04 departures taxi south-west to Golf, on the pavement before the displaced 04 threshold.',
+    const rec = ac && depHold(ac), ix = (INTX[depRw()] || []).filter(k => HOLDS[k]);
+    return [...new Set([rec, ...ks.sort((a, b) => dist(...p, ...GN[HOLDS[a].node].p) - dist(...p, ...GN[HOLDS[b].node].p)).slice(0, 2), ...ix].filter(Boolean))].slice(0, 4); },
+  taxiHint: rw => rw === '22' ? 'Runway 22 departures taxi north-east along taxiway Alfa to holding point A at the end of the runway (holding bay A); Charlie is the intersection (2,000 m). North Apron traffic lines up at P1.' : 'Runway 04 departures taxi south-west along Outer to holding point G (holding bay G), on the pavement before the displaced 04 threshold; Foxtrot is the intersection (3,200 m). North Apron traffic lines up at Q1 (2,750 m).',
+  lvpNote: 'CAT II/III holding positions protected',
   // the three satellites' stands are taxi-in, taxi-out: no push back, Ground gives start-up and the aircraft taxis out forward
   diverts: [{ cs: 'BAW706', t: 'A320', o: 'EGLL', gate: 'NE', to: 'Zurich' }, { cs: 'KLM1923', t: 'E190', o: 'EHAM', gate: 'NE', to: 'Zurich' },
     { cs: 'IBE3416', t: 'A320', o: 'LEMD', gate: 'SW', to: 'Lyon' }, { cs: 'ITY626', t: 'A319', o: 'LIRF', gate: 'SE', to: 'Milan' }],
@@ -554,7 +581,7 @@ const APT = {
     if (E && E.ws) out.push(`Windshear reported on final runway ${E.ws.rw} at ${zt(E.ws.t).slice(0,5).replace(':', '')}, ${E.ws.text}.`);
     if (E && E.rwyBlock) out.push(`Runway ${blockRw()} closed: ${E.rwyBlock.why}. Expect delays.`);
     if (!minsOk(w, S.rwy)) out.push('Visibility below the ILS minima. Expect holding at SAPRE.');
-    out.push('Stands 31 to 34, 41 to 44 and 121 to 127 at the satellites are taxi-in, taxi-out: no push back. Passengers are bussed.');
+    out.push('Stands 31 to 34, 42 to 44 and 121 to 127 at the satellites are taxi-in, taxi-out: no push back. Passengers are bussed.');
     out.push(`Acknowledge receipt of information ${L} and advise aircraft type and stand on first contact.`);
     return out;
   },
