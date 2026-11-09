@@ -3,6 +3,8 @@ name: Website screenshots
 # and publishes the pictures to the shots branch for the website to use (tools/shots/shots.cjs).
 on:
   workflow_dispatch:
+    inputs:
+      only: { description: 'Airports to shoot (comma-separated keys, e.g. omdb); empty for all', required: false, default: '' }
   push:
     branches: ['claude/**']
     paths: ['tools/shots/**', '.github/workflows/shots.yml']
@@ -25,7 +27,7 @@ jobs:
           python3 build.py
           cd dist && (python3 -m http.server 8080 >/dev/null 2>&1 &) && sleep 2
       - name: Take the screenshots
-        run: NODE_PATH=/tmp/pw/node_modules BASE=http://localhost:8080 OUT=out node tools/shots/shots.cjs
+        run: NODE_PATH=/tmp/pw/node_modules BASE=http://localhost:8080 OUT=out ONLY="${{ github.event.inputs.only }}" node tools/shots/shots.cjs
       - name: Publish to the shots branch
         run: |
           cd out && ls -la

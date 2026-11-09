@@ -1,0 +1,82 @@
+name: Fetch OMDB data
+# One-off for the Dubai International (OMDB) airport build: the UAE eAIP AD 2 OMDB page and every chart it links (AD 2.24),
+# the aerodrome geometry from OpenStreetMap (runways, taxiways, holding positions, aprons, stands, terminals, concourses,
+# airbridges, airside roads), the coast, towns and nearby airfields for the approach map, METAR/TAF samples and a day of
+# the avionio DXB boards, published to the omdb-data branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [dubai-omdb]
+    paths: ['.github/workflows/omdb-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download
+        run: |
+          mkdir -p out/aip out/flights && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          BUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+          # --- eAIP: the AD 2 OMDB page and every PDF it links
+          AIPBASE="https://www.gcaa.gov.ae/en/ais/AIPHtmlFiles/AIP/Current/AIRACs/2026-P08/html/eAIP/"
+          curl -sSL -m 60 -A "$BUA" "${AIPBASE}AD-2.OMDB-en-GB.html" -o aip/AD-2.OMDB-en-GB.html -w "aip %{http_code}\n" || true
+          python3 - "$AIPBASE" <<'PY' > aip/links.txt
+          import re, sys, urllib.parse, html
+          base = sys.argv[1]
+          t = open('aip/AD-2.OMDB-en-GB.html', encoding='utf-8', errors='replace').read()
+          seen = set()
+          for h in re.findall(r'href\s*=\s*["\']([^"\']+)["\']', t, re.I):
+              h = html.unescape(h)
+              if '.pdf' not in h.lower(): continue
+              u = urllib.parse.urljoin(base, h)
+              if u not in seen: seen.add(u); print(u)
+          PY
+          wc -l aip/links.txt; cat aip/links.txt
+          i=0
+          while read -r U; do
+            i=$((i+1)); N=$(basename "${U%%\?*}" | sed 's/%20/_/g; s/[^A-Za-z0-9._-]/_/g')
+            curl -sSL -m 120 -A "$BUA" "$U" -o "aip/$(printf %03d $i)_$N" -w "$i %{http_code} %{size_download} $N\n" || true
+          done < aip/links.txt
+          # --- OpenStreetMap
+          q() {
+            S=$(date +%s)
+            while [ $(( $(date +%s) - S )) -lt 480 ]; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                if curl -sSf -m 120 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.tmp" && head -c 1 "$1.tmp" | grep -q '{'; then mv "$1.tmp" "$1.json"; echo "OK $1 from $H"; return 0; fi
+                echo "retry $1 ($H)"; sleep 5
+              done
+            done
+            echo "FAILED $1"; rm -f "$1.tmp"
+          }
+          B="25.220,55.315,25.290,55.415"
+          q aerodrome "[out:json][timeout:180];(way[aeroway]($B);node[aeroway]($B);relation[aeroway]($B);way[building]($B);way[highway]($B);way[barrier]($B);nwr[amenity~\"fire_station|fuel|bus_station|parking\"]($B);nwr[emergency]($B);way[man_made]($B);way[landuse]($B);nwr[public_transport]($B);way[railway]($B););out geom;" &
+          q coast "[out:json][timeout:180];way[natural=coastline](24.60,54.60,25.90,56.40);out geom;" &
+          q water "[out:json][timeout:180];(way[natural=water](24.90,55.00,25.50,55.70);relation[natural=water](24.90,55.00,25.50,55.70);way[natural=bay](24.90,55.00,25.50,55.70););out geom;" &
+          q border "[out:json][timeout:180];way[boundary=administrative][admin_level~\"2|4\"](24.30,54.60,26.30,56.60);out geom;" &
+          q towns "[out:json][timeout:120];(node[place~\"city|town\"](24.00,54.00,26.50,57.00););out;" &
+          q airports "[out:json][timeout:120];(nwr[aeroway=aerodrome][icao](23.50,53.50,27.00,57.50););out center;" &
+          q palms "[out:json][timeout:180];(way[place~\"island|islet\"](24.90,54.95,25.40,55.40);relation[place~\"island|archipelago\"](24.90,54.95,25.40,55.40););out geom;" &
+          wait
+          # --- weather samples
+          for S in OMDB OMDW OMSJ OMAA; do
+            curl -sS -m 20 "https://aviationweather.gov/api/data/metar?ids=$S&format=raw&hours=48" -o metar_$S.txt || true
+            curl -sS -m 20 "https://aviationweather.gov/api/data/taf?ids=$S&format=raw" -o taf_$S.txt || true
+          done
+          # --- a day of the DXB boards
+          for P in $(seq 0 45); do
+            curl -sSL --compressed -m 30 -A "$UA" -o flights/dxb_a$P.html -w "arr $P %{http_code}\n" "https://www.avionio.com/en/airport/dxb/arrivals?page=$P" || true
+            curl -sSL --compressed -m 30 -A "$UA" -o flights/dxb_d$P.html -w "dep $P %{http_code}\n" "https://www.avionio.com/en/airport/dxb/departures?page=$P" || true
+          done
+          A=$(ls flights/dxb_a*.html | tr '\n' ',' | sed 's/,$//'); D=$(ls flights/dxb_d*.html | tr '\n' ',' | sed 's/,$//')
+          python3 "$GITHUB_WORKSPACE/tools/avionio_flights.py" "$A" "$D" omdb_flights.json Asia/Dubai || echo "avionio parse failed"
+          ls -la . aip; du -sh .
+      - name: Publish to omdb-data branch
+        run: |
+          cd out
+          git init -q -b omdb-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OMDB data"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" omdb-data

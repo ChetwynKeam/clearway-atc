@@ -5,7 +5,7 @@ LOWI: dist/lowi/index.html and dist/innsbruck-atc.html; KJFK: dist/kjfk/index.ht
 EGKK: dist/egkk/index.html and dist/london-gatwick-atc.html; LEMD: dist/lemd/index.html and dist/madrid-atc.html;
 EGCC: dist/egcc/index.html and dist/manchester-atc.html; EGLL: dist/egll/index.html and dist/london-heathrow-atc.html;
 EGGD: dist/eggd/index.html and dist/bristol-atc.html; LSGG: dist/lsgg/index.html and dist/geneva-atc.html; YSSY: dist/yssy/index.html and dist/sydney-atc.html;
-EIDW: dist/eidw/index.html and dist/dublin-atc.html."""
+EIDW: dist/eidw/index.html and dist/dublin-atc.html; OMDB: dist/omdb/index.html and dist/dubai-atc.html."""
 import pathlib
 root = pathlib.Path(__file__).parent
 src = root/'src'
@@ -49,6 +49,9 @@ AIRPORTS = {
     'EIDW': dict(title='Dublin · Clearway ATC Simulator', desc='Clearway: air traffic control at Dublin (EIDW): three runways, the parallel 10R/28L and 10L/28R and the crossing 16/34, point merge RNAV arrivals, RNAV SIDs for jets and turboprops, CAT III ILS approaches, 191 stands at four piers and the real day of Dublin traffic.',
                  geo='airports/eidw.geo.json', profile=['airports/eidw.js', 'airports/eidw-ground.js', 'airports/eidw-engine.js'], site=['airports/eidw-site.js'], artifact='dublin-atc.html', page='eidw/index.html',
                  data=('EIDW', 'airports/eidw.js')),
+    'OMDB': dict(title='Dubai · Clearway ATC Simulator', desc='Clearway: air traffic control at Dubai International (OMDB): two staggered parallel runways, 12L/30R and 12R/30L, landing on one and departing from the other, RNAV STARs with long downwind legs, RNAV SIDs, CAT III ILS approaches, 225 stands at Terminals 1, 2 and 3, every stop bar of the follow-the-greens system and a full day of Emirates and flydubai traffic.',
+                 geo='airports/omdb.geo.json', profile=['airports/omdb.js', 'airports/omdb-ground.js', 'airports/omdb-engine.js'], site=['airports/omdb-site.js'], artifact='dubai-atc.html', page='omdb/index.html',
+                 data=('OMDB', 'airports/omdb.js')),
     'EGAA': dict(title='Belfast · Clearway ATC Simulator', desc='Clearway: air traffic control at Belfast International (EGAA) and Belfast City (EGAC) together: two airfields and three runways under one approach, radar vectors over Belfast Lough, ILS and RNP approaches and real traffic.',
                  geo='airports/egaa.geo.json', profile=['airports/egaa.js', 'airports/egaa-ground.js', 'airports/egaa-engine.js'], site=['airports/egaa-site.js'], artifact='belfast-atc.html', page='egaa/index.html',
                  data=('EGAA', 'airports/egaa.js')),

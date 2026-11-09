@@ -1,0 +1,31 @@
+name: Fetch OMDB en-route data
+# One-off for the Dubai International (OMDB) build: the UAE eAIP ENR 4.1 (navaids) and ENR 4.4 (significant points) pages,
+# whose coordinates the OMDB SID, STAR and approach coding tables refer to, and the airside roads for the vehicles,
+# published to the omdb-enr branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [dubai-omdb]
+    paths: ['.github/workflows/omdb-enr.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          BUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+          B="https://www.gcaa.gov.ae/en/ais/AIPHtmlFiles/AIP/Current/AIRACs/2026-P08/html/eAIP/"
+          for P in ENR-4.1-en-GB ENR-4.4-en-GB ENR-3.3-en-GB ENR-2.1-en-GB; do
+            curl -sSL -m 120 -A "$BUA" "$B$P.html" -o "$P.html" -w "$P %{http_code} %{size_download}\n" || true
+          done
+          ls -la
+      - name: Publish
+        run: |
+          cd out
+          git init -q -b omdb-enr
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OMDB ENR pages"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" omdb-enr
