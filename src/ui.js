@@ -930,8 +930,8 @@ function standLine(ac){
   const busyWhy = s => { const o = s.occ; if (!o || !o.cs) return 'blocked'; if (o.kind === 'DEP') { const w = o.state === 'PARKED' ? Math.max(0, Math.round(((o.reqAt || S.t) - S.t)/60)) : 0; return `${o.cs} ${o.state === 'PARKED' ? 'pushes in ~' + w + ' min' : 'pushing now'}`; } return `${o.cs} on stand`; };
   // (a stand whose departure is about to leave can be chosen: it waits for it)
   const busy = STANDS.filter(s => s.occ && s.occ !== ac && (pa.has(s) || s === ac.stand)).slice(0, 8), canWait = s => standLeaver(s.occ) && !(s.waitBy && s.waitBy !== ac);
-  const held = standHeld(ac) ? `<span class="pref">still occupied: ${esc(busyWhy(ac.stand))}</span>` : '';
-  return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b>${held}<span class="pref">prefers ${esc(pa.name)}</span>
+  const held = standHeld(ac) ? `<span class="held">Still occupied: ${esc(busyWhy(ac.stand))}</span>` : '';
+  return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b><span class="pref">prefers ${esc(pa.name)}</span>${held}
     <span class="pick"><select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}${busy.length ? `<optgroup label="Occupied: its airline's ${sw}s">${busy.map(s => `<option${canWait(s) ? ` value="${s.id}"` : ' disabled'}${ac.stand === s ? ' selected' : ''}>${s.id} · ${esc(busyWhy(s))}</option>`).join('')}</optgroup>` : ''}</select><button id="iStandAuto" class="auto" title="Let the sim pick a free ${sw} that fits, in its airline's usual area first"${locked ? ' disabled' : ''}>Auto</button></span></div>`;
 }
 // ── clearance pop-outs (push direction, taxi routing) ──
