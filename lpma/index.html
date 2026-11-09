@@ -1488,7 +1488,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
       <div>
         <div class="eyebrow">New airport</div>
         <h2>Geneva, one runway between the Jura and the Alps.</h2>
-        <p>Geneva runs everything on one long runway, 04/22, with Outer and Inner along the aprons, three round satellites whose stands are taxi-in, taxi-out, and the North Apron for business aviation across the runway. Arrivals come off six STARs onto the ILS; departures fly RNAV SIDs into Switzerland and France. Fit the departures between the landings, and watch for the bise.</p>
+        <p>Geneva runs everything on one long runway, 04/22, with taxiways O (Outer) and I (Inner) along the aprons, three round satellites whose stands are taxi-in, taxi-out, and the North Apron for business aviation across the runway. Arrivals come off six STARs onto the ILS; departures fly RNAV SIDs into Switzerland and France. Fit the departures between the landings, and watch for the bise.</p>
         <div class="kv"><span>RWY <b>1 · 04/22</b></span><span>Length <b>3,900 m</b></span><span>Elev <b>1,411 ft</b></span><span>Approach <b>ILS</b></span></div>
         <div class="ctas"><a class="btn primary" href="#sim">Open the position</a><a class="btn" href="#lsgg">Airport briefing</a></div>
       </div>
@@ -2413,7 +2413,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
     <div class="positions">
       <div class="pos"><div class="shot"><img loading="lazy" src="shots/lsgg-radar.jpg" width="1216" height="772" alt="Geneva approach radar in the simulator"></div><div class="body"><div class="freq">GENEVA ARRIVAL · 136.255 · APPROACH 120.305</div><h3>Approach</h3><p>Bring the six STARs down to 7,000 ft, sequence them onto the ILS 22 from SAPRE or the ILS 04 from INDIS, and leave room on the one runway for the departures.</p></div></div>
       <div class="pos"><div class="shot"><img loading="lazy" src="shots/lsgg-runway.jpg" width="1216" height="772" alt="Geneva runway in the simulator"></div><div class="body"><div class="freq">GENEVA TOWER · 118.705</div><h3>Tower</h3><p>Land and launch on 04/22. Departures line up at A or G at the ends, at the F and C intersections, or at Q1 and P1 for the North Apron; arrivals vacate at D, C or E.</p></div></div>
-      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lsgg-ground.jpg" width="1216" height="772" alt="Geneva aprons and the three satellites in the simulator"></div><div class="body"><div class="freq">GENEVA GROUND · 121.680 · APRON 121.855</div><h3>Ground</h3><p>Taxi along Outer and Inner and the Links between the satellites, hold traffic at the intermediate holding points, push the terminal stands and send the satellite stands out forwards.</p></div></div>
+      <div class="pos"><div class="shot"><img loading="lazy" src="shots/lsgg-ground.jpg" width="1216" height="772" alt="Geneva aprons and the three satellites in the simulator"></div><div class="body"><div class="freq">GENEVA GROUND · 121.680 · APRON 121.855</div><h3>Ground</h3><p>Taxi along O (Outer) and I (Inner) and the Links between the satellites, hold traffic at the intermediate holding points, push the terminal stands and send the satellite stands out forwards.</p></div></div>
     </div>
   </div></div>
 
@@ -4299,6 +4299,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
       <p>You are <b>Geneva Arrival (136.255)</b>, <b>Approach (120.305)</b>, <b>Tower (118.705)</b>, <b>Ground (121.680)</b> and <b>Departure (119.530)</b> combined. Arrivals check in with Arrival on their STAR, go to the Tower once established on the ILS, and taxi in to their stand. Departures call Ground for start-up, go to the Tower at the runway, to <b>Geneva Departure</b> once airborne and then to <b>Swiss Radar</b>. The ATIS is <b>Geneva Information (135.580)</b>.</p>
       <ul>
         <li>The <b>transition altitude is 7,000 ft</b>, which is also the level of the ILS intermediate fixes SAPRE (22) and INDIS (04).</li>
+        <li><b>Taxiways O and I</b> are Outer and Inner along the aprons: type or say them as O (Oscar) and I (India), for example <code>SWR123 TAXI A VIA O</code>.</li>
         <li><b>Satellite stands</b> (31 to 34, 42 to 44, 121 to 127) have no push back: the aircraft taxis in and out on its own. Give it TAXI.</li>
         <li><b>Apron buses</b> carry the passengers between the terminal and the satellites.</li>
         <li>The usual runway is 22 (south-westerly); in the bise it is 04.</li>
@@ -15079,16 +15080,17 @@ function phraseToCmd(raw){
     let cmd = 'TAXI'; const g = s.match(/ (?:stand|gate) (.*)/);
     if (g) { const id = heardStand(g[1]); if (id) cmd += ' ' + id; }
     const v = s.match(/ via (.+?)( hold| $)/);
-    if (v) { const vl = []; let solo = false; for (const x of v[1].split(' ')) { if (LINE_WORDS[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
+    if (v) { const vl = []; let solo = false; let lk = false; for (const x of v[1].split(' ')) { if (LINE_WORDS[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } if (x === 'link') { lk = true; continue; } if (lk) { lk = false; const n = /^\d+$/.test(x) ? x : PHONW[x]; if (n && PHON['LINK' + n]) { vl.push('LINK' + n); solo = false; continue; } } const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
       const vv = vl.filter(x => PHON[x] || LINE_WORDS[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
     out.push(cmd);
   } else if ((m = s.match(/ taxi .*?holding point (\S+)/)) || (m = s.match(/ taxi (to )?(\S+)/))) {
     const hp = PHONW[m[m.length-1]] || (m[m.length-1].length === 1 ? m[m.length-1].toUpperCase() : null);
     if ((hp && HOLDS[hp]) || (!hp && / runway /.test(s) && RW_ENDS.length > 2)) {
       let cmd = 'TAXI' + (hp && HOLDS[hp] ? ' ' + hp : ''); const v = s.match(/ via (.+?)( hold| holding| cross| $)/);
-      // two spoken letters make one taxiway where the airport has it (New York: "kilo delta" is KD); "centre", "blue" or
+      // two spoken letters make one taxiway where the airport has it (New York: "kilo delta" is KD); "link four" is LINK4
+      // (Geneva, Dublin); "centre", "blue" or
   // "orange" after a taxiway picks its line (Manchester: "via zulu centre line")
-      if (v) { const vl = []; let solo = false; for (const x of v[1].split(' ')) { if (LINE_WORDS[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
+      if (v) { const vl = []; let solo = false; let lk = false; for (const x of v[1].split(' ')) { if (LINE_WORDS[x.toUpperCase()]) { vl.push(x.toUpperCase()); solo = false; continue; } if (x === 'link') { lk = true; continue; } if (lk) { lk = false; const n = /^\d+$/.test(x) ? x : PHONW[x]; if (n && PHON['LINK' + n]) { vl.push('LINK' + n); solo = false; continue; } } const l = PHONW[x]; if (!l) continue; if (solo && PHON[vl[vl.length-1] + l]) { vl[vl.length-1] += l; solo = false; } else { vl.push(l); solo = true; } }
         const vv = vl.filter(x => PHON[x] || LINE_WORDS[x]); if (vv.length) cmd += ' VIA ' + vv.join(' '); }
       out.push(cmd);
     }
