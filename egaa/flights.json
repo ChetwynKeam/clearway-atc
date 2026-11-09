@@ -1,134 +1,15 @@
 {
- "updated": "2026-11-08T23:21:26Z",
+ "updated": "2026-11-09T02:51:52Z",
  "source": "avionio.com",
  "days": {
-  "2026-11-08": {
-   "utcOffsetMin": 0,
-   "arr": [
-    {
-     "place": "London",
-     "flight": "U2805",
-     "sched": "20:35",
-     "status": "Landed",
-     "expected": "20:29",
-     "air": "C"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EI3649",
-     "sched": "21:00",
-     "status": "Landed",
-     "expected": "20:33",
-     "air": "C"
-    },
-    {
-     "place": "Manchester",
-     "flight": "EI3619",
-     "sched": "21:05",
-     "status": "Landed",
-     "expected": "20:48",
-     "air": "C"
-    },
-    {
-     "place": "Leeds/Bradford",
-     "flight": "EI3679",
-     "sched": "21:10",
-     "status": "Landed",
-     "expected": "20:27",
-     "air": "C"
-    },
-    {
-     "place": "Southampton",
-     "flight": "EI3607",
-     "sched": "21:15",
-     "status": "Cancelled",
-     "expected": "",
-     "air": "C"
-    },
-    {
-     "place": "Glasgow",
-     "flight": "EMC6",
-     "sched": "23:06",
-     "status": "Landed",
-     "expected": "22:56",
-     "air": "A"
-    },
-    {
-     "place": "Alicante",
-     "flight": "RK7706",
-     "sched": "23:15",
-     "status": "Landed",
-     "expected": "22:53",
-     "air": "A"
-    }
-   ],
-   "dep": [
-    {
-     "place": "Manchester",
-     "flight": "EI3618",
-     "sched": "18:20",
-     "status": "Departed",
-     "expected": "18:19",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "U2802",
-     "sched": "19:25",
-     "status": "Departed",
-     "expected": "19:52",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "U2644",
-     "sched": "19:45",
-     "status": "Departed",
-     "expected": "19:48",
-     "air": "C"
-    },
-    {
-     "place": "Liverpool",
-     "flight": "U2536",
-     "sched": "20:00",
-     "status": "Departed",
-     "expected": "19:59",
-     "air": "C"
-    },
-    {
-     "place": "London",
-     "flight": "BA1409",
-     "sched": "20:30",
-     "status": "Departed",
-     "expected": "20:51",
-     "air": "C"
-    }
-   ]
-  },
   "2026-11-09": {
    "utcOffsetMin": 0,
    "arr": [
     {
-     "place": "Sharm el-Sheikh",
-     "flight": "U23080",
-     "sched": "00:05",
-     "status": "Estimated",
-     "expected": "00:15",
-     "air": "A"
-    },
-    {
-     "place": "Gran Canaria",
-     "flight": "LS372",
-     "sched": "00:45",
-     "status": "Estimated",
-     "expected": "00:26",
-     "air": "A"
-    },
-    {
      "place": "Nottingham",
      "flight": "D02506",
      "sched": "04:19",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": "",
      "air": "A"
     },
@@ -136,6 +17,14 @@
      "place": "Nottingham",
      "flight": "DJ6978",
      "sched": "04:27",
+     "status": "Estimated",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Nottingham",
+     "flight": "5H751",
+     "sched": "05:58",
      "status": "Scheduled",
      "expected": "",
      "air": "A"
@@ -149,12 +38,188 @@
      "air": "A"
     },
     {
+     "place": "Liverpool",
+     "flight": "U2501",
+     "sched": "06:55",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Manchester",
+     "flight": "U2711",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "U2327",
+     "sched": "07:35",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "London",
+     "flight": "BA1390",
+     "sched": "07:40",
+     "status": "Cancelled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Liverpool",
+     "flight": "U2531",
+     "sched": "07:50",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Paris",
+     "flight": "EC4641",
+     "sched": "08:10",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Manchester",
+     "flight": "U2701",
+     "sched": "08:10",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Liverpool",
+     "flight": "U218",
+     "sched": "08:25",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Glasgow",
+     "flight": "U264",
+     "sched": "08:25",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "London",
+     "flight": "BA1392",
+     "sched": "08:35",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "London",
+     "flight": "U2801",
+     "sched": "08:50",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "London",
+     "flight": "U2985",
+     "sched": "09:00",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
      "place": "London",
      "flight": "RK129",
      "sched": "09:10",
      "status": "Scheduled",
      "expected": "",
      "air": "A"
+    },
+    {
+     "place": "Bristol",
+     "flight": "U2221",
+     "sched": "09:10",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "KL947",
+     "sched": "09:10",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Newcastle",
+     "flight": "U268",
+     "sched": "09:15",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EI3651",
+     "sched": "09:20",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Birmingham",
+     "flight": "U226",
+     "sched": "09:25",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Manchester",
+     "flight": "EI3611",
+     "sched": "09:50",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Birmingham",
+     "flight": "EI3641",
+     "sched": "09:55",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "London",
+     "flight": "CJ8752",
+     "sched": "10:05",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "London",
+     "flight": "U2819",
+     "sched": "10:10",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Cardiff",
+     "flight": "EI3621",
+     "sched": "10:25",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
     },
     {
      "place": "Edinburgh",
@@ -231,6 +296,110 @@
      "air": "A"
     },
     {
+     "place": "Glasgow",
+     "flight": "U263",
+     "sched": "06:20",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "London",
+     "flight": "U2818",
+     "sched": "06:20",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "London",
+     "flight": "BA1411",
+     "sched": "06:35",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "London",
+     "flight": "U215",
+     "sched": "06:40",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Birmingham",
+     "flight": "U225",
+     "sched": "06:45",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "London",
+     "flight": "CJ8751",
+     "sched": "06:45",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Leeds/Bradford",
+     "flight": "EI3670",
+     "sched": "06:45",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Alicante",
+     "flight": "U23005",
+     "sched": "06:50",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Newcastle",
+     "flight": "U267",
+     "sched": "06:50",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Birmingham",
+     "flight": "EI3640",
+     "sched": "06:50",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Manchester",
+     "flight": "EI3610",
+     "sched": "07:00",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EI3650",
+     "sched": "07:00",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Cardiff",
+     "flight": "EI3620",
+     "sched": "07:05",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
      "place": "Alicante",
      "flight": "RK7705",
      "sched": "07:15",
@@ -242,6 +411,86 @@
      "place": "Manchester",
      "flight": "RK190",
      "sched": "07:20",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "London",
+     "flight": "U2800",
+     "sched": "07:20",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Liverpool",
+     "flight": "U2502",
+     "sched": "07:25",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Nottingham",
+     "flight": "5H752",
+     "sched": "07:30",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Manchester",
+     "flight": "U2712",
+     "sched": "08:00",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "U2328",
+     "sched": "08:05",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Liverpool",
+     "flight": "U2532",
+     "sched": "08:20",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "London",
+     "flight": "BA1391",
+     "sched": "08:35",
+     "status": "Cancelled",
+     "expected": "",
+     "air": "C"
+    },
+    {
+     "place": "Paris",
+     "flight": "EC4642",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Tenerife",
+     "flight": "LS377",
+     "sched": "08:40",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Manchester",
+     "flight": "U2702",
+     "sched": "08:40",
      "status": "Scheduled",
      "expected": "",
      "air": "A"
@@ -282,6 +531,69 @@
      "place": "Manchester",
      "flight": "RK192",
      "sched": "22:05",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    }
+   ]
+  },
+  "2026-11-10": {
+   "utcOffsetMin": 0,
+   "arr": [
+    {
+     "place": "Manchester",
+     "flight": "RK191",
+     "sched": "07:55",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Manchester",
+     "flight": "RK193",
+     "sched": "19:10",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "London",
+     "flight": "RK131",
+     "sched": "20:10",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    }
+   ],
+   "dep": [
+    {
+     "place": "Manchester",
+     "flight": "RK190",
+     "sched": "08:25",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Alicante",
+     "flight": "RK7705",
+     "sched": "10:05",
+     "status": "Cancelled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "Manchester",
+     "flight": "RK192",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": "",
+     "air": "A"
+    },
+    {
+     "place": "London",
+     "flight": "RK130",
+     "sched": "17:05",
      "status": "Scheduled",
      "expected": "",
      "air": "A"
