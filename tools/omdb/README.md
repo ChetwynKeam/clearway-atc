@@ -31,5 +31,11 @@ boards, all downloaded by `.github/workflows/omdb-fetch.yml` (branch `omdb-data`
    arrivals and the evening's departures) filled out with each flight's turnaround and the day's other bank.
 6. `../omdb_geo.py <omdb-data dir> ../../src/airports/omdb.geo.json` (needs shapely): the approach map.
 7. `../vehicles_osm.py OMDB <aerodrome.json> ../../src/airports/omdb-veh.js`: airside roads, jet bridges, fire station, fuel farm.
+8. `bridges.py <aerodrome.json> ../../src/airports/omdb-ground.js ../../src/airports/omdb-veh.js`: the jet bridges again.
+   OpenStreetMap maps most of Dubai's in pieces (fixed link, rotunda and tunnel as separate ways, some tunnels joined to
+   nothing), which the game took for stubs and floating tunnels. Laid instead out of the concourse face ahead of each
+   contact stand to its design doors: three at an A380 stand, two at a widebody stand, one otherwise, fanned so they never
+   cross; OpenStreetMap's own kept where one is mapped whole (Terminal 1's angled faces), and the concourse ends laid from
+   the nearest face beside the stand.
 
 Simplifications are listed in the Academy briefing (site.html, `dx-limits`).
