@@ -16,7 +16,9 @@ boards, all downloaded by `.github/workflows/omdb-fetch.yml` (branch `omdb-data`
    - all 141 intermediate holding points carry the chart's names (KB, NC, ZF, J1A ...): matched to OpenStreetMap's stop
      lines, the 29 it does not have added on the taxiway centreline at the chart's bar;
    - the links OpenStreetMap runs on under a neighbour's name take the chart's (J3, M5A, N5, M7B);
-   - taxiway V (helicopters), K east of K18 (closed) and Apron S (no live movements) left out.
+   - taxiway V (helicopters), K east of K18 (closed) and Apron S (no live movements) left out;
+   - OpenStreetMap maps Dubai's junction curves itself, so the generator adds its own curve only at a corner that has none
+     (none where a mapped curve starts, where the two arms meet again, or within 28 m of another junction).
 4. `parse_procs.py <AD-2.OMDB html> <ENR-4.4 html>`: every SID, STAR and approach coding table, with ENR 4.4's coordinates
    → `procs.json`.
 5. `make_profile.py <omdb_flights.json> > ../../src/airports/omdb.js`: the profile from `omdb.template.js`, the primary STARs,
