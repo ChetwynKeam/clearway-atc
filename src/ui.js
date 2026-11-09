@@ -896,9 +896,14 @@ function renderSel(){
       // clear of the runway it stops and waits for this
       const canIn = ac.state === 'VACATING' && !ac.onRwy;
       const sw = APT.standWord || 'stand', sid = ac.stand ? sw + ' ' + ac.stand.id : 'a ' + sw;
-      if (ac.followV) html += b('FOLLOW', ac.following ? 'Following car to ' + sid : 'Follow car to ' + sid, canIn && !ac.taxiIn && !!ac.stand, ac.following ? 'on' : ac.vacated && ac.stand ? 'go' : '');
-      html += b('TAXI', (ac.taxiIn && !ac.following ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn && !!ac.stand, ac.taxiIn && !ac.following ? 'on' : ac.vacated && ac.stand && !ac.followV ? 'go' : '');
-      html += b('POP:holdin', 'Taxi to holding point…', canIn);
+      // its stand still taken by the departure leaving it: hold it out of the way until it is free, or change the stand
+      const held = standHeld(ac), waitOut = held && canIn && !ac.taxiIn && !ac.holdAt;
+      if (held && !ac.taxiIn) html += b('TAXI', `${sw[0].toUpperCase() + sw.slice(1)} ${ac.stand.id} occupied`, false);
+      else {
+        if (ac.followV) html += b('FOLLOW', ac.following ? 'Following car to ' + sid : 'Follow car to ' + sid, canIn && !ac.taxiIn && !!ac.stand, ac.following ? 'on' : ac.vacated && ac.stand ? 'go' : '');
+        html += b('TAXI', (ac.taxiIn && !ac.following ? 'Taxiing to ' : 'Taxi to ') + sid, canIn && !ac.taxiIn && !!ac.stand, ac.taxiIn && !ac.following ? 'on' : ac.vacated && ac.stand && !ac.followV ? 'go' : '');
+      }
+      html += b('POP:holdin', 'Taxi to holding point…', canIn, waitOut ? 'go' : '');
     }
     if (xingAhead(ac) >= 0) { const r = rwyName(ac.path.pts[xingAhead(ac)].hs); html += ac.xAfter ? b('CROSS ' + r, `Cross behind ${ac.xAfter.o.cs}`, false, 'on') : b('CROSS ' + r, 'Cross runway ' + r, true, ac.hsAt ? 'go' : ''); }
     html += b(ac.held ? 'RES' : 'HP', ac.held ? 'Continue taxi' : 'Hold position', !!ac.path && ac.state !== 'TAKEOFF');
@@ -923,9 +928,11 @@ function standLine(ac){
   const mine = ch.filter(s => pa.has(s)), rest = ch.filter(s => !pa.has(s)), locked = ac.taxiIn;
   // the airline's own stands that are taken, and when they should free up (a departure's push-back is its call time)
   const busyWhy = s => { const o = s.occ; if (!o || !o.cs) return 'blocked'; if (o.kind === 'DEP') { const w = o.state === 'PARKED' ? Math.max(0, Math.round(((o.reqAt || S.t) - S.t)/60)) : 0; return `${o.cs} ${o.state === 'PARKED' ? 'pushes in ~' + w + ' min' : 'pushing now'}`; } return `${o.cs} on stand`; };
-  const busy = STANDS.filter(s => s.occ && s.occ !== ac && pa.has(s)).slice(0, 8);
-  return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b><span class="pref">prefers ${esc(pa.name)}</span>
-    <span class="pick"><select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}${busy.length ? `<optgroup label="Occupied: its airline's ${sw}s">${busy.map(s => `<option disabled>${s.id} · ${esc(busyWhy(s))}</option>`).join('')}</optgroup>` : ''}</select><button id="iStandAuto" class="auto" title="Let the sim pick a free ${sw} that fits, in its airline's usual area first"${locked ? ' disabled' : ''}>Auto</button></span></div>`;
+  // (a stand whose departure is about to leave can be chosen: it waits for it)
+  const busy = STANDS.filter(s => s.occ && s.occ !== ac && (pa.has(s) || s === ac.stand)).slice(0, 8), canWait = s => standLeaver(s.occ) && !(s.waitBy && s.waitBy !== ac);
+  const held = standHeld(ac) ? `<span class="pref">still occupied: ${esc(busyWhy(ac.stand))}</span>` : '';
+  return `<div class="standline${ac.stand ? '' : ' none'}"><span class="lbl">${Sw}</span><b>${ac.stand ? ac.stand.id : 'not assigned'}</b>${held}<span class="pref">prefers ${esc(pa.name)}</span>
+    <span class="pick"><select id="iStand" aria-label="Assign ${sw}"${locked ? ' disabled title="Taxiing in: re-route it with TAXI and a ' + sw + '"' : ''}><option value="">${ac.stand ? 'Change' : 'Assign'} ${sw}…</option>${mine.length ? `<optgroup label="${esc(pa.name)}">${mine.map(opt).join('')}</optgroup>` : ''}${rest.length ? `<optgroup label="Elsewhere">${rest.map(opt).join('')}</optgroup>` : ''}${busy.length ? `<optgroup label="Occupied: its airline's ${sw}s">${busy.map(s => `<option${canWait(s) ? ` value="${s.id}"` : ' disabled'}${ac.stand === s ? ' selected' : ''}>${s.id} · ${esc(busyWhy(s))}</option>`).join('')}</optgroup>` : ''}</select><button id="iStandAuto" class="auto" title="Let the sim pick a free ${sw} that fits, in its airline's usual area first"${locked ? ' disabled' : ''}>Auto</button></span></div>`;
 }
 // ── clearance pop-outs (push direction, taxi routing) ──
 function drawPreview(pv){
@@ -1478,7 +1485,7 @@ function resetSession(){
   S.rops = null; S.ropsV++; S.ropsOpen = false; S.wshift = null;
   S.t = 0; S.acs = []; S.sel = null; S.sched = []; S.atisAlert = false; S.running = false; S.paused = true; S.conflicts = new Set(); S.conflictSet = new Set();
   S.emg = null; S.flow = null; S.rtow = null; S.recalls = []; S.xing = { st: APT.xing ? 'OPEN' : 'CLOSED', t: 0, queue: 0, totalClosed: 0 }; S.score = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
-  STANDS.forEach(s => s.occ = null); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
+  STANDS.forEach(s => { s.occ = null; s.waitBy = null; }); HANGARS.forEach(h => h.occ = null); logEl.innerHTML = ''; stripSig = '';
 }
 function start(){
   const pasted = $('wxPaste').value.trim();

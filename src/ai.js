@@ -323,6 +323,15 @@ function aiGround(ac){
   // off the runway again in a departure stop: back to the holding point once it is nearly over
   if (n.startsWith('Holding at') && ac.kind === 'DEP' && flowStop(ac) && flowStop(ac).until - S.t > 150) { ac.aiWhy = `departures stopped until ${flowEnd(flowStop(ac))}`; return; }
   if (n.startsWith('Holding at') && aiDue(ac, n, 4, 9)) { if (/^departures stopped/.test(ac.aiWhy || '')) ac.aiWhy = ''; return aiDo('GND', ac, aiTaxiCmd(ac)); }
+  // clear of the runway with its stand still taken: a free one of its airline's if the wait would be long, otherwise a
+  // holding point out of the way until it is free (with none, it waits where it is)
+  if (n === 'Stand occupied' && aiDue(ac, n, 3, 7)) {
+    const o = ac.stand && ac.stand.occ, long = !standLeaver(o) || standFreeIn(o) > 300;
+    const alt = long && standChoices(ac).find(s => !s.occ && prefArea(ac).has(s));
+    if (alt) { ac.aiWhy = `${APT.standWord || 'stand'} ${ac.stand.id} still occupied`; aiDo('GND', ac, `STAND ${alt.id}`); return aiDo('GND', ac, aiTaxiCmd(ac)); }
+    const hp = standWaitPt(ac); if (hp) { ac.aiWhy = `waiting for ${APT.standWord || 'stand'} ${ac.stand.id}`; return aiDo('GND', ac, `TAXI ${hp}`); }
+    return;
+  }
   if ((n === 'Request taxi' || n === 'Needs a stand') && aiDue(ac, n, 3, 7)) {
     if (!ac.stand) aiDo('GND', ac, 'STAND AUTO');
     return aiDo('GND', ac, ac.stand ? aiTaxiCmd(ac) : 'STAND AUTO TAXI');
