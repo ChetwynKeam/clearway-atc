@@ -516,8 +516,9 @@ const APT = {
   liveName: 'Dubai International', liveThin: 22, atisFreq: OMDB.UNITS.atis.freq, turbName: 'Dubai',
   sessionHours: Array.from({ length: 24 }, (_, i) => i),
   // the tower view: both runways and the concourses (an offset from the south runway's middle, NM)
-  view: { app: [0, 0, 70], get twr(){ const c = R0.rm(R0.len*0.45, -300), m = R0.rm(R0.len/2, 0); return [c[0] - m[0], c[1] - m[1], 3.4]; },
-    gnd: (() => { const c = firstOf('F') ? firstOf('F').p : ARP; return [mOf(c), offOf(c), 5200, 3600]; })() },
+  // (the field's middle, between the four runway ends, set left of centre so the flight panel on the right leaves it clear)
+  view: { app: [0, 0, 70], get twr(){ const c = EN(668 + 1200, -183), m = R0.rm(R0.len/2, 0); return [c[0] - m[0], c[1] - m[1], 3.6]; },
+    gnd: (() => { const F = STANDS.filter(s => s.term === 'F'), c = F.length ? [F.reduce((a, s) => a + s.p[0], 0)/F.length + 900*M2NM, F.reduce((a, s) => a + s.p[1], 0)/F.length] : ARP; return [mOf(c), offOf(c), 4600, 3200]; })() },
   minsOk,
   splitRwy: true, rwyFor, depFor, configOf,
   rwyConfigs: [['west', '30L', '30R'], ['east', '12L', '12R']].map(([key, land, dep]) => ({ key, name: CFG[key].name, land, lands: [land], deps: [dep] })),
