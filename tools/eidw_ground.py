@@ -77,6 +77,14 @@ E.append({'type': 'way', 'id': -3, 'nodes': _zn, 'geometry': [{'lat': _ll(q)[0],
 # stub): without it the only way from A to B2 is over 16/34 and back
 _f1 = 13745260603
 E.append({'type': 'way', 'id': -4, 'nodes': [_f1, _z0], 'geometry': [{'lat': _ll(q)[0], 'lon': _ll(q)[1]} for q in (NODE[_f1], NODE[_z0])], 'tags': {'aeroway': 'taxiway', 'ref': 'F1'}})
+# F-Inner's top end onto Link 6 westbound (and back): the chart's curve left off F-Inner to Link 6 and on to N and E2.
+# OpenStreetMap only joins F-Inner to Link 6 east of that, as a hairpin, so the way north from the piers to Link 6 went
+# round the North Apron lanes instead
+_fa, _fb = 10253442936, 5006838588
+_pa, _pb = NODE[_fa], NODE[_fb]; _u0 = (math.sin(math.radians(4)), math.cos(math.radians(4))); _u3 = (math.sin(math.radians(247)), math.cos(math.radians(247)))
+_c1 = (_pa[0] + _u0[0]*16, _pa[1] + _u0[1]*16); _c2 = (_pb[0] - _u3[0]*16, _pb[1] - _u3[1]*16)
+_fp = [_pa] + [tuple((1-t)**3*_pa[k] + 3*(1-t)**2*t*_c1[k] + 3*(1-t)*t*t*_c2[k] + t**3*_pb[k] for k in (0, 1)) for t in (0.2, 0.4, 0.6, 0.8)] + [_pb]
+E.append({'type': 'way', 'id': -5, 'nodes': [_fa] + [_nn(q) for q in _fp[1:-1]] + [_fb], 'geometry': [{'lat': _ll(q)[0], 'lon': _ll(q)[1]} for q in _fp], 'tags': {'aeroway': 'taxiway', 'ref': 'LINK 6'}})
 # runway-holding positions on a runway before the one it meets (mapped in OpenStreetMap off the taxiways): 10L/28R either
 # side of 16/34, 16/34 south of 10L/28R, 10R/28L west of the 28L/34 end. Painted only.
 RRH = [10253454827, 10253454828, 10253454829, 10253329346]
@@ -629,7 +637,7 @@ edges = [e for e in edges if not _over(e)]
 print('taxiway stretches over a runway removed', _before - len(edges))
 # ── junction fillets: OpenStreetMap has the taxiways meeting at sharp corners, where the painted centrelines (and
 # the pavement) sweep round in curves. At every junction or bend, each pair of taxiway stretches that turns between 30
-# and 140 degrees gets a curve from a point up to 45 m along one to a point along the other; at a plain bend the sharp
+# and 150 degrees gets a curve from a point up to 45 m along one to a point along the other; at a plain bend the sharp
 # corner goes. Holding points, stands, runway and crossing points keep their corners.
 FIL_R = 45
 pos = {n[0]: (n[1], n[2]) for n in nodes}
@@ -660,11 +668,11 @@ for n, es in inc.items():
             pa_, pb_ = (cut_at(a, min(12, plen(a)*0.5)) or (a[1],))[0], (cut_at(b, min(12, plen(b)*0.5)) or (b[1],))[0]   # the heading over its first 12 m
             ha = math.atan2(pa_[0]-a[0][0], pa_[1]-a[0][1]); hb = math.atan2(pb_[0]-b[0][0], pb_[1]-b[0][1])
             turn = 180 - abs((math.degrees(ha - hb) + 180) % 360 - 180)   # 0: straight on, 180: back the way it came
-            if 30 <= turn <= 125: pairs.append((es[i], es[j], turn))
+            if 30 <= turn <= 150: pairs.append((es[i], es[j], turn))   # (above 115 an aircraft can't make the corner itself)
     for ea, eb, turn in pairs:
         la, lb = plen(away(ea, n)), plen(away(eb, n))
-        r = min(FIL_R*(1 if turn < 100 else 0.7), 0.42*la, 0.42*lb)
-        if r < 10: continue
+        r = min(FIL_R*(1 if turn < 100 else 0.7 if turn <= 125 else 0.55), 0.42*la, 0.42*lb)
+        if r < (10 if turn <= 115 else 5): continue   # a sharp turn gets a curve however short its stretches: without one it can't be made
         for e in (ea, eb): cut[(id(e), n)] = max(cut.get((id(e), n), 0), r)
         fillets.append((n, ea, eb, r))
 # split each edge at its cut points (one at either end at most), keeping the middle; the corner bits stay only at a junction
