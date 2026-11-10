@@ -1,0 +1,82 @@
+// Clearway live flights board (Vercel function: /api/flights?apt=EIDW). The scheduled GitHub job that writes each
+// airport's flights.json is meant to run every 15 minutes, but GitHub runs it every few hours, so its times miss the
+// day's delays. A Real world session asks here first: this reads the same avionio.com boards fresh, but only the pages
+// around now (from about an hour ago to a few hours ahead), and answers in flights.json's shape. The simulator lays these
+// rows over its flights.json, which still covers the rest of the day.
+// Only fixed avionio.com board URLs are fetched, so it can't be turned into an open proxy. Answers are cached at
+// Vercel's edge for a few minutes, so however many people are playing, each board is read at most that often.
+// Same parsing as tools/avionio_flights.py (codeshare rows skipped, times local) and tools/belfast_flights_merge.py.
+const UA = 'Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)';
+// airport: avionio codes (Belfast: International then City, tagged A and C), time zone, board pages to read
+const BOARDS = {
+  LXGB: null,   // Gibraltar and Madeira read their own airports' sites (scheduled job only)
+  EGLC: { codes: ['lcy'], tz: 'Europe/London', pages: [-1, 0, 1] },
+  LOWI: { codes: ['inn'], tz: 'Europe/Vienna', pages: [-1, 0, 1] },
+  KJFK: { codes: ['jfk'], tz: 'America/New_York', pages: [-1, 0, 1, 2, 3, 4] },
+  EGKK: { codes: ['lgw'], tz: 'Europe/London', pages: [-1, 0, 1, 2, 3] },
+  LEMD: { codes: ['mad'], tz: 'Europe/Madrid', pages: [-1, 0, 1, 2, 3, 4] },
+  EGCC: { codes: ['man'], tz: 'Europe/London', pages: [-1, 0, 1, 2, 3] },
+  EGLL: { codes: ['lhr'], tz: 'Europe/London', pages: [-1, 0, 1, 2, 3, 4] },
+  EGGD: { codes: ['brs'], tz: 'Europe/London', pages: [-1, 0, 1, 2] },
+  EGAA: { codes: ['bfs', 'bhd'], tz: 'Europe/London', pages: [-1, 0, 1], tags: ['A', 'C'] },
+  YSSY: { codes: ['syd'], tz: 'Australia/Sydney', pages: [-1, 0, 1, 2, 3, 4] },
+  EIDW: { codes: ['dub'], tz: 'Europe/Dublin', pages: [-1, 0, 1, 2, 3] },
+  OMDB: { codes: ['dxb'], tz: 'Asia/Dubai', pages: [-1, 0, 1, 2, 3, 4] },
+  LSGG: { codes: ['gva'], tz: 'Europe/Zurich', pages: [-1, 0, 1, 2] },
+};
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, OPTIONS' };
+const MON = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
+const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+const unesc = s => s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => e[0] === '#' ? String.fromCodePoint(e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : +e.slice(1)) : ENT[e.toLowerCase()] ?? m);
+const cell = (row, c) => { const m = row.match(new RegExp(`<td class="${c}[^"]*"[^>]*>([\\s\\S]*?)</td>`)); return m ? unesc(m[1].replace(/<[^>]+>/g, ' ')).split(/\s+/).filter(Boolean) : []; };
+// the zone's offset from UTC at noon on a day, in minutes (as the Python tool works it out)
+const offsetMin = (tz, y, mo, d) => { const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'longOffset' }).formatToParts(new Date(Date.UTC(y, mo - 1, d, 12)));
+  const m = (p.find(x => x.type === 'timeZoneName') || {}).value.match(/GMT([+-])(\d\d):?(\d\d)?/); return m ? (m[1] === '-' ? -1 : 1)*(+m[2]*60 + +(m[3] || 0)) : 0; };
+const nowMonth = tz => +new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'numeric' }).format(new Date());
+const nowYear = tz => +new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric' }).format(new Date());
+
+function parse(pages, tz, tag){
+  const days = {}, seen = new Set(), mo = nowMonth(tz), yr = nowYear(tz);
+  for (const key of ['arr', 'dep']) {
+    for (const [, cls, row] of pages[key].join('').matchAll(/<tr class="tt-row ([^"]*)">([\s\S]*?)<\/tr>/g)) {
+      if (cls.includes('tt-child')) continue;   // codeshare of the row above
+      const t = cell(row, 'tt-t'), d = cell(row, 'tt-d'), fl = cell(row, 'tt-f');
+      if (!t.length || d.length < 2 || !fl.length || !MON[d[1]]) continue;
+      const year = yr + (MON[d[1]] < mo - 6 ? 1 : 0), dayKey = `${year}-${String(MON[d[1]]).padStart(2, '0')}-${String(+d[0]).padStart(2, '0')}`;
+      const place = cell(row, 'tt-ap').join(' '), k = `${dayKey}|${key}|${t[0]}|${place}`;
+      const e = days[dayKey] ||= { utcOffsetMin: offsetMin(tz, year, MON[d[1]], +d[0]), arr: [], dep: [] };
+      if (seen.has(k) && !fl[0].startsWith('CJ')) continue;   // BA8454 and CJ8454 are one flight: keep the operator's number
+      if (seen.has(k)) e[key] = e[key].filter(r => !(r.sched === t[0] && r.place === place));
+      seen.add(k);
+      const status = cell(row, 'tt-s').join(' '), m = status.match(/(\d\d:\d\d)/);
+      e[key].push({ place, flight: fl[0], sched: t[0], status: status.replace(/\s*\d\d:\d\d\s*/g, ' ').trim(), expected: m ? m[1] : '', ...(tag ? { air: tag } : {}) });
+    }
+  }
+  return days;
+}
+async function page(code, kind, p){
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000);
+  try { const r = await fetch(`https://www.avionio.com/en/airport/${code}/${kind}?page=${p}`, { headers: { 'user-agent': UA, accept: 'text/html' }, signal: ctl.signal }); return r.ok ? await r.text() : ''; }
+  catch (e) { return ''; } finally { clearTimeout(to); }
+}
+const json = (o, status = 200, cache = 's-maxage=300, stale-while-revalidate=600') => new Response(JSON.stringify(o), { status, headers: { ...CORS, 'content-type': 'application/json', 'cache-control': 'public, max-age=60', 'cdn-cache-control': cache } });
+
+async function handle(req){
+  if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
+  const apt = (new URL(req.url).searchParams.get('apt') || '').toUpperCase(), B = BOARDS[apt];
+  if (!B) return json({ error: 'no live board for this airport' }, 404, 's-maxage=3600');
+  const out = { updated: new Date().toISOString().slice(0, 19) + 'Z', source: 'avionio.com', live: true, days: {} };
+  let rows = 0;
+  await Promise.all(B.codes.map(async (code, i) => {
+    const pages = { arr: [], dep: [] };
+    await Promise.all(['arr', 'dep'].flatMap(k => B.pages.map(async (p, j) => { pages[k][j] = await page(code, k === 'arr' ? 'arrivals' : 'departures', p); })));
+    for (const [day, v] of Object.entries(parse(pages, B.tz, B.tags && B.tags[i]))) {
+      const e = out.days[day] ||= { utcOffsetMin: v.utcOffsetMin, arr: [], dep: [] };
+      e.arr.push(...v.arr); e.dep.push(...v.dep); rows += v.arr.length + v.dep.length;
+    }
+  }));
+  if (!rows) return json({ error: 'board unavailable' }, 502, 's-maxage=60');
+  for (const v of Object.values(out.days)) for (const k of ['arr', 'dep']) v[k].sort((a, b) => a.sched.localeCompare(b.sched));
+  return json(out);
+}
+export const GET = handle, OPTIONS = handle;
