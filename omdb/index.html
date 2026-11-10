@@ -13926,7 +13926,8 @@ function openFidsBoard(){
 
 // ═════════════════════════ Real world mode: today's real flights and live traffic ═════════════════════════
 // The session starts at the current time. Gibraltar's arrivals and departures come from the airport's own live flight
-// information (flights.json beside the page, refreshed every 15 minutes by a scheduled job in the site's repo), with
+// information (flights.json beside the page, written by a scheduled job in the site's repo, with the board around now
+// laid over it fresh from the relay: see liveLoad), with
 // their expected times and delays. Aircraft in the air right now come from free ADS-B networks (adsb.lol, adsb.fi)
 // through a small relay, because those feeds can't be read by a web page directly. Real Gibraltar inbounds take over
 // their scheduled flight when they come within range; everything else is shown as background traffic.
@@ -13949,13 +13950,57 @@ const placeOf = p => PLACE_ICAO[p.toLowerCase().trim()] || p;
 const typeOf = cs => AIRLINE_TYPE[cs.slice(0, 3)] || APT.defType || 'A320';
 const fnum = cs => +((cs.match(/(\d+)/) || [0, 0])[1]);
 
+// Today's flights: flights.json beside the page (the whole day, written by a scheduled job that GitHub runs only every
+// few hours) with the board around now laid over it fresh from the relay (api/flights.js: from about an hour ago to a
+// few hours ahead, at most a few minutes old), so delays, cancellations and landings are today's, not this morning's.
+// Either alone will do: Geneva has only the fresh board, Gibraltar and Madeira only flights.json.
+const BOARD_URL = RELAY_URLS[0].replace(/\/traffic$/, '/flights');
+async function boardFresh(){
+  try {
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 9000);
+    const r = await fetch(`${BOARD_URL}?apt=${APT.icao}`, { signal: ctl.signal }); clearTimeout(to);
+    if (r.ok) { const j = await r.json(); if (j && j.days) return j; }
+  } catch (e) {}
+  return null;
+}
+// a fresh row replaces the same flight at the same scheduled time; flights only on the fresh board are added
+function boardMerge(base, fresh){
+  if (!fresh) return base; if (!base || !base.days) return fresh;
+  const out = { ...base, updated: fresh.updated, fresh: true, days: { ...base.days } };
+  for (const [day, v] of Object.entries(fresh.days)) {
+    const b = out.days[day]; if (!b) { out.days[day] = v; continue; }
+    const e = out.days[day] = { ...b };
+    for (const k of ['arr', 'dep']) {
+      const key = r => `${r.flight}|${r.sched}|${r.air || ''}`, nu = new Map(v[k].map(r => [key(r), r]));
+      e[k] = [...b[k].map(r => nu.get(key(r)) || r), ...v[k].filter(r => !b[k].some(o => key(o) === key(r)))].sort((x, y) => x.sched.localeCompare(y.sched));
+    }
+  }
+  return out;
+}
 async function liveLoad(force){
   if (LIVE.data && !force && Date.now() - LIVE.loadedAt < 5*60e3) return LIVE.data;
-  try {
-    const r = await fetch('flights.json?_=' + Date.now(), { cache: 'no-store' });
-    if (r.ok) { LIVE.data = await r.json(); LIVE.loadedAt = Date.now(); }
-  } catch (e) {}
+  const [base, fresh] = await Promise.all([
+    fetch('flights.json?_=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null), boardFresh()]);
+  const d = boardMerge(base, fresh);
+  if (d && d.days) { LIVE.data = d; LIVE.loadedAt = Date.now(); }
   return LIVE.data;
+}
+// During a session the board is read again every ten minutes: the flights you have not been given yet take their new
+// times (a delay announced since you started), so the real aircraft are still recognised as them when they turn up
+async function liveRefresh(){
+  if (!S.running || !isLiveMode() || !LIVE.session || !LIVE.session.T) return;
+  const fresh = await boardFresh(); if (!fresh || !S.running || !LIVE.session) return;
+  LIVE.data = boardMerge(LIVE.data, fresh); LIVE.loadedAt = Date.now();
+  const T = LIVE.session.T, N = liveToday(S.start); if (!N) return;
+  for (const k of ['arr', 'dep']) for (const r of N[k]) {
+    const o = T[k].find(x => x.cs === r.cs && x.sched === r.sched);
+    if (o) Object.assign(o, { tm: r.tm, rel: r.rel, real: r.real, done: r.done, cancelled: r.cancelled });
+    else T[k].push(r);
+  }
+  for (const f of S.sched) if (f.k === 'ARR' && f.real && !f.spawned && !f.liveHex) {   // a held arrival waits for its new time
+    const r = T.arr.find(x => x.cs === f.cs); if (!r) continue;
+    if (r.cancelled) f.spawned = true; else f.m = Math.max(f.m, r.rel - 15);
+  }
 }
 // today's rows in UTC minutes from 00Z, with the airport's own status text
 function liveToday(now = Date.now()){
@@ -14367,9 +14412,9 @@ function drawLive(){
 S.listeners.push((ev, data) => {
   if (ev === 'cmd' && data && data.ac) data.ac.told = true;   // one you have worked: a real flight never replaces it
   if (ev === 'start') {
-    clearInterval(LIVE.timer); LIVE.timer = null; LIVE.ac.clear(); LIVE.bound.clear(); LIVE.prev.clear(); LIVE.ok = 0; LIVE.err = 0; LIVE.joined = 0; LIVE.used = new Set(); LIVE.dprev = new Map();
+    clearInterval(LIVE.timer); LIVE.timer = null; clearInterval(LIVE.boardTimer); LIVE.boardTimer = null; LIVE.ac.clear(); LIVE.bound.clear(); LIVE.prev.clear(); LIVE.ok = 0; LIVE.err = 0; LIVE.joined = 0; LIVE.used = new Set(); LIVE.dprev = new Map();
     if (isLiveMode()) {
-      if (RELAY) { pollTraffic(); LIVE.timer = setInterval(pollTraffic, 10000); }
+      if (RELAY) { pollTraffic(); LIVE.timer = setInterval(pollTraffic, 10000); LIVE.boardTimer = setInterval(liveRefresh, 10*60e3); }
       else sys('Real world: live aircraft positions need the traffic relay, which isn’t set up yet. Today’s real ${APT.name} flights are scheduled at their real times.');
     }
   }

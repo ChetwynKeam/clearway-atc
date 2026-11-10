@@ -12,7 +12,10 @@ name: Refresh airport flights
 # Belfast International and City (avionio.com's BFS and BHD boards, merged with an airfield tag per row) as egaa/flights.json,
 # Sydney (avionio.com's SYD boards, fourteen pages each way) as yssy/flights.json,
 # Dublin (avionio.com's DUB boards, eighteen pages each way) as eidw/flights.json,
-# Dubai (avionio.com's DXB boards, twenty-four pages each way) as omdb/flights.json.
+# Dubai (avionio.com's DXB boards, twenty-four pages each way) as omdb/flights.json,
+# Geneva (avionio.com's GVA boards, eight pages each way) as lsgg/flights.json.
+# GitHub runs this schedule only every few hours, not every 15 minutes, so during a Real world session the simulator
+# also reads the board around now fresh through the relay (api/flights.js) and lays it over these files.
 on:
   schedule:
     - cron: '2,17,32,47 * * * *'
@@ -158,9 +161,19 @@ jobs:
           [ -n "$A" ] && [ -n "$D" ] || exit 0
           python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/omdb.json Asia/Dubai || exit 0
           python3 -c "import json,sys; d=json.load(open('/tmp/omdb.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p omdb && cp /tmp/omdb.json omdb/flights.json || echo "no Dubai flights parsed"
+      - name: Fetch Geneva's flight information
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; A=""; D=""
+          for P in 0 1 2 3 4 5 6 7; do
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/gva_a$P.html "https://www.avionio.com/en/airport/gva/arrivals?page=$P" && A="$A,/tmp/gva_a$P.html"
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/gva_d$P.html "https://www.avionio.com/en/airport/gva/departures?page=$P" && D="$D,/tmp/gva_d$P.html"
+          done
+          [ -n "$A" ] && [ -n "$D" ] || exit 0
+          python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/lsgg.json Europe/Zurich || exit 0
+          python3 -c "import json,sys; d=json.load(open('/tmp/lsgg.json'))['days']; sys.exit(0 if d else 1)" && mkdir -p lsgg && cp /tmp/lsgg.json lsgg/flights.json || echo "no Geneva flights parsed"
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json egkk/flights.json lemd/flights.json egcc/flights.json egll/flights.json eggd/flights.json egaa/flights.json yssy/flights.json eidw/flights.json omdb/flights.json; do [ -f "$f" ] && git add "$f"; done; true
+          for f in flights.json lpma/flights.json eglc/flights.json lowi/flights.json kjfk/flights.json egkk/flights.json lemd/flights.json egcc/flights.json egll/flights.json eggd/flights.json egaa/flights.json yssy/flights.json eidw/flights.json omdb/flights.json lsgg/flights.json; do [ -f "$f" ] && git add "$f"; done; true
           git diff --cached --quiet && { echo "unchanged"; exit 0; }
           git commit -qm "Flights update" && git pull -q --rebase origin main && git push -q origin HEAD:main
