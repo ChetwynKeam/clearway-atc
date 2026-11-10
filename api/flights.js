@@ -12,16 +12,16 @@ const BOARDS = {
   LXGB: null,   // Gibraltar and Madeira read their own airports' sites (scheduled job only)
   EGLC: { codes: ['lcy'], tz: 'Europe/London', pages: [-1, 0, 1] },
   LOWI: { codes: ['inn'], tz: 'Europe/Vienna', pages: [-1, 0, 1] },
-  KJFK: { codes: ['jfk'], tz: 'America/New_York', pages: [-1, 0, 1, 2, 3, 4] },
+  KJFK: { codes: ['jfk'], tz: 'America/New_York', pages: [-1, 0, 1, 2, 3] },
   EGKK: { codes: ['lgw'], tz: 'Europe/London', pages: [-1, 0, 1, 2, 3] },
-  LEMD: { codes: ['mad'], tz: 'Europe/Madrid', pages: [-1, 0, 1, 2, 3, 4] },
+  LEMD: { codes: ['mad'], tz: 'Europe/Madrid', pages: [-1, 0, 1, 2, 3] },
   EGCC: { codes: ['man'], tz: 'Europe/London', pages: [-1, 0, 1, 2, 3] },
   EGLL: { codes: ['lhr'], tz: 'Europe/London', pages: [-1, 0, 1, 2, 3, 4] },
   EGGD: { codes: ['brs'], tz: 'Europe/London', pages: [-1, 0, 1, 2] },
   EGAA: { codes: ['bfs', 'bhd'], tz: 'Europe/London', pages: [-1, 0, 1], tags: ['A', 'C'] },
-  YSSY: { codes: ['syd'], tz: 'Australia/Sydney', pages: [-1, 0, 1, 2, 3, 4] },
-  EIDW: { codes: ['dub'], tz: 'Europe/Dublin', pages: [-1, 0, 1, 2, 3] },
-  OMDB: { codes: ['dxb'], tz: 'Asia/Dubai', pages: [-1, 0, 1, 2, 3, 4] },
+  YSSY: { codes: ['syd'], tz: 'Australia/Sydney', pages: [-1, 0, 1, 2, 3] },
+  EIDW: { codes: ['dub'], tz: 'Europe/Dublin', pages: [-1, 0, 1, 2] },
+  OMDB: { codes: ['dxb'], tz: 'Asia/Dubai', pages: [-1, 0, 1, 2, 3] },
   LSGG: { codes: ['gva'], tz: 'Europe/Zurich', pages: [-1, 0, 1, 2] },
 };
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, OPTIONS' };
@@ -54,24 +54,27 @@ function parse(pages, tz, tag){
   }
   return days;
 }
-// one board page; a failed read (avionio turns away bursts now and then) is tried again once after a short pause
-async function page(code, kind, p, log){
-  for (let i = 0; i < 2; i++) {
-    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000);
+// one board page. avionio.com answers bursts with HTTP 429, so a turned-away read waits (its Retry-After, at most
+// two seconds) and tries once more, and nothing new starts once the time budget is used up
+async function page(code, kind, p, log, until){
+  for (let i = 0; i < 2 && Date.now() < until; i++) {
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), Math.max(500, Math.min(6000, until - Date.now())));
+    let wait = 500;
     try {
       const r = await fetch(`https://www.avionio.com/en/airport/${code}/${kind}?page=${p}`, { headers: { 'user-agent': UA, accept: 'text/html' }, signal: ctl.signal });
       const t = r.ok ? await r.text() : '';
       if (t.includes('tt-row')) { log.push(`${code} ${kind} ${p}: OK`); return t; }
       log.push(`${code} ${kind} ${p}: HTTP ${r.status}${r.ok ? ' (no rows)' : ''}`);
       if (r.ok) return t;   // a real empty page (nothing that far ahead)
+      if (r.status === 429) wait = Math.min(2000, (+r.headers.get('retry-after') || 1)*1000);
     } catch (e) { log.push(`${code} ${kind} ${p}: ${e.name === 'AbortError' ? 'timeout' : e.message}`); }
     finally { clearTimeout(to); }
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, wait));
   }
   return '';
 }
-// a few reads at a time rather than all at once
-async function pool(jobs, n){ let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < jobs.length) await jobs[i++](); })); }
+// two reads at a time, a moment apart; the pages nearest now first, so a cut-short answer still has the next hours
+async function pool(jobs, n){ let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < jobs.length) { await jobs[i++](); await new Promise(r => setTimeout(r, 150)); } })); }
 const json = (o, status = 200, cache = 's-maxage=300, stale-while-revalidate=600') => new Response(JSON.stringify(o), { status, headers: { ...CORS, 'content-type': 'application/json', 'cache-control': 'public, max-age=60', 'cdn-cache-control': cache } });
 
 async function handle(req){
@@ -81,7 +84,8 @@ async function handle(req){
   const out = { updated: new Date().toISOString().slice(0, 19) + 'Z', source: 'avionio.com', live: true, days: {} };
   let rows = 0;
   const pages = B.codes.map(() => ({ arr: [], dep: [] }));
-  await pool(B.codes.flatMap((code, i) => ['arr', 'dep'].flatMap(k => B.pages.map((p, j) => async () => { pages[i][k][j] = await page(code, k === 'arr' ? 'arrivals' : 'departures', p, log); }))), 4);
+  const until = Date.now() + 8000, order = B.pages.map((p, j) => j).sort((x, y) => Math.abs(B.pages[x] - 0.5) - Math.abs(B.pages[y] - 0.5));
+  await pool(order.flatMap(j => B.codes.flatMap((code, i) => ['arr', 'dep'].map(k => async () => { pages[i][k][j] = await page(code, k === 'arr' ? 'arrivals' : 'departures', B.pages[j], log, until); }))), 2);
   B.codes.forEach((code, i) => {
     for (const [day, v] of Object.entries(parse(pages[i], B.tz, B.tags && B.tags[i]))) {
       const e = out.days[day] ||= { utcOffsetMin: v.utcOffsetMin, arr: [], dep: [] };
