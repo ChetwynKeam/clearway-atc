@@ -54,29 +54,44 @@ function parse(pages, tz, tag){
   }
   return days;
 }
-async function page(code, kind, p){
-  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000);
-  try { const r = await fetch(`https://www.avionio.com/en/airport/${code}/${kind}?page=${p}`, { headers: { 'user-agent': UA, accept: 'text/html' }, signal: ctl.signal }); return r.ok ? await r.text() : ''; }
-  catch (e) { return ''; } finally { clearTimeout(to); }
+// one board page; a failed read (avionio turns away bursts now and then) is tried again once after a short pause
+async function page(code, kind, p, log){
+  for (let i = 0; i < 2; i++) {
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000);
+    try {
+      const r = await fetch(`https://www.avionio.com/en/airport/${code}/${kind}?page=${p}`, { headers: { 'user-agent': UA, accept: 'text/html' }, signal: ctl.signal });
+      const t = r.ok ? await r.text() : '';
+      if (t.includes('tt-row')) { log.push(`${code} ${kind} ${p}: OK`); return t; }
+      log.push(`${code} ${kind} ${p}: HTTP ${r.status}${r.ok ? ' (no rows)' : ''}`);
+      if (r.ok) return t;   // a real empty page (nothing that far ahead)
+    } catch (e) { log.push(`${code} ${kind} ${p}: ${e.name === 'AbortError' ? 'timeout' : e.message}`); }
+    finally { clearTimeout(to); }
+    await new Promise(r => setTimeout(r, 400));
+  }
+  return '';
 }
+// a few reads at a time rather than all at once
+async function pool(jobs, n){ let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < jobs.length) await jobs[i++](); })); }
 const json = (o, status = 200, cache = 's-maxage=300, stale-while-revalidate=600') => new Response(JSON.stringify(o), { status, headers: { ...CORS, 'content-type': 'application/json', 'cache-control': 'public, max-age=60', 'cdn-cache-control': cache } });
 
 async function handle(req){
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
-  const apt = (new URL(req.url).searchParams.get('apt') || '').toUpperCase(), B = BOARDS[apt];
+  const u = new URL(req.url), apt = (u.searchParams.get('apt') || '').toUpperCase(), B = BOARDS[apt], debug = u.searchParams.has('debug'), log = [];
   if (!B) return json({ error: 'no live board for this airport' }, 404, 's-maxage=3600');
   const out = { updated: new Date().toISOString().slice(0, 19) + 'Z', source: 'avionio.com', live: true, days: {} };
   let rows = 0;
-  await Promise.all(B.codes.map(async (code, i) => {
-    const pages = { arr: [], dep: [] };
-    await Promise.all(['arr', 'dep'].flatMap(k => B.pages.map(async (p, j) => { pages[k][j] = await page(code, k === 'arr' ? 'arrivals' : 'departures', p); })));
-    for (const [day, v] of Object.entries(parse(pages, B.tz, B.tags && B.tags[i]))) {
+  const pages = B.codes.map(() => ({ arr: [], dep: [] }));
+  await pool(B.codes.flatMap((code, i) => ['arr', 'dep'].flatMap(k => B.pages.map((p, j) => async () => { pages[i][k][j] = await page(code, k === 'arr' ? 'arrivals' : 'departures', p, log); }))), 4);
+  B.codes.forEach((code, i) => {
+    for (const [day, v] of Object.entries(parse(pages[i], B.tz, B.tags && B.tags[i]))) {
       const e = out.days[day] ||= { utcOffsetMin: v.utcOffsetMin, arr: [], dep: [] };
       e.arr.push(...v.arr); e.dep.push(...v.dep); rows += v.arr.length + v.dep.length;
     }
-  }));
+  });
+  if (debug) return json({ rows, log }, 200, 'no-store');
+  if (log.some(l => !/: OK$/.test(l) && !/no rows/.test(l))) out.partial = true;
   if (!rows) return json({ error: 'board unavailable' }, 502, 's-maxage=60');
   for (const v of Object.values(out.days)) for (const k of ['arr', 'dep']) v[k].sort((a, b) => a.sched.localeCompare(b.sched));
-  return json(out);
+  return json(out, 200, out.partial ? 's-maxage=60, stale-while-revalidate=120' : undefined);
 }
 export const GET = handle, OPTIONS = handle;
