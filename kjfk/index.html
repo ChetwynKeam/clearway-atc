@@ -8180,7 +8180,7 @@ function step(dt){
   S.t += dt;
   stepWindShift(); stepReadbacks();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
-  for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && S.t < (S.liveWait || 0)) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
+  for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
   if (APT.xing) {
   if (X.st === 'CLOSING' && S.t >= X.t) { X.st = 'CLOSED'; sys('Winston Churchill Avenue closed: barriers down, crossing clear, FOD check complete.'); renderAtis(); emit('xing', 'CLOSED'); }
@@ -13276,13 +13276,32 @@ function liveSession(now = Date.now(), mode = 'live'){
   for (const d of T.dep) if (!used.has(d) && !d.cancelled && !d.done && d.rel > 0)   // night-stoppers and positioning flights
     residents.push({ cs: d.cs, t: d.t, k: 'RES', d: d.ap, gate: gateFor(d.ap), m: 0, depM: d.rel, at: zHM(Date.UTC(2026, 0, 1) + d.tm*60e3), real: true });
   // a very busy airport (New York JFK: APT.liveThin movements an hour) keeps an even share of its real flights in Live now;
-  // Live now plus extra traffic keeps them all
+  // Live now plus extra traffic keeps them all. The share is exact (Dublin keeps about seven flights in eight at its
+  // peak), not every second or third flight: a whole-number stride halved the traffic as soon as it was a little over.
   if (APT.liveThin && mode !== 'liveplus') {
-    const mov = sched.filter(f => f.m < 180).length*2 + residents.filter(f => f.depM < 180).length, k = Math.max(1, Math.ceil(mov/(3*APT.liveThin)));
-    return { sched: sched.filter((f, i) => i % k === 0), residents: residents.filter((f, i) => i % k === 0), T };
+    const mov = sched.filter(f => f.m < 180).length*2 + residents.filter(f => f.depM < 180).length, q = Math.min(1, 3*APT.liveThin/Math.max(1, mov));
+    const pick = L => q >= 1 ? L : L.filter((f, i) => Math.floor((i + 1)*q) > Math.floor(i*q));
+    const s = pick(sched), r = pick(residents), keep = new Set([...s.flatMap(f => f.turn ? [f.cs, f.turn.cs] : [f.cs]), ...r.map(f => f.cs)]);
+    return { sched: s, residents: r, T, q, keep };
   }
-  return { sched, residents, T };
+  return { sched, residents, T, q: 1, keep: null };
 }
+// Live now's share at a busy airport: a flight on today's list is yours if it was kept, one that isn't on the list by a
+// steady coin toss on its transponder code (the same answer every time it is looked at)
+const liveKept = r => !LIVE.session || !LIVE.session.keep || LIVE.session.keep.has(r.cs);
+const hexKept = h => { const q = LIVE.session ? LIVE.session.q : 1; if (q == null || q >= 1) return true; let x = 7; for (const c of h || '') x = (x*31 + c.charCodeAt(0)) >>> 0; return (x % 1000)/1000 < q; };
+// airlines fly under their own callsigns and their regional or sister operators' (Aer Lingus EIN/Emerald EAI, Ryanair
+// RYR/RUK/MAY/LDM, BA/CityFlyer): a Flights board row "EI 3301" is flown by EAI43AB, so the guess is by airline family
+const CS_FAMILY = [['RYR', 'RUK', 'MAY', 'LDM'], ['EIN', 'EAI', 'EUK'], ['BAW', 'CFE', 'SHT', 'EFW'], ['EZY', 'EJU', 'EZS'], ['DLH', 'CLH'], ['KLM', 'KLC'],
+  ['SAS', 'SZS'], ['AFR', 'HOP'], ['IBE', 'IBS'], ['WZZ', 'WUK', 'WMT'], ['TOM', 'TUI'], ['DAL', 'EDV', 'SKW', 'RPA'], ['UAL', 'SKW', 'RPA', 'ASH', 'GJS'], ['AAL', 'ENY', 'RPA', 'JIA', 'PDT'],
+  ['QFA', 'QLK', 'NWK'], ['VOZ', 'VAU']];
+const sameAirline = (a, b) => (a = a.slice(0, 3)) === (b = b.slice(0, 3)) || CS_FAMILY.some(g => g.includes(a) && g.includes(b));
+// the Flights board is refreshed by a scheduled job that can run hours apart: the older it is, the less its times know of
+// today's delays, so a guess by time allows for more
+const boardAge = () => { const u = LIVE.data && Date.parse(LIVE.data.updated || ''); return u ? Math.max(0, (Date.now() - u)/60e3) : 0; };
+const tolOf = base => Math.min(120, base + clamp(boardAge()/4, 0, 30));
+// how far round from the side a flight comes from (its entry point) an aircraft at p is, in degrees
+const sideOff = (ap, p) => { const e = ENTRY[gateFor(ap)]; return e ? Math.abs(angDiff(brg(...RADAR_REF, ...p), brg(...RADAR_REF, ...e))) : 0; };
 // session picker: today's real flights instead of the timetable slot
 function renderLiveSlots(){
   const el = $('slotList'); el.innerHTML = `<span class="dimmer">Loading today’s flights from ${APT.liveName}…</span>`;
@@ -13296,6 +13315,13 @@ function renderLiveSlots(){
   });
 }
 
+// While the live feed is working, a real arrival on today's list comes in as its real aircraft (picked up on its way, or
+// handed over in the airspace), not as a made-up copy at its board time flying in beside the real one, which stays grey.
+// Only when no aircraft has turned up for it well after its time (allowing for an old board) is it made up as before.
+function liveHoldArr(f){
+  if (!f.real || f.liveHex || !isLiveMode() || !LIVE.ok || Date.now() - LIVE.ok > 60e3) return false;
+  return S.t < f.m*60 + tolOf(25)*60;
+}
 // ── live traffic from the relay ──
 async function pollTraffic(){
   if (!RELAY || !S.running || !isLiveMode()) return;
@@ -13336,9 +13362,15 @@ function liveBind(){
     // flight's entry point: a Belfast flight can't be east of Bristol), high enough for the distance it still has to go
     // (not another airport's departure or arrival down low) and not climbing. Busy airlines (easyJet, Ryanair) have
     // dozens of aircraft within 90 NM, so without these checks any of them could be picked up as the wrong flight.
-    const sideOk = f => { const e = ENTRY[f.gate]; return !e || Math.abs(angDiff(brg(...RADAR_REF, ...p), brg(...RADAR_REF, ...e))) < 60; };
-    const highOk = a.alt >= Math.min(20000, dGbr*150);
-    const byPath = !byName && off < 25 && a.alt < 26000 && highOk && (a.vs || 0) <= 300 && S.sched.find(f => f.k === 'ARR' && f.real && !f.liveHex && f.cs.slice(0, 3) === a.cs.slice(0, 3) && sideOk(f) && Math.abs(f.m*60 + 15*60 - S.t - dGbr/Math.max(150, a.gs || 250)*3600) < 40*60);
+    // Arrivals fly their STARs and holds rather than straight at the airport, and start down from cruise well out, so the
+    // checks are on the way here (within 50°) and under a descent profile, not pointed right at it below FL260; the airline
+    // may be a sister operator (EAI for an Aer Lingus EI 3xxx), and of several candidates the one due nearest is taken.
+    const sideOk = f => { const g = ENTRY[f.gate]; return !g || Math.abs(angDiff(brg(...RADAR_REF, ...p), brg(...RADAR_REF, ...g))) < 75; };
+    const highOk = a.alt >= Math.min(20000, dGbr*150), lowOk = a.alt <= Math.min(41000, dGbr*330 + ELEV + 8000);
+    const eta = dGbr/Math.max(150, a.gs || 250)*3600, tol = tolOf(40)*60;
+    let byPath = null, bd = tol;
+    if (!byName && off < 50 && lowOk && highOk && (a.vs || 0) <= 300 && airlineCs(adsbCs(a)))
+      for (const f of S.sched) if (f.k === 'ARR' && f.real && !f.liveHex && sameAirline(f.cs, adsbCs(a)) && sideOk(f)) { const dt = Math.abs(f.m*60 + 15*60 - S.t - eta); if (dt < bd) { bd = dt; byPath = f; } }
     const f = byName || byPath; if (!f) continue;
     let ac = S.acs.find(x => x.cs === f.cs);
     if (ac && ac.state !== 'PRE' && S.t < LIVE_JOIN_S && !ac.liveHex && !ac.told) { dropAc(ac); ac = null; f.spawned = false; }   // just joined: the real one replaces the simulated copy
@@ -13397,15 +13429,21 @@ function routeOn(p, from, names){
   return names.slice(bi - 1);
 }
 // today's flight it is: by its callsign, or the same airline's flight due nearest the time it lands or took off (eta, minutes from now)
-function liveRow(a, kind, eta, tol = 40){
+// A guess (no callsign match) is by airline family, within tol minutes (more when the board is old), and for an arrival
+// seen at p, from the side its flight comes from: a row due from the other side counts as half an hour further off.
+// keptOnly: guess only among the flights Live now's share kept (a guessed name is only a name; the aircraft is real).
+function liveRow(a, kind, eta, tol = 40, p = null, keptOnly = false){
   const T = LIVE.session && LIVE.session.T; if (!T) return null;
   const cs = adsbCs(a), now = (Date.now() - S.start)/60e3, rows = kind === 'ARR' ? T.arr : T.dep;
   const free = r => !r.cancelled && !LIVE.used.has(r.cs) && !S.acs.some(x => x.cs === r.cs && (x.liveHex || x.told));
   const exact = rows.find(r => free(r) && r.cs === cs); if (exact) return exact;
+  if (!tol || !airlineCs(cs)) return null;
   const taken = new Set([...LIVE.ac.values()].map(adsbCs));
-  if (!airlineCs(cs)) return null;
-  let best = null, bd = tol;
-  for (const r of rows) if (free(r) && !taken.has(r.cs) && r.cs.slice(0, 3) === cs.slice(0, 3)) { const d = Math.abs(r.rel - (eta + now)); if (d < bd) { bd = d; best = r; } }
+  let best = null, bd = tolOf(tol);
+  for (const r of rows) if (free(r) && !taken.has(r.cs) && sameAirline(r.cs, cs) && (!keptOnly || liveKept(r))) {
+    const d = Math.abs(r.rel - (eta + now)) + (p && kind === 'ARR' && sideOff(r.ap, p) > 75 ? 30 : 0) + (r.cs.slice(0, 3) === cs.slice(0, 3) ? 0 : 5);   // its own airline before a sister one
+    if (d < bd) { bd = d; best = r; }
+  }
   return best;
 }
 // a place to come from or go to for a flight that isn't on today's list: one of today's that uses the same gate
@@ -13537,8 +13575,30 @@ function adoptGround(a, p){
   ac.need = 'Needs a stand'; liveCall(ac, `${APT.tower[0]}, ${greet()}, request taxi`);
   return ac;
 }
-// late: after the first minutes, only arrivals crossing into the airspace that nothing else has picked up (a flight
-// not on the Flights board, or flying under a different callsign) are handed over, at the boundary
+// After the first minutes: a real aircraft inside the airspace (or just crossing into it) that is plainly landing here and
+// that nothing has picked up yet is handed over where it is. Before, only one crossing the boundary with its own Flights
+// board time was taken, so anything first seen inside (low-level ADS-B coverage, a guess that failed further out, an
+// alphanumeric callsign like EIN9MY for Aer Lingus 123) stayed grey all the way to the runway, while a made-up copy of
+// its flight flew in alongside it. It must be on final, or descending towards the airport under a descent profile and
+// getting closer; an airliner (or a known type at airliner speeds, not a light aircraft for a neighbouring airfield);
+// and, if not on today's board, on final or close in and pointed here. Live now's share at a busy airport still applies.
+function lateArr(a, p, d, cs){
+  if (d > entryNM(nearGate(p)) + 2) return null;
+  const gs = Math.max(120, a.gs || 250), off = Math.abs(angDiff(a.trk || 0, brg(...p, ...RADAR_REF))), pd = LIVE.dprev && LIVE.dprev.get(a.hex);
+  const closing = pd == null ? off < 50 : d < pd - 0.05;
+  const fin = d < 20 && liveFinal(p, a);
+  // not on final: under the descent profile but not far below it either (a light aircraft at 1,000 ft 12 NM out is going
+  // somewhere else, VFR)
+  if (!fin && !(closing && (a.vs || 0) < 600 && a.alt < Math.min(26000, ELEV + d*350 + 4000) && a.alt > ELEV + Math.min(d*180, 3000) && (off < 70 || d < 12))) return null;
+  if (!airlineCs(cs) && !(TYPES[a.t] && (a.gs || 0) > 110)) return null;
+  const eta = fin ? fin.q.togo/gs*60 : d/gs*60*1.3 + 3;
+  const row = liveRow(a, 'ARR', eta, 25, p, true) || liveRow(a, 'ARR', eta, 75, p, true);   // a late or early one: the airline's nearest within a wider window
+  if (row ? !liveKept(row) : !hexKept(a.hex)) return null;
+  if (!row && !fin && !(d < 15 && off < 45 && a.alt < ELEV + 5000)) return null;
+  const ac = fin ? adoptFinal(a, p, row, fin) : adoptArr(a, p, row);
+  if (ac) sys(`${ac.cs} is a real flight${cs && cs !== ac.cs ? ` (callsign ${cs})` : ''}: it is yours ${Math.round(d)} NM out at ${altShort(Math.round(a.alt/100)*100)}.`);
+  return ac;
+}
 function liveJoin(late){
   const got = { fin: 0, arr: 0, dep: 0, gnd: 0 }, mine = [];
   // nearest first: the aircraft closest in call first, and take their own flights before anyone else's guess at them
@@ -13548,31 +13608,32 @@ function liveJoin(late){
     if (cs && S.acs.some(x => x.cs === cs && (x.liveHex || x.told))) continue;   // you are already working a flight with its callsign
     const onGround = a.gnd || (a.alt != null && a.alt < ELEV + 150 && (a.gs || 0) < 60 && d < 2);
     let ac = null;
-    if (late && (onGround || !a.alt || d < entryNM(nearGate(p)) - 8)) continue;
+    if (late) { if (!onGround && a.alt && (ac = lateArr(a, p, d, cs))) { mine.push(ac); emit('spawn', ac); } continue; }
     if (onGround) { if (d < 3) { ac = adoptGround(a, p); if (ac === 'later') continue; if (ac) got.gnd++; } }
     else if (a.alt) {
       const toB = brg(...p, ...RADAR_REF), off = Math.abs(angDiff(a.trk || 0, toB)), gs = Math.max(120, a.gs || 250);
       const fin = d < 20 && liveFinal(p, a);
-      if (fin && !late) { ac = adoptFinal(a, p, liveRow(a, 'ARR', fin.q.togo/gs*60, 30), fin); got.fin++; }
+      if (fin) { ac = adoptFinal(a, p, liveRow(a, 'ARR', fin.q.togo/gs*60, 30, p), fin); got.fin++; }
       else {
         // climbing away from the airport, inside the hand-off range: one of its departures
         const exDep = liveRow(a, 'DEP', 0, 0), climbing = (a.vs || 0) > 300 || (a.alt < ELEV + 1500 && d < 4);
         const back = lineTo(p, a.trk || 0, RADAR_REF), row = exDep || (climbing && off > 110 ? liveRow(a, 'DEP', -(d/gs*60 + 1), 25) : null);
-        if (!late && d < APT.handoffNM && (exDep || (climbing && off > 110 && (row || (d < 6 && back.ahead < 0 && back.off < 3 && a.alt < ELEV + 5000))))) { ac = adoptDepAir(a, p, row); got.dep++; }
+        if (d < APT.handoffNM && (exDep || (climbing && off > 110 && (row || (d < 6 && back.ahead < 0 && back.off < 3 && a.alt < ELEV + 5000))))) { ac = adoptDepAir(a, p, row); got.dep++; }
         // inside the airspace and coming in (or flying the circuit close in), low enough to be landing here
         else if (d < entryNM(nearGate(p)) + 2 && (off < 60 || d < 15) && (a.vs || 0) < 600 && a.alt < Math.min(26000, d*400 + 6000)) {
-          const row = liveRow(a, 'ARR', d/gs*60*1.3 + 3, late ? 20 : 40);
-          if (late && (!row || S.acs.some(x => x.cs === row.cs) || (row.cs !== cs && a.alt > d*350 + 3000))) continue;   // a guess at the boundary must look like an approach here
+          const row = liveRow(a, 'ARR', d/gs*60*1.3 + 3, 40, p);
           if (row || (d < 12 && a.alt < ELEV + 4000 && off < 45 && (airlineCs(cs) || TYPES[a.t]))) { ac = adoptArr(a, p, row); got.arr++; }
         }
       }
     }
     if (ac) { mine.push(ac); emit('spawn', ac); }
   }
-  if (!mine.length || late) return;
+  LIVE.dprev = new Map(near.map(x => [x.a.hex, x.d]));
+  if (!mine.length) return;
   // whatever the real controllers had already separated is not a loss of separation for you
   const air = S.acs.filter(o => o.airborne && o.state !== 'PRE' && o.alt > 700);
   for (const a of mine) if (a.airborne) for (const b of air) if (a !== b && Math.abs(a.alt - b.alt) < 950 && dist(a.x, a.y, b.x, b.y) < 3) S.conflicts.add([a.cs, b.cs].sort().join('|'));
+  if (late) { if (typeof renderStrips === 'function') renderStrips(true); return; }
   const n = got.fin + got.arr + got.dep + got.gnd, part = [got.fin && `${got.fin} on final`, got.arr && `${got.arr} inbound`, got.dep && `${got.dep} climbing out`, got.gnd && `${got.gnd} on the ground`].filter(Boolean).join(', ');
   sys(`${LIVE.joined ? 'More real traffic' : 'You have taken over the real traffic'}: ${n} aircraft ${n === 1 ? 'is' : 'are'} now yours where ${n === 1 ? 'it is' : 'they are'} (${part}).`);
   LIVE.joined += n;
@@ -13592,7 +13653,7 @@ function drawLive(){
 S.listeners.push((ev, data) => {
   if (ev === 'cmd' && data && data.ac) data.ac.told = true;   // one you have worked: a real flight never replaces it
   if (ev === 'start') {
-    clearInterval(LIVE.timer); LIVE.timer = null; LIVE.ac.clear(); LIVE.bound.clear(); LIVE.prev.clear(); LIVE.ok = 0; LIVE.err = 0; LIVE.joined = 0; LIVE.used = new Set();
+    clearInterval(LIVE.timer); LIVE.timer = null; LIVE.ac.clear(); LIVE.bound.clear(); LIVE.prev.clear(); LIVE.ok = 0; LIVE.err = 0; LIVE.joined = 0; LIVE.used = new Set(); LIVE.dprev = new Map();
     if (isLiveMode()) {
       if (RELAY) { pollTraffic(); LIVE.timer = setInterval(pollTraffic, 10000); }
       else sys('Real world: live aircraft positions need the traffic relay, which isn’t set up yet. Today’s real ${APT.name} flights are scheduled at their real times.');

@@ -2024,7 +2024,7 @@ function step(dt){
   S.t += dt;
   stepWindShift(); stepReadbacks();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
-  for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && S.t < (S.liveWait || 0)) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
+  for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
   if (APT.xing) {
   if (X.st === 'CLOSING' && S.t >= X.t) { X.st = 'CLOSED'; sys('Winston Churchill Avenue closed: barriers down, crossing clear, FOD check complete.'); renderAtis(); emit('xing', 'CLOSED'); }
