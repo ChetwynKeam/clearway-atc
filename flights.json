@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-12T08:18:42Z",
+ "updated": "2026-11-12T16:56:46Z",
  "source": "gibraltarairport.gi",
  "days": {
   "2026-11-12": {
@@ -9,29 +9,36 @@
      "place": "London Gatwick",
      "flight": "EZY8791",
      "sched": "11:05",
-     "status": "On time",
+     "status": "Arrived",
      "expected": ""
     },
     {
      "place": "Manchester",
      "flight": "EZY2267",
      "sched": "11:10",
+     "status": "Arrived",
+     "expected": "11:47"
+    },
+    {
+     "place": "London Heathrow",
+     "flight": "BA492",
+     "sched": "09:46",
      "status": "Estimated",
-     "expected": "11:13"
+     "expected": "12:15"
     },
     {
      "place": "London Heathrow",
      "flight": "BA490",
      "sched": "13:00",
-     "status": "Scheduled",
+     "status": "Diverted",
      "expected": ""
     },
     {
      "place": "Bristol",
      "flight": "EZY2729",
      "sched": "19:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:53"
     }
    ],
    "dep": [
@@ -39,28 +46,35 @@
      "place": "London Gatwick",
      "flight": "EZY8792",
      "sched": "11:45",
-     "status": "On time",
-     "expected": ""
+     "status": "Departed",
+     "expected": "11:58"
     },
     {
      "place": "Manchester",
      "flight": "EZY2268",
      "sched": "11:45",
+     "status": "Departed",
+     "expected": "12:33"
+    },
+    {
+     "place": "London Heathrow",
+     "flight": "BA493",
+     "sched": "10:00",
      "status": "Estimated",
-     "expected": "11:53"
+     "expected": "13:00"
     },
     {
      "place": "London Heathrow",
      "flight": "BA491",
      "sched": "14:05",
-     "status": "Scheduled",
+     "status": "Cancelled",
      "expected": ""
     },
     {
      "place": "Bristol",
      "flight": "EZY2730",
      "sched": "19:45",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     }
    ]
