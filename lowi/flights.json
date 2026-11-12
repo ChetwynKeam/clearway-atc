@@ -1,31 +1,80 @@
 {
- "updated": "2026-11-12T01:13:52Z",
+ "updated": "2026-11-12T08:18:44Z",
  "source": "avionio.com",
  "days": {
   "2026-11-12": {
    "utcOffsetMin": 60,
    "arr": [
     {
-     "place": "Vienna",
-     "flight": "OS101",
-     "sched": "07:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "HV6609",
-     "sched": "08:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "Hamburg",
      "flight": "PAV312",
      "sched": "09:27",
+     "status": "Estimated",
+     "expected": "09:48"
+    },
+    {
+     "place": "Paris",
+     "flight": "RJB101",
+     "sched": "10:09",
      "status": "Scheduled",
      "expected": ""
     },
+    {
+     "place": "Vienna",
+     "flight": "OS105",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Frankfurt",
+     "flight": "PIZ42",
+     "sched": "16:41",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS107",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "09:00",
+     "status": "Estimated",
+     "expected": "08:50"
+    },
+    {
+     "place": "Zurich",
+     "flight": "PAV312",
+     "sched": "11:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-11-13": {
+   "utcOffsetMin": 60,
+   "arr": [
     {
      "place": "Vienna",
      "flight": "OS105",
@@ -42,20 +91,6 @@
     }
    ],
    "dep": [
-    {
-     "place": "Krakow/Balice",
-     "flight": "FTY7",
-     "sched": "07:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Vienna",
-     "flight": "OS102",
-     "sched": "08:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
     {
      "place": "Vienna",
      "flight": "OS106",
