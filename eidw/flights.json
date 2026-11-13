@@ -1,735 +1,378 @@
 {
- "updated": "2026-11-13T02:51:06Z",
+ "updated": "2026-11-13T10:25:22Z",
  "source": "avionio.com",
  "days": {
   "2026-11-13": {
    "utcOffsetMin": 0,
    "arr": [
     {
-     "place": "London",
-     "flight": "MDI18",
-     "sched": "02:05",
-     "status": "Landed",
-     "expected": "02:03"
-    },
-    {
-     "place": "Boston",
-     "flight": "EI132",
-     "sched": "04:15",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "New York",
-     "flight": "EI104",
-     "sched": "04:30",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Brussels",
-     "flight": "QY2886",
-     "sched": "04:31",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Indianapolis",
-     "flight": "FX5051",
-     "sched": "04:37",
-     "status": "Estimated",
-     "expected": "04:57"
-    },
-    {
-     "place": "Paris",
-     "flight": "5O4294",
-     "sched": "04:48",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Cologne/Bonn",
-     "flight": "5X248",
-     "sched": "04:55",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Washington",
-     "flight": "EI116",
-     "sched": "05:05",
-     "status": "Estimated",
-     "expected": "04:38"
-    },
-    {
-     "place": "Hartford",
-     "flight": "EI130",
-     "sched": "05:05",
-     "status": "Estimated",
-     "expected": "05:07"
-    },
-    {
-     "place": "Toronto",
-     "flight": "EI126",
-     "sched": "05:10",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "New York",
-     "flight": "EI100",
-     "sched": "05:15",
-     "status": "Estimated",
-     "expected": "05:10"
-    },
-    {
-     "place": "Philadelphia",
-     "flight": "EI114",
-     "sched": "05:15",
-     "status": "Estimated",
-     "expected": "05:37"
-    },
-    {
-     "place": "Chicago",
-     "flight": "EI122",
-     "sched": "05:15",
-     "status": "Estimated",
-     "expected": "05:02"
-    },
-    {
-     "place": "Leipzig/Halle",
-     "flight": "QY2882",
-     "sched": "05:19",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Doha",
-     "flight": "QR19",
-     "sched": "06:00",
-     "status": "Estimated",
-     "expected": "06:11"
-    },
-    {
-     "place": "London",
-     "flight": "FX5202",
-     "sched": "06:03",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Shanghai",
-     "flight": "MU231",
-     "sched": "06:15",
-     "status": "Estimated",
-     "expected": "05:18"
-    },
-    {
-     "place": "Abu Dhabi",
-     "flight": "EY45",
-     "sched": "06:30",
-     "status": "Estimated",
-     "expected": "06:02"
-    },
-    {
-     "place": "New York",
-     "flight": "EI108",
-     "sched": "07:00",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Leeds/Bradford",
-     "flight": "FR153",
-     "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Newcastle",
-     "flight": "FR17",
-     "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Fort Worth",
-     "flight": "AA132",
-     "sched": "07:10",
-     "status": "Estimated",
-     "expected": "06:32"
-    },
-    {
-     "place": "Paris",
-     "flight": "FR23",
-     "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "FR819",
-     "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Bristol",
-     "flight": "FR509",
-     "sched": "07:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "FR661",
-     "sched": "07:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "New York",
-     "flight": "UA23",
-     "sched": "07:30",
-     "status": "Estimated",
-     "expected": "04:32"
-    },
-    {
-     "place": "Atlanta",
-     "flight": "DL176",
-     "sched": "07:35",
-     "status": "Estimated",
-     "expected": "05:38"
-    },
-    {
-     "place": "Vienna",
-     "flight": "FR7007",
-     "sched": "07:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "BA824",
-     "sched": "07:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Manchester",
-     "flight": "FR557",
-     "sched": "07:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR256",
-     "sched": "08:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL1135",
-     "sched": "08:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Chicago",
-     "flight": "UA980",
-     "sched": "08:10",
-     "status": "Estimated",
-     "expected": "07:10"
-    },
-    {
-     "place": "London",
-     "flight": "CJ4460",
-     "sched": "08:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Liverpool",
-     "flight": "FR441",
-     "sched": "08:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Boston",
-     "flight": "EI136",
-     "sched": "08:20",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "LH976",
-     "sched": "08:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Glasgow",
-     "flight": "FR5564",
-     "sched": "08:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "New York",
-     "flight": "DL44",
-     "sched": "08:37",
-     "status": "Cancelled",
-     "expected": ""
-    },
-    {
-     "place": "Philadelphia",
-     "flight": "AA722",
-     "sched": "08:40",
-     "status": "Estimated",
-     "expected": "02:31"
-    },
-    {
-     "place": "Nashville",
-     "flight": "EI92",
-     "sched": "08:40",
-     "status": "Estimated",
-     "expected": "08:34"
-    },
-    {
-     "place": "Birmingham",
-     "flight": "FR667",
-     "sched": "08:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "New York",
-     "flight": "EI106",
-     "sched": "08:45",
-     "status": "Estimated",
-     "expected": "02:31"
-    },
-    {
-     "place": "Washington",
-     "flight": "EI118",
-     "sched": "08:45",
-     "status": "Estimated",
-     "expected": "07:25"
-    },
-    {
-     "place": "Donegal",
-     "flight": "EA3401",
-     "sched": "08:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Pittsburgh",
-     "flight": "EI80",
-     "sched": "08:50",
-     "status": "Estimated",
-     "expected": "08:16"
-    },
-    {
-     "place": "Paris",
-     "flight": "AF1716",
-     "sched": "09:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malaga",
-     "flight": "FR7047",
-     "sched": "09:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Orlando",
-     "flight": "EI120",
-     "sched": "09:05",
-     "status": "Estimated",
-     "expected": "08:28"
-    },
-    {
-     "place": "London",
-     "flight": "FR463",
-     "sched": "09:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "EI151",
-     "sched": "09:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Manchester",
-     "flight": "EI203",
-     "sched": "09:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EI263",
-     "sched": "09:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Chicago",
-     "flight": "EI124",
-     "sched": "09:30",
-     "status": "Estimated",
-     "expected": "02:35"
-    },
-    {
-     "place": "Manchester",
-     "flight": "FR1917",
-     "sched": "09:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Nantes",
-     "flight": "FR1987",
-     "sched": "09:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Liverpool",
-     "flight": "EA3191",
-     "sched": "09:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Madrid",
-     "flight": "FR11",
-     "sched": "09:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Istanbul",
-     "flight": "TK1975",
-     "sched": "09:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Glasgow",
-     "flight": "EA3221",
-     "sched": "09:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Boston",
-     "flight": "DL154",
-     "sched": "09:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "EA3251",
-     "sched": "09:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Leeds/Bradford",
-     "flight": "EA3391",
-     "sched": "09:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR271",
-     "sched": "09:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "BA828",
-     "sched": "09:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Newcastle",
-     "flight": "EA3351",
-     "sched": "09:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "New York",
-     "flight": "UA317",
-     "sched": "09:55",
-     "status": "Estimated",
-     "expected": "04:48"
-    },
-    {
      "place": "Munich",
      "flight": "VL2516",
      "sched": "10:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:55"
     },
     {
      "place": "Oslo",
      "flight": "SK4603",
      "sched": "10:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:09"
     },
     {
      "place": "London",
      "flight": "EI153",
      "sched": "10:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:48"
     },
     {
      "place": "Amsterdam",
      "flight": "EI603",
      "sched": "10:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:03"
     },
     {
      "place": "Reykjavik",
      "flight": "FI416",
      "sched": "10:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:15"
     },
     {
      "place": "London",
      "flight": "FR338",
      "sched": "10:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "09:58"
     },
     {
      "place": "Liverpool",
      "flight": "FR443",
      "sched": "10:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "09:59"
     },
     {
      "place": "Washington",
      "flight": "UA228",
      "sched": "10:20",
-     "status": "Estimated",
-     "expected": "03:42"
+     "status": "Landed",
+     "expected": "03:34"
     },
     {
      "place": "London",
      "flight": "FR115",
      "sched": "10:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:13"
     },
     {
      "place": "Lisbon",
      "flight": "TP1322",
      "sched": "10:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:59"
+    },
+    {
+     "place": "London",
+     "flight": "CJ4462",
+     "sched": "10:30",
+     "status": "Estimated",
+     "expected": "10:36"
+    },
+    {
+     "place": "Birmingham",
+     "flight": "EA3265",
+     "sched": "10:30",
+     "status": "Estimated",
+     "expected": "10:22"
     },
     {
      "place": "Santander",
      "flight": "FR7153",
      "sched": "10:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:30"
     },
     {
      "place": "Stockholm",
      "flight": "SK535",
      "sched": "10:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:26"
     },
     {
      "place": "Istanbul",
      "flight": "TK6525",
      "sched": "10:50",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": "10:50"
+    },
+    {
+     "place": "Exeter",
+     "flight": "EA3331",
+     "sched": "10:55",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Manchester",
+     "flight": "EI205",
+     "sched": "10:55",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Brussels",
      "flight": "FR1453",
      "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:03"
     },
     {
      "place": "Istanbul",
      "flight": "PC1157",
      "sched": "10:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:06"
+    },
+    {
+     "place": "Southampton",
+     "flight": "EA3301",
+     "sched": "11:00",
+     "status": "Estimated",
+     "expected": "10:54"
     },
     {
      "place": "Cancun",
      "flight": "EI142",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": "06:24"
+     "expected": "10:37"
     },
     {
      "place": "London",
      "flight": "FR121",
      "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:00"
     },
     {
      "place": "Copenhagen",
      "flight": "FR633",
      "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "10:46"
     },
     {
      "place": "Frankfurt",
      "flight": "LH978",
      "sched": "11:00",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": "11:06"
+    },
+    {
+     "place": "Paris",
+     "flight": "EI521",
+     "sched": "11:05",
+     "status": "Estimated",
+     "expected": "11:15"
+    },
+    {
+     "place": "Brussels",
+     "flight": "EI631",
+     "sched": "11:05",
+     "status": "Estimated",
+     "expected": "10:47"
+    },
+    {
+     "place": "London",
+     "flight": "EI155",
+     "sched": "11:15",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Porto",
      "flight": "FR7073",
      "sched": "11:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:18"
     },
     {
      "place": "Athens",
      "flight": "A3630",
      "sched": "11:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:02"
     },
     {
      "place": "Dubai",
      "flight": "EK161",
      "sched": "11:20",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:08"
     },
     {
      "place": "Kerry",
      "flight": "FR5307",
      "sched": "11:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:20"
     },
     {
      "place": "Zurich",
      "flight": "LX400",
      "sched": "11:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:14"
+    },
+    {
+     "place": "Duesseldorf",
+     "flight": "EI693",
+     "sched": "11:25",
+     "status": "Estimated",
+     "expected": "11:12"
     },
     {
      "place": "Hamburg",
      "flight": "FR5044",
      "sched": "11:30",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": "11:30"
+    },
+    {
+     "place": "Aberdeen",
+     "flight": "LM51",
+     "sched": "11:30",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Venice",
      "flight": "FR834",
      "sched": "11:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:25"
+    },
+    {
+     "place": "Berlin",
+     "flight": "EI333",
+     "sched": "11:40",
+     "status": "Estimated",
+     "expected": "11:32"
     },
     {
      "place": "Gdansk",
      "flight": "FR1909",
      "sched": "11:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:48"
+    },
+    {
+     "place": "Copenhagen",
+     "flight": "SK537",
+     "sched": "11:45",
+     "status": "Estimated",
+     "expected": "11:30"
     },
     {
      "place": "London",
      "flight": "FR210",
      "sched": "11:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:50"
     },
     {
      "place": "Madrid",
      "flight": "FR494",
      "sched": "11:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:18"
+    },
+    {
+     "place": "Barcelona",
+     "flight": "VY1092",
+     "sched": "12:05",
+     "status": "Estimated",
+     "expected": "11:51"
     },
     {
      "place": "Athens",
      "flight": "A36188",
      "sched": "12:08",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:36"
+    },
+    {
+     "place": "Geneva",
+     "flight": "EI681",
+     "sched": "12:10",
+     "status": "Estimated",
+     "expected": "11:53"
     },
     {
      "place": "Katowice",
      "flight": "FR5347",
      "sched": "12:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:52"
     },
     {
      "place": "Alicante",
      "flight": "FR7063",
      "sched": "12:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:15"
     },
     {
      "place": "Trieste",
      "flight": "FR9320",
      "sched": "12:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:08"
     },
     {
      "place": "Faro",
      "flight": "FR7033",
      "sched": "12:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:21"
     },
     {
      "place": "London",
-     "flight": "FR344",
+     "flight": "BA830",
      "sched": "12:25",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Munich",
+     "flight": "EI353",
+     "sched": "12:25",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "EI343",
+     "sched": "12:30",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Doha",
      "flight": "QR17",
      "sched": "12:35",
+     "status": "Estimated",
+     "expected": "12:44"
+    },
+    {
+     "place": "Birmingham",
+     "flight": "EA3267",
+     "sched": "12:40",
      "status": "Scheduled",
      "expected": ""
     },
@@ -737,7 +380,21 @@
      "place": "Budapest",
      "flight": "FR1026",
      "sched": "12:40",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": "12:59"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "KL1139",
+     "sched": "12:40",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Madrid",
+     "flight": "EI593",
+     "sched": "12:45",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -751,20 +408,34 @@
      "place": "Prague",
      "flight": "FR97",
      "sched": "12:55",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": "12:55"
+    },
+    {
+     "place": "Budapest",
+     "flight": "EI673",
+     "sched": "13:10",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Krakow/Balice",
      "flight": "FR2024",
      "sched": "13:10",
+     "status": "Estimated",
+     "expected": "13:10"
+    },
+    {
+     "place": "Manchester",
+     "flight": "EA3323",
+     "sched": "13:15",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Manchester",
-     "flight": "FR1900",
-     "sched": "13:15",
+     "place": "Glasgow",
+     "flight": "EA3223",
+     "sched": "13:20",
      "status": "Scheduled",
      "expected": ""
     },
@@ -772,6 +443,27 @@
      "place": "Milan",
      "flight": "EI433",
      "sched": "13:20",
+     "status": "Estimated",
+     "expected": "13:20"
+    },
+    {
+     "place": "Prague",
+     "flight": "EI643",
+     "sched": "13:20",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Farnborough",
+     "flight": "VJT643",
+     "sched": "13:21",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Teesside",
+     "flight": "MDI14",
+     "sched": "13:22",
      "status": "Scheduled",
      "expected": ""
     },
@@ -780,14 +472,35 @@
      "flight": "EI50",
      "sched": "13:25",
      "status": "Estimated",
+     "expected": "12:45"
+    },
+    {
+     "place": "Barcelona",
+     "flight": "EI563",
+     "sched": "13:25",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "TO7904",
+     "sched": "13:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "EI661",
+     "sched": "13:30",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Barcelona",
      "flight": "FR3976",
      "sched": "13:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:30"
     },
     {
      "place": "Leeds/Bradford",
@@ -800,6 +513,55 @@
      "place": "Malaga",
      "flight": "FR7045",
      "sched": "13:30",
+     "status": "Estimated",
+     "expected": "13:30"
+    },
+    {
+     "place": "Bristol",
+     "flight": "EA3281",
+     "sched": "13:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "EI159",
+     "sched": "13:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rome",
+     "flight": "EI403",
+     "sched": "13:35",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Liverpool",
+     "flight": "EA3193",
+     "sched": "13:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EA3253",
+     "sched": "13:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Duesseldorf",
+     "flight": "EW9394",
+     "sched": "13:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Luxembourg",
+     "flight": "LG4887",
+     "sched": "13:45",
      "status": "Scheduled",
      "expected": ""
     },
@@ -814,7 +576,14 @@
      "place": "Malta",
      "flight": "FR7237",
      "sched": "13:50",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": "13:50"
+    },
+    {
+     "place": "Lisbon",
+     "flight": "EI483",
+     "sched": "13:55",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -826,8 +595,29 @@
     },
     {
      "place": "London",
+     "flight": "BA826",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Southampton",
+     "flight": "EA3305",
+     "sched": "14:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
      "flight": "FR339",
      "sched": "14:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "EI605",
+     "sched": "14:10",
      "status": "Scheduled",
      "expected": ""
     },
@@ -839,11 +629,25 @@
      "expected": ""
     },
     {
-     "place": "Dubrovnik",
-     "flight": "FR3881",
+     "place": "Paris",
+     "flight": "EI525",
      "sched": "14:15",
      "status": "Scheduled",
      "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "EI583",
+     "sched": "14:15",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Dubrovnik",
+     "flight": "FR3881",
+     "sched": "14:15",
+     "status": "Estimated",
+     "expected": "14:15"
     },
     {
      "place": "Lisbon",
@@ -853,11 +657,18 @@
      "expected": ""
     },
     {
-     "place": "Rabat",
-     "flight": "FR163",
+     "place": "Aberdeen",
+     "flight": "EA3243",
      "sched": "14:20",
      "status": "Scheduled",
      "expected": ""
+    },
+    {
+     "place": "Rabat",
+     "flight": "FR163",
+     "sched": "14:20",
+     "status": "Estimated",
+     "expected": "14:20"
     },
     {
      "place": "Amsterdam",
@@ -877,6 +688,34 @@
      "place": "Rome",
      "flight": "FR5569",
      "sched": "14:25",
+     "status": "Estimated",
+     "expected": "14:25"
+    },
+    {
+     "place": "Athens",
+     "flight": "A36188",
+     "sched": "14:30",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "AF1116",
+     "sched": "14:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "EA3225",
+     "sched": "14:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EA3255",
+     "sched": "14:30",
      "status": "Scheduled",
      "expected": ""
     },
@@ -888,11 +727,18 @@
      "expected": ""
     },
     {
+     "place": "Birmingham",
+     "flight": "EI267",
+     "sched": "14:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Los Angeles",
      "flight": "EI68",
      "sched": "14:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "14:07"
     },
     {
      "place": "London",
@@ -905,6 +751,13 @@
      "place": "Paris",
      "flight": "FR25",
      "sched": "14:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "BA832",
+     "sched": "14:55",
      "status": "Scheduled",
      "expected": ""
     },
@@ -926,13 +779,27 @@
      "place": "Gran Canaria",
      "flight": "FR95",
      "sched": "15:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:05"
     },
     {
      "place": "Manchester",
      "flight": "FR559",
      "sched": "15:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Shannon",
+     "flight": "BGF24",
+     "sched": "15:14",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Manchester",
+     "flight": "EI209",
+     "sched": "15:15",
      "status": "Scheduled",
      "expected": ""
     },
@@ -954,6 +821,13 @@
      "place": "Lanzarote",
      "flight": "FR7200",
      "sched": "15:15",
+     "status": "Estimated",
+     "expected": "15:15"
+    },
+    {
+     "place": "London",
+     "flight": "CJ4464",
+     "sched": "15:20",
      "status": "Scheduled",
      "expected": ""
     },
@@ -965,9 +839,37 @@
      "expected": ""
     },
     {
+     "place": "Donegal",
+     "flight": "EA3403",
+     "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "London",
      "flight": "FR1031",
      "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Istanbul",
+     "flight": "TK1977",
+     "sched": "15:30",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Lanzarote",
+     "flight": "EI777",
+     "sched": "15:35",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "EI165",
+     "sched": "15:40",
      "status": "Scheduled",
      "expected": ""
     },
@@ -986,8 +888,22 @@
      "expected": ""
     },
     {
+     "place": "Lyon",
+     "flight": "EI553",
+     "sched": "16:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Alicante",
      "flight": "FR262",
+     "sched": "16:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Lisbon",
+     "flight": "TP1324",
      "sched": "16:10",
      "status": "Scheduled",
      "expected": ""
@@ -996,6 +912,34 @@
      "place": "London",
      "flight": "FR127",
      "sched": "16:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bordeaux",
+     "flight": "EI507",
+     "sched": "16:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "KL1141",
+     "sched": "16:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faroe Islands",
+     "flight": "T2344",
+     "sched": "16:22",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "CJ4466",
+     "sched": "16:25",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1031,6 +975,20 @@
      "place": "Amsterdam",
      "flight": "FR5299",
      "sched": "16:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bristol",
+     "flight": "EA3285",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brussels",
+     "flight": "EI635",
+     "sched": "16:50",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1084,9 +1042,37 @@
      "expected": ""
     },
     {
+     "place": "Munich",
+     "flight": "VL2518",
+     "sched": "17:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "London",
      "flight": "FR331",
      "sched": "17:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Helsinki",
+     "flight": "AY1385",
+     "sched": "17:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "EA3227",
+     "sched": "17:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "EI609",
+     "sched": "17:20",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1126,6 +1112,27 @@
      "expected": ""
     },
     {
+     "place": "Paris",
+     "flight": "EI527",
+     "sched": "17:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "BA834",
+     "sched": "17:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EA3257",
+     "sched": "17:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Amsterdam",
      "flight": "FR3101",
      "sched": "17:40",
@@ -1133,8 +1140,22 @@
      "expected": ""
     },
     {
+     "place": "London",
+     "flight": "EI169",
+     "sched": "17:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Birmingham",
      "flight": "FR671",
+     "sched": "17:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX404",
      "sched": "17:45",
      "status": "Scheduled",
      "expected": ""
@@ -1158,6 +1179,13 @@
      "flight": "FR1949",
      "sched": "18:00",
      "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Abu Dhabi",
+     "flight": "EY47",
+     "sched": "18:10",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1193,6 +1221,13 @@
      "flight": "FR2191",
      "sched": "18:50",
      "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dubai",
+     "flight": "EK163",
+     "sched": "18:55",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1492,674 +1527,72 @@
    ],
    "dep": [
     {
-     "place": "Maastricht",
-     "flight": "XM359",
-     "sched": "03:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Lisbon",
-     "flight": "TP1327",
-     "sched": "04:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "LH983",
-     "sched": "05:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Shannon",
-     "flight": "5O4294",
-     "sched": "05:38",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Shannon",
-     "flight": "5X248",
-     "sched": "05:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Gdansk",
-     "flight": "FR1908",
-     "sched": "05:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Nantes",
-     "flight": "FR1986",
-     "sched": "05:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Venice",
-     "flight": "FR3086",
-     "sched": "05:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL1134",
-     "sched": "05:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malta",
-     "flight": "FR7242",
-     "sched": "05:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Gran Canaria",
-     "flight": "FR94",
-     "sched": "05:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Lanzarote",
-     "flight": "EI776",
-     "sched": "05:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Madrid",
-     "flight": "FR495",
-     "sched": "05:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Copenhagen",
-     "flight": "FR5070",
-     "sched": "05:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Katowice",
-     "flight": "FR5346",
-     "sched": "05:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Paris",
-     "flight": "AF1017",
-     "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Liverpool",
-     "flight": "FR442",
-     "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "FR666",
-     "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Faro",
-     "flight": "FR7032",
-     "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Alicante",
-     "flight": "FR7062",
-     "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Porto",
-     "flight": "FR7072",
-     "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Santander",
-     "flight": "FR7152",
-     "sched": "06:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Budapest",
-     "flight": "FR1025",
-     "sched": "06:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Tenerife",
-     "flight": "FR5557",
-     "sched": "06:10",
+     "place": "London",
+     "flight": "EI158",
+     "sched": "10:00",
      "status": "Estimated",
-     "expected": "06:10"
-    },
-    {
-     "place": "Glasgow",
-     "flight": "FR5565",
-     "sched": "06:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Berlin",
-     "flight": "EI332",
-     "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Madrid",
-     "flight": "EI592",
-     "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "EI602",
-     "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Budapest",
-     "flight": "EI672",
-     "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Lanzarote",
-     "flight": "FR7199",
-     "sched": "06:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Trieste",
-     "flight": "FR9319",
-     "sched": "06:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Rome",
-     "flight": "EI402",
-     "sched": "06:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "EA3250",
-     "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Manchester",
-     "flight": "EI202",
-     "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Bristol",
-     "flight": "EA3280",
-     "sched": "06:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "EI152",
-     "sched": "06:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Glasgow",
-     "flight": "EA3220",
-     "sched": "06:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Leeds/Bradford",
-     "flight": "EA3390",
-     "sched": "06:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EI262",
-     "sched": "06:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Munich",
-     "flight": "EI352",
-     "sched": "06:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Paris",
-     "flight": "EI520",
-     "sched": "06:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR272",
-     "sched": "06:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malaga",
-     "flight": "FR7044",
-     "sched": "06:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Brussels",
-     "flight": "EI630",
-     "sched": "06:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Geneva",
-     "flight": "EI680",
-     "sched": "06:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Duesseldorf",
-     "flight": "EI692",
-     "sched": "06:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Manchester",
-     "flight": "FR1918",
-     "sched": "06:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Krakow/Balice",
-     "flight": "FR2023",
-     "sched": "06:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Hamburg",
-     "flight": "FR5043",
-     "sched": "06:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "CJ4461",
-     "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Newcastle",
-     "flight": "EA3350",
-     "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Zurich",
-     "flight": "EI342",
-     "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Vienna",
-     "flight": "EI660",
-     "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Brussels",
-     "flight": "FR1452",
-     "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR114",
-     "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Rabat",
-     "flight": "FR162",
-     "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Liverpool",
-     "flight": "EA3190",
-     "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Southampton",
-     "flight": "EA3300",
-     "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Barcelona",
-     "flight": "EI562",
-     "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Dubrovnik",
-     "flight": "FR3880",
-     "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "EA3264",
-     "sched": "07:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "EI432",
-     "sched": "07:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Leeds/Bradford",
-     "flight": "FR152",
-     "sched": "07:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Newcastle",
-     "flight": "FR16",
-     "sched": "07:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Prague",
-     "flight": "FR96",
-     "sched": "07:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Exeter",
-     "flight": "EA3330",
-     "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "EI154",
-     "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "EI432",
-     "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Rome",
-     "flight": "FR5568",
-     "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Edinburgh",
-     "flight": "FR818",
-     "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Paris",
-     "flight": "FR22",
-     "sched": "07:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Barcelona",
-     "flight": "FR3977",
-     "sched": "07:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Bristol",
-     "flight": "FR508",
-     "sched": "07:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR120",
-     "sched": "07:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "FR660",
-     "sched": "07:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Liverpool",
-     "flight": "FR446",
-     "sched": "07:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Manchester",
-     "flight": "EI204",
-     "sched": "08:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Vienna",
-     "flight": "FR7008",
-     "sched": "08:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Lisbon",
-     "flight": "FR7138",
-     "sched": "08:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Manchester",
-     "flight": "FR556",
-     "sched": "08:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR255",
-     "sched": "08:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Milan",
-     "flight": "FR6126",
-     "sched": "08:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "EI156",
-     "sched": "08:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "BA825",
-     "sched": "08:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "KL1136",
-     "sched": "08:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "CJ4463",
-     "sched": "08:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR343",
-     "sched": "09:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Shanghai",
-     "flight": "MU232",
-     "sched": "09:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Kerry",
-     "flight": "FR5306",
-     "sched": "09:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "LH977",
-     "sched": "09:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malaga",
-     "flight": "FR7046",
-     "sched": "09:25",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR462",
-     "sched": "09:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "New York",
-     "flight": "UA22",
-     "sched": "09:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Atlanta",
-     "flight": "DL177",
-     "sched": "09:40",
-     "status": "Scheduled",
-     "expected": ""
+     "expected": "09:58"
     },
     {
      "place": "Madrid",
      "flight": "FR10",
      "sched": "10:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:54"
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "EI604",
+     "sched": "10:10",
+     "status": "Estimated",
+     "expected": "10:10"
+    },
+    {
+     "place": "Southampton",
+     "flight": "EA3304",
+     "sched": "10:15",
+     "status": "Estimated",
+     "expected": "10:30"
+    },
+    {
+     "place": "Manchester",
+     "flight": "EA3322",
+     "sched": "10:15",
+     "status": "Estimated",
+     "expected": "10:30"
+    },
+    {
+     "place": "Glasgow",
+     "flight": "EA3222",
+     "sched": "10:20",
+     "status": "Estimated",
+     "expected": "10:35"
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EA3252",
+     "sched": "10:20",
+     "status": "Estimated",
+     "expected": "10:35"
     },
     {
      "place": "Amsterdam",
      "flight": "FR3006",
      "sched": "10:20",
+     "status": "Estimated",
+     "expected": "10:20"
+    },
+    {
+     "place": "Aberdeen",
+     "flight": "EA3242",
+     "sched": "10:25",
+     "status": "Estimated",
+     "expected": "10:40"
+    },
+    {
+     "place": "Istanbul",
+     "flight": "TK1976",
+     "sched": "10:40",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2185,6 +1618,13 @@
      "expected": ""
     },
     {
+     "place": "London",
+     "flight": "BA829",
+     "sched": "10:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Krakow/Balice",
      "flight": "FR2030",
      "sched": "10:50",
@@ -2192,18 +1632,60 @@
      "expected": ""
     },
     {
+     "place": "Munich",
+     "flight": "VL2517",
+     "sched": "10:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Lyon",
+     "flight": "EI552",
+     "sched": "10:55",
+     "status": "Estimated",
+     "expected": "10:55"
+    },
+    {
+     "place": "Oslo",
+     "flight": "SK4604",
+     "sched": "10:55",
+     "status": "Estimated",
+     "expected": "11:11"
+    },
+    {
+     "place": "Liverpool",
+     "flight": "EA3192",
+     "sched": "11:00",
+     "status": "Estimated",
+     "expected": "11:15"
+    },
+    {
      "place": "Milan",
      "flight": "FR1454",
      "sched": "11:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:16"
     },
     {
      "place": "Paris",
      "flight": "FR24",
      "sched": "11:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:59"
+    },
+    {
+     "place": "London",
+     "flight": "CJ4465",
+     "sched": "11:10",
+     "status": "Estimated",
+     "expected": "11:16"
+    },
+    {
+     "place": "Lisbon",
+     "flight": "TP1323",
+     "sched": "11:10",
+     "status": "Estimated",
+     "expected": "11:47"
     },
     {
      "place": "New York",
@@ -2216,6 +1698,13 @@
      "place": "Barcelona",
      "flight": "FR6875",
      "sched": "11:20",
+     "status": "Estimated",
+     "expected": "11:40"
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EA3254",
+     "sched": "11:25",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2227,8 +1716,22 @@
      "expected": ""
     },
     {
+     "place": "Glasgow",
+     "flight": "EA3224",
+     "sched": "11:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Chicago",
      "flight": "EI123",
+     "sched": "11:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Reykjavik",
+     "flight": "FI417",
      "sched": "11:30",
      "status": "Scheduled",
      "expected": ""
@@ -2244,12 +1747,33 @@
      "place": "Berlin",
      "flight": "FR3669",
      "sched": "11:30",
+     "status": "Estimated",
+     "expected": "11:50"
+    },
+    {
+     "place": "Stockholm",
+     "flight": "SK536",
+     "sched": "11:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bordeaux",
+     "flight": "EI506",
+     "sched": "11:40",
      "status": "Scheduled",
      "expected": ""
     },
     {
      "place": "Boston",
-     "flight": "EI13J",
+     "flight": "EI133",
+     "sched": "11:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Birmingham",
+     "flight": "EI266",
      "sched": "11:45",
      "status": "Scheduled",
      "expected": ""
@@ -2269,8 +1793,15 @@
      "expected": ""
     },
     {
+     "place": "Istanbul",
+     "flight": "PC1158",
+     "sched": "12:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "London",
-     "flight": "FR1030",
+     "flight": "EI164",
      "sched": "12:05",
      "status": "Scheduled",
      "expected": ""
@@ -2290,6 +1821,27 @@
      "expected": ""
     },
     {
+     "place": "Athens",
+     "flight": "A3631",
+     "sched": "12:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Aberdeen",
+     "flight": "LM52",
+     "sched": "12:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "LX401",
+     "sched": "12:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "London",
      "flight": "FR211",
      "sched": "12:15",
@@ -2298,9 +1850,9 @@
     },
     {
      "place": "Washington",
-     "flight": "EI11T",
+     "flight": "EI117",
      "sched": "12:20",
-     "status": "Scheduled",
+     "status": "Cancelled",
      "expected": ""
     },
     {
@@ -2318,8 +1870,36 @@
      "expected": ""
     },
     {
+     "place": "Miami",
+     "flight": "EI141",
+     "sched": "12:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Manchester",
+     "flight": "EI208",
+     "sched": "12:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "San Francisco",
+     "flight": "EI61",
+     "sched": "12:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Stockholm",
      "flight": "FR313",
+     "sched": "12:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Copenhagen",
+     "flight": "SK538",
      "sched": "12:30",
      "status": "Scheduled",
      "expected": ""
@@ -2328,6 +1908,13 @@
      "place": "Glasgow",
      "flight": "FR5772",
      "sched": "12:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brussels",
+     "flight": "EI634",
+     "sched": "12:40",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2346,9 +1933,51 @@
      "expected": ""
     },
     {
+     "place": "Istanbul",
+     "flight": "TK6526",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "VY1093",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Fort Worth",
      "flight": "AA133",
      "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Donegal",
+     "flight": "EA3402",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Philadelphia",
+     "flight": "EI115",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Lanzarote",
+     "flight": "EI778",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "EI166",
+     "sched": "13:00",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2367,8 +1996,22 @@
      "expected": ""
     },
     {
+     "place": "Dubai",
+     "flight": "EK162",
+     "sched": "13:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "New York",
-     "flight": "EI10M",
+     "flight": "EI101",
+     "sched": "13:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "EI526",
      "sched": "13:15",
      "status": "Scheduled",
      "expected": ""
@@ -2381,9 +2024,37 @@
      "expected": ""
     },
     {
+     "place": "Amsterdam",
+     "flight": "EI608",
+     "sched": "13:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "KL1140",
+     "sched": "13:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bristol",
+     "flight": "EA3284",
+     "sched": "13:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Brussels",
      "flight": "FR46",
      "sched": "13:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "BA831",
+     "sched": "13:35",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2444,9 +2115,65 @@
      "expected": ""
     },
     {
-     "place": "London",
-     "flight": "FR292",
+     "place": "Cardiff",
+     "flight": "MDI14",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "New York",
+     "flight": "UA3901",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Doha",
+     "flight": "QR18",
+     "sched": "14:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "TO7905",
+     "sched": "14:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Sevilla",
+     "flight": "EI756",
+     "sched": "14:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Liverpool",
+     "flight": "EA3196",
      "sched": "14:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "EI168",
+     "sched": "14:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "EA3226",
+     "sched": "14:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EA3256",
+     "sched": "14:20",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2465,9 +2192,23 @@
      "expected": ""
     },
     {
+     "place": "Duesseldorf",
+     "flight": "EW9395",
+     "sched": "14:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Glasgow",
      "flight": "FR5151",
      "sched": "14:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Luxembourg",
+     "flight": "LG4888",
+     "sched": "14:35",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2486,9 +2227,37 @@
      "expected": ""
     },
     {
+     "place": "Bristol",
+     "flight": "EA3286",
+     "sched": "14:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Edinburgh",
      "flight": "FR808",
      "sched": "14:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "BA827",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Nice",
+     "flight": "EI546",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "EI574",
+     "sched": "15:00",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2497,6 +2266,13 @@
      "flight": "FR506",
      "sched": "15:00",
      "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "New York",
+     "flight": "UA3901",
+     "sched": "15:00",
+     "status": "Cancelled",
      "expected": ""
     },
     {
@@ -2514,9 +2290,37 @@
      "expected": ""
     },
     {
+     "place": "Birmingham",
+     "flight": "EA3272",
+     "sched": "15:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Malaga",
+     "flight": "EI586",
+     "sched": "15:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bilbao",
+     "flight": "EI748",
+     "sched": "15:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Liverpool",
      "flight": "FR436",
      "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Glasgow",
+     "flight": "EA3228",
+     "sched": "15:25",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2528,15 +2332,50 @@
      "expected": ""
     },
     {
-     "place": "Raleigh/Durham",
-     "flight": "EI9CJ",
+     "place": "Larnaca",
+     "flight": "A34089",
+     "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Paris",
+     "flight": "AF1117",
+     "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Manchester",
+     "flight": "EA3324",
+     "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Edinburgh",
+     "flight": "EA3554",
+     "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "EI172",
      "sched": "15:30",
      "status": "Scheduled",
      "expected": ""
     },
     {
      "place": "Los Angeles",
-     "flight": "EI9PE",
+     "flight": "EI69",
+     "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Raleigh/Durham",
+     "flight": "EI85",
      "sched": "15:30",
      "status": "Scheduled",
      "expected": ""
@@ -2545,8 +2384,8 @@
      "place": "Tenerife",
      "flight": "FR7121",
      "sched": "15:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:30"
     },
     {
      "place": "Manchester",
@@ -2557,7 +2396,7 @@
     },
     {
      "place": "Indianapolis",
-     "flight": "EI9KN",
+     "flight": "EI83",
      "sched": "15:40",
      "status": "Scheduled",
      "expected": ""
@@ -2577,6 +2416,13 @@
      "expected": ""
     },
     {
+     "place": "London",
+     "flight": "BA833",
+     "sched": "15:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Washington",
      "flight": "EI119",
      "sched": "15:50",
@@ -2585,14 +2431,21 @@
     },
     {
      "place": "Chicago",
-     "flight": "EI1TV",
+     "flight": "EI125",
+     "sched": "15:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Rome",
+     "flight": "EI406",
      "sched": "15:50",
      "status": "Scheduled",
      "expected": ""
     },
     {
      "place": "Cleveland",
-     "flight": "EI9AR",
+     "flight": "EI87",
      "sched": "15:55",
      "status": "Scheduled",
      "expected": ""
@@ -2612,9 +2465,51 @@
      "expected": ""
     },
     {
+     "place": "London",
+     "flight": "CJ4467",
+     "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Isle of Man",
+     "flight": "EA3216",
+     "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Berlin",
+     "flight": "EI336",
+     "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Marrakech",
      "flight": "FR7378",
      "sched": "16:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Munich",
+     "flight": "EI356",
+     "sched": "16:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zurich",
+     "flight": "EI348",
+     "sched": "16:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Madrid",
+     "flight": "EI594",
+     "sched": "16:15",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2629,6 +2524,20 @@
      "place": "Kerry",
      "flight": "FR611",
      "sched": "16:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Warsaw",
+     "flight": "PLF102",
+     "sched": "16:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Sofia",
+     "flight": "BGF4",
+     "sched": "16:20",
      "status": "Scheduled",
      "expected": ""
     },
@@ -2654,6 +2563,13 @@
      "expected": ""
     },
     {
+     "place": "London",
+     "flight": "EI174",
+     "sched": "16:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Manchester",
      "flight": "FR552",
      "sched": "16:30",
@@ -2663,6 +2579,13 @@
     {
      "place": "Alicante",
      "flight": "FR261",
+     "sched": "16:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Istanbul",
+     "flight": "TK1978",
      "sched": "16:35",
      "status": "Scheduled",
      "expected": ""
@@ -2683,7 +2606,14 @@
     },
     {
      "place": "Boston",
-     "flight": "EI1GA",
+     "flight": "EI137",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Barcelona",
+     "flight": "EI564",
      "sched": "16:45",
      "status": "Scheduled",
      "expected": ""
@@ -2696,8 +2626,22 @@
      "expected": ""
     },
     {
+     "place": "Lisbon",
+     "flight": "TP1325",
+     "sched": "16:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "London",
-     "flight": "FR118",
+     "flight": "CJ4469",
+     "sched": "17:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Duesseldorf",
+     "flight": "EI698",
      "sched": "17:05",
      "status": "Scheduled",
      "expected": ""
@@ -3345,6 +3289,13 @@
      "expected": ""
     },
     {
+     "place": "New York",
+     "flight": "UA317",
+     "sched": "09:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Liverpool",
      "flight": "FR3145",
      "sched": "10:00",
@@ -3375,6 +3326,13 @@
     {
      "place": "Hamburg",
      "flight": "FR5044",
+     "sched": "10:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Washington",
+     "flight": "UA228",
      "sched": "10:20",
      "status": "Scheduled",
      "expected": ""
@@ -3994,69 +3952,6 @@
      "sched": "21:25",
      "status": "Scheduled",
      "expected": ""
-    },
-    {
-     "place": "Leeds/Bradford",
-     "flight": "FR157",
-     "sched": "21:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR210",
-     "sched": "21:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Glasgow",
-     "flight": "FR5564",
-     "sched": "21:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR113",
-     "sched": "21:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Porto",
-     "flight": "FR7073",
-     "sched": "22:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "FR3103",
-     "sched": "22:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Alicante",
-     "flight": "FR7063",
-     "sched": "22:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "FR669",
-     "sched": "22:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Liverpool",
-     "flight": "FR449",
-     "sched": "22:45",
-     "status": "Scheduled",
-     "expected": ""
     }
    ],
    "dep": [
@@ -4348,6 +4243,13 @@
      "expected": ""
     },
     {
+     "place": "Toronto",
+     "flight": "AC801",
+     "sched": "09:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Zagreb",
      "flight": "FR8912",
      "sched": "09:00",
@@ -4418,6 +4320,13 @@
      "expected": ""
     },
     {
+     "place": "New York",
+     "flight": "UA22",
+     "sched": "09:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Faro",
      "flight": "FR7032",
      "sched": "09:35",
@@ -4425,9 +4334,23 @@
      "expected": ""
     },
     {
+     "place": "Minneapolis/Saint Paul",
+     "flight": "DL259",
+     "sched": "09:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Edinburgh",
      "flight": "FR818",
      "sched": "09:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Atlanta",
+     "flight": "DL177",
+     "sched": "09:55",
      "status": "Scheduled",
      "expected": ""
     },
@@ -4988,34 +4911,6 @@
      "place": "London",
      "flight": "FR292",
      "sched": "20:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Cologne/Bonn",
-     "flight": "FR4501",
-     "sched": "20:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Birmingham",
-     "flight": "FR670",
-     "sched": "20:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Madrid",
-     "flight": "FR7156",
-     "sched": "20:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "FR202",
-     "sched": "20:30",
      "status": "Scheduled",
      "expected": ""
     }
