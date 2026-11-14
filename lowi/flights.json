@@ -1,10 +1,17 @@
 {
- "updated": "2026-11-13T23:05:50Z",
+ "updated": "2026-11-14T03:11:10Z",
  "source": "avionio.com",
  "days": {
   "2026-11-14": {
    "utcOffsetMin": 60,
    "arr": [
+    {
+     "place": "Amsterdam",
+     "flight": "HV6601",
+     "sched": "08:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
     {
      "place": "Vienna",
      "flight": "OS105",
@@ -15,9 +22,65 @@
    ],
    "dep": [
     {
+     "place": "Hurghada",
+     "flight": "TYW431",
+     "sched": "08:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "09:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "HV82",
+     "sched": "10:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Vienna",
      "flight": "OS106",
      "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-11-15": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Vienna",
+     "flight": "OS105",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS107",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
      "status": "Scheduled",
      "expected": ""
     }
