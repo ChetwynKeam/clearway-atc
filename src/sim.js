@@ -965,7 +965,8 @@ vacated: ac => { ac.vacated = true; ac.onRwy = false; ac.vacDec = null; if (!ac.
   depOff: (ac, { ex }) => { ac.depVac = null; ac.onRwy = false; ac.xing = null; ac.holdAt = ex; ac.need = `Holding at ${ex.replace(/~\d+$/, '')}`; pilot(ac, `runway vacated via ${exitWord(ex)}, holding`); emit('depoff', ac); },
   atIhp: (ac, { ihp }) => { ac.holdAt = ihp.id; ac.need = `Holding at ${ihp.id}`; pilot(ac, PH.atHoldPt(ac, ihp)); },
   atHp: (ac, { hp }, v) => { ac.state = 'HOLDPT'; if (ac.luAfter) { ac.gs = ac.ias = 0; return; } if (!ac.cto && !ac.luq) { ac.need = 'Ready for departure'; pilot(ac, PH.atHold(ac, hp)); } else startLineUp(ac, v); },
-  pushed: ac => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + rnd(25, 70); if (deiceNeeded() && Math.random() < 0.85) ac.deice = { st: 'ASK' }; },
+  pushed: ac => { ac.state = 'READY'; ac.pushed = true; ac.readyAt = S.t + (ac.perf.shape === 'prop' ? rnd(40, 90) : rnd(60, 150));   // the engines started and the after-start checks done, the tug disconnected and clear (props are quicker)
+    if (deiceNeeded() && Math.random() < 0.85) ac.deice = { st: 'ASK' }; },
   pulled: (ac, { st }) => { ac.state = 'PARKED'; ac.hdg = st.hdg; ac.face = null; ac.pushPts = null; ac.reqAt = S.t + rnd(20, 45); sys(`${ac.cs} is back on ${APT.standWord || 'stand'} ${st.id}.`); },
   // a tow: pushed back off the stand first (towOn), then towed along its route at a tug's pace
   towOn: (ac, { pts, done, o }) => { ac.towNext = null; setPath(ac, pts, TOW_KT, done, o); },
