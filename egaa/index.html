@@ -1435,6 +1435,14 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .dm-go{color:var(--accent);font-size:11px}
 @media (max-width:520px){.dm-t .dm-st{display:none}.dm-t{font-size:10.5px}.dm-t td,.dm-t th{padding:4px 3px}}
 .dm-key{display:flex;flex-wrap:wrap;gap:4px 12px}.dm-key .am-k::before{display:inline-block!important}
+/* mixed-mode runway tactics (mixmode.js), on the ATIS panel */
+.mix{margin:6px 0 4px}.mix-h{margin-bottom:4px}
+.mix-o{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.mix-o button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 6px;border:1px solid var(--line-2);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer;text-align:left;min-width:0}
+.mix-o button b{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.mix-o button span{font:10px var(--font-data);color:var(--dim);white-space:nowrap}
+.mix-o button.on{border-color:var(--accent);background:var(--accent-soft)}
+@media (max-width:520px){.mix-o{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mix-h{display:flex;justify-content:space-between;align-items:baseline}.mix-n{font-size:10px}
 
 </style>
 </head>
@@ -10429,6 +10437,7 @@ function renderAtis(){
     ${typeof worksPanel === 'function' ? worksPanel() : ''}
     ${typeof eqPanel === 'function' ? eqPanel() : ''}
     ${typeof noisePanel === 'function' ? noisePanel() : ''}
+    ${typeof mixPanel === 'function' ? mixPanel() : ''}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the ${APT.turbName || 'Special Procedures'} limit. Expect windshear on final.</div>` : ''}
@@ -15455,7 +15464,7 @@ function depSecs(ac){
 }
 // how long the next arrival must still be away for the departure to go: its line-up and roll plus a minute; landing
 // towards it (Innsbruck: land 26, depart 08) five minutes more, so it is well clear before they meet
-const clearS = ac => { const a = arrNear(rwyOf(depRw(ac)), ac); return depSecs(ac) + 110 + (a.opp ? 300 : a.head ? 150 : 0); };
+const clearS = ac => { const a = arrNear(rwyOf(depRw(ac)), ac); return depSecs(ac) + (typeof mixOf === 'function' && mixOf(rwyOf(depRw(ac))) ? MIX_CLR : 110) + (a.opp ? 300 : a.head ? 150 : 0); };
 // how long a landing occupies the runway, learned from the landings so far (a backtrack at Gibraltar takes minutes)
 const occS = R => (S.aiOcc && S.aiOcc[R.id]) || (BIG_GROUND ? 75 : 150);
 // departures waiting for a runway (or one crossing it): Approach leaves them a gap (the landing ahead vacates, then
@@ -15536,6 +15545,7 @@ function shutOpenFor(ac){
 // waiting), so the hold empties in a steady stream at the minimum spacing
 function holdGap(R, gap){
   if (!gap) return 0;
+  { const k = typeof mixOf === 'function' && mixOf(R); if (k === 'alt') return gap; if (k) return 0; }   // a mixed-mode spacing (mixmode.js): every landing, or the set gaps instead
   // a departure already on the runway (lined up, or lining up) gets its gap now: it can't wait out three landings there
   if (S.acs.some(o => o.kind === 'DEP' && o.ground && o.onRwy && (o.state === 'LINEUP' || o.state === 'LINEDUP') && sameRwy(R, rwyOf(depRw(o)).id))) return gap;
   const held = S.acs.filter(o => o.kind === 'ARR' && o.airborne && o.mode === 'HOLD' && !o.app && sameRwy(R, rwyOf(landRw(o)).id)).length;
@@ -15545,7 +15555,7 @@ function holdGap(R, gap){
 }
 const WAKE_NM = { HH: 4, HM: 5, HL: 6, MH: 3, MM: 3, ML: 5, LH: 3, LM: 3, LL: 3 };
 // the time between two landings: wake (or radar) spacing plus a mile at the approach speed, or the runway occupancy
-const landGapS = (lead, trail, R) => wxSlow()*Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25);
+const landGapS = (lead, trail, R) => wxSlow()*Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25, typeof mixNM === 'function' ? mixNM(R)/((trail.perf.vapp || 135))*3600 : 0);   // (a mixed-mode spacing set on the ATIS panel: mixmode.js)
 // where it is heading next on its way in: the first fix of the route estToGo measures, else the start of the final
 function nextFixP(ac, F){
   if (!F) return null;
@@ -15721,14 +15731,15 @@ function aiDepart(ac){
   // the one ahead is rolling (or just gone): line up and wait behind it, ready to go once the spacing allows, if the next
   // arrival leaves room for that. Lined up, it needs about 45 s to be rolling away instead of the taxi on
   const rolling = S.acs.some(o => o !== ac && o.state === 'TAKEOFF' && o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id));
-  const lineNeed = 45 + 110 + (a.opp ? 300 : a.head ? 150 : 0);
+  const mixT = typeof mixOf === 'function' && !!mixOf(R);   // a mixed-mode spacing set (mixmode.js): the gaps are worked tightly
+  const lineNeed = 45 + (mixT ? MIX_CLR : 110) + (a.opp ? 300 : a.head ? 150 : 0);
   if (!lined && ac.state === 'HOLDPT' && !luFull(ac) && (wait > 0 || rolling) && luBehind(ac, R) && a.eta >= Math.max(wait, rolling ? 30 : 0) + lineNeed + 30) { ac.aiWhy = 'lining up behind the departure'; return aiDo('TWR', ac, 'LU'); }
   // an aircraft crossing the runway well away from this one's entry: line up meanwhile, ready to go once it is across
   if (!lined && ac.state === 'HOLDPT' && !ac.luAfter && !luFull(ac) && busy && !rwyBusy(R, ac, false, o => xFar(o, ac) || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + 30) { ac.aiWhy = 'lining up while traffic crosses'; return aiDo('TWR', ac, 'LU'); }
   // conditional line-up: a landing aircraft rolling out the same way, or a departure rolling, is all that is on the
   // runway: line up behind it (it waits at the holding point until the traffic has gone by), if the next arrival leaves room
   const tr = !lined && ac.state === 'HOLDPT' && !ac.luAfter && !luFull(ac) && luTraffic(ac);
-  if (tr && tr.o.onRwy && !rwyBusy(R, ac, true, o => o === tr.o || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + (tr.kind === 'landing' ? 60 : 30)) { ac.aiWhy = `lining up behind the ${tr.kind} ${tr.o.cs}`; return aiDo('TWR', ac, 'LU'); }
+  if (tr && tr.o.onRwy && !rwyBusy(R, ac, true, o => o === tr.o || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + (tr.kind === 'landing' && !mixT ? 60 : 30)) { ac.aiWhy = `lining up behind the ${tr.kind} ${tr.o.cs}`; return aiDo('TWR', ac, 'LU'); }
   // multiple line-ups: one or two already lined up further down the runway (an intersection departure ahead), this one
   // lines up behind them to go next, if the next arrival leaves room for them all
   const ahead = luOthers(ac);
@@ -16144,7 +16155,7 @@ function amanPlan(list){
       const ac = x.ac;
       // a departure's gap ahead of this one (mixed mode): as holdGap gives them, every landing while the holds are quiet,
       // every second or third while they are busy
-      const dep = dg > 0 && (held < 2 || run >= (held >= 4 ? 3 : 2));
+      const mk = typeof mixOf === 'function' && mixOf(R), dep = dg > 0 && (mk ? mk === 'alt' : (held < 2 || run >= (held >= 4 ? 3 : 2)));   // (a mixed-mode spacing: mixmode.js)
       const before = s => Math.max(amanGap(s.ac, ac, R), dep ? dg : 0);
       let t0 = S.t + x.tMin;
       if (last) t0 = Math.max(t0, last.t + before(last));
@@ -17924,6 +17935,73 @@ function dmPop(){
 }
 { const b = document.getElementById('tgDman'); if (b) b.onclick = () => dmOpen(); }
 window.__dman = { plan: dmPlan, row: dmRow, open: dmOpen, pop: dmPop, DM };
+
+// ═════════════════════════ mixed-mode runway tactics ═════════════════════════
+// On a runway that lands and departs at once, the arrival spacing decides how many departures get away between the
+// landings. Set it on the ATIS panel, per runway:
+// • Auto: as before, a departure gap after every landing while the holds are quiet, every second or third when busy
+// • 6 NM gaps: every arrival at least 6 NM behind the one ahead, one departure in each gap
+// • 8 NM gaps: at least 8 NM, room for a departure even behind a heavy or a slow line-up
+// • a departure between every arrival: the gap for the departure waiting after every landing, however busy the holds
+// With a set spacing the Tower works the gaps tightly, as a real mixed-mode runway does: a departure is cleared for
+// take-off with the next arrival still at least about 3 NM out, rather than the AI's usual wide margin.
+// The AI Approach spaces its arrivals to it (landGapS and holdGap in ai.js). The panel shows the runway's capacity
+// with each choice, in arrivals and departures an hour (other limits, the holds, the taxi, can keep the real numbers lower), and the flow manager (in the team chat on a shift, else on the landline) agrees
+// or warns what it costs against the inbounds due in the next hour.
+const MIX_OPTS = [['auto', 'Auto'], ['6', '6 NM gaps'], ['8', '8 NM gaps'], ['alt', 'Dep. every arrival']];
+const MIX_SAY = { auto: 'auto spacing', 6: '6 NM gaps', 8: '8 NM gaps', alt: 'a departure between every arrival' };
+const MIX_CLR = 30;   // seconds on top of the line-up and roll the next arrival must still be away (the AI's usual: 110)
+const mixOf = R => (R && S.mix && S.mix[R.id]) || null;
+const mixNM = R => { const k = mixOf(R); return k === '6' ? 6 : k === '8' ? 8 : 0; };
+// the runways landing and departing now
+function mixRwys(){
+  const land = new Set(), dep = new Set();
+  try { land.add(rwyOf(S.rwy).id); } catch (e) {}
+  for (const o of S.acs) if (o.kind === 'ARR' && o.airborne && !o.handed) { try { land.add(rwyOf(landRw(o)).id); } catch (e) {} }
+  try { for (const r of depRwys()) dep.add(rwyOf(r).id); } catch (e) {}
+  return [...land].filter(id => dep.has(id)).map(id => rwyById(id)).filter(Boolean);
+}
+// the arrivals and departures an hour each choice gives on this runway (medium behind medium at 140 kt, landings
+// vacating as they have been, departures lined up and waiting)
+function mixRates(R, k){
+  const v = 140, wx = wxSlow(), occ = occS(R), base = Math.max(4/v*3600, occ + 25)*wx, depInt = 90*wx;
+  const clr = k && k !== 'auto' ? MIX_CLR : 110, need = 45 + clr;   // the departure's roll plus the margin, after the landing has vacated
+  const fit = I => I - occ < need ? 0 : 1 + Math.floor((I - occ - need)/depInt);
+  const gapAuto = occ + need + 15;
+  let arr, dep;
+  if (k === '6' || k === '8') { const I = Math.max(base, (k === '6' ? 6 : 8)/v*3600*wx); arr = 3600/I; dep = arr*fit(I); }
+  else if (k === 'alt') { const I = Math.max(base, occ + need + 15); arr = 3600/I; dep = arr*fit(I); }
+  else { const cyc = 2*base + Math.max(base, gapAuto); arr = 3*3600/cyc; dep = 3600/cyc*fit(Math.max(base, gapAuto)); }   // busy holds: a gap every third landing
+  return { arr: Math.round(arr), dep: Math.round(dep) };
+}
+// the flow manager's view: the inbounds due in the next hour against the new landing rate
+function mixSay(R, k){
+  const r = mixRates(R, k), h = typeof demandIn === 'function' ? demandIn(-2, 60) : { arr: 0, dep: 0 };
+  const name = MIX_SAY[k || 'auto'];
+  let text;
+  if (h.arr > r.arr + 1) text = `${name[0].toUpperCase() + name.slice(1)} on ${R.lo}/${R.hi} takes us to about ${r.arr} arrivals an hour, and I've got ${h.arr} inbound in the next hour: expect holding to build, around ${Math.round((h.arr - r.arr)*60/Math.max(1, r.arr))} minutes by the end of it. I'd keep it short, or regulate the arrivals.`;
+  else if (h.dep > r.dep + 2 && k !== 'alt') text = `${name[0].toUpperCase() + name.slice(1)} on ${R.lo}/${R.hi}: about ${r.arr} arrivals and ${r.dep} departures an hour. The arrivals fit (${h.arr} due), but there are ${h.dep} departures waiting to go this hour, so the queue will grow.`;
+  else text = `Agreed, ${name} on ${R.lo}/${R.hi}: about ${r.arr} arrivals and ${r.dep} departures an hour. ${h.arr} inbound and ${h.dep} departures due this hour, so that works.`;
+  if (typeof TEAM !== 'undefined' && TEAM.people && typeof teamSay === 'function') teamSay('FMP', text, true);
+  else if (typeof cbAdd === 'function') cbAdd({ from: 'Flow manager', text });
+}
+function mixSet(id, k){
+  const R = rwyById(id); if (!R) return;
+  S.mix ||= {}; if (!k || k === 'auto') delete S.mix[id]; else S.mix[id] = k;
+  if (typeof AMAN !== 'undefined') AMAN.t = -1;
+  sys(`Runway ${R.lo}/${R.hi}: ${k && k !== 'auto' ? MIX_SAY[k] + ' for the arrivals' : 'arrival spacing back to auto'}.`);
+  mixSay(R, k);
+  if (typeof renderAtis === 'function') renderAtis();
+}
+function mixPanel(){
+  if (!S.running) return '';
+  return mixRwys().map(R => { const cur = mixOf(R) || 'auto';
+    return `<div class="mix"><div class="mix-h"><span class="lbl">Mixed mode ${esc(R.lo)}/${esc(R.hi)} · arrival spacing</span><span class="dimmer mix-n">runway capacity an hour</span></div>
+      <div class="mix-o">${MIX_OPTS.map(([k, l]) => { const r = mixRates(R, k); return `<button type="button" data-mix="${esc(R.id)}:${k}" class="${cur === k ? 'on' : ''}" title="${esc(l)}: about ${r.arr} arrivals and ${r.dep} departures an hour"><b>${esc(l)}</b><span>${r.arr} arr · ${r.dep} dep /h</span></button>`; }).join('')}</div></div>`; }).join('');
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-mix]'); if (!b) return; const [id, k] = b.dataset.mix.split(':'); mixSet(id, k); });
+S.listeners.push(ev => { if (ev === 'start') S.mix = {}; });
+window.__mix = { rates: mixRates, set: mixSet, rwys: mixRwys };
 
 // ═════════════════════════ holding: expected approach times and fuel ═════════════════════════
 // A flight that holds needs an expected approach time (EAT): UK practice is to give one when the delay will be 20
