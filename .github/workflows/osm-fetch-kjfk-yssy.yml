@@ -1,0 +1,33 @@
+name: Fetch JFK and Sydney OSM airfield data
+# One-off: downloads the aerodrome geometry of New York JFK (KJFK) and Sydney (YSSY) from OpenStreetMap into the
+# osm-data-kjfk-yssy branch: apron outlines (the converted ones were lost), terminals and stand lines for the ground fixes.
+on:
+  push:
+    branches: [osm-fetch-kjfk-yssy]
+    paths: ['.github/workflows/osm-fetch-kjfk-yssy.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download both aerodromes
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          q() {  # name south,west,north,east
+            Q="[out:json][timeout:120];(way[aeroway]($2);node[aeroway]($2);relation[aeroway]($2);way[building]($2););out geom;"
+            for H in https://overpass-api.de https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+              curl -sSf -A "$UA" --data-urlencode "data=$Q" "$H/api/interpreter" -o "$1.json" && break || sleep 15
+            done
+          }
+          q kjfk 40.610,-73.830,40.670,-73.740
+          q yssy -33.980,151.150,-33.920,151.200
+          ls -la
+      - name: Publish to osm-data-kjfk-yssy branch
+        run: |
+          cd out
+          git init -q -b osm-data-kjfk-yssy
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OSM aerodrome data for KJFK and YSSY"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" osm-data-kjfk-yssy
