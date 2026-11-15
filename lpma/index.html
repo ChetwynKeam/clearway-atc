@@ -8883,6 +8883,30 @@ function routeAhead(ac, maxD = 0.35){   // points along an aircraft's path, abou
     D += L; last = p; if (D > maxD) break; }
   return out;
 }
+// in my way: some part of o (nose, middle or tail) lies inside the strip my wings sweep along my route over the next
+// 90 m, that is closer to my route than half our two wingspans together. Traffic on a parallel lane far enough off, or
+// beside a junction I turn away from, is not in my way; one on my lane, or on a lane too close to pass, is.
+// (in use where seeded runs showed it clearing the jams without costing anything elsewhere: Dublin's pier lanes. The other
+// airports keep the older rule, anything within 40 degrees of the nose, until it is measured there)
+const GROUND_LANES = typeof AIRPORT !== 'undefined' && ['EIDW'].includes(AIRPORT);
+function inMyWay(ac, o){
+  let L = ac.wayL;
+  if (!L || L.t !== S.t || L.n !== ac.path.pts.length) {
+    const pts = [[ac.x, ac.y]]; let rem = 90*M2NM;
+    for (const p of ac.path.pts) { const l = pts[pts.length - 1], s = dist(...l, ...p);
+      if (s >= rem) { pts.push([l[0] + (p[0] - l[0])*rem/s, l[1] + (p[1] - l[1])*rem/s]); break; } pts.push(p); rem -= s; }
+    L = ac.wayL = { t: S.t, n: ac.path.pts.length, pts };
+  }
+  const W = (spanOf(ac) + spanOf(o))/2, c = acMid(o), h = bodyHdg(o)*D2R, hl = ((o.perf && o.perf.len) || 38)/2*M2NM;
+  const body = [[o.x, o.y], c, [c[0] - Math.sin(h)*hl, c[1] - Math.cos(h)*hl]], P = L.pts;
+  for (const q of body) for (let i = 1; i < P.length; i++) {
+    const a = P[i-1], b = P[i], dx = b[0] - a[0], dy = b[1] - a[1], LL = dx*dx + dy*dy; if (LL < 1e-14) continue;
+    const u = ((q[0] - a[0])*dx + (q[1] - a[1])*dy)/LL;
+    if (i === 1 && u < 0) continue;   // behind my nose
+    if (segDistM(q, a, b) < W) return true;
+  }
+  return false;
+}
 function backPlan(o, ac){
   const tr = o.trail; if (!tr || tr.length < 2 || o.onRwy || o.xing || o.backing || !o.path || o.path.reverse) return null;
   const ahead = routeAhead(ac), pts = []; let L = 0, last = [o.x, o.y];
@@ -8898,7 +8922,7 @@ function backPlan(o, ac){
 function backOff(o, ac){
   const pts = backPlan(o, ac); if (!pts) return false;
   o.bk = { path: o.path, pts, from: [o.x, o.y] }; o.trail = o.trail.slice(0, Math.max(0, o.trail.length - pts.length));
-  setPath(o, pts, 4, ['backedOff', {}], { reverse: true, tug: true, fine: true }); o.backing = ac.cs; o.yieldTo = ac.cs; o.waiting = null;
+  setPath(o, pts, 4, ['backedOff', {}], { reverse: true, tug: true, fine: true }); o.backing = ac.cs; o.yieldTo = ac.cs; o.waiting = null; o.gaveTo = { cs: ac.cs, t: S.t };
   log('plt', `${o.state === 'TOW' ? 'tug with ' + o.cs : o.cs + ', tug'} backing up clear of ${ac.cs}, met nose to nose`, o.state === 'TOW' ? 'TUG' : o.cs, o);
   return true;
 }
@@ -8906,7 +8930,10 @@ function backOff(o, ac){
 // backing, or o is being moved out of its way)
 function faceOff(ac, o){
   if (Math.abs(angDiff(ac.hdg, o.hdg)) < 120 || dist(ac.x, ac.y, o.x, o.y) > 80*M2NM) return false;
-  const order = ac.state === 'TOW' && o.state !== 'TOW' ? [[ac, o], [o, ac]] : [[o, ac], [ac, o]];
+  // one that has backed off for the other lately keeps giving way to it (backs further if need be): the two never take
+  // turns backing off for each other
+  const gave = (a, b) => GROUND_LANES && a.gaveTo && a.gaveTo.cs === b.cs && S.t - a.gaveTo.t < 180;
+  const order = gave(o, ac) ? [[o, ac], [ac, o]] : gave(ac, o) ? [[ac, o], [o, ac]] : ac.state === 'TOW' && o.state !== 'TOW' ? [[ac, o], [o, ac]] : [[o, ac], [ac, o]];
   for (const [y, w] of order) { if (y.state === 'VACATING' && (y.onRwy || y.xing)) continue; if (backOff(y, w)) return true; }
   return false;
 }
@@ -8956,7 +8983,7 @@ function stepGround(ac, dt){
       // never stop on the runway, or partway across one, for traffic waiting at a holding point or holding short, or coming
       // the other way off it: that waits for this one to clear the runway (a crossing that stopped for it would lock both up)
       if ((ac.onRwy || ac.xing) && (o.state === 'HOLDPT' || (o.hsAt && (o.gs || 0) < 1) || (!o.onRwy && (o.waiting === ac.cs || Math.abs(angDiff(o.hdg, ac.hdg)) > 120)))) continue;
-      if (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40 && !(o.state === 'PARKED' || o.state === 'ONSTAND')) { spd = 0; ac.waiting = o.cs; break; }
+      if (!(o.state === 'PARKED' || o.state === 'ONSTAND') && (GROUND_LANES ? inMyWay(ac, o) : Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40)) { spd = 0; ac.waiting = o.cs; break; }
       // converging (two taxiways meeting at a junction, a tow crossing a lane): straight on for the next 12 s each would
       // pass within a wingspan; the one further from where they meet waits (a tie: right of way, as in a ring)
       if (dd < 70 && (o.gs || 0) > 2 && !o.onRwy && !(o.path && o.path.reverse) && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 100) {
@@ -14906,9 +14933,31 @@ function rwyBusy(R, skip, rolling, ok){
   if (typeof VEH !== 'undefined' && VEH.list.some(v => v.onRwy && sameRwy(R, v.onRwy) && !v.gone)) return true;
   return rwyBlocked(R.lo) ? true : null;
 }
-// seconds to touchdown from this many track miles out, at the speeds arrivals fly here (slowing to the approach
-// speed for the last four miles): what spacing is judged on, so the closing-up on final is allowed for
+// seconds to touchdown from this many track miles out, at the speeds arrivals fly here (stepAir in sim.js): on its
+// own, 170 kt on the final until 5 NM, then slowing at about 1.3 kt/s to the approach speed; further out 190 kt within
+// about 14 NM, 220 within 25 and its cruise-in speed beyond. With a speed from Approach, that speed until 4 NM, then
+// the approach speed plus 15 to 2.5 NM and the approach speed. What spacing is judged on, so the closing-up on final
+// (a turboprop at 110 kt ahead of a jet at 140) is allowed for
 function etaD(d, ac){
+  if (!AMAN_ON) return etaTwr(d, ac);
+  // (further out it flies faster over the ground the higher it is: the indicated speed at that height, and what it is
+  // making now if more, as it comes in from the cruise; in the hold it leaves at the holding speed)
+  const v = (ac && ac.perf && ac.perf.vapp) || 135, hi = ac ? 1 + 0.017*Math.max(0, ac.alt - ELEV)/1000 : 1;
+  const far = ac && ac.mode !== 'HOLD' && ac.airborne ? clamp(ac.gs || 0, 235, 300) : 235;
+  const cap = ac && ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : null;
+  let t = 0, lo = 0;
+  const seg = (top, kt) => { if (d <= lo) return; const L = Math.max(0, Math.min(d, top) - lo); t += L/kt*3600; lo = top; };
+  if (cap) { seg(2.5, v); seg(4, Math.min(cap, v + 15)); seg(20, cap); seg(1e9, cap*hi); return t; }
+  // the last 5 NM: the slow-down from 170 kt, then the approach speed
+  const td = Math.max(0, 170 - v)/1.3, dd = (170 + v)/2*td/3600;
+  if (d <= 5) { const a = Math.max(0, 5 - dd); t = d <= a ? d/v*3600 : a/v*3600 + (d - a)/((170 + v)/2)*3600; lo = d; }
+  else { t = (5 - dd)/v*3600 + td; lo = 5; }
+  seg(10, 170); seg(14, 190); seg(25, 220); seg(1e9, Math.max(far, 220));
+  return t;
+}
+// the Tower's rougher estimate of the same (slowing to the approach speed for the last four miles), which its departure
+// and crossing gaps are tuned to
+function etaTwr(d, ac){
   // (further out it flies faster over the ground the higher it is: the indicated speed at that height, and what it is
   // making now if more, as it comes in from the cruise; in the hold it leaves at the holding speed)
   const v = (ac && ac.perf && ac.perf.vapp) || 135, hi = ac ? 1 + 0.017*Math.max(0, ac.alt - ELEV)/1000 : 1;
@@ -14929,7 +14978,7 @@ function arrNear(R, skip){
     if (o === skip || o.kind !== 'ARR' || !o.airborne || o.state === 'PRE' || o.state === 'MISSED' || o.state === 'DIVERTING' || o.handed) continue;
     const rw = landRw(o), F = o.app ? finOf(o) : FINAL[rw]; if (!F || !sameRwy(R, rwyOf(rw).id)) continue;
     const d = o.mode === 'FINAL' ? finalDist(o) : estToGo(o, F);
-    if (d < best) { best = d; bt = etaD(d, o);
+    if (d < best) { best = d; bt = etaTwr(d, o);
       // landing the other way, or its approach comes in head-on before turning in (Madeira's VOR to 05 from the north-east)
       const dh = skip ? parseInt(depRw(skip), 10)*10 : NaN;
       opp = rwyOf(rw) === R && rw !== (skip ? depRw(skip) : rw);
@@ -15254,7 +15303,7 @@ function crossSecs(ac, R, k){
 }
 // seconds until traffic o on (or landing on) runway R has gone past the point m metres along it
 function passSecs(o, R, m){
-  if (o.airborne) return etaD(finalDist(o), o) + Math.abs(m - (landRw(o) === R.lo ? 0 : R.len || 3000))/35;   // rolling out from the threshold
+  if (o.airborne) return etaTwr(finalDist(o), o) + Math.abs(m - (landRw(o) === R.lo ? 0 : R.len || 3000))/35;   // rolling out from the threshold
   return Math.abs(m - R.mOf([o.x, o.y]))/Math.max((o.gs || 0)*0.514, o.kind === 'DEP' ? 20 : 12);
 }
 function aiTower(ac){
@@ -15357,7 +15406,9 @@ function joinLevel(ac){
   const slots = []; for (let L = base; L <= 24000; L += 1000) slots.push(L);
   const free = L => !occ.some(u => Math.abs(u - L) < 990);
   // a level it can reach without climbing or descending through anyone in the stack
-  const reach = L => !occ.some(u => u > Math.min(ac.alt, L) + 10 && u < Math.max(ac.alt, L) - 10);
+  // (well away from the fix it can go to any level: it is out of the way of those holding there by the time it is down)
+  const away = AMAN_ON && dist(ac.x, ac.y, ...holdFixP(ac)) > 15;
+  const reach = L => away || !occ.some(u => u > Math.min(ac.alt, L) + 10 && u < Math.max(ac.alt, L) - 10);
   // the nearest free level it can reach without passing anyone's (a gap low down left by the one that went first will
   // do: it is then next to go); boxed in, the nearest free level of all
   const near = (a, b) => Math.abs(a - ac.alt) - Math.abs(b - ac.alt), ok = slots.filter(free);
@@ -15367,7 +15418,9 @@ function joinLevel(ac){
   // not one an arrival just sent in from the hold is still descending through (Innsbruck's approach starts at RTT),
   // nor one a departure close by is climbing to or through (Bristol's hold is over the field)
   const calm = L => !appPathBusy(ac, L) && !S.acs.some(o => o.kind === 'DEP' && o.airborne && (o.tgtAlt ?? o.alt) > L - 990 && o.alt < L + 990 && dist(o.x, o.y, ac.x, ac.y) < 12);
-  return ok.filter(reach).filter(calm).sort(near)[0] ?? under.filter(reach).filter(calm).sort(near)[0] ?? ok.filter(reach).sort(near)[0] ?? under.filter(reach).sort(near)[0] ?? ok.sort(near)[0] ?? Math.max(base, top + 1000);
+  // (boxed in, every level it could reach without passing someone in the stack taken: the nearest free one the look-ahead
+  // finds clear of everyone on the way; failing that where it is, if that is free)
+  return ok.filter(reach).filter(calm).sort(near)[0] ?? under.filter(reach).filter(calm).sort(near)[0] ?? ok.filter(reach).sort(near)[0] ?? under.filter(reach).sort(near)[0] ?? (AMAN_ON ? null : ok.sort(near)[0] ?? Math.max(base, top + 1000)) ?? ok.filter(L => safeLevel(ac, [L]) != null).sort(near)[0] ?? (free(Math.round(ac.alt/1000)*1000) ? Math.round(ac.alt/1000)*1000 : ok.sort(near)[0]) ?? Math.max(base, top + 1000);
 }
 const holdFixOf = ac => ac.mode === 'HOLD' && ac.hold ? ac.hold.name : holdFixFor(ac) || (ac.route && ac.route.length ? ac.route[ac.route.length - 1] : 'pp');
 const holdFixP = ac => { const f = holdFixOf(ac); return ac.mode === 'HOLD' && ac.hold ? ac.hold.c : WP[f] ? WP[f].p : [ac.x, ac.y]; };
@@ -15381,7 +15434,11 @@ function stackBase(ac){
   return dist(ac.x, ac.y, ...holdFixP(ac)) < 22 ? low : Math.max(APT.inboundAlt ? APT.inboundAlt(ac.gate) : 7000, low);
 }
 // the others waiting at the same fix, or at one close by (New York's fixes are a few miles apart)
-const stackPeers = ac => { const fix = holdFixOf(ac), P = holdFixP(ac); return S.acs.filter(o => o !== ac && o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.app && !o.handed && (holdFixOf(o) === fix || dist(...holdFixP(o), ...P) < 14)); };
+// (only those in the stack: holding, or given a level there to hold at. The others on their way in are kept apart by
+// their routes, the look-ahead and the arrival manager's slots, not by a level each)
+const stackPeersAman = ac => { const fix = holdFixOf(ac), P = holdFixP(ac); return S.acs.filter(o => o !== ac && o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.app && !o.handed && (o.mode === 'HOLD' || o.aiSlot != null) && (holdFixOf(o) === fix || dist(...holdFixP(o), ...P) < 14)); };
+const stackPeersOld = ac => { const fix = holdFixOf(ac), P = holdFixP(ac); return S.acs.filter(o => o !== ac && o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.app && !o.handed && (holdFixOf(o) === fix || dist(...holdFixP(o), ...P) < 14)); };
+const stackPeers = ac => AMAN_ON ? stackPeersAman(ac) : stackPeersOld(ac);
 const lvlOf = o => o.cleared ?? Math.round(o.alt/100)*100;
 function stackLevel(ac, base = stackBase(ac)){
   const used = stackPeers(ac).map(slotOf);
@@ -15554,7 +15611,211 @@ function aiDirect(ac, seat){
   }
   return false;
 }
+// ── the arrival manager (AMAN): every arrival the AI Approach works has a landing slot on its runway, worked out from
+// the runway's real capacity (the wake or radar spacing and the runway occupancy, slower in poor weather, and a gap for a
+// departure in mixed mode), in a fixed order: first come, first served by the earliest time each could land, the holds
+// emptying bottom first. The delay is taken up early and where it is cheapest: a point merge arc is flown until a
+// direct to the merge point lands it in its slot, a small delay is taken off with speed, a large one in the hold, which
+// it leaves at its slot time less the time to fly in from there. Releases go strictly in slot order, and an approach is
+// never cleared that would land well before its slot (it would close up on the one ahead)
+// the airports it runs at: those where seeded all-AI runs showed it landing more and losing separation less than the
+// sequencing before it (tools/bench.cjs); elsewhere that sequencing is kept (aiSequenceOld) until it is tuned there
+const AMAN_ON = typeof AIRPORT !== 'undefined' && ['EIDW', 'EGLL', 'EGKK', 'LEMD', 'LPMA', 'LOWI', 'YSSY'].includes(AIRPORT);
+const AMAN_HORIZON = 1200;   // seconds to touchdown: further out an arrival has a slot, but its approach clearance waits
+// the arc fixes of a point merge (Dublin): where APT.aiFloor holds an arrival at the arc's level
+const arcFix = id => !!APT.aiFloor && APT.aiFloor({ kind: 'ARR', route: [id] }) > 0;
+// the ways in an arrival could be given now, with how long each takes to touchdown, shortest first: its route as it
+// is, and on a point merge arc a direct off it to the merge point (still on its way to the arc: the merge point once it
+// is on the arc, the earliest it could land; later: true)
+function amanWays(ac, F){
+  const rt = ac.route || [], now = eta(ac, F), ways = [{ rt: null, t: now }];
+  if (!APT.aiFloor || (ac.mode !== 'NAV' && ac.mode !== 'HOLD') || ac.app || ac.state === 'MISSED' || !rt.length) return ways;
+  const arc = rt.map(arcFix), first = arc.indexOf(true); if (first < 0) return ways;
+  let m = first; while (m < rt.length && arc[m]) m++;   // the merge point: the first fix after the arc
+  if (m >= rt.length) return ways;
+  // on the arc (flying along it): off it now. Still on its way to it, or held at its first fix: to the arc's first
+  // fix, then off it there
+  const on = first === 0 && ac.mode === 'NAV', r = on ? rt.slice(m) : [...rt.slice(0, first + 1), ...rt.slice(m)], keep = ac.route;
+  ac.route = r; let t; try { t = eta(ac, F); } catch (e) { t = NaN; } ac.route = keep;
+  return isFinite(t) && t < now - 5 ? [{ rt: on ? r : null, fix: rt[m], t, later: !on }, ...ways] : ways;
+}
+let AMAN = { t: -1, m: new Map(), line: {} };
+// the estimates are never exact (the turn out of the hold, the slow-down at the merge point, the spacing on final):
+// how long flights really took from their approach clearance to touchdown against what was worked out, learned from
+// the landings so far, and the times to touchdown scaled by it
+const amanK = () => S.amK || 1;
+// the slots are planned a little wider than the minimum (a twentieth, and five seconds): the spacing closes up on the final
+// as those ahead slow to their approach speed, and a go-around costs far more than the few seconds kept in hand
+const amanGap = (lead, trail, R) => landGapS(lead, trail, R) + 5;
+function amanPlan(list){
+  if (AMAN.t === S.t) return AMAN.m;
+  const m = new Map(), line = {}, byR = {};
+  for (const ac of list) {
+    const F = FINAL[landRw(ac)]; if (!F || ac.state === 'DIVERTING') continue;
+    const R = rwyOf(landRw(ac)); let W; try { W = amanWays(ac, F).map(w => ({ ...w, t: w.t*amanK() })); } catch (e) { continue; }
+    const tMin = W[0].t, tNow = W[W.length - 1].t; if (!isFinite(tMin) || !isFinite(tNow)) continue;
+    // its place in the order: when it could land, fixed when first seen (a go-around is fitted in again as it comes
+    // round); one still far out whose time has moved a lot is put where it now belongs
+    if (ac.amKey == null || ac.amGa !== (ac.gaCount || 0)) { ac.amKey = S.t + tMin; ac.amGa = ac.gaCount || 0; }
+    else if (ac.mode !== 'HOLD' && tMin > AMAN_HORIZON && Math.abs(S.t + tMin - ac.amKey) > 180) ac.amKey = S.t + tMin;
+    (byR[R.id] ||= { R, c: [] }).c.push({ ac, W, tMin, tNow, F });
+  }
+  for (const id in byR) {
+    const { R, c } = byR[id];
+    // the holds empty from the bottom: those in one hold take its turns in the order of their levels
+    // (and no one goes ahead of the time it can really land: one held far out whose turn has come is fitted in where it
+    // can get to, not ahead of those already close in, which would leave the runway empty while it flies in)
+    for (const x of c) x.k = Math.max(x.ac.amKey, S.t + x.tMin);
+    const byFix = {};
+    for (const x of c) if (x.ac.mode === 'HOLD' && x.ac.hold && !x.ac.emerg) (byFix[x.ac.hold.name] ||= []).push(x);
+    for (const f in byFix) { const H = byFix[f], keys = H.map(x => x.k).sort((a, b) => a - b); H.sort((a, b) => slotOf(a.ac) - slotOf(b.ac) || a.k - b.k).forEach((x, i) => { x.k = keys[i]; }); }
+    c.sort((a, b) => (b.ac.emerg ? 1 : 0) - (a.ac.emerg ? 1 : 0) || a.k - b.k);
+    // those already cleared keep the times they are flying to
+    const T = S.acs.filter(o => o.kind === 'ARR' && o.airborne && o.app && o.state !== 'MISSED' && o.state !== 'DIVERTING' && !o.handed && sameRwy(R, rwyOf(landRw(o)).id))
+      .map(o => { let t; try { t = S.t + eta(o)*amanK(); } catch (e) { t = S.t; } return { ac: o, t, fixed: true }; }).sort((a, b) => a.t - b.t);
+    const dg = depGapS(R), held = c.filter(x => x.ac.mode === 'HOLD').length;
+    let run = (S.aiRun || {})[R.id] || 0, last = null, n = 0;
+    for (const x of c) {
+      const ac = x.ac;
+      // a departure's gap ahead of this one (mixed mode): as holdGap gives them, every landing while the holds are quiet,
+      // every second or third while they are busy
+      const dep = dg > 0 && (held < 2 || run >= (held >= 4 ? 3 : 2));
+      const before = s => Math.max(amanGap(s.ac, ac, R), dep ? dg : 0);
+      let t0 = S.t + x.tMin;
+      if (last) t0 = Math.max(t0, last.t + before(last));
+      // fitted in among those already cleared: a full gap either side of it
+      const fits = t => T.every(s => s.t <= t ? t - s.t >= before(s) - 0.5 : s.t - t >= amanGap(ac, s.ac, R) - 0.5);
+      const opts = [t0, ...T.map(s => s.t + before(s))].filter(t => t >= t0).sort((a, b) => a - b);
+      const sta = ac.emerg ? S.t + x.tMin : opts.find(fits) ?? t0;
+      const ahead = T.filter(s => s.t <= sta).sort((a, b) => b.t - a.t)[0];
+      const e = { ac, t: sta, fixed: false, W: x.W, tMin: x.tMin, tNow: x.tNow, first: n === 0, dep, after: ahead ? ahead.ac : null, afterT: ahead ? ahead.t : null };
+      m.set(ac, e); T.push(e); T.sort((a, b) => a.t - b.t); last = e; n++;
+      if (dep) run = 0; else if (dg > 0) run++;
+    }
+    line[id] = T;
+  }
+  AMAN = { t: S.t, m, line };
+  return m;
+}
+// how much a flight cleared now can still lose on the way in by slowing down (to 160 kt or its approach speed and a
+// bit, until the slow-down to the approach speed at 4 NM): the slot can be met that much early
+function amanAbsorb(ac, F){
+  const togo = estToGo(ac, F), slow = Math.max(160, (ac.perf.vapp || 135) + 15), v0 = ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 220;
+  return v0 > slow ? Math.max(0, togo - 4)*3600*(1/slow - 1/v0) : 0;
+}
 function aiSequence(list){
+  if (!AMAN_ON) return aiSequenceOld(list);
+  for (const ac of list) if (ac.mode === 'HOLD' && ac.aiQ == null) ac.aiQ = S.t;
+  const plan = amanPlan(list);
+  list.sort((a, b) => ((plan.get(a) || {}).t ?? 1e12) - ((plan.get(b) || {}).t ?? 1e12));
+  for (const ac of list) {
+    const rw = landRw(ac), F = FINAL[rw], R = rwyOf(rw), n = ac.need || '', P = plan.get(ac);
+    if (S.t < (ac.aiNext || 0) || !F) continue;
+    // a shortcut while it is not delayed (the plan has it landing in its slot flying the shortest way)
+    if (P && !ac.emerg && P.t - (S.t + P.tMin) <= 20 && aiDirect(ac, 'APP')) continue;
+    if (ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75) { ac.aiWhy = 'climbing out after the go-around'; continue; }
+    const M = mayAfter(ac), shut = rwyShut(rw) || (M && !M.p ? mayWhy(M) : null);
+    let ok = !shut, way = null, lose = false;
+    ac.aiWhy = shut ? (M && !M.p ? `holding: ${shut}` : `holding, runway closed (${shut})`) : '';
+    if (ok && !ac.emerg && P) {
+      // the shortest way in that does not land it before its slot (less what it can lose with speed once cleared)
+      const tol = Math.min(120, 0.7*amanAbsorb(ac, F)), due = P.t - S.t - tol;
+      way = P.W.find(w => w.t >= due) || null;
+      // flying the whole of its route (and the arc) still lands it early: it has to lose time in a hold
+      lose = P.tNow < due - 20;
+      if (!P.first) { ok = false; ac.aiWhy = P.after ? `number ${(AMAN.line[R.id] || []).indexOf(P) + 1}, after ${P.after.cs}` : 'in sequence'; }
+      else if (!way) { ok = false; ac.aiWhy = `delayed for its slot at ${zt(P.t).slice(0, 5)}`; }
+      else if (way.later) { ok = false; ac.aiWhy = `turning in off the arc for its slot at ${zt(P.t).slice(0, 5)}`; }
+      else if (way.t > AMAN_HORIZON && ac.mode !== 'HOLD') { ok = false; ac.aiWhy = 'in sequence, still a long way out'; }
+      // a delay it can't make up on the way in: taken off with speed while it is still well out, rather than all in the hold
+      const D = P.t - (S.t + P.tNow);
+      if (!ok && ac.mode !== 'HOLD' && ac.state !== 'MISSED' && D > 30 && ac.ias > 195 && estToGo(ac, F) > 15) {
+        const v = estToGo(ac, F) > 25 && D < 120 ? 210 : 180;
+        if ((!ac.spdAssigned || ac.tgtSpd > v) && aiDue(ac, 'spd' + v, 3, 8)) aiDo('APP', ac, 'S' + v);
+      }
+    }
+    // others waiting lower down near its way in: they go first (it would descend through them)
+    // anyone holding below in the stack it is in (or whose fix it is about to pass over) goes first
+    if (ok && !ac.emerg) { const below = stackBelow(ac);
+      if (below) { ok = false; ac.aiWhy = `${below.cs} below leaves the hold first`; } }
+    if (ok && !ac.emerg) { const under = waitsUnder(ac);
+      if (under) { ok = false; ac.aiWhy = `waiting for ${under.cs} below to go first`; } }
+    // a departure passing under the hold (Heathrow's Detling departures under BIG): it leaves the hold all the same,
+    // but stays at its level until the departure is past (the look-ahead then lets it down)
+    // (a hold over the field, Bristol's BRI: the departures climb out right under it, so it waits for them instead)
+    let keep = ok && !ac.emerg && ac.mode === 'HOLD' ? depUnder(ac) : null;
+    if (keep && ac.hold && Math.hypot(...ac.hold.c) < 10) { ok = false; ac.aiWhy = `waiting for ${keep.cs} to pass below`; keep = null; }
+    // too high to start the approach from here: down to the approach altitude first
+    const togoWay = () => { if (!way || !way.rt) return estToGo(ac, F); const k = ac.route; ac.route = way.rt; const d = estToGo(ac, F); ac.route = k; return d; };
+    const high = ok && !ac.emerg && ac.alt > ELEV + togoWay()*290 + 1000;
+    if (high) ac.aiWhy = 'descending before the approach';
+    // the descent on the approach would meet someone not on it (a departure climbing out, a flight in the hold), or
+    // would while it is still at its level (the profile can keep it up there a while)
+    if (ok && !high && !ac.emerg) { const clash = airNow().find(o => o !== ac && !(o.app && o.kind === 'ARR') && (conflictWith(ac, o, keep ? lvlOf(ac) : (F.alt || APT.appAlt || 3000)) >= 0 || conflictWith(ac, o, lvlOf(ac)) >= 0));
+      if (clash) { ok = false; ac.aiWhy = `waiting for ${clash.cs} to pass`; } }
+    // the way in off a point merge arc: a direct to the merge point, if the airspace allows (else on along the arc)
+    if (ok && !high && way && way.rt && !dctClear(ac, way.rt, Math.min(ac.alt, F.alt || APT.appAlt || 3000), ac.alt)) { ok = false; ac.aiWhy = `turning in to ${way.fix} when clear`; }
+    // the one next to go is stuck (traffic, a level it can't leave yet): after a minute the one behind may go ahead of it
+    if (P && P.first && !ok && !shut && !ac.emerg && way && !way.later && ac.mode === 'HOLD') {
+      ac.amStuck ??= S.t;
+      if (S.t - ac.amStuck > 60) { const nx = [...plan.values()].filter(e => e.ac !== ac && !e.fixed && sameRwy(R, rwyOf(landRw(e.ac)).id)).sort((a, b) => a.t - b.t)[0]; if (nx) { ac.amKey = nx.ac.amKey + 1; ac.amStuck = null; AMAN.t = -1; } }
+    } else ac.amStuck = null;
+    if (ok && !high && !ac.aiLev && aiDue(ac, 'app' + (ac.gaCount || 0), 3, 7)) { const lv = keep ? Math.round(lvlOf(ac)/100) : 0;
+      const cmd = (way && way.rt ? `DCT ${way.fix} ` : '') + (keep ? `APP A${lv}` : 'APP');
+      if (aiDo('APP', ac, cmd)) { ac.amRel = { t: S.t, sta: P ? P.t : null, e: way ? way.t/amanK() : null }; ac.aiWhy = way && way.rt ? `turned in to ${way.fix} for its slot` : ''; ac.aiSlot = null; if (keep) { ac.aiLev = { t: S.t, o: keep.cs }; ac.aiWhy = `level above ${keep.cs}`; } if (P && depGapS(R) > 0) { const r = (S.aiRun ||= {}); r[R.id] = P.dep ? 0 : (r[R.id] || 0) + 1; } AMAN.t = -1; continue; } }
+    // waiting: into the published hold, joined as it reaches the fix (or straight there after a go-around or once past it).
+    // A hold before the end of its route (Dublin's ahead of the point merge arcs) only for a delay the rest of the route
+    // can't take up; the one at the end of it whenever it is not cleared yet
+    const hf = holdFixFor(ac), W = hf && WP[hf], rt = ac.route || [];
+    const endHold = !!hf && (rt.indexOf(hf) === rt.length - 1 || hf === F.entry || rt.indexOf(hf) < 0);
+    const mustHold = !ok && (!P || lose || shut || endHold || ac.emerg);
+    if (!(ok && !high) && mustHold && !ac.emerg && ac.state !== 'DIVERTING' && !(ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75)) {
+      if (W && !(ac.mode === 'HOLD' && ac.hold && ac.hold.name === hf)) {
+        const onRt = ac.mode === 'NAV' && rt.includes(hf), near = dist(ac.x, ac.y, ...W.p) < 8;
+        if ((onRt ? rt[0] === hf && near : !ok) && aiDue(ac, 'hold' + hf, 2, 5)) { aiDo('APP', ac, holdCmd(ac, hf)); ac.aiWhy = ac.aiWhy || 'holding'; }
+      }
+    }
+    // held before the end of its route: on its way again (the bottom of the stack) as soon as the rest of the route can
+    // take up what is left of its delay, so the arc ahead has flights on it to turn in early or late as the slots move
+    if (P && !ok && !shut && !ac.emerg && ac.mode === 'HOLD' && ac.hold && !endHold && rt.length && rt.includes(ac.hold.name) && !stackBelow(ac) && !lose && aiDue(ac, 'onarc' + Math.round(P.t/60), 2, 5)) {
+      const id = rt[0]; ac.aiSlot = null; if (aiDo('APP', ac, `DCT ${id}`)) { ac.aiWhy = `on its way again for its slot at ${zt(P.t).slice(0, 5)}`; continue; }
+    }
+    // not yet: answer the call and keep it 1,000 ft clear of the others waiting at the same fix
+    if (ac.aiLev || (ac.state === 'MISSED' && !n)) continue;
+    const cur = lvlOf(ac), d = estToGo(ac, F), peers = stackPeers(ac), free = L => !peers.some(o => Math.abs(slotOf(o) - L) < 990);
+    if (n === 'Initial call' || n === 'Missed approach' || n === 'Back on frequency') { if (aiDue(ac, n, 3, 7)) { const tg = Math.round((ac.tgtAlt ?? cur)/1000)*1000, want = n === 'Initial call' && tg < cur - 50 && free(tg) ? tg : free(cur) && (n !== 'Initial call' || cur >= stackBase(ac)) ? cur : stackLevel(ac); aiDo('APP', ac, `A${Math.round((safeLevel(ac, [want, want + 1000, want + 2000, Math.ceil(ac.alt/1000)*1000]) ?? cur)/100)}`); } continue; }
+    if (S.t - (ac.aiStack || 0) < 20) continue;
+    // heading for a stack and within 40 NM of it: given its level there now, while it has room to climb or descend to it
+    // (a point merge arc ahead, Dublin's: the arc's level is kept until the arrival is sent off it, APT.aiFloor)
+    const floor = APT.aiFloor ? APT.aiFloor(ac) : 0;
+    const willHold = !P || lose || endHold;
+    if (floor && ac.mode !== 'HOLD' && !(ac.aiSlot != null && willHold)) {
+      if (cur < floor - 50 || (ac.tgtAlt ?? cur) < floor - 50) { if (aiDue(ac, 'arc', 3, 7)) { ac.aiStack = S.t; ac.aiSlot = null; aiDo('APP', ac, `A${Math.round(floor/100)}`); } }
+      else if ((ac.tgtAlt ?? cur) > floor + 50 && !(lose && rt.includes(hf) && !endHold)) { const lv = safeLevel(ac, [floor, floor + 1000, floor + 2000].filter(L => L < (ac.tgtAlt ?? cur) - 50)); if (lv != null && aiDue(ac, 'arcd' + lv, 3, 7)) { ac.aiStack = S.t; ac.aiSlot = null; aiDo('APP', ac, `A${Math.round(lv/100)}`); } }
+      if (!(lose && rt.includes(hf) && !endHold)) continue;
+    }
+    if (ac.mode !== 'HOLD' && ac.aiSlot == null && ac.state !== 'MISSED' && willHold && (ac.route || []).includes(holdFixOf(ac)) && dist(ac.x, ac.y, ...holdFixP(ac)) < (stackNow(ac).some(o => o.mode === 'HOLD') ? 70 : 40)) {
+      const lv = joinLevel(ac); ac.aiSlot = lv; ac.aiStack = S.t; if (Math.abs((ac.tgtAlt ?? ac.alt) - lv) >= 100) aiDo('APP', ac, `A${Math.round(lv/100)}`); continue; }
+    if (ac.mode === 'HOLD' || ac.aiSlot != null) {
+      if (ac.aiSlot == null) ac.aiSlot = Math.round(lvlOf(ac)/100)*100;   // holding by itself at the end of its route
+      // in the stack: sharing a level (a newcomer it didn't know about) goes back on top; else one level down once it is empty
+      const occ = stackNow(ac), mine = ac.aiSlot;
+      if (occ.some(o => (o.mode === 'HOLD' || o.aiSlot != null) && Math.abs(slotOf(o) - mine) < 990 && (estToGo(o, FINAL[landRw(o)]) < d || o.cs < ac.cs))) { const lv = joinLevel(ac); ac.aiStack = S.t; ac.aiSlot = lv; aiDo('APP', ac, `A${Math.round(lv/100)}`); continue; }
+      // (the stack keeps its own levels: anything else that moved it is put right)
+      if (Math.abs((ac.tgtAlt ?? ac.alt) - mine) >= 100) { ac.aiStack = S.t; aiDo('APP', ac, `A${Math.round(mine/100)}`); continue; }
+      const L = mine - 1000;
+      if (L >= holdBase(ac) - 10 && !occ.some(o => Math.abs(slotOf(o) - L) < 990) && !airNow().some(o => o !== ac && Math.abs(o.alt - L) < 990 && dist(o.x, o.y, ac.x, ac.y) < 8) && !appPathBusy(ac, L) && !S.acs.some(o => o.kind === 'DEP' && o.airborne && (o.tgtAlt ?? o.alt) > L - 990 && o.alt < L + 990 && dist(o.x, o.y, ac.x, ac.y) < 12) && Math.abs(ac.alt - mine) < 200) {
+        ac.aiStack = S.t; ac.aiSlot = L; aiDo('APP', ac, `A${Math.round(L/100)}`); }
+      continue;
+    }
+    // on the way in: down towards the stack's base when the levels below are free, never through someone else's
+    const base = stackBase(ac), slots = []; for (let L = base; L < cur - 50; L += 1000) slots.push(L);
+    let to = cur; for (const L of slots.reverse()) { if (!free(L)) break; to = L; }
+    if (to < cur) { const lv = safeLevel(ac, slots.filter(L => L >= to).reverse()); if (lv != null && lv < cur) { ac.aiStack = S.t; aiDo('APP', ac, `A${Math.round(lv/100)}`); } }
+  }
+}
+// main's sequencing, for the airports where the arrival manager has not been shown to do better (AMAN_ON)
+function aiSequenceOld(list){
   // soonest first
   list.sort((a, b) => (Math.round(eta(a, FINAL[landRw(a)])/10) - Math.round(eta(b, FINAL[landRw(b)])/10)) || (lvlOf(a) - lvlOf(b)));
   // the landing plan for each runway, like an arrival manager: the slots of those already cleared, then the ones free
@@ -15672,7 +15933,7 @@ function aiApproach(ac){
     // keep the gap to the one ahead: slow down while it closes up, back to the hold if it can't be made up
     const L = appLeader(ac), R = rwyOf(landRw(ac)), gap = L ? eta(ac) - eta(L) : 1e9, need = L ? landGapS(L, ac, R) : 0, togo = estToGo(ac, finOf(ac));
     if (L && !ac.emerg) {
-      const slow = Math.max(160, (ac.perf.vapp || 135) + 15);
+      const slow = AMAN_ON ? Math.max(150, (ac.perf.vapp || 135) + 10) : Math.max(160, (ac.perf.vapp || 135) + 15);
       // (only if slowing right down can't make the gap up before the approach speed at 4 miles)
       const absorb = Math.max(0, togo - 4)*3600*(1/slow - 1/(ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 220));
       if (gap < need*0.6 && need - gap > absorb && ac.mode !== 'FINAL' && togo > 15 && aiDue(ac, 'rehold', 2, 4)) { const hf = holdFixFor(ac); if (hf) { ac.aiWhy = `too close behind ${L.cs}: back to the hold`; aiDo('APP', ac, holdCmd(ac, hf)); return true; } }
@@ -15862,10 +16123,11 @@ function stepAI(dt){
   }
 }
 S.listeners.push((ev, ac) => {
-  if (ev === 'landed' && ac) ac.aiTd = S.t;
+  if (ev === 'landed' && ac) { ac.aiTd = S.t;
+    const r = ac.amRel; if (r && r.e > 150 && !ac.gaCount) { const k = clamp((S.t - r.t)/r.e, 0.85, 1.35); S.amK = S.amK ? S.amK*0.7 + k*0.3 : k; } }
   if (ev === 'ga' && ac) ac.aiSlot = null;
   if (ev === 'takeoff' && ac) { (S.aiDep ||= {})[rwyOf(ac.depRwy || depRw(ac)).id] = { t: S.t, wake: ac.perf.wake }; for (const id of rwyCross(rwyOf(ac.depRwy || depRw(ac)))) S.aiDep[id] = S.aiDep[rwyOf(ac.depRwy || depRw(ac)).id]; }
-  if (ev === 'start') { S.aiDep = {}; S.aiOcc = {}; S.aiRun = {}; S.aiAcc = 0; S.aiRoadT = 0; S.aiScore = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+  if (ev === 'start') { S.aiDep = {}; S.aiOcc = {}; S.amK = 1; S.aiRun = {}; S.aiAcc = 0; S.aiRoadT = 0; S.aiScore = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
     const on = AI_SEATS.filter(k => S.seats[k] === 'AI');
     if (EXERCISES[S.mode] && on.length) sys('Guided exercises are yours alone: the AI controllers sit this one out.');
     else if (on.length) sys(`AI controllers on ${on.map(k => AI_NAME[k]).join(', ')}. You work ${AI_SEATS.filter(k => S.seats[k] !== 'AI').map(k => AI_NAME[k]).join(', ') || 'nothing: watch them'}. Click a flight and Take over to work it yourself.`); }
@@ -17094,28 +17356,174 @@ function ojtiReport(){
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-mor]'); if (b) { const m = MOR.list.find(m => m.id === +b.dataset.mor); if (m) { morForm(m); b.remove(); } } });
 
-// ── noise. UK airports have noise preferential routes: a departure stays on its SID track until it is at 4,000 ft.
-// Turned off it lower than that, it flies over the towns the route avoids, and the complaints come in (more of them at
-// night, 23:00 to 06:00 local). At night each movement also uses the airport's night quota (QC points: a heavy 4, a
-// medium 1, a light 0.5); going over the session's allowance costs 20 points a time.
-const NOISE = { qc: 0, cap: 20, over: 0 };
-const nightLocal = () => { const ms = (S.start || 0) + S.t*1000, h = ((new Date(ms).getUTCHours() + tzOffH(ms)) % 24 + 24) % 24; return h >= 23 || h < 6; };
+// ── noise. Airports have noise preferential routes (NPRs): a departure stays on its SID track until it reaches the
+// route's altitude. Turned off it lower than that, it flies over the towns the route avoids, and the complaints come in
+// (more of them at night). At night each movement also uses the airport's night quota: quota count (QC) points for
+// its noise class, and at some airports a number of movements; going over the session's share costs 20 points a time.
+// The UK airports use their real rules (NOISE_RULES below); everywhere else keeps the generic ones (GENERIC_NOISE).
+//
+// Quota count. The Department for Transport's notice for Heathrow, Gatwick and Stansted (summer 2026, para 6.1 and the
+// Schedule, para 12.1: https://ops.group/blog/wp-content/uploads/2026/04/EGLL-EGKK-noise-quota-system.pdf) classes each
+// aircraft separately for landing and take-off: a landing by its certificated approach noise minus 9 EPNdB, a take-off
+// by the average of its certificated flyover and sideline (lateral) noise. Below 81 EPNdB is QC/0, then 81 to 83.9 is
+// QC/0.125, 84 to 86.9 QC/0.25, 87 to 89.9 QC/0.5, 90 to 92.9 QC/1, 93 to 95.9 QC/2, 96 to 98.9 QC/4, 99 to 101.9 QC/8
+// and above that QC/16; light propeller aircraft of 8,618 kg or less are QC/0. Manchester and Bristol use the same
+// classes (EGCC AD 2.21 para 3; Bristol's quota is in QC points too). The QC of each type here, [landing, take-off], was
+// worked out with those rules from EASA's certification noise levels (https://www.easa.europa.eu/en/domains/environment/
+// easa-certification-noise-levels: the jet database of 12 November 2026 and the heavy propeller one of 29 October 2026),
+// taking the median of the type's entries (they differ with weight and engine). The real classification is per airframe
+// (the UK CAA's noise certificates), so a particular aircraft can be a class either side. A type not in the table (the
+// A400M, which is not in EASA's civil databases) keeps the generic class by wake.
+const QC_TYPE = {
+  A319: [0.25, 0.5],  A320: [0.25, 0.5],  A321: [0.5, 1],    A20N: [0.125, 0.125], A21N: [0.25, 0.25],
+  A332: [1, 2],       A333: [0.5, 2],     A339: [0.5, 1],    A359: [0.5, 0.5],     A35K: [0.5, 1],    A388: [0.5, 2],
+  BCS1: [0.125, 0.125], BCS3: [0.125, 0.25], B738: [0.5, 0.5], B38M: [0.25, 0.25], B752: [0.25, 0.5], B763: [0.5, 1],
+  B772: [1, 2],       B77W: [1, 2],       B788: [0.25, 0.5], B789: [0.5, 0.5],     B78X: [0.25, 0.5],
+  E145: [0.125, 0.125], E190: [0.125, 0.5], E195: [0.125, 0.5], E295: [0.125, 0.125],
+  E55P: [0, 0],       CL35: [0, 0.125],   FA7X: [0.125, 0.25], GLF6: [0, 0.125],   C56X: [0.125, 0],
+  AT76: [0.125, 0.125], DH8D: [0.25, 0.125], PC12: [0, 0]
+};
+// the largest maximum take-off mass (kg) in the same EASA databases, for the types light enough to be let off a
+// noise route by weight (the PC-12 from EASA's light propeller database); airliners are all far heavier
+const MTOM = { PC12: 4740, E55P: 8415, C56X: 9222, CL35: 18416, E145: 22000, AT76: 23500, DH8D: 29574, FA7X: 31751, GLF6: 46992 };
+const isProp = ac => ac.perf && ac.perf.shape === 'prop';
+const mtomOf = ac => MTOM[ac.t] ?? 1e9;
+// local time: minutes since local midnight, and whether it falls in a window [from, to) that may run past midnight
+const nzMin = (ms = (S.start || 0) + S.t*1000) => { const d = new Date(ms + tzOffH(ms)*3600e3); return d.getUTCHours()*60 + d.getUTCMinutes(); };
+const nzIn = ([a, b], m = nzMin()) => a <= b ? m >= a && m < b : m >= a || m < b;
+const nzHM = m => String(Math.floor(m/60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+// The quota seasons are the scheduling seasons: summer from the last Sunday in March to the last Sunday in October
+// (summer 2026: 29 March 01:00 to 25 October 00:59, the DfT notice para 2.1), winter the rest. A seasonal limit is
+// shared out evenly over the season's nights to give one night's share, and that is the session's allowance (a session
+// is part of one night): Heathrow's summer quota of 2,735 points over the 210 nights of summer 2026 is 13.0 a night.
+const nzSun = (y, mo) => { const d = new Date(Date.UTC(y, mo + 1, 0, 1)); d.setUTCDate(d.getUTCDate() - d.getUTCDay()); return +d; };
+function noiseSeason(ms){
+  const y = new Date(ms).getUTCFullYear(), a = nzSun(y, 2), b = nzSun(y, 9);
+  if (ms >= a && ms < b) return { k: 'summer', nights: Math.round((b - a)/864e5) };
+  const [s, e] = ms >= b ? [b, nzSun(y + 1, 2)] : [nzSun(y - 1, 9), a];
+  return { k: 'winter', nights: Math.round((e - s)/864e5) };
+}
+// Each airport: night, its night period (complaints about noise routes are worse then); quotas, the night quota
+// windows, each with seasonal QC (and movement) limits; npr(ac, m), the altitude (ft QNH) a departure must reach before
+// it may be turned off its route at local minute m (0 for none); rwyNight, runways not to be used at night.
+const GENERIC_NOISE = {   // no published figures: the old generic rules (4,000 ft routes; 20 QC points 23:00 to 06:00, by wake)
+  generic: true, night: [23*60, 6*60], quotas: [{ name: 'night quota', at: [23*60, 6*60], cap: 20 }], npr: () => 4000
+};
+const NOISE_RULES = {
+  // Heathrow. Night 23:00 to 07:00, night quota period 23:30 to 06:00 (EGLL AD 2.21 para 3.4; DfT decision of December
+  // 2024, https://assets.publishing.service.gov.uk/media/6752c47114973821ce2a6c90/decision-night-flight-restrictions-
+  // heathrow-gatwick-stansted-from-oct-25.pdf: the limits stay as they were from October 2025 to October 2028): summer
+  // 3,250 movements and 2,735 QC points, winter 2,550 and 2,415. NPRs: a departure may be turned off its route once at
+  // 4,000 ft (AD 2.21 note 9); propeller aircraft of 5,700 kg or less are not bound by the routes, nor between 06:00 and
+  // 23:30 those of 17,000 kg or less (para 3.8). The westerly preference (27 used when the tailwind is 5 kt or less, AD
+  // 2.20 para 6) and the night runway alternation are egll.js and egll-engine.js's.
+  EGLL: { name: 'Heathrow', night: [23*60, 7*60],
+    quotas: [{ name: 'night quota period', at: [23*60 + 30, 6*60], qc: { summer: 2735, winter: 2415 }, mv: { summer: 3250, winter: 2550 } }],
+    npr: (ac, m) => isProp(ac) && (mtomOf(ac) <= 5700 || (nzIn([6*60, 23*60 + 30], m) && mtomOf(ac) <= 17000)) ? 0 : 4000 },
+  // Gatwick. Night 23:00 to 07:00, night quota period 23:30 to 06:00 (EGKK AD 2.21 para 4); summer 11,200 movements and
+  // 5,150 QC points, winter 3,250 and 1,785 (the DfT decision above). NPRs (AD 2.21 notes 8 and 9): between 23:30 and
+  // 06:00 every departure may be turned off at 4,000 ft; between 06:00 and 23:30 departures from 26L at 4,000 ft except
+  // the NOVMA, IMVUR, KENET and SAM SIDs (3,000 ft), and from 08R at 3,000 ft except via Seaford (4,000 ft). Propeller
+  // aircraft as at Heathrow (para 8). No preferential runway is published: the wind decides.
+  EGKK: { name: 'Gatwick', night: [23*60, 7*60],
+    quotas: [{ name: 'night quota period', at: [23*60 + 30, 6*60], qc: { summer: 5150, winter: 1785 }, mv: { summer: 11200, winter: 3250 } }],
+    npr: (ac, m) => {
+      if (isProp(ac) && (mtomOf(ac) <= 5700 || (nzIn([6*60, 23*60 + 30], m) && mtomOf(ac) <= 17000))) return 0;
+      if (nzIn([23*60 + 30, 6*60], m)) return 4000;
+      const sid = String(ac.sid || '').replace(/\d.*$/, ''), rw = ac.depRwy || '';
+      return /^08/.test(rw) ? (sid === 'SFD' ? 4000 : 3000) : (['NOVMA', 'IMVUR', 'KENET', 'SAM'].includes(sid) ? 3000 : 4000);
+    } },
+  // Manchester. Night 23:00 to 07:00, core night 23:30 to 06:00 (ACL's MAN Local Rule 1, September 2025, https://www.
+  // acl-uk.org/wp-content/uploads/2025/10/MAN-Local-Rule-1-September-2025-final.pdf). Quota points
+  // (ACL capacity declarations: summer 2026, https://www.acl-uk.org/wp-content/uploads/2025/10/MAN-S26-Capacity-
+  // Declaration.pdf, and winter 2026/27, https://www.acl-uk.org/wp-content/uploads/2026/04/MAN-W26-Capacity-
+  // Declaration.pdf): the night period 11,498 in summer and 7,788 in winter, the core night 7,000 and 3,000. No
+  // movement limit is published for noise. NPRs (EGCC AD 2.21 para 2): each SID until passing its altitude, ASMIM,
+  // DESIG, POL and SONEX 4,000 ft, EKLAD and KUXEM 3,000 ft, LISTO and SANBA 5,000 ft; aircraft of 5,700 kg or less are
+  // not bound, and between 07:00 and 23:00 ATC may turn early propeller aircraft of 23,000 kg or less and jets of
+  // 35,000 kg or less (with the Embraer 135/145, CRJs, BAe 146, Global Express and Gulfstream V). Runway 2 (23L/05R) is
+  // not normally used from 22:00 to 06:00 (AD 2.21 para 4); the westerly preference is egcc-engine.js's rwyFor.
+  EGCC: { name: 'Manchester', night: [23*60, 7*60],
+    quotas: [{ name: 'night period', at: [23*60, 7*60], qc: { summer: 11498, winter: 7788 } },
+             { name: 'core night', at: [23*60 + 30, 6*60], qc: { summer: 7000, winter: 3000 } }],
+    npr: (ac, m) => {
+      if (mtomOf(ac) <= 5700) return 0;
+      if (nzIn([7*60, 23*60], m) && ((isProp(ac) && mtomOf(ac) <= 23000) || (!isProp(ac) && (mtomOf(ac) <= 35000 || ac.t === 'E145')))) return 0;
+      const sid = String(ac.sid || '').replace(/\d.*$/, '');
+      return { ASMIM: 4000, DESIG: 4000, POL: 4000, SONEX: 4000, EKLAD: 3000, KUXEM: 3000, LISTO: 5000, SANBA: 5000 }[sid] || 4000;
+    },
+    rwyNight: { at: [22*60, 6*60], rwys: ['23L', '05R'], why: 'runway 23L/05R is not normally used between 22:00 and 06:00; use 23R/05L' } },
+  // Bristol. Night flying restrictions 23:00 to 07:00 and the night quota 23:30 to 06:00 (EGGD AD 2.21); 1,260 QC points
+  // in summer and 900 in winter (https://www.bristolairport.co.uk/corporate/environment/aircraft-noise/night-flying/);
+  // 3,500 night movements in summer 2026 (https://www.acl-uk.org/wp-content/uploads/2025/09/BRS-Capacity-Declaration-
+  // S26-1.pdf). The winter declaration gives only 4,000 a year across a summer and a winter together, so no winter
+  // movement limit is used. NPRs: for aircraft over 5,700 kg, ending at 4,000 ft (AD 2.21).
+  EGGD: { name: 'Bristol', night: [23*60, 7*60],
+    quotas: [{ name: 'night quota', at: [23*60 + 30, 6*60], qc: { summer: 1260, winter: 900 }, mv: { summer: 3500 } }],
+    npr: ac => mtomOf(ac) <= 5700 ? 0 : 4000 },
+  // Belfast International. No night quota and no noise planning conditions, and no SIDs, so no noise preferential routes
+  // (its noise action plan 2018-23, https://www.belfastairport.com/media/2076/bia-end-round-3-noise-action-plan-
+  // 2018-23-v3-draft.pdf). From 22:00 to 07:00 departures over 5,700 kg climb on the runway track to 2,000 ft before
+  // any turn (EGAA AD 2.21 para 3).
+  EGAA: { name: 'Belfast International', night: [22*60, 7*60], quotas: [],
+    npr: (ac, m) => nzIn([22*60, 7*60], m) && mtomOf(ac) > 5700 ? 2000 : 0, what: 'turned off the runway track' },
+  // Belfast City is open 06:30 to 21:30 (EGAC AD 2.3), so it has no night quota; no noise route altitude is published
+  // for it, so the generic 4,000 ft is kept.
+  EGAC: { name: 'Belfast City', generic: true, night: [23*60, 6*60], quotas: [], npr: () => 4000 },
+  // London City is closed at night (EGLC AD 2.3: Monday to Friday 06:30 to 22:00, Saturday 06:30 to 12:30, Sunday
+  // 12:30 to 22:00), so it has no night quota; its noise routes are in the SIDs, with no vectoring altitude published,
+  // so the generic 4,000 ft is kept.
+  EGLC: { name: 'London City', generic: true, night: [23*60, 6*60], quotas: [], npr: () => 4000 }
+};
+// the rules for an aircraft (Belfast's page has both airports) or for the page's airport
+const noiseRules = ac => (ac && APT.apOf && NOISE_RULES[APT.apOf(ac)]) || NOISE_RULES[APT.icao] || GENERIC_NOISE;
+const qcFmt = x => String(+x.toFixed(3));
+// a quota's allowance for this session: one night's share of the season's limit (or the generic cap)
+function quotaCap(Q, k){
+  if (Q.cap != null) return k === 'qc' ? Q.cap : null;
+  const s = noiseSeason((S.start || 0) + S.t*1000), lim = Q[k] && Q[k][s.k];
+  return lim == null ? null : { cap: Math.round(lim/s.nights*10)/10, lim, season: s.k, nights: s.nights };
+}
+const NOISE = { q: [], over: 0 };
+const noiseQ = i => NOISE.q[i] ||= { qc: 0, mv: 0 };
 function noiseCmd(ac, toks){
-  if (aiCtx || !ac || ac.kind !== 'DEP' || !ac.airborne || ac.alt >= 4000 || !toks.some(t => /^[HLR]\d{1,3}$/.test(t)) || ac.nprOff) return;
+  if (aiCtx || !ac || ac.kind !== 'DEP' || !ac.airborne || !toks.some(t => /^[HLR]\d{1,3}$/.test(t)) || ac.nprOff) return;
+  const R = noiseRules(ac), m = nzMin(), alt = R.npr(ac, m);
+  if (!alt || ac.alt >= alt) return;
   ac.nprOff = true;
-  const n = nightLocal(), p = n ? 0.8 : 0.4;
-  if (Math.random() < p) { const k = n ? 15 : 5; SC(ac).pts -= k; sys(`Noise: ${ac.cs} was turned off its noise preferential route at ${altShort(Math.round(ac.alt/100)*100)} (below 4,000 ft)${n ? ' at night' : ''}; complaints from under the new track (−${k}).`, true); }
+  const n = nzIn(R.night, m), p = n ? 0.8 : 0.4;
+  if (Math.random() < p) { const k = n ? 15 : 5; SC(ac).pts -= k; sys(`Noise: ${ac.cs} was ${R.what || 'turned off its noise preferential route'} at ${altShort(Math.round(ac.alt/100)*100)} (below ${alt.toLocaleString('en-GB')} ft${R.generic ? '' : ' at ' + R.name})${n ? ' at night' : ''}; complaints from under the new track (−${k}).`, true); }
 }
 function noiseMove(ac){
-  if (!nightLocal() || aiOwns(ac)) return;
-  const q = { J: 8, H: 4, M: 1, L: 0.5 }[ac.perf.wake] ?? 1; NOISE.qc += q;
-  if (NOISE.qc > NOISE.cap) { NOISE.over++; SC(ac).pts -= 20; sys(`Night quota exceeded: ${ac.cs} (${q} QC) takes the session to ${NOISE.qc} of ${NOISE.cap} points (−20). At night, keep the noisiest types for the morning if their slot allows.`, true); }
+  if (aiOwns(ac)) return;
+  const R = noiseRules(ac), arr = ac.kind === 'ARR', m = nzMin();
+  if (R.rwyNight && nzIn(R.rwyNight.at, m) && !ac.nRwy) {
+    const rw = arr ? ac.app || landRw(ac) : ac.depRwy || depRw(ac);
+    if (R.rwyNight.rwys.includes(rw)) { ac.nRwy = true; SC(ac).pts -= 5; sys(`Noise: ${ac.cs} ${arr ? 'landed on' : 'departed from'} ${rw} at night: at ${R.name} ${R.rwyNight.why} (−5).`, true); }
+  }
+  const real = !R.generic && QC_TYPE[ac.t], q = real ? real[arr ? 0 : 1] : { J: 8, H: 4, M: 1, L: 0.5 }[ac.perf.wake] ?? 1;
+  R.quotas.forEach((Q, i) => {
+    if (!nzIn(Q.at, m)) return;
+    const N = noiseQ(i); N.qc += q; N.mv++;
+    const c = quotaCap(Q, 'qc'), v = quotaCap(Q, 'mv'), cq = c && (c.cap ?? c), why = c && c.lim ? ` (${R.name}'s ${c.season} quota of ${c.lim.toLocaleString('en-GB')} points over ${c.nights} nights)` : '';
+    if (cq != null && N.qc > cq) { NOISE.over++; SC(ac).pts -= 20; sys(`Night quota exceeded: ${ac.cs} (${ac.t} ${arr ? 'landing' : 'take-off'}, QC/${qcFmt(q)}) takes the ${Q.name} to ${qcFmt(N.qc)} of ${cq} points${why} (−20). At night, keep the noisiest types for the morning if their slot allows.`, true); }
+    if (v && N.mv > v.cap) { NOISE.over++; SC(ac).pts -= 20; sys(`Night movement limit exceeded: ${ac.cs} is movement ${N.mv} in the ${Q.name}, over tonight's ${v.cap} (${R.name}'s ${v.season} limit of ${v.lim.toLocaleString('en-GB')} over ${v.nights} nights) (−20).`, true); }
+  });
 }
-function noisePanel(){ return nightLocal() ? `<div class="warnline dimmer">Night quota: ${NOISE.qc} of ${NOISE.cap} QC points used</div>` : ''; }
+function noisePanel(){
+  const R = noiseRules(), m = nzMin(), L = [];
+  R.quotas.forEach((Q, i) => {
+    if (!nzIn(Q.at, m) && !nzIn(R.night, m)) return;
+    const N = NOISE.q[i] || { qc: 0, mv: 0 }, c = quotaCap(Q, 'qc'), v = quotaCap(Q, 'mv');
+    L.push(`Night quota${R.generic ? '' : `, ${Q.name} ${nzHM(Q.at[0])}–${nzHM(Q.at[1])}`}: ${qcFmt(N.qc)} of ${c && (c.cap ?? c)} QC points${v ? `, ${N.mv} of ${v.cap} movements` : ''} used${c && c.lim ? ` (tonight's share of the ${c.season} ${c.lim.toLocaleString('en-GB')})` : ''}`);
+  });
+  if (R.rwyNight && nzIn(R.rwyNight.at, m)) L.push(`Night: ${R.rwyNight.why}.`);
+  return L.map(t => `<div class="warnline dimmer">${esc(t)}</div>`).join('');
+}
 
 S.listeners.push((ev, d) => {
   if (ev === 'start') {
-    MOR.list = []; OJTI.said.clear(); OJTI.t = 0; NOISE.qc = 0; NOISE.over = 0;
+    MOR.list = []; OJTI.said.clear(); OJTI.t = 0; NOISE.q = []; NOISE.over = 0;
     const el = document.getElementById('ojtiSel'); OJTI.on = !!(el && el.value === 'on'); OJTI.name = ['Alex', 'Siobhán', 'Paddy', 'Rachel', 'Imran', 'Claire'][hash(String(S.start)) % 6];
     return;
   }
