@@ -99,9 +99,31 @@ function rwyBusy(R, skip, rolling, ok){
   if (typeof VEH !== 'undefined' && VEH.list.some(v => v.onRwy && sameRwy(R, v.onRwy) && !v.gone)) return true;
   return rwyBlocked(R.lo) ? true : null;
 }
-// seconds to touchdown from this many track miles out, at the speeds arrivals fly here (slowing to the approach
-// speed for the last four miles): what spacing is judged on, so the closing-up on final is allowed for
+// seconds to touchdown from this many track miles out, at the speeds arrivals fly here (stepAir in sim.js): on its
+// own, 170 kt on the final until 5 NM, then slowing at about 1.3 kt/s to the approach speed; further out 190 kt within
+// about 14 NM, 220 within 25 and its cruise-in speed beyond. With a speed from Approach, that speed until 4 NM, then
+// the approach speed plus 15 to 2.5 NM and the approach speed. What spacing is judged on, so the closing-up on final
+// (a turboprop at 110 kt ahead of a jet at 140) is allowed for
 function etaD(d, ac){
+  if (!AMAN_ON) return etaTwr(d, ac);
+  // (further out it flies faster over the ground the higher it is: the indicated speed at that height, and what it is
+  // making now if more, as it comes in from the cruise; in the hold it leaves at the holding speed)
+  const v = (ac && ac.perf && ac.perf.vapp) || 135, hi = ac ? 1 + 0.017*Math.max(0, ac.alt - ELEV)/1000 : 1;
+  const far = ac && ac.mode !== 'HOLD' && ac.airborne ? clamp(ac.gs || 0, 235, 300) : 235;
+  const cap = ac && ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : null;
+  let t = 0, lo = 0;
+  const seg = (top, kt) => { if (d <= lo) return; const L = Math.max(0, Math.min(d, top) - lo); t += L/kt*3600; lo = top; };
+  if (cap) { seg(2.5, v); seg(4, Math.min(cap, v + 15)); seg(20, cap); seg(1e9, cap*hi); return t; }
+  // the last 5 NM: the slow-down from 170 kt, then the approach speed
+  const td = Math.max(0, 170 - v)/1.3, dd = (170 + v)/2*td/3600;
+  if (d <= 5) { const a = Math.max(0, 5 - dd); t = d <= a ? d/v*3600 : a/v*3600 + (d - a)/((170 + v)/2)*3600; lo = d; }
+  else { t = (5 - dd)/v*3600 + td; lo = 5; }
+  seg(10, 170); seg(14, 190); seg(25, 220); seg(1e9, Math.max(far, 220));
+  return t;
+}
+// the Tower's rougher estimate of the same (slowing to the approach speed for the last four miles), which its departure
+// and crossing gaps are tuned to
+function etaTwr(d, ac){
   // (further out it flies faster over the ground the higher it is: the indicated speed at that height, and what it is
   // making now if more, as it comes in from the cruise; in the hold it leaves at the holding speed)
   const v = (ac && ac.perf && ac.perf.vapp) || 135, hi = ac ? 1 + 0.017*Math.max(0, ac.alt - ELEV)/1000 : 1;
@@ -122,7 +144,7 @@ function arrNear(R, skip){
     if (o === skip || o.kind !== 'ARR' || !o.airborne || o.state === 'PRE' || o.state === 'MISSED' || o.state === 'DIVERTING' || o.handed) continue;
     const rw = landRw(o), F = o.app ? finOf(o) : FINAL[rw]; if (!F || !sameRwy(R, rwyOf(rw).id)) continue;
     const d = o.mode === 'FINAL' ? finalDist(o) : estToGo(o, F);
-    if (d < best) { best = d; bt = etaD(d, o);
+    if (d < best) { best = d; bt = etaTwr(d, o);
       // landing the other way, or its approach comes in head-on before turning in (Madeira's VOR to 05 from the north-east)
       const dh = skip ? parseInt(depRw(skip), 10)*10 : NaN;
       opp = rwyOf(rw) === R && rw !== (skip ? depRw(skip) : rw);
@@ -447,7 +469,7 @@ function crossSecs(ac, R, k){
 }
 // seconds until traffic o on (or landing on) runway R has gone past the point m metres along it
 function passSecs(o, R, m){
-  if (o.airborne) return etaD(finalDist(o), o) + Math.abs(m - (landRw(o) === R.lo ? 0 : R.len || 3000))/35;   // rolling out from the threshold
+  if (o.airborne) return etaTwr(finalDist(o), o) + Math.abs(m - (landRw(o) === R.lo ? 0 : R.len || 3000))/35;   // rolling out from the threshold
   return Math.abs(m - R.mOf([o.x, o.y]))/Math.max((o.gs || 0)*0.514, o.kind === 'DEP' ? 20 : 12);
 }
 function aiTower(ac){
@@ -550,7 +572,9 @@ function joinLevel(ac){
   const slots = []; for (let L = base; L <= 24000; L += 1000) slots.push(L);
   const free = L => !occ.some(u => Math.abs(u - L) < 990);
   // a level it can reach without climbing or descending through anyone in the stack
-  const reach = L => !occ.some(u => u > Math.min(ac.alt, L) + 10 && u < Math.max(ac.alt, L) - 10);
+  // (well away from the fix it can go to any level: it is out of the way of those holding there by the time it is down)
+  const away = AMAN_ON && dist(ac.x, ac.y, ...holdFixP(ac)) > 15;
+  const reach = L => away || !occ.some(u => u > Math.min(ac.alt, L) + 10 && u < Math.max(ac.alt, L) - 10);
   // the nearest free level it can reach without passing anyone's (a gap low down left by the one that went first will
   // do: it is then next to go); boxed in, the nearest free level of all
   const near = (a, b) => Math.abs(a - ac.alt) - Math.abs(b - ac.alt), ok = slots.filter(free);
@@ -560,7 +584,9 @@ function joinLevel(ac){
   // not one an arrival just sent in from the hold is still descending through (Innsbruck's approach starts at RTT),
   // nor one a departure close by is climbing to or through (Bristol's hold is over the field)
   const calm = L => !appPathBusy(ac, L) && !S.acs.some(o => o.kind === 'DEP' && o.airborne && (o.tgtAlt ?? o.alt) > L - 990 && o.alt < L + 990 && dist(o.x, o.y, ac.x, ac.y) < 12);
-  return ok.filter(reach).filter(calm).sort(near)[0] ?? under.filter(reach).filter(calm).sort(near)[0] ?? ok.filter(reach).sort(near)[0] ?? under.filter(reach).sort(near)[0] ?? ok.sort(near)[0] ?? Math.max(base, top + 1000);
+  // (boxed in, every level it could reach without passing someone in the stack taken: the nearest free one the look-ahead
+  // finds clear of everyone on the way; failing that where it is, if that is free)
+  return ok.filter(reach).filter(calm).sort(near)[0] ?? under.filter(reach).filter(calm).sort(near)[0] ?? ok.filter(reach).sort(near)[0] ?? under.filter(reach).sort(near)[0] ?? (AMAN_ON ? null : ok.sort(near)[0] ?? Math.max(base, top + 1000)) ?? ok.filter(L => safeLevel(ac, [L]) != null).sort(near)[0] ?? (free(Math.round(ac.alt/1000)*1000) ? Math.round(ac.alt/1000)*1000 : ok.sort(near)[0]) ?? Math.max(base, top + 1000);
 }
 const holdFixOf = ac => ac.mode === 'HOLD' && ac.hold ? ac.hold.name : holdFixFor(ac) || (ac.route && ac.route.length ? ac.route[ac.route.length - 1] : 'pp');
 const holdFixP = ac => { const f = holdFixOf(ac); return ac.mode === 'HOLD' && ac.hold ? ac.hold.c : WP[f] ? WP[f].p : [ac.x, ac.y]; };
@@ -574,7 +600,11 @@ function stackBase(ac){
   return dist(ac.x, ac.y, ...holdFixP(ac)) < 22 ? low : Math.max(APT.inboundAlt ? APT.inboundAlt(ac.gate) : 7000, low);
 }
 // the others waiting at the same fix, or at one close by (New York's fixes are a few miles apart)
-const stackPeers = ac => { const fix = holdFixOf(ac), P = holdFixP(ac); return S.acs.filter(o => o !== ac && o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.app && !o.handed && (holdFixOf(o) === fix || dist(...holdFixP(o), ...P) < 14)); };
+// (only those in the stack: holding, or given a level there to hold at. The others on their way in are kept apart by
+// their routes, the look-ahead and the arrival manager's slots, not by a level each)
+const stackPeersAman = ac => { const fix = holdFixOf(ac), P = holdFixP(ac); return S.acs.filter(o => o !== ac && o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.app && !o.handed && (o.mode === 'HOLD' || o.aiSlot != null) && (holdFixOf(o) === fix || dist(...holdFixP(o), ...P) < 14)); };
+const stackPeersOld = ac => { const fix = holdFixOf(ac), P = holdFixP(ac); return S.acs.filter(o => o !== ac && o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.app && !o.handed && (holdFixOf(o) === fix || dist(...holdFixP(o), ...P) < 14)); };
+const stackPeers = ac => AMAN_ON ? stackPeersAman(ac) : stackPeersOld(ac);
 const lvlOf = o => o.cleared ?? Math.round(o.alt/100)*100;
 function stackLevel(ac, base = stackBase(ac)){
   const used = stackPeers(ac).map(slotOf);
@@ -747,7 +777,211 @@ function aiDirect(ac, seat){
   }
   return false;
 }
+// ── the arrival manager (AMAN): every arrival the AI Approach works has a landing slot on its runway, worked out from
+// the runway's real capacity (the wake or radar spacing and the runway occupancy, slower in poor weather, and a gap for a
+// departure in mixed mode), in a fixed order: first come, first served by the earliest time each could land, the holds
+// emptying bottom first. The delay is taken up early and where it is cheapest: a point merge arc is flown until a
+// direct to the merge point lands it in its slot, a small delay is taken off with speed, a large one in the hold, which
+// it leaves at its slot time less the time to fly in from there. Releases go strictly in slot order, and an approach is
+// never cleared that would land well before its slot (it would close up on the one ahead)
+// the airports it runs at: those where seeded all-AI runs showed it landing more and losing separation less than the
+// sequencing before it (tools/bench.cjs); elsewhere that sequencing is kept (aiSequenceOld) until it is tuned there
+const AMAN_ON = typeof AIRPORT !== 'undefined' && ['EIDW', 'EGLL', 'EGKK', 'LEMD', 'LPMA', 'LOWI', 'YSSY'].includes(AIRPORT);
+const AMAN_HORIZON = 1200;   // seconds to touchdown: further out an arrival has a slot, but its approach clearance waits
+// the arc fixes of a point merge (Dublin): where APT.aiFloor holds an arrival at the arc's level
+const arcFix = id => !!APT.aiFloor && APT.aiFloor({ kind: 'ARR', route: [id] }) > 0;
+// the ways in an arrival could be given now, with how long each takes to touchdown, shortest first: its route as it
+// is, and on a point merge arc a direct off it to the merge point (still on its way to the arc: the merge point once it
+// is on the arc, the earliest it could land; later: true)
+function amanWays(ac, F){
+  const rt = ac.route || [], now = eta(ac, F), ways = [{ rt: null, t: now }];
+  if (!APT.aiFloor || (ac.mode !== 'NAV' && ac.mode !== 'HOLD') || ac.app || ac.state === 'MISSED' || !rt.length) return ways;
+  const arc = rt.map(arcFix), first = arc.indexOf(true); if (first < 0) return ways;
+  let m = first; while (m < rt.length && arc[m]) m++;   // the merge point: the first fix after the arc
+  if (m >= rt.length) return ways;
+  // on the arc (flying along it): off it now. Still on its way to it, or held at its first fix: to the arc's first
+  // fix, then off it there
+  const on = first === 0 && ac.mode === 'NAV', r = on ? rt.slice(m) : [...rt.slice(0, first + 1), ...rt.slice(m)], keep = ac.route;
+  ac.route = r; let t; try { t = eta(ac, F); } catch (e) { t = NaN; } ac.route = keep;
+  return isFinite(t) && t < now - 5 ? [{ rt: on ? r : null, fix: rt[m], t, later: !on }, ...ways] : ways;
+}
+let AMAN = { t: -1, m: new Map(), line: {} };
+// the estimates are never exact (the turn out of the hold, the slow-down at the merge point, the spacing on final):
+// how long flights really took from their approach clearance to touchdown against what was worked out, learned from
+// the landings so far, and the times to touchdown scaled by it
+const amanK = () => S.amK || 1;
+// the slots are planned a little wider than the minimum (a twentieth, and five seconds): the spacing closes up on the final
+// as those ahead slow to their approach speed, and a go-around costs far more than the few seconds kept in hand
+const amanGap = (lead, trail, R) => landGapS(lead, trail, R) + 5;
+function amanPlan(list){
+  if (AMAN.t === S.t) return AMAN.m;
+  const m = new Map(), line = {}, byR = {};
+  for (const ac of list) {
+    const F = FINAL[landRw(ac)]; if (!F || ac.state === 'DIVERTING') continue;
+    const R = rwyOf(landRw(ac)); let W; try { W = amanWays(ac, F).map(w => ({ ...w, t: w.t*amanK() })); } catch (e) { continue; }
+    const tMin = W[0].t, tNow = W[W.length - 1].t; if (!isFinite(tMin) || !isFinite(tNow)) continue;
+    // its place in the order: when it could land, fixed when first seen (a go-around is fitted in again as it comes
+    // round); one still far out whose time has moved a lot is put where it now belongs
+    if (ac.amKey == null || ac.amGa !== (ac.gaCount || 0)) { ac.amKey = S.t + tMin; ac.amGa = ac.gaCount || 0; }
+    else if (ac.mode !== 'HOLD' && tMin > AMAN_HORIZON && Math.abs(S.t + tMin - ac.amKey) > 180) ac.amKey = S.t + tMin;
+    (byR[R.id] ||= { R, c: [] }).c.push({ ac, W, tMin, tNow, F });
+  }
+  for (const id in byR) {
+    const { R, c } = byR[id];
+    // the holds empty from the bottom: those in one hold take its turns in the order of their levels
+    // (and no one goes ahead of the time it can really land: one held far out whose turn has come is fitted in where it
+    // can get to, not ahead of those already close in, which would leave the runway empty while it flies in)
+    for (const x of c) x.k = Math.max(x.ac.amKey, S.t + x.tMin);
+    const byFix = {};
+    for (const x of c) if (x.ac.mode === 'HOLD' && x.ac.hold && !x.ac.emerg) (byFix[x.ac.hold.name] ||= []).push(x);
+    for (const f in byFix) { const H = byFix[f], keys = H.map(x => x.k).sort((a, b) => a - b); H.sort((a, b) => slotOf(a.ac) - slotOf(b.ac) || a.k - b.k).forEach((x, i) => { x.k = keys[i]; }); }
+    c.sort((a, b) => (b.ac.emerg ? 1 : 0) - (a.ac.emerg ? 1 : 0) || a.k - b.k);
+    // those already cleared keep the times they are flying to
+    const T = S.acs.filter(o => o.kind === 'ARR' && o.airborne && o.app && o.state !== 'MISSED' && o.state !== 'DIVERTING' && !o.handed && sameRwy(R, rwyOf(landRw(o)).id))
+      .map(o => { let t; try { t = S.t + eta(o)*amanK(); } catch (e) { t = S.t; } return { ac: o, t, fixed: true }; }).sort((a, b) => a.t - b.t);
+    const dg = depGapS(R), held = c.filter(x => x.ac.mode === 'HOLD').length;
+    let run = (S.aiRun || {})[R.id] || 0, last = null, n = 0;
+    for (const x of c) {
+      const ac = x.ac;
+      // a departure's gap ahead of this one (mixed mode): as holdGap gives them, every landing while the holds are quiet,
+      // every second or third while they are busy
+      const dep = dg > 0 && (held < 2 || run >= (held >= 4 ? 3 : 2));
+      const before = s => Math.max(amanGap(s.ac, ac, R), dep ? dg : 0);
+      let t0 = S.t + x.tMin;
+      if (last) t0 = Math.max(t0, last.t + before(last));
+      // fitted in among those already cleared: a full gap either side of it
+      const fits = t => T.every(s => s.t <= t ? t - s.t >= before(s) - 0.5 : s.t - t >= amanGap(ac, s.ac, R) - 0.5);
+      const opts = [t0, ...T.map(s => s.t + before(s))].filter(t => t >= t0).sort((a, b) => a - b);
+      const sta = ac.emerg ? S.t + x.tMin : opts.find(fits) ?? t0;
+      const ahead = T.filter(s => s.t <= sta).sort((a, b) => b.t - a.t)[0];
+      const e = { ac, t: sta, fixed: false, W: x.W, tMin: x.tMin, tNow: x.tNow, first: n === 0, dep, after: ahead ? ahead.ac : null, afterT: ahead ? ahead.t : null };
+      m.set(ac, e); T.push(e); T.sort((a, b) => a.t - b.t); last = e; n++;
+      if (dep) run = 0; else if (dg > 0) run++;
+    }
+    line[id] = T;
+  }
+  AMAN = { t: S.t, m, line };
+  return m;
+}
+// how much a flight cleared now can still lose on the way in by slowing down (to 160 kt or its approach speed and a
+// bit, until the slow-down to the approach speed at 4 NM): the slot can be met that much early
+function amanAbsorb(ac, F){
+  const togo = estToGo(ac, F), slow = Math.max(160, (ac.perf.vapp || 135) + 15), v0 = ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 220;
+  return v0 > slow ? Math.max(0, togo - 4)*3600*(1/slow - 1/v0) : 0;
+}
 function aiSequence(list){
+  if (!AMAN_ON) return aiSequenceOld(list);
+  for (const ac of list) if (ac.mode === 'HOLD' && ac.aiQ == null) ac.aiQ = S.t;
+  const plan = amanPlan(list);
+  list.sort((a, b) => ((plan.get(a) || {}).t ?? 1e12) - ((plan.get(b) || {}).t ?? 1e12));
+  for (const ac of list) {
+    const rw = landRw(ac), F = FINAL[rw], R = rwyOf(rw), n = ac.need || '', P = plan.get(ac);
+    if (S.t < (ac.aiNext || 0) || !F) continue;
+    // a shortcut while it is not delayed (the plan has it landing in its slot flying the shortest way)
+    if (P && !ac.emerg && P.t - (S.t + P.tMin) <= 20 && aiDirect(ac, 'APP')) continue;
+    if (ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75) { ac.aiWhy = 'climbing out after the go-around'; continue; }
+    const M = mayAfter(ac), shut = rwyShut(rw) || (M && !M.p ? mayWhy(M) : null);
+    let ok = !shut, way = null, lose = false;
+    ac.aiWhy = shut ? (M && !M.p ? `holding: ${shut}` : `holding, runway closed (${shut})`) : '';
+    if (ok && !ac.emerg && P) {
+      // the shortest way in that does not land it before its slot (less what it can lose with speed once cleared)
+      const tol = Math.min(120, 0.7*amanAbsorb(ac, F)), due = P.t - S.t - tol;
+      way = P.W.find(w => w.t >= due) || null;
+      // flying the whole of its route (and the arc) still lands it early: it has to lose time in a hold
+      lose = P.tNow < due - 20;
+      if (!P.first) { ok = false; ac.aiWhy = P.after ? `number ${(AMAN.line[R.id] || []).indexOf(P) + 1}, after ${P.after.cs}` : 'in sequence'; }
+      else if (!way) { ok = false; ac.aiWhy = `delayed for its slot at ${zt(P.t).slice(0, 5)}`; }
+      else if (way.later) { ok = false; ac.aiWhy = `turning in off the arc for its slot at ${zt(P.t).slice(0, 5)}`; }
+      else if (way.t > AMAN_HORIZON && ac.mode !== 'HOLD') { ok = false; ac.aiWhy = 'in sequence, still a long way out'; }
+      // a delay it can't make up on the way in: taken off with speed while it is still well out, rather than all in the hold
+      const D = P.t - (S.t + P.tNow);
+      if (!ok && ac.mode !== 'HOLD' && ac.state !== 'MISSED' && D > 30 && ac.ias > 195 && estToGo(ac, F) > 15) {
+        const v = estToGo(ac, F) > 25 && D < 120 ? 210 : 180;
+        if ((!ac.spdAssigned || ac.tgtSpd > v) && aiDue(ac, 'spd' + v, 3, 8)) aiDo('APP', ac, 'S' + v);
+      }
+    }
+    // others waiting lower down near its way in: they go first (it would descend through them)
+    // anyone holding below in the stack it is in (or whose fix it is about to pass over) goes first
+    if (ok && !ac.emerg) { const below = stackBelow(ac);
+      if (below) { ok = false; ac.aiWhy = `${below.cs} below leaves the hold first`; } }
+    if (ok && !ac.emerg) { const under = waitsUnder(ac);
+      if (under) { ok = false; ac.aiWhy = `waiting for ${under.cs} below to go first`; } }
+    // a departure passing under the hold (Heathrow's Detling departures under BIG): it leaves the hold all the same,
+    // but stays at its level until the departure is past (the look-ahead then lets it down)
+    // (a hold over the field, Bristol's BRI: the departures climb out right under it, so it waits for them instead)
+    let keep = ok && !ac.emerg && ac.mode === 'HOLD' ? depUnder(ac) : null;
+    if (keep && ac.hold && Math.hypot(...ac.hold.c) < 10) { ok = false; ac.aiWhy = `waiting for ${keep.cs} to pass below`; keep = null; }
+    // too high to start the approach from here: down to the approach altitude first
+    const togoWay = () => { if (!way || !way.rt) return estToGo(ac, F); const k = ac.route; ac.route = way.rt; const d = estToGo(ac, F); ac.route = k; return d; };
+    const high = ok && !ac.emerg && ac.alt > ELEV + togoWay()*290 + 1000;
+    if (high) ac.aiWhy = 'descending before the approach';
+    // the descent on the approach would meet someone not on it (a departure climbing out, a flight in the hold), or
+    // would while it is still at its level (the profile can keep it up there a while)
+    if (ok && !high && !ac.emerg) { const clash = airNow().find(o => o !== ac && !(o.app && o.kind === 'ARR') && (conflictWith(ac, o, keep ? lvlOf(ac) : (F.alt || APT.appAlt || 3000)) >= 0 || conflictWith(ac, o, lvlOf(ac)) >= 0));
+      if (clash) { ok = false; ac.aiWhy = `waiting for ${clash.cs} to pass`; } }
+    // the way in off a point merge arc: a direct to the merge point, if the airspace allows (else on along the arc)
+    if (ok && !high && way && way.rt && !dctClear(ac, way.rt, Math.min(ac.alt, F.alt || APT.appAlt || 3000), ac.alt)) { ok = false; ac.aiWhy = `turning in to ${way.fix} when clear`; }
+    // the one next to go is stuck (traffic, a level it can't leave yet): after a minute the one behind may go ahead of it
+    if (P && P.first && !ok && !shut && !ac.emerg && way && !way.later && ac.mode === 'HOLD') {
+      ac.amStuck ??= S.t;
+      if (S.t - ac.amStuck > 60) { const nx = [...plan.values()].filter(e => e.ac !== ac && !e.fixed && sameRwy(R, rwyOf(landRw(e.ac)).id)).sort((a, b) => a.t - b.t)[0]; if (nx) { ac.amKey = nx.ac.amKey + 1; ac.amStuck = null; AMAN.t = -1; } }
+    } else ac.amStuck = null;
+    if (ok && !high && !ac.aiLev && aiDue(ac, 'app' + (ac.gaCount || 0), 3, 7)) { const lv = keep ? Math.round(lvlOf(ac)/100) : 0;
+      const cmd = (way && way.rt ? `DCT ${way.fix} ` : '') + (keep ? `APP A${lv}` : 'APP');
+      if (aiDo('APP', ac, cmd)) { ac.amRel = { t: S.t, sta: P ? P.t : null, e: way ? way.t/amanK() : null }; ac.aiWhy = way && way.rt ? `turned in to ${way.fix} for its slot` : ''; ac.aiSlot = null; if (keep) { ac.aiLev = { t: S.t, o: keep.cs }; ac.aiWhy = `level above ${keep.cs}`; } if (P && depGapS(R) > 0) { const r = (S.aiRun ||= {}); r[R.id] = P.dep ? 0 : (r[R.id] || 0) + 1; } AMAN.t = -1; continue; } }
+    // waiting: into the published hold, joined as it reaches the fix (or straight there after a go-around or once past it).
+    // A hold before the end of its route (Dublin's ahead of the point merge arcs) only for a delay the rest of the route
+    // can't take up; the one at the end of it whenever it is not cleared yet
+    const hf = holdFixFor(ac), W = hf && WP[hf], rt = ac.route || [];
+    const endHold = !!hf && (rt.indexOf(hf) === rt.length - 1 || hf === F.entry || rt.indexOf(hf) < 0);
+    const mustHold = !ok && (!P || lose || shut || endHold || ac.emerg);
+    if (!(ok && !high) && mustHold && !ac.emerg && ac.state !== 'DIVERTING' && !(ac.state === 'MISSED' && S.t - (ac.gaT || 0) < 75)) {
+      if (W && !(ac.mode === 'HOLD' && ac.hold && ac.hold.name === hf)) {
+        const onRt = ac.mode === 'NAV' && rt.includes(hf), near = dist(ac.x, ac.y, ...W.p) < 8;
+        if ((onRt ? rt[0] === hf && near : !ok) && aiDue(ac, 'hold' + hf, 2, 5)) { aiDo('APP', ac, holdCmd(ac, hf)); ac.aiWhy = ac.aiWhy || 'holding'; }
+      }
+    }
+    // held before the end of its route: on its way again (the bottom of the stack) as soon as the rest of the route can
+    // take up what is left of its delay, so the arc ahead has flights on it to turn in early or late as the slots move
+    if (P && !ok && !shut && !ac.emerg && ac.mode === 'HOLD' && ac.hold && !endHold && rt.length && rt.includes(ac.hold.name) && !stackBelow(ac) && !lose && aiDue(ac, 'onarc' + Math.round(P.t/60), 2, 5)) {
+      const id = rt[0]; ac.aiSlot = null; if (aiDo('APP', ac, `DCT ${id}`)) { ac.aiWhy = `on its way again for its slot at ${zt(P.t).slice(0, 5)}`; continue; }
+    }
+    // not yet: answer the call and keep it 1,000 ft clear of the others waiting at the same fix
+    if (ac.aiLev || (ac.state === 'MISSED' && !n)) continue;
+    const cur = lvlOf(ac), d = estToGo(ac, F), peers = stackPeers(ac), free = L => !peers.some(o => Math.abs(slotOf(o) - L) < 990);
+    if (n === 'Initial call' || n === 'Missed approach' || n === 'Back on frequency') { if (aiDue(ac, n, 3, 7)) { const tg = Math.round((ac.tgtAlt ?? cur)/1000)*1000, want = n === 'Initial call' && tg < cur - 50 && free(tg) ? tg : free(cur) && (n !== 'Initial call' || cur >= stackBase(ac)) ? cur : stackLevel(ac); aiDo('APP', ac, `A${Math.round((safeLevel(ac, [want, want + 1000, want + 2000, Math.ceil(ac.alt/1000)*1000]) ?? cur)/100)}`); } continue; }
+    if (S.t - (ac.aiStack || 0) < 20) continue;
+    // heading for a stack and within 40 NM of it: given its level there now, while it has room to climb or descend to it
+    // (a point merge arc ahead, Dublin's: the arc's level is kept until the arrival is sent off it, APT.aiFloor)
+    const floor = APT.aiFloor ? APT.aiFloor(ac) : 0;
+    const willHold = !P || lose || endHold;
+    if (floor && ac.mode !== 'HOLD' && !(ac.aiSlot != null && willHold)) {
+      if (cur < floor - 50 || (ac.tgtAlt ?? cur) < floor - 50) { if (aiDue(ac, 'arc', 3, 7)) { ac.aiStack = S.t; ac.aiSlot = null; aiDo('APP', ac, `A${Math.round(floor/100)}`); } }
+      else if ((ac.tgtAlt ?? cur) > floor + 50 && !(lose && rt.includes(hf) && !endHold)) { const lv = safeLevel(ac, [floor, floor + 1000, floor + 2000].filter(L => L < (ac.tgtAlt ?? cur) - 50)); if (lv != null && aiDue(ac, 'arcd' + lv, 3, 7)) { ac.aiStack = S.t; ac.aiSlot = null; aiDo('APP', ac, `A${Math.round(lv/100)}`); } }
+      if (!(lose && rt.includes(hf) && !endHold)) continue;
+    }
+    if (ac.mode !== 'HOLD' && ac.aiSlot == null && ac.state !== 'MISSED' && willHold && (ac.route || []).includes(holdFixOf(ac)) && dist(ac.x, ac.y, ...holdFixP(ac)) < (stackNow(ac).some(o => o.mode === 'HOLD') ? 70 : 40)) {
+      const lv = joinLevel(ac); ac.aiSlot = lv; ac.aiStack = S.t; if (Math.abs((ac.tgtAlt ?? ac.alt) - lv) >= 100) aiDo('APP', ac, `A${Math.round(lv/100)}`); continue; }
+    if (ac.mode === 'HOLD' || ac.aiSlot != null) {
+      if (ac.aiSlot == null) ac.aiSlot = Math.round(lvlOf(ac)/100)*100;   // holding by itself at the end of its route
+      // in the stack: sharing a level (a newcomer it didn't know about) goes back on top; else one level down once it is empty
+      const occ = stackNow(ac), mine = ac.aiSlot;
+      if (occ.some(o => (o.mode === 'HOLD' || o.aiSlot != null) && Math.abs(slotOf(o) - mine) < 990 && (estToGo(o, FINAL[landRw(o)]) < d || o.cs < ac.cs))) { const lv = joinLevel(ac); ac.aiStack = S.t; ac.aiSlot = lv; aiDo('APP', ac, `A${Math.round(lv/100)}`); continue; }
+      // (the stack keeps its own levels: anything else that moved it is put right)
+      if (Math.abs((ac.tgtAlt ?? ac.alt) - mine) >= 100) { ac.aiStack = S.t; aiDo('APP', ac, `A${Math.round(mine/100)}`); continue; }
+      const L = mine - 1000;
+      if (L >= holdBase(ac) - 10 && !occ.some(o => Math.abs(slotOf(o) - L) < 990) && !airNow().some(o => o !== ac && Math.abs(o.alt - L) < 990 && dist(o.x, o.y, ac.x, ac.y) < 8) && !appPathBusy(ac, L) && !S.acs.some(o => o.kind === 'DEP' && o.airborne && (o.tgtAlt ?? o.alt) > L - 990 && o.alt < L + 990 && dist(o.x, o.y, ac.x, ac.y) < 12) && Math.abs(ac.alt - mine) < 200) {
+        ac.aiStack = S.t; ac.aiSlot = L; aiDo('APP', ac, `A${Math.round(L/100)}`); }
+      continue;
+    }
+    // on the way in: down towards the stack's base when the levels below are free, never through someone else's
+    const base = stackBase(ac), slots = []; for (let L = base; L < cur - 50; L += 1000) slots.push(L);
+    let to = cur; for (const L of slots.reverse()) { if (!free(L)) break; to = L; }
+    if (to < cur) { const lv = safeLevel(ac, slots.filter(L => L >= to).reverse()); if (lv != null && lv < cur) { ac.aiStack = S.t; aiDo('APP', ac, `A${Math.round(lv/100)}`); } }
+  }
+}
+// main's sequencing, for the airports where the arrival manager has not been shown to do better (AMAN_ON)
+function aiSequenceOld(list){
   // soonest first
   list.sort((a, b) => (Math.round(eta(a, FINAL[landRw(a)])/10) - Math.round(eta(b, FINAL[landRw(b)])/10)) || (lvlOf(a) - lvlOf(b)));
   // the landing plan for each runway, like an arrival manager: the slots of those already cleared, then the ones free
@@ -865,7 +1099,7 @@ function aiApproach(ac){
     // keep the gap to the one ahead: slow down while it closes up, back to the hold if it can't be made up
     const L = appLeader(ac), R = rwyOf(landRw(ac)), gap = L ? eta(ac) - eta(L) : 1e9, need = L ? landGapS(L, ac, R) : 0, togo = estToGo(ac, finOf(ac));
     if (L && !ac.emerg) {
-      const slow = Math.max(160, (ac.perf.vapp || 135) + 15);
+      const slow = AMAN_ON ? Math.max(150, (ac.perf.vapp || 135) + 10) : Math.max(160, (ac.perf.vapp || 135) + 15);
       // (only if slowing right down can't make the gap up before the approach speed at 4 miles)
       const absorb = Math.max(0, togo - 4)*3600*(1/slow - 1/(ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 220));
       if (gap < need*0.6 && need - gap > absorb && ac.mode !== 'FINAL' && togo > 15 && aiDue(ac, 'rehold', 2, 4)) { const hf = holdFixFor(ac); if (hf) { ac.aiWhy = `too close behind ${L.cs}: back to the hold`; aiDo('APP', ac, holdCmd(ac, hf)); return true; } }
@@ -1055,10 +1289,11 @@ function stepAI(dt){
   }
 }
 S.listeners.push((ev, ac) => {
-  if (ev === 'landed' && ac) ac.aiTd = S.t;
+  if (ev === 'landed' && ac) { ac.aiTd = S.t;
+    const r = ac.amRel; if (r && r.e > 150 && !ac.gaCount) { const k = clamp((S.t - r.t)/r.e, 0.85, 1.35); S.amK = S.amK ? S.amK*0.7 + k*0.3 : k; } }
   if (ev === 'ga' && ac) ac.aiSlot = null;
   if (ev === 'takeoff' && ac) { (S.aiDep ||= {})[rwyOf(ac.depRwy || depRw(ac)).id] = { t: S.t, wake: ac.perf.wake }; for (const id of rwyCross(rwyOf(ac.depRwy || depRw(ac)))) S.aiDep[id] = S.aiDep[rwyOf(ac.depRwy || depRw(ac)).id]; }
-  if (ev === 'start') { S.aiDep = {}; S.aiOcc = {}; S.aiRun = {}; S.aiAcc = 0; S.aiRoadT = 0; S.aiScore = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
+  if (ev === 'start') { S.aiDep = {}; S.aiOcc = {}; S.amK = 1; S.aiRun = {}; S.aiAcc = 0; S.aiRoadT = 0; S.aiScore = { landed: 0, departed: 0, ga: 0, div: 0, los: 0, infr: 0, incidents: 0, pts: 0 };
     const on = AI_SEATS.filter(k => S.seats[k] === 'AI');
     if (EXERCISES[S.mode] && on.length) sys('Guided exercises are yours alone: the AI controllers sit this one out.');
     else if (on.length) sys(`AI controllers on ${on.map(k => AI_NAME[k]).join(', ')}. You work ${AI_SEATS.filter(k => S.seats[k] !== 'AI').map(k => AI_NAME[k]).join(', ') || 'nothing: watch them'}. Click a flight and Take over to work it yourself.`); }

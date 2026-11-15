@@ -2527,6 +2527,30 @@ function routeAhead(ac, maxD = 0.35){   // points along an aircraft's path, abou
     D += L; last = p; if (D > maxD) break; }
   return out;
 }
+// in my way: some part of o (nose, middle or tail) lies inside the strip my wings sweep along my route over the next
+// 90 m, that is closer to my route than half our two wingspans together. Traffic on a parallel lane far enough off, or
+// beside a junction I turn away from, is not in my way; one on my lane, or on a lane too close to pass, is.
+// (in use where seeded runs showed it clearing the jams without costing anything elsewhere: Dublin's pier lanes. The other
+// airports keep the older rule, anything within 40 degrees of the nose, until it is measured there)
+const GROUND_LANES = typeof AIRPORT !== 'undefined' && ['EIDW'].includes(AIRPORT);
+function inMyWay(ac, o){
+  let L = ac.wayL;
+  if (!L || L.t !== S.t || L.n !== ac.path.pts.length) {
+    const pts = [[ac.x, ac.y]]; let rem = 90*M2NM;
+    for (const p of ac.path.pts) { const l = pts[pts.length - 1], s = dist(...l, ...p);
+      if (s >= rem) { pts.push([l[0] + (p[0] - l[0])*rem/s, l[1] + (p[1] - l[1])*rem/s]); break; } pts.push(p); rem -= s; }
+    L = ac.wayL = { t: S.t, n: ac.path.pts.length, pts };
+  }
+  const W = (spanOf(ac) + spanOf(o))/2, c = acMid(o), h = bodyHdg(o)*D2R, hl = ((o.perf && o.perf.len) || 38)/2*M2NM;
+  const body = [[o.x, o.y], c, [c[0] - Math.sin(h)*hl, c[1] - Math.cos(h)*hl]], P = L.pts;
+  for (const q of body) for (let i = 1; i < P.length; i++) {
+    const a = P[i-1], b = P[i], dx = b[0] - a[0], dy = b[1] - a[1], LL = dx*dx + dy*dy; if (LL < 1e-14) continue;
+    const u = ((q[0] - a[0])*dx + (q[1] - a[1])*dy)/LL;
+    if (i === 1 && u < 0) continue;   // behind my nose
+    if (segDistM(q, a, b) < W) return true;
+  }
+  return false;
+}
 function backPlan(o, ac){
   const tr = o.trail; if (!tr || tr.length < 2 || o.onRwy || o.xing || o.backing || !o.path || o.path.reverse) return null;
   const ahead = routeAhead(ac), pts = []; let L = 0, last = [o.x, o.y];
@@ -2542,7 +2566,7 @@ function backPlan(o, ac){
 function backOff(o, ac){
   const pts = backPlan(o, ac); if (!pts) return false;
   o.bk = { path: o.path, pts, from: [o.x, o.y] }; o.trail = o.trail.slice(0, Math.max(0, o.trail.length - pts.length));
-  setPath(o, pts, 4, ['backedOff', {}], { reverse: true, tug: true, fine: true }); o.backing = ac.cs; o.yieldTo = ac.cs; o.waiting = null;
+  setPath(o, pts, 4, ['backedOff', {}], { reverse: true, tug: true, fine: true }); o.backing = ac.cs; o.yieldTo = ac.cs; o.waiting = null; o.gaveTo = { cs: ac.cs, t: S.t };
   log('plt', `${o.state === 'TOW' ? 'tug with ' + o.cs : o.cs + ', tug'} backing up clear of ${ac.cs}, met nose to nose`, o.state === 'TOW' ? 'TUG' : o.cs, o);
   return true;
 }
@@ -2550,7 +2574,10 @@ function backOff(o, ac){
 // backing, or o is being moved out of its way)
 function faceOff(ac, o){
   if (Math.abs(angDiff(ac.hdg, o.hdg)) < 120 || dist(ac.x, ac.y, o.x, o.y) > 80*M2NM) return false;
-  const order = ac.state === 'TOW' && o.state !== 'TOW' ? [[ac, o], [o, ac]] : [[o, ac], [ac, o]];
+  // one that has backed off for the other lately keeps giving way to it (backs further if need be): the two never take
+  // turns backing off for each other
+  const gave = (a, b) => GROUND_LANES && a.gaveTo && a.gaveTo.cs === b.cs && S.t - a.gaveTo.t < 180;
+  const order = gave(o, ac) ? [[o, ac], [ac, o]] : gave(ac, o) ? [[ac, o], [o, ac]] : ac.state === 'TOW' && o.state !== 'TOW' ? [[ac, o], [o, ac]] : [[o, ac], [ac, o]];
   for (const [y, w] of order) { if (y.state === 'VACATING' && (y.onRwy || y.xing)) continue; if (backOff(y, w)) return true; }
   return false;
 }
@@ -2600,7 +2627,7 @@ function stepGround(ac, dt){
       // never stop on the runway, or partway across one, for traffic waiting at a holding point or holding short, or coming
       // the other way off it: that waits for this one to clear the runway (a crossing that stopped for it would lock both up)
       if ((ac.onRwy || ac.xing) && (o.state === 'HOLDPT' || (o.hsAt && (o.gs || 0) < 1) || (!o.onRwy && (o.waiting === ac.cs || Math.abs(angDiff(o.hdg, ac.hdg)) > 120)))) continue;
-      if (Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40 && !(o.state === 'PARKED' || o.state === 'ONSTAND')) { spd = 0; ac.waiting = o.cs; break; }
+      if (!(o.state === 'PARKED' || o.state === 'ONSTAND') && (GROUND_LANES ? inMyWay(ac, o) : Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40)) { spd = 0; ac.waiting = o.cs; break; }
       // converging (two taxiways meeting at a junction, a tow crossing a lane): straight on for the next 12 s each would
       // pass within a wingspan; the one further from where they meet waits (a tie: right of way, as in a ring)
       if (dd < 70 && (o.gs || 0) > 2 && !o.onRwy && !(o.path && o.path.reverse) && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 100) {
