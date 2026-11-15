@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
 const code = process.argv[2] || 'egaa', mins = +process.argv[3] || 90;
 (async () => {
   const b = await chromium.launch(), p = await b.newPage(), errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto(`http://localhost:8765/dist/${code}/index.html#wx/fair`); await p.waitForTimeout(2500);
+  await p.goto(`http://localhost:8765/dist/${code === 'lxgb' ? '' : code + '/'}index.html#wx/fair`); await p.waitForTimeout(2500);
   const r = await p.evaluate(mins => {
     try { cwGate = () => true; } catch (e) {}
     for (const k of AI_SEATS) S.seats[k] = 'AI'; try { liveBox.checked = false; } catch (e) {}

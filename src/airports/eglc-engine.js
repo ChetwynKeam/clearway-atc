@@ -163,7 +163,7 @@ function pushPath(ac, face){
 }
 // face the way the aircraft will taxi: Alpha joins T at about m 0, so stands 12-15, west of it, face east for Alpha too
 const A_JOIN = mOf(GN.HA.p);
-const pushRec = ac => depHold(ac) === 'M' || mOf(ac.stand.lp) < A_JOIN ? 'east' : 'west';
+function pushRec(ac){ return depHold(ac) === 'M' || mOf(ac.stand.lp) < A_JOIN ? 'east' : 'west'; }
 // exits in the order an arrival meets them: 27 arrivals roll west and take the angled exits E, D or C; 09 arrivals
 // roll east to F, K, L or M
 const VAC_PREFS = st => S.rwy === RW_HI ? ['E', 'D', 'C', 'B', 'A'] : ['F', 'K', 'L', 'M'];

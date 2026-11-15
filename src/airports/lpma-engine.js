@@ -95,7 +95,7 @@ function pushPath(ac, face){
   const tail = face === 'west' ? 1 : -1;                    // facing north-east means the tail goes south-west
   return [st.lp, rm(clamp(lm + tail*40, LANE_LIM[0], LANE_LIM[1]), lo)];
 }
-const pushRec = ac => depHold(ac) === 'B' ? 'east' : 'west';
+function pushRec(ac){ return depHold(ac) === 'B' ? 'east' : 'west'; }
 
 // ═════════════════════════ fixes, STARs, SIDs (AD 2.24.08, 2.24.10, 2.24.12) ═════════════════════════
 for (const [id, p] of Object.entries(LPMA.FIX)) wp(id, p[0], p[1]);

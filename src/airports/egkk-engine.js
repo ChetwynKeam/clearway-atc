@@ -78,12 +78,6 @@ PHON.APRON = 'the apron';
 // departure entries: the holding points at the departure end of the runway, nearest first from where the aircraft is
 const endHolds = rw => Object.keys(HOLDS).filter(k => HOLDS[k].end === rw);
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
-function depHold(ac){
-  const rw = depRw(), from = ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id;
-  const ks = endHolds(rw); let best = ks[0], bl = Infinity;
-  for (const k of ks) { const L = routeLen(from, HOLDS[k].node); if (L < bl) { bl = L; best = k; } }
-  return best;
-}
 // nose-in stands: the tug pushes the tail back onto the taxilane, then 40 m along it the way the tail points
 function laneDir(st, face){
   const tail = face === 'east' ? 270 : 90, lp = st.lp;
@@ -97,20 +91,6 @@ function laneDir(st, face){
   let fwd = null, fd = 999;
   for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
   return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
-}
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
-// face the way the route to the runway starts
-function pushRec(ac){
-  const st = ac.stand, to = HOLDS[depHold(ac)].node;
-  // the face whose push leaves the nose pointing the way the route to the runway sets off (it can't turn round
-  // afterwards): the shorter of the routes that start the way the nose points
-  const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
-  const E = len('east'), W = len('west');
-  if (E < Infinity || W < Infinity) return E <= W ? 'east' : 'west';
-  const r = route(st.node, to);
-  if (!r || r.nodes.length < 2) return 'east';
-  const b = brg(...st.lp, ...GN[r.nodes[1]].p), off = f => Math.abs(angDiff(norm(laneDir(st, f) + 180), b));
-  return off('east') <= off('west') ? 'east' : 'west';
 }
 // exits for the landing runway: those the roll-out direction can turn into, on the terminal side, in the order met
 // (26L: Echo Romeo then Foxtrot Romeo, the rapid exits; 08R: Delta, then Charlie)
@@ -313,10 +293,6 @@ const WX_PRESETS = EGKK.WX_PRESETS;
 // ═════════════════════════ weather rules ═════════════════════════
 // strong south-westerlies over the Weald bring turbulence and windshear on short final for 26L
 const TURB_TABLE = {};
-function turbExcess(w){
-  if (w.vrb || w.spd < 15) return 0;
-  return Math.max(0, Math.max(w.spd, (w.gust || 0)*0.85) - 25);
-}
 // ILS CAT I: 200 ft and RVR 550 m
 const minsOk = (w, rw) => w.vis >= 550 && w.ceil >= 200;
 const sraMinsOk = w => minsOk(w, '26L');
@@ -324,13 +300,6 @@ const sraMinsOk = w => minsOk(w, '26L');
 // ═════════════════════════ engine hooks ═════════════════════════
 // the terminal an airline uses; easyJet spills over to the other terminal when its own is full
 const termOf = ac => EGKK.TERMINAL_OF[ac.cs.slice(0, 3)] || (isBiz(ac) ? 'W' : 'S');
-// any free stand of the terminal that takes it, the smallest that fits first (a narrowbody leaves the widebody stands
-// free), picked at random across the whole terminal
-function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
-  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
-  return best[Math.floor(Math.random()*best.length)] || null;
-}
 const APT = {
   toVis: 125,   // departures continue in low visibility procedures (RVR 125 m)
   lineSay: { b: 'West', r: 'East' },   // taxilane S's side lines are S West and S East (VIA S WEST, VIA S EAST)

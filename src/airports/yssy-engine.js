@@ -108,33 +108,6 @@ const depHolds = rw => [...endHolds(rw), ...intxHolds(rw)];
 const depHoldAs = (ac, hp) => { const rw = depRw(ac), ok = depHolds(rw); if (!HOLDS[hp] || ok.includes(hp)) return hp;
   return ok.find(k => HOLDS[k].ref === HOLDS[hp].ref) || hp; };
 const routeLen = (from, to) => { const r = route(from, to); return r ? pathLen(r.nodes) : Infinity; };
-function depHold(ac){
-  const rw = depRw(), from = ac.stand && !ac.leftStand ? ac.stand.node : nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)).id;
-  const ks = endHolds(rw); let best = ks[0], bl = Infinity;
-  for (const k of ks) { const L = routeLen(from, HOLDS[k].node); if (L < bl) { bl = L; best = k; } }
-  return best;
-}
-function laneDir(st, face){
-  const tail = face === 'east' ? 270 : 90, lp = st.lp;
-  const ways = waysOn(st.node); if (ways.length === 1) return norm(brg(...lp, ...GN[ways[0][0]].p) + 180);
-  let best = null, bd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
-  if (best && bd <= 60) return brg(...lp, ...GN[best].p);
-  let fwd = null, fd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
-  return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
-}
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
-function pushRec(ac){
-  const st = ac.stand, to = HOLDS[depHold(ac)].node;
-  const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
-  const E = len('east'), W = len('west');
-  if (E < Infinity || W < Infinity) return E <= W ? 'east' : 'west';
-  const r = route(st.node, to);
-  if (!r || r.nodes.length < 2) return 'east';
-  const b = brg(...st.lp, ...GN[r.nodes[1]].p), off = f => Math.abs(angDiff(norm(laneDir(st, f) + 180), b));
-  return off('east') <= off('west') ? 'east' : 'west';
-}
 // the side of the runway an arrival vacates to: the side its terminal is on (Terminal 1, the international terminal, is
 // west of 16R/34L; the domestic terminals east), from its bay once it has one
 const TERM_C = {}; for (const s of STANDS) (TERM_C[s.term] ||= []).push(s.p);

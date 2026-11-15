@@ -252,17 +252,6 @@ function depHold(ac){
   for (const k of ks) { const r = rs.get(HOLDS[k].node), L = (r ? pathLen(r.nodes) : Infinity) + (Math.sign(HOLDS[k].off) !== side ? 1.2 : 0); if (L < bl) { bl = L; best = k; } }
   return best;
 }
-function laneDir(st, face){
-  const tail = face === 'east' ? 270 : face === 'west' ? 90 : face === 'north' ? 180 : face === 'south' ? 0 : 90, lp = st.lp;
-  const ways = waysOn(st.node); if (ways.length === 1) return norm(brg(...lp, ...GN[ways[0][0]].p) + 180);
-  let best = null, bd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
-  if (best && bd <= 60) return brg(...lp, ...GN[best].p);
-  let fwd = null, fd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
-  return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
-}
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
 function pushRec(ac){
   const st = ac.stand, h = depHold(ac), to = h && HOLDS[h].node; if (!to) return 'east';
   const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
@@ -561,10 +550,6 @@ const WX_PRESETS = EIDW.WX_PRESETS;
 // ═════════════════════════ weather rules ═════════════════════════
 // Atlantic westerlies: mechanical turbulence and windshear on short final in strong south-westerlies
 const TURB_TABLE = {};
-function turbExcess(w){
-  if (w.vrb || w.spd < 15) return 0;
-  return Math.max(0, Math.max(w.spd, (w.gust || 0)*0.85) - 25);
-}
 const minsOk = (w, rw) => { const I = EIDW.ILS[rw] || EIDW.ILS['28L'], m = EIDW.MINS[I.cat]; return w.vis >= m.vis && w.ceil >= m.ceil; };
 const sraMinsOk = w => minsOk(w, '28L');
 // the Dublin and Wicklow Mountains, 14 NM south: up to 2,890 ft (Kippure), surveillance minimum altitude 3,500 ft

@@ -131,6 +131,7 @@ const SITE = @@SITE@@;
 const SITE_HOST = '{HOST}';
 const GEO = {r(A['geo']).strip()};
 {r('core.js')}
+{r('ground-common.js')}
 {prof}
 const AP_DATA = {ap_data};
 {r('awy-data.js')}

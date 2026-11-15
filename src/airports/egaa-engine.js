@@ -251,16 +251,6 @@ function depHold(ac){
   ks.forEach((k, i) => { const r = rs[i], L = r ? pathLen(r.nodes) : Infinity; if (L < bl) { bl = L; best = k; } });
   return best;
 }
-function laneDir(st, face){
-  const tail = face === 'east' ? 270 : face === 'west' ? 90 : face === 'north' ? 180 : face === 'south' ? 0 : 90, lp = st.lp;
-  const ways = waysOn(st.node); if (ways.length === 1) return norm(brg(...lp, ...GN[ways[0][0]].p) + 180);
-  let best = null, bd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
-  if (best && bd <= 60) return brg(...lp, ...GN[best].p);
-  let fwd = null, fd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
-  return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
-}
 function pushPath(ac, face){
   const st = ac.stand, lp = st.lp, ld = laneDir(st, face), end = add(lp, ld, 40*M2NM);
   // the tail swings round onto the lane: the tug backs it down the stand line, then in an arc onto the lane (not a corner on the lane's edge)
@@ -561,18 +551,12 @@ const WX_PRESETS = EGAA.WX_PRESETS;
 
 // ═════════════════════════ weather rules ═════════════════════════
 const TURB_TABLE = {};
-function turbExcess(w){ if (w.vrb || w.spd < 15) return 0; return Math.max(0, Math.max(w.spd, (w.gust || 0)*0.85) - 25); }
 const minsOk = (w, rw) => { const rnp = rw === '07'; return w.vis >= (rnp ? 800 : 550) && w.ceil >= (rnp ? 250 : 200); };
 const sraMinsOk = w => minsOk(w, '25');
 
 // ═════════════════════════ engine hooks ═════════════════════════
 // an arrival goes to the apron of the airport it lands at, whoever it is flagged as
 const termOf = ac => ac && ac.kind === 'ARR' && ac.rwyId ? (ac.rwyId === '0422' ? 'C' : 'M') : isCity(ac) ? 'C' : 'M';
-function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
-  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
-  return best[Math.floor(Math.random()*best.length)] || null;
-}
 const flowText = c => `Aldergrove ${alderRw()} and City ${cityRw()}`;
 const UN = EGAA.UNITS;
 const APT = {
