@@ -1972,7 +1972,8 @@ function commandRun(str){
     } else if (t === 'DLY' || t === 'DELAY') {
       const r = typeof flowTell === 'function' && flowTell(ac); if (!r) { sys(`${ac.cs} isn't held by a departure stop.`); continue; }
       said.push(r[0]); reads.push(r[1]);
-    } else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
+    } else if (t === 'EAT' && typeof eatCmd === 'function') { const nx = /^\d{4}$/.test(toks[i+1] || '') ? toks[++i] : null; eatCmd(ac, nx, said, reads); }
+    else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
   if (said.length && rbPlan && !snap) rbApply(ac, rbPlan, reads);
@@ -2140,6 +2141,7 @@ function step(dt){
   if (typeof shiftStep === 'function') shiftStep();
   if (typeof teamStep === 'function') teamStep();
   if (typeof cbStep === 'function') cbStep();
+  if (typeof holdStep === 'function') holdStep(dt);
   stepWindShift(); stepReadbacks(); stepSimilarCs(); stepCsErr();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand

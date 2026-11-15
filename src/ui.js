@@ -1243,6 +1243,7 @@ function stripNext(ac){
   if (!ac || aiOwns(ac) || (ac.emerg && !ac.emerg.ack)) return null;
   const n = ac.need || '';
   if (n === 'Request start-up' && ac.state === 'PARKED') return { cmd: 'PUSH', label: 'Push', to: 'push' };
+  if (n === 'Request EAT' || (n === 'Minimum fuel' && ac.mode === 'HOLD' && !ac.eat)) return { cmd: 'EAT', label: 'EAT' };
   if (n === 'Ready to taxi') return { cmd: 'TAXI', label: 'Taxi', to: 'taxi' };
   if (n === 'Request taxi' && ac.kind === 'ARR' && ac.stand && !standHeld(ac)) return { cmd: 'TAXI', label: 'Taxi in', to: 'taxi' };
   if (n === 'Ready for departure' && ac.state === 'HOLDPT') return { cmd: 'LU', label: 'Line up', to: 'rwy' };
