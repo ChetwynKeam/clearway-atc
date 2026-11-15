@@ -786,7 +786,7 @@ function aiDirect(ac, seat){
 // never cleared that would land well before its slot (it would close up on the one ahead)
 // the airports it runs at: those where seeded all-AI runs showed it landing more and losing separation less than the
 // sequencing before it (tools/bench.cjs); elsewhere that sequencing is kept (aiSequenceOld) until it is tuned there
-const AMAN_ON = typeof AIRPORT !== 'undefined' && ['EIDW', 'EGLL', 'EGKK', 'LEMD', 'LPMA', 'LOWI', 'EGLC', 'YSSY'].includes(AIRPORT);
+const AMAN_ON = typeof AIRPORT !== 'undefined' && ['EIDW', 'EGLL', 'EGKK', 'LEMD', 'LPMA', 'LOWI', 'YSSY'].includes(AIRPORT);
 const AMAN_HORIZON = 1200;   // seconds to touchdown: further out an arrival has a slot, but its approach clearance waits
 // the arc fixes of a point merge (Dublin): where APT.aiFloor holds an arrival at the arc's level
 const arcFix = id => !!APT.aiFloor && APT.aiFloor({ kind: 'ARR', route: [id] }) > 0;
@@ -1099,7 +1099,7 @@ function aiApproach(ac){
     // keep the gap to the one ahead: slow down while it closes up, back to the hold if it can't be made up
     const L = appLeader(ac), R = rwyOf(landRw(ac)), gap = L ? eta(ac) - eta(L) : 1e9, need = L ? landGapS(L, ac, R) : 0, togo = estToGo(ac, finOf(ac));
     if (L && !ac.emerg) {
-      const slow = Math.max(150, (ac.perf.vapp || 135) + 10);
+      const slow = AMAN_ON ? Math.max(150, (ac.perf.vapp || 135) + 10) : Math.max(160, (ac.perf.vapp || 135) + 15);
       // (only if slowing right down can't make the gap up before the approach speed at 4 miles)
       const absorb = Math.max(0, togo - 4)*3600*(1/slow - 1/(ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 220));
       if (gap < need*0.6 && need - gap > absorb && ac.mode !== 'FINAL' && togo > 15 && aiDue(ac, 'rehold', 2, 4)) { const hf = holdFixFor(ac); if (hf) { ac.aiWhy = `too close behind ${L.cs}: back to the hold`; aiDo('APP', ac, holdCmd(ac, hf)); return true; } }

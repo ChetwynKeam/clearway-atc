@@ -2530,6 +2530,9 @@ function routeAhead(ac, maxD = 0.35){   // points along an aircraft's path, abou
 // in my way: some part of o (nose, middle or tail) lies inside the strip my wings sweep along my route over the next
 // 90 m, that is closer to my route than half our two wingspans together. Traffic on a parallel lane far enough off, or
 // beside a junction I turn away from, is not in my way; one on my lane, or on a lane too close to pass, is.
+// (in use where seeded runs showed it clearing the jams without costing anything elsewhere: Dublin's pier lanes. The other
+// airports keep the older rule, anything within 40 degrees of the nose, until it is measured there)
+const GROUND_LANES = typeof AIRPORT !== 'undefined' && ['EIDW'].includes(AIRPORT);
 function inMyWay(ac, o){
   let L = ac.wayL;
   if (!L || L.t !== S.t || L.n !== ac.path.pts.length) {
@@ -2573,7 +2576,7 @@ function faceOff(ac, o){
   if (Math.abs(angDiff(ac.hdg, o.hdg)) < 120 || dist(ac.x, ac.y, o.x, o.y) > 80*M2NM) return false;
   // one that has backed off for the other lately keeps giving way to it (backs further if need be): the two never take
   // turns backing off for each other
-  const gave = (a, b) => a.gaveTo && a.gaveTo.cs === b.cs && S.t - a.gaveTo.t < 180;
+  const gave = (a, b) => GROUND_LANES && a.gaveTo && a.gaveTo.cs === b.cs && S.t - a.gaveTo.t < 180;
   const order = gave(o, ac) ? [[o, ac], [ac, o]] : gave(ac, o) ? [[ac, o], [o, ac]] : ac.state === 'TOW' && o.state !== 'TOW' ? [[ac, o], [o, ac]] : [[o, ac], [ac, o]];
   for (const [y, w] of order) { if (y.state === 'VACATING' && (y.onRwy || y.xing)) continue; if (backOff(y, w)) return true; }
   return false;
@@ -2624,7 +2627,7 @@ function stepGround(ac, dt){
       // never stop on the runway, or partway across one, for traffic waiting at a holding point or holding short, or coming
       // the other way off it: that waits for this one to clear the runway (a crossing that stopped for it would lock both up)
       if ((ac.onRwy || ac.xing) && (o.state === 'HOLDPT' || (o.hsAt && (o.gs || 0) < 1) || (!o.onRwy && (o.waiting === ac.cs || Math.abs(angDiff(o.hdg, ac.hdg)) > 120)))) continue;
-      if (!(o.state === 'PARKED' || o.state === 'ONSTAND') && inMyWay(ac, o)) { spd = 0; ac.waiting = o.cs; break; }
+      if (!(o.state === 'PARKED' || o.state === 'ONSTAND') && (GROUND_LANES ? inMyWay(ac, o) : Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40)) { spd = 0; ac.waiting = o.cs; break; }
       // converging (two taxiways meeting at a junction, a tow crossing a lane): straight on for the next 12 s each would
       // pass within a wingspan; the one further from where they meet waits (a tie: right of way, as in a ring)
       if (dd < 70 && (o.gs || 0) > 2 && !o.onRwy && !(o.path && o.path.reverse) && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 100) {
