@@ -2139,6 +2139,7 @@ function step(dt){
   if (typeof nightStep === 'function') nightStep();
   if (typeof shiftStep === 'function') shiftStep();
   if (typeof teamStep === 'function') teamStep();
+  if (typeof cbStep === 'function') cbStep();
   stepWindShift(); stepReadbacks(); stepSimilarCs(); stepCsErr();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand

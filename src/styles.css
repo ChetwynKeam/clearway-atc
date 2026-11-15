@@ -1327,3 +1327,21 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .tc-chip:hover{background:rgba(47,158,106,.15)}
 .tc-in{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line,#ccd)}
 .tc-in input{flex:1;min-width:0;font:inherit;padding:7px 10px;border-radius:6px;border:1px solid var(--line,#ccd);background:transparent;color:inherit}
+/* ── coordination board ── */
+.cb-toasts{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:95;display:flex;flex-direction:column;gap:8px;width:min(460px,94vw)}
+.cb-toast{background:var(--bg,#fff);color:var(--ink,#123);border:1px solid #f0a020;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.4);animation:cbin .25s ease-out;cursor:pointer}
+@keyframes cbin{from{transform:translateY(-12px);opacity:0}to{transform:none;opacity:1}}
+.cb-drawer{position:fixed;right:0;top:52px;bottom:0;width:min(420px,100vw);z-index:85;background:var(--bg,#fff);color:var(--ink,#123);border-left:1px solid var(--line,#ccd);display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.35)}
+.cb-page{display:flex;flex-direction:column;height:100vh;background:var(--bg,#fff);color:var(--ink,#123)}
+.cb-top{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line,#ccd)}.cb-top .grow{flex:1}
+.cb-body{flex:1;overflow:auto;padding:8px 12px}
+.cb-sec{margin-bottom:12px}.cb-sec>.lbl{margin:6px 2px}
+.cb-call{border:1px solid var(--line,#ccd);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:13px}
+.cb-call.ring{border-color:#f0a020;background:rgba(240,160,32,.08)}.cb-call.missed{opacity:.65}
+.cb-call p{margin:4px 0;line-height:1.4}.cb-h{display:flex;gap:8px;align-items:center}.cb-h span{opacity:.6;font-family:var(--font-data,monospace);font-size:12px}
+.cb-ring{color:#c2410c;font-style:normal;font-weight:600;font-size:11px;animation:cbbl 1s infinite}.cb-miss{color:#e5484d;font-style:normal;font-size:11px}
+@keyframes cbbl{50%{opacity:.3}}
+.cb-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cb-opts button{border:1px solid #2f9e6a;background:transparent;color:inherit;border-radius:14px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
+.cb-ans{opacity:.7;font-style:italic}.cb-rels{display:flex;flex-wrap:wrap;gap:6px}
+.cb-rel{font-size:12px;padding:3px 7px;border-radius:5px;border:1px solid var(--line,#ccd)}.cb-rel.ok{border-color:#2f9e6a}.cb-rel.exp{border-color:#e5484d}
