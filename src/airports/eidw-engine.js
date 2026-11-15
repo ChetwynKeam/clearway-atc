@@ -447,11 +447,14 @@ for (const id of Object.keys(EIDW.FIX)) if (/^DW\d/.test(id) && !STAR_FIXES.has(
 if (WP.DW015) WP.DW015.hide = true;
 const RADAR_REF = ARP;
 // the holds: the intermediate fixes' (LAPMO 28L, ABIVU 28R, SUBOF 10L, RAQAR 10R) always; the 16/34 holds (KERAV,
-// SORIN, ULTAG) only while 16/34 is in use: on 10/28 KERAV is just a point on the northern STARs (the point merge arcs
-// do the sequencing), and an arrival held there would sit across the arc traffic
-const RWY16_HOLDS = new Set(['KERAV', 'SORIN', 'ULTAG']);
+// SORIN, ULTAG) while 16/34 is in use. On 28 the point merge arcs do the sequencing and holding is the exception:
+// KERAV and SORIN, where the northern and southern arcs begin, are the contingency holds for a delay longer than the
+// arcs can take up, from 1,000 ft above the arc (FL90 at KERAV over the FL80 arc, FL80 at SORIN over FL70), so a flight
+// held there is clear of the arc traffic below it. ULTAG is on no 28 or 10 arrival.
+const RWY16_HOLDS = new Set(['KERAV', 'SORIN', 'ULTAG']), ARC_HOLD_MIN = { KERAV: 9000, SORIN: 8000 };
 for (const [id, h] of Object.entries(EIDW.HOLDS_AIR)) if (WP[id]) { const v = { inb: Math.round(h.inb), min: h.min, left: h.turn === 'L' };
-  if (RWY16_HOLDS.has(id)) Object.defineProperty(WP[id], 'hold', { enumerable: true, configurable: true, get: () => typeof S !== 'undefined' && /^(16|34)$/.test(S.rwy) ? v : undefined });
+  const arc = ARC_HOLD_MIN[id] ? { ...v, min: ARC_HOLD_MIN[id] } : null;
+  if (RWY16_HOLDS.has(id)) Object.defineProperty(WP[id], 'hold', { enumerable: true, configurable: true, get: () => typeof S === 'undefined' ? undefined : /^(16|34)$/.test(S.rwy) ? v : arc && /^28/.test(S.rwy) ? arc : undefined });
   else WP[id].hold = v; }
 const GATES = Object.keys(EIDW.DIR);
 const grpOf = rw => rw.slice(0, 2);
