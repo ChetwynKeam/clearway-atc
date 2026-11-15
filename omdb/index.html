@@ -17341,7 +17341,16 @@ function teamAnswers(low){
 // landings an hour the airport declares in good weather (its single landing runway, or the pair it lands on)
 const ARR_CAP = { EGLL: 44, EGKK: 30, EIDW: 32, EGCC: 34, EGAA: 20, EGGD: 20, KJFK: 40, OMDB: 40, YSSY: 44, LEMD: 48, LSGG: 28, EGLC: 18, LXGB: 10, LPMA: 12, LOWI: 12 };
 const capHour = () => { let c = ARR_CAP[APT.icao] || 28; if (S.lvpOn || (typeof lvpNeeded === 'function' && lvpNeeded())) c = Math.round(c*0.6); else if (S.wx.gust >= 25 || S.wx.cb) c = Math.round(c*0.85); return c; };
-function demandIn(from, to){ const a = S.sched.filter(f => !f.spawned && f.m*60 >= S.t + from*60 && f.m*60 < S.t + to*60); return { arr: a.filter(f => f.k === 'ARR').length, dep: a.filter(f => f.k !== 'ARR').length }; }
+// flights due in the window (minutes from now): arrivals still to come (not yet on the scope, or in the air by their
+// estimate) and departures by their off-blocks time (parked ones by when they will ask to start, and any still to appear)
+function demandIn(from, to){
+  const t0 = S.t + from*60, t1 = S.t + to*60, inW = t => t >= t0 && t < t1;
+  let arr = S.sched.filter(f => f.k === 'ARR' && !f.spawned && inW(f.m*60)).length;
+  for (const ac of S.acs) if (ac.kind === 'ARR' && ac.airborne && !outOfCtl(ac) && ac.state !== 'DIVERTING') { let e = 600; try { if (typeof eta === 'function') e = eta(ac); } catch (_) {} if (inW(S.t + (isFinite(e) ? e : 600))) arr++; }
+  let dep = S.sched.filter(f => f.k !== 'ARR' && f.k !== 'RES' && !f.spawned && inW(f.m*60)).length;
+  for (const ac of S.acs) if (ac.kind === 'DEP' && !ac.airborne && !outOfCtl(ac)) { const t = ac.state === 'PARKED' && ac.reqAt != null ? ac.reqAt : S.t; if (inW(t)) dep++; }
+  return { arr, dep };
+}
 function demandLine(){
   const h = demandIn(-2, 60), q = [0, 15, 30, 45].map(m => demandIn(m, m + 15).arr), pk = q.indexOf(Math.max(...q));
   return `Next hour: ${h.arr} arrivals and ${h.dep} departures. Busiest between ${hmZ(S.t + pk*900)} and ${hmZ(S.t + pk*900 + 900)} with ${q[pk]} inbound. Landing capacity in this weather is about ${capHour()} an hour.`;
