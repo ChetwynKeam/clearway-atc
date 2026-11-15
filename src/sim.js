@@ -263,10 +263,12 @@ function stepWindShift(){
   if (typeof renderAtis === 'function') renderAtis();
 }
 function wxXwind(){ try { return windComp(S.wx, crsOf(S.rwy)).crossG; } catch (e) { return 0; } }
-const wxSlow = () => (wxLvp() ? 1.5 : 1) * (wxXwind() >= 20 ? 1.15 : 1);
+const lvpFlow = () => typeof lvpNeeded === 'function' ? !!S.lvpOn : wxLvp();
+const wxSlow = () => (lvpFlow() ? 1.5 : 1) * (wxXwind() >= 20 ? 1.15 : 1);
 function wxLines(){
   const L = [];
-  if (wxLvp()) L.push(`Low visibility procedures: arrival and departure gaps about 50% wider, slower taxi, ${APT.lvpNote || 'ILS sensitive areas protected'}.`);
+  if (lvpFlow()) L.push(`Low visibility procedures: arrival and departure gaps about 50% wider, ${APT.lvpNote || 'ILS sensitive areas protected'}.`);
+  if (wxLvp()) L.push('Fog: crews taxi slower.');
   const x = wxXwind(); if (x >= 20) L.push(`Crosswind ${Math.round(x)} kt (gusts) on ${S.rwy}: crews fly slower and the flow slows by about 15%.`);
   return L;
 }
@@ -443,7 +445,8 @@ function csSimilar(a, b){
 let simCsT = 0; const simSaid = new Set();
 function stepSimilarCs(){
   if (S.t - simCsT < 10) return; simCsT = S.t;
-  const on = S.acs.filter(a => a.state !== 'PRE' && !outOfCtl(a) && seatOf(a));
+  // on the frequency: in the air, or moving or holding on the ground (not those still parked at their stands)
+  const on = S.acs.filter(a => a.state !== 'PRE' && !outOfCtl(a) && seatOf(a) && (a.airborne || a.path || a.hsAt || a.onRwy));
   for (const a of on) a.simCs = null;
   for (let i = 0; i < on.length; i++) for (let j = i + 1; j < on.length; j++) {
     const a = on[i], b = on[j]; if (chOf(a) !== chOf(b) || !csSimilar(a.cs, b.cs)) continue;
@@ -1626,7 +1629,8 @@ function commandRun(str){
   // a callsign that was split by a space (CAR 9 H20): join the first words back up when together they name a flight
   for (let n = 3; n >= 2; n--) { if (toks.length >= n) { const j = toks.slice(0, n).join(''); if (!S.acs.some(a => a.cs === toks[0]) && S.acs.some(a => a.cs === j)) { toks.splice(0, n, j); break; } } }
   if (toks.length === 2 && /^(REMOVE|DELETE|DEL)$/.test(toks[0]) && findAc(toks[1])) toks.reverse();   // "REMOVE BAW123" as well as "BAW123 REMOVE"
-  if (typeof vehCommand === 'function' && vehCommand(toks)) return;   // a radio vehicle (OPS, FIRE): vehicles.js
+  if (typeof vehCommand === 'function' && vehCommand(toks)) return;
+  if (typeof lvpCommand === 'function' && lvpCommand(toks)) return;   // LVP / LVP OFF: night.js   // a radio vehicle (OPS, FIRE): vehicles.js
   let ac = findAc(toks[0]);
   if (ac) toks.shift(); else ac = S.sel;
   if (ac && toks[0] === ac.cs.toUpperCase()) toks.shift();   // the box already held the callsign and it was typed again
@@ -1694,7 +1698,7 @@ function commandRun(str){
       const key = v ? APT.rnp(ac, rw, v) : null;
       if (v && !key) { sys(`There is no RNP ${v} approach to runway ${rw}.`); return; }
       const F = FINAL[key || rw];
-      const lim = windLimit(ac, rw) || (appMinsOk(F, rw, S.wx) ? null : (F.rnp ? 'weather below the RNP minima' : APT.minsText));
+      const lim = windLimit(ac, rw) || (appMinsOk(F, rw, S.wx) ? null : (F.rnp ? 'weather below the RNP minima' : APT.minsText)) || (typeof lvoLimit === 'function' ? lvoLimit(ac, F, rw) : null);
       if (lim) {
         atc(ac, `this will be ${F.rnp ? 'the ' + F.spoken : 'a ' + APT.appName + ' runway ' + rw}`);
         // below the circling minima but good enough for RNP: the crew asks for it instead of holding
@@ -1903,6 +1907,7 @@ function commandRun(str){
         if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
       if (ac.deice && ac.deice.st === 'DONE' && S.t > ac.deice.until) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, our de-icing holdover time has expired, we need de-icing again'); ac.deice = { st: 'ASK' }; ac.need = 'Request de-icing'; SC(ac).pts -= 5; return; }
+      { const tl = typeof lvtoLimit === 'function' && lvtoLimit(ac); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl}`); ac.need = 'Unable take-off'; renderSel(); return; } }
       if (S.wx.vis < toVisMin()) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, visibility is below our ${toVisMin().toLocaleString('en-GB')} metre departure minimum`); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(depRw(ac)); if (blk) { sys(`Runway ${depRw(ac)} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
@@ -2035,7 +2040,7 @@ function checkFinalGap(lead, rw){
   let nx = null, nd = 99;
   for (const o of S.acs) if (o !== lead && o.kind === 'ARR' && o.mode === 'FINAL' && o.airborne && landRw(o) === rw) { const d = dist(lead.x, lead.y, o.x, o.y); if (d < nd) { nd = d; nx = o; } }
   if (!nx || nd > 8) return;
-  const need = (typeof WAKE_NM !== 'undefined' && WAKE_NM[(lead.perf.wake || 'M') + (nx.perf.wake || 'M')]) || 3, req = Math.max(2.5, need*(wxLvp() ? 1.5 : 1));
+  const need = (typeof WAKE_NM !== 'undefined' && WAKE_NM[(lead.perf.wake || 'M') + (nx.perf.wake || 'M')]) || 3, req = Math.max(2.5, need*(lvpFlow() ? 1.5 : 1));
   if (nd < req*0.8 && !nx.wkInfr) { nx.wkInfr = true; SC(nx).infr++; SC(nx).pts -= 15; sys(`Spacing on final: ${nx.cs} was ${nd.toFixed(1)} NM behind ${lead.cs} at touchdown (needs ${req.toFixed(1)} NM).`, true); }
   else if (nd >= req && nd < req + 2.5) SC(nx).pts += 2;   // tight but legal: well sequenced
 }
@@ -2131,6 +2136,7 @@ function viaAlt(ac){
 function step(dt){
   S.t += dt;
   if (typeof recStep === 'function') recStep();
+  if (typeof nightStep === 'function') nightStep();
   stepWindShift(); stepReadbacks(); stepSimilarCs(); stepCsErr();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
@@ -2406,6 +2412,8 @@ function stepAir(ac, dt){
       pilot(ac, `low pass complete, climbing ${altShort(APT.gaAlt)}, request vectors for another approach`);
       sys(`${ac.cs} low pass: the gear is down and looks normal from the tower. Bring it round for landing; the fire service will meet it.`, true); if (ac.emerg && ac.emerg.ack) SC(ac).pts += 15; return;
     }
+    // at the decision height (about 1 NM out): below this crew's minima, or no LVP, it goes around
+    if (fin.togo < 1 && ac.dhChk !== (ac.gaCount || 0) + ':' + rw) { ac.dhChk = (ac.gaCount || 0) + ':' + rw; const L = typeof lvoLimit === 'function' && lvoLimit(ac, finOf(ac), rw); if (L) return goAround(ac, 'minima, ' + L); }
     if (fin.togo < 0.4 && !ac.ctl) return goAround(ac, 'no landing clearance');
     if (fin.togo < 0.4 && (S.acs.some(o => o !== ac && onRunway(o, rw)) || (typeof vehOnRwy === 'function' && vehOnRwy(rw)))) return goAround(ac, typeof vehOnRwy === 'function' && vehOnRwy(rw) ? 'vehicle on the runway' : 'runway occupied');
     if (APT.xing && fin.togo < 0.4 && S.xing.st !== 'CLOSED') { SC(ac).incidents++; SC(ac).pts -= 60; sys(`${ac.cs} went around: Winston Churchill Avenue was not closed.`, true); return goAround(ac, 'people on the runway crossing'); }

@@ -77,7 +77,9 @@ const EVENTS = {
     if (S.acs.filter(a => a.airborne && a.kind === 'ARR').length > 5) return false;
     const opts = DIVERTS.filter(d => !S.acs.some(a => a.cs === d.cs)); if (!opts.length) return false;
     const d = opts[Math.floor(Math.random()*opts.length)];
-    const ac = spawnArrival({ cs: d.cs, t: d.t, k: 'ARR', o: d.o, gate: d.gate, m: S.t/60, diverted: true });
+    // an airport without its own diversion list borrows Gibraltar's: their entry gates may not exist here
+    const gates = Object.keys(ARR_ROUTE), gate = ARR_ROUTE[d.gate] ? d.gate : gates[Math.floor(Math.random()*gates.length)];
+    const ac = spawnArrival({ cs: d.cs, t: d.t, k: 'ARR', o: d.o, gate, m: S.t/60, diverted: true });
     ac.need = null;
     declare(ac, 'PAN', `medical diversion, ${MEDICAL[Math.floor(Math.random()*MEDICAL.length)]}, we were en route to ${d.to}`, `request diversion to ${APT.name} and an ambulance on arrival`);
     return true;

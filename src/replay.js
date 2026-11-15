@@ -38,7 +38,8 @@ function gaNote(why){
   if (/landing clearance/.test(w)) return 'It reached the minimum without a landing clearance. Clear it to land by about 2 NM, or earlier with "after the landing / departing traffic, cleared to land" when the runway will be free.';
   if (/occupied|vehicle on the runway|people on/.test(w)) return 'The runway was not free in time. With a departure going between two arrivals, about 6 NM between the arrivals is the usual gap; or hold the departure, or slow the arrival early.';
   if (/too high|unstable/.test(w)) return 'It arrived too high to land. Give the descent earlier: about 300 ft for every mile to go, and keep the speed down to 160 kt by 4 NM.';
-  if (/visual|minimums|weather|wind|shear|turbulence/.test(w)) return 'Weather: the crew could not land safely. Nothing to have done differently, except to brief the next arrivals and consider the other runway or a diversion.';
+  if (/^minima, low visibility procedures/.test(w)) return 'The crew could not fly a CAT II or III approach because low visibility procedures had not been declared. Declare LVP as soon as the RVR drops below 600 m.';
+  if (/visual|minimums|minima|weather|wind|shear|turbulence/.test(w)) return 'Weather: the crew could not land safely. Nothing to have done differently, except to brief the next arrivals and consider the other runway or a diversion.';
   if (!w) return 'A go-around: plan the missed approach traffic so it has somewhere to climb to.';
   return `The crew went around (${w}). Look at what happened in the two minutes before it.`;
 }

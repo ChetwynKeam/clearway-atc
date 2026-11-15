@@ -65,6 +65,7 @@ function draw(){
   if (!ground) drawRadarMap(); else if (!img) drawRockRelief();
   if (S.showProc && sc >= 3) drawProcedures();
   drawAirport();
+  if (typeof drawLvpLights === 'function') drawLvpLights();
   if (typeof drawGFlow === 'function') drawGFlow();
   if (S.preview) drawPreview(S.preview);
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
@@ -718,6 +719,7 @@ function renderAtis(){
     ${(() => { const b = wxBest(); return b ? `<div class="warnline bad">Tailwind on ${S.rwy}: wind favours ${b} <button id="wxChg" class="rops-btn">Change to ${b}</button></div>` : ''; })()}
     <div class="togap" id="toGap"></div>
     ${wxLines().map(l => `<div class="warnline">${esc(l)}</div>`).join('')}
+    ${typeof lvpPanel === 'function' ? lvpPanel() : ''}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the ${APT.turbName || 'Special Procedures'} limit. Expect windshear on final.</div>` : ''}
@@ -1617,11 +1619,11 @@ function renderSysbar(d){
   const c = $('sbClock'); if (!c) return;
   const t = d.toISOString().substr(11, 8); c.innerHTML = `${t.slice(0, 5)}<span class="sb-s">${t.slice(5)}</span><small>Z</small>`;
   const w = S.wx, dep = typeof depRw === 'function' ? depRw() : S.rwy, warn = !!(S.emg && (S.emg.rwyBlock || S.emg.ws));
-  const sig = [S.atis, w.raw, S.rwy, dep, S.atisAlert, warn].join('|');
+  const rvr = S.rvr ? S.rvr.tdz : null, sig = [S.atis, w.raw, S.rwy, dep, S.atisAlert, warn, rvr, S.lvpOn].join('|');
   const a = $('sbAtis');
   if (a.dataset.sig !== sig) { a.dataset.sig = sig;
     const cell = (l, v) => `<span class="sb-c"><i>${l}</i>${v}</span>`;
-    a.innerHTML = `<span class="sb-l">${S.atis}</span>${cell('WIND', `${w.vrb ? 'VRB' : hdg3(w.dir)}/${w.spd}${w.gust ? 'G' + w.gust : ''}`)}${cell(APT.inHg ? 'ALT' : 'QNH', APT.inHg ? w.inhg.toFixed(2) : w.qnh)}${cell('VIS', w.vis >= 9999 ? '10K+' : w.vis)}${cell(dep === S.rwy ? 'RWY' : 'ARR · DEP', dep === S.rwy ? S.rwy : S.rwy + ' · ' + dep)}${S.atisAlert || warn ? `<span class="sb-dot ${S.atisAlert ? 'flash' : ''}" title="${S.atisAlert ? 'The ATIS has changed' : 'Runway closure or windshear: see the ATIS panel'}"></span>` : ''}`;
+    a.innerHTML = `<span class="sb-l">${S.atis}</span>${cell('WIND', `${w.vrb ? 'VRB' : hdg3(w.dir)}/${w.spd}${w.gust ? 'G' + w.gust : ''}`)}${cell(APT.inHg ? 'ALT' : 'QNH', APT.inHg ? w.inhg.toFixed(2) : w.qnh)}${rvr ? cell('RVR', rvr) : cell('VIS', w.vis >= 9999 ? '10K+' : w.vis)}${S.lvpOn ? cell('LVP', 'ON') : ''}${cell(dep === S.rwy ? 'RWY' : 'ARR · DEP', dep === S.rwy ? S.rwy : S.rwy + ' · ' + dep)}${S.atisAlert || warn ? `<span class="sb-dot ${S.atisAlert ? 'flash' : ''}" title="${S.atisAlert ? 'The ATIS has changed' : 'Runway closure or windshear: see the ATIS panel'}"></span>` : ''}`;
     a.classList.toggle('alert', !!S.atisAlert); }
   if (APT.xing) { // Gibraltar: the road across the runway, open or shut from the bar
     let rb = $('sbRoad'); if (!rb) { rb = document.createElement('button'); rb.type = 'button'; rb.id = 'sbRoad'; rb.className = 'sb-road'; rb.title = 'Winston Churchill Avenue: open or close the road'; rb.onclick = () => { const x = $('xBtn'); if (x) x.click(); }; a.after(rb); $('sysbar').classList.add('has-road'); }
