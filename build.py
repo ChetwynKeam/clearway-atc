@@ -156,6 +156,7 @@ const AP_DATA = {ap_data};
 {r('shift.js')}
 {r('team.js')}
 {r('coordbd.js')}
+{r('aman.js')}
 {r('holdfuel.js')}
 {r('equip.js')}
 {r('vfr.js')}
