@@ -1372,6 +1372,17 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .oj-ok{color:#2f9e6a;font-weight:600}.oj-mid{color:#c27c0e;font-weight:600}.oj-bad{color:#e5484d;font-weight:600}
 .oj-mor{margin-top:6px;font-size:12px}
 .mor textarea{background:rgba(127,127,127,.08)!important;color:inherit!important}
+/* team chat and handover on a phone: full screen, a compact header, the message box full width with the buttons under it */
+@media (max-width:760px){
+  .tc-card,.ho-card{width:100%;height:100%;max-height:100%;border-radius:0}
+  .tc-card .db-hd,.ho-card .db-hd{flex-wrap:nowrap;padding:10px 12px}
+  .tc-card .db-hd .db-sum,.ho-card .db-hd .db-sum{flex-basis:auto;font-size:12px}
+  .tc-in{flex-wrap:wrap;padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+  .tc-in input{flex:1 1 100%;font-size:16px;padding:10px 12px;min-height:44px}
+  .tc-in .btn{flex:1 1 0;min-height:44px}
+  .tc-m{max-width:92%}
+  .tc-brief .ho-list{max-height:35vh}
+}
 
 </style>
 </head>
@@ -16927,12 +16938,37 @@ function teamTyped(text){
   const q = TEAM.ask[0], low = t.toLowerCase();
   if (q) { const o = q.opts.find(o => (o.keys || []).some(k => low.includes(k))); if (o) { teamSay('ME', t, true); TEAM.ask.shift(); try { o.do && o.do(); } catch (e) {} if (o.reply) teamLater(o.by || 'SUP', o.reply, 500); if (TEAM.ask[0]) teamLater('SUP', TEAM.ask[0].text, 600); else if (!TEAM.started) { TEAM.started = true; teamLater('OUT', 'That\'s everything from me. Ready to take it?', 500); } teamRenderMsgs(); return; } }
   teamSay('ME', t, true);
-  if (/thank|cheers|ta\b/.test(low)) teamLater('OUT', 'No bother, have a good one.');
-  else if (/weather|fog|wind|front|shower|forecast/.test(low)) teamLater('MET', SHIFT && SHIFT.trend ? SHIFT.trend : 'No significant change expected.');
-  else if (/how many|traffic|demand|busy|flights/.test(low)) teamLater('FMP', demandLine());
-  else if (/taxiway|works|closed|runway|ils/.test(low)) teamLater('OPS', WORKS && WORKS.list.some(w => !w.done) ? WORKS.list.filter(w => !w.done).map(worksLine).join(' ') : 'Nothing closed on the airfield at the moment.');
-  else if (q) teamLater('SUP', `Sorry, which is it? ${q.opts.map(o => o.label).join(', or ')}?`);
+  // every topic the message asks about gets an answer from whoever knows (several topics, several answers)
+  const ans = teamAnswers(low);
+  for (const [k, txt] of ans) teamLater(k, txt);
+  if (ans.length) return;
+  if (q) teamLater('SUP', `Sorry, which is it? ${q.opts.map(o => o.label).join(', or ')}?`);
+  else if (/\b(thank|thanks|cheers|ta)\b/.test(low) && !/\?/.test(t)) teamLater(TEAM.started && !SHIFT.done ? 'OUT' : 'SUP', TEAM.started ? 'No bother, have a good one.' : 'No problem.');
+  else if (/\?|\b(any|what|how|is|are|do|does|will|can)\b/.test(low)) teamLater('SUP', 'Nothing I know of. Ask me about holds, flow and Area, weather, runways, works, traffic, staffing or your break.');
   else teamLater('SUP', 'Noted.');
+}
+
+// the answers to what you ask the team, by topic
+function teamAnswers(low){
+  const out = [], has = re => re.test(low);
+  if (has(/hold|stack|delay|queue/)) {
+    const H = S.acs.filter(a => a.kind === 'ARR' && a.airborne && a.mode === 'HOLD' && !outOfCtl(a));
+    const fx = [...new Set(H.map(a => a.hold && a.hold.name).filter(Boolean))], long = H.reduce((m, a) => Math.max(m, a.holdNow || 0), 0);
+    const h = demandIn(-2, 60), cap = capHour();
+    out.push(['FMP', `${H.length ? `${H.length} holding now${fx.length ? ` (${fx.join(', ')})` : ''}, the longest ${Math.round(long/60)} min.` : 'Nobody holding at the moment.'} Next hour ${h.arr} inbound against about ${cap}: ${h.arr > cap ? `expect holding at the peak, around ${Math.round((h.arr - cap)*60/cap)} min.` : 'it should fit without much holding.'}${TEAM.strat.reg ? ` The regulation is in at ${TEAM.strat.reg} an hour.` : ''}`]);
+  }
+  if (has(/flow|regulat|area|control|centre|center|release|stop/)) {
+    const F = S.flow && S.flow.stop, rel = S.acs.filter(a => a.rel && a.rel.st === 'REQ').length;
+    out.push(['FMP', `${F ? `${F.who} has departures stopped${F.until ? ' until ' + hmZ(F.until) : ''}: ${F.why}.` : 'No departure stops from Area at the moment.'}${S.flow && S.flow.rate ? ` They've said they may stop departures now and then this shift.` : ''}${rel ? ` ${rel} release${rel > 1 ? 's' : ''} waiting on Area.` : ''}${TEAM.strat.reg ? ` Arrivals regulated to ${TEAM.strat.reg} an hour.` : ' No arrival regulation.'}`]);
+  }
+  if (has(/weather|fog|wind|front|shower|forecast|vis|rvr|cloud|metar/)) out.push(['MET', `Now ${S.wx.raw}.${S.rvr ? ` RVR ${S.rvr.tdz} m.` : ''} ${SHIFT && SHIFT.trend ? 'For the shift: ' + SHIFT.trend : 'No significant change expected.'}`]);
+  if (has(/traffic|demand|busy|flights|how many|movements|peak/)) out.push(['FMP', demandLine()]);
+  if (has(/taxiway|works|closed|ils|inspection|runway|airfield/)) out.push(['OPS', WORKS && WORKS.list.some(w => !w.done) ? WORKS.list.filter(w => !w.done).map(worksLine).join(' ') : `Nothing closed on the airfield. ${typeof depRw === 'function' && depRw() !== S.rwy ? `Landing ${S.rwy}, departing ${depRw()}.` : `Runway ${S.rwy} in use.`}`]);
+  if (has(/lvp|low vis/)) out.push(['SUP', S.lvpOn ? 'Low visibility procedures are in force.' : typeof lvpPrep === 'function' && lvpPrep() ? 'Not yet, but the visibility is coming down: be ready to declare them.' : 'No need for LVP at the moment.']);
+  if (has(/staff|split|band|ground|colleague|help/)) { const ai = AI_SEATS.filter(k => S.seats[k] === 'AI'); out.push(['SUP', `${ai.length ? `${ai.map(k => AI_NAME[k]).join(', ')} ${ai.length > 1 ? 'are' : 'is'} with a colleague.` : 'You have every position.'} I'll split one off if it gets busy, and band-box it back when it quietens.`]); }
+  if (has(/break|relief|rest/)) out.push(['SUP', SHIFT && SHIFT.onT != null && SHIFT.end - S.t > 1200 && SHIFT.end - (SHIFT.onT + 7200) > 1200 ? `Your break is due at ${hmZ(SHIFT.onT + 7200 + (SHIFT.putOff || 0)*600)}.` : `No break this shift: your relief takes over at ${SHIFT ? hmZ(SHIFT.end) : 'the end'}.`]);
+  if (has(/emergenc|mayday|pan\b/)) { const em = S.acs.filter(a => a.emerg && !a.emerg.done && !outOfCtl(a)); out.push(['SUP', em.length ? em.map(a => `${a.cs}: ${a.emerg.k}, ${a.emerg.why}`).join('; ') + '.' : 'No emergencies going on.']); }
+  return out;
 }
 
 // ── what the team says
