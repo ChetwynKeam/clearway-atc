@@ -158,9 +158,10 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
       gn(fid, mOf(X), offOf(X)); GN[fid].p = X;
       for (const [x, y] of [[old.a, fid], [fid, old.b]]) { ge(x, y, old.tw); const ne = GE[GE.length - 1]; if (old.bare) ne.bare = old.bare; if (old.k) ne.k = old.k; }   // no copy of the old edge line: each half would carry the whole detour
       for (const [v, ev] of GN[t.node].adj.slice()) if (ev.tw === 'APRON') drop(ev);
-      gn(sid, mOf(t.p), offOf(t.p)); GN[sid].p = t.p; ge(fid, sid, 'APRON'); GE[GE.length - 1].bare = true;
+      // the stand's node is its lead-in point on A, as at every other stand: the push swings the tail onto A and the nose
+      // faces along it, and the taxi out starts there (a node at the stand itself, off the lane, left every push facing the apron)
       const br = brg(...a, ...b), fwd = Math.abs(angDiff(br, H)) < 90 ? br : (br + 180) % 360;
-      t.node = sid; t.lp = X; t.hdg = H; t.h0 = H; t.line = null; t.noLead = false; t.tang = dirv(fwd); t.curved = true;
+      t.node = fid; t.lp = X; t.hdg = H; t.h0 = H; t.line = null; t.noLead = false; t.tang = dirv(fwd); t.curved = true;
       // a straight painted lead-in square off the taxiway, with the turn-in curves from each way along A as short dashed lines
       const T = dirv(fwd), at = (P, d, k) => [P[0] + d[0]*k*M2NM, P[1] + d[1]*k*M2NM];
       t.lane = fid;
@@ -198,6 +199,11 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
     at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
   }
   for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
+// the T junctions where the paint turns both ways but the surveyed centreline only one: a graph fillet each way (core tFillets)
+tFillets({ R: 30 }); kinkLinks();
+// stand 18's lead-in met taxiway L's spur 9 m below where the spur forks (n23: one way down onto L westbound, the other
+// round onto it eastbound), so after the push it could only go east: its lead-in point is the fork
+{ const t = STANDS.find(s => s.id === '18'); if (t && GN.n23 && t.node !== 'n23' && dist(...t.lp, ...GN.n23.p) < 15/1852) { t.node = 'n23'; t.lp = GN.n23.p; } }
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 const TERM_NAME = { M: 'Aldergrove apron', C: 'City apron' };
 // which side of each runway its exits are on (the side the taxiway system is)
