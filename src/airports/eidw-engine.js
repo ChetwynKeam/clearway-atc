@@ -607,7 +607,7 @@ const APT = {
   area: { dep: 40, arr: 70, div: 45 }, roll: [70, RWY_M - 70], defRwy: '28L', defWx: 'west',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the approach minima', reqApp: rw => (EIDW.ILS[rw] || {}).rnp ? 'RNP approach' : 'ILS approach',
   minsLong: 'Visibility is below the minima (ILS CAT III on 10/28: RVR 75 m; CAT I on 16; RNP on 34).',
-  liveName: 'Dublin Airport', liveThin: 22, atisFreq: EIDW.UNITS.atis.freq, turbName: 'Dublin',
+  liveName: 'Dublin Airport', atisFreq: EIDW.UNITS.atis.freq, turbName: 'Dublin',
   sessionHours: Array.from({ length: 17 }, (_, i) => i + 5),   // 0500Z to 2100Z
   // the tower view: both parallel runways and the piers between them (an offset from the south runway's middle, NM)
   view: { app: [0, 0, 70], get twr(){ const c = R0.rm(R0.len*0.66, 850), m = R0.rm(R0.len/2, 0); return [c[0] - m[0], c[1] - m[1], 3.0]; },

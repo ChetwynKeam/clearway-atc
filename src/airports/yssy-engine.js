@@ -365,8 +365,7 @@ const APT = {
   area: { dep: 45, arr: 100, div: 45 }, roll: [70, RWY_M - 70], defRwy: '34R', defWx: 'n',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minima', reqApp: rw => 'ILS approach',
   minsLong: 'Weather is below the ILS minima (200 ft decision altitude and 800 m visibility).',
-  liveName: 'Sydney Airport', liveThin: 50,   // Sydney runs about 60 an hour at its peak: 20 left grey most of its real arrivals in Live now
-  atisFreq: YSSY.UNITS.atis.freq, turbName: 'Sydney',
+  liveName: 'Sydney Airport', atisFreq: YSSY.UNITS.atis.freq, turbName: 'Sydney',
   sessionHours: Array.from({ length: 17 }, (_, i) => i + 19),   // 1900Z to 1100Z next day: 06:00 to 22:00 in Sydney, outside the curfew
   view: { app: [0, 0, 75], twr: [ARP[0] - (R0.rm(RWY_M/2)[0]), ARP[1] - (R0.rm(RWY_M/2)[1]), 3.4],
     gnd: (() => { const c = firstOf('T2') ? firstOf('T2').p : ARP; return [mOf(c), offOf(c), 5200, 4200]; })() },

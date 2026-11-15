@@ -537,7 +537,7 @@ const APT = {
   area: { dep: 45, arr: 80, div: 45 }, roll: [70, RWY_M - 70], defRwy: '27R', defWx: 'west',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the approach minima', reqApp: rw => 'ILS approach',
   minsLong: 'Visibility is below even the ILS CAT III minima (RVR 75 m).',
-  liveName: 'Heathrow Airport', liveThin: 30, atisFreq: EGLL.UNITS.atis.freq, turbName: 'Heathrow',
+  liveName: 'Heathrow Airport', atisFreq: EGLL.UNITS.atis.freq, turbName: 'Heathrow',
   sessionHours: Array.from({ length: 19 }, (_, i) => i + 4),   // 0400Z to 2200Z: 05:00 to 23:00 in London, the night runway either side
   view: { app: [0, 0, 80], twr: [0, -0.4, 4.2], gnd: [mOf(EN(-200, -650)), offOf(EN(-200, -650)), 5200, 3600] },
   minsOk,

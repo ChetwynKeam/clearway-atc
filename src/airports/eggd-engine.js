@@ -377,7 +377,7 @@ const APT = {
   area: { dep: 45, arr: 80, div: 45 }, roll: [70, RWY_M - 70], defRwy: '27', defWx: 'west',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minima', reqApp: rw => 'ILS approach',
   minsLong: 'Weather is below the ILS CAT I minima (200 ft and RVR 550 m).',
-  liveName: 'Bristol Airport', liveThin: 22, atisFreq: EGGD.UNITS.atis.freq, turbName: 'Bristol',
+  liveName: 'Bristol Airport', atisFreq: EGGD.UNITS.atis.freq, turbName: 'Bristol',
   sessionHours: Array.from({ length: 16 }, (_, i) => i + 6),   // 0600Z to 2100Z: 07:00 to 22:00 in Bristol
   view: { app: [0, 0, 60], twr: [0, 0.2, 2.2], gnd: [mOf(EN(-150, 280)), offOf(EN(-150, 280)), 1900, 1100] },
   minsOk,

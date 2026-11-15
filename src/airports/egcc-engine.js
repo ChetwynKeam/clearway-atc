@@ -435,7 +435,7 @@ const APT = {
   area: { dep: 45, arr: 80, div: 45 }, roll: [70, RWY_M - 70], defRwy: '23R', defWx: 'west',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the approach minima', reqApp: rw => (EGCC.ILS[rw] || {}).rnp ? 'RNP approach' : 'ILS approach',
   minsLong: 'Weather is below the ILS CAT I minima (200 ft and RVR 550 m).',
-  liveName: 'Manchester Airport', liveThin: 22, atisFreq: EGCC.UNITS.atis.freq, turbName: 'Manchester',
+  liveName: 'Manchester Airport', atisFreq: EGCC.UNITS.atis.freq, turbName: 'Manchester',
   sessionHours: Array.from({ length: 17 }, (_, i) => i + 5),   // 0500Z to 2100Z: 06:00 to 22:00 in Manchester
   view: { app: [0, 0, 80], twr: [-0.15, -0.1, 3.2], gnd: [mOf(EN(-450, -400)), offOf(EN(-450, -400)), 4200, 3000] },
   minsOk,

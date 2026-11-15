@@ -417,7 +417,7 @@ const APT = {
   area: { dep: 50, arr: 100, div: 50 }, roll: [70, RWY_M - 70], defRwy: '32L', defWx: 'north',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minima', reqApp: rw => 'ILS approach',
   minsLong: 'Weather is below the ILS CAT I minima (200 ft and RVR 550 m).',
-  liveName: 'Madrid-Barajas', liveThin: 24, atisFreq: LEMD.UNITS.atis.freq, turbName: 'Madrid',
+  liveName: 'Madrid-Barajas', atisFreq: LEMD.UNITS.atis.freq, turbName: 'Madrid',
   sessionHours: Array.from({ length: 18 }, (_, i) => i + 4),   // 0400Z to 2100Z: 06:00 to 23:00 in Madrid
   view: { app: [0, 0, 90], twr: [0, 0, 3.6], gnd: [mOf(EN(-250, 2000)), offOf(EN(-250, 2000)), 5200, 6400] },
   minsOk,

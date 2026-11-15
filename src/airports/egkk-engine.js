@@ -341,7 +341,7 @@ const APT = {
   area: { dep: 45, arr: 100, div: 45 }, roll: [70, RWY_M - 70], defRwy: '26L', defWx: 'west',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minima', reqApp: rw => 'ILS approach',
   minsLong: 'Weather is below the ILS CAT I minima (200 ft and RVR 550 m).',
-  liveName: 'Gatwick Airport', liveThin: 22, atisFreq: EGKK.UNITS.atis.freq, turbName: 'Gatwick',
+  liveName: 'Gatwick Airport', atisFreq: EGKK.UNITS.atis.freq, turbName: 'Gatwick',
   sessionHours: Array.from({ length: 17 }, (_, i) => i + 5),   // 0500Z to 2100Z: 06:00 to 22:00 in London
   view: { app: [0, 0, 80], twr: [0, 0.25, 2.4], gnd: [mOf(EN(450, 650)), offOf(EN(450, 650)), 3600, 1500] },
   minsOk,

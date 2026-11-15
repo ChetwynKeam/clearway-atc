@@ -517,7 +517,7 @@ const APT = {
   area: { dep: 45, arr: 60, div: 50 }, roll: [70, RWY_M - 70], defRwy: '30L', defWx: 'west',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the approach minima', reqApp: rw => 'ILS approach',
   minsLong: 'Visibility is below the minima (ILS CAT III on all four runway ends: RVR 50 m).',
-  liveName: 'Dubai International', liveThin: 22, atisFreq: OMDB.UNITS.atis.freq, turbName: 'Dubai',
+  liveName: 'Dubai International', atisFreq: OMDB.UNITS.atis.freq, turbName: 'Dubai',
   sessionHours: Array.from({ length: 24 }, (_, i) => i),
   // the tower view: both runways and the concourses (an offset from the south runway's middle, NM)
   // (the field's middle, between the four runway ends, set left of centre so the flight panel on the right leaves it clear)
