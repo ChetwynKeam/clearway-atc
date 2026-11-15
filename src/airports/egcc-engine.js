@@ -164,46 +164,6 @@ function depHold(ac){
   ks.forEach(k => { const r = rs.get(HOLDS[k].node), L = r ? pathLen(r.nodes) : Infinity; if (L < bl) { bl = L; best = k; } });
   return best;
 }
-// nose-in stands: the tug pushes the tail back onto the taxilane, then 40 m along it the way the tail points
-function laneDir(st, face){
-  const tail = face === 'east' ? 270 : face === 'west' ? 90 : face === 'north' ? 180 : face === 'south' ? 0 : 90, lp = st.lp;
-  const ways = waysOn(st.node); if (ways.length === 1) return norm(brg(...lp, ...GN[ways[0][0]].p) + 180);
-  let best = null, bd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
-  if (best && bd <= 60) return brg(...lp, ...GN[best].p);
-  let fwd = null, fd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
-  return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
-}
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
-// face the way the route to the runway starts
-function pushRec(ac){
-  const st = ac.stand, to = HOLDS[depHold(ac)].node;
-  const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
-  const E = len('east'), W = len('west');
-  if (E < Infinity || W < Infinity) return E <= W ? 'east' : 'west';
-  const r = route(st.node, to);
-  if (!r || r.nodes.length < 2) return 'east';
-  const b = brg(...st.lp, ...GN[r.nodes[1]].p), off = f => Math.abs(angDiff(norm(laneDir(st, f) + 180), b));
-  return off('east') <= off('west') ? 'east' : 'west';
-}
-// exits for a landing runway: those the roll-out direction can turn into, in the order met; on runway 1 the terminal
-// (north-west) side first, then the south side (to runway 2 and the crossings)
-function exitsFor(rw){
-  const R = RWYS_BY_END(rw), up = rw === R.lo, thr = R.thr[rw];
-  const ks = Object.keys(HOLDS).filter(k => { const H = HOLDS[k]; return H.on === R.id && H.dirs.includes(rw) && (up ? H.m > thr + 700 : H.m < thr - 700); });
-  const near = ks.filter(k => Math.sign(HOLDS[k].off) === R.side), far = ks.filter(k => Math.sign(HOLDS[k].off) !== R.side);
-  const order = a => a.sort((x, y) => (HOLDS[x].m - HOLDS[y].m)*(up ? 1 : -1));
-  return [...order(near), ...order(far)];
-}
-// a name the controller says ("VAC B1") to the exit of that taxiway on the aircraft's runway, ahead of it
-function exitFor(ac, name){
-  const rw = ac.app || landRw(ac), R = RWYS_BY_END(rw);
-  if (HOLDS[name] && HOLDS[name].on === (ac.rwyId || R.id)) return name;
-  const m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1;
-  const ks = Object.keys(HOLDS).filter(k => (HOLDS[k].ref === name || HOLDS[k].tw === name) && HOLDS[k].on === R.id && (HOLDS[k].m - m)*dir > 20);
-  return ks.sort((a, b) => (Math.sign(HOLDS[b].off) === R.side) - (Math.sign(HOLDS[a].off) === R.side) || (HOLDS[a].m - HOLDS[b].m)*dir)[0] || null;
-}
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
 // taxiways 23 m (ICAO code E; code F routes for the A380); runways 45 m
@@ -391,10 +351,6 @@ const WX_PRESETS = EGCC.WX_PRESETS;
 // ═════════════════════════ weather rules ═════════════════════════
 // Atlantic westerlies off the Welsh hills and the Pennines bring turbulence and windshear on short final
 const TURB_TABLE = {};
-function turbExcess(w){
-  if (w.vrb || w.spd < 15) return 0;
-  return Math.max(0, Math.max(w.spd, (w.gust || 0)*0.85) - 25);
-}
 // ILS CAT I: 200 ft and RVR 550 m; the RNP to 23L: about 400 ft and 1,500 m
 const minsOk = (w, rw) => { const m = (EGCC.ILS[rw] || EGCC.ILS['23R']).mins; return w.vis >= m.vis && w.ceil >= m.ceil; };
 const sraMinsOk = w => minsOk(w, '23R');
@@ -413,14 +369,6 @@ const PENNINES = [[53.22, -1.97], [53.40, -1.97], [53.56, -1.99], [53.70, -1.98]
 // the terminal an airline uses (Ryanair, British Airways, Loganair and Aer Lingus at Terminal 3, everyone else at
 // Terminal 2); the two spill over into each other when full
 const termOf = ac => EGCC.TERMINAL_OF[ac.cs.slice(0, 3)] || '2';
-// any free stand of the terminal that takes it, the smallest that fits first (a narrowbody leaves the widebody stands
-// free), picked at random across the whole terminal: Pier 1 (101-112) and Pier 2 get their share, not only the first
-// stands in the list
-function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
-  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
-  return best[Math.floor(Math.random()*best.length)] || null;
-}
 const flowText = c => `land ${CFG[c].land}, depart ${CFG[c].dep}`;
 const APT = {
   dualLanes: true,   // AD 2-EGCC-2-1: TWY D (D9 to D10) and TWY NC are dual function: closed under their stands while in use

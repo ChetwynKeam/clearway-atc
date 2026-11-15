@@ -216,7 +216,7 @@ function pushPath(ac, face){
   const tail = face === 'west' ? 1 : -1;                     // facing east means the tail goes west
   return [st.lp, rm(clamp(lm + tail*40, lim[0], lim[1]), lo)];
 }
-const pushRec = ac => (depHold(ac) === 'E' || depHold(ac) === 'D') ? 'east' : 'west';
+function pushRec(ac){ return (depHold(ac) === 'E' || depHold(ac) === 'D') ? 'east' : 'west'; }
 // turnaround on the turning circles (no 180s on the runway above 17 t MTOM)
 // East pad lies north of the centreline (D1). The aircraft swings left round a 24 m radius circle on the pad
 // and rejoins the centreline facing west. The west pad is the same figure rotated 180° (south side).

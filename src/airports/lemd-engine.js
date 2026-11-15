@@ -157,46 +157,6 @@ function depHold(ac){
   for (const k of ks) { const L = routeLen(from, HOLDS[k].node); if (L < bl) { bl = L; best = k; } }
   return best;
 }
-// nose-in stands: the tug pushes the tail back onto the taxilane, then 40 m along it the way the tail points
-function laneDir(st, face){
-  const tail = face === 'east' ? 270 : 90, lp = st.lp;
-  const ways = waysOn(st.node); if (ways.length === 1) return norm(brg(...lp, ...GN[ways[0][0]].p) + 180);
-  let best = null, bd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
-  if (best && bd <= 60) return brg(...lp, ...GN[best].p);
-  let fwd = null, fd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
-  return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
-}
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
-// face the way the route to the runway starts
-function pushRec(ac){
-  const st = ac.stand, to = HOLDS[depHold(ac)].node;
-  const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
-  const E = len('east'), W = len('west');
-  if (E < Infinity || W < Infinity) return E <= W ? 'east' : 'west';
-  const r = route(st.node, to);
-  if (!r || r.nodes.length < 2) return 'east';
-  const b = brg(...st.lp, ...GN[r.nodes[1]].p), off = f => Math.abs(angDiff(norm(laneDir(st, f) + 180), b));
-  return off('east') <= off('west') ? 'east' : 'west';
-}
-// exits for a landing runway: those the roll-out direction can turn into, on the taxiway side, in the order met
-// (AD 2.20.7 rapid exits: 32L L7, L5, L3, L2; 32R K5, K4; 18L Y5, Y4; 18R Z10, Z7)
-function exitsFor(rw){
-  const R = RWYS_BY_END(rw), up = rw === R.lo, thr = R.thr[rw];
-  const ks = Object.keys(HOLDS).filter(k => { const H = HOLDS[k]; return H.on === R.id && H.dirs.includes(rw) && (up ? H.m > thr + 700 : H.m < thr - 700); });
-  const near = ks.filter(k => Math.sign(HOLDS[k].off) === R.side), far = ks.filter(k => Math.sign(HOLDS[k].off) !== R.side);
-  const order = a => a.sort((x, y) => (HOLDS[x].m - HOLDS[y].m)*(up ? 1 : -1));
-  return [...order(near), ...order(far)];
-}
-// a name the controller says ("VAC L5") to the exit of that taxiway on the aircraft's runway, ahead of it
-function exitFor(ac, name){
-  const rw = ac.app || landRw(ac), R = RWYS_BY_END(rw);
-  if (HOLDS[name] && HOLDS[name].on === (ac.rwyId || R.id)) return name;
-  const m = R.mOf([ac.x, ac.y]), dir = rw === R.lo ? 1 : -1;
-  const ks = Object.keys(HOLDS).filter(k => (HOLDS[k].ref === name || HOLDS[k].tw === name) && HOLDS[k].on === R.id && (HOLDS[k].m - m)*dir > 20);
-  return ks.sort((a, b) => (Math.sign(HOLDS[b].off) === R.side) - (Math.sign(HOLDS[a].off) === R.side) || (HOLDS[a].m - HOLDS[b].m)*dir)[0] || null;
-}
 
 // ═════════════════════════ aerodrome drawing ═════════════════════════
 // taxiways 23 m (ICAO code E/F); runways 60 m
@@ -376,10 +336,6 @@ const WX_PRESETS = LEMD.WX_PRESETS;
 // ═════════════════════════ weather rules ═════════════════════════
 // summer thunderstorms and gusty winter north-westerlies off the Sierra de Guadarrama bring windshear on short final
 const TURB_TABLE = {};
-function turbExcess(w){
-  if (w.vrb || w.spd < 15) return 0;
-  return Math.max(0, Math.max(w.spd, (w.gust || 0)*0.85) - 25);
-}
 // ILS CAT I: 200 ft and RVR 550 m
 const minsOk = (w, rw) => w.vis >= 550 && w.ceil >= 200;
 const sraMinsOk = w => minsOk(w, '32L');
@@ -399,13 +355,6 @@ const GUADARRAMA = [[40.55, -4.45], [40.72, -4.20], [40.84, -3.92], [40.98, -3.7
 // the terminal an airline uses (Iberia, Iberia Express, Air Nostrum and Vueling at T-4; the oneworld long-haul partners at
 // T-4S; everyone else at T-1, T-2 and T-3); Terminals 4 and 4S spill over into each other when full
 const termOf = ac => LEMD.TERMINAL_OF[ac.cs.slice(0, 3)] || '123';
-// any free stand of the terminal that takes it, the smallest that fits first (a narrowbody leaves the widebody stands
-// free), picked at random across the whole terminal
-function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
-  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
-  return best[Math.floor(Math.random()*best.length)] || null;
-}
 const flowText = c => `land ${landRwys(c).join(' and ')}, depart ${depRwysOf(c).join(' and ')}`;
 const APT = {
   get arrAlt(){ return ARR_ALT[cfgNow()]; },   // the flow's STAR and initial approach altitudes

@@ -50,7 +50,7 @@ function pushPath(ac, face){
   const tail = face === 'west' ? 1 : -1;                    // facing west means the tail goes east
   return [st.lp, rm(clamp(lm + tail*40, L[0], L[1]), lo)];
 }
-const pushRec = ac => ac.stand.area === 'north' || depHold(ac) === 'B' ? 'east' : 'west';
+function pushRec(ac){ return ac.stand.area === 'north' || depHold(ac) === 'B' ? 'east' : 'west'; }
 
 // ═════════════════════════ fixes, STARs, SIDs (charts 9-1, 9-2, 11-1) ═════════════════════════
 for (const [id, p] of Object.entries(LOWI.FIX)) wp(id, p[0], p[1], /^WI(5|6|7|8)\d\d$/.test(id) || /^WI00[5-8]$/.test(id) || id === 'WI103' || id === 'WI002' ? { minor: true } : {});

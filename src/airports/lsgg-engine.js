@@ -232,34 +232,6 @@ function depHold(ac){
   ks.forEach((k, i) => { const r = rs[i], L = r ? pathLen(r.nodes) : Infinity; if (L < bl) { bl = L; best = k; } });
   return best;
 }
-// nose-in stands: the tug pushes the tail back onto the taxilane, then 40 m along it the way the tail points
-function laneDir(st, face){
-  const tail = face === 'east' ? 270 : face === 'west' ? 90 : face === 'north' ? 180 : face === 'south' ? 0 : 90, lp = st.lp;
-  // a lead-in at the dead end of its lane: the tail goes back past the end, so the nose faces the only way on
-  const ways = waysOn(st.node); if (ways.length === 1) return norm(brg(...lp, ...GN[ways[0][0]].p) + 180);
-  let best = null, bd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail)); if (d < bd) { bd = d; best = v; } }
-  if (best && bd <= 60) return brg(...lp, ...GN[best].p);
-  // no way on behind it (a lead-in at the end of its lane, or one way along): the tail goes back past the end, so the
-  // nose faces along the way on nearest the side it is to face
-  let fwd = null, fd = 999;
-  for (const [v] of waysOn(st.node)) { const d = Math.abs(angDiff(brg(...lp, ...GN[v].p), tail + 180)); if (d < fd) { fd = d; fwd = v; } }
-  return fwd && fd <= 60 ? norm(brg(...lp, ...GN[fwd].p) + 180) : best ? brg(...lp, ...GN[best].p) : tail;
-}
-function pushPath(ac, face){ const st = ac.stand; return [st.lp, add(st.lp, laneDir(st, face), 40*M2NM)]; }
-// face the way the route to the runway starts
-function pushRec(ac){
-  const st = ac.stand, to = HOLDS[depHold(ac)].node;
-  // the face whose push leaves the nose pointing the way the route to the runway sets off (it can't turn round
-  // afterwards): the shorter of the routes that start the way the nose points
-  const len = f => { const r = route(st.node, to, undefined, norm(laneDir(st, f) + 180)); return r ? pathLen(r.nodes) : Infinity; };
-  const E = len('east'), W = len('west');
-  if (E < Infinity || W < Infinity) return E <= W ? 'east' : 'west';
-  const r = route(st.node, to);
-  if (!r || r.nodes.length < 2) return 'east';
-  const b = brg(...st.lp, ...GN[r.nodes[1]].p), off = f => Math.abs(angDiff(norm(laneDir(st, f) + 180), b));
-  return off('east') <= off('west') ? 'east' : 'west';
-}
 // exits for the landing runway: those the roll-out direction can turn into, on the apron side, in the order met (27:
 // Delta, angled for it, then Foxtrot and Golf; 09: Foxtrot, Delta, Bravo, Alfa), then the south side (Hotel, Juliett).
 // The runway is 3,919 m: an exit 800 m past the threshold is usable.
@@ -475,10 +447,6 @@ const WX_PRESETS = LSGG.WX_PRESETS;
 // ═════════════════════════ weather rules ═════════════════════════
 // the bise (a strong north-easterly funnelled between the Jura and the Alps) brings turbulence and windshear on final 04
 const TURB_TABLE = {};
-function turbExcess(w){
-  if (w.vrb || w.spd < 15) return 0;
-  return Math.max(0, Math.max(w.spd, (w.gust || 0)*0.85) - 25);
-}
 // ILS CAT I: 200 ft and RVR 550 m
 const minsOk = (w, rw) => w.vis >= 550 && w.ceil >= 200;
 const sraMinsOk = w => minsOk(w, '22');
@@ -487,12 +455,6 @@ const sraMinsOk = w => minsOk(w, '22');
 // the area an airline uses (Swiss and the network carriers on the satellites, easyJet on the west apron, business aircraft on
 // the north apron); if it is full, the terminal stands, then the others
 const termOf = ac => LSGG.APRON_OF[ac.cs.slice(0, 3)] || (isBiz(ac) ? 'N' : 'T');
-// any free stand of the area that takes it, the smallest that fits first, picked at random across the area
-function standAt(ac, t){
-  const free = STANDS.filter(s => standFree(s, ac) && s.term === t).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80));
-  const best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 12);
-  return best[Math.floor(Math.random()*best.length)] || null;
-}
 const driveOutNow = ac => typeof driveOut === 'function' && !!driveOut(ac);
 const APT = {
   toVis: 125,   // departures continue in low visibility procedures (RVR 125 m)
