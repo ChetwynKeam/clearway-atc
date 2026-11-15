@@ -115,6 +115,9 @@ const MARS = {};
 for (const s of STANDS) { const m = s.id.match(/^([CE]\d+)[LR]$/); if (m && STANDS.some(o => o.id === m[1])) { (MARS[m[1]] ||= []).push(s.id); } }
 for (const [c, hs] of Object.entries(MARS)) { const C = STANDS.find(o => o.id === c); C.vacant = [...new Set([...(C.vacant || []), ...hs])];
   for (const h of hs) { const H = STANDS.find(o => o.id === h); H.vacant = [...new Set([...(H.vacant || []), c])]; } }
+// shared graph repairs (core): lanes that stop just short of each other joined, junction fillets the paint has but the
+// centreline lacks, corner links past kinks, and slightly-too-sharp corners chamfered
+joinGaps(); tFillets({ R: 30 }); kinkLinks(); smoothKinks();
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 // the paved areas a junction's mapped curves enclose (the stop bar chart shows them paved, omdb_ground.py): pavement, not grass
 const PAVED = (G.paved || []).map(r => r.map(([e, n]) => EN(e, n)));

@@ -199,6 +199,9 @@ STANDS.forEach(s => { if (s.out) s.dash = null; });         // the satellite sta
     at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
   }
   for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
+// shared graph repairs (core): lanes that stop just short of each other joined, junction fillets the paint has but the
+// centreline lacks, corner links past kinks, and slightly-too-sharp corners chamfered
+joinGaps(); tFillets({ R: 30 }); kinkLinks(); smoothKinks();
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 R0.side = -1;                                              // the terminal, the aprons and the main exits are south-east of the runway
 const TERM_NAME = { T: 'Terminal', S: 'Satellites', E: 'East Apron', W: 'West Apron', N: 'North Apron' };

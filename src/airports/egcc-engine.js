@@ -109,6 +109,9 @@ const D9_10 = (() => { const ih = Object.fromEntries(G.ihps), a = GN[ih.D9] && G
     for (let r = 22; r <= 95; r++) { const c = add(t.lp, u, r*M2NM), k = clr(c), sc = k >= 14 ? 1000 - Math.abs(r - r0) : k; if (!best || sc > best.sc) best = { sc, c }; }
     t.p = best.c; t.m = mOf(t.p); t.off = offOf(t.p);
   } }
+// shared graph repairs (core): lanes that stop just short of each other joined, junction fillets the paint has but the
+// centreline lacks, corner links past kinks, and slightly-too-sharp corners chamfered
+joinGaps(); tFillets({ R: 30 }); kinkLinks(); smoothKinks();
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 const TERM_NAME = { '2': 'Terminal 2', '3': 'Terminal 3', R: 'remote stands', C: 'north-west remote stands' };
 // which side of each runway its exits are on (the side the taxiway system is): runway 1 has exits both sides

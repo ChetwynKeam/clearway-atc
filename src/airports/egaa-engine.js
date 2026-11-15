@@ -200,7 +200,7 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
   }
   for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
 // the T junctions where the paint turns both ways but the surveyed centreline only one: a graph fillet each way (core tFillets)
-tFillets({ R: 30 }); kinkLinks();
+tFillets({ R: 30 }); kinkLinks(); smoothKinks();
 // stand 18's lead-in met taxiway L's spur 9 m below where the spur forks (n23: one way down onto L westbound, the other
 // round onto it eastbound), so after the push it could only go east: its lead-in point is the fork
 { const t = STANDS.find(s => s.id === '18'); if (t && GN.n23 && t.node !== 'n23' && dist(...t.lp, ...GN.n23.p) < 15/1852) { t.node = 'n23'; t.lp = GN.n23.p; } }
