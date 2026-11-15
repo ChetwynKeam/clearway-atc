@@ -1961,7 +1961,17 @@ function goAround(ac, why){
 }
 
 // ═════════════════════════ simulation ═════════════════════════
-function windAt(alt){ const w = S.wx; const k = alt < 1500 ? 1 : 1.3; const g = w.gust ? Math.random()*(w.gust-w.spd) : 0; const s = (w.spd + g*0.4)*k; const toward = (w.dir+180)*D2R; return [Math.sin(toward)*s, Math.cos(toward)*s]; }
+// the wind with height. The METAR wind is the surface wind; through the friction layer (the first 2,000 ft) it
+// strengthens by about 40% and veers by up to 25° (backs in the southern hemisphere). Above that the westerlies add a
+// component growing about 1.5 kt per 1,000 ft (60 kt at most; weaker towards the tropics). A gusty wind rises and
+// falls smoothly over tens of seconds instead of jumping every step.
+function windAt(alt){
+  const w = S.wx, h = Math.max(0, alt - (typeof ELEV === 'number' ? ELEV : 0)), fl = clamp(h/2000, 0, 1);
+  const g = w.gust ? (w.gust - w.spd)*(0.5 + 0.3*Math.sin(S.t*0.21) + 0.2*Math.sin(S.t*0.77 + 1.3))*0.4 : 0;
+  const s = (w.spd + g)*(1 + 0.4*fl), from = (w.dir || 0) + (w.vrb ? 0 : (LAT0 >= 0 ? 1 : -1)*25*fl), toward = (from + 180)*D2R;
+  const lat = Math.abs(LAT0), west = clamp((h - 2000)/1000*1.5, 0, 60)*(lat < 20 ? 0.3 : lat < 30 ? 0.6 : 1);
+  return [Math.sin(toward)*s + west, Math.cos(toward)*s];
+}
 // position relative to a final path: nearest segment, track miles to go, cross-track (+ right), segment course
 // fly-by turn anticipation: how far before fix p to start turning towards nx, from the turn radius at 25° bank
 function turnLead(ac, p, nx){
@@ -2102,11 +2112,19 @@ function stepAir(ac, dt){
     else tgtS = dGBR < 14 ? 190 : dGBR < 25 ? 220 : 250;
     tgtS = Math.min(tgtS, Pf.cruise);
   }
+  // high up the airspeed is limited by Mach (about 0.78 for an airliner): the speed of sound falls with temperature
+  if (ac.alt > 20000) { const a = 661.47*Math.sqrt(Math.max(216.65, 288.15 - 0.0019812*ac.alt)/288.15); tgtS = Math.min(tgtS, (Pf.mmo || 0.78)*a/(1 + ac.alt/1000*0.018)); }
   if (ac.alt < 9900 && !ac.ground && !isMil(ac)) tgtS = Math.min(tgtS, 250);   // 250 kt below FL100 (the speed limit crews fly)
   if (APT.inHg && !ac.ground && ac.alt < ELEV + 2500 && dGBR < 4) tgtS = Math.min(tgtS, 200);   // US: 200 kt within 4 NM below 2,500 ft
   if (ac.mode === 'HOLD' && ac.alt < 14000) tgtS = Math.min(tgtS, 230);   // holding speed
   if (fin && fin.togo < 4) tgtS = Math.min(tgtS, Pf.vapp + (fin.togo > 2.5 ? 15 : 0));
-  ac.ias += clamp(tgtS - ac.ias, -1.3*dt, 2.0*dt);
+  // speed and height share the energy: an aircraft can't slow down quickly while descending (idle thrust already) nor
+  // speed up quickly while climbing. Level it slows at about 1.3 kt/s and speeds up at 2 kt/s (less high up, thinner
+  // air); descending at 2,500 ft/min it slows at only a third of that, and climbing hard it accelerates at half.
+  // (Final approach keeps its own profile: gear and flap slow it on the glidepath.)
+  { const vsN = ac.vs || 0, hiF = clamp(1.2 - ac.alt/25000, 0.45, 1);
+    const dec = fin ? 1.3 : 1.3*(1 - 0.65*clamp(-vsN/2500, 0, 1)), acc = 2.0*hiF*(1 - 0.5*clamp(vsN/2500, 0, 1));
+    ac.ias += clamp(tgtS - ac.ias, -dec*dt, acc*dt); }
 
   // ── lateral
   let tgtH = ac.hdg, track = false;
@@ -2195,7 +2213,13 @@ function stepAir(ac, dt){
   let tgtA = ac.tgtAlt ?? ac.alt;
   if (ac.via && ac.app && ac.mode === 'NAV') { const p = viaAlt(ac); if (p != null && p > tgtA) tgtA = Math.min(p, Math.max(ac.alt, tgtA)); }
   if (fin) { const gp = gpAlt(fin.togo, apk(ac)); tgtA = Math.min(ac.alt, gp, ac.cleared ?? 1e9); if (ac.alt > gp + 40) tgtA = Math.min(ac.alt, Math.max(gp, gpCeil(fin.togo, apk(ac)))); }
-  const vmax = tgtA > ac.alt ? Pf.climb*(ac.alt > 10000 ? 0.7 : 1) : (fin ? (ac.alt > gpAlt(fin.togo, apk(ac)) + 150 ? 2000 : 1100) : Pf.desc);
+  // climb falls off with height (thinner air, less thrust): the type's rate low down, about half by FL200, a third by
+  // FL300; and while it is accelerating (to 250 kt, or past FL100 to its climb speed) part of the thrust goes into speed.
+  // Descent at idle is steeper the faster it flies; while slowing down it is held to about 1,500 ft/min.
+  const slowing = ac.ias - tgtS > 10, speeding = tgtS - ac.ias > 10;
+  const climbR = Pf.climb*clamp(1.15 - ac.alt/30000, 0.3, 1.1)*(speeding ? 0.6 : 1);
+  const descR = Math.min(Pf.desc*clamp(0.75 + 0.25*ac.ias/250, 0.7, 1.15), slowing ? 1500 : 1e9);
+  const vmax = tgtA > ac.alt ? climbR : (fin ? (ac.alt > gpAlt(fin.togo, apk(ac)) + 150 ? 2000 : 1100) : descR);
   if (fin && ac.alt <= gpAlt(fin.togo, apk(ac)) + 150) {
     // on the glidepath: feed-forward the 2.8° descent rate, correct the error, flare onto the runway
     const te = tdElev(apk(ac)), gp = fin.togo > 0.05 ? gpAlt(fin.togo, apk(ac)) : te;
