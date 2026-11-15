@@ -78,6 +78,12 @@ const CARGO_STANDS = [['F1', -592, 2424, 'k289'], ['F2', -537, 2391, 'k290'], ['
   ['C1', -1488, 2480, 'n219'], ['C2', -1489, 2436, 'n230'], ['C3', -1489, 2393, 'n230'], ['C4', -1447, 2379, 'n230'], ['C5', -1446, 2422, 'n230'], ['C6', -1450, 2459, 'n230'], ['CC', -1467, 2547, 'n219']];
 for (const [term, list] of [['R', HARDSTANDS], ['C', CARGO_STANDS]]) for (const [id, e, n, node] of list) if (GN[node]) { const p = EN(e, n); STANDS.push({ id, term, p, m: mOf(p), off: offOf(p), node, area: 'remote', occ: null, noLead: term === 'C' }); }
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = brg(...s.lp, ...s.p); });
+// the OpenStreetMap parking positions mark where the nose stops; a stand's point is the aircraft's middle (core), and none
+// may leave an aircraft across a taxilane
+standsNoseToMiddle(); standsClearLanes();
+// shared graph repairs (core): lanes that stop just short of each other joined, junction fillets the paint has but the
+// centreline lacks, and corner links past kinks
+joinGaps(); tFillets({ R: 30 }); kinkLinks();
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 // which side of each runway the terminals are on (all of them sit inside the four runways' central area)
 { const c = STANDS.reduce((a, s) => [a[0] + s.p[0]/STANDS.length, a[1] + s.p[1]/STANDS.length], [0, 0]); for (const R of RWY_LIST) R.side = Math.sign(R.offOf(c)); }
@@ -181,8 +187,8 @@ function drawKjfk(){
   // taxiways are already there, so only the drawn chart paves them
   if (!IMG) {
     cx.fillStyle = C.concrete; for (const a of APRONS) { pathP(a.map(([m, o]) => rm(m, o))); cx.fill(); }
-    // the mapped apron outlines did not survive conversion, so the ramp is paved along its taxilanes and gate lead-ins:
-    // the yellow ramp lines then sit on concrete instead of on the grass
+    // the ramp is also paved along its taxilanes and gate lead-ins, where they run past the mapped apron outlines
+    // (tools/osm_aprons.py), so the yellow ramp lines never sit on grass
     cx.strokeStyle = C.concrete; cx.lineWidth = lw(70);
     for (const e of GE) { if (e.tw !== 'APRON') continue; pathP([GN[e.a].p, GN[e.b].p], false); cx.stroke(); }
     cx.lineWidth = lw(48); for (const s of STANDS) { pathP([s.lp, s.p], false); cx.stroke(); }
