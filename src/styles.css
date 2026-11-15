@@ -1298,7 +1298,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .db-marks{position:absolute;left:0;right:0;top:0;height:10px;pointer-events:none}
 .db-m{position:absolute;top:0;width:3px;height:10px;margin-left:-1px;border-radius:1px}
 .db-m.land,.db-m.dep{height:5px;top:5px;width:2px;opacity:.6}
-.db-hd b{order:0}.db-hd .grow{order:1}.db-x{order:2}.db-sum{order:3}
+.db-hd b{order:0}.db-sum{order:1}.db-hd .grow{order:2}.db-x{order:3}
 @media (max-width:760px){.db-sum{flex-basis:100%}.db-body{flex-direction:column}.db-side{width:auto;border-left:0;border-top:1px solid var(--line,#ccd);max-height:42%}.debrief{padding:0}.db-card{height:100%;border-radius:0}}
 /* ── frequency lamps beside the command line ── */
 .cmd .chs{display:flex;gap:6px;align-items:center;margin-right:6px;white-space:nowrap}
@@ -1347,3 +1347,11 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .cb-rel{font-size:12px;padding:3px 7px;border-radius:5px;border:1px solid var(--line,#ccd)}.cb-rel.ok{border-color:#2f9e6a}.cb-rel.exp{border-color:#e5484d}
 .ho-p{padding:14px 16px;margin:0;font-size:14px;line-height:1.5}
 .ho-bar{margin:0 16px 14px;height:8px;border-radius:4px;background:rgba(127,127,127,.2);overflow:hidden}.ho-bar i{display:block;height:100%;width:0;background:#2f9e6a;transition:width .2s}
+/* ── occurrence reports and the assessment ── */
+.mor{padding:12px 16px;display:flex;flex-direction:column;gap:6px;font-size:14px}.mor p{margin:0 0 6px}.mor .lbl{margin-top:8px}
+.mor-o{display:flex;gap:8px;align-items:center}.mor textarea{font:inherit;padding:6px;border-radius:6px;border:1px solid var(--line,#ccd);background:transparent;color:inherit}
+.ojti{margin:4px 12px 10px;padding:8px 10px;border:1px solid var(--line,#ccd);border-radius:8px;font-size:13px}
+.oj-r{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:baseline;padding:4px 0}.oj-r small{opacity:.7;grid-column:1/-1}
+.oj-ok{color:#2f9e6a;font-weight:600}.oj-mid{color:#c27c0e;font-weight:600}.oj-bad{color:#e5484d;font-weight:600}
+.oj-mor{margin-top:6px;font-size:12px}
+.mor textarea{background:rgba(127,127,127,.08)!important;color:inherit!important}

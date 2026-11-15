@@ -151,7 +151,7 @@ function shiftStep(){
   breakStep();
   if (S.t - SHIFT.staffT >= 30) { SHIFT.staffT = S.t; shiftStaff(); }
   if (!SHIFT.warned && SHIFT.end - S.t <= 900) { SHIFT.warned = true; sys(`Your relief arrives at ${hmZ(SHIFT.end)}, in 15 minutes.`); }
-  if (!SHIFT.done && S.t >= SHIFT.end) { SHIFT.done = true; if (typeof TEAM !== 'undefined' && TEAM.people) teamSay('REL', `Hi, ${TEAM.people.REL} here. Ready to take over when you are.`); else sys('Your relief is here: hand the position over.'); for (const k of SHIFT.splits) S.seats[k] = 'ME'; shiftModal(true); }
+  if (!SHIFT.done && S.t >= SHIFT.end) { SHIFT.done = true; emit('shiftend'); if (typeof TEAM !== 'undefined' && TEAM.people) teamSay('REL', `Hi, ${TEAM.people.REL} here. Ready to take over when you are.`); else sys('Your relief is here: hand the position over.'); for (const k of SHIFT.splits) S.seats[k] = 'ME'; shiftModal(true); }
 }
 S.listeners.push(ev => {
   if (ev !== 'start') return;
