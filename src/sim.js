@@ -1955,7 +1955,7 @@ function goAround(ac, why){
   { const F = finOf(ac); ac.missRoute = F && F.missed ? F.missed.slice() : null; ac.appId = null; ac.finI = null; }
   ac.reqExit = null; ac.vacDec = null;
   ac.tgtAlt = ac.cleared = APT.gaAlt; ac.via = false; ac.ctl = false; ac.app = null; ac.gaTurn = false; ac.checked = false; ac.shearChecked = false; ac.warnedCtl = false; ac.spdAssigned = false; ac.route = []; ac.freq = 'RAD';
-  ac.gaRwy = rw; sc.ga++; ac.gaCount = (ac.gaCount||0) + 1;
+  ac.gaRwy = rw; ac.gaWhy = why || null; sc.ga++; ac.gaCount = (ac.gaCount||0) + 1;
   if (why) pilot(ac, `going around, ${why}`);
   ac.need = 'Missed approach';
   if (ac.gaCount >= 2 && why) { // second weather/turbulence go-around: the crew elects to divert
@@ -2036,6 +2036,7 @@ function viaAlt(ac){
 
 function step(dt){
   S.t += dt;
+  if (typeof recStep === 'function') recStep();
   stepWindShift(); stepReadbacks();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
@@ -2096,7 +2097,7 @@ function step(dt){
     if (APT.sepOk && APT.sepOk(a, b, d)) continue;   // independent parallel approaches or departures (Madrid)
     conf.add(a.cs); conf.add(b.cs);
     const key = [a.cs, b.cs].sort().join('|');
-    if (!S.conflicts.has(key)) { S.conflicts.add(key); const mine = x => seatOf(x) && !aiOwns(x), sc = !mine(a) && !mine(b) && (aiOwns(a) || aiOwns(b)) ? S.aiScore : S.score; sc.los++; sc.pts -= 50; sys(`Loss of separation: ${a.cs} and ${b.cs} (${d.toFixed(1)} NM, ${Math.round(Math.abs(a.alt-b.alt))} ft).`, true); }
+    if (!S.conflicts.has(key)) { S.conflicts.add(key); const mine = x => seatOf(x) && !aiOwns(x), sc = !mine(a) && !mine(b) && (aiOwns(a) || aiOwns(b)) ? S.aiScore : S.score; sc.los++; sc.pts -= 50; sys(`Loss of separation: ${a.cs} and ${b.cs} (${d.toFixed(1)} NM, ${Math.round(Math.abs(a.alt-b.alt))} ft).`, true); emit('los', { a, b, d, dz: Math.abs(a.alt-b.alt), ai: sc === S.aiScore }); }
   }
   for (const k of [...S.conflicts]) { const [p,q] = k.split('|'); if (!conf.has(p) || !conf.has(q)) S.conflicts.delete(k); }
   S.conflictSet = conf;

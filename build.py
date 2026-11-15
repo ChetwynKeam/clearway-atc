@@ -142,6 +142,7 @@ const AP_DATA = {ap_data};
 {r('emerg.js')}
 {r('flow.js')}
 {r('career.js')}
+{r('replay.js')}
 {r('ground.js')}
 {veh}
 {r('vehicles.js')}
