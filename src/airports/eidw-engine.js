@@ -166,6 +166,9 @@ for (const s of STANDS) {
   s.hdg = norm(brg(...a, ...Lnose) + 180); s.out = out; s.noLead = false;
   s.line = [a, P0, A, ...arch, nose]; s.lineOk = true;
 }
+// shared graph repairs (core): lanes that stop just short of each other joined, junction fillets the paint has but the
+// centreline lacks, corner links past kinks, and slightly-too-sharp corners chamfered
+joinGaps(); tFillets({ R: 30 }); kinkLinks(); smoothKinks();
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 // which side of each runway the terminals are
 { const civ = STANDS.filter(s => s.area === 'civil'), c = civ.reduce((a, s) => [a[0] + s.p[0]/civ.length, a[1] + s.p[1]/civ.length], [0, 0]); for (const R of RWY_LIST) R.side = Math.sign(R.offOf(c)) || 1; }

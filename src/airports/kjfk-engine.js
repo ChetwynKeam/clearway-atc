@@ -82,8 +82,8 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = brg(...s.lp, ...s.p); });
 // may leave an aircraft across a taxilane
 standsNoseToMiddle(); standsClearLanes();
 // shared graph repairs (core): lanes that stop just short of each other joined, junction fillets the paint has but the
-// centreline lacks, and corner links past kinks
-joinGaps(); tFillets({ R: 30 }); kinkLinks();
+// centreline lacks, corner links past kinks, and slightly-too-sharp corners chamfered
+joinGaps(); tFillets({ R: 30 }); kinkLinks(); smoothKinks();
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 // which side of each runway the terminals are on (all of them sit inside the four runways' central area)
 { const c = STANDS.reduce((a, s) => [a[0] + s.p[0]/STANDS.length, a[1] + s.p[1]/STANDS.length], [0, 0]); for (const R of RWY_LIST) R.side = Math.sign(R.offOf(c)); }

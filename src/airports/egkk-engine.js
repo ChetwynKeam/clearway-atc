@@ -58,6 +58,9 @@ for (const [id, rid] of Object.entries(G.hs)) if (GN[id]) GN[id].p.hs = rid;
 const AREA_OF = { N: 'civil', S: 'civil', R: 'remote', W: 'north' };
 const STANDS = G.gates.map(([id, term, [e, n], node]) => { const p = EN(e, n); return { id, term, p, m: mOf(p), off: offOf(p), node, area: AREA_OF[term], occ: null }; });
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = brg(...s.lp, ...s.p); });
+// shared graph repairs (core): lanes that stop just short of each other joined, junction fillets the paint has but the
+// centreline lacks, corner links past kinks, and slightly-too-sharp corners chamfered
+joinGaps(); tFillets({ R: 30 }); kinkLinks(); smoothKinks();
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 R0.side = 1;                                               // the terminals and every exit used are north of the runway
 const TERM_NAME = { N: 'North Terminal', S: 'South Terminal', R: 'remote stands', W: 'west apron' };

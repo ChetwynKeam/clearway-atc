@@ -233,6 +233,13 @@ function tFillets(opts = {}){
     // between the junction and the fillet's end (a branch that already curves in), the fillet would cusp, so not here
     const legB = h => brg(...GN[h.w].p, ...GN[h.u].p), toJ = q => brg(...q, ...GN[id].p);
     if (Math.abs(angDiff(legB(A), toJ(A.q))) > 60 || Math.abs(angDiff(legB(B), toJ(B.q))) > 60 || Math.abs(angDiff(toJ(A.q), brg(...GN[id].p, ...B.q))) > 150) continue;
+    // the curve must not cross another line (a parallel lane, the through line beyond a bend): it would cut across it
+    { const Q = []; for (let s = 0; s <= 8; s++) { const u = s/8, w = 1 - u; Q.push([w*w*A.q[0] + 2*w*u*GN[id].p[0] + u*u*B.q[0], w*w*A.q[1] + 2*w*u*GN[id].p[1] + u*u*B.q[1]]); }
+      const cr = (o, p, q) => (p[0]-o[0])*(q[1]-o[1]) - (p[1]-o[1])*(q[0]-o[0]), X = (a, b, c, d) => cr(a, b, c)*cr(a, b, d) < 0 && cr(c, d, a)*cr(c, d, b) < 0;
+      // the branch's own line between the junction and the curve's start may be crossed (a branch kinked just before the junction)
+      const own = new Set([id]); { let u = id, w = br; for (let g = 0; g < 40 && w; g++) { own.add(w); if (w === A.w || w === A.u && g) break; const nx = GN[w].adj.filter(([y]) => y !== u); if (nx.length !== 1) break; u = w; w = nx[0][0]; } }
+      const near = GE.filter(e => !isR(e.a) && !isR(e.b) && !(own.has(e.a) && own.has(e.b)) && segDistM(GN[id].p, GN[e.a].p, GN[e.b].p) < 120);
+      if (near.some(e => e !== A.e && e !== B.e && Q.some((q, i) => i && X(Q[i-1], q, GN[e.a].p, GN[e.b].p)))) continue; }
     const na = cut(A, 'fa' + n0), nb = cut(along(id, th, dd), 'fb' + n0);
     const P0 = GN[na].p, P1 = GN[id].p, P2 = GN[nb].p; let prev = na;
     for (let s = 1; s < 8; s++) { const u = s/8, w = 1 - u, q = [w*w*P0[0] + 2*w*u*P1[0] + u*u*P2[0], w*w*P0[1] + 2*w*u*P1[1] + u*u*P2[1]], fid = 'fc' + n0 + '_' + s;
@@ -327,6 +334,33 @@ function joinGaps(maxM = 8){
       GE.splice(GE.indexOf(e), 1); GN[e.a].adj = GN[e.a].adj.filter(([, x]) => x !== e); GN[e.b].adj = GN[e.b].adj.filter(([, x]) => x !== e);
       for (const [x, y] of [[e.a, to], [to, e.b]]) { ge(x, y, e.tw); const ne = GE[GE.length - 1]; for (const k of ['line', 'k', 'gf']) if (e[k] != null) ne[k] = e[k]; } }
     ge(id, to, GN[id].adj[0][1].tw); n++;
+  }
+  return n;
+}
+// the way an aircraft turns into its stand off the lane: along the painted lead-in line where there is one (it often
+// curves, so its start points well away from the straight line to the stop point), else straight at the stop point
+function leadInB(st){
+  const L = st.line;
+  if (L && L.length > 1 && dist(...L[0], ...st.lp) < 5/1852) { let k = 1; while (k < L.length - 1 && dist(...L[0], ...L[k]) < 15/1852) k++; return brg(...L[0], ...L[k]); }
+  return brg(...st.lp, ...st.p);
+}
+// ── sharp corners: a corner in a lane a little sharper than the turn limit (a surveyed centreline with its curve cut
+// short, 115 to 145 degrees) is chamfered: the corner node goes and its two legs are joined by a short straight cut
+// across it, so each turn is about half. Holding points, stands and runway entries are left alone. Returns the count.
+function smoothKinks(opts = {}){
+  const M = 1/1852, isR = id => id[0] === 'R', fixed = new Set(Object.values(HOLDS).map(h => h.node)); for (const t of STANDS) fixed.add(t.node);
+  let n = 0;
+  for (const x of Object.keys(GN)) {
+    if (isR(x) || fixed.has(x) || !GN[x]) continue; const ws = GN[x].adj;
+    if (ws.length !== 2 || ws.some(([v, e]) => isR(v) || e.bare || e.len < 0.3*M)) continue;
+    const [[u, eu], [w, ew]] = ws, t = Math.abs(angDiff(brg(...GN[u].p, ...GN[x].p), brg(...GN[x].p, ...GN[w].p)));
+    if (t <= TURN_MAX || t > (opts.max || 145)) continue;
+    const d = Math.min(12*M, eu.len*0.45, ew.len*0.45), P = GN[x].p, at = (q, k) => [P[0] + (GN[q].p[0] - P[0])*k, P[1] + (GN[q].p[1] - P[1])*k];
+    const a = 'sk' + n + 'a', b = 'sk' + n + 'b';
+    for (const [id, q, e] of [[a, at(u, d/eu.len), eu], [b, at(w, d/ew.len), ew]]) { TAXI_MEMO.clear(); GN[id] = { id, m: typeof mOf === 'function' ? mOf(q) : 0, off: typeof offOf === 'function' ? offOf(q) : 0, p: q, adj: [] }; }
+    for (const e of [eu, ew]) { GE.splice(GE.indexOf(e), 1); for (const id of [e.a, e.b]) GN[id].adj = GN[id].adj.filter(([, z]) => z !== e); }
+    delete GN[x];
+    ge(u, a, eu.tw); ge(a, b, eu.tw); ge(b, w, ew.tw); n++;
   }
   return n;
 }

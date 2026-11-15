@@ -94,6 +94,9 @@ STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p);
     at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)/M2NM - 15))*M2NM));
   }
   for (const [t, p] of at) { t.p = p; t.m = mOf(p); t.off = offOf(p); } }
+// shared graph repairs (core): lanes that stop just short of each other joined, junction fillets the paint has but the
+// centreline lacks, corner links past kinks, and slightly-too-sharp corners chamfered
+joinGaps(); tFillets({ R: 30 }); kinkLinks(); smoothKinks();
 const APRONS = G.aprons.map(r => r.map(([e, n]) => inF0(e, n)));
 const TERM_NAME = { '123': 'Terminals 1-2-3', '4': 'Terminal 4', '4S': 'Terminal 4S', R: 'remote stands', C: 'cargo stands' };
 // which side of each runway its exits are on (the side the taxiway system is)

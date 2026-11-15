@@ -68,13 +68,15 @@ function audit(){
   sizes.forEach((n, c) => { if (c === main || (fields.has(c) && n > 30)) return; const mem = ids.filter(i => comp.get(i) === c), st = mem.filter(i => standNodes.has(i)).length;
     add(n === 1 && !st ? 'ORPHAN' : 'ISLAND', mem[0], `${n} nodes cut off from the main network${st ? `, with ${st} stands` : ''}`, GN[mem[0]].p); });
   const deg = id => waysOn(id).filter(([v]) => !isR(v)).length + waysOn(id).filter(([v]) => isR(v)).length;
-  const ends = ids.filter(id => !isR(id) && deg(id) === 1 && !standNodes.has(id) && !holdNodes.has(id));
+  const ends = ids.filter(id => !isR(id) && deg(id) === 1 && !standNodes.has(id) && !holdNodes.has(id) && !GN[id].adj.some(([v]) => isR(v)));   // a runway entry's end is joined to the runway
   for (const id of ends) add('DEADEND', id, `lane ends at ${id}`, GN[id].p);
   // kinks: a node joining two legs at a turn sharper than the turn limit can't be passed either way
   for (const id of ids) { if (isR(id)) continue; const ws = GN[id].adj.filter(([v, e]) => !e.bare && e.len > 0.3/M && !isR(v));
     if (ws.length !== 2 || GN[id].adj.some(([v]) => isR(v)) || standNodes.has(id) || holdNodes.has(id)) continue;
     const t = Math.abs(angDiff(brg(...GN[ws[0][0]].p, ...GN[id].p), brg(...GN[id].p, ...GN[ws[1][0]].p)));
     const by = new Set(ws.map(([v]) => v)); if (ws.some(([v]) => GN[v].adj.some(([x, e]) => e.fil && (by.has(x) || x === id || GN[x].adj.some(([y]) => by.has(y)))))) continue;   // bypassed by a corner link
+    if (t > 145 && dist(...GN[ws[0][0]].p, ...GN[ws[1][0]].p)*M < 30) continue;
+    if (id[0] === 'x' && ws[0][1].tw !== ws[1][1].tw) continue;   // two runway entries from either side meeting on the centreline: not a way across   // the tip of a V-shaped stub (a dead-end pad): nothing to pass
     if (t > TURN_MAX) add('KINK', id, `${Math.round(t)}° kink at ${id} on ${ws[0][1].tw}/${ws[1][1].tw}: can't be passed`, GN[id].p); }
   // near-miss: a dead end close to another node or edge it isn't joined to
   const near2 = (a, b) => { const seen = new Set([a]); let fr = [a]; for (let k = 0; k < 6; k++) { const nx = []; for (const u of fr) for (const [v] of GN[u].adj) if (!seen.has(v)) { if (v === b) return true; seen.add(v); nx.push(v); } fr = nx; } return false; };
@@ -92,6 +94,10 @@ function audit(){
       if (cr(A.a, A.b, B.a)*cr(A.a, A.b, B.b) < 0 && cr(B.a, B.b, A.a)*cr(B.a, B.b, A.b) < 0) {
         // a lane into a stand crossing another stand's lead-in is the stand area, not a taxiway fault
         if ((ea.fil || eb.fil) && ea.tw === eb.tw) continue;
+        // the turn-off curves of one junction cross each other (as painted): both lines lead into the same junction
+        { const hop = (n0, j) => { const seen = new Set([n0]); let fr = [n0]; for (let k = 0; k < 8; k++) { if (seen.has(j)) return true; const nx = []; for (const u of fr) for (const [v] of GN[u].adj) if (!seen.has(v)) { seen.add(v); nx.push(v); } fr = nx; } return seen.has(j); };
+          const X = A.a, js = ids.filter(j => !isR(j) && GN[j].adj.length >= 3 && dist(...GN[j].p, ...X)*M < 90);
+          if (js.some(j => (hop(ea.a, j) || hop(ea.b, j)) && (hop(eb.a, j) || hop(eb.b, j)))) continue; }
         if ([ea.a, ea.b, eb.a, eb.b].some(n => standNodes.has(n)) && (ea.tw === eb.tw || /APRON|^$/.test(ea.tw + '') || /APRON/.test(eb.tw + ''))) continue;
         const k = [ea.tw, eb.tw].sort().join('×'); const key = k + Math.round(A.a[0]*M/50) + ',' + Math.round(A.a[1]*M/50); if (xs.has(key)) continue; xs.add(key);
         add('XCROSS', `${ea.tw}/${eb.tw}`, `${ea.tw || '?'} (${ea.a}-${ea.b}) crosses ${eb.tw || '?'} (${eb.a}-${eb.b}) with no junction`, A.a); } } }
@@ -155,14 +161,15 @@ function audit(){
     for (const k of ex) { const H = HOLDS[k], face = brg(...GN[H.rwy].p, ...GN[H.node].p);
       const m = routesFrom(H.node, dests.map(s => s.node), face); let n = 0;
       for (const s of dests) { const r = m.get(s.node); if (!r) continue; n++;
-        const lead = s.lp && dist(...s.lp, ...s.p) > 5/M ? brg(...s.lp, ...s.p) : null, nn = r.nodes, last = nn.length > 1 ? brg(...GN[nn[nn.length-2]].p, ...GN[nn[nn.length-1]].p) : null;
-        const ok = lead == null || last == null || s.out || Math.abs(angDiff(last, lead)) <= TURN_MAX;
+        const lead = s.lp && dist(...s.lp, ...s.p) > 5/M ? (typeof leadInB === 'function' ? leadInB(s) : brg(...s.lp, ...s.p)) : null, nn = r.nodes, last = nn.length > 1 ? brg(...GN[nn[nn.length-2]].p, ...GN[nn[nn.length-1]].p) : null;
+        const chord = s.lp ? brg(...s.lp, ...s.p) : null;
+        const ok = lead == null || last == null || s.out || Math.abs(angDiff(last, lead)) <= TURN_MAX || Math.abs(angDiff(last, chord)) <= TURN_MAX;
         const prev = reach.get(s); if (!prev || (ok && !prev.ok)) reach.set(s, { ok, k }); }
       if (!n) add('EXIT_DEAD', k, `exit ${k} off ${rw}: no stand reachable facing forward`, GN[H.node].p); }
     const fs = new Set(ex.map(k => field(HOLDS[k].node)));
     for (const s of dests) { if (!fs.has(field(s.node))) continue; stats.arrPairs++; const r = reach.get(s);
       if (!r) { const m = routesFrom(HOLDS[ex[0]].node, [s.node]); add(m.get(s.node) ? 'ARR_TURN' : 'ARR_NONE', s.id, `runway ${rw} → stand ${s.id}`, s.p); }
-      else if (!r.ok && !ex.some(k => { const H = HOLDS[k]; return route(H.node, s.node, null, brg(...GN[H.rwy].p, ...GN[H.node].p), brg(...s.lp, ...s.p)); })) add('ARR_INTO', s.id, `runway ${rw} → stand ${s.id}: arrives at the lead-in the wrong way`, s.p); } }
+      else if (!r.ok && !ex.some(k => { const H = HOLDS[k]; return route(H.node, s.node, null, brg(...GN[H.rwy].p, ...GN[H.node].p), typeof leadInB === 'function' ? leadInB(s) : brg(...s.lp, ...s.p)) || route(H.node, s.node, null, brg(...GN[H.rwy].p, ...GN[H.node].p), brg(...s.lp, ...s.p)); })) add('ARR_INTO', s.id, `runway ${rw} → stand ${s.id}: arrives at the lead-in the wrong way`, s.p); } }
   const count = {}; for (const i of issues) count[i.t] = (count[i.t] || 0) + 1;
   return { stats, count, issues };
 }

@@ -1224,7 +1224,7 @@ function vacatePath(ac){
   const sharp = p => pts.length > 1 && Math.abs(angDiff(brg(...pts[pts.length-2], ...pts[pts.length-1]), brg(...pts[pts.length-1], ...p))) > 100;
   // the planned route on: leaving the runway along the link, so it can't turn back on itself (see route)
   const vf = vacFace(ex);
-  if (st) { const r = route(H.node, st.node, undefined, vf, brg(...st.lp, ...st.p)) || route(H.node, st.node, undefined, vf) || route(H.node, st.node); if (r) { via = viaOf(r.tws, ex); let D = 0;
+  if (st) { const r = route(H.node, st.node, undefined, vf, leadInB(st)) || route(H.node, st.node, undefined, vf, brg(...st.lp, ...st.p)) || route(H.node, st.node, undefined, vf) || route(H.node, st.node); if (r) { via = viaOf(r.tws, ex); let D = 0;
     for (let i = 1; i < r.nodes.length - 1 && D < VAC_CLEAR; i++) { const n = GN[r.nodes[i]];
       if (n.p.hs || /^R/.test(n.id) || n.id === st.node || sharp(n.p) || (D += dist(...GN[r.nodes[i-1]].p, ...n.p)) > VAC_CLEAR*3) break;
       pts.push(n.p); stop = n.id; }
@@ -1329,7 +1329,7 @@ function taxiIn(ac, st, via, hold){
   else [from, face] = taxiStart(ac);
   // onto a stand: arriving the way its lead-in turns off, if there is such a route
   const qp = APT.queuePen ? queuePen(ac) : null;   // lanes with a queue of stopped aircraft on them cost more: go round by another where there is one
-  const rt0 = pen => (!hold && face != null && route(from, st.node, pen, face, brg(...st.lp, ...st.p))) || route(from, hold ? hold.node : st.node, pen, face)
+  const rt0 = pen => (!hold && face != null && (route(from, st.node, pen, face, leadInB(st)) || route(from, st.node, pen, face, brg(...st.lp, ...st.p)))) || route(from, hold ? hold.node : st.node, pen, face)
     // no way round from where it stopped (it can't stay on the runway's exit): the tight turn, rather than a jam
     || (ac.vacated || rolling ? route(from, hold ? hold.node : st.node, pen) : null);
   const rt = pen => rt0(qp ? (pen ? e => pen(e)*qp(e) : qp) : pen);
