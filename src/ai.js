@@ -341,6 +341,7 @@ function aiGround(ac){
   const n = ac.need || '';
   if (n === 'Request start-up' && ac.state === 'PARKED') {
     if (!aiDue(ac, n, 5, 12)) return;
+    if (typeof dmanHoldStart === 'function' && dmanHoldStart(ac)) return;   // the departure manager's start-up time (dman.js)
     const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
     if (sl && sl.ctot != null && nowMin() < sl.ctot - 20) return;   // its slot is a while off: it waits on stand
     { const fs = flowStop(ac); if (fs && fs.until - S.t > 300) { ac.aiWhy = `departures stopped until ${flowEnd(fs)}`; return; } if (/^departures stopped/.test(ac.aiWhy || '')) ac.aiWhy = ''; }   // a long departure stop: it waits on stand too
@@ -399,6 +400,7 @@ function aiDepart(ac){
   if (needRel(ac)) { const L = ac.rel; if (!L || L.st === 'EXP') { why('release requested'); return aiDo('TWR', ac, 'REL'); } if (L.st !== 'OK') return why('waiting for the release'); if (L.nb && S.t < L.nb - 20) return why('released not before ' + zt(L.nb).slice(0, 5)); }
   const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
   if (sl && sl.ctot != null && nowMin() < sl.ctot - 4) return why('waiting for its slot');
+  { const w = typeof dmanHoldTO === 'function' && dmanHoldTO(ac); if (w) return why(w); }   // the route's departure interval (dman.js)
   if (S.acs.some(o => o.state === 'MISSED' && o.airborne && S.t - (o.gaT || 0) < 150 && dist(o.x, o.y, ac.x, ac.y) < 10)) return why('a go-around climbing out');
   // an arrival passing low over the field, not lined up behind it (Madeira's VOR to 05 circles round before turning in):
   // only one below 3,000 ft above the runway: close in, or flying an approach that brings it round over the field before

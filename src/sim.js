@@ -2000,6 +2000,7 @@ function commandRun(str){
       const r = typeof flowTell === 'function' && flowTell(ac); if (!r) { sys(`${ac.cs} isn't held by a departure stop.`); continue; }
       said.push(r[0]); reads.push(r[1]);
     } else if (t === 'WX' && typeof wxCmd === 'function') { wxCmd(ac, said, reads); }
+    else if (t === 'TSAT' && typeof dmCmd === 'function') dmCmd(ac, said, reads);
     else if (t === 'EAT' && typeof eatCmd === 'function') { const nx = /^\d{4}$/.test(toks[i+1] || '') ? toks[++i] : null; eatCmd(ac, nx, said, reads); }
     else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
@@ -2170,6 +2171,7 @@ function step(dt){
   if (typeof teamStep === 'function') teamStep();
   if (typeof cbStep === 'function') cbStep();
   if (typeof holdStep === 'function') holdStep(dt);
+  if (typeof dmanStep === 'function') dmanStep();
   if (typeof eqStep === 'function') eqStep();
   if (typeof vfrStep === 'function') vfrStep(dt);
   if (typeof ojtiStep === 'function') ojtiStep();
