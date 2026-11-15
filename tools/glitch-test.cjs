@@ -1,6 +1,9 @@
 const {chromium}=require('playwright');
 const code=process.argv[2]||'egll', mins=+process.argv[3]||60, wx=process.argv[4]||'';
-(async()=>{const b=await chromium.launch();const p=await b.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+(async()=>{const b=await chromium.launch();const p=await b.newPage();
+// SEED=n: the same random numbers every run, so two builds can be compared like for like (a change that should not alter
+// behaviour must then give exactly the same results)
+if(process.env.SEED)await p.addInitScript(seed=>{let s=seed>>>0;Math.random=()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}},+process.env.SEED);const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('http://localhost:8765/dist/'+code+'/index.html'+'#wx/'+(wx||'fair'));await p.waitForTimeout(2500);
 const r=await p.evaluate(async function(mins){
  try{cwGate=()=>true}catch(e){}

@@ -66,6 +66,7 @@ function aiDo(seat, ac, cmd){
   const sel = S.sel; aiCtx = { seat, said: false };
   try { command(ac.cs + ' ' + cmd); } catch(e) {}
   const ok = aiCtx.said; aiCtx = null;
+  if (ok) DEPGAP.t = -1;   // an instruction given changes the picture: work the departure gaps out again
   S.sel = sel && S.acs.includes(sel) ? sel : null;
   ac.aiNext = S.t + (ok ? 4 : 15);   // a refused instruction: try again a little later
   return ok;
@@ -143,7 +144,15 @@ const clearS = ac => { const a = arrNear(rwyOf(depRw(ac)), ac); return depSecs(a
 const occS = R => (S.aiOcc && S.aiOcc[R.id]) || (BIG_GROUND ? 75 : 150);
 // departures waiting for a runway (or one crossing it): Approach leaves them a gap (the landing ahead vacates, then
 // the departure lines up and rolls before the next one is close)
+// (asked for every arrival every second and dear, through arrNear: worked out once per runway per second, and again
+// after any instruction)
+let DEPGAP = { t: -1, m: new Map() };
 function depGapS(R){
+  if (DEPGAP.t !== S.t) DEPGAP = { t: S.t, m: new Map() };
+  if (DEPGAP.m.has(R.id)) return DEPGAP.m.get(R.id);
+  const g = depGapCalc(R); DEPGAP.m.set(R.id, g); return g;
+}
+function depGapCalc(R){
   let g = 0;
   for (const o of S.acs) if (o.kind === 'DEP' && o.ground && (['HOLDPT', 'LINEUP', 'LINEDUP'].includes(o.state) || (o.state === 'TAXI' && o.hp && HOLDS[o.hp])) && sameRwy(R, rwyOf(depRw(o)).id)) g = Math.max(g, occS(R) + clearS(o) + 15);
   return g;
@@ -340,13 +349,14 @@ function aiGround(ac){
   if ((n === 'Request tow' || n.startsWith('Tug holding')) && aiDue(ac, n, 4, 10)) return aiDo('GND', ac, 'TOW');
   // waiting a while at a precautionary hold for traffic coming the other way (gflow.js): send it round another way, if
   // there is one that is not much longer
-  if (ac.gfWait && S.t - ac.gfWait.t > 40 && ac.path && (ac.state === 'TAXI' || ac.taxiIn) && aiDue(ac, 'gf' + ac.gfWait.t, 1, 3)) {
-    const c = aiTaxiCmd(ac); if (c !== 'TAXI') { const by = ac.gfWait.cs; aiDo('GND', ac, c); ac.aiWhy = `sent round ${by}`; ac.gfWait = null; return; } }
+  // (a search that finds no other way is not repeated for 20 s: the routes are dear, and nothing changes second to second)
+  if (ac.gfWait && S.t - ac.gfWait.t > 40 && ac.path && (ac.state === 'TAXI' || ac.taxiIn) && S.t >= (ac.aiRoundNext || 0) && aiDue(ac, 'gf' + ac.gfWait.t, 1, 3)) {
+    const c = aiTaxiCmd(ac); if (c !== 'TAXI') { const by = ac.gfWait.cs; aiDo('GND', ac, c); ac.aiWhy = `sent round ${by}`; ac.gfWait = null; return; } ac.aiRoundNext = S.t + 20; }
   // stopped nose to nose with someone coming the other way: send it round another way, if there is one
   if (ac.path && (ac.state === 'TAXI' || ac.taxiIn) && !ac.held && !ac.hsAt && (ac.gs || 0) < 1) {
     if (!ac.aiStop) ac.aiStop = S.t;
     const nose = S.t - ac.aiStop > 15 && S.acs.find(o => o !== ac && o.ground && dist(o.x, o.y, ac.x, ac.y) < 200/1852 && Math.abs(angDiff(o.hdg, ac.hdg)) > 120 && Math.abs(angDiff(ac.hdg, brg(ac.x, ac.y, o.x, o.y))) < 40);
-    if (nose && aiDue(ac, 'round' + ac.aiStop, 1, 4)) { const c = aiTaxiCmd(ac); if (c !== 'TAXI') { aiDo('GND', ac, c); ac.aiWhy = `sent round ${nose.cs}`; } }
+    if (nose && S.t >= (ac.aiRoundNext || 0) && aiDue(ac, 'round' + ac.aiStop, 1, 4)) { const c = aiTaxiCmd(ac); if (c !== 'TAXI') { aiDo('GND', ac, c); ac.aiWhy = `sent round ${nose.cs}`; } else ac.aiRoundNext = S.t + 20; }
   } else ac.aiStop = null;
 }
 
@@ -960,6 +970,9 @@ function project(a, t, lv){
 }
 // the first time (s, within two minutes) a and b come within 3.6 NM and 1,000 ft, or -1; lv: a flying to that level instead
 function conflictWith(a, b, lv){
+  // too far apart to come within 3.6 NM in the two minutes looked ahead, even flying straight at each other: no need to
+  // project them (this check runs for every pair, every second)
+  if (Math.hypot(a.x - b.x, a.y - b.y) > 3.6 + (Math.max(a.gs || 0, a.ias || 0, 300) + Math.max(b.gs || 0, b.ias || 0, 300))*1.3*120/3600) return -1;   // (each taken as at least 300 kt and allowed to speed up 30%)
   for (let t = 0; t <= 120; t += 5) { const [x1, y1, z1] = project(a, t, lv), [x2, y2, z2] = project(b, t); if (Math.hypot(x1 - x2, y1 - y2) < 3.6 && Math.abs(z1 - z2) < 950) return t; }   // 1,000 ft apart, give or take a few feet
   return -1;
 }
