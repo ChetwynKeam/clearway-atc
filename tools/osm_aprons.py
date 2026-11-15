@@ -9,7 +9,7 @@ E = json.load(open(osm))['elements']
 en = lambda la, lo: ((lo - lon0)*60*1852*math.cos(math.radians(lat0)), (la - lat0)*60*1852)
 src = open(path).read()
 # calibration: each runway's pavement ends in the file against the nearest OSM runway end
-rw = json.loads(re.search(r'runways: (\[.*?\]),\n', src).group(1))
+m = re.search(r'"?runways"?: ?(\[\{.*?\}\])', src); rw = json.loads(m.group(1))
 ends = [en(p['lat'], p['lon']) for e in E if e['type'] == 'way' and e.get('tags', {}).get('aeroway') == 'runway' for p in (e['geometry'][0], e['geometry'][-1])]
 dx, dy, n = 0, 0, 0
 for r in rw:
@@ -27,8 +27,9 @@ for e in E:
         for m in e.get('members', []):
             if m.get('role') == 'outer' and 'geometry' in m: rings.append(m['geometry'])
 out = [[[round(x + dx, 1), round(y + dy, 1)] for x, y in (en(p['lat'], p['lon']) for p in g)] for g in rings]
-new = 'aprons: ' + json.dumps(out, separators=(',', ':'))
-src2, k = re.subn(r'aprons: \[\[\[.*?\]\]\]', lambda m: new, src, count=1, flags=re.S)
+q = '"' if '"aprons":' in src else ''
+new = f'{q}aprons{q}:' + ('' if q else ' ') + json.dumps(out, separators=(',', ':'))
+src2, k = re.subn(r'"?aprons"?: ?\[\[\[.*?\]\]\]', lambda m: new, src, count=1, flags=re.S)
 if not k: sys.exit('no aprons array found')
 open(path, 'w').write(src2)
 print(f'{len(out)} apron rings, {sum(len(r) for r in out)} points')

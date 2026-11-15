@@ -1,7 +1,7 @@
 // Ground smoke test: runs an airport with every seat on AI and event traffic, and watches the aircraft on the ground.
 // usage: node tools/ground-smoke.cjs [icao] [minutes]  (server on :8765 as for glitch-test.cjs)
 //  TURNABOUT  a taxiing aircraft swings round more than 120° within 8 s while moving (turning about on a taxiway)
-//  STUCK      a taxiing aircraft, not holding short or waiting, has not moved for 4 minutes
+//  STUCK      a taxiing aircraft, not holding short, waiting or queueing behind another, has not moved for 4 minutes
 // and counts what moved: pushbacks, departures off the ground, arrivals on stand.
 const { chromium } = require('playwright');
 const code = process.argv[2] || 'egaa', mins = +process.argv[3] || 90;
@@ -25,7 +25,8 @@ const code = process.argv[2] || 'egaa', mins = +process.argv[3] || 90;
         if (t.h.length === 8) { const d = Math.abs(((t.h[7][0] - t.h[0][0]) + 540)%360 - 180), moved = Math.hypot(t.h[7][2] - t.h[0][2], t.h[7][3] - t.h[0][3])*1852;
           if (d > 120 && moved > 15 && moved < 120 && !/PULL|PUSH/.test(st)) add('TURNABOUT', a.cs, `${a.kind} ${st} swung ${Math.round(d)}° near ${Math.round(a.x*1852)}, ${Math.round(a.y*1852)} m`); }
         if (Math.hypot(a.x - t.x, a.y - t.y)*1852 < 3) t.still++; else { t.still = 0; t.x = a.x; t.y = a.y; }
-        if (t.still === 240 && !/HOLD|WAIT|LINEUP/.test(st) && !a.need) add('STUCK', a.cs, `${a.kind} ${st} still 4 min at ${Math.round(a.x*1852)}, ${Math.round(a.y*1852)} m`);
+        // queueing behind another aircraft (within 150 m) is not stuck
+        if (t.still === 240 && !/HOLD|WAIT|LINEUP/.test(st) && !a.need && !S.acs.some(o => o !== a && o.ground && Math.hypot(o.x - a.x, o.y - a.y)*1852 < 150)) add('STUCK', a.cs, `${a.kind} ${st} still 4 min at ${Math.round(a.x*1852)}, ${Math.round(a.y*1852)} m`);
       }
     }
     return { G, C, t: S.t, n: S.acs.length };

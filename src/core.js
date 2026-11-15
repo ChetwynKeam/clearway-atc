@@ -84,7 +84,7 @@ function waysOn(u){ const out = []; for (const [v, e] of GN[u].adj) { if (e.len 
 // no hairpins: within HAIR_WIN of route (two junction fillets back to back, a lap round a junction's circle) the heading
 // never swings round by more than HAIR_MAX, whatever the single turns. A state carries the bearings of the legs that
 // started within HAIR_WIN of its node ([bearing, distance back to the leg's start]), the aircraft's own heading first
-const HAIR_WIN = 80/1852, HAIR_MAX = 150;
+const HAIR_WIN = 65/1852, HAIR_MAX = 150;
 const hairOk = (hist, b) => hist.every(([hb]) => Math.abs(angDiff(hb, b)) <= HAIR_MAX);
 function histOn(hist, b, len){ if (len < 0.5/1852) return hist; const out = [[b, len]]; for (const [hb, d] of hist) if (d + len < HAIR_WIN) out.push([hb, d + len]); return out; }
 // a line that doubles back on itself, by the same rule
