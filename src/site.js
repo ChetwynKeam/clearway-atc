@@ -40,8 +40,7 @@ function fromHash(){
   // from the host page's Academy, scenario cards and Live now links: #ex/<key>, #wx/<preset>, #live
   if (h.startsWith('ex/')) { const k = h.slice(3); if (EXERCISES[k]) { history.replaceState(null, '', '#sim'); return startExercise(k); } }
   if (h.startsWith('wx/')) { const k = h.slice(3); history.replaceState(null, '', '#sim'); return WX_PRESETS[k] ? openScenario(k) : go('sim'); }
-  // from the home page's Continue last stint (stint.js, which loads after this)
-  if (h === 'resume') { history.replaceState(null, '', '#sim'); go('sim'); setTimeout(stintContinue); return; }
+  if (h === 'resume') { history.replaceState(null, '', '#sim'); go('sim'); return; }   // an old Continue link: just the simulator
   if (h === 'live') { history.replaceState(null, '', '#sim'); go('sim'); const sel = $('trafficSel'); if (!S.running) { sel.value = 'live'; sel.dispatchEvent(new Event('change')); } return; }
   if (ROUTES.includes(h)) return go(h);
   const el = h && document.getElementById(h);
@@ -944,3 +943,5 @@ document.querySelectorAll('[data-live]').forEach(a => a.addEventListener('click'
   const sel = $('trafficSel'); if (S.running) return;
   sel.value = 'live'; sel.dispatchEvent(new Event('change'));
 }));
+// saved stints are gone: clear any left on this device by older versions
+try { for (const k of Object.keys(localStorage)) if (k.startsWith('cw-stint-')) localStorage.removeItem(k); } catch (_) {}

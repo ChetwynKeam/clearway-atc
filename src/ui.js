@@ -1454,7 +1454,7 @@ function speedLbl(){ const m = document.querySelector('#menuPop [data-click="tgS
 speedLbl();
 $('tgVoice').onclick = e => { S.voice = !S.voice; e.currentTarget.classList.toggle('on', S.voice); e.currentTarget.setAttribute('aria-pressed', S.voice); loadVoices(); if (!S.voice) try { speechSynthesis.cancel(); } catch(_) {} e.currentTarget.textContent = S.voice ? 'Voice · on' : 'Voice'; sys(S.voice ? 'Voice on: pilots and controllers are spoken aloud.' : 'Voice off.'); };
 $('tgSetup').onclick = () => openSetup();
-function openSetup(){ S.paused = true; $('tgPause').textContent = 'Resume'; $('startBtn').textContent = S.running ? 'Apply weather and resume' : 'Open the position'; $('setup').hidden = false; try { renderSlots(); } catch(_) {} if (typeof stintRender === 'function') stintRender(); }
+function openSetup(){ S.paused = true; $('tgPause').textContent = 'Resume'; $('startBtn').textContent = S.running ? 'Apply weather and resume' : 'Open the position'; $('setup').hidden = false; try { renderSlots(); } catch(_) {} }
 
 // touch and mouse on the scope: one finger (or the mouse) drags the map, two fingers pinch to zoom round the point between
 // them and move it as they go. A finger the browser cancels (a notification, an edge swipe, switching apps) is forgotten

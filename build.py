@@ -165,7 +165,6 @@ const AP_DATA = {ap_data};
 {r('radio.js')}
 {r('site.js')}
 {site}
-{r('stint.js')}
 </script>
 '''
     (root/'dist').mkdir(exist_ok=True)

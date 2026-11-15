@@ -77,11 +77,15 @@ function ojtiStep(){
 // the checkout: the competencies an assessor scores, from what happened on your positions
 function ojtiReport(){
   const sc = S.score, hrs = Math.max(0.25, S.t/3600), mv = sc.landed + sc.departed, mors = MOR.list.length, filed = MOR.list.filter(m => m.filed).length;
+  // the flights you were working that should have landed or departed by now (due 15 minutes ago or more), against the
+  // ones that did: so a quiet airport is judged on its own traffic, not a fixed rate
+  const mine = AI_SEATS.filter(k => S.seats[k] !== 'AI'), arrMine = mine.some(k => k === 'APP' || k === 'TWR'), depMine = mine.some(k => k === 'TWR' || k === 'GND' || k === 'DEP');
+  const due = S.sched.filter(f => f.m*60 <= S.t - 900 && f.m >= 0 && (f.k === 'ARR' ? arrMine : depMine)).length, flow = due ? Math.min(1, mv/due) : 1;
   const g = (ok, mid) => ok ? ['Competent', 'ok'] : mid ? ['Developing', 'mid'] : ['Not yet', 'bad'];
   const rows = [
     ['Separation', g(sc.los === 0, sc.los <= 1), sc.los ? `${sc.los} loss${sc.los > 1 ? 'es' : ''} of separation` : 'no losses of separation'],
     ['Runway safety', g(sc.incidents === 0, sc.incidents <= 1), sc.incidents ? `${sc.incidents} incident${sc.incidents > 1 ? 's' : ''}` : 'no runway incidents'],
-    ['Traffic flow', g(mv/hrs >= 10 && sc.ga <= 2, mv/hrs >= 5), `${mv} movements (${Math.round(mv/hrs)} an hour), ${sc.ga} go-around${sc.ga === 1 ? '' : 's'}${sc.div ? `, ${sc.div} diversion${sc.div > 1 ? 's' : ''}` : ''}`],
+    ['Traffic flow', g(flow >= 0.7 && sc.ga <= 2, flow >= 0.4), `${mv} movements of the ${due} due by now${due ? ` (${Math.round(flow*100)}%)` : ''}, ${sc.ga} go-around${sc.ga === 1 ? '' : 's'}${sc.div ? `, ${sc.div} diversion${sc.div > 1 ? 's' : ''}` : ''}`],
     ['Rules and procedures', g(sc.infr === 0, sc.infr <= 2), sc.infr ? `${sc.infr} infringement${sc.infr > 1 ? 's' : ''} (wrong readbacks left, spacing, holding with no EAT…)` : 'none'],
     ['Reporting', g(filed === mors, filed > 0), mors ? `${filed} of ${mors} occurrence report${mors > 1 ? 's' : ''} filed` : 'nothing to report']
   ];
