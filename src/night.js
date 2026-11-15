@@ -113,7 +113,7 @@ function nightStep(){
     if (need && !S.lvpOn) { if (!lvpAiAt) lvpAiAt = S.t + rnd(60, 150); else if (S.t >= lvpAiAt) { lvpAiAt = 0; lvpSet(true); } }
     else if (S.lvpOn && lvpCanCancel()) { if (!lvpAiAt) lvpAiAt = S.t + rnd(120, 300); else if (S.t >= lvpAiAt) { lvpAiAt = 0; lvpSet(false); } }
     else lvpAiAt = 0;
-  } else if (S.t - lvpWarn > 300) {
+  } else if (S.t - lvpWarn > (lvpWarn ? 600 : 0)) {
     if (need && !S.lvpOn) { lvpWarn = S.t; sys(`RVR ${rvrTdz()} m${S.wx.ceil < 200 ? `, cloud base ${S.wx.ceil} ft` : ''}: low visibility procedures are needed. Declare them (LVP, or the button on the ATIS panel) or crews will not fly approaches below CAT I.`, true); }
     else if (S.lvpOn && lvpCanCancel()) { lvpWarn = S.t; sys(`RVR ${rvrTdz() >= 1500 ? 'over 1,500' : rvrTdz()} m: low visibility procedures can be cancelled (LVP OFF), which lets the gaps close up again.`); }
     else if (prep && !need && !S.lvpOn && !S.lvpPrepSaid) { S.lvpPrepSaid = true; sys(`RVR ${rvrTdz()} m and falling: get ready for low visibility procedures (they are needed below 600 m or a cloud base under 200 ft).`); }
