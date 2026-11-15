@@ -1405,6 +1405,22 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .am-l2{display:flex;gap:8px;font-family:var(--font-data);font-size:10.5px;color:var(--ink-2)}.am-l2 .am-dl{font-weight:600}.am-short{color:var(--alert);font-weight:700}
 .am-l1 em.am-em{background:var(--alert);color:#fff}
 .am-body.narrow .am-col{min-width:0;flex-basis:100%}.am-body.narrow .am-axis{width:40px}.am-body.narrow .am-eta{left:33px}.am-body.narrow .am-sta{left:34px}.am-body.narrow .am-del{left:35px}.am-body.narrow .am-ld{left:44px;width:8px}.am-body.narrow .am-lab{left:52px;height:52px;padding-left:18px}.am-body.narrow .am-l2{flex-wrap:wrap;white-space:normal;gap:0 8px}
+/* the departure manager (dman.js) */
+.dm-hd{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:11px;color:var(--dim);margin:2px 0 8px}
+.dm-tog{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink);font-weight:600;margin-right:6px}
+.dm-regs{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--ink-2);background:var(--panel-2);border-radius:6px;padding:6px 8px;margin-bottom:10px}
+.dm-col{margin-bottom:14px}.dm-wrap{overflow-x:auto}
+.dm-t{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--font-data)}
+.dm-t th{text-align:left;font:600 10px var(--font-label);text-transform:uppercase;letter-spacing:.05em;color:var(--dim);padding:4px 5px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+.dm-t td{padding:5px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+.dm-t tr{cursor:pointer}.dm-t tr.sel td{background:var(--accent-soft)}
+.dm-t tr.red td:first-child{box-shadow:inset 4px 0 var(--alert)}.dm-t tr.amber td:first-child{box-shadow:inset 4px 0 var(--amber)}.dm-t tr.blue td:first-child{box-shadow:inset 4px 0 var(--accent)}
+.dm-t tr.red td{background:color-mix(in srgb,var(--alert) 8%,transparent)}.dm-t tr.amber td{background:color-mix(in srgb,var(--amber) 9%,transparent)}
+.dm-t .dim{color:var(--dim)}.dm-t em{font-style:normal;font-size:10px;color:var(--dim);background:var(--panel-3);border-radius:3px;padding:0 4px}.dm-t small{color:var(--dim)}.dm-t i{color:var(--amber);font-style:normal}
+.dm-b{font:600 11px var(--font-body);padding:3px 8px;border-radius:5px;border:1px solid var(--amber);background:var(--amber-soft);color:var(--amber);cursor:pointer}
+.dm-go{color:var(--accent);font-size:11px}
+@media (max-width:520px){.dm-t .dm-st{display:none}.dm-t{font-size:10.5px}.dm-t td,.dm-t th{padding:4px 3px}}
+.dm-key{display:flex;flex-wrap:wrap;gap:4px 12px}.dm-key .am-k::before{display:inline-block!important}
 
 /* Clearway Area Control: the landing page and the extras the area console needs on top of the shared styles */
 html, body { height: 100%; }
