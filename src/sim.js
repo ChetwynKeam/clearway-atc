@@ -2112,6 +2112,8 @@ function stepAir(ac, dt){
     else tgtS = dGBR < 14 ? 190 : dGBR < 25 ? 220 : 250;
     tgtS = Math.min(tgtS, Pf.cruise);
   }
+  // high up the airspeed is limited by Mach (about 0.78 for an airliner): the speed of sound falls with temperature
+  if (ac.alt > 20000) { const a = 661.47*Math.sqrt(Math.max(216.65, 288.15 - 0.0019812*ac.alt)/288.15); tgtS = Math.min(tgtS, (Pf.mmo || 0.78)*a/(1 + ac.alt/1000*0.018)); }
   if (ac.alt < 9900 && !ac.ground && !isMil(ac)) tgtS = Math.min(tgtS, 250);   // 250 kt below FL100 (the speed limit crews fly)
   if (APT.inHg && !ac.ground && ac.alt < ELEV + 2500 && dGBR < 4) tgtS = Math.min(tgtS, 200);   // US: 200 kt within 4 NM below 2,500 ft
   if (ac.mode === 'HOLD' && ac.alt < 14000) tgtS = Math.min(tgtS, 230);   // holding speed
