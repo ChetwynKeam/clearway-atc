@@ -96,8 +96,11 @@ function facingSteps(k, u, from_, inB, hist, d, pen, ok, push){
     if (e.closed || !ok(v)) continue;
     const b = legBrg(u, v, inB);
     if (Math.abs(angDiff(inB, b)) > (from_ ? TURN_MAX : TURN_START) || !hairOk(hist, b)) continue;
-    // keyed by the node before u too, so a junction reached two ways keeps both pasts (they turn on differently)
-    push(v + '|' + u + '|' + from_, [v, u, b, histOn(hist, b, e.len)], d + e.len*(e.k || 1)*(pen ? pen(e) : 1)*gfK(e, u), k, e);
+    // keyed by the node before u too, so a junction reached two ways keeps both pasts (they turn on differently), and by
+    // how far the heading has swung within the hairpin window (in 30° steps): a cheaper way in that has swung further
+    // must not shut out a dearer one that can still turn on (the search would miss routes that exist)
+    const nh = histOn(hist, b, e.len); let sw = 0; for (const [hb] of nh) sw = Math.max(sw, Math.abs(angDiff(hb, b)));
+    push(v + '|' + u + '|' + from_ + '|' + Math.floor(sw/30), [v, u, b, nh], d + e.len*(e.k || 1)*(pen ? pen(e) : 1)*gfK(e, u), k, e);
   }
 }
 function routeFacing(from, to, pen, face, outB){
@@ -268,6 +271,62 @@ function kinkLinks(opts = {}){
     }
     if (!best || GN[best.y].adj.some(([q]) => q === best.z)) continue;
     ge(best.y, best.z, best.tw); GE[GE.length - 1].fil = true; n++;
+  }
+  return n;
+}
+// ── stands mapped at the nose: an OpenStreetMap parking position (or a stand line) ends where the nose stops, but a stand's
+// point is the aircraft's middle. Each stand moves back along its line by the stop-bar distance of the largest aircraft
+// it takes (judged from the room to the stands beside it), never closer than 15 m to its lead-in point. Sets t.lat (the
+// room beside it, m) and t.maxSpan if not set. As at Heathrow, Madrid and Manchester. opts.same(a, b): halves of one stand.
+function standsNoseToMiddle(opts = {}){
+  const same = opts.same || (() => false), at = new Map();
+  for (const t of STANDS) {
+    if (t.area === 'remote' && t.noLead) continue;
+    const u = dirv(t.hdg); let lat = Infinity, near = Infinity;
+    for (const o of STANDS) { if (o === t || same(o, t)) continue;
+      const dx = (o.p[0] - t.p[0])*1852, dy = (o.p[1] - t.p[1])*1852, al = dx*u[0] + dy*u[1], la = Math.abs(dx*u[1] - dy*u[0]);
+      if (Math.abs(al) < 30 && la > 10) lat = Math.min(lat, la);
+      if (la > 10 || Math.abs(al) > 10) near = Math.min(near, Math.hypot(dx, dy)); }
+    const w = clamp(Math.min(isFinite(lat) ? lat : 45, near*1.1) - 1, 30, 82), sb = clamp(w + 6, 24, 80)*0.56 - 4;
+    t.lat = isFinite(lat) ? lat : 90; if (t.maxSpan == null) t.maxSpan = Math.round(clamp(2*t.lat - 42, 30, 82));
+    at.set(t, add(t.p, t.hdg + 180, Math.min(sb, Math.max(0, dist(...t.lp, ...t.p)*1852 - 15))/1852));
+  }
+  for (const [t, p] of at) { t.p = p; if (typeof mOf === 'function') { t.m = mOf(p); t.off = offOf(p); } }
+}
+// a stand whose aircraft would sit across a taxiway (nose or wings within 12 m of a lane) slides along its line to the
+// nearest spot at least 14 m clear
+function standsClearLanes(){
+  const body = (c, h) => [add(c, h, 19/1852), add(c, h + 180, 19/1852), add(c, h - 90, 18/1852), add(c, h + 90, 18/1852)];
+  let n = 0;
+  for (const t of STANDS) {
+    const u = t.hdg, lanes = GE.filter(e => !e.bare && e.tw !== 'APRON' && dist(...GN[e.a].p, ...GN[e.b].p) > 1e-7 && segDistM(t.p, GN[e.a].p, GN[e.b].p) < 150);
+    const clr = c => { const [nz, tl, wl, wr] = body(c, u); let m = Infinity; for (const e of lanes) { const a = GN[e.a].p, b = GN[e.b].p; m = Math.min(m, segSegM(nz, tl, a, b), segSegM(wl, wr, a, b)); } return m; };
+    if (clr(t.p) >= 12) continue;
+    const r0 = dist(...t.lp, ...t.p)*1852; let best = null;
+    for (let r = 22; r <= 95; r++) { const c = add(t.lp, u, r/1852), k = clr(c), sc = k >= 14 ? 1000 - Math.abs(r - r0) : k; if (!best || sc > best.sc) best = { sc, c }; }
+    t.p = best.c; if (typeof mOf === 'function') { t.m = mOf(t.p); t.off = offOf(t.p); } n++;
+  }
+  return n;
+}
+// ── gaps: a lane that ends within a few metres of another lane it isn't joined to (two surveyed lines that stop just
+// short of each other) is joined to the nearest point on it. Returns the number joined.
+function joinGaps(maxM = 8){
+  const isR = id => id[0] === 'R', M = 1/1852, fixed = new Set(Object.values(HOLDS).map(h => h.node)); for (const t of STANDS) fixed.add(t.node);
+  const near = (a, b) => { const seen = new Set([a]); let fr = [a]; for (let k = 0; k < 6; k++) { const nx = []; for (const u of fr) for (const [v] of GN[u].adj) if (!seen.has(v)) { if (v === b) return true; seen.add(v); nx.push(v); } fr = nx; } return false; };
+  let n = 0;
+  for (const id of Object.keys(GN)) {
+    if (isR(id) || fixed.has(id) || GN[id].adj.length !== 1) continue;
+    const p = GN[id].p; let best = null;
+    for (const e of GE) { if (e.a === id || e.b === id || isR(e.a) || isR(e.b) || e.bare) continue;
+      const d = segDistM(p, GN[e.a].p, GN[e.b].p); if (d < maxM && (!best || d < best.d) && !near(id, e.a) && !near(id, e.b)) best = { e, d }; }
+    if (!best) continue;
+    const { e } = best, a = GN[e.a].p, b = GN[e.b].p, dx = b[0]-a[0], dy = b[1]-a[1], f = clamp(((p[0]-a[0])*dx + (p[1]-a[1])*dy)/(dx*dx + dy*dy || 1e-12), 0, 1);
+    let to = f < 0.05 ? e.a : f > 0.95 ? e.b : null;
+    if (!to) { to = 'jg' + n; const q = [a[0] + dx*f, a[1] + dy*f]; TAXI_MEMO.clear();
+      GN[to] = { id: to, m: typeof mOf === 'function' ? mOf(q) : 0, off: typeof offOf === 'function' ? offOf(q) : 0, p: q, adj: [] };
+      GE.splice(GE.indexOf(e), 1); GN[e.a].adj = GN[e.a].adj.filter(([, x]) => x !== e); GN[e.b].adj = GN[e.b].adj.filter(([, x]) => x !== e);
+      for (const [x, y] of [[e.a, to], [to, e.b]]) { ge(x, y, e.tw); const ne = GE[GE.length - 1]; for (const k of ['line', 'k', 'gf']) if (e[k] != null) ne[k] = e[k]; } }
+    ge(id, to, GN[id].adj[0][1].tw); n++;
   }
   return n;
 }
