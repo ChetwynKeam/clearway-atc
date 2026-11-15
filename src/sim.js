@@ -469,7 +469,8 @@ function stepCsErr(){
     sys(`${ac.cs} took the instruction meant for ${E.for} (similar callsigns) and nobody put it right: it is still flying it. Listen for who reads back.`, true);
   } }
 }
-const missP = ac => { const r = rdyRatio(ac); return r < 0.75 ? 0.04 : Math.min(0.6, 0.04 + (r - 0.75)*2.2); };
+const missP0 = ac => { const r = rdyRatio(ac); return r < 0.75 ? 0.04 : Math.min(0.6, 0.04 + (r - 0.75)*2.2); };
+const missP = ac => missP0(ac) + (typeof eqMissAdd === 'function' ? eqMissAdd(ac) : 0);
 // Unprompted calls (not read-backs) now and then collide with another station and are blocked; the crew calls again.
 let inCmd = false, lastCallT = -99;
 function pilot(ac, text, again){
@@ -1630,7 +1631,9 @@ function commandRun(str){
   for (let n = 3; n >= 2; n--) { if (toks.length >= n) { const j = toks.slice(0, n).join(''); if (!S.acs.some(a => a.cs === toks[0]) && S.acs.some(a => a.cs === j)) { toks.splice(0, n, j); break; } } }
   if (toks.length === 2 && /^(REMOVE|DELETE|DEL)$/.test(toks[0]) && findAc(toks[1])) toks.reverse();   // "REMOVE BAW123" as well as "BAW123 REMOVE"
   if (typeof vehCommand === 'function' && vehCommand(toks)) return;
-  if (typeof lvpCommand === 'function' && lvpCommand(toks)) return;   // LVP / LVP OFF: night.js   // a radio vehicle (OPS, FIRE): vehicles.js
+  if (typeof lvpCommand === 'function' && lvpCommand(toks)) return;
+  if (typeof eqCommand === 'function' && eqCommand(toks)) return;   // STBY: equip.js
+  if (typeof vfrCommand === 'function' && vfrCommand(toks)) return;   // VFR transits: vfr.js   // LVP / LVP OFF: night.js   // a radio vehicle (OPS, FIRE): vehicles.js
   let ac = findAc(toks[0]);
   if (ac) toks.shift(); else ac = S.sel;
   if (ac && toks[0] === ac.cs.toUpperCase()) toks.shift();   // the box already held the callsign and it was typed again
@@ -1640,6 +1643,7 @@ function commandRun(str){
   if (!aiCtx && aiOwns(ac)) takeOver(ac);   // an instruction to a flight the AI is working: you take it back
   if (ac.state === 'PRE') { if (!aiCtx) select(ac); sys(`${ac.cs} is not on your frequency yet: it calls ${APT.radar[0]} at ${ARR_ROUTE[ac.gate][arrKey(ac)][0] ? 'the boundary' : 'entry'}.`); return; }
   if (!aiCtx) select(ac);
+  { const why = typeof eqBlock === 'function' && eqBlock(ac, toks); if (why) { sys(why, true); return; } }
   const said = [], reads = [];
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
@@ -1972,7 +1976,8 @@ function commandRun(str){
     } else if (t === 'DLY' || t === 'DELAY') {
       const r = typeof flowTell === 'function' && flowTell(ac); if (!r) { sys(`${ac.cs} isn't held by a departure stop.`); continue; }
       said.push(r[0]); reads.push(r[1]);
-    } else if (t === 'EAT' && typeof eatCmd === 'function') { const nx = /^\d{4}$/.test(toks[i+1] || '') ? toks[++i] : null; eatCmd(ac, nx, said, reads); }
+    } else if (t === 'WX' && typeof wxCmd === 'function') { wxCmd(ac, said, reads); }
+    else if (t === 'EAT' && typeof eatCmd === 'function') { const nx = /^\d{4}$/.test(toks[i+1] || '') ? toks[++i] : null; eatCmd(ac, nx, said, reads); }
     else if (t === 'IDENT' || t === 'SQK') { said.push('squawk ident'); reads.push('ident'); }
     else { sys(`Didn't understand "${t}" for ${ac.cs}${!air && /^[HLRACDS]\d/.test(t) ? ' (it is on the ground)' : ''}.`); return; }
   }
@@ -2142,6 +2147,8 @@ function step(dt){
   if (typeof teamStep === 'function') teamStep();
   if (typeof cbStep === 'function') cbStep();
   if (typeof holdStep === 'function') holdStep(dt);
+  if (typeof eqStep === 'function') eqStep();
+  if (typeof vfrStep === 'function') vfrStep(dt);
   stepWindShift(); stepReadbacks(); stepSimilarCs(); stepCsErr();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
