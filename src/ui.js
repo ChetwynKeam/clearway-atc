@@ -1201,6 +1201,7 @@ function makeStrip(ac, doc = document){
   const d = doc.createElement('button'); d.type = 'button'; d.className = `strip ${ac.kind}${outOfCtl(ac) ? ' off' : ''}${S.sel === ac ? ' sel' : ''}${ac.need && !ai ? ' need' : ''}${ai ? ' ai' : ''}${ac.emerg && !ac.emerg.done ? ' emg' : ''}${clrOf(ac) ? ' clr' : ''}${ac.state === 'DIVERTING' && !outOfCtl(ac) ? ' div' : ''}`;
   d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span><span class="fq"></span></span>`;
   d.querySelector('.cs').textContent = ac.cs;
+  if (ac.simCs) { const c = d.querySelector('.cs'); c.classList.add('simcs'); c.title = `Similar callsign on the frequency: ${ac.simCs}`; }
   d.querySelector('.ty').textContent = `${ac.t}/${ac.perf.wake} · ${ac.sqk}${ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null ? ' · CTOT ' + hhmm(SLOT[ac.cs].ctot).replace(':', '') : ''}`;
   d.querySelector('.rte').textContent = (a => ac.kind === 'ARR' ? `${ac.o} › ${a}` : `${a} › ${ac.d}`)(APT.apOf ? APT.apOf(ac) : APT.icao);
   d.querySelector('.lv').textContent = ac.airborne ? (ac.alt > FL_ABOVE ? 'FL'+String(Math.round(ac.alt/100)).padStart(3,'0') : Math.round(ac.alt/100)*100+' ft') + (ac.tgtAlt ? ' › '+(ac.tgtAlt > FL_ABOVE ? 'FL'+Math.round(ac.tgtAlt/100) : ac.tgtAlt) : '') : (ac.stand && ac.state === 'PARKED' ? (ac.stand.area === 'hangar' ? 'Hangar ' : 'Stand ')+ac.stand.id : towOn(ac) ? 'Tow › '+(ac.path && ac.towTgt ? ac.towTgt : ac.tow.to.id) : ac.hp ? 'Hold '+ac.hp.replace(/~\d+$/, '') : 'Ground');
@@ -1292,7 +1293,7 @@ const phaseRwy = k => k === 'hold' || k === 'rwy' ? (typeof depRw === 'function'
 function renderStrips(force){
   const mine = a => !!a.need && !aiOwns(a);   // waiting on you (not on an AI controller)
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
-  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
+  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '') + (a.simCs || '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
   if (stripWin && stripWin.closed) closeStripBoard();
   if (stripDrag && !force) return;   // not while a strip is being dragged: the drop zone would go
   if (sig === stripSig && !force) return; stripSig = sig;
@@ -1376,7 +1377,16 @@ function renderStripBoard(list){
 }
 $('popStrips').onclick = openStripBoard;
 $('backStrips').onclick = () => { if (stripWin && !stripWin.closed) stripWin.close(); closeStripBoard(); };
+// your frequencies beside the command line: lit while someone is transmitting, with how busy each has been
+function renderChannels(){
+  const el = $('chs'); if (!el) return;
+  const mine = S.running ? AI_SEATS.filter(k => S.seats[k] !== 'AI' && CH[k]) : [];
+  const html = mine.map(k => { const o = Math.round(chOcc(k)*100), on = chBusy(k), who = on ? CH[k].who : '';
+    return `<span class="ch${on ? ' on' : ''}${o >= 60 ? ' hot' : ''}" title="${AI_NAME[k]} frequency: in use ${o}% of the last ten minutes${who ? ', ' + esc(who) + ' transmitting' : ''}"><i></i>${k} ${o}%</span>`; }).join('');
+  if (el.innerHTML !== html) el.innerHTML = html;
+}
 function renderScore(){
+  renderChannels();
   const s = S.score;
   $('score').innerHTML = `<span><b>${s.pts}</b> pts</span><span>Landed <b>${s.landed}</b></span><span>Departed <b>${s.departed}</b></span><span>GA <b>${s.ga}</b></span><span>Div <b>${s.div}</b></span><span class="${s.los?'bad':''}">LoS <b>${s.los}</b></span>${APT.restricted ? `<span class="${s.infr?'bad':''}">${APT.restricted.short || 'Infr'} <b>${s.infr}</b></span>` : ''}<span class="${s.incidents?'bad':''}">Incidents <b>${s.incidents}</b></span>${S.running && !EXERCISES[S.mode] && AI_SEATS.some(k => S.seats[k] === 'AI') ? `<span class="ai" title="Seats worked by AI controllers (their flights don't count in your score)">AI <b>${AI_SEATS.filter(k => S.seats[k] === 'AI').join(' ')}</b></span>` : ''}`;
   const d = new Date(S.start + S.t*1000);

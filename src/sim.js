@@ -390,17 +390,104 @@ function say(text, who){
     speechSynthesis.speak(u);
   } catch(e) {}
 }
-function atc(ac, text){ const line = `${spoken(ac.cs)}, ${text}`; log('atc', line, ac.freq === 'TWR' ? 'TOWER' : 'RADAR'); say(line, 'atc'); }
+function atc(ac, text){
+  const line = `${spoken(ac.cs)}, ${text}`; log('atc', line, ac.freq === 'TWR' ? 'TOWER' : 'RADAR'); say(line, 'atc');
+  chUse(chOf(ac), txDur(line), aiCtx ? 'AI' : 'ATC');
+  if (S.recalls && S.recalls.length) S.recalls = S.recalls.filter(r => r.ac !== ac);   // its waiting call is answered by this
+}
+// ── the frequencies. Each position (Ground, Tower, Approach, Departure) is one radio channel, and only one station can
+// transmit on it at a time: a transmission takes about as long as it would to say (2.7 words a second). A crew with
+// something to say waits for a gap; when two crews jump into the same gap they block each other and both call again.
+// CH[k].win keeps the last ten minutes of transmissions, for how busy the frequency is.
+const CH = {};
+const CH_WIN = 600;
+const chOf = ac => (typeof seatOf === 'function' && seatOf(ac)) || (ac.freq === 'TWR' ? 'TWR' : 'APP');
+const txDur = text => 0.6 + String(text).split(/\s+/).length/2.7;
+function chUse(k, d, who){
+  const c = CH[k] ||= { until: 0, who: '', win: [], peak: 0 };
+  // (the AI controllers can say several things in one second; the queue never runs more than a few seconds ahead)
+  const s = Math.min(Math.max(S.t, c.until), S.t + 6); c.until = Math.max(c.until, s + d); c.who = who || ''; c.win.push([s, d]);
+  while (c.win.length && c.win[0][0] + c.win[0][1] < S.t - CH_WIN) c.win.shift();
+  return s;
+}
+// the share of the last ten minutes (or of the session so far) the frequency was in use
+function chOcc(k){
+  const c = CH[k]; if (!c) return 0;
+  const span = Math.min(CH_WIN, Math.max(60, S.t)), from = S.t - span; let b = 0;
+  let end = -1e9;   // overlapping transmissions counted once
+  for (const [s, d] of c.win) { const a = Math.max(from, s, end), e = Math.min(S.t, s + d); if (e > a) b += e - a; end = Math.max(end, s + d); }
+  const o = clamp(b/span, 0, 1); if (S.t > 300 && o > c.peak) c.peak = o; return o;
+}
+const chBusy = k => CH[k] && CH[k].until > S.t + 0.05;
+S.listeners.push(ev => { if (ev === 'start') for (const k in CH) delete CH[k]; });
+// VHF is line of sight: an aircraft hears the field out to about 1.23 × (√its height + √the aerial's height) NM. Past
+// three-quarters of that the signal is weak (readability two or three) and instructions are missed more often; past it,
+// nothing gets through at all.
+function rdyRatio(ac){
+  if (ac.ground) return 0;
+  const R = typeof RADAR_REF !== 'undefined' ? RADAR_REF : [0, 0];
+  return Math.hypot(ac.x - R[0], ac.y - R[1])/(1.23*(Math.sqrt(Math.max(0, ac.alt)) + 12));
+}
+// ── similar callsigns. Two flights on one frequency whose callsigns sound alike (RYR1974 and RYR1978, BAW12 and EZY12)
+// are marked on their strips, and now and then the wrong one takes an instruction: it reads it back with its own
+// callsign and flies it. Listen to who reads back; put it right within a minute.
+function csSimilar(a, b){
+  if (a === b) return false;
+  const pa = a.slice(0, 3), pb = b.slice(0, 3), na = a.slice(3), nb = b.slice(3);
+  if (!/^[A-Z]{3}$/.test(pa) || !/^[A-Z]{3}$/.test(pb) || !na || !nb) return false;
+  if (pa !== pb) return na === nb && na.length >= 2;
+  if (na.length !== nb.length) return Math.min(na.length, nb.length) >= 2 && (na.startsWith(nb) || nb.startsWith(na));
+  let diff = 0; for (let i = 0; i < na.length; i++) diff += na[i] !== nb[i];
+  return diff <= 1 || (na.length >= 3 && [...na].sort().join('') === [...nb].sort().join(''));
+}
+let simCsT = 0; const simSaid = new Set();
+function stepSimilarCs(){
+  if (S.t - simCsT < 10) return; simCsT = S.t;
+  const on = S.acs.filter(a => a.state !== 'PRE' && !outOfCtl(a) && seatOf(a));
+  for (const a of on) a.simCs = null;
+  for (let i = 0; i < on.length; i++) for (let j = i + 1; j < on.length; j++) {
+    const a = on[i], b = on[j]; if (chOf(a) !== chOf(b) || !csSimilar(a.cs, b.cs)) continue;
+    a.simCs = b.cs; b.simCs = a.cs;
+    const key = [a.cs, b.cs].sort().join('|');
+    if (!simSaid.has(key) && !aiOwns(a) && !aiOwns(b)) { simSaid.add(key); sys(`Caution, similar callsigns on ${AI_NAME[chOf(a)] || chOf(a)}: ${a.cs} and ${b.cs}.`); }
+  }
+}
+S.listeners.push(ev => { if (ev === 'start') { simSaid.clear(); simCsT = 0; } });
+// the flight that takes an instruction meant for ac, if one does this time
+function csTaker(ac, toks){
+  if (aiCtx || !humanWorking() || !ac.airborne || !ac.simCs || toks.length > 2 || !toks.every(t => rbKind(t))) return null;
+  const b = S.acs.find(x => x.cs === ac.simCs);
+  if (!b || !b.airborne || b.emerg || b.csErr || aiOwns(b) || chOf(b) !== chOf(ac) || b.state === 'PRE' || b.mode === 'FINAL' || b.app) return null;
+  return Math.random() < 0.12 ? b : null;
+}
+function stepCsErr(){
+  for (const ac of S.acs) { const E = ac.csErr; if (E && S.t - E.t > 60) {
+    ac.csErr = null; SC(ac).pts -= 15; SC(ac).infr++;
+    sys(`${ac.cs} took the instruction meant for ${E.for} (similar callsigns) and nobody put it right: it is still flying it. Listen for who reads back.`, true);
+  } }
+}
+const missP = ac => { const r = rdyRatio(ac); return r < 0.75 ? 0.04 : Math.min(0.6, 0.04 + (r - 0.75)*2.2); };
 // Unprompted calls (not read-backs) now and then collide with another station and are blocked; the crew calls again.
 let inCmd = false, lastCallT = -99;
 function pilot(ac, text, again){
-  if (!inCmd && !again && S.running && !ac.emerg && (S.t - lastCallT < 3 ? Math.random() < 0.6 : Math.random() < 0.025)) {
-    log('blk', 'two stations transmitting at once, blocked', '· · ·'); if (typeof radioFx === 'function') radioFx('blocked');
-    (S.recalls ||= []).push({ at: S.t + rnd(8, 16), ac, text }); lastCallT = S.t; return;
+  if (!inCmd && S.running && !ac.emerg && ac.state !== 'PRE') {
+    const k = chOf(ac);
+    // the frequency is in use: wait for the gap after it (a mayday does not wait)
+    if (chBusy(k)) { (S.recalls ||= []).push({ at: CH[k].until + rnd(0.4, 2.5), ac, text, q: true, again }); return; }
+    // a station we cannot hear (another sector's traffic on the same frequency) keys up at the same moment, now and then
+    if (!again && Math.random() < 0.012) { blockedTx([{ ac, text }]); return; }
   }
   if (!inCmd) lastCallT = S.t;
+  if (S.running) chUse(chOf(ac), txDur(text) + 1, ac.cs);
   const ai = !!aiCtx || aiOwns(ac), quiet = ai && !S.aiHear;
   const line = `${text}, ${spoken(ac.cs)}`; log('plt', line, ac.cs, null, ai); setTimeout(() => quiet || say(line, ac.cs), 300);
+}
+// two (or more) calls at once: a squeal, nobody heard, and each crew tries again a little later
+function blockedTx(calls){
+  const quiet = calls.every(c => aiOwns(c.ac) && !S.aiHear);
+  if (!quiet) { log('blk', 'two stations transmitting at once, blocked', '· · ·', null, calls.every(c => aiOwns(c.ac))); if (typeof radioFx === 'function') radioFx('blocked'); }
+  const k = chOf(calls[0].ac); chUse(k, 1.5, '');
+  for (const c of calls) (S.recalls ||= []).push({ at: S.t + rnd(4, 14), ac: c.ac, text: c.text, again: true });
 }
 function sys(text, bad){ if (aiCtx) return; log(bad ? 'bad' : 'sys', text); }   // an AI instruction that doesn't work is just not given
 // landline coordination with Sevilla / Casablanca (not on the frequency)
@@ -1553,13 +1640,20 @@ function commandRun(str){
   const air = ac.airborne;
   if (ac.lost && !(toks.length === 1 && toks[0] === 'REL')) { sys(`${ac.cs} is not on your frequency: it was sent to ${ac.lost.f}. Wait for it to come back.`, true); return; }
   if (ac.deice && ac.deice.st === 'ON' && !toks.every(t => t === 'DEICE' || t === 'DI')) { pilot(ac, 'standing by, we are still being de-iced'); return; }
-  const snap = garbleable(ac, toks) && Math.random() < 0.05 ? { ...ac } : null;   // the crew misses it now and then
+  // out of radio range: nothing reaches the crew at all
+  if (garbleable(ac, toks) && rdyRatio(ac) > 1 && !aiCtx) { sys(`No reply from ${ac.cs}: at ${Math.round(Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]))} NM and ${altShort(Math.round(ac.alt/100)*100)} it is beyond radio range of the field. Try again as it climbs or comes closer.`); ac.need = 'No reply'; renderSel(); return; }
+  const snap = garbleable(ac, toks) && Math.random() < missP(ac) ? { ...ac } : null;   // the crew misses it now and then, more often on a weak signal
   // "negative" / "correction" before a re-issued instruction: the crew had it wrong and is being put right
   while (toks.length > 1 && /^(NEGATIVE|NEG|CORRECTION|CORR)$/.test(toks[0])) toks.shift();
   // an instruction the crew read back wrongly (see rbPlan below): re-issuing the same kind of instruction puts it right
   if (ac.rbErr && toks.length) { const k = rbKind(toks[0]); if (k === ac.rbErr.kind) { const ok = rbSame(toks[0], ac.rbErr.right); if (ok && !aiCtx) { SC(ac).pts += 8; sys(`${ac.cs}: readback corrected.`); } ac.rbErr = null; } }
+  // the flight that took another's instruction is put right: any new instruction to it
+  if (ac.csErr && !aiCtx) { SC(ac).pts += 8; sys(`${ac.cs}: the callsign confusion is put right. Now give ${ac.csErr.for} its instruction again.`); ac.csErr = null; }
+  // ... or the wrong flight takes this one: the instruction goes to it, and the one it was meant for hears nothing
+  const callTo = ac, taker = !snap && csTaker(ac, toks);
+  if (taker) { ac = taker; ac.csErr = { for: callTo.cs, t: S.t }; }
   // now and then a crew reads back a level, heading or speed wrongly and flies it that way until put right
-  const rbPlan = !snap && !aiCtx && humanWorking() && !ac.rbErr && toks.length === 1 && garbleable(ac, toks) && rbKind(toks[0]) && Math.random() < RB_RATE ? toks[0] : null;
+  const rbPlan = !snap && !taker && !aiCtx && humanWorking() && !ac.rbErr && toks.length === 1 && garbleable(ac, toks) && rbKind(toks[0]) && Math.random() < RB_RATE ? toks[0] : null;
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]; let r;
     if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
@@ -1881,10 +1975,10 @@ function commandRun(str){
     atc(ac, said.join(', '));
     for (const k of Object.keys(ac)) if (!(k in snap)) delete ac[k];
     Object.assign(ac, snap); ac.lastCmd = toks.join(' ');
-    pilot(ac, SAY_AGAIN[Math.floor(Math.random()*SAY_AGAIN.length)]); ac.need = 'Say again';
+    pilot(ac, rdyRatio(ac) > 0.75 ? `${ac.unit()}, readability ${rdyRatio(ac) > 0.9 ? 'two' : 'three'}, say again` : SAY_AGAIN[Math.floor(Math.random()*SAY_AGAIN.length)]); ac.need = 'Say again';
     renderSel(); renderStrips(true); return;
   }
-  if (said.length) { if (ac.emerg && !ac.emerg.ack) { const a = emgAck(ac); if (a) { said.unshift(a); reads.unshift('roger'); } } atc(ac, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency' || ac.need === 'Say again') ac.need = null; emit('cmd', { ac, toks }); }
+  if (said.length) { if (ac.emerg && !ac.emerg.ack) { const a = emgAck(ac); if (a) { said.unshift(a); reads.unshift('roger'); } } atc(callTo, said.join(', ')); pilot(ac, reads.join(', ')); if (ac.need === 'Initial call' || ac.need === 'Back on frequency' || ac.need === 'Say again' || ac.need === 'No reply') ac.need = null; emit('cmd', { ac, toks }); }
   renderSel(); renderStrips(true);
 }
 function willIntercept(ac, F){
@@ -2037,7 +2131,7 @@ function viaAlt(ac){
 function step(dt){
   S.t += dt;
   if (typeof recStep === 'function') recStep();
-  stepWindShift(); stepReadbacks();
+  stepWindShift(); stepReadbacks(); stepSimilarCs(); stepCsErr();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
   const X = S.xing;
@@ -2049,7 +2143,16 @@ function step(dt){
 
   stepStandWaits(); stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt); if (S.flow) stepFlow();
   if (typeof stepVehicles === 'function') stepVehicles(dt);
-  if (S.recalls && S.recalls.length) for (const r of S.recalls.splice(0)) { if (S.t < r.at) { S.recalls.push(r); continue; } if (S.acs.includes(r.ac)) pilot(r.ac, r.text.startsWith(r.ac.unit() + ', ') ? r.text : `${r.ac.unit()}, ${r.text}`, true); }
+  if (S.recalls && S.recalls.length) {
+    // the calls that are due: one station alone in a gap is heard; two or more in the same gap block each other
+    const due = {}, all = S.recalls.splice(0);
+    for (const r of all) { if (S.t < r.at || !S.acs.includes(r.ac)) { if (S.acs.includes(r.ac)) S.recalls.push(r); continue; } (due[chOf(r.ac)] ||= []).push(r); }
+    for (const k in due) {
+      const D = due[k];
+      if (D.length > 1 && !chBusy(k)) { blockedTx(D); continue; }
+      for (const r of D) { const tx = r.again && !r.text.startsWith(r.ac.unit() + ', ') ? `${r.ac.unit()}, ${r.text}` : r.text; pilot(r.ac, tx, r.again ? true : undefined); }
+    }
+  }
   for (const ac of S.acs) {
     if (ac.state === 'TOW') {
       if (ac.towAlign && !ac.path) { const A = ac.towAlign, e = angDiff(ac.hdg, A.h); ac.hdg = norm(ac.hdg + clamp(e, -8*dt, 8*dt)); if (Math.abs(e) <= 8*dt) { ac.hdg = A.h; ac.towAlign = null; runDone(ac, A.done); } }
