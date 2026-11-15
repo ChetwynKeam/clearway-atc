@@ -1383,6 +1383,42 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
   .tc-m{max-width:92%}
   .tc-brief .ho-list{max-height:35vh}
 }
+/* the arrival manager (aman.js): a timeline of the inbounds against their landing slots, one column per runway */
+.am-drawer{width:min(640px,100vw)}
+.am-page{height:auto;min-height:100vh}.am-page .am-body{padding:8px 12px}
+.am-empty{padding:16px 4px}
+.am-key{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px;color:var(--dim);margin:2px 0 10px}
+.am-k::before{content:'';display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--line-2)}
+.am-k.red::before{background:var(--alert)}.am-k.amber::before{background:var(--amber)}.am-k.blue::before{background:var(--accent)}
+.am-k:last-child::before{display:none}
+.am-cols{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.am-col{flex:1 1 290px;min-width:290px;max-width:100%}
+.am-ch{display:flex;align-items:baseline;gap:8px;padding:0 0 6px;border-bottom:1px solid var(--line);margin-bottom:4px}.am-ch b{font-family:var(--font-data);font-size:15px}.am-ch span{color:var(--dim);font-size:12px}
+.am-lad{position:relative}
+.am-axis{position:absolute;left:0;top:0;bottom:0;width:52px;border-right:2px solid var(--line-2)}
+.am-tk{position:absolute;right:0;width:5px;border-top:1px solid var(--line-2)}.am-tk.big{width:10px}
+.am-tl{position:absolute;left:0;font:500 10.5px var(--font-data);color:var(--dim)}.am-tl.now{color:var(--accent);font-weight:700}
+.am-now{position:absolute;left:0;right:-2px;border-top:2px solid var(--accent)}
+.am-del{position:absolute;left:47px;width:6px;background:repeating-linear-gradient(0deg,var(--amber) 0 3px,transparent 3px 6px);opacity:.7}
+.am-eta{position:absolute;left:45px;width:8px;height:8px;border:1.5px solid var(--ink-2);border-radius:50%;background:var(--bg)}
+.am-sta{position:absolute;left:46px;width:9px;height:9px;transform:translateX(0) rotate(45deg);background:var(--ink-2)}
+.am-sta.red{background:var(--alert)}.am-sta.amber{background:var(--amber)}.am-sta.blue{background:var(--accent)}
+.am-ld{position:absolute;left:56px;width:14px;overflow:visible}.am-ld line{stroke:var(--line-2);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.am-lab{position:absolute;left:70px;right:0;height:38px;box-sizing:border-box;padding:3px 6px 3px 20px;border:1px solid var(--line-2);border-left:4px solid var(--line-2);border-radius:5px;background:var(--panel);font-size:11.5px;line-height:1.35;cursor:grab;user-select:none;overflow:hidden}
+.am-lab.fixed{cursor:default;padding-left:8px;opacity:.75;background:var(--panel-2)}
+.am-lab.ai{opacity:.82}
+.am-lab.red{border-left-color:var(--alert);background:color-mix(in srgb,var(--alert) 9%,var(--panel))}
+.am-lab.amber{border-left-color:var(--amber);background:color-mix(in srgb,var(--amber) 10%,var(--panel))}
+.am-lab.blue{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--panel))}
+.am-lab.sel{outline:2px solid var(--accent);outline-offset:-1px}
+.am-lab.drag{z-index:3;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:grabbing;opacity:.95}
+.am-lab.over{outline:2px dashed var(--accent);outline-offset:1px}
+.am-grip{position:absolute;left:4px;top:0;bottom:0;width:14px;display:flex;align-items:center;color:var(--faint);letter-spacing:-3px;touch-action:none;cursor:grab}
+.am-l1,.am-l2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.am-l1 .am-cs{font-family:var(--font-data)}.am-l1 span{color:var(--dim);font-family:var(--font-data)}.am-l1 em{font-style:normal;font-size:10px;color:var(--dim);background:var(--panel-3);border-radius:3px;padding:0 4px}
+.am-l2{display:flex;gap:8px;font-family:var(--font-data);font-size:10.5px;color:var(--ink-2)}.am-l2 .am-dl{font-weight:600}.am-short{color:var(--alert);font-weight:700}
+.am-l1 em.am-em{background:var(--alert);color:#fff}
+.am-body.narrow .am-col{min-width:0;flex-basis:100%}.am-body.narrow .am-axis{width:40px}.am-body.narrow .am-eta{left:33px}.am-body.narrow .am-sta{left:34px}.am-body.narrow .am-del{left:35px}.am-body.narrow .am-ld{left:44px;width:8px}.am-body.narrow .am-lab{left:52px;height:52px;padding-left:18px}.am-body.narrow .am-l2{flex-wrap:wrap;white-space:normal;gap:0 8px}
 
 </style>
 </head>
@@ -3075,7 +3111,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
     <button id="tgTalk" class="talk" aria-label="Hold to talk" title="Hold to talk (or hold T) and give the instruction in standard phraseology"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="currentColor"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     <button type="button" class="sb-menu" id="tgMenu" aria-label="Menu" aria-expanded="false" title="Session, voice, display and feedback"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></button>
     <div class="sb-menupop" id="menuPop" hidden role="menu">
-      <button id="tgSetup">Session</button><button id="tgDebrief">Debrief</button><button id="tgTeam" hidden>Team chat</button><button id="tgCoord">Coordination</button>
+      <button id="tgSetup">Session</button><button id="tgDebrief">Debrief</button><button id="tgTeam" hidden>Team chat</button><button id="tgCoord">Coordination</button><button id="tgAman">Arrival manager</button>
       <button type="button" class="phone-only" data-click="tgSeats">Positions</button>
       <button type="button" class="phone-only" data-click="tgSpeed">Change speed</button>
       <button id="tgVoice" aria-pressed="false" title="Pilots and controller speak">Voice</button>
@@ -15498,6 +15534,9 @@ const waitsFor = ac => ac.emerg ? null : stackBelow(ac) || waitsUnder(ac);
 // out (Approach then trims its speed to fit it in exactly, as the estimates are never perfect, and a gap left open
 // is lost for good), the minimum and a little over otherwise
 const relK = (lead, trail, ac, e) => (trail === ac ? e : trail.mode === 'FINAL' ? 0 : eta(trail)) > 360 ? 0.85 : 1.05;
+// a landing order set by hand on the arrival manager display (aman.js: a flight dragged above another): its key in the
+// order, in place of when it joined the hold or when it is due (unset, the order is the planner's own)
+const amOrdK = (o, e) => o.amSeq ?? (o.aiQ != null ? o.aiQ : 1e12 + S.t + e);
 function planLandings(list){
   const plan = new Map(), byR = {};
   for (const ac of list) {
@@ -15511,7 +15550,7 @@ function planLandings(list){
     // while there are holds to empty, one still on its way in from further out than the stacks waits its turn (it
     // would take a slot a long way ahead and close in on those released after it)
     const far = Math.max(-1, ...c.filter(([a]) => a.mode === 'HOLD').map(([, e]) => e));
-    c.sort((a, b) => (a[0].aiQ ?? 1e12) - (b[0].aiQ ?? 1e12) || a[1] - b[1]);
+    c.sort((a, b) => a[0].amSeq != null || b[0].amSeq != null ? amOrdK(a[0], a[1]) - amOrdK(b[0], b[1]) : (a[0].aiQ ?? 1e12) - (b[0].aiQ ?? 1e12) || a[1] - b[1]);
     for (const [a, e] of c) if (far >= 0 && a.mode !== 'HOLD' && e > far + 60) plan.set(a, { wait: e - far, n: c.length, after: null });
     for (const [ac, e] of c) {
       if (plan.has(ac)) continue;
@@ -15544,7 +15583,7 @@ function landOrder(ac){
     }
     for (const id in byR) {
       const L = byR[id], R = rwyById(id), taken = L.filter(x => x.fixed).map(x => ({ t: x.e, x }));
-      const rest = L.filter(x => !x.fixed).sort((a, b) => (a.o.aiQ ?? 1e12) - (b.o.aiQ ?? 1e12) || a.e - b.e);
+      const rest = L.filter(x => !x.fixed).sort((a, b) => a.o.amSeq != null || b.o.amSeq != null ? amOrdK(a.o, a.e) - amOrdK(b.o, b.e) : (a.o.aiQ ?? 1e12) - (b.o.aiQ ?? 1e12) || a.e - b.e);
       for (const x of rest) {
         const need = (a, b) => landGapS(a, b, R);
         const fits = t => taken.every(s => s.t <= t ? t - s.t >= need(s.x.o, x.o) - 0.5 : s.t - t >= need(x.o, s.x.o) - 0.5);
@@ -15690,9 +15729,9 @@ function amanPlan(list){
     // the holds empty from the bottom: those in one hold take its turns in the order of their levels
     // (and no one goes ahead of the time it can really land: one held far out whose turn has come is fitted in where it
     // can get to, not ahead of those already close in, which would leave the runway empty while it flies in)
-    for (const x of c) x.k = Math.max(x.ac.amKey, S.t + x.tMin);
+    for (const x of c) x.k = x.ac.amSeq ?? Math.max(x.ac.amKey, S.t + x.tMin);
     const byFix = {};
-    for (const x of c) if (x.ac.mode === 'HOLD' && x.ac.hold && !x.ac.emerg) (byFix[x.ac.hold.name] ||= []).push(x);
+    for (const x of c) if (x.ac.mode === 'HOLD' && x.ac.hold && !x.ac.emerg && x.ac.amSeq == null) (byFix[x.ac.hold.name] ||= []).push(x);
     for (const f in byFix) { const H = byFix[f], keys = H.map(x => x.k).sort((a, b) => a - b); H.sort((a, b) => slotOf(a.ac) - slotOf(b.ac) || a.k - b.k).forEach((x, i) => { x.k = keys[i]; }); }
     c.sort((a, b) => (b.ac.emerg ? 1 : 0) - (a.ac.emerg ? 1 : 0) || a.k - b.k);
     // those already cleared keep the times they are flying to
@@ -15713,7 +15752,7 @@ function amanPlan(list){
       const opts = [t0, ...T.map(s => s.t + before(s))].filter(t => t >= t0).sort((a, b) => a - b);
       const sta = ac.emerg ? S.t + x.tMin : opts.find(fits) ?? t0;
       const ahead = T.filter(s => s.t <= sta).sort((a, b) => b.t - a.t)[0];
-      const e = { ac, t: sta, fixed: false, W: x.W, tMin: x.tMin, tNow: x.tNow, first: n === 0, dep, after: ahead ? ahead.ac : null, afterT: ahead ? ahead.t : null };
+      const e = { ac, t: sta, k: x.k, fixed: false, W: x.W, tMin: x.tMin, tNow: x.tNow, first: n === 0, dep, after: ahead ? ahead.ac : null, afterT: ahead ? ahead.t : null };
       m.set(ac, e); T.push(e); T.sort((a, b) => a.t - b.t); last = e; n++;
       if (dep) run = 0; else if (dg > 0) run++;
     }
@@ -15783,7 +15822,7 @@ function aiSequence(list){
     // the one next to go is stuck (traffic, a level it can't leave yet): after a minute the one behind may go ahead of it
     if (P && P.first && !ok && !shut && !ac.emerg && way && !way.later && ac.mode === 'HOLD') {
       ac.amStuck ??= S.t;
-      if (S.t - ac.amStuck > 60) { const nx = [...plan.values()].filter(e => e.ac !== ac && !e.fixed && sameRwy(R, rwyOf(landRw(e.ac)).id)).sort((a, b) => a.t - b.t)[0]; if (nx) { ac.amKey = nx.ac.amKey + 1; ac.amStuck = null; AMAN.t = -1; } }
+      if (S.t - ac.amStuck > 60) { const nx = [...plan.values()].filter(e => e.ac !== ac && !e.fixed && sameRwy(R, rwyOf(landRw(e.ac)).id)).sort((a, b) => a.t - b.t)[0]; if (nx) { ac.amKey = nx.ac.amKey + 1; if (ac.amSeq != null) ac.amSeq = (nx.ac.amSeq ?? nx.k) + 1; ac.amStuck = null; AMAN.t = -1; } }
     } else ac.amStuck = null;
     if (ok && !high && !ac.aiLev && aiDue(ac, 'app' + (ac.gaCount || 0), 3, 7)) { const lv = keep ? Math.round(lvlOf(ac)/100) : 0;
       const cmd = (way && way.rt ? `DCT ${way.fix} ` : '') + (keep ? `APP A${lv}` : 'APP');
@@ -17058,6 +17097,178 @@ function cbPop(){
   cbRender();
 }
 { const b = document.getElementById('tgCoord'); if (b) b.onclick = () => cbOpen(); }
+
+// ═════════════════════════ the arrival manager display (AMAN) ═════════════════════════
+// A timeline of every inbound against its landing slot on each runway (menu › Arrival manager): a drawer beside the
+// scope that can also go on its own page (Pop out). Time runs down the page from now; each flight's label sits at its
+// slot, with a mark on the time line at its estimate, and shows the estimate, the slot, the delay still to absorb (and
+// how: speed, the hold, or nothing), the wake category and the gap behind the one ahead. Flights you work that need
+// something doing are coloured: red, a hold is needed (or the gap on the approach is short); amber, slow it down;
+// blue, its delay is used up and it can leave the hold or turn in.
+// The slots are the AI Approach's own plan (amanPlan in ai.js where the arrival manager runs, landOrder elsewhere),
+// worked out here for every inbound whoever works it, without touching the AI's state. Drag a flight's label onto
+// another's to swap their places in the order: the plan (and the AI Approach) then works to the new order.
+const AM = { open: false, win: null, timer: 0, drag: null, last: null };
+const AM_PX = 15;   // pixels a minute
+const AM_LAB = 40;  // label height and the least space between two
+const amIn = o => o.kind === 'ARR' && o.airborne && !o.handed && o.state !== 'DIVERTING' && o.need !== 'Unable approach' && !o.lost;
+// the plan, worked out on a copy of the arrival manager's state (its order keys and cache put back as they were, so the
+// AI's own plan and every seeded run are just as they would be without the display)
+function amanSnap(){
+  const all = S.acs.filter(amIn), cols = {};
+  if (typeof AMAN_ON !== 'undefined' && AMAN_ON && typeof amanPlan === 'function') {
+    const list = all.filter(o => !o.app || o.state === 'MISSED'), saved = AMAN, keys = list.map(a => [a, a.amKey, a.amGa]);
+    for (const a of list) if (a.amKey == null && a.amVK != null) { a.amKey = a.amVK; a.amGa = a.amVGa; }
+    AMAN = { t: -1, m: new Map(), line: {} };
+    let line = {};
+    try { amanPlan(list); line = AMAN.line; } catch (e) { line = {}; }
+    finally { for (const [a, k, g] of keys) { if (k == null) { a.amVK = a.amKey; a.amVGa = a.amGa; } a.amKey = k; a.amGa = g; } AMAN = saved; }
+    for (const id in line) {
+      const R = rwyById(id), L = line[id].slice().sort((a, b) => a.t - b.t);
+      cols[id] = { R, rows: L.map(e => {
+        const F = FINAL[landRw(e.ac)], eta = e.fixed ? e.t : S.t + e.tMin;
+        const route = e.fixed ? 0 : Math.max(0, e.tNow - e.tMin);   // the time it can lose just flying its route (a point merge arc)
+        return { ac: e.ac, rw: landRw(e.ac), eta, sta: e.t, fixed: e.fixed, k: e.k, route, F };
+      }) };
+    }
+  } else if (typeof landOrder === 'function') {
+    const byR = {};
+    for (const o of all) { const L = landOrder(o); if (!L) continue; const R = rwyOf(L.rw); (byR[R.id] ||= { R, rows: [] }).rows.push({ ac: o, rw: L.rw, eta: S.t + L.e, sta: S.t + L.t, fixed: !!o.app && o.state !== 'MISSED', k: amOrdK(o, L.e), route: 0, F: o.app ? finOf(o) : FINAL[L.rw] }); }
+    for (const id in byR) cols[id] = byR[id];
+  }
+  // what each needs: the delay, how it is taken up, the gap behind the one ahead
+  for (const id in cols) {
+    const R = cols[id].R, rows = cols[id].rows.sort((a, b) => a.sta - b.sta);
+    rows.forEach((r, i) => { r.prev = i ? rows[i - 1] : null; });
+    for (const r of rows) {
+      const ac = r.ac, mine = !(typeof aiOwns === 'function' && aiOwns(ac)), early = ac.state === 'PRE';
+      r.delay = Math.max(0, r.sta - r.eta);
+      let spd = 0; try { spd = r.F && typeof amanAbsorb === 'function' ? amanAbsorb(ac, r.F) : 0; } catch (e) {}
+      r.how = r.fixed ? (ac.state === 'MISSED' ? 'go-around' : 'cleared') : r.delay < 20 ? 'none' : ac.mode === 'HOLD' ? 'hold' : r.delay <= r.route + 10 ? 'route' : r.delay <= r.route + spd ? 'speed' : 'hold';
+      if (r.prev) { r.gap = r.sta - r.prev.sta; r.need = landGapS(r.prev.ac, ac, R); r.nm = r.gap*(ac.perf.vapp || 135)/3600; }
+      // the colours: only flights you work (and that are on your frequency) need anything from you
+      r.act = '';
+      if (mine && !early) {
+        if (r.fixed && r.prev && r.gap < r.need*0.9) r.act = 'red';
+        else if (!r.fixed && r.how === 'hold' && ac.mode !== 'HOLD') r.act = 'red';
+        else if (!r.fixed && r.how === 'speed' && !(ac.spdAssigned && ac.tgtSpd <= 220)) r.act = 'amber';
+        else if (!r.fixed && ac.mode === 'HOLD' && r.delay < 45 && r === rows.find(x => !x.fixed)) r.act = 'blue';
+      }
+      r.mine = mine; r.early = early; r.lock = r.fixed || !!ac.emerg;
+    }
+  }
+  return cols;
+}
+const amMS = s => { s = Math.round(s); const m = Math.floor(Math.abs(s)/60), x = Math.abs(s) % 60; return (s < 0 ? '−' : '') + m + ':' + String(x).padStart(2, '0'); };
+const AM_HOW = { none: '—', route: 'route', speed: 'speed', hold: 'hold', cleared: 'cleared', 'go-around': 'go-around' };
+function amanBody(narrow, cols){
+  cols = cols || amanSnap(); const LAB = narrow ? 54 : AM_LAB;
+  const ids = Object.keys(cols).filter(id => cols[id].rows.length);
+  AM.last = cols;
+  if (!S.running && !S.acs.length) return '<p class="dimmer am-empty">Start a session to see the arrivals.</p>';
+  if (!ids.length) return '<p class="dimmer am-empty">No inbounds right now.</p>';
+  const now = S.t, base = S.start/1000, t0 = Math.ceil((base + now)/60)*60 - base;   // the first whole minute on the clock
+  return `<div class="am-key"><span class="am-k red">hold needed / gap short</span><span class="am-k amber">slow down</span><span class="am-k blue">can leave the hold</span><span class="am-k">drag a label onto another to swap them</span></div>
+  <div class="am-cols">${ids.map(id => {
+    const C = cols[id], rows = C.rows, end = Math.max(now + 30*60, ...rows.map(r => Math.max(r.sta, r.eta) + 180));
+    const y = t => 18 + (t - now)/60*AM_PX;
+    let ly = -1e9; const pos = rows.map(r => { const v = Math.max(y(r.sta) - LAB/2, ly + LAB + 2, 4); ly = v; return v; });
+    const H = Math.max(y(end), ly + LAB + 10);
+    let ticks = ''; for (let t = t0; t <= end; t += 60) { if (t <= now) continue; const m = Math.round((base + t)/60) % 60, big = m % 5 === 0; ticks += `<i class="am-tk${big ? ' big' : ''}" style="top:${y(t).toFixed(1)}px"></i>${big ? `<b class="am-tl" style="top:${(y(t) - 7).toFixed(1)}px">${zt(t).slice(0, 5)}</b>` : ''}`; }
+    const rwys = [...new Set(rows.map(r => r.rw))].join(' / ');
+    return `<section class="am-col" data-r="${esc(id)}"><div class="am-ch"><b>${esc(rwys)}</b><span>${rows.length} inbound${rows.length === 1 ? '' : 's'}</span></div>
+      <div class="am-lad" style="height:${H.toFixed(0)}px"><div class="am-axis">${ticks}<i class="am-now" style="top:18px"></i><b class="am-tl now" style="top:2px">${zt(now).slice(0, 5)}</b></div>
+      ${rows.map((r, i) => { const ac = r.ac, ys = y(r.sta), ye = y(r.eta), py = pos[i];
+        const lead = `<i class="am-del" style="top:${Math.min(ye, ys).toFixed(1)}px;height:${Math.max(1, Math.abs(ys - ye)).toFixed(1)}px"></i><i class="am-eta" style="top:${(ye - 4).toFixed(1)}px"></i><i class="am-sta ${r.act}" style="top:${(ys - 4).toFixed(1)}px"></i>`;
+        const line = `<svg class="am-ld" style="top:${Math.min(ys, py + LAB/2).toFixed(1)}px;height:${(Math.abs(ys - py - LAB/2) + 2).toFixed(1)}px" preserveAspectRatio="none" viewBox="0 0 10 10"><line x1="0" y1="${ys <= py + LAB/2 ? 0 : 10}" x2="10" y2="${ys <= py + LAB/2 ? 10 : 0}"/></svg>`;
+        const short = r.prev && r.gap < r.need*0.9;
+        return lead + line + `<div class="am-lab ${r.act}${r.lock ? ' fixed' : ''}${S.sel === ac ? ' sel' : ''}${r.mine ? '' : ' ai'}" data-cs="${esc(ac.cs)}" data-r="${esc(id)}" style="top:${py.toFixed(1)}px" title="${esc(ac.cs)}: ${r.fixed ? 'cleared for the approach' : ac.emerg ? 'emergency: first in' : 'drag onto another flight to swap them'}">
+          ${r.lock ? '' : '<span class="am-grip" aria-hidden="true">⋮⋮</span>'}<div class="am-l1"><b>${i + 1}</b> <b class="am-cs">${esc(ac.cs)}</b> <span>${esc(ac.t || '')}/${esc(ac.perf.wake || 'M')}</span>${r.mine ? '' : ' <em>AI</em>'}${r.early ? ' <em>not yet with you</em>' : ''}${ac.emerg ? ' <em class="am-em">emergency</em>' : ''}${ac.mode === 'HOLD' ? ` <em>holding ${esc(ac.hold ? ac.hold.name : '')}</em>` : ''}${ac.amMoved && !r.fixed ? ' <em>moved</em>' : ''}</div>
+          <div class="am-l2"><span>ETA ${zt(r.eta).slice(0, 5)}</span><span>slot ${zt(r.sta).slice(0, 5)}</span><span class="am-dl">${r.fixed ? AM_HOW[r.how] : r.delay < 20 ? 'on time' : '+' + amMS(r.delay) + ' ' + AM_HOW[r.how]}</span><span class="${short ? 'am-short' : ''}">${r.prev ? `gap ${amMS(r.gap)} · ${r.nm.toFixed(1)} NM` : 'first'}</span></div></div>`; }).join('')}
+      </div></section>`; }).join('')}</div>`;
+}
+function amanRender(){
+  if (AM.drag) return;   // not while a label is being dragged
+  const on = AM.open || (AM.win && !AM.win.closed), cols = on ? amanSnap() : null;
+  const d = document.getElementById('amandock'); if (d) { const b = d.querySelector('.am-body'), st = b.scrollTop, n = b.clientWidth < 420; b.classList.toggle('narrow', n); b.innerHTML = amanBody(n, cols); b.scrollTop = st; }
+  if (AM.win && !AM.win.closed) { const b = AM.win.document.querySelector('.am-body'); if (b) { const st = AM.win.document.scrollingElement.scrollTop, n = b.clientWidth < 420; b.classList.toggle('narrow', n); b.innerHTML = amanBody(n, cols); AM.win.document.scrollingElement.scrollTop = st; } }
+  if (!AM.open && !(AM.win && !AM.win.closed)) { clearInterval(AM.timer); AM.timer = 0; }
+}
+// swap two flights' places in the landing order (the plan is worked out again straight away)
+function amanSwap(a, b){
+  const cols = AM.last || amanSnap(); let ra, rb, C;
+  for (const id in cols) for (const r of cols[id].rows) { if (r.ac === a) { ra = r; C = cols[id]; } if (r.ac === b) rb = r; }
+  if (!ra || !rb || ra.lock || rb.lock) { sys('Only flights not yet cleared for the approach (and not in an emergency) can be moved in the order.', true); return false; }
+  if (rwyOf(ra.rw).id !== rwyOf(rb.rw).id) { sys(`${a.cs} and ${b.cs} land on different runways.`, true); return false; }
+  // the order on this runway as it is shown, with the two swapped, takes the same order keys in turn (so the rest of the
+  // plan, and flights that turn up later, keep their places around them)
+  const mov = C.rows.filter(r => !r.lock), keys = mov.map(r => r.k ?? r.sta).sort((x, y) => x - y);
+  const ia = mov.indexOf(ra), ib = mov.indexOf(rb); mov[ia] = rb; mov[ib] = ra;
+  mov.forEach((r, i) => { r.ac.amSeq = keys[i] + i*1e-3; });
+  a.amMoved = b.amMoved = true;
+  if (typeof AMAN !== 'undefined') AMAN.t = -1;
+  if (S.landOrd) S.landOrd.t = -1;
+  const first = ia < ib ? b : a, second = first === a ? b : a;
+  sys(`Arrival manager: ${first.cs} now lands ahead of ${second.cs}.`);
+  amanRender();
+  return true;
+}
+// dragging a label (mouse, pen or a finger on its grip), in the drawer or the popped-out page
+function amanDown(e){
+  const lab = e.target.closest && e.target.closest('.am-lab'); if (!lab || lab.classList.contains('fixed')) return;
+  if (e.pointerType === 'touch' && !e.target.closest('.am-grip')) return;   // a finger elsewhere on the label scrolls
+  AM.drag = { lab, cs: lab.dataset.cs, r: lab.dataset.r, y0: e.clientY, top: parseFloat(lab.style.top), moved: false, doc: lab.ownerDocument };
+  try { lab.setPointerCapture(e.pointerId); } catch (_) {}
+  e.preventDefault();
+}
+function amanMove(e){
+  const D = AM.drag; if (!D) return;
+  const dy = e.clientY - D.y0; if (Math.abs(dy) > 4) D.moved = true;
+  D.lab.style.top = (D.top + dy) + 'px'; D.lab.classList.add('drag');
+  for (const n of D.doc.querySelectorAll('.am-lab.over')) n.classList.remove('over');
+  const t = amanTarget(D, e.clientY); if (t) t.classList.add('over');
+}
+function amanTarget(D, cy){
+  for (const n of D.doc.querySelectorAll(`.am-lab[data-r="${CSS.escape(D.r)}"]`)) { if (n === D.lab || n.classList.contains('fixed')) continue; const b = n.getBoundingClientRect(); if (cy >= b.top && cy <= b.bottom) return n; }
+  return null;
+}
+function amanUp(e){
+  const D = AM.drag; if (!D) return; AM.drag = null;
+  const t = D.moved ? amanTarget(D, e.clientY) : null, a = S.acs.find(x => x.cs === D.cs);
+  if (!D.moved) { if (a && typeof select === 'function') select(a); amanRender(); return; }
+  const b = t && S.acs.find(x => x.cs === t.dataset.cs);
+  if (a && b) amanSwap(a, b); else amanRender();
+}
+function amanWire(doc){
+  doc.addEventListener('pointerdown', amanDown);
+  doc.addEventListener('pointermove', amanMove);
+  doc.addEventListener('pointerup', amanUp);
+  doc.addEventListener('pointercancel', () => { AM.drag = null; amanRender(); });
+}
+amanWire(document);
+function amanTick(){ if (!AM.timer) AM.timer = setInterval(amanRender, 1000); amanRender(); }
+function amanOpen(){
+  AM.open = true;
+  let d = document.getElementById('amandock');
+  if (!d) {
+    d = document.createElement('aside'); d.id = 'amandock'; d.className = 'cb-drawer am-drawer'; d.setAttribute('aria-label', 'Arrival manager');
+    d.innerHTML = `<div class="cb-top"><b>Arrival manager</b><span class="grow"></span><button type="button" class="btn ghost" data-am="pop">Pop out</button><button type="button" class="db-x" data-am="x" aria-label="Close">✕</button></div><div class="am-body cb-body"></div>`;
+    document.body.appendChild(d);
+    d.querySelector('[data-am="x"]').onclick = () => { d.remove(); AM.open = false; };
+    d.querySelector('[data-am="pop"]').onclick = () => { d.remove(); AM.open = false; amanPop(); };
+  }
+  amanTick();
+}
+function amanPop(){
+  if (AM.win && !AM.win.closed) { AM.win.focus(); return; }
+  const w = popWin('cwAman', `${APT.icao} arrival manager`, 760, 900); if (!w) return;
+  AM.win = w; w.document.body.innerHTML = `<div class="cb-page am-page"><div class="cb-top"><b>${esc(APT.name)} · arrival manager</b></div><div class="am-body"></div></div>`;
+  amanWire(w.document);
+  amanTick();
+}
+S.listeners.push(ev => { if (ev === 'start') { AM.drag = null; if (AM.open || AM.win) amanRender(); } });
+{ const b = document.getElementById('tgAman'); if (b) b.onclick = () => amanOpen(); }
+window.__aman = { snap: amanSnap, swap: amanSwap, open: amanOpen, pop: amanPop };
 
 // ═════════════════════════ holding: expected approach times and fuel ═════════════════════════
 // A flight that holds needs an expected approach time (EAT): UK practice is to give one when the delay will be 20
