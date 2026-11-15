@@ -161,7 +161,7 @@ function depSecs(ac){
 }
 // how long the next arrival must still be away for the departure to go: its line-up and roll plus a minute; landing
 // towards it (Innsbruck: land 26, depart 08) five minutes more, so it is well clear before they meet
-const clearS = ac => { const a = arrNear(rwyOf(depRw(ac)), ac); return depSecs(ac) + 110 + (a.opp ? 300 : a.head ? 150 : 0); };
+const clearS = ac => { const a = arrNear(rwyOf(depRw(ac)), ac); return depSecs(ac) + (typeof mixOf === 'function' && mixOf(rwyOf(depRw(ac))) ? MIX_CLR : 110) + (a.opp ? 300 : a.head ? 150 : 0); };
 // how long a landing occupies the runway, learned from the landings so far (a backtrack at Gibraltar takes minutes)
 const occS = R => (S.aiOcc && S.aiOcc[R.id]) || (BIG_GROUND ? 75 : 150);
 // departures waiting for a runway (or one crossing it): Approach leaves them a gap (the landing ahead vacates, then
@@ -242,6 +242,7 @@ function shutOpenFor(ac){
 // waiting), so the hold empties in a steady stream at the minimum spacing
 function holdGap(R, gap){
   if (!gap) return 0;
+  { const k = typeof mixOf === 'function' && mixOf(R); if (k === 'alt') return gap; if (k) return 0; }   // a mixed-mode spacing (mixmode.js): every landing, or the set gaps instead
   // a departure already on the runway (lined up, or lining up) gets its gap now: it can't wait out three landings there
   if (S.acs.some(o => o.kind === 'DEP' && o.ground && o.onRwy && (o.state === 'LINEUP' || o.state === 'LINEDUP') && sameRwy(R, rwyOf(depRw(o)).id))) return gap;
   const held = S.acs.filter(o => o.kind === 'ARR' && o.airborne && o.mode === 'HOLD' && !o.app && sameRwy(R, rwyOf(landRw(o)).id)).length;
@@ -251,7 +252,7 @@ function holdGap(R, gap){
 }
 const WAKE_NM = { HH: 4, HM: 5, HL: 6, MH: 3, MM: 3, ML: 5, LH: 3, LM: 3, LL: 3 };
 // the time between two landings: wake (or radar) spacing plus a mile at the approach speed, or the runway occupancy
-const landGapS = (lead, trail, R) => wxSlow()*Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25);
+const landGapS = (lead, trail, R) => wxSlow()*Math.max(((WAKE_NM[(lead.perf.wake || 'M') + (trail.perf.wake || 'M')] || 3) + 1)/((trail.perf.vapp || 135))*3600, occS(R) + 25, typeof mixNM === 'function' ? mixNM(R)/((trail.perf.vapp || 135))*3600 : 0);   // (a mixed-mode spacing set on the ATIS panel: mixmode.js)
 // where it is heading next on its way in: the first fix of the route estToGo measures, else the start of the final
 function nextFixP(ac, F){
   if (!F) return null;
@@ -427,14 +428,15 @@ function aiDepart(ac){
   // the one ahead is rolling (or just gone): line up and wait behind it, ready to go once the spacing allows, if the next
   // arrival leaves room for that. Lined up, it needs about 45 s to be rolling away instead of the taxi on
   const rolling = S.acs.some(o => o !== ac && o.state === 'TAKEOFF' && o.onRwy && sameRwy(R, o.rwyId || RWYS[0].id));
-  const lineNeed = 45 + 110 + (a.opp ? 300 : a.head ? 150 : 0);
+  const mixT = typeof mixOf === 'function' && !!mixOf(R);   // a mixed-mode spacing set (mixmode.js): the gaps are worked tightly
+  const lineNeed = 45 + (mixT ? MIX_CLR : 110) + (a.opp ? 300 : a.head ? 150 : 0);
   if (!lined && ac.state === 'HOLDPT' && !luFull(ac) && (wait > 0 || rolling) && luBehind(ac, R) && a.eta >= Math.max(wait, rolling ? 30 : 0) + lineNeed + 30) { ac.aiWhy = 'lining up behind the departure'; return aiDo('TWR', ac, 'LU'); }
   // an aircraft crossing the runway well away from this one's entry: line up meanwhile, ready to go once it is across
   if (!lined && ac.state === 'HOLDPT' && !ac.luAfter && !luFull(ac) && busy && !rwyBusy(R, ac, false, o => xFar(o, ac) || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + 30) { ac.aiWhy = 'lining up while traffic crosses'; return aiDo('TWR', ac, 'LU'); }
   // conditional line-up: a landing aircraft rolling out the same way, or a departure rolling, is all that is on the
   // runway: line up behind it (it waits at the holding point until the traffic has gone by), if the next arrival leaves room
   const tr = !lined && ac.state === 'HOLDPT' && !ac.luAfter && !luFull(ac) && luTraffic(ac);
-  if (tr && tr.o.onRwy && !rwyBusy(R, ac, true, o => o === tr.o || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + (tr.kind === 'landing' ? 60 : 30)) { ac.aiWhy = `lining up behind the ${tr.kind} ${tr.o.cs}`; return aiDo('TWR', ac, 'LU'); }
+  if (tr && tr.o.onRwy && !rwyBusy(R, ac, true, o => o === tr.o || behind(o)) && a.eta >= Math.max(wait, 0) + lineNeed + (tr.kind === 'landing' && !mixT ? 60 : 30)) { ac.aiWhy = `lining up behind the ${tr.kind} ${tr.o.cs}`; return aiDo('TWR', ac, 'LU'); }
   // multiple line-ups: one or two already lined up further down the runway (an intersection departure ahead), this one
   // lines up behind them to go next, if the next arrival leaves room for them all
   const ahead = luOthers(ac);
@@ -850,7 +852,7 @@ function amanPlan(list){
       const ac = x.ac;
       // a departure's gap ahead of this one (mixed mode): as holdGap gives them, every landing while the holds are quiet,
       // every second or third while they are busy
-      const dep = dg > 0 && (held < 2 || run >= (held >= 4 ? 3 : 2));
+      const mk = typeof mixOf === 'function' && mixOf(R), dep = dg > 0 && (mk ? mk === 'alt' : (held < 2 || run >= (held >= 4 ? 3 : 2)));   // (a mixed-mode spacing: mixmode.js)
       const before = s => Math.max(amanGap(s.ac, ac, R), dep ? dg : 0);
       let t0 = S.t + x.tMin;
       if (last) t0 = Math.max(t0, last.t + before(last));
