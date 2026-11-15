@@ -1698,7 +1698,7 @@ function commandRun(str){
       const key = v ? APT.rnp(ac, rw, v) : null;
       if (v && !key) { sys(`There is no RNP ${v} approach to runway ${rw}.`); return; }
       const F = FINAL[key || rw];
-      const lim = windLimit(ac, rw) || (appMinsOk(F, rw, S.wx) ? null : (F.rnp ? 'weather below the RNP minima' : APT.minsText)) || (typeof lvoLimit === 'function' ? lvoLimit(ac, F, rw) : null);
+      const lim = windLimit(ac, rw) || (appMinsOk(F, rw, S.wx) ? null : (F.rnp ? 'weather below the RNP minima' : APT.minsText)) || (typeof lvoLimit === 'function' ? lvoLimit(ac, F, rw) : null) || (typeof worksLimit === 'function' ? worksLimit(ac, F, rw) : null);
       if (lim) {
         atc(ac, `this will be ${F.rnp ? 'the ' + F.spoken : 'a ' + APT.appName + ' runway ' + rw}`);
         // below the circling minima but good enough for RNP: the crew asks for it instead of holding
@@ -1907,7 +1907,7 @@ function commandRun(str){
         if (ahead) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, there's traffic lined up ahead of us on the runway`); sys(`${ahead.cs} is lined up ahead of ${ac.cs}: clear it for take-off first.`, true); return; } }
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
       if (ac.deice && ac.deice.st === 'DONE' && S.t > ac.deice.until) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, our de-icing holdover time has expired, we need de-icing again'); ac.deice = { st: 'ASK' }; ac.need = 'Request de-icing'; SC(ac).pts -= 5; return; }
-      { const tl = typeof lvtoLimit === 'function' && lvtoLimit(ac); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl}`); ac.need = 'Unable take-off'; renderSel(); return; } }
+      { const tl = (typeof lvtoLimit === 'function' && lvtoLimit(ac)) || (typeof worksToLimit === 'function' && worksToLimit(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl}`); ac.need = 'Unable take-off'; renderSel(); return; } }
       if (S.wx.vis < toVisMin()) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, visibility is below our ${toVisMin().toLocaleString('en-GB')} metre departure minimum`); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(depRw(ac)); if (blk) { sys(`Runway ${depRw(ac)} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
@@ -2138,6 +2138,7 @@ function step(dt){
   if (typeof recStep === 'function') recStep();
   if (typeof nightStep === 'function') nightStep();
   if (typeof shiftStep === 'function') shiftStep();
+  if (typeof teamStep === 'function') teamStep();
   stepWindShift(); stepReadbacks(); stepSimilarCs(); stepCsErr();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand

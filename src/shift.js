@@ -32,6 +32,7 @@ function wxApply(f, why){
   if (typeof rvrUpdate === 'function') rvrUpdate(true);
   if (typeof wxBest === 'function') { const b = wxBest(); if (b && b !== was) sys(`The wind now favours runway ${b}.`, true); }
   if (typeof renderAtis === 'function') renderAtis();
+  emit('wxchange', why);
 }
 
 // ── the forecast for the shift: a list of changes, each at a time, and a line saying what to expect
@@ -129,7 +130,7 @@ function shiftStaff(){
     if (S.t - SHIFT.busyT > 240) {
       const k = ['GND', 'DEP', 'APP', 'TWR'].find(x => mine.includes(x)); SHIFT.busyT = 0;
       shiftSeat(k, 'AI'); SHIFT.splits.push(k);
-      sys(`Supervisor: you have ${load} flights, I'm splitting ${AI_NAME[k]} off. A colleague has opened ${seatUnit(k)} and takes its traffic from now.`, true);
+      supSay(`You have ${load} flights, I'm splitting ${AI_NAME[k]} off. A colleague has opened ${seatUnit(k)} and takes its traffic from now.`);
     }
   } else SHIFT.busyT = 0;
   // quiet again: band-box the last position split off back in with yours
@@ -137,17 +138,18 @@ function shiftStaff(){
     const k = SHIFT.splits[SHIFT.splits.length - 1];
     if (load + seatLoad(k) <= SHIFT_BOX) {
       SHIFT.quietT ||= S.t;
-      if (S.t - SHIFT.quietT > 480) { SHIFT.quietT = 0; SHIFT.splits.pop(); shiftSeat(k, 'ME'); sys(`Supervisor: it's quiet, I'm band-boxing ${AI_NAME[k]} back with you. You are working ${AI_NAME[k]} (${seatUnit(k)}) again.`, true); }
+      if (S.t - SHIFT.quietT > 480) { SHIFT.quietT = 0; SHIFT.splits.pop(); shiftSeat(k, 'ME'); supSay(`It's quiet, I'm band-boxing ${AI_NAME[k]} back with you. You are working ${AI_NAME[k]} (${seatUnit(k)}) again.`); }
     } else SHIFT.quietT = 0;
   }
 }
 
+const supSay = t => typeof TEAM !== 'undefined' && TEAM.people ? teamSay('SUP', t) : sys('Supervisor: ' + t, true);
 function shiftStep(){
   if (!SHIFT || !S.running) return;
   while (SHIFT.plan.length && S.t >= SHIFT.plan[0].at) { const p = SHIFT.plan.shift(); wxApply({ ...wxParts(S.wx), ...p.f }, p.why); }
   if (S.t - SHIFT.staffT >= 30) { SHIFT.staffT = S.t; shiftStaff(); }
   if (!SHIFT.warned && SHIFT.end - S.t <= 900) { SHIFT.warned = true; sys(`Your relief arrives at ${hmZ(SHIFT.end)}, in 15 minutes.`); }
-  if (!SHIFT.done && S.t >= SHIFT.end) { SHIFT.done = true; sys('Your relief is here: hand the position over.'); for (const k of SHIFT.splits) S.seats[k] = 'ME'; shiftModal(true); }
+  if (!SHIFT.done && S.t >= SHIFT.end) { SHIFT.done = true; if (typeof TEAM !== 'undefined' && TEAM.people) teamSay('REL', `Hi, ${TEAM.people.REL} here. Ready to take over when you are.`); else sys('Your relief is here: hand the position over.'); for (const k of SHIFT.splits) S.seats[k] = 'ME'; shiftModal(true); }
 }
 S.listeners.push(ev => {
   if (ev !== 'start') return;
@@ -158,5 +160,5 @@ S.listeners.push(ev => {
   const P = wxPlan(len);
   S.wshift = null;   // the shift's forecast replaces the random wind shifts
   SHIFT = { len, end: S.t + len*60, plan: P.out.sort((a, b) => a.at - b.at), trend: P.text, splits: [], orig: { ...S.seats }, staffT: 0, busyT: 0, quietT: 0 };
-  setTimeout(() => { if (SHIFT && S.running) shiftModal(false); }, 0);
+  setTimeout(() => { if (SHIFT && S.running) (typeof teamHandover === 'function' ? teamHandover() : shiftModal(false)); }, 0);
 });

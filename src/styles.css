@@ -1314,3 +1314,16 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .ho-list dt{font-weight:600;opacity:.7}.ho-list dd{margin:0}
 .ho-ctl{display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:1px solid var(--line,#ccd)}
 @media (max-width:760px){.ho-list{grid-template-columns:1fr;gap:2px}.ho-list dd{margin-bottom:8px}}
+/* ── team chat ── */
+.tc-card{width:min(680px,100%);height:min(720px,100%)}
+.tc-brief{border-bottom:1px solid var(--line,#ccd)}.tc-brief summary{cursor:pointer;padding:8px 16px;font-weight:600;font-size:13px}
+.tc-brief .ho-list{max-height:220px;padding-top:4px}
+.tc-msgs{flex:1;overflow:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.tc-m{max-width:85%;align-self:flex-start;background:rgba(127,127,127,.12);border-radius:10px;padding:7px 10px;font-size:14px;line-height:1.4}
+.tc-m b{display:block;font-size:11px;font-weight:600;opacity:.65;margin-bottom:2px}
+.tc-m.me{align-self:flex-end;background:rgba(47,158,106,.18)}
+.tc-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px}
+.tc-chip{border:1px solid #2f9e6a;color:inherit;background:transparent;border-radius:16px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.tc-chip:hover{background:rgba(47,158,106,.15)}
+.tc-in{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line,#ccd)}
+.tc-in input{flex:1;min-width:0;font:inherit;padding:7px 10px;border-radius:6px;border:1px solid var(--line,#ccd);background:transparent;color:inherit}

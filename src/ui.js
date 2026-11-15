@@ -66,6 +66,7 @@ function draw(){
   if (S.showProc && sc >= 3) drawProcedures();
   drawAirport();
   if (typeof drawLvpLights === 'function') drawLvpLights();
+  if (typeof drawWorks === 'function') drawWorks();
   if (typeof drawGFlow === 'function') drawGFlow();
   if (S.preview) drawPreview(S.preview);
   if (typeof drawFar === 'function' && cv.id === 'scope') drawFar();
@@ -720,6 +721,7 @@ function renderAtis(){
     <div class="togap" id="toGap"></div>
     ${wxLines().map(l => `<div class="warnline">${esc(l)}</div>`).join('')}
     ${typeof lvpPanel === 'function' ? lvpPanel() : ''}
+    ${typeof worksPanel === 'function' ? worksPanel() : ''}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the ${APT.turbName || 'Special Procedures'} limit. Expect windshear on final.</div>` : ''}

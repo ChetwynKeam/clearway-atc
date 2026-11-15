@@ -154,6 +154,7 @@ const AP_DATA = {ap_data};
 {r('ai.js')}
 {r('night.js')}
 {r('shift.js')}
+{r('team.js')}
 {r('gflow.js')}
 {r('voice.js')}
 {r('radio.js')}
