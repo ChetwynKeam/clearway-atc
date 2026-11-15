@@ -823,9 +823,32 @@ function randomTowFor(ac){
   for (const list of first) { const to = list.length && nearestFree(ac, list, list === same); if (to) return to; }
   return null;
 }
+// ── gridlock. Aircraft on the ground wait for each other (give way, back off, yield); now and then the waiting goes
+// round in a circle (A waits for B, B for C, C for A) and nothing moves again. A circle that has stood still for
+// 90 seconds is broken: one of them (a taxiing aircraft before one under tow) is let through the one it waits for,
+// as a marshaller would wave it on.
+let gridT = 0;
+function stepGridlock(){
+  if (S.t - gridT < 15) return; gridT = S.t;
+  const on = a => a && a.ground && a.path && a.path.pts && a.path.pts.length;
+  for (const a of S.acs) { if (on(a) && (a.gs || 0) < 1) a.stillS = (a.stillS || 0) + 15; else a.stillS = 0; }
+  const by = cs => S.acs.find(x => x.cs === cs), next = a => by(a.waiting) || by(a.yieldTo) || by(a.backing);
+  for (const a of S.acs) {
+    if (!on(a) || (a.stillS || 0) < 90 || a.dlGo > S.t) continue;
+    const ring = [a]; let c = next(a);
+    while (c && c !== a && !ring.includes(c) && ring.length < 12) { ring.push(c); c = next(c); }
+    if (c !== a || ring.length < 2 || ring.some(x => !x.ground)) continue;
+    const go = ring.find(x => x.state === 'TAXI' && on(x)) || ring.find(on); if (!go) continue;
+    go.dlGo = S.t + 30; go.dlIgnore = ring.map(x => x.cs); go.waiting = null; go.yieldTo = null;
+    for (const x of ring) x.stillS = 0;
+    break;
+  }
+}
 function stepRandomTows(){
   const R = S.rtow; if (!R || S.t < R.next) return;
   R.next = S.t + 3600/TOW_RATE*rnd(0.5, 1.5);
+  // not while the apron is busy: a random tow then only blocks the taxilanes the departures and arrivals need
+  if (S.acs.filter(a => a.ground && a.path && ['TAXI', 'PUSH', 'TOW', 'VACATING'].includes(a.state)).length > 6) { R.next = S.t + 300; return; }
   const can = ac => ac.ground && ac.stand && !ac.tow && !ac.rtowed && !ac.need && !outOfCtl(ac) && !ac.emerg && !ac.slotHold && !ac.slotCancelled && S.sel !== ac &&
     !(ac.inAt != null && S.t - ac.inAt < ac.inGap) &&   // just on stand: passengers off, bags out and the crew gone (30-45 min) before a tug comes for it
     (ac.state === 'ONSTAND' ? ac.doneAt === Infinity : ac.state === 'PARKED' && ac.kind === 'DEP' && ac.reqAt - S.t > 40*60);
@@ -2160,7 +2183,7 @@ function step(dt){
   if (X.st === 'CLOSED' || X.st === 'CLOSING') { X.queue += dt*0.8; X.totalClosed += dt; } else X.queue = Math.max(0, X.queue - dt*5);
   }
 
-  stepStandWaits(); stepTows(); stepRandomTows(); if (S.emg) stepEmerg(dt); if (S.flow) stepFlow();
+  stepStandWaits(); stepTows(); stepRandomTows(); stepGridlock(); if (S.emg) stepEmerg(dt); if (S.flow) stepFlow();
   if (typeof stepVehicles === 'function') stepVehicles(dt);
   if (S.recalls && S.recalls.length) {
     // the calls that are due: one station alone in a gap is heard; two or more in the same gap block each other
@@ -2199,7 +2222,10 @@ function step(dt){
   S.acs = S.acs.filter(ac => {
     if (ac.state === 'ONSTAND' && S.t > ac.doneAt) { if (S.sel === ac) S.sel = null; if (ac.stand) ac.stand.occ = null; return false; }
     if (ac.divLanded) { dropPlan(ac); SC(ac).div++; sys(`${ac.cs} has landed at ${ac.divLanded.name}.`); emit('divlanded', ac); if (S.sel === ac) S.sel = null; return false; }
-    if (ac.airborne && ac.state !== 'PRE' && Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]) > (ac.kind === 'DEP' ? APT.area.dep : ac.state === 'DIVERTING' ? APT.area.div : APT.area.arr)) {
+    // (an arrival counts as leaving only once it has been inside: one that starts the session already inbound may be
+    // placed a little outside, at its entry point)
+    if (ac.kind === 'ARR' && ac.airborne && !ac.wasIn && Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]) < APT.area.arr - 2) ac.wasIn = true;
+    if (ac.airborne && ac.state !== 'PRE' && (ac.kind === 'DEP' || ac.wasIn || ac.state === 'DIVERTING') && Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]) > (ac.kind === 'DEP' ? APT.area.dep : ac.state === 'DIVERTING' ? APT.area.div : APT.area.arr)) {
       if (ac.kind === 'DEP') { const sc = ac.handed ? (ac.hoBy || S.score) : SC(ac); if (!ac.handed) { sc.pts -= 30; sys(`${ac.cs} left your area without being transferred.`, true); } else sc.pts += 20; sc.departed++; }
       else { SC(ac).div++; SC(ac).pts -= ac.state === 'DIVERTING' ? 0 : 40; { const D = ac.state === 'DIVERTING' && divDest(ac); sys(D ? `${ac.cs} has left the area, flying on to ${D.name}.` : `${ac.cs} has left the area (diverted).`, ac.state !== 'DIVERTING'); } }
       emit('exit', ac);
@@ -2563,6 +2589,7 @@ function stepGround(ac, dt){
     // give way: stop if another aircraft on the ground is close ahead (not under a tug on its push line: that space is its own)
     if (!ac.path.reverse && !ac.path.tug && spd > 0) for (const o of S.acs) {
       if (o === ac || !o.ground) continue;
+      if (ac.dlGo > S.t && ac.dlIgnore && ac.dlIgnore.includes(o.cs)) continue;   // breaking a gridlock: see stepGridlock
       const dd = dist(ac.x, ac.y, o.x, o.y)/M2NM; if (dd > 80 || dd < 1) continue;
       if (o.yieldTo === ac.cs && !o.backing && (o.gs || 0) < 1) continue;   // backed off clear of my route for me
       if (o.backing === ac.cs) { spd = 0; ac.waiting = o.cs; break; }   // being pushed back out of my way: wait for it

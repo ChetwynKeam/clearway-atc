@@ -58,7 +58,9 @@ function worksInit(len){
     if (k === 'twy') { const t = pickTaxiway(); if (t) WORKS.list.push({ k, ...t, why: why[Math.floor(Math.random()*why.length)], until: until() }); }
     else if (k === 'short') {
       // what is left is enough for the narrowbodies (1,800 m to take off, 1,500 to land), not for the heavies
-      const R = longest, avail = Math.round(rnd(1850, 2050)/50)*50, cut = Math.round((R.len - avail)/10)*10, atHi = Math.random() < 0.5;
+      const R = longest, avail = Math.round(rnd(1850, 2050)/50)*50, cut = Math.round((R.len - avail)/10)*10;
+      // the works are at the far end for the flow in use, so arrivals touch down and depart from the open part
+      const ld = typeof landRw === 'function' ? S.rwy : R.lo, atHi = rwyOf(ld) === R ? ld === R.lo : Math.random() < 0.5;
       WORKS.list.push({ k, rid: R.id, R, cut, end: atHi ? R.hi : R.lo, avail, why: 'works at the end of the runway', until: until() });
     }
     else if (k === 'ils') { const ends = RW_ENDS.filter(e => FINAL[e] && !FINAL[e].rnp), rw = ends.includes(S.rwy) && Math.random() < 0.7 ? S.rwy : ends[Math.floor(Math.random()*ends.length)]; if (rw) WORKS.list.push({ k, rw, why: 'a localiser fault', until: until() }); }
