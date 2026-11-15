@@ -724,6 +724,7 @@ function renderAtis(){
     ${typeof lvpPanel === 'function' ? lvpPanel() : ''}
     ${typeof worksPanel === 'function' ? worksPanel() : ''}
     ${typeof eqPanel === 'function' ? eqPanel() : ''}
+    ${typeof noisePanel === 'function' ? noisePanel() : ''}
     ${typeof flowLine === 'function' ? flowLine() : ''}
     ${S.emg && S.emg.ws ? `<div class="warnline">Windshear reported on final ${S.emg.ws.rw} by ${esc(S.emg.ws.cs)}: ${esc(S.emg.ws.text)}. Pass it with <b>WS</b>.</div>` : ''}
     ${tex > 0 ? `<div class="warnline">Turbulence: ${Math.round(tex)} kt over the ${APT.turbName || 'Special Procedures'} limit. Expect windshear on final.</div>` : ''}

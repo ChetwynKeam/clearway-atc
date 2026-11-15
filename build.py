@@ -159,6 +159,7 @@ const AP_DATA = {ap_data};
 {r('holdfuel.js')}
 {r('equip.js')}
 {r('vfr.js')}
+{r('ojti.js')}
 {r('gflow.js')}
 {r('voice.js')}
 {r('radio.js')}
