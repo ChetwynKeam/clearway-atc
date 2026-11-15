@@ -196,6 +196,12 @@ body.theme-dark .app .sel-head button.rm { border-color: #7a3030; color: #ffbcbc
 /* a landing or take-off clearance that still stands: green edge and a tick (purple stays for transferred flights) */
 .app button.strip.clr { box-shadow: inset 0 0 0 2px rgba(18,128,92,.75); }
 .strip.clr .bar { background: #12805c; }
+.strip .nx { display: inline-block; align-self: flex-start; width: max-content; margin: 2px 0 0;  padding: 1px 8px; border-radius: 5px; background: #0b5cad; color: #fff; font-family: var(--font-label); font-weight: 700; font-size: 11px; letter-spacing: .02em; cursor: pointer; white-space: nowrap; }
+.strip .nx:hover, .strip .nx:focus-visible { background: #0a4a8b; outline: none; }
+body.theme-dark .strip .nx { background: #5aa9ff; color: #04203d; }
+.strips .dropbay { margin: 4px 0 8px; padding: 14px 10px; border: 2px dashed #0b5cad; border-radius: 8px; text-align: center; font-family: var(--font-label); font-weight: 700; color: #0b5cad; }
+.strips .dropbay.over { background: rgba(11,92,173,.12); }
+body.theme-dark .strips .dropbay { border-color: #5aa9ff; color: #5aa9ff; }
 .strip .clrk { display: inline-block; padding: 0 5px; border-radius: 4px; background: #12805c; color: #fff; font-family: var(--font-label); font-weight: 700; font-size: 11px; letter-spacing: .03em; }
 body.theme-dark .strip .clrk { background: #5fe39a; color: #062014; }
 /* an approved diversion: magenta, like its icon on the scope (orange is arrivals, purple transferred, green cleared) */

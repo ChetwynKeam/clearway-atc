@@ -1214,6 +1214,15 @@ function makeStrip(ac, doc = document){
   if (clrOf(ac)) { const k = doc.createElement('span'); k.className = 'clrk'; k.textContent = '✓ ' + clrOf(ac); k.title = clrOf(ac) === 'CTL' ? 'Cleared to land' : 'Cleared for take-off'; d.querySelector('.fq').append(' ', k); }
   if (outOfCtl(ac)) { st.textContent = 'Transferred'; d.disabled = true; d.title = `Handed to ${NEXT_UNIT[ac.gate][0]}: no longer under your control`; }
   else d.onclick = () => { tapSelect(ac, true); if (towAsk(ac) && !phoneMQ.matches) centreOn(ac); };   // a tow request: show me where it is
+  // the obvious next instruction for a flight waiting on you: one tap on its strip (no need to open it), or drag the strip
+  // to the bay it moves on to, as on an electronic strip board
+  { const nx = !outOfCtl(ac) && stripNext(ac); if (nx) {
+    const k = doc.createElement('span'); k.className = 'nx'; k.setAttribute('role', 'button'); k.tabIndex = 0; k.textContent = nx.label; k.title = `${nx.label}: ${ac.cs} ${nx.cmd}`;
+    const go = e => { e.stopPropagation(); e.preventDefault(); command(`${ac.cs} ${nx.cmd}`); renderStrips(true); if (S.sel === ac) renderSel(); };
+    k.onclick = go; k.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); };
+    d.querySelector('.c-c').appendChild(k);
+    if (nx.to && doc === document) { d.draggable = true; d.ondragstart = e => { e.dataTransfer.setData('text/plain', ac.cs); e.dataTransfer.effectAllowed = 'move'; stripDrag = { ac, nx }; showDropBay(nx); }; d.ondragend = () => { stripDrag = null; hideDropBay(); }; }
+  } }
   // the selected flight's strip gets a recentre button: the map jumps to it (close in on the ground, the radar picture in the air)
   if (S.sel === ac && !outOfCtl(ac)) {
     const c = doc.createElement('span'); c.className = 'ctr'; c.setAttribute('role', 'button'); c.tabIndex = 0; c.title = 'Centre the map on ' + ac.cs; c.setAttribute('aria-label', c.title);
@@ -1224,6 +1233,34 @@ function makeStrip(ac, doc = document){
   }
   return d;
 }
+// ── the next instruction from the strip bay ──
+function stripNext(ac){
+  if (!ac || aiOwns(ac) || (ac.emerg && !ac.emerg.ack)) return null;
+  const n = ac.need || '';
+  if (n === 'Request start-up' && ac.state === 'PARKED') return { cmd: 'PUSH', label: 'Push', to: 'push' };
+  if (n === 'Ready to taxi') return { cmd: 'TAXI', label: 'Taxi', to: 'taxi' };
+  if (n === 'Request taxi' && ac.kind === 'ARR' && ac.stand && !standHeld(ac)) return { cmd: 'TAXI', label: 'Taxi in', to: 'taxi' };
+  if (n === 'Ready for departure' && ac.state === 'HOLDPT') return { cmd: 'LU', label: 'Line up', to: 'rwy' };
+  if (n === 'Lined up' || (ac.state === 'LINEDUP' && !ac.cto && !n)) return { cmd: 'CTO', label: 'Take off', to: 'rwy' };
+  if (/landing clearance|Short final/.test(n)) return { cmd: 'CTL', label: 'Land', to: 'final' };
+  if (n === 'Request approach') return { cmd: 'APP', label: 'Approach', to: 'final' };
+  if (/transfer/i.test(n)) return { cmd: 'HO', label: 'Transfer', to: 'off' };
+  if (n === 'Initial call' || n === 'Back on frequency') return { cmd: 'IDENT', label: 'Identified', to: null };
+  const m = n.match(/^Request direct (\S+)/); if (m) return { cmd: 'DCT ' + m[1], label: 'Direct ' + m[1], to: null };
+  if (n === 'Request climb' && typeof climbTop === 'function') return { cmd: 'C' + Math.round(climbTop()/100), label: 'Climb', to: null };
+  return null;
+}
+// dragging a strip: a drop zone for the bay it moves on to, at the top of the bay, and the instruction when it is dropped there
+let stripDrag = null;
+function showDropBay(nx){
+  const el = $('strips'); hideDropBay();
+  const z = document.createElement('div'); z.className = 'dropbay'; z.id = 'dropBay';
+  z.textContent = `Drop here: ${nx.label} → ${(PHASES.find(([k]) => k === nx.to) || [, nx.to])[1]}`;
+  z.ondragover = e => { e.preventDefault(); z.classList.add('over'); }; z.ondragleave = () => z.classList.remove('over');
+  z.ondrop = e => { e.preventDefault(); const D = stripDrag; stripDrag = null; hideDropBay(); if (D && S.acs.includes(D.ac)) { command(`${D.ac.cs} ${D.nx.cmd}`); renderStrips(true); if (S.sel === D.ac) renderSel(); } };
+  el.prepend(z);
+}
+function hideDropBay(){ const z = $('dropBay'); if (z) z.remove(); }
 function centreOn(ac){
   const m = Math.min(W, H) || 600, [x, y] = acMid(ac);
   if (ac.ground) { V.scale = Math.max(V.scale, m/(700*M2NM)); V.name = 'gnd'; }   // about 700 m across the scope
@@ -1257,6 +1294,7 @@ function renderStrips(force){
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
   const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
   if (stripWin && stripWin.closed) closeStripBoard();
+  if (stripDrag && !force) return;   // not while a strip is being dragged: the drop zone would go
   if (sig === stripSig && !force) return; stripSig = sig;
   const el = $('strips'); el.innerHTML = '';
   // the strip bay, grouped by phase of flight like an electronic strip board: each bay heads its strips, with an amber
