@@ -3127,7 +3127,6 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
             <select id="trafficSel">
               <optgroup label="Real world">
                 <option value="live">Live now · today’s real flights</option>
-                <option value="liveplus">Live now plus extra traffic</option>
               </optgroup>
               <optgroup label="Sessions">
                 <option value="real" selected>Timetable only</option>
@@ -13176,19 +13175,10 @@ function liveSession(now = Date.now(), mode = 'live'){
   }
   for (const d of T.dep) if (!used.has(d) && !d.cancelled && !d.done && d.rel > 0)   // night-stoppers and positioning flights
     residents.push({ cs: d.cs, t: d.t, k: 'RES', d: d.ap, gate: gateFor(d.ap), m: 0, depM: d.rel, at: zHM(Date.UTC(2026, 0, 1) + d.tm*60e3), real: true });
-  // a very busy airport (New York JFK: APT.liveThin movements an hour) keeps an even share of its real flights in Live now;
-  // Live now plus extra traffic keeps them all. The share is exact (Dublin keeps about seven flights in eight at its
-  // peak), not every second or third flight: a whole-number stride halved the traffic as soon as it was a little over.
-  if (APT.liveThin && mode !== 'liveplus') {
-    const mov = sched.filter(f => f.m < 180).length*2 + residents.filter(f => f.depM < 180).length, q = Math.min(1, 3*APT.liveThin/Math.max(1, mov));
-    const pick = L => q >= 1 ? L : L.filter((f, i) => Math.floor((i + 1)*q) > Math.floor(i*q));
-    const s = pick(sched), r = pick(residents), keep = new Set([...s.flatMap(f => f.turn ? [f.cs, f.turn.cs] : [f.cs]), ...r.map(f => f.cs)]);
-    return { sched: s, residents: r, T, q, keep };
-  }
+  // Live now keeps every real flight, however busy the airport: each arrival and departure on today's board is yours
   return { sched, residents, T, q: 1, keep: null };
 }
-// Live now's share at a busy airport: a flight on today's list is yours if it was kept, one that isn't on the list by a
-// steady coin toss on its transponder code (the same answer every time it is looked at)
+// every real flight is kept (sessions saved before Live now kept them all may still carry a share)
 const liveKept = r => !LIVE.session || !LIVE.session.keep || LIVE.session.keep.has(r.cs);
 const hexKept = h => { const q = LIVE.session ? LIVE.session.q : 1; if (q == null || q >= 1) return true; let x = 7; for (const c of h || '') x = (x*31 + c.charCodeAt(0)) >>> 0; return (x % 1000)/1000 < q; };
 // airlines fly under their own callsigns and their regional or sister operators' (Aer Lingus EIN/Emerald EAI, Ryanair

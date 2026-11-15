@@ -504,7 +504,7 @@ const APT = {
   area: { dep: 45, arr: 80, div: 45 }, roll: [70, RWY_M - 70], defRwy: '22', defWx: 'west',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minima', reqApp: rw => 'ILS approach',
   minsLong: 'Weather is below the ILS CAT I minima (200 ft and RVR 550 m).',
-  liveName: 'Geneva Airport', liveThin: 22, atisFreq: LSGG.UNITS.atis.freq, turbName: 'Geneva',
+  liveName: 'Geneva Airport', atisFreq: LSGG.UNITS.atis.freq, turbName: 'Geneva',
   sessionHours: Array.from({ length: 16 }, (_, i) => i + 5),   // 0500Z to 2000Z: 07:00 to 22:00 in Geneva in summer
   view: { app: [0, 0, 60], twr: [0, -0.2, 2.2], gnd: [mOf(EN(-300, -800)), offOf(EN(-300, -800)), 2000, 1200] },
   minsOk,

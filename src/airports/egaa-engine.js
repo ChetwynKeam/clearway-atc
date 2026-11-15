@@ -590,7 +590,7 @@ const APT = {
   minsLong: 'Weather is below the approach minima (ILS CAT I: 200 ft and RVR 550 m; the RNP 07: 250 ft).',
   markCity: cs => CITY.add(cs),
   holdOk: (ac, id) => isCity(ac) ? (id === 'MAGEE' || id === 'HB') : id === 'BEL',
-  liveName: 'Belfast Airport', liveThin: 22, atisFreq: UN.EGAA.atis.freq, turbName: 'Belfast',
+  liveName: 'Belfast Airport', atisFreq: UN.EGAA.atis.freq, turbName: 'Belfast',
   sessionHours: Array.from({ length: 17 }, (_, i) => i + 5),
   view: { app: [0, 0, 120], twr: [0, 0.2, 2.2], gnd: [mOf(EN(0, 250)), offOf(EN(0, 250)), 2600, 1500] },
   minsOk,

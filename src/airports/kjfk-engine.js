@@ -393,7 +393,7 @@ const APT = {
   area: { dep: 45, arr: 100, div: 45 }, roll: [70, RWY_M - 70], defRwy: '22L', defWx: 'sw',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the ILS minimums', reqApp: rw => 'ILS approach',
   minsLong: 'Weather is below the ILS CAT I minimums (200 ft and 1/2 statute mile).',
-  liveName: 'JFK Airport', liveThin: 20, atisFreq: KJFK.UNITS.atis.freq, turbName: 'New York',
+  liveName: 'JFK Airport', atisFreq: KJFK.UNITS.atis.freq, turbName: 'New York',
   sessionHours: Array.from({ length: 17 }, (_, i) => i + 10),   // 1000Z to 0200Z next day: 06:00 to 22:00 in New York
   view: { app: [0, 0, 75], twr: [ARP[0] - (R0.rm(RWY_M/2)[0]), ARP[1] - (R0.rm(RWY_M/2)[1]), 3.4], gnd: [mOf(ARP), offOf(ARP), 4600, 3800] },
   minsOk,
