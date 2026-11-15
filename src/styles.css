@@ -1406,3 +1406,11 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .dm-go{color:var(--accent);font-size:11px}
 @media (max-width:520px){.dm-t .dm-st{display:none}.dm-t{font-size:10.5px}.dm-t td,.dm-t th{padding:4px 3px}}
 .dm-key{display:flex;flex-wrap:wrap;gap:4px 12px}.dm-key .am-k::before{display:inline-block!important}
+/* mixed-mode runway tactics (mixmode.js), on the ATIS panel */
+.mix{margin:6px 0 4px}.mix-h{margin-bottom:4px}
+.mix-o{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.mix-o button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 6px;border:1px solid var(--line-2);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer;text-align:left;min-width:0}
+.mix-o button b{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.mix-o button span{font:10px var(--font-data);color:var(--dim);white-space:nowrap}
+.mix-o button.on{border-color:var(--accent);background:var(--accent-soft)}
+@media (max-width:520px){.mix-o{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mix-h{display:flex;justify-content:space-between;align-items:baseline}.mix-n{font-size:10px}
