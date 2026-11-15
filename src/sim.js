@@ -2138,12 +2138,16 @@ function stepAir(ac, dt){
     tgtH = brg(ac.x, ac.y, ...w.p); track = true;
     // the leg is the line from where it was joined (or the last fix) to this fix: it intercepts that line and holds it, so the
     // path is the published track (and the line drawn for it), not a curve re-aimed at the fix from wherever the wind put it
-    if (ac.legW !== w) { ac.legW = w; ac.legFrom = [ac.x, ac.y]; }
+    // (back on its route from a hold or a heading, the leg starts where it is now: an old start from before the hold left
+    // it tracking a line it was miles off and could never rejoin, held to 40° of that line's course)
+    if (ac.legW !== w || ac.legMode !== 'NAV') { ac.legW = w; ac.legFrom = [ac.x, ac.y]; }
     { const a = ac.legFrom, ux = w.p[0] - a[0], uy = w.p[1] - a[1], len = Math.hypot(ux, uy);
       if (len > 3 && d > 2) {
         const nx_ = ux/len, ny_ = uy/len, at = (ac.x - a[0])*nx_ + (ac.y - a[1])*ny_, look = Math.max(1.5, (ac.gs || ac.ias)/3600*30), f = clamp(at + look, 0, len);
         const leg = brg(...a, ...w.p); let h = brg(ac.x, ac.y, a[0] + nx_*f, a[1] + ny_*f);
-        const off = angDiff(leg, h); if (Math.abs(off) > 40) h = norm(leg + Math.sign(off)*40);
+        // well off the line (more than 3 NM) or past its end: straight for the fix, not a 40° intercept that may never meet it
+        const xte = Math.abs((ac.x - a[0])*ny_ - (ac.y - a[1])*nx_);
+        const off = angDiff(leg, h); if (Math.abs(off) > 40 && xte < 3 && at < len) h = norm(leg + Math.sign(off)*40);
         tgtH = h;
       } }
     // fly-by: start the turn onto the next leg early by the turn radius at 25° bank × tan(half the course change)
@@ -2169,6 +2173,7 @@ function stepAir(ac, dt){
       }
     }
   }
+  ac.legMode = ac.mode;
   if (ac.mode === 'HDG') tgtH = ac.tgtHdg;
   if (ac.mode === 'HOLD') {
     const h = ac.hold; h.t = (h.t||0) + dt;
