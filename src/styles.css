@@ -1345,3 +1345,5 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .cb-opts button{border:1px solid #2f9e6a;background:transparent;color:inherit;border-radius:14px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
 .cb-ans{opacity:.7;font-style:italic}.cb-rels{display:flex;flex-wrap:wrap;gap:6px}
 .cb-rel{font-size:12px;padding:3px 7px;border-radius:5px;border:1px solid var(--line,#ccd)}.cb-rel.ok{border-color:#2f9e6a}.cb-rel.exp{border-color:#e5484d}
+.ho-p{padding:14px 16px;margin:0;font-size:14px;line-height:1.5}
+.ho-bar{margin:0 16px 14px;height:8px;border-radius:4px;background:rgba(127,127,127,.2);overflow:hidden}.ho-bar i{display:block;height:100%;width:0;background:#2f9e6a;transition:width .2s}

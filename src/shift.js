@@ -147,6 +147,8 @@ const supSay = t => typeof TEAM !== 'undefined' && TEAM.people ? teamSay('SUP', 
 function shiftStep(){
   if (!SHIFT || !S.running) return;
   while (SHIFT.plan.length && S.t >= SHIFT.plan[0].at) { const p = SHIFT.plan.shift(); wxApply({ ...wxParts(S.wx), ...p.f }, p.why); }
+  if (SHIFT.onBreak) return;   // the colleague on your positions
+  breakStep();
   if (S.t - SHIFT.staffT >= 30) { SHIFT.staffT = S.t; shiftStaff(); }
   if (!SHIFT.warned && SHIFT.end - S.t <= 900) { SHIFT.warned = true; sys(`Your relief arrives at ${hmZ(SHIFT.end)}, in 15 minutes.`); }
   if (!SHIFT.done && S.t >= SHIFT.end) { SHIFT.done = true; if (typeof TEAM !== 'undefined' && TEAM.people) teamSay('REL', `Hi, ${TEAM.people.REL} here. Ready to take over when you are.`); else sys('Your relief is here: hand the position over.'); for (const k of SHIFT.splits) S.seats[k] = 'ME'; shiftModal(true); }
@@ -159,6 +161,68 @@ S.listeners.push(ev => {
   if (!len || EXERCISES[S.mode] || /^live/.test(S.mode)) return;
   const P = wxPlan(len);
   S.wshift = null;   // the shift's forecast replaces the random wind shifts
-  SHIFT = { len, end: S.t + len*60, plan: P.out.sort((a, b) => a.at - b.at), trend: P.text, splits: [], orig: { ...S.seats }, staffT: 0, busyT: 0, quietT: 0 };
+  SHIFT = { len, onT: S.t, end: S.t + len*60, plan: P.out.sort((a, b) => a.at - b.at), trend: P.text, splits: [], orig: { ...S.seats }, staffT: 0, busyT: 0, quietT: 0 };
   setTimeout(() => { if (SHIFT && S.running) (typeof teamHandover === 'function' ? teamHandover() : shiftModal(false)); }, 0);
 });
+
+// ── rest breaks. UK rules allow at most two hours on position; then a 30-minute break while a colleague works it.
+// The supervisor warns ten minutes before. You can put it off twice by ten minutes; after that it is not optional,
+// and going past two hours costs 10 points. On the break the AI colleague works your positions and the game runs
+// the half hour through; you come back to a briefing on what changed while you were away.
+const BRK_ON = 7200, BRK_LEN = 1800;
+function breakStep(){
+  if (!SHIFT || SHIFT.onBreak || SHIFT.done) return;
+  SHIFT.onT ??= S.t - 0;
+  const due = SHIFT.onT + BRK_ON + (SHIFT.putOff || 0)*600;
+  if (SHIFT.end - due < 20*60) return;   // the end of the shift comes first
+  if (!SHIFT.brkWarn && S.t >= due - 600) { SHIFT.brkWarn = true; supSay(`Your break is due at ${hmZ(due)}. ${typeof TEAM !== 'undefined' && TEAM.people ? TEAM.people.REL : 'A colleague'} will relieve you.`); }
+  if (!SHIFT.brkAsk && S.t >= due) { SHIFT.brkAsk = true; breakModal(); }
+  if (!SHIFT.overT && S.t >= SHIFT.onT + BRK_ON + 1500) { SHIFT.overT = true; S.score.pts -= 10; supSay('You are well past two hours on position (−10). Take your break now.'); breakModal(); }
+}
+function breakModal(){
+  document.getElementById('handover')?.remove();
+  S.paused = true;
+  const can = (SHIFT.putOff || 0) < 2 && !SHIFT.overT;
+  const box = document.createElement('div'); box.className = 'debrief'; box.id = 'handover';
+  box.innerHTML = `<div class="db-card ho-card" role="dialog" aria-label="Break"><div class="db-hd"><b>Time for your break</b><span class="db-sum">${hmZ(S.t)}</span></div>
+    <p class="ho-p">You have been on position for ${Math.round((S.t - SHIFT.onT)/60)} minutes. ${typeof TEAM !== 'undefined' && TEAM.people ? TEAM.people.REL : 'A colleague'} takes your positions for 30 minutes; the game runs the half hour through and you come back to a briefing.</p>
+    <div class="ho-bar" hidden><i></i></div>
+    <div class="ho-ctl">${can ? '<button type="button" class="btn ghost" data-h="later">Ten more minutes</button>' : ''}<button type="button" class="btn" data-h="go">Hand over and take the break</button></div></div>`;
+  document.body.appendChild(box);
+  const later = box.querySelector('[data-h="later"]');
+  if (later) later.onclick = () => { SHIFT.putOff = (SHIFT.putOff || 0) + 1; SHIFT.brkAsk = false; SHIFT.brkWarn = true; box.remove(); S.paused = false; supSay(`OK, ten more minutes${SHIFT.putOff >= 2 ? ', but that\'s the last time' : ''}.`); };
+  box.querySelector('[data-h="go"]').onclick = () => breakRun(box);
+}
+function breakRun(box){
+  const mine = AI_SEATS.filter(k => S.seats[k] !== 'AI'), before = { rwy: S.rwy, dep: typeof depRw === 'function' ? depRw() : S.rwy, wx: S.wx.raw, atis: S.atis, lvp: !!S.lvpOn, land: S.aiScore.landed, dept: S.aiScore.departed, los: S.aiScore.los, ga: S.aiScore.ga };
+  SHIFT.onBreak = true; for (const k of mine) shiftSeat(k, 'AI');
+  if (typeof teamSay === 'function' && TEAM.people) teamSay('REL', 'I have the position. Enjoy your break.', true);
+  box.querySelector('.ho-ctl').hidden = true; const bar = box.querySelector('.ho-bar'); bar.hidden = false;
+  box.querySelector('.ho-p').textContent = 'On your break: the position is being worked for you…';
+  const end = S.t + BRK_LEN;
+  const chunk = () => {
+    if (!S.running) return;
+    for (let i = 0; i < 60 && S.t < end; i++) step(1);
+    bar.firstChild.style.width = `${100*(1 - (end - S.t)/BRK_LEN)}%`;
+    if (S.t < end) return setTimeout(chunk, 0);
+    for (const k of mine) shiftSeat(k, 'ME');
+    SHIFT.onBreak = false; SHIFT.onT = S.t; SHIFT.putOff = 0; SHIFT.brkWarn = SHIFT.brkAsk = SHIFT.overT = false;
+    const ch = [];
+    ch.push(`${S.aiScore.landed - before.land} landed and ${S.aiScore.departed - before.dept} departed while you were away${S.aiScore.ga > before.ga ? `, ${S.aiScore.ga - before.ga} go-around${S.aiScore.ga - before.ga > 1 ? 's' : ''}` : ''}${S.aiScore.los > before.los ? `, ${S.aiScore.los - before.los} loss${S.aiScore.los - before.los > 1 ? 'es' : ''} of separation` : ''}.`);
+    if (S.rwy !== before.rwy || (typeof depRw === 'function' && depRw() !== before.dep)) ch.push(`Runways changed: now landing ${S.rwy}${typeof depRw === 'function' && depRw() !== S.rwy ? ', departing ' + depRw() : ''}.`);
+    if (S.wx.raw !== before.wx) ch.push(`New weather, information ${phonetic(S.atis)}: ${S.wx.raw}.`);
+    if (!!S.lvpOn !== before.lvp) ch.push(S.lvpOn ? 'Low visibility procedures are now in force.' : 'Low visibility procedures have been cancelled.');
+    box.remove();
+    if (typeof teamSay === 'function' && TEAM.people) teamSay('REL', `Welcome back. ${ch.join(' ')}`, true);
+    shiftModalBack(ch);
+  };
+  chunk();
+}
+function shiftModalBack(changes){
+  const box = document.createElement('div'); box.className = 'debrief'; box.id = 'handover';
+  box.innerHTML = `<div class="db-card ho-card" role="dialog" aria-label="Back from your break"><div class="db-hd"><b>Back from your break</b><span class="db-sum">${hmZ(S.t)}</span></div><dl class="ho-list"></dl><div class="ho-ctl"><button type="button" class="btn" data-h="close">I have the position</button></div></div>`;
+  const dl = box.querySelector('.ho-list');
+  for (const [k, v] of [['While you were away', changes.join(' ')], ...shiftBrief(false).filter(([k]) => k !== 'Shift' && k !== 'Forecast')]) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
+  document.body.appendChild(box);
+  box.querySelector('[data-h="close"]').onclick = () => { box.remove(); S.paused = false; sys('Back on position after your break.'); };
+}
