@@ -371,8 +371,11 @@ function log(cls, text, who, ac, ai){
   const tx = document.createElement('span'); tx.className = 'tx'; tx.textContent = text;
   div.append(tm, wh, tx);
   logEl.appendChild(div); while (logEl.childNodes.length > 300) logEl.removeChild(logEl.firstChild);
-  logEl.scrollTop = logEl.scrollHeight;
+  // scrolled to the newest line once per frame, not per line: reading scrollHeight forces a layout of the whole log,
+  // and a busy second (the AI controllers, a fast-forward) writes dozens of lines
+  if (!logScroll) { logScroll = true; requestAnimationFrame(() => { logScroll = false; logEl.scrollTop = logEl.scrollHeight; }); }
 }
+let logScroll = false;
 let voices = [];
 function loadVoices(){ try { voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); } catch(e) {} }
 try { speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); } catch(e) {}
