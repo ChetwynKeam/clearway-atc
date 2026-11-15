@@ -639,6 +639,9 @@ const waitsFor = ac => ac.emerg ? null : stackBelow(ac) || waitsUnder(ac);
 // out (Approach then trims its speed to fit it in exactly, as the estimates are never perfect, and a gap left open
 // is lost for good), the minimum and a little over otherwise
 const relK = (lead, trail, ac, e) => (trail === ac ? e : trail.mode === 'FINAL' ? 0 : eta(trail)) > 360 ? 0.85 : 1.05;
+// a landing order set by hand on the arrival manager display (aman.js: a flight dragged above another): its key in the
+// order, in place of when it joined the hold or when it is due (unset, the order is the planner's own)
+const amOrdK = (o, e) => o.amSeq ?? (o.aiQ != null ? o.aiQ : 1e12 + S.t + e);
 function planLandings(list){
   const plan = new Map(), byR = {};
   for (const ac of list) {
@@ -652,7 +655,7 @@ function planLandings(list){
     // while there are holds to empty, one still on its way in from further out than the stacks waits its turn (it
     // would take a slot a long way ahead and close in on those released after it)
     const far = Math.max(-1, ...c.filter(([a]) => a.mode === 'HOLD').map(([, e]) => e));
-    c.sort((a, b) => (a[0].aiQ ?? 1e12) - (b[0].aiQ ?? 1e12) || a[1] - b[1]);
+    c.sort((a, b) => a[0].amSeq != null || b[0].amSeq != null ? amOrdK(a[0], a[1]) - amOrdK(b[0], b[1]) : (a[0].aiQ ?? 1e12) - (b[0].aiQ ?? 1e12) || a[1] - b[1]);
     for (const [a, e] of c) if (far >= 0 && a.mode !== 'HOLD' && e > far + 60) plan.set(a, { wait: e - far, n: c.length, after: null });
     for (const [ac, e] of c) {
       if (plan.has(ac)) continue;
@@ -685,7 +688,7 @@ function landOrder(ac){
     }
     for (const id in byR) {
       const L = byR[id], R = rwyById(id), taken = L.filter(x => x.fixed).map(x => ({ t: x.e, x }));
-      const rest = L.filter(x => !x.fixed).sort((a, b) => (a.o.aiQ ?? 1e12) - (b.o.aiQ ?? 1e12) || a.e - b.e);
+      const rest = L.filter(x => !x.fixed).sort((a, b) => a.o.amSeq != null || b.o.amSeq != null ? amOrdK(a.o, a.e) - amOrdK(b.o, b.e) : (a.o.aiQ ?? 1e12) - (b.o.aiQ ?? 1e12) || a.e - b.e);
       for (const x of rest) {
         const need = (a, b) => landGapS(a, b, R);
         const fits = t => taken.every(s => s.t <= t ? t - s.t >= need(s.x.o, x.o) - 0.5 : s.t - t >= need(x.o, s.x.o) - 0.5);
@@ -831,9 +834,9 @@ function amanPlan(list){
     // the holds empty from the bottom: those in one hold take its turns in the order of their levels
     // (and no one goes ahead of the time it can really land: one held far out whose turn has come is fitted in where it
     // can get to, not ahead of those already close in, which would leave the runway empty while it flies in)
-    for (const x of c) x.k = Math.max(x.ac.amKey, S.t + x.tMin);
+    for (const x of c) x.k = x.ac.amSeq ?? Math.max(x.ac.amKey, S.t + x.tMin);
     const byFix = {};
-    for (const x of c) if (x.ac.mode === 'HOLD' && x.ac.hold && !x.ac.emerg) (byFix[x.ac.hold.name] ||= []).push(x);
+    for (const x of c) if (x.ac.mode === 'HOLD' && x.ac.hold && !x.ac.emerg && x.ac.amSeq == null) (byFix[x.ac.hold.name] ||= []).push(x);
     for (const f in byFix) { const H = byFix[f], keys = H.map(x => x.k).sort((a, b) => a - b); H.sort((a, b) => slotOf(a.ac) - slotOf(b.ac) || a.k - b.k).forEach((x, i) => { x.k = keys[i]; }); }
     c.sort((a, b) => (b.ac.emerg ? 1 : 0) - (a.ac.emerg ? 1 : 0) || a.k - b.k);
     // those already cleared keep the times they are flying to
@@ -854,7 +857,7 @@ function amanPlan(list){
       const opts = [t0, ...T.map(s => s.t + before(s))].filter(t => t >= t0).sort((a, b) => a - b);
       const sta = ac.emerg ? S.t + x.tMin : opts.find(fits) ?? t0;
       const ahead = T.filter(s => s.t <= sta).sort((a, b) => b.t - a.t)[0];
-      const e = { ac, t: sta, fixed: false, W: x.W, tMin: x.tMin, tNow: x.tNow, first: n === 0, dep, after: ahead ? ahead.ac : null, afterT: ahead ? ahead.t : null };
+      const e = { ac, t: sta, k: x.k, fixed: false, W: x.W, tMin: x.tMin, tNow: x.tNow, first: n === 0, dep, after: ahead ? ahead.ac : null, afterT: ahead ? ahead.t : null };
       m.set(ac, e); T.push(e); T.sort((a, b) => a.t - b.t); last = e; n++;
       if (dep) run = 0; else if (dg > 0) run++;
     }
@@ -924,7 +927,7 @@ function aiSequence(list){
     // the one next to go is stuck (traffic, a level it can't leave yet): after a minute the one behind may go ahead of it
     if (P && P.first && !ok && !shut && !ac.emerg && way && !way.later && ac.mode === 'HOLD') {
       ac.amStuck ??= S.t;
-      if (S.t - ac.amStuck > 60) { const nx = [...plan.values()].filter(e => e.ac !== ac && !e.fixed && sameRwy(R, rwyOf(landRw(e.ac)).id)).sort((a, b) => a.t - b.t)[0]; if (nx) { ac.amKey = nx.ac.amKey + 1; ac.amStuck = null; AMAN.t = -1; } }
+      if (S.t - ac.amStuck > 60) { const nx = [...plan.values()].filter(e => e.ac !== ac && !e.fixed && sameRwy(R, rwyOf(landRw(e.ac)).id)).sort((a, b) => a.t - b.t)[0]; if (nx) { ac.amKey = nx.ac.amKey + 1; if (ac.amSeq != null) ac.amSeq = (nx.ac.amSeq ?? nx.k) + 1; ac.amStuck = null; AMAN.t = -1; } }
     } else ac.amStuck = null;
     if (ok && !high && !ac.aiLev && aiDue(ac, 'app' + (ac.gaCount || 0), 3, 7)) { const lv = keep ? Math.round(lvlOf(ac)/100) : 0;
       const cmd = (way && way.rt ? `DCT ${way.fix} ` : '') + (keep ? `APP A${lv}` : 'APP');
