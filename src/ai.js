@@ -874,8 +874,9 @@ function aiApproach(ac){
       if (gap < need*1.05 && togo > 5 && aiDue(ac, 'slow' + L.cs, 2, 4)) {
         const D = Math.max(1, togo - 4), v0 = ac.spdAssigned && ac.tgtSpd ? ac.tgtSpd : 220, short = need*1.05 - gap;
         const v = [210, 200, 190, 180, 170, 160].filter(v => v >= slow && v < v0 - 5).find(v => D*3600*(1/v - 1/v0) >= short) || slow;
-        if (v < v0 - 5) { ac.aiWhy = `slowing behind ${L.cs}`; aiDo('APP', ac, 'S' + v); }
-      } else if (ac.spdAssigned && gap > need*1.3 && togo > 6 && aiDue(ac, 'fast' + L.cs, 3, 6)) { ac.aiWhy = ''; aiDo('APP', ac, 'SN'); }
+        if (v < v0 - 5) { ac.aiWhy = `slowing behind ${L.cs}`; aiDo('APP', ac, 'S' + v); ac.aiSlowT = S.t; }
+      // (not straight after slowing it: the gap opens as it slows, and a controller lets it settle before speeding it up again)
+      } else if (ac.spdAssigned && gap > need*1.3 && togo > 6 && S.t - (ac.aiSlowT ?? -1e9) > 120 && aiDue(ac, 'fast' + L.cs, 3, 6)) { ac.aiWhy = ''; aiDo('APP', ac, 'SN'); }
     }
     else if (!L && ac.spdAssigned && togo > 6 && aiDue(ac, 'fast', 3, 6)) aiDo('APP', ac, 'SN');   // nobody ahead any more
     // a shortcut to the start of the approach when it keeps its place in the order

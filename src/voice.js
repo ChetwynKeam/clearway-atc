@@ -44,6 +44,7 @@ function inEnglish(t){
 }
 const isEnglishVoice = v => !v || /^en/i.test(v.lang);
 // replaces the plain speaker: accent by airline, steadier controller, slight per-crew pitch and pace
+let spkQ = 0;
 say = function(text, who){
   if (!S.voice) return;
   // you are the controller: your own transmissions stay written in the radio log but are never read aloud,
@@ -53,7 +54,13 @@ say = function(text, who){
     const u = new SpeechSynthesisUtterance(text.replace(/FL(\d+)/g, (m,a) => 'flight level '+a.split('').map(d=>DIG[d]).join(' ')).replace(/\bLINK(\w)\b/g, 'link $1'));
     const v = voiceFor(who); if (v) { u.voice = v; u.lang = v.lang; if (!isEnglishVoice(v)) u.text = inEnglish(u.text); }
     u.rate = who === 'atc' ? 1.1 : 1.05 + (hash(who) % 20)/100; u.pitch = who === 'atc' ? 1 : 0.85 + (hash(who+'p') % 30)/100;
-    if (!/^tel:/.test(who) && typeof radioFx === 'function') { u.onstart = () => radioFx('open'); u.onend = () => radioFx('close'); }   // landline calls have no squelch
+    // the speech keeps up with the radio: at high speed, or on a crowded frequency, lines that would only be heard long after
+    // they were said are left written in the log and not spoken
+    if (spkQ && !speechSynthesis.speaking && !speechSynthesis.pending) spkQ = 0;   // a cancelled queue that never said so
+    if (spkQ >= 3) return;
+    spkQ++; const done = () => { spkQ = Math.max(0, spkQ - 1); };
+    if (!/^tel:/.test(who) && typeof radioFx === 'function') { u.onstart = () => radioFx('open'); u.onend = () => { done(); radioFx('close'); }; } else u.onend = done;   // landline calls have no squelch
+    u.onerror = done;
     speechSynthesis.speak(u);
   } catch(e) {}
 };

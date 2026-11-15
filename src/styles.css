@@ -1300,3 +1300,11 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .db-m.land,.db-m.dep{height:5px;top:5px;width:2px;opacity:.6}
 .db-hd b{order:0}.db-hd .grow{order:1}.db-x{order:2}.db-sum{order:3}
 @media (max-width:760px){.db-sum{flex-basis:100%}.db-body{flex-direction:column}.db-side{width:auto;border-left:0;border-top:1px solid var(--line,#ccd);max-height:42%}.debrief{padding:0}.db-card{height:100%;border-radius:0}}
+/* ── frequency lamps beside the command line ── */
+.cmd .chs{display:flex;gap:6px;align-items:center;margin-right:6px;white-space:nowrap}
+.cmd .ch{display:inline-flex;align-items:center;gap:4px;font:600 11px/1 var(--font-data,ui-monospace,monospace);padding:4px 6px;border-radius:5px;border:1px solid var(--line,#ccd);opacity:.75}
+.cmd .ch i{width:7px;height:7px;border-radius:50%;background:#8a9aa6}
+.cmd .ch.on{opacity:1}.cmd .ch.on i{background:#2fbf71;box-shadow:0 0 6px #2fbf71}
+.cmd .ch.hot{color:#c2410c;border-color:#f0a020}
+.strip .cs.simcs{text-decoration:underline wavy #f0a020;text-underline-offset:3px}
+@media (max-width:760px){.cmd .chs{display:none}}

@@ -14,6 +14,7 @@ function recStep(){
     a.push([ac.cs, Math.round(ac.x*1000)/1000, Math.round(ac.y*1000)/1000, Math.round(ac.alt), Math.round(ac.hdg), ac.kind === 'ARR' ? 1 : 0, ac.ground ? 1 : 0, aiOwns(ac) ? 1 : 0]);
   }
   REC.frames.push({ t: S.t, a });
+  if (typeof CH !== 'undefined') for (const k in CH) chOcc(k);   // keeps each frequency's busiest ten minutes
   if (REC.frames.length > REC_MAX) REC.frames.shift();
 }
 // the frame nearest time t
@@ -56,6 +57,8 @@ const EV_INFO = { los: ['Loss of separation', '#e5484d'], ga: ['Go-around', '#f0
 function evNote(e){ return e.k === 'los' ? losNote(e) : e.k === 'ga' ? gaNote(e.why) : e.k === 'inc' ? INC_NOTE : e.k === 'emg' ? (e.why ? e.why.replace(/[.\s]*$/, '.') : 'An emergency.') + ' Priority to it: a clear runway, the fire service told, and the traffic around it moved out of its way.' : ''; }
 function evText(e){ return `${EV_INFO[e.k][0]}: ${e.cs.filter(Boolean).join(' and ')}${e.k === 'ga' && e.why ? ` (${e.why})` : ''}${e.ai ? ' · AI seat' : ''}`; }
 
+// the busiest ten minutes each frequency had
+const freqPeaks = () => { const L = typeof CH === 'undefined' ? [] : AI_SEATS.filter(k => CH[k] && CH[k].peak > 0).map(k => `${AI_NAME[k]} ${Math.round(CH[k].peak*100)}%`); return L.length ? ` · busiest frequency use: ${L.join(', ')}` : ''; };
 // ── the debrief window ──
 let DB = null;
 function openDebrief(){
@@ -66,7 +69,7 @@ function openDebrief(){
   const key = ['los', 'ga', 'inc', 'emg'], allAI = AI_SEATS.every(k => S.seats[k] === 'AI'), mine = REC.events.filter(e => key.includes(e.k) && (!e.ai || allAI));
   const sc = allAI ? S.aiScore : S.score;
   box.innerHTML = `<div class="db-card" role="dialog" aria-label="Debrief">
-    <div class="db-hd"><b>Debrief</b><span class="db-sum">${sc.landed} landed · ${sc.departed} departed · ${sc.ga} go-arounds · ${sc.los} losses of separation · ${sc.incidents} incidents · ${sc.pts} pts${allAI ? ' (AI)' : ''}</span><span class="grow"></span><button type="button" class="db-x" aria-label="Close">✕</button></div>
+    <div class="db-hd"><b>Debrief</b><span class="db-sum">${sc.landed} landed · ${sc.departed} departed · ${sc.ga} go-arounds · ${sc.los} losses of separation · ${sc.incidents} incidents · ${sc.pts} pts${allAI ? ' (AI)' : ''}${freqPeaks()}</span><span class="grow"></span><button type="button" class="db-x" aria-label="Close">✕</button></div>
     <div class="db-body"><div class="db-view"><canvas class="db-cv"></canvas><div class="db-zoom"><button type="button" data-z="1.6">+</button><button type="button" data-z="0.625">−</button></div></div>
       <div class="db-side"><p class="db-lead">${mine.length ? `${mine.length} moment${mine.length > 1 ? 's' : ''} to look at. Pick one to see it and what an assessor would say.` : 'No losses of separation, go-arounds or incursions on your positions: a clean session.'}${allAI ? ' (Every position was on AI.)' : ''}</p><ol class="db-list"></ol><div class="db-note" hidden></div></div></div>
     <div class="db-ctl"><button type="button" class="db-play">Play</button><button type="button" class="db-spd">8×</button><span class="db-t"></span><div class="db-tl"><input type="range" class="db-rng" min="0" max="${REC.frames.length - 1}" value="${REC.frames.length - 1}" aria-label="Time"><div class="db-marks"></div></div></div>
