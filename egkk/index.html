@@ -1453,6 +1453,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .lbrk{position:fixed;left:50%;top:62px;transform:translateX(-50%);z-index:90;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px);padding:8px 14px;border-radius:10px;background:var(--panel);color:var(--ink);border:1px solid var(--amber);box-shadow:var(--shadow-2,0 6px 20px rgba(0,0,0,.3));font-size:13px}
 .lbrk b{color:var(--amber)}.lbrk-t{font-family:var(--font-data);font-size:12px;color:var(--ink-2)}
 .lbrk{width:min(460px,calc(100vw - 20px));box-sizing:border-box}.lbrk .btn{padding:4px 10px;font-size:12px;min-height:0}
+.strip.VEH .vacts button.go { background: #2f9e6a; color: #fff; border-color: #2f9e6a; opacity: 1; }
 
 </style>
 </head>
@@ -11079,7 +11080,7 @@ const phaseRwy = k => k === 'hold' || k === 'rwy' ? (typeof depRw === 'function'
 function renderStrips(force){
   const mine = a => !!a.need && !aiOwns(a);   // waiting on you (not on an AI controller)
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
-  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '') + (a.simCs || '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
+  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '') + (a.simCs || '')).join(',') + (typeof VFR !== 'undefined' ? '|' + VFR.list.map(v => v.cs + v.st).join(',') : '') + (typeof vehSig === 'function' ? vehSig() : '');
   if (stripWin && stripWin.closed) closeStripBoard();
   if (stripDrag && !force) return;   // not while a strip is being dragged: the drop zone would go
   if (sig === stripSig && !force) return; stripSig = sig;
@@ -11098,7 +11099,8 @@ function renderStrips(force){
     for (const ac of L) el.appendChild(makeStrip(ac));
   }
   if (typeof vehStrips === 'function') { const VS = vehStrips(); if (VS.length) { const hd = document.createElement('div'); hd.className = 'bayhd bay-veh'; hd.innerHTML = '<span class="bl">Vehicles</span><span class="bn"></span><b></b>'; hd.querySelector('b').textContent = VS.length; el.appendChild(hd); for (const d of VS) el.appendChild(d); } }
-  if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
+  if (typeof vfrStrips === 'function') { const VS = vfrStrips(); if (VS.length) { const hd = document.createElement('div'); hd.className = 'bayhd bay-veh'; hd.innerHTML = '<span class="bl">VFR traffic</span><span class="bn"></span><b></b>'; hd.querySelector('b').textContent = VS.length; el.appendChild(hd); for (const d of VS) el.appendChild(d); } }
+  if (!list.length && !el.children.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
   { const n = S.acs.filter(mine).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;
@@ -17482,8 +17484,8 @@ function cbAnswer(id, i){
 function cbStep(){
   if (!S.running) return;
   for (const c of CB.calls) if (c.st === 'RING' && S.t - c.t > CB_TIMEOUT) {
-    c.st = 'MISSED'; S.score.pts -= 5;
-    sys(`Missed call from ${c.from}: "${c.text.slice(0, 80)}${c.text.length > 80 ? '…' : ''}" (−5). ${c.missed || ''}`, true);
+    c.st = 'MISSED'; if (!c.free) S.score.pts -= 5;
+    if (!c.free) sys(`Missed call from ${c.from}: "${c.text.slice(0, 80)}${c.text.length > 80 ? '…' : ''}" (−5). ${c.missed || ''}`, true);
     try { c.onMiss && c.onMiss(); } catch (e) {}
     document.querySelectorAll(`.cb-toast[data-id="${c.id}"]`).forEach(n => n.remove());
     cbRender();
@@ -18260,7 +18262,12 @@ function vfrSpawn(){
   v.hdg = brg(v.x, v.y, ...R);
   VFR.list.push(v);
   const svfr = S.wx.vis < 5000 || S.wx.ceil < 1500;
-  vfrSay(v, `${APT.radar[0]}, ${v.cs}, ${v.hems ? 'HEMS priority, ' : ''}${/^[AEIOU]/.test(v.t) ? 'an' : 'a'} ${v.t}, ${v.who}, ${v.asked} of the zone, request ${svfr ? 'special VFR ' : ''}zone transit to the ${v.dest}, not above ${v.alt.toLocaleString('en-GB')} feet`);
+  v.call = `${APT.radar[0]}, ${v.cs}, ${v.hems ? 'HEMS priority, ' : ''}${/^[AEIOU]/.test(v.t) ? 'an' : 'a'} ${v.t}, ${v.who}, ${v.asked} of the zone, request ${svfr ? 'special VFR ' : ''}zone transit to the ${v.dest}, not above ${v.alt.toLocaleString('en-GB')} feet`;
+  vfrSay(v, v.call);
+  // it rings on the coordination board too, with the answers on it (its own three-minute wait applies, not the board's)
+  if (vfrMine() && typeof cbAdd === 'function') v.cb = cbAdd({ from: `${v.cs} (VFR, ${v.who})`, text: v.call, free: true, opts: [
+    { label: svfr ? 'Special VFR: cleared to cross' : 'Cleared to cross', do: () => vfrCommand([v.id, svfr ? 'SVFR' : 'CROSS']) },
+    { label: 'Orbit, I\'ll call you back', do: () => vfrCommand([v.id, 'HOLD']) }] });
 }
 function vfrSay(v, text){ log('plt', text, v.cs, null, !vfrMine()); if (vfrMine()) setTimeout(() => say(text, v.cs), 300); }
 const vfrMine = () => S.seats && S.seats.APP !== 'AI';
@@ -18325,6 +18332,25 @@ function drawVfr(){
     cx.fillText(`${v.cs} ${String(Math.round(v.alt/100)).padStart(3, '0')} VFR${v.st === 'CALL' ? ' ?' : v.st === 'ORBIT' ? ' ⟳' : ''}`, X + 8, Y - 6);
   }
   cx.restore();
+}
+// a strip for each VFR flight: what it wants, where it is, and the answers as buttons (tap the strip to see it on the map)
+function vfrStrips(doc = document){
+  return VFR.list.filter(v => v.st !== 'GONE').map(v => {
+    const d = doc.createElement('div'); d.className = `strip VEH${v.st === 'CALL' ? ' need' : ''}`;
+    const svfr = S.wx.vis < 5000 || S.wx.ceil < 1500, R = RADAR_REF, nm = Math.round(dist(v.x, v.y, ...R));
+    d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span></span>`;
+    d.querySelector('.cs').textContent = v.cs; d.querySelector('.ty').textContent = `${v.t} · ${v.who}`;
+    d.querySelector('.rte').textContent = `${v.asked} → ${v.dest}`; d.querySelector('.lv').textContent = `${nm} NM · ≤${v.alt} ft`;
+    d.querySelector('.stt').textContent = v.st === 'CALL' ? `◆ Zone transit${v.hems ? ' (HEMS priority)' : ''}` : v.st === 'ORBIT' ? 'Orbiting' : 'Crossing';
+    if (v.st !== 'TRANSIT') {
+      const acts = doc.createElement('span'); acts.className = 'vacts';
+      const bt = (label, c, cls) => { const b = doc.createElement('button'); b.type = 'button'; b.textContent = label; if (cls) b.className = cls; b.onclick = e => { e.stopPropagation(); vfrCommand([v.id, c]); if (v.cb && v.cb.st === 'RING') { v.cb.st = 'DONE'; v.cb.ans = label; cbRender(); } renderStrips(true); }; acts.append(b); };
+      bt(svfr ? 'Special VFR' : 'Cross', svfr ? 'SVFR' : 'CROSS', 'go'); if (v.st === 'CALL') bt('Orbit', 'HOLD');
+      d.append(acts);
+    }
+    d.onclick = () => { V.cx = v.x; V.cy = v.y; V.scale = Math.min(V.scale, (Math.min(W, H) || 600)/30); };
+    return d;
+  });
 }
 S.listeners.push(ev => { if (ev === 'start') { VFR.list = []; VFR.next = 0; } });
 
