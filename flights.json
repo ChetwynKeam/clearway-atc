@@ -1,30 +1,30 @@
 {
- "updated": "2026-11-16T03:07:07Z",
+ "updated": "2026-11-16T10:52:15Z",
  "source": "gibraltarairport.gi",
  "days": {
   "2026-11-16": {
    "utcOffsetMin": 60,
    "arr": [
     {
-     "place": "Birmingham",
-     "flight": "EZY6671",
-     "sched": "09:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "London Heathrow",
      "flight": "BA490",
      "sched": "10:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "10:26"
+    },
+    {
+     "place": "Birmingham",
+     "flight": "EZY6671",
+     "sched": "09:55",
+     "status": "Arrived",
+     "expected": "10:27"
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8791",
      "sched": "11:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Arrived",
+     "expected": "10:55"
     }
    ],
    "dep": [
@@ -32,21 +32,21 @@
      "place": "Birmingham",
      "flight": "EZY6672",
      "sched": "10:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:10"
     },
     {
      "place": "London Heathrow",
      "flight": "BA491",
      "sched": "11:30",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8792",
      "sched": "11:55",
-     "status": "Scheduled",
+     "status": "On time",
      "expected": ""
     }
    ]
