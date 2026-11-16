@@ -1429,6 +1429,12 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .mix-o button.on{border-color:var(--accent);background:var(--accent-soft)}
 @media (max-width:520px){.mix-o{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .mix-h{display:flex;justify-content:space-between;align-items:baseline}.mix-n{font-size:10px}
+/* push-to-talk on the landlines (landline.js) */
+.ll-talk{display:inline-flex;align-items:center;gap:5px;touch-action:none;user-select:none;-webkit-user-select:none}
+.ll-talk svg{width:14px;height:14px}.ll-talk.on{background:var(--alert)!important;color:#fff!important;border-color:var(--alert)!important}
+.ll-fb{font:12px var(--font-data);padding:6px 14px;border-bottom:1px solid var(--line,#ccd);color:var(--ink-2)}
+.ll-fb.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 8%,transparent)}.ll-fb.bad{color:var(--alert);background:color-mix(in srgb,var(--alert) 7%,transparent)}
+.tc-in .ll-talk{flex:none}
 
 /* Clearway Area Control: the landing page and the extras the area console needs on top of the shared styles */
 html, body { height: 100%; }
