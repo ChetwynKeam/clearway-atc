@@ -258,6 +258,8 @@ function handleHeard(text){
   S.voiceAt = Date.now();
   const { ac, cmd } = phraseToCmd(text);
   const target = ac || S.sel;
+  // no instruction for a flight in it: a landline phrase ("approve", "declare LVP", "split ground"), said on the radio button
+  if (!cmd && typeof llMatch === 'function') { const r = llMatch(text); if (r && r.did) { llFeedback(`☎ “${text}” → ${r.did}`, 'ok'); log('sys', `Landline: “${text}” → ${r.did}.`); return; } if (r && r.why) { llFeedback(`☎ “${text}” · ${r.why}`, 'bad'); return; } }
   if (!cmd) { setHeard(`“${text}” · not understood`, 'bad'); log('sys', `Heard “${text}” but found no instruction in it. Say again using standard phraseology.`); return; }
   if (!target) { setHeard(`“${text}” · no callsign`, 'bad'); sys('Start with the callsign, or select a flight first.'); return; }
   setHeard(`“${text}” → ${target.cs} ${cmd}`, 'ok');
