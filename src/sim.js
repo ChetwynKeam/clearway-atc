@@ -279,7 +279,7 @@ function wxLines(){
 const ROPS_ON = RWYS.length > 1 && !APT.noRops;
 const ropsEnds = ROPS_ON ? RW_ENDS.filter(e => !(APT.ropsSkip || []).includes(e)) : [];
 const ropsGroup = e => APT.ropsGroup ? APT.ropsGroup(e) : 'A';
-const ropsCan = (e, role) => role === 'OFF' || (role === 'DEP' ? true : !!FINAL[e]);   // landing needs an approach
+const ropsCan = (e, role) => role === 'OFF' || ((!APT.ropsCan || APT.ropsCan(e, role)) && (role === 'DEP' ? true : !!FINAL[e]));   // landing needs an approach (and some runways are one way only)
 const ropsHdg = e => (parseInt(e, 10) % 36) * 10;
 const ropsCompat = (a, b) => Math.abs(angDiff(ropsHdg(a), ropsHdg(b))) <= 50;       // opposite flows cannot both be live
 const ropsOther = e => { const R = rwyOf(e); return e === R.lo ? R.hi : R.lo; };
@@ -1284,6 +1284,7 @@ const vacAll = ac => [...new Set([...(APT.vacExits ? APT.vacExits(ac) : []), ...
 function exitCheck(ac, ex){
   const P = vacPos(ac); if (!P || !HOLDS[ex]) return null;
   const { R, dir, m, v } = P, f = FIL[ex] && FIL[ex][dir > 0 ? 'W' : 'E'], fm = f && f.length ? f[0][0] : HOLDS[ex].m;
+  if (HOLDS[ex].on && R.id && HOLDS[ex].on !== R.id) return null;   // an exit off another runway (planned before the runway changed)
   const ahead = (fm - m)*dir, need = 15 + stopDist(v, vacMax(ac)), back = ahead < need;
   return { ok: !back || !R.ends, back, ahead, dec: Math.max(0, v*v - VAC_TURN*VAC_TURN)*0.5144/(2*Math.max(1, ahead - 15)) };
 }
@@ -1888,7 +1889,7 @@ function commandRun(str){
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
       if (ac.depVac) { sys(`${ac.cs} is still vacating the runway: give it its taxi once it is clear.`); continue; }
       const ihp = toks[i+1] && IHPS[toks[i+1]] && !HOLDS[toks[i+1]] ? IHPS[toks[++i]] : null;   // an intermediate holding point on the way
-      let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
+      let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' && !(APT.taxiCheck && APT.taxiCheck(ac, ac.hp)) ? ac.hp : depHold(ac));   // its holding point, unless the runway has changed under it
       if (APT.depHoldAs) hp = APT.depHoldAs(ac, hp);   // a name with a holding point each side of the runway: the side departures use
       if (toks[i+1] === 'VIA' && /^(RWY|RUNWAY)$/.test(toks[i+2] || '') && toks[i-1] && HOLDS[toks[i]]) { i += 2; if (!rwyTaxi(ac, toks[i-2], said, reads)) return; continue; }   // along the runway
       const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);

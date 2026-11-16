@@ -99,7 +99,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 // route's altitude. Turned off it lower than that, it flies over the towns the route avoids, and the complaints come in
 // (more of them at night). At night each movement also uses the airport's night quota: quota count (QC) points for
 // its noise class, and at some airports a number of movements; going over the session's share costs 20 points a time.
-// The UK airports use their real rules (NOISE_RULES below); everywhere else keeps the generic ones (GENERIC_NOISE).
+// The UK airports and Schiphol use their real rules (NOISE_RULES below); everywhere else keeps the generic ones (GENERIC_NOISE).
 //
 // Quota count. The Department for Transport's notice for Heathrow, Gatwick and Stansted (summer 2026, para 6.1 and the
 // Schedule, para 12.1: https://ops.group/blog/wp-content/uploads/2026/04/EGLL-EGKK-noise-quota-system.pdf) classes each
@@ -229,6 +229,20 @@ const NOISE_RULES = {
   // the SIDs and the omnidirectional departures, until 4,000 ft unless ATC authorise otherwise.
   EGNT: { name: 'Newcastle', night: [23*60, 7*60], quotas: [],
     npr: ac => isProp(ac) && mtomOf(ac) <= 5700 ? 0 : 4000 },
+  // Schiphol. No quota count: the Besluit luchtverkeer limits the night (23:00 to 07:00 local) to a number of
+  // movements, and the capacity declaration shares it out (winter 2026/27, Airport Coordination Netherlands: 8,839 night
+  // movements over the 22-week season; summer the rest of the yearly 27,000, 18,161). Aircraft with a cumulative noise
+  // margin under 13 EPNdB may not use the airport between 22:00 and 06:00 UTC (AD 2.21 para 6): a scheduling rule, kept
+  // out of the traffic rather than scored here. Departures stay on their SID until 3,000 ft by day; at night (23:00 to
+  // 06:00) jets stay on it until FL90 (9,000 ft here); light propeller aircraft are not bound. Runways (AD 2.21 para 5.1,
+  // 22:30 to 06:30 local): no landings on 18C, 24, 36R, 04/22 or 09/27 and no take-offs from 36C, 18L, 04/22 or 09/27,
+  // and never landings on 36L or 18L or take-offs from 18R or 36R. The preference tables are eham-engine.js's.
+  EHAM: { name: 'Schiphol', night: [23*60, 7*60],
+    quotas: [{ name: 'night period', at: [23*60, 7*60], mv: { summer: 18161, winter: 8839 } }],
+    npr: (ac, m) => isProp(ac) && mtomOf(ac) <= 5700 ? 0 : nzIn([23*60, 6*60], m) && !isProp(ac) ? 9000 : 3000,
+    rwyNight: { at: [22*60 + 30, 6*60 + 30], arr: ['18C', '24', '36R', '04', '22', '09', '27'], dep: ['36C', '18L', '04', '22', '09', '27'],
+      why: 'from 22:30 to 06:30 there are no landings on 18C, 24, 36R, 04/22 or 09/27 and no take-offs from 36C, 18L, 04/22 or 09/27 unless no other runway can be used' },
+    rwyAlways: { arr: ['36L', '18L'], dep: ['18R', '36R'], why: 'the Polderbaan lands on 18R and departs from 36L only, the Aalsmeerbaan lands on 36R and departs from 18L only' } },
   // Belfast City is open 06:30 to 21:30 (EGAC AD 2.3), so it has no night quota; no noise route altitude is published
   // for it, so the generic 4,000 ft is kept.
   EGAC: { name: 'Belfast City', generic: true, night: [23*60, 6*60], quotas: [], npr: () => 4000 },
@@ -259,10 +273,13 @@ function noiseCmd(ac, toks){
 function noiseMove(ac){
   if (aiOwns(ac)) return;
   const R = noiseRules(ac), arr = ac.kind === 'ARR', m = nzMin();
+  // rwys: closed both ways at night; arr and dep: closed to landings or to take-offs (Schiphol)
+  const rwOf = () => arr ? ac.app || landRw(ac) : ac.depRwy || depRw(ac), shut = X => X.rwys || X[arr ? 'arr' : 'dep'] || [];
   if (R.rwyNight && nzIn(R.rwyNight.at, m) && !ac.nRwy) {
-    const rw = arr ? ac.app || landRw(ac) : ac.depRwy || depRw(ac);
-    if (R.rwyNight.rwys.includes(rw)) { ac.nRwy = true; SC(ac).pts -= 5; sys(`Noise: ${ac.cs} ${arr ? 'landed on' : 'departed from'} ${rw} at night: at ${R.name} ${R.rwyNight.why} (−5).`, true); }
+    const rw = rwOf();
+    if (shut(R.rwyNight).includes(rw)) { ac.nRwy = true; SC(ac).pts -= 5; sys(`Noise: ${ac.cs} ${arr ? 'landed on' : 'departed from'} ${rw} at night: at ${R.name} ${R.rwyNight.why} (−5).`, true); }
   }
+  if (R.rwyAlways && !ac.nRwy) { const rw = rwOf(); if (shut(R.rwyAlways).includes(rw)) { ac.nRwy = true; SC(ac).pts -= 5; sys(`Noise: ${ac.cs} ${arr ? 'landed on' : 'departed from'} ${rw}: at ${R.name} ${R.rwyAlways.why} (−5).`, true); } }
   const real = !R.generic && QC_TYPE[ac.t], q = real ? real[arr ? 0 : 1] : { J: 8, H: 4, M: 1, L: 0.5 }[ac.perf.wake] ?? 1;
   R.quotas.forEach((Q, i) => {
     if (!nzIn(Q.at, m)) return;
@@ -277,6 +294,7 @@ function noisePanel(){
   R.quotas.forEach((Q, i) => {
     if (!nzIn(Q.at, m) && !nzIn(R.night, m)) return;
     const N = NOISE.q[i] || { qc: 0, mv: 0 }, c = quotaCap(Q, 'qc'), v = quotaCap(Q, 'mv');
+    if (!c && v) { L.push(`Night movements, ${Q.name} ${nzHM(Q.at[0])}–${nzHM(Q.at[1])}: ${N.mv} of ${v.cap} used (tonight's share of the ${v.season} ${v.lim.toLocaleString('en-GB')})`); return; }   // a movement limit only (Schiphol)
     L.push(`Night quota${R.generic ? '' : `, ${Q.name} ${nzHM(Q.at[0])}–${nzHM(Q.at[1])}`}: ${qcFmt(N.qc)} of ${c && (c.cap ?? c)} QC points${v ? `, ${N.mv} of ${v.cap} movements` : ''} used${c && c.lim ? ` (tonight's share of the ${c.season} ${c.lim.toLocaleString('en-GB')})` : ''}`);
   });
   if (R.rwyNight && nzIn(R.rwyNight.at, m)) L.push(`Night: ${R.rwyNight.why}.`);
