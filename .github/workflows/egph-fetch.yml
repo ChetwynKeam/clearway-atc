@@ -1,0 +1,42 @@
+name: Fetch EGPH data
+# One-off for the Edinburgh (EGPH) airport build: the coastline of the Forth, the Clyde and the North Sea coast, inland
+# water, towns and nearby airfields from OpenStreetMap for the approach map (tools/egph_geo.py), published to the
+# egph-data branch. The aerodrome itself comes from the OpenStreetMap API (tools/egph/README.md).
+on:
+  workflow_dispatch:
+  push:
+    branches: [edinburgh-egph]
+    paths: ['.github/workflows/egph-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir -p out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          q() {
+            S=$(date +%s)
+            while [ $(( $(date +%s) - S )) -lt 480 ]; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                if curl -sSf -m 180 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.tmp" && head -c 1 "$1.tmp" | grep -q '{'; then mv "$1.tmp" "$1.json"; echo "OK $1 from $H"; return 0; fi
+                echo "retry $1 ($H)"; sleep 5
+              done
+            done
+            echo "FAILED $1"; rm -f "$1.tmp"
+          }
+          q coast "[out:json][timeout:180];way[natural=coastline](54.70,-5.40,57.20,-1.20);out geom;" &
+          q water "[out:json][timeout:180];(way[natural=water][water~\"loch|lake|reservoir\"](55.40,-4.30,56.50,-2.60);relation[natural=water][water~\"loch|lake|reservoir\"](55.40,-4.30,56.50,-2.60););out geom;" &
+          q towns "[out:json][timeout:120];(node[place~\"city|town\"](54.70,-5.40,57.20,-1.20););out;" &
+          q airports "[out:json][timeout:120];(nwr[aeroway=aerodrome][icao](54.70,-5.40,57.20,-1.20););out center;" &
+          wait
+          ls -la
+      - name: Publish to egph-data branch
+        run: |
+          cd out
+          git init -q -b egph-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "EGPH data"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" egph-data
