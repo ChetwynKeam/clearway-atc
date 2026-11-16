@@ -408,10 +408,13 @@ function aiDepart(ac){
   // an arrival passing low over the field, not lined up behind it (Madeira's VOR to 05 circles round before turning in):
   // only one below 3,000 ft above the runway: close in, or flying an approach that brings it round over the field before
   // the departure is away. Higher up it passes over, and the departure is stopped below it on the climb if need be
-  const dh = parseInt(rw, 10)*10, over = S.acs.find(o => o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.handed && o.alt < ELEV + 3000 && dist(o.x, o.y, ac.x, ac.y) < (o.app ? 6 + (o.gs || 180)*depSecs(ac)/3600 : 3) && Math.abs(((o.hdg - dh + 540) % 360) - 180) > 90);
+  const dh = parseInt(rw, 10)*10, over = S.acs.find(o => o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.handed && o.alt < ELEV + 3000 && dist(o.x, o.y, ac.x, ac.y) < (o.app ? 6 + (o.gs || 180)*depSecs(ac)/3600 : 3) && Math.abs(((o.hdg - dh + 540) % 360) - 180) > 90
+    // one on its approach still behind the departure's start (turning onto final out on the approach side: Newcastle's
+    // D1, at the 25 end with the intercepts out past it) is spaced by the arrival gap below, not passing overhead
+    && !(o.app && (o.x - ac.x)*Math.sin(dh*D2R) + (o.y - ac.y)*Math.cos(dh*D2R) < -1));
   if (over) return why(`${over.cs} passing overhead`);
   // the inspection car is waiting at a holding point for this runway: the departures hold, so there is a gap for it
-  { const C = S.rc; if (!lined && C && C.st === 'READY' && C.v.need && C.R === R && S.t - (C.asked || S.t) < 420) return why('holding for the runway inspection'); }
+  { const C = S.rc; if (!lined && C && C.st === 'READY' && C.v.need && C.R === R && S.t - (C.t || S.t) < 420) return why('holding for the runway inspection'); }   // from when it got there (C.t): its "still holding" calls (C.asked) don't start the wait again
   const a = arrNear(R, ac), need = clearS(ac);
   const last = S.aiDep && S.aiDep[R.id], gap = last ? wxSlow()*(last.wake === 'H' && ac.perf.wake !== 'H' ? 150 : last.wake === 'M' && ac.perf.wake === 'L' ? 120 : 100) : 0;
   // a departure lined up behind this one (further back up the runway: multiple line-ups) doesn't stop it going
@@ -534,7 +537,7 @@ function aiTowerVehicles(){
     const R = v.req.R; if (rwyClearFor(R) && !rwyBusy(R) && arrNear(R).eta > 120) aiVeh('TWR', () => vehApprove(v));
   }
   const C = S.rc;
-  if (C && C.st === 'READY' && C.v.need && aiDue(C.v, 'enter' + C.t, 5, 10)) { if (!rwyBusy(C.R) && arrNear(C.R).eta > (S.t - (C.asked || S.t) > 150 ? 210 : 300)) aiVeh('TWR', () => command('OPS1 ENTER')); }
+  if (C && C.st === 'READY' && C.v.need && aiDue(C.v, 'enter' + C.t, 5, 10)) { if (!rwyBusy(C.R) && arrNear(C.R).eta > (S.t - (C.t || S.t) > 150 ? 210 : 300)) aiVeh('TWR', () => command('OPS1 ENTER')); }
   if (C && C.st === 'ON' && arrNear(C.R).nm < 4 && aiDue(C.v, 'vac' + C.t, 1, 3)) aiVeh('TWR', () => command('OPS1 VACATE'));
 }
 function aiGroundVehicles(){

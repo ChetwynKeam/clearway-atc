@@ -1043,7 +1043,8 @@ function vread(v, text){ const t = `${text}, ${radioSpoken(v)}`; log('plt', t.re
 function vatc(v, text){ log('atc', `${radioName(v)}, ${text}`, 'TOWER'); }
 // the vehicle on that runway (any end of it), if any
 function vehOnRwy(rw){ const id = rwyOf(rw).id; return VEH.list.find(v => v.onRwy === id && !v.gone) || null; }
-const rcHolds = R => Object.keys(HOLDS).filter(h => holdRwy(h) === R && HOLDS[h].node && GN[HOLDS[h].node] && VG['t:' + HOLDS[h].node]);
+// APT.rcAvoid: holding points the car doesn't use for the check (Newcastle's A1 and D1, where the departures queue)
+const rcHolds = R => Object.keys(HOLDS).filter(h => holdRwy(h) === R && HOLDS[h].node && GN[HOLDS[h].node] && VG['t:' + HOLDS[h].node] && !(APT.rcAvoid || []).includes(HOLDS[h].ref || h));
 const rLen = R => R.len || RWY_M;
 const holdM = (R, h) => R.mOf(GN[HOLDS[h].rwy] ? GN[HOLDS[h].rwy].p : GN[HOLDS[h].node].p);
 function rcEntry(R, from){

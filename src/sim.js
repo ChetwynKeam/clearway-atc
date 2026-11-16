@@ -1067,7 +1067,10 @@ function straightCross(pts){
   }
   return out;
 }
-function setPath(ac, pts, spd, onDone, opts={}){ if (!opts.fine) pts = straightCross(pts); ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; if (p.tight) q.tight = true; if (p.ext) q.ext = true; return q; }), spd, onDone, ...opts }; }
+// a point on top of the one before (a holding point's link ending where the line onto the runway starts) is dropped: a
+// leg of no length has no direction, and the aircraft can lose its place on the path there (Newcastle's D1)
+const dedupPts = pts => pts.filter((p, i) => i === 0 || p.hs || p.tight || p.ext || dist(...pts[i-1], ...p) > 0.4/1852);
+function setPath(ac, pts, spd, onDone, opts={}){ if (!opts.fine) pts = straightCross(pts); pts = dedupPts(pts); ac.path = { pts: pts.map(p => { const q = [p[0],p[1]]; if (p.hs) q.hs = p.hs; if (p.tight) q.tight = true; if (p.ext) q.ext = true; return q; }), spd, onDone, ...opts }; }
 // what an aircraft does at the end of a ground path. onDone is [name, args] (a closure can't be saved with a stint:
 // stint.js), args holding what the path was for: the stand, the holding point, the tow's destination
 const PATH_DONE = {
@@ -1239,16 +1242,22 @@ const xNote = (ac, r) => { ac.xc = r ? xsOn(r).map(c => ({ c, side: Math.sign(c.
 // a point on a runway-end turning pad: the aircraft goes round it slowly and tight, staying on the pad
 const padPt = (R, m, o) => { const q = R.rm(m, o); q.tight = true; return q; };
 function lineUpPath(ac, hp){
+  // a holding point that lines up by backtracking for this runway (H.back: Newcastle's F and G, on the south side, with no
+  // taxiway to either end) goes onto the runway the other way and turns round at the end (R.TURN_W / TURN_E), even on a
+  // runway otherwise entered at its ends
+  const back = (HOLDS[hp].back || []).includes(depRw(ac));
   // where the holding point has a turn-on each way (Heathrow's N8 and N8~2 share a stop bar), the one that turns the way
   // it departs: the other swings it round the wrong way and back on the runway
-  { const H0 = HOLDS[hp], R0 = holdRwy(hp), up = depRw(ac) === R0.lo;
+  if (!back) { const H0 = HOLDS[hp], R0 = holdRwy(hp), up = depRw(ac) === R0.lo;
     const turns = k => { if (!FIL[k]) return null; const f = filOut(k, up ? 'E' : 'W'); return f.length > 1 ? Math.sign(R0.mOf(f[f.length-1]) - R0.mOf(f[0])) : null; };
     if (R0.ends && turns(hp) === (up ? -1 : 1)) { const k = Object.keys(HOLDS).find(k => k !== hp && HOLDS[k].node === H0.node && HOLDS[k].on === H0.on && turns(k) === (up ? 1 : -1)); if (k) hp = k; } }
   const H = HOLDS[hp], R = holdRwy(hp), pts = [...holdLink(hp), GN[H.rwy].p];
   // a runway entered at its end (R.ends: New York) is lined up straight away, pointing down the runway
-  if (R.ends) { const up = depRw(ac) === R.lo; pts.push(...filOut(hp, up ? 'E' : 'W')); const e = pts[pts.length-1]; pts.push(R.rm(R.mOf(e) + (up ? 60 : -60), 0)); return pts; }
-  if (depRw(ac) === R.hi) { pts.push(...filOut(hp, 'E')); for (const [m,o] of R.TURN_E) if (m > H.m + 40) pts.push(padPt(R, m, o)); }
-  else { pts.push(...filOut(hp, 'W')); for (const [m,o] of R.TURN_W) if (m < H.m - 40) pts.push(padPt(R, m, o)); }
+  if (R.ends && !back) { const up = depRw(ac) === R.lo; pts.push(...filOut(hp, up ? 'E' : 'W')); const e = pts[pts.length-1]; pts.push(R.rm(R.mOf(e) + (up ? 60 : -60), 0)); return pts; }
+  // a backtrack turns onto the centreline the way it is going, whichever way the charted line onto the runway curves
+  const onto = side => back ? [R.rm(R.mOf(GN[H.rwy].p) + (side === 'E' ? 25 : -25), 0)] : filOut(hp, side);
+  if (depRw(ac) === R.hi) { pts.push(...onto('E')); for (const [m,o] of R.TURN_E) if (m > H.m + 40) pts.push(padPt(R, m, o)); }
+  else { pts.push(...onto('W')); for (const [m,o] of R.TURN_W) if (m < H.m - 40) pts.push(padPt(R, m, o)); }
   return pts;
 }
 // Leaving the runway. The crew picks the exit (APT.vacPrefs, for its stand) and keeps rolling; the controller can name
@@ -1535,7 +1544,10 @@ function rwyTaxi(ac, B, said, reads){
 function startLineUp(ac, v){
   // the holding point is on one runway: if the departure runway in use is another one (it was changed while this aircraft taxied), line up for the end of this runway
   { const R0 = HOLDS[ac.hp] && holdRwy(ac.hp); ac.depRwyLock = false;
-    if (R0 && rwyOf(depRw(ac)).id !== R0.id) { const ds = (HOLDS[ac.hp].dirs || []).filter(d => rwyOf(d).id === R0.id), pick = ds.find(d => d === S.rwy) || ds[0]; if (pick) { ac.depRwy = pick; ac.depRwyLock = true; } } }
+    if (R0 && rwyOf(depRw(ac)).id !== R0.id) { const ds = (HOLDS[ac.hp].dirs || []).filter(d => rwyOf(d).id === R0.id), pick = ds.find(d => d === S.rwy) || ds[0]; if (pick) { ac.depRwy = pick; ac.depRwyLock = true; } }
+    // once on the runway it departs the way it lined up: a change of runway direction meanwhile doesn't swing it round
+    // where it stands (it would take off from the far end, downwind)
+    else if (R0) { ac.depRwy = depRw(ac); ac.depRwyLock = true; } }
   ac.state = 'LINEUP'; ac.onRwy = true; ac.rwyId = rwyOf(depRw(ac)).id; ac.need = null; ac.luq = false; ac.gs = ac.ias = v || 0;
   const back = true;
   // finish on a straight stretch of centreline, so the turn onto the runway rounds out into line instead of snapping onto it
