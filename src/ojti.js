@@ -11,6 +11,7 @@ const MOR_Q = {
 };
 const MOR_NAME = { los: 'Loss of separation', airprox: 'Airprox', inc: 'Runway incursion' };
 function morNeed(k, text, cs){
+  if (MOR.list.some(m => m.k === k && m.cs === cs && S.t - m.t < 300)) return;   // the same pair again within five minutes: one occurrence
   const m = { id: MOR.list.length + 1, k, text, cs, t: S.t, filed: false };
   MOR.list.push(m);
   if (typeof cbAdd === 'function') cbAdd({ from: 'Supervisor', text: `${MOR_NAME[k]}: ${text}. An occurrence report (MOR) is needed.`, opts: [{ label: 'File the report now', do: () => morForm(m) }, { label: 'Later (from the debrief)' }], missed: 'File it from the debrief before the end of the session.' });

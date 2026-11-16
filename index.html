@@ -23966,14 +23966,16 @@ function cbToast(c){
 function cbBadge(){ const b = document.getElementById('tgCoord'); if (b) b.textContent = CB.unread ? `Coordination (${CB.unread})` : 'Coordination'; }
 function cbBody(){
   const ring = CB.calls.filter(c => c.st === 'RING'), rest = CB.calls.filter(c => c.st !== 'RING').slice(-60).reverse();
-  const rel = S.acs.filter(a => a.rel && a.ground && !a.airborne).map(a => `<span class="cb-rel ${relCls(a)}">${esc(a.cs)} ${{ ok: 'released' + (a.rel.nb ? ' NB ' + zt(a.rel.nb).slice(0, 5) : '') + ' until ' + zt(a.rel.until).slice(0, 5), req: 'requested', exp: 'expired' }[relCls(a)]}</span>`).join('');
+  const rel = S.acs.filter(a => a.rel && a.ground && !a.airborne && (typeof needRel !== 'function' || needRel(a))).map(a => { let t = ''; try { t = relText(a); } catch (_) { t = esc(relCls(a)); } return `<span class="cb-rel ${relCls(a)}">${esc(a.cs)}: ${t}</span>`; }).join('');
   return `<div class="cb-sec"><div class="lbl">Ringing</div>${ring.length ? ring.map(cbCallHtml).join('') : '<p class="dimmer">No calls waiting.</p>'}</div>
     ${rel ? `<div class="cb-sec"><div class="lbl">Releases</div><div class="cb-rels">${rel}</div></div>` : ''}
     <div class="cb-sec"><div class="lbl">Earlier calls</div>${rest.map(cbCallHtml).join('') || '<p class="dimmer">None yet.</p>'}</div>`;
 }
 function cbRender(){
-  const d = document.getElementById('coordbd'); if (d) d.querySelector('.cb-body').innerHTML = cbBody();
-  if (CB.win && !CB.win.closed) { const b = CB.win.document.querySelector('.cb-body'); if (b) b.innerHTML = cbBody(); }
+  // (a call or release that can't be drawn must never blank the whole board)
+  let html; try { html = cbBody(); } catch (e) { html = `<p class="dimmer">The board could not be drawn (${esc(e.message)}).</p>`; }
+  const d = document.getElementById('coordbd'); if (d) d.querySelector('.cb-body').innerHTML = html;
+  if (CB.win && !CB.win.closed) { const b = CB.win.document.querySelector('.cb-body'); if (b) b.innerHTML = html; }
   for (const n of document.querySelectorAll('.cb-toast')) { const c = CB.calls.find(c => c.id === +n.dataset.id); if (!c || c.st !== 'RING') n.remove(); }
 }
 function cbClick(e){ const b = e.target.closest && e.target.closest('[data-a]'); if (!b) return; const [id, i] = b.dataset.a.split(':').map(Number); cbAnswer(id, i); }
@@ -24743,6 +24745,7 @@ const MOR_Q = {
 };
 const MOR_NAME = { los: 'Loss of separation', airprox: 'Airprox', inc: 'Runway incursion' };
 function morNeed(k, text, cs){
+  if (MOR.list.some(m => m.k === k && m.cs === cs && S.t - m.t < 300)) return;   // the same pair again within five minutes: one occurrence
   const m = { id: MOR.list.length + 1, k, text, cs, t: S.t, filed: false };
   MOR.list.push(m);
   if (typeof cbAdd === 'function') cbAdd({ from: 'Supervisor', text: `${MOR_NAME[k]}: ${text}. An occurrence report (MOR) is needed.`, opts: [{ label: 'File the report now', do: () => morForm(m) }, { label: 'Later (from the debrief)' }], missed: 'File it from the debrief before the end of the session.' });
