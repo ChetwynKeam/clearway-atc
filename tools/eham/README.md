@@ -18,7 +18,9 @@ workspace).
    rebuilt and has no stand coordinates in this AIRAC; P20-P26 and the remote holding positions P1-P3 and PA-PD are not
    stands.
 4. `parse_procs.py` and `fixes.py`: the AD 2.22 coding tables (86 SIDs and 10 STARs) -> `procs.json`, and the points
-   they use (ENR 4.4, ENR 4.1 and the AM-points in the coding tables) -> `fixes.json`.
+   they use (ENR 4.4, ENR 4.1 and the AM-points in the coding tables) -> `fixes.json`. `parse_trans.py`: the ILS and
+   RNP approach coding (intermediate and final approach fixes, missed approaches) and the RNAV transitions (the night
+   transitions 1B, 1H and 1D to 06, 18C and 18R, and ARTIP 2X to 36R by day) -> `trans.json`.
 5. `../eham_ground.py aerodrome.json chart.json stands_aip.json ../../src/airports/eham-ground.js`:
    - the six runways from AD 2.12 (the 18L pavement end 575 m north of its displaced threshold, the 60 m Polderbaan);
    - one holding point per stop bar on the chart, named off the chart; where a bar is just short of where two lanes merge
@@ -33,7 +35,8 @@ workspace).
      beyond the last stand and the closed stretch east of E7 pruned; the taxiway bridges (A and B over the A4, V over the
      Hoofdvaart and the Hoofdweg).
 6. `make_profile.py boards-2026-11-16.json > ../../src/airports/eham.js`: the profile from `eham.template.js` (runways,
-   ILS, frequencies, holds, the STARs to ARTIP, RIVER and SUGOL and the SIDs, airline and type tables) and the AMS boards
+   ILS and missed approaches, frequencies, holds, the STARs to ARTIP, RIVER and SUGOL, the transitions and the SIDs,
+   airline and type tables) and the AMS boards
    of Monday 16 November 2026 (from midday; the full day comes with Live now).
 7. `../eham_geo.py <eham-data>/geo ../../src/airports/eham.geo.json` (shapely): the approach map, the land less the
    IJsselmeer, the Markermeer and the other lakes.

@@ -43,6 +43,21 @@ for name, s in J['stars'].items():
     STARS[name.replace(' ', '')] = dict(name=name.replace(' ', ''), spoken=spoken(name), iaf=pts[-1][0], level=7000, pts=pts)
 print('STARs', len(STARS), sorted(STARS), file=sys.stderr)
 
+# ── RNAV transitions (trans.json, parse_trans.py): the night transitions to the ILS of 06, 18C and 18R (1B, 1H, 1D) and
+# the day transition ARTIP 2X to 36R, each point with its lowest altitude and highest speed (the RNP ones are not flown)
+TJ = json.load(open(os.path.join(HERE, 'trans.json')))
+def t_alt(a):
+    if not a: return None
+    v = [int(x[2:])*100 if x.startswith('FL') else int(x) for x in re.findall(r'FL ?\d{2,3}|\d{4,5}', a.replace('FL ', 'FL'))]
+    if not v: return None
+    return min(v) if a.strip()[0] in '+B' or ' + ' in a else (v[-1] if a.strip()[0] == '@' else None)
+TRANS = {}
+for name, t in TJ.items():
+    if t['kind'] != 'transition' or t['app'] != 'ILS': continue
+    pts = [[l['fix'], t_alt(l['alt']), int(re.sub(r'\D', '', l['spd'])) if l['spd'] and re.search(r'\d', l['spd']) else None] for l in t['legs'] if l['fix'] in F]
+    TRANS[name.replace(' ', '')] = dict(iaf=pts[0][0], rwy=t['rwy'], when=t['when'], pts=pts)
+print('transitions', sorted(TRANS), file=sys.stderr)
+
 # ── SIDs (AD 2.22 para 1.5): RNAV1. The designator's letter is the runway (the charts SID-04 ... SID-36L)
 SUFFIX = {'F': '04', 'G': '22', 'R': '06', 'T': '06', 'S': '24', 'Q': '24', 'J': '24', 'K': '24', 'N': '09', 'M': '09', 'P': '27',
           'X': '18C', 'Y': '18C', 'W': '36C', 'E': '18L', 'V': '36L', 'Z': '36L'}
@@ -121,14 +136,16 @@ used_ap = sorted({r[1] for r in TT if r[1]} | {r[4] for r in TT if r[4]} | {'EHA
 USED = set()
 for s in STARS.values(): USED |= {p[0] for p in s['pts']}
 for s in SIDS.values(): USED |= set(s['pts'])
-APP_FIX = ['OSRON', 'AM609', 'SIDNI', 'AM630', 'PEVOS', 'AM621', 'AM624', 'LANSU', 'AM650', 'TIDVO', 'AM639', 'OLGAX', 'AM632', 'NEWCO', 'AM636',
-           'AM120', 'AM260', 'AM280', 'AM637', 'AM163', 'AM160', 'NARSO', 'SPL', 'PAM', 'SPY']
+APP_FIX = ['OSRON', 'AM609', 'SIDNI', 'AM630', 'PEVOS', 'AM621', 'AM624', 'AM649', 'AM650', 'TIDVO', 'AM639', 'OLGAX', 'AM632', 'NEWCO', 'AM636',
+           'AM637', 'AM163', 'NARSO', 'SPL', 'PAM', 'SPY']
+for t in TRANS.values(): USED |= {p[0] for p in t['pts']}
 USED |= {f for f in APP_FIX if f in F}
 NAVS = {'SPL', 'PAM', 'SPY'}
 fix_js = ',\n    '.join(', '.join(f"{k}: [{F[k][0]:.6f}, {F[k][1]:.6f}]" for k in row) for row in
                        [sorted(k for k in USED if k in F and k not in NAVS)[i:i+5] for i in range(0, len(USED), 5)] if row)
 def js(o): return json.dumps(o, separators=(', ', ': ')).replace('"', "'")
 star_js = ',\n    '.join(f"'{k}': {{ name: '{v['name']}', spoken: '{v['spoken']}', iaf: '{v['iaf']}', level: {v['level']}, pts: {js(v['pts'])} }}" for k, v in sorted(STARS.items()))
+trans_js = ',\n    '.join(f"'{k}': {{ iaf: '{v['iaf']}', rwy: '{v['rwy']}', when: '{v['when']}', pts: {js(v['pts'])} }}" for k, v in sorted(TRANS.items()))
 sid_js = ',\n    '.join(f"'{k}': {{ rwy: '{v['rwy']}', spoken: '{v['spoken']}', pts: {js(v['pts'])}, top: {v['top']} }}" for k, v in sorted(SIDS.items()))
 dir_js = ',\n    '.join(f"\"{g}\": {{ brg: {d['c']}, entry: '{d['entry']}', star: '{d['star']}' }}" for g, d in GATES.items())
 tt_js = ',\n    '.join(js(r) for r in TT)
@@ -142,7 +159,7 @@ for r in TT:
         if k: pl[AP[k][2].lower()] = k
 pl_js = ', '.join(f"{json.dumps(k, ensure_ascii=False)}: '{v}'" for k, v in sorted(pl.items()))
 T = open(os.path.join(HERE, 'eham.template.js')).read()
-for k, v in {'@@FIX@@': fix_js, '@@STARS@@': star_js, '@@SIDS@@': sid_js, '@@DIRS@@': dir_js, '@@TIMETABLE@@': tt_js, '@@AIRPORTS@@': ap_js,
+for k, v in {'@@FIX@@': fix_js, '@@STARS@@': star_js, '@@SIDS@@': sid_js, '@@TRANS@@': trans_js, '@@DIRS@@': dir_js, '@@TIMETABLE@@': tt_js, '@@AIRPORTS@@': ap_js,
              '@@PLACES@@': pl_js, '@@PLACE_DIR@@': pd_js, '@@SID_BRG@@': sx_js, '@@NROWS@@': str(len(TT))}.items():
     assert k in T, k; T = T.replace(k, v)
 sys.stdout.write(T)
