@@ -1449,6 +1449,10 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .ll-fb{font:12px var(--font-data);padding:6px 14px;border-bottom:1px solid var(--line,#ccd);color:var(--ink-2)}
 .ll-fb.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 8%,transparent)}.ll-fb.bad{color:var(--alert);background:color-mix(in srgb,var(--alert) 7%,transparent)}
 .tc-in .ll-talk{flex:none}
+/* a break in a Live now shift (liveshift.js): a bar while the colleague has your positions */
+.lbrk{position:fixed;left:50%;top:62px;transform:translateX(-50%);z-index:90;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px);padding:8px 14px;border-radius:10px;background:var(--panel);color:var(--ink);border:1px solid var(--amber);box-shadow:var(--shadow-2,0 6px 20px rgba(0,0,0,.3));font-size:13px}
+.lbrk b{color:var(--amber)}.lbrk-t{font-family:var(--font-data);font-size:12px;color:var(--ink-2)}
+.lbrk{width:min(460px,calc(100vw - 20px));box-sizing:border-box}.lbrk .btn{padding:4px 10px;font-size:12px;min-height:0}
 
 </style>
 </head>
@@ -6574,7 +6578,7 @@ function buildSchedule(mode, day = 0, hour = 17){
 function parseMetar(m){
   m = m.trim().toUpperCase().replace(/\s+/g,' ');
   const w = { raw: m, dir: 0, spd: 0, gust: 0, vrb: false, vis: 9999, ceil: 9999, qnh: 1013, inhg: 29.92, temp: 15, dew: 10, wx: [], cb: false, clouds: [] };
-  for (const tok of m.split(' RMK ')[0].split(' ')) {   // remarks (US METARs) are not weather
+  for (const tok of m.split(' RMK ')[0].split(/ (?:TEMPO|BECMG|NOSIG)\b/)[0].split(' ')) {   // remarks (US METARs) are not weather, nor the trend (TEMPO, BECMG: what may come, not what is)
     let r;
     if ((r = tok.match(/^(\d{3}|VRB)(\d{2,3})(G(\d{2,3}))?(KT|MPS)$/))) { const f = r[5]==='MPS' ? 1.944 : 1; w.vrb = r[1]==='VRB'; w.dir = w.vrb ? 0 : +r[1]; w.spd = Math.round(+r[2]*f); w.gust = r[4] ? Math.round(+r[4]*f) : 0; }
     else if (/^\d{4}$/.test(tok)) w.vis = +tok;
@@ -16578,7 +16582,8 @@ function shiftBrief(out){
   const on = a => a.state !== 'PRE' && !outOfCtl(a);
   const air = S.acs.filter(a => on(a) && a.airborne), hold = air.filter(a => a.mode === 'HOLD');
   const taxi = S.acs.filter(a => on(a) && a.ground && (a.path || a.hsAt || a.onRwy)), waiting = S.acs.filter(a => on(a) && a.ground && a.need && !a.path);
-  const soon = S.sched.filter(f => !f.spawned && f.m*60 - S.t < 1800 && f.m*60 >= S.t - 60), arr = soon.filter(f => f.k === 'ARR').length, dep = soon.length - arr;
+  const soon = S.sched.filter(f => !f.spawned && f.m*60 - S.t < 1800 && f.m*60 >= S.t - 60), LD = /^live/.test(S.mode) && typeof liveDemand === 'function' ? liveDemand(0, 30) : null;
+  const arr = LD ? LD.arr : soon.filter(f => f.k === 'ARR').length, dep = LD ? LD.dep : soon.length - soon.filter(f => f.k === 'ARR').length;   // (Live now: today's real flights still to come)
   const dep0 = typeof depRw === 'function' ? depRw() : S.rwy, st = typeof sunTimes === 'function' ? sunTimes() : {};
   const L = [];
   L.push(['Position', `${mine.length ? mine.map(k => `${AI_NAME[k]} (${seatUnit(k)})`).join(', ') : 'none: every position is on AI'}${ais.length && mine.length ? `. AI colleagues on ${ais.map(k => AI_NAME[k]).join(', ')}` : ''}.`]);
@@ -16593,14 +16598,14 @@ function shiftBrief(out){
 }
 function shiftModal(out){
   document.getElementById('handover')?.remove();
-  const wasPaused = S.paused; S.paused = true;
+  const wasPaused = S.paused; if (!(SHIFT && SHIFT.live && !out)) S.paused = true;   // (Live now runs on while you take over)
   const box = document.createElement('div'); box.className = 'debrief'; box.id = 'handover';
   box.innerHTML = `<div class="db-card ho-card" role="dialog" aria-label="Handover"><div class="db-hd"><b>${out ? 'Handing over to your relief' : 'Taking over the position'}</b><span class="db-sum">${hmZ(S.t)}</span><span class="grow"></span></div>
     <dl class="ho-list"></dl><div class="ho-ctl">${out ? '<button type="button" class="btn" data-h="debrief">Open the debrief</button><button type="button" class="btn ghost" data-h="close">Close</button>' : '<button type="button" class="btn" data-h="close">I have the position</button>'}</div></div>`;
   const dl = box.querySelector('.ho-list');
   for (const [k, v] of shiftBrief(out)) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
   document.body.appendChild(box);
-  box.querySelector('[data-h="close"]').onclick = () => { box.remove(); S.paused = out ? true : wasPaused; if (!out) sys(`Handover complete: you have the position until ${hmZ(SHIFT.end)}.`); };
+  box.querySelector('[data-h="close"]').onclick = () => { box.remove(); S.paused = out ? true : wasPaused; if (!out) { if (typeof shiftTaken === 'function') shiftTaken(); sys(`Handover complete: you have the position until ${hmZ(SHIFT.end)}.`); } };
   const d = box.querySelector('[data-h="debrief"]'); if (d) d.onclick = () => { box.remove(); if (typeof openDebrief === 'function') openDebrief(); };
 }
 
@@ -16636,7 +16641,8 @@ const supSay = t => typeof TEAM !== 'undefined' && TEAM.people ? teamSay('SUP', 
 function shiftStep(){
   if (!SHIFT || !S.running) return;
   while (SHIFT.plan.length && S.t >= SHIFT.plan[0].at) { const p = SHIFT.plan.shift(); wxApply({ ...wxParts(S.wx), ...p.f }, p.why); }
-  if (SHIFT.onBreak) return;   // the colleague on your positions
+  if (SHIFT.onBreak) { if (SHIFT.liveBrk) { liveBreakTick(); if (S.t >= SHIFT.liveBrk.end) liveBreakEnd(); } return; }   // the colleague on your positions (Live now: for 30 real minutes)
+  if (SHIFT.hoSeats) return;   // Live now: the outgoing controller still has your positions
   breakStep();
   if (S.t - SHIFT.staffT >= 30) { SHIFT.staffT = S.t; shiftStaff(); }
   if (!SHIFT.warned && SHIFT.end - S.t <= 900) { SHIFT.warned = true; sys(`Your relief arrives at ${hmZ(SHIFT.end)}, in 15 minutes.`); }
@@ -16647,11 +16653,12 @@ S.listeners.push(ev => {
   if (SHIFT && SHIFT.orig) for (const k of AI_SEATS) S.seats[k] = SHIFT.orig[k];   // the last shift's splits do not carry over
   SHIFT = null;
   const el = document.getElementById('shiftSel'), len = el ? +el.value : 0;
-  if (!len || EXERCISES[S.mode] || /^live/.test(S.mode)) return;
-  const P = wxPlan(len);
+  if (!len || EXERCISES[S.mode]) return;
+  const live = /^live/.test(S.mode);   // Live now: the live weather, no forecast plan, and real time (liveshift.js)
+  const P = live ? { out: [], text: `${typeof metTrend === 'function' ? metTrend(S.wx.raw) : ''} It's the live weather: there is no forecast plan in Live now.` } : wxPlan(len);
   S.wshift = null;   // the shift's forecast replaces the random wind shifts
-  SHIFT = { len, onT: S.t, end: S.t + len*60, plan: P.out.sort((a, b) => a.at - b.at), trend: P.text, splits: [], orig: { ...S.seats }, staffT: 0, busyT: 0, quietT: 0 };
-  setTimeout(() => { if (SHIFT && S.running) (typeof teamHandover === 'function' ? teamHandover() : shiftModal(false)); }, 0);
+  SHIFT = { len, onT: S.t, end: S.t + len*60, plan: P.out.sort((a, b) => a.at - b.at), trend: P.text, splits: [], orig: { ...S.seats }, staffT: 0, busyT: 0, quietT: 0, live };
+  setTimeout(() => { if (SHIFT && S.running) { if (live && typeof liveHandoverSeats === 'function') liveHandoverSeats(); (typeof teamHandover === 'function' ? teamHandover() : shiftModal(false)); } }, 0);
 });
 
 // ── rest breaks. UK rules allow at most two hours on position; then a 30-minute break while a colleague works it.
@@ -16670,17 +16677,18 @@ function breakStep(){
 }
 function breakModal(){
   document.getElementById('handover')?.remove();
-  S.paused = true;
+  if (!SHIFT.live) S.paused = true;   // (Live now runs on in real time)
   const can = (SHIFT.putOff || 0) < 2 && !SHIFT.overT;
   const box = document.createElement('div'); box.className = 'debrief'; box.id = 'handover';
   box.innerHTML = `<div class="db-card ho-card" role="dialog" aria-label="Break"><div class="db-hd"><b>Time for your break</b><span class="db-sum">${hmZ(S.t)}</span></div>
-    <p class="ho-p">You have been on position for ${Math.round((S.t - SHIFT.onT)/60)} minutes. ${typeof TEAM !== 'undefined' && TEAM.people ? TEAM.people.REL : 'A colleague'} takes your positions for 30 minutes; the game runs the half hour through and you come back to a briefing.</p>
+    <p class="ho-p">You have been on position for ${Math.round((S.t - SHIFT.onT)/60)} minutes. ${typeof TEAM !== 'undefined' && TEAM.people ? TEAM.people.REL : 'A colleague'} takes your positions for 30 minutes; ${SHIFT.live ? `in Live now that's 30 real minutes (back at ${hmZ(S.t + BRK_LEN)}), with the traffic carrying on. Or skip the break, which costs ${BRK_SKIP} points.` : 'the game runs the half hour through and you come back to a briefing.'}</p>
     <div class="ho-bar" hidden><i></i></div>
-    <div class="ho-ctl">${can ? '<button type="button" class="btn ghost" data-h="later">Ten more minutes</button>' : ''}<button type="button" class="btn" data-h="go">Hand over and take the break</button></div></div>`;
+    <div class="ho-ctl">${can ? '<button type="button" class="btn ghost" data-h="later">Ten more minutes</button>' : ''}${SHIFT.live ? '<button type="button" class="btn ghost" data-h="skip">Skip the break</button>' : ''}<button type="button" class="btn" data-h="go">Hand over and take the break</button></div></div>`;
   document.body.appendChild(box);
   const later = box.querySelector('[data-h="later"]');
-  if (later) later.onclick = () => { SHIFT.putOff = (SHIFT.putOff || 0) + 1; SHIFT.brkAsk = false; SHIFT.brkWarn = true; box.remove(); S.paused = false; supSay(`OK, ten more minutes${SHIFT.putOff >= 2 ? ', but that\'s the last time' : ''}.`); };
-  box.querySelector('[data-h="go"]').onclick = () => breakRun(box);
+  if (later) later.onclick = () => { SHIFT.putOff = (SHIFT.putOff || 0) + 1; SHIFT.brkAsk = false; SHIFT.brkWarn = true; box.remove(); if (!SHIFT.live) S.paused = false; supSay(`OK, ten more minutes${SHIFT.putOff >= 2 ? ', but that\'s the last time' : ''}.`); };
+  box.querySelector('[data-h="go"]').onclick = () => SHIFT.live ? liveBreakTake(box) : breakRun(box);
+  const sk = box.querySelector('[data-h="skip"]'); if (sk) sk.onclick = () => liveBreakSkip(box);
 }
 function breakRun(box){
   const mine = AI_SEATS.filter(k => S.seats[k] !== 'AI'), before = { rwy: S.rwy, dep: typeof depRw === 'function' ? depRw() : S.rwy, wx: S.wx.raw, atis: S.atis, lvp: !!S.lvpOn, land: S.aiScore.landed, dept: S.aiScore.departed, los: S.aiScore.los, ga: S.aiScore.ga };
@@ -16909,6 +16917,7 @@ const capHour = () => { let c = ARR_CAP[APT.icao] || 28; if (S.lvpOn || (typeof 
 // flights due in the window (minutes from now): arrivals still to come (not yet on the scope, or in the air by their
 // estimate) and departures by their off-blocks time (parked ones by when they will ask to start, and any still to appear)
 function demandIn(from, to){
+  if (/^live/.test(S.mode) && typeof liveDemand === 'function') { const L = liveDemand(from, to); if (L) return L; }   // Live now: today's real flights still to come (liveshift.js)
   const t0 = S.t + from*60, t1 = S.t + to*60, inW = t => t >= t0 && t < t1;
   let arr = S.sched.filter(f => f.k === 'ARR' && !f.spawned && inW(f.m*60)).length;
   for (const ac of S.acs) if (ac.kind === 'ARR' && ac.airborne && !outOfCtl(ac) && ac.state !== 'DIVERTING') { let e = 600; try { if (typeof eta === 'function') e = eta(ac); } catch (_) {} if (inW(S.t + (isFinite(e) ? e : 600))) arr++; }
@@ -16930,11 +16939,13 @@ function worksLine(w){
 }
 function regulate(rate){
   // the FMP spaces the inbounds still to come over the next two hours so no more than the capacity arrive in an hour
-  const gap = 60/rate, list = S.sched.filter(f => f.k === 'ARR' && !f.spawned && !f.hold && f.m*60 >= S.t && f.m*60 < S.t + 7200).sort((a, b) => a.m - b.m);
+  // (Live now: the real flights keep their times, which is how live.js knows each real aircraft as its flight; the plan
+  // is worked out and described, not applied)
+  const live = /^live/.test(S.mode), gap = 60/rate, list = S.sched.filter(f => f.k === 'ARR' && !f.spawned && !f.hold && f.m*60 >= S.t && f.m*60 < S.t + 7200).sort((a, b) => a.m - b.m);
   let last = S.t/60 + 6, n = 0, max = 0;
-  for (const f of list) { const want = Math.max(f.m, last + gap); if (want > f.m + 0.5) { max = Math.max(max, want - f.m); n++; f.m = want; } last = f.m; }
+  for (const f of list) { const want = Math.max(f.m, last + gap); if (want > f.m + 0.5) { max = Math.max(max, want - f.m); n++; if (!live) f.m = want; } last = live ? Math.max(f.m, want) : f.m; }
   TEAM.strat.reg = rate;
-  return { n, max: Math.round(max) };
+  return { n, max: Math.round(max), live };
 }
 function teamScript(){
   const o = TEAM.people, mine = AI_SEATS.filter(k => S.seats[k] !== 'AI');
@@ -16947,7 +16958,7 @@ function teamScript(){
   // the questions
   const h = demandIn(-2, 60), cap = capHour();
   if (h.arr > cap*0.85) teamAsk({ text: `That's ${h.arr} inbound against about ${cap} an hour. Do you want the FMP to put a regulation on the arrivals?`, opts: [
-    { label: `Yes, regulate to ${cap} an hour`, keys: ['yes', 'regulat', 'cap'], do: () => { const r = regulate(cap); TEAM.regMsg = r; }, by: 'FMP', get reply(){ const r = TEAM.regMsg || { n: 0, max: 0 }; return `Regulation in at ${cap} an hour: ${r.n} inbound${r.n === 1 ? '' : 's'} delayed on the ground at origin, the longest by ${r.max} min.`; } },
+    { label: `Yes, regulate to ${cap} an hour`, keys: ['yes', 'regulat', 'cap'], do: () => { const r = regulate(cap); TEAM.regMsg = r; }, by: 'FMP', get reply(){ const r = TEAM.regMsg || { n: 0, max: 0 }; return r.live ? `I've asked for ${cap} an hour: it would hold ${r.n} inbound${r.n === 1 ? '' : 's'} at origin, the longest by about ${r.max} min. These are today's real flights, so they still turn up when they really do: treat it as the plan and expect holding at the peak until it bites.` : `Regulation in at ${cap} an hour: ${r.n} inbound${r.n === 1 ? '' : 's'} delayed on the ground at origin, the longest by ${r.max} min.`; } },
     { label: 'No, we\'ll hold them', keys: ['no', 'hold'], reply: 'OK. The stacks will fill at the peak: keep an eye on the holding times.' }] });
   const tr = (SHIFT && SHIFT.trend) || '';
   if (/fog|mist/i.test(tr) || (typeof lvpPrep === 'function' && lvpPrep() && !S.lvpOn)) teamAsk({ text: 'With the fog about: do you want LVP declared early, as soon as the RVR is under 1,500 metres, so the gaps are set before it gets thick?', opts: [
@@ -16974,7 +16985,7 @@ function teamScript(){
 // ── the window: the briefing at the top, the chat under it
 function teamOpen(handover){
   document.getElementById('teamchat')?.remove();
-  const wasPaused = S.paused; if (handover) S.paused = true;
+  const wasPaused = S.paused; if (handover && !(typeof SHIFT !== 'undefined' && SHIFT && SHIFT.live)) S.paused = true;   // (Live now runs on: liveshift.js)
   TEAM.open = true; TEAM.unread = 0; teamBadge();
   const box = document.createElement('div'); box.className = 'debrief'; box.id = 'teamchat';
   box.innerHTML = `<div class="db-card tc-card" role="dialog" aria-label="Team chat"><div class="db-hd"><b>${handover ? 'Shift handover · team chat' : 'Team chat'}</b><span class="db-sum">${hmZ(S.t)}</span><span class="grow"></span>${handover ? '' : '<button type="button" class="db-x" aria-label="Close">✕</button>'}</div>
@@ -16990,7 +17001,7 @@ function teamOpen(handover){
   const take = box.querySelector('[data-h="take"]');
   if (take) take.onclick = () => {
     // anything not answered keeps the plan as it is
-    TEAM.ask.length = 0; close(); S.paused = false;
+    TEAM.ask.length = 0; close(); S.paused = false; if (typeof shiftTaken === 'function') shiftTaken();
     teamSay('OUT', 'You have it. Cheers!', true);
     sys(`Handover complete: you have the position until ${hmZ(SHIFT.end)}.${TEAM.strat.reg ? ` Arrivals regulated to ${TEAM.strat.reg} an hour.` : ''}`);
   };
@@ -17080,6 +17091,7 @@ function cbStep(){
     cbRender();
   }
   if (Math.floor(S.t) % 15 === 0) { cbEstimates(); cbDirect(); cbRelCancel(); }
+  if (/^live/.test(S.mode) && typeof cbTrail === 'function') cbTrail();
 }
 
 // ── the calls
@@ -17094,7 +17106,9 @@ function cbEstimates(){
     const fix = (ARR_ROUTE[b.gate] && ARR_ROUTE[b.gate][arrKey(b)] || [])[0] || 'the boundary';
     cbAdd({ from: areaName(), text: `Estimates ${a.cs} and ${b.cs}, ${fix} at ${hhmmOf(a.m)} and ${hhmmOf(b.m)}, same level. Do you accept them as they are?`, opts: [
       { label: 'Accept, I\'ll sequence them', reply: `${APT.coordName}: accepted, ${a.cs} and ${b.cs}.` },
-      { label: 'Request 10 NM in trail', do: () => { if (!b.spawned) b.m = Math.max(b.m, a.m) + rnd(2, 3); }, reply: `${areaName()}: 10 in trail, ${b.cs} new estimate ${hhmmOf(b.m)}.` }],
+      // (Live now: a real flight keeps its time on the board, which is how the real aircraft is recognised; the area
+      // spaces it at the boundary instead, liveshift.js cbTrail)
+      { label: 'Request 10 NM in trail', do: () => { if (b.real && /^live/.test(S.mode)) b.trail = a.cs; else if (!b.spawned) b.m = Math.max(b.m, a.m) + rnd(2, 3); }, get reply(){ return b.trail ? `${areaName()}: 10 in trail, ${b.cs} will be behind ${a.cs} at the boundary.` : `${areaName()}: 10 in trail, ${b.cs} new estimate ${hhmmOf(b.m)}.`; } }],
       missed: 'They come as they are.' });
     return;
   }
@@ -18827,7 +18841,7 @@ function llMatch(raw){
   if (/ regulat/.test(s) && !(typeof TEAM !== 'undefined' && TEAM.ask[0] && TEAM.ask[0].opts.some(o => (o.keys || []).includes('regulat')))) {
     if (typeof regulate !== 'function' || typeof TEAM === 'undefined' || !TEAM.people) return { why: 'The flow manager is only in the team chat on a shift.' };
     const n = (m = s.match(/ (\d{1,2}) /)) ? +m[1] : capHour(), r = regulate(n);
-    llTeam('ME', `Can we regulate the arrivals to ${n} an hour?`); llTeam('FMP', `Regulation in at ${n} an hour: ${r.n} inbound${r.n === 1 ? '' : 's'} delayed on the ground at origin, the longest by ${r.max} min.`);
+    llTeam('ME', `Can we regulate the arrivals to ${n} an hour?`); llTeam('FMP', r.live ? `I've asked for ${n} an hour: it would hold ${r.n} inbound${r.n === 1 ? '' : 's'} at origin, the longest by about ${r.max} min. They're real flights, so they still turn up when they really do.` : `Regulation in at ${n} an hour: ${r.n} inbound${r.n === 1 ? '' : 's'} delayed on the ground at origin, the longest by ${r.max} min.`);
     return { did: `arrivals regulated to ${n} an hour` };
   }
   // the call ringing on the board (the one named, else the oldest)
@@ -18918,6 +18932,138 @@ if (typeof cbPop === 'function') { const _p = cbPop; cbPop = function(){ _p(); i
   doc.addEventListener('keydown', e => { if (!e.repeat && (e.key === 'l' || e.key === 'L')) llStart(null); }); doc.addEventListener('keyup', e => { if (e.key === 'l' || e.key === 'L') llStop(); }); } }; }
 if (typeof teamOpen === 'function') { const _t = teamOpen; teamOpen = function(h){ _t(h); const f = document.querySelector('#teamchat .tc-in'); if (f) llAddTo(f, f.querySelector('button[type="submit"]')); }; }
 window.__ll = { match: llMatch, heard: llHeard, norm: llNorm };
+
+// ═════════════════════════ shifts in Live now ═════════════════════════
+// A shift (shift.js, team.js) in a Live now session, adapted for real time and real flights:
+// • the handover and the flow manager's figures count today's real flights still to come (the live board, refreshed
+//   through the session), not a timetable
+// • the weather is the live METAR: no forecast plan. The Met office describes the METAR and its trend (the TEMPO and
+//   BECMG groups, NOSIG, and how it has changed since the last one), and each new live METAR is posted to the team chat
+//   as it arrives
+// • an arrival regulation leaves the real flights' times alone (live.js recognises each real aircraft as its flight by
+//   its time on the board, so moving it would break the matching): the flow manager describes the plan instead
+// • the session isn't paused: during the handover the outgoing controller (an AI colleague) keeps working your positions
+//   until you take them, and a break is 30 real minutes with the colleague on your positions (or skip it, −15)
+// • taxiway closures, a shortened runway, an ILS out of service and planned inspections come as in any shift
+const isLiveShift = () => typeof SHIFT !== 'undefined' && SHIFT && SHIFT.live;
+// ── the real flights still to come, from the live board
+function liveDemand(from, to){
+  const T = typeof LIVE !== 'undefined' && LIVE.session && LIVE.session.T; if (!T) return null;
+  const now = nowMin(), lo = now + from, hi = now + to, inW = m => { for (const d of [0, 1440, -1440]) if (m + d >= lo && m + d < hi) return true; return false; };
+  const landed = new Set(S.acs.filter(a => a.kind !== 'ARR' || a.ground).map(a => a.cs)), gone = new Set(S.acs.filter(a => a.kind === 'DEP' && a.airborne).map(a => a.cs));
+  const arr = T.arr.filter(r => !r.cancelled && !r.done && !landed.has(r.cs) && inW(r.tm)).length;
+  const dep = T.dep.filter(r => !r.cancelled && !r.done && !gone.has(r.cs) && inW(r.tm)).length;
+  return { arr, dep };
+}
+// ── the Met office's reading of a METAR: its trend groups, and what has changed since the last one
+const WXW = { RA: 'rain', SHRA: 'showers of rain', TSRA: 'thunderstorms with rain', TS: 'thunderstorms', DZ: 'drizzle', SN: 'snow', SHSN: 'snow showers', FG: 'fog', BR: 'mist', HZ: 'haze', BCFG: 'fog patches', MIFG: 'shallow fog', FZFG: 'freezing fog', SHGS: 'hail showers', GR: 'hail', RASN: 'rain and snow', FZRA: 'freezing rain', FZDZ: 'freezing drizzle' };
+const CLW = { FEW: 'a few clouds', SCT: 'scattered cloud', BKN: 'broken cloud', OVC: 'overcast', VV: 'sky obscured, vertical visibility' };
+function metWords(toks){
+  const out = [];
+  for (const t of toks) {
+    let m;
+    if ((m = t.match(/^(\d{3}|VRB)(\d{2,3})(G(\d{2,3}))?KT$/))) out.push(`wind ${m[1] === 'VRB' ? 'variable' : m[1] + '°'} ${+m[2]} kt${m[4] ? ' gusting ' + +m[4] : ''}`);
+    else if ((m = t.match(/^(\d{4})$/))) out.push(+m[1] >= 9999 ? 'visibility 10 km or more' : `visibility ${(+m[1]).toLocaleString('en-GB')} m`);
+    else if (t === 'CAVOK') out.push('CAVOK');
+    else if (t === 'NSW') out.push('the weather clearing');
+    else if (t === 'NSC') out.push('no significant cloud');
+    else if ((m = t.match(/^(FEW|SCT|BKN|OVC|VV)(\d{3})(CB|TCU)?$/))) out.push(`${CLW[m[1]]} at ${(+m[2]*100).toLocaleString('en-GB')} ft${m[3] === 'CB' ? ' (cumulonimbus)' : m[3] === 'TCU' ? ' (towering cumulus)' : ''}`);
+    else if ((m = t.match(/^([+-])?(VC)?([A-Z]{2,6})$/)) && (WXW[m[3]] || WXW[m[3].slice(2)])) out.push(`${m[1] === '+' ? 'heavy ' : m[1] === '-' ? 'light ' : ''}${WXW[m[3]] || WXW[m[3].slice(2)]}${m[2] ? ' nearby' : ''}`);
+    else if ((m = t.match(/^(FM|TL|AT)(\d{4})$/))) out.push(`${{ FM: 'from', TL: 'until', AT: 'at' }[m[1]]} ${m[2].slice(0, 2)}:${m[2].slice(2)}Z`);
+  }
+  return out.join(', ');
+}
+function metTrend(raw){
+  const s = String(raw || '').replace(/=$/, '');
+  if (/\bNOSIG\b/.test(s)) return 'No significant change expected in the next two hours (NOSIG).';
+  const parts = s.split(/\b(?=TEMPO\b|BECMG\b)/).slice(1).map(p => { const t = p.trim().split(/\s+/), k = t.shift(); const w = metWords(t); return w ? `${k === 'TEMPO' ? 'temporarily' : 'becoming'} ${w}` : ''; }).filter(Boolean);
+  return parts.length ? `Trend for the next two hours: ${parts.join('; ')}.` : 'No trend given with this report.';
+}
+function metChange(w, p){
+  if (!p) return '';
+  const ch = [], d = w.vrb || p.vrb ? 0 : Math.abs(angDiff(p.dir, w.dir));
+  if (d >= 30) ch.push(`the wind has ${angDiff(p.dir, w.dir) > 0 ? 'veered' : 'backed'} ${Math.round(d/10)*10}°`);
+  if (Math.abs((w.spd || 0) - (p.spd || 0)) >= 5) ch.push(`${w.spd > p.spd ? 'picked up' : 'eased'} to ${w.spd} kt`);
+  if ((w.gust || 0) && !(p.gust || 0)) ch.push(`gusts to ${w.gust} kt`);
+  if (Math.abs(w.vis - p.vis) >= Math.max(500, 0.3*Math.min(w.vis, p.vis)) && Math.min(w.vis, p.vis) < 9999) ch.push(`visibility ${w.vis < p.vis ? 'down' : 'up'} to ${w.vis >= 9999 ? '10 km+' : w.vis.toLocaleString('en-GB') + ' m'}`);
+  const ceil = x => x.ceil ?? 99999;
+  if (ceil(w) < 1500 && Math.abs(ceil(w) - ceil(p)) >= 200) ch.push(`cloud base ${ceil(w) < ceil(p) ? 'lowering' : 'lifting'}, now ${ceil(w)} ft`);
+  if (Math.abs(w.qnh - p.qnh) >= 2) ch.push(`QNH ${w.qnh > p.qnh ? 'up' : 'down'} to ${w.qnh}`);
+  return ch.length ? `Since the last one: ${ch.join(', ')}.` : 'Little change since the last one.';
+}
+function metDescribe(w, prev){ return `Live METAR ${w.raw.replace(/\s+(NOSIG|TEMPO|BECMG)\b.*$/, '')}: ${metWords(w.raw.replace(/\s+(NOSIG|TEMPO|BECMG)\b.*$/, '').split(/\s+/).slice(2)) || 'as reported'}. ${metTrend(w.raw)} ${metChange(w, prev)}`.trim(); }
+// a new live METAR during a Live now shift: the Met office posts it, with its trend
+if (typeof applyLiveMetar === 'function') { const _a = applyLiveMetar; applyLiveMetar = function(raw){
+  const prev = S.wx && S.running ? { ...S.wx } : null; _a(raw);
+  if (!isLiveShift() || !S.running) return;
+  SHIFT.trend = `${metTrend(S.wx.raw)} It's the live weather: there is no forecast plan in Live now.`;
+  if (typeof teamSay === 'function' && TEAM.people) teamSay('MET', `New METAR in: ${metDescribe(S.wx, prev)}`);
+}; }
+
+// ── the handover in real time: the outgoing controller keeps your positions until you take them
+function liveHandoverSeats(){
+  const mine = AI_SEATS.filter(k => S.seats[k] !== 'AI'); SHIFT.hoSeats = mine;
+  for (const k of mine) shiftSeat(k, 'AI');
+  if (mine.length) sys(`Live now doesn't stop: the outgoing controller keeps working ${mine.map(k => AI_NAME[k]).join(', ')} until you take the position.`);
+}
+function shiftTaken(){
+  if (!SHIFT || !SHIFT.hoSeats) return;
+  for (const k of SHIFT.hoSeats) shiftSeat(k, 'ME');
+  SHIFT.hoSeats = null; SHIFT.onT = S.t;
+}
+
+// ── breaks in real time: 30 real minutes with a colleague on your positions, or skipped (−15)
+const BRK_SKIP = 15;
+function liveBreakTake(box){
+  const mine = AI_SEATS.filter(k => S.seats[k] !== 'AI');
+  SHIFT.liveBrk = { end: S.t + BRK_LEN, mine, before: { rwy: S.rwy, dep: typeof depRw === 'function' ? depRw() : S.rwy, wx: S.wx.raw, lvp: !!S.lvpOn, land: S.aiScore.landed, dept: S.aiScore.departed, los: S.aiScore.los, ga: S.aiScore.ga } };
+  SHIFT.onBreak = true; for (const k of mine) shiftSeat(k, 'AI');
+  if (typeof teamSay === 'function' && TEAM.people) teamSay('REL', `I have the position. Enjoy your break, see you at ${hmZ(SHIFT.liveBrk.end)}.`, true);
+  box && box.remove(); liveBreakBar();
+}
+function liveBreakSkip(box){
+  S.score.pts -= BRK_SKIP; SHIFT.onT = S.t; SHIFT.putOff = 0; SHIFT.brkWarn = SHIFT.brkAsk = SHIFT.overT = false;
+  supSay(`Break skipped (−${BRK_SKIP}). That's not good for you: you're due another one in two hours.`);
+  box && box.remove();
+}
+function liveBreakBar(){
+  document.getElementById('lbrk')?.remove();
+  const B = SHIFT && SHIFT.liveBrk; if (!B) return;
+  const d = document.createElement('div'); d.id = 'lbrk'; d.className = 'lbrk';
+  d.innerHTML = `<b>On your break</b><span class="lbrk-t"></span><button type="button" class="btn ghost" data-lb="back">Come back now (−5)</button>`;
+  document.body.appendChild(d);
+  d.querySelector('[data-lb="back"]').onclick = () => { S.score.pts -= 5; supSay('Back early (−5): take your full break next time.'); liveBreakEnd(); };
+  liveBreakTick();
+}
+function liveBreakTick(){ const B = SHIFT && SHIFT.liveBrk, t = document.querySelector('#lbrk .lbrk-t'); if (B && t) { const s = Math.max(0, Math.round(B.end - S.t)); t.textContent = `${TEAM.people ? TEAM.people.REL : 'A colleague'} has your positions · back at ${hmZ(B.end)} (${Math.floor(s/60)}:${String(s % 60).padStart(2, '0')})`; } }
+function liveBreakEnd(){
+  const B = SHIFT && SHIFT.liveBrk; if (!B) return;
+  SHIFT.liveBrk = null; document.getElementById('lbrk')?.remove();
+  for (const k of B.mine) shiftSeat(k, 'ME');
+  SHIFT.onBreak = false; SHIFT.onT = S.t; SHIFT.putOff = 0; SHIFT.brkWarn = SHIFT.brkAsk = SHIFT.overT = false;
+  const b = B.before, ch = [];
+  ch.push(`${S.aiScore.landed - b.land} landed and ${S.aiScore.departed - b.dept} departed while you were away${S.aiScore.ga > b.ga ? `, ${S.aiScore.ga - b.ga} go-around${S.aiScore.ga - b.ga > 1 ? 's' : ''}` : ''}${S.aiScore.los > b.los ? `, ${S.aiScore.los - b.los} loss${S.aiScore.los - b.los > 1 ? 'es' : ''} of separation` : ''}.`);
+  if (S.rwy !== b.rwy || (typeof depRw === 'function' && depRw() !== b.dep)) ch.push(`Runways changed: now landing ${S.rwy}${typeof depRw === 'function' && depRw() !== S.rwy ? ', departing ' + depRw() : ''}.`);
+  if (S.wx.raw !== b.wx) ch.push(`New weather, information ${phonetic(S.atis)}: ${S.wx.raw}.`);
+  if (!!S.lvpOn !== b.lvp) ch.push(S.lvpOn ? 'Low visibility procedures are now in force.' : 'Low visibility procedures have been cancelled.');
+  if (typeof teamSay === 'function' && TEAM.people) teamSay('REL', `Welcome back. ${ch.join(' ')}`, true);
+  shiftModalBack(ch);
+}
+
+// ── the area's "ten miles in trail" for two real flights: their times on the board stay as they are (they are how the
+// real aircraft are recognised); once both are real tracks heading for the boundary, the second is brought to it later
+function cbTrail(){
+  for (const f of S.sched) {
+    if (!f.trail) continue;
+    const b = S.acs.find(a => a.cs === f.cs), a = S.acs.find(x => x.cs === f.trail);
+    if (!b || b.state !== 'PRE') { if (b && b.state !== 'PRE') f.trail = null; continue; }
+    if (!a) continue;
+    if (a.state === 'PRE' && b.preAt < a.preAt + 150) b.preAt = a.preAt + 150;
+    else if (a.state !== 'PRE' && b.preAt < S.t + 60 && dist(a.x, a.y, b.x, b.y) < 10) b.preAt = S.t + 90;
+  }
+}
+S.listeners.push(ev => { if (ev === 'start') document.getElementById('lbrk')?.remove(); });
+window.__lsh = { liveDemand, metDescribe, metTrend, liveBreakEnd, liveBreakTake, liveBreakSkip };
 
 // ═════════════════════════ radio realism ═════════════════════════
 // Squelch clicks and band-limited hiss around each transmission, a heterodyne squeal when two stations transmit at
