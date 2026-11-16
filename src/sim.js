@@ -1507,7 +1507,7 @@ function vacSpeed(ac, dt){
     if (off > 12 && dBend == null) dBend = d;          // the start of a rapid exit's sweep off the runway: no faster than VAC_RWY into it
     d += seg; from = p;
   }
-  const lim = dBend == null ? Infinity : Math.sqrt(VAC_RWY*VAC_RWY + 2*dec*dBend*3600);
+  const lim = dBend == null ? Infinity : Math.sqrt(VAC_RWY*VAC_RWY + 2*Math.min(dec, TAXI_DEC)*dBend*3600);   // braked for at the rate it actually slows on the runway (TAXI_DEC)
   return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, lim, Math.sqrt(turnV*turnV + 2*dec*d*3600)));
 }
 // v: the speed it reaches the holding point at, cleared on while still taxiing: it keeps rolling onto the runway
