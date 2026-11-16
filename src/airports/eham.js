@@ -129,7 +129,17 @@ const EHAM = (() => {
     ARTIP: { inb: 253, turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // AD 2.22 para 2.5.6.2: 251° MAG
     RIVER: { inb: 42,  turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // 040° MAG
     SUGOL: { inb: 111, turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // 109° MAG
-    NARSO: { inb: 356, turn: 'L', min: 20000, max: 26000, maxKt: 220 }     // 354° MAG, left-hand
+    NARSO: { inb: 356, turn: 'L', min: 20000, max: 26000, maxKt: 220 },    // 354° MAG, left-hand
+    // not published: extra holds for the game, so a controller has somewhere to put delay before the initial approach fix
+    // stacks fill. On the STARs upstream of each IAF, inbound along the STAR towards the next fix, right-hand, FL110 and
+    // above (clear of the IAF stacks below FL100 and well away from the SIDs, which stop at FL060); WINJA to the north
+    // (on the night transitions, about 7 NM from the nearest SID) from FL070. inb is worked out from the next fix (to).
+    ROBVI: { to: 'SUGOL', turn: 'R', min: 11000, max: 15000, maxKt: 250, extra: true },   // MOLIX, TOPPA
+    OSKUR: { to: 'ARTIP', turn: 'R', min: 11000, max: 15000, maxKt: 250, extra: true },   // NORKU, RKN
+    DOFMU: { to: 'RIVER', turn: 'R', min: 11000, max: 15000, maxKt: 250, extra: true },   // PESER
+    HAMZA: { to: 'RIVER', turn: 'R', min: 11000, max: 15000, maxKt: 250, extra: true },   // HELEN
+    YENZO: { to: 'RIVER', turn: 'R', min: 11000, max: 15000, maxKt: 250, extra: true },   // DENUT
+    WINJA: { to: 'AM602', turn: 'R', min: 7000, max: 10000, maxKt: 230, extra: true }     // north, between ARTIP and SUGOL
   };
 
   // ── SIDs (AD 2.22 para 1.5): RNAV1, every runway its own set, the letter of the designator the runway (S and Q 24, E 18L,

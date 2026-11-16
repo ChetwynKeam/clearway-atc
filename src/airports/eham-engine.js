@@ -504,7 +504,9 @@ for (const [id, p] of Object.entries(EHAM.FIX)) wp(id, p[0], p[1], (STAR_FIXES.h
 for (const [id, n] of Object.entries(EHAM.NAV)) wp(id, ...n.p, { note: `${n.name} ${n.freq}` });
 for (const id of Object.keys(EHAM.FIX)) if (/^AM\d/.test(id)) WP[id].hide = true;
 const RADAR_REF = ARP;
-for (const [id, h] of Object.entries(EHAM.HOLDS_AIR)) if (WP[id]) WP[id].hold = { inb: Math.round(h.inb), min: h.min, left: h.turn === 'L' };
+for (const [id, h] of Object.entries(EHAM.HOLDS_AIR)) if (WP[id]) {
+  const inb = h.inb ?? (WP[h.to] ? brg(...WP[id].p, ...WP[h.to].p) : 0);
+  WP[id].hold = { inb: Math.round(inb), min: h.min, left: h.turn === 'L' }; WP[id].minor = false; }
 const GATES = Object.keys(EHAM.DIR);
 const starOf = (g, rw) => EHAM.STARS[EHAM.DIR[g].star];
 const ENTRY = Object.fromEntries(GATES.map(g => [g, WP[EHAM.DIR[g].entry].p]));
@@ -537,9 +539,32 @@ for (const [rw, I] of Object.entries(EHAM.ILS)) {
 // runway ('18R'), night transition ('18R:N') and ARTIP 2X ('36R:X'); APT.arrRoute picks the key for each arrival.
 const LAND_RWYS = Object.keys(FINAL);
 const TRANS_OF = (iaf, rw, when) => Object.values(EHAM.TRANS).find(t => t.iaf === iaf && t.rwy === rw && t.when === when);
+// By day the vectors are laid out as hidden points beside the final, the pattern Schiphol Approach flies: from the initial
+// approach fix a downwind on the side the arrival comes from, 7 NM off the centreline, then a base 5 NM outside the
+// intermediate fix and 3 NM off, so the localiser is joined at about 30° (not the 120° turn straight from SUGOL or
+// ARTIP to the intermediate fix). Downwind 1,000 ft above the intercept altitude, the base at it; an arrival that must
+// cross a parallel's final to reach its own (the arrival manager balancing the two) stays 1,000 ft up across it.
+const FEED_ALT = {};
+function feeder(rw, from){
+  const I = EHAM.ILS[rw], thr = THR[rw], out = norm(crsOf(rw) + 180), ifp = WP[I.ifx].p, dIF = dist(...thr, ...ifp);
+  const f = WP[from].p, ux = Math.sin(out*D2R), uy = Math.cos(out*D2R), dx = f[0] - thr[0], dy = f[1] - thr[1];
+  const along = dx*ux + dy*uy, right = dx*uy - dy*ux, s = right >= 0 ? 1 : -1;
+  // already lined up (a turn of 30° or less at the intermediate fix): straight there
+  if (along > dIF && Math.abs(angDiff(brg(...f, ...ifp), crsOf(rw))) <= 30) return [I.ifx];
+  // a same-direction parallel on that side, between it and the arrival
+  const cross = LAND_RWYS.some(o => o !== rw && THR[o] && Math.abs(angDiff(crsOf(o), crsOf(rw))) < 10 && (() => {
+    const ox = THR[o][0] - thr[0], oy = THR[o][1] - thr[1], r = ox*uy - oy*ux; return Math.sign(r) === s && Math.abs(r) < 3; })());
+  const pt = (a, l) => add(add(thr, out, a), out + 90, l), tag = `${rw}${s > 0 ? 'L' : 'R'}`;
+  const mk = (k, p, note) => { WP[tag + k] = { id: tag + k, p, hide: true, minor: true, note }; FEED_ALT[tag + k] = I.ifAlt + (k === 'B' && !cross ? 0 : 1000); return tag + k; };
+  const base = mk('B', pt(dIF + 5, s*3), `base for ${rw}`);
+  if (along > dIF + 5) return [base, I.ifx];
+  const dw = mk('D', pt(dIF + 5, s*7), `downwind for ${rw}`);
+  if (along > 1) return [dw, base, I.ifx];
+  return [mk('A', pt(1, s*7), `downwind for ${rw}`), dw, base, I.ifx];
+}
 const ARR_ROUTE = Object.fromEntries(GATES.map(g => { const st = starOf(g).pts.map(p => p[0]), iaf = IAF_OF(g), R = {};
   for (const rw of LAND_RWYS) {
-    R[rw] = [...st, EHAM.ILS[rw].ifx];
+    R[rw] = [...st, ...feeder(rw, iaf)];
     const n = TRANS_OF(iaf, rw, 'night'), d = TRANS_OF(iaf, rw, 'day');
     if (n) R[rw + ':N'] = [...st, ...n.pts.slice(1).map(p => p[0])];
     if (d) R[rw + ':X'] = [...st, ...d.pts.slice(1).map(p => p[0])];
@@ -559,7 +584,7 @@ function arrKeyOf(o){
 // intermediate fixes'
 const ARR_ALT = (() => { const m = {}; for (const s of STAR_LIST) for (const [id, a] of s.pts) if (a && m[id] == null) m[id] = a;
   for (const t of Object.values(EHAM.TRANS)) for (const [id, a] of t.pts.slice(1)) if (a && m[id] == null) m[id] = a;
-  for (const I of Object.values(EHAM.ILS)) m[I.ifx] = I.ifAlt; return m; })();
+  for (const I of Object.values(EHAM.ILS)) m[I.ifx] = I.ifAlt; return { ...m, ...FEED_ALT }; })();
 
 // ── departures: the SID of the take-off runway whose end is nearest the destination's bearing
 const catOf = ac => 'CD';
