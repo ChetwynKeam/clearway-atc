@@ -21,7 +21,7 @@ jobs:
           for A in "AIRAC%20AMDT%2012-2026_2026_11_26" "AIRAC%20AMDT%2011-2026_2026_10_29"; do
             for ROOT in "https://eaip.lvnl.nl/web/eaip/$A" "https://eaip.lvnl.nl/$A"; do
               D=$(echo "$A" | sed 's/%20/_/g'); mkdir -p "$D"
-              for P in "eAIP/EH-AD%202%20EHAM%201-en-GB.html" "eAIP/EH-AD%202%20EHAM%202-en-GB.html" "eAIP/EH-AD%202%20EHAM%203-en-GB.html" "EH-Cover%20Page-en-GB.html"; do
+              for P in "eAIP/EH-ENR%203.1-en-GB.html" "eAIP/EH-ENR%203.2-en-GB.html" "eAIP/EH-ENR%203.3-en-GB.html" "eAIP/EH-ENR%204.1-en-GB.html" "eAIP/EH-ENR%204.4-en-GB.html" "eAIP/EH-ENR%202.1-en-GB.html" "eAIP/EH-AD%202%20EHAM%201-en-GB.html" "eAIP/EH-AD%202%20EHAM%202-en-GB.html" "eAIP/EH-AD%202%20EHAM%203-en-GB.html" "EH-Cover%20Page-en-GB.html"; do
                 curl -sSfL -m 120 -A "$UA" "$ROOT/$P" -o "$D/$(basename "$P" | sed 's/%20/_/g')" && echo "OK $ROOT/$P"
               done
               if ls "$D"/*EHAM_1*.html >/dev/null 2>&1; then echo "$ROOT" > "$D/ROOT"; break; fi
