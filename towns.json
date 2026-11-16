@@ -1,0 +1,2924 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.4 2390de5a",
+  "osm3s": {
+    "timestamp_osm_base": "2026-11-16T10:01:06Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 10292814,
+  "lat": 55.6244917,
+  "lon": -3.5215795,
+  "tags": {
+    "is_in": "Scotland, UK",
+    "name": "Biggar",
+    "place": "town",
+    "population": "2320",
+    "wikidata": "Q3250089",
+    "wikipedia": "en:Biggar, South Lanarkshire"
+  }
+},
+{
+  "type": "node",
+  "id": 11960093,
+  "lat": 54.9740218,
+  "lon": -2.0175509,
+  "tags": {
+    "alt_name:la": "Corstopitum",
+    "name": "Corbridge",
+    "name:la": "Coria",
+    "old_name": "Coria;Corstopitum",
+    "place": "town",
+    "population": "3672",
+    "postal_code": "NE45",
+    "wikidata": "Q122953",
+    "wikipedia": "en:Corbridge"
+  }
+},
+{
+  "type": "node",
+  "id": 17898859,
+  "lat": 55.9533456,
+  "lon": -3.1883749,
+  "tags": {
+    "alt_name:fur": "Edimburc",
+    "alt_name:la": "Edinburgum;Dunedinum",
+    "alt_name:mi": "Erinipara",
+    "alt_name:sco": "Embro;Edinburrie",
+    "burgh": "royal;county of city",
+    "burgh:start_date": "1124-1127",
+    "capital": "4",
+    "ele": "47",
+    "is_in:country": "Scotland",
+    "is_in:country_1": "United Kingdom",
+    "is_in:country_code": "GB",
+    "name": "Edinburgh",
+    "name:af": "Edinburg",
+    "name:am": "ኤዲንቦሮ",
+    "name:an": "Edimburgo",
+    "name:ang": "Edinburg",
+    "name:ar": "إدنبرة",
+    "name:arz": "ادنبره",
+    "name:ast": "Edimburgo",
+    "name:az": "Edinburq",
+    "name:azb": "ادینبورق",
+    "name:ba": "Эдинбург",
+    "name:bar": "Edinburg",
+    "name:bat-smg": "Edėnborgs",
+    "name:be": "Эдынбург",
+    "name:be-tarask": "Эдынбург",
+    "name:bg": "Единбург",
+    "name:bh": "एडिनबर्ग",
+    "name:bn": "এডিনবরা",
+    "name:br": "Dinedin",
+    "name:bs": "Edinburgh",
+    "name:ca": "Edimburg",
+    "name:ce": "Эдинбург",
+    "name:ceb": "Edinburgh",
+    "name:ckb": "ئێدینبەرە",
+    "name:cnr": "Edinburgh",
+    "name:cs": "Edinburgh",
+    "name:cv": "Эдинбург",
+    "name:cy": "Caeredin",
+    "name:da": "Edinburgh",
+    "name:de": "Edinburg",
+    "name:diq": "Edinburgh",
+    "name:dsb": "Edinburgh",
+    "name:el": "Εδιμβούργο",
+    "name:en": "Edinburgh",
+    "name:eo": "Edinburgo",
+    "name:es": "Edimburgo",
+    "name:et": "Edinburgh",
+    "name:eu": "Edinburgo",
+    "name:ext": "Edimburgu",
+    "name:fa": "ادینبورو",
+    "name:fi": "Edinburgh",
+    "name:fj": "Edinburgh",
+    "name:fo": "Edinburgh",
+    "name:fr": "Édimbourg",
+    "name:frr": "Edinburgh",
+    "name:fur": "Edinburc",
+    "name:fy": "Edinboarch",
+    "name:ga": "Dún Éideann",
+    "name:gd": "Dùn Èideann",
+    "name:gl": "Edimburgo",
+    "name:gn": "Endimbúgo",
+    "name:gsw": "Edinbùrri",
+    "name:gv": "Doon Edin",
+    "name:hak": "Edinburgh",
+    "name:he": "אדינבורג",
+    "name:hi": "ऎडिन्बर",
+    "name:hr": "Edinburgh",
+    "name:hsb": "Edinburgh",
+    "name:ht": "Edinbo",
+    "name:hu": "Edinburgh",
+    "name:hy": "Էդինբուրգ",
+    "name:ia": "Edimburg",
+    "name:id": "Edinburgh",
+    "name:io": "Edinburgh",
+    "name:is": "Edinborg",
+    "name:it": "Edimburgo",
+    "name:ja": "エディンバラ",
+    "name:jv": "Edinburgh",
+    "name:ka": "ედინბურგი",
+    "name:kaa": "Edinburg",
+    "name:kk": "Эдинбург",
+    "name:kn": "ಎಡಿನ್ಬರ",
+    "name:ko": "에든버러",
+    "name:ks": "ایڈِنبرگ",
+    "name:ku": "Edinburgh",
+    "name:kw": "Karedin",
+    "name:ky": "Эдинбург",
+    "name:la": "Edimburgum",
+    "name:lad": "Edimburgo",
+    "name:lb": "Edinburgh",
+    "name:lfn": "Edinburgh",
+    "name:lij": "Edimburgo",
+    "name:lmo": "Edimbùrgh",
+    "name:lo": "ເອແດມບວກ",
+    "name:lt": "Edinburgas",
+    "name:lv": "Edinburga",
+    "name:mhr": "Эдинбург",
+    "name:mi": "Ētinipara",
+    "name:mk": "Единбург",
+    "name:ml": "എഡിൻബറോ",
+    "name:mn": "Эдинбург",
+    "name:mni": "ꯏꯗꯤꯟꯕꯔꯒ",
+    "name:mr": "एडिनबरा",
+    "name:ms": "Edinburgh",
+    "name:mt": "Edinburgu",
+    "name:my": "အက်ဒင်ဗာရာမြို့",
+    "name:mzn": "ادینبورگ",
+    "name:nan": "Edinburgh",
+    "name:nds-nl": "Edinburgh",
+    "name:new": "एदिनबरा",
+    "name:nl": "Edinburgh",
+    "name:nn": "Edinburgh",
+    "name:no": "Edinburgh",
+    "name:oc": "Edimborg",
+    "name:os": "Эдинбург",
+    "name:pa": "ਐਡਿਨਬਰਾ",
+    "name:pap": "Edinburgh",
+    "name:pl": "Edynburg",
+    "name:pms": "Edimborgh",
+    "name:pnb": "ایڈنبرا",
+    "name:pronunciation": "ˈɛdɪnb(ə)rə",
+    "name:ps": "ایدینبرګ",
+    "name:pt": "Edimburgo",
+    "name:qu": "Edinburgh",
+    "name:ro": "Edinburgh",
+    "name:roa-rup": "Edinburgh",
+    "name:ru": "Эдинбург",
+    "name:rue": "Единбург",
+    "name:sc": "Edimburgu",
+    "name:scn": "Edimburgu",
+    "name:sco": "Embra",
+    "name:sd": "ايڊنبرا",
+    "name:sh": "Edinburgh",
+    "name:si": "එඩින්බරෝ",
+    "name:sk": "Edinburg",
+    "name:sl": "Edinburg",
+    "name:sn": "Edinburgh",
+    "name:sq": "Edinburg",
+    "name:sr": "Единбург",
+    "name:sv": "Edinburgh",
+    "name:sw": "Edinburgh",
+    "name:szl": "Edinburgh",
+    "name:ta": "எடின்பரோ",
+    "name:th": "เอดินบะระ",
+    "name:tl": "Edinburgh",
+    "name:tr": "Edinburgh",
+    "name:tt": "Эдинбург",
+    "name:tw": "Edinburgh",
+    "name:udm": "Эдинбург",
+    "name:ug": "Idinburg",
+    "name:uk": "Единбург",
+    "name:ur": "ایڈنبرا",
+    "name:uz": "Edinburgh",
+    "name:vec": "Ebora",
+    "name:vep": "Edinburg",
+    "name:vi": "Edinburgh",
+    "name:war": "Edinburgh",
+    "name:wuu": "爱丁堡",
+    "name:xmf": "ედინბურგი",
+    "name:yi": "עדינבורג",
+    "name:yue": "愛丁堡",
+    "name:zh": "爱丁堡",
+    "name:zh-Latn-pinyin": "Àidīngbǎo",
+    "place": "city",
+    "population": "488050",
+    "source_ref:capital": "http://comments.gmane.org/gmane.comp.gis.openstreetmap/55712",
+    "wikidata": "Q23436",
+    "wikipedia": "en:Edinburgh"
+  }
+},
+{
+  "type": "node",
+  "id": 20629613,
+  "lat": 54.2820009,
+  "lon": -0.4011868,
+  "tags": {
+    "alt_name:zh": "斯卡布罗",
+    "name": "Scarborough",
+    "name:ar": "سكاربورو",
+    "name:en": "Scarborough",
+    "name:pronunciation": "ˈskɑːbɹə",
+    "name:ru": "Скарборо",
+    "name:zh": "斯卡伯勒",
+    "place": "town",
+    "population": "61749",
+    "wikidata": "Q743521",
+    "wikipedia": "en:Scarborough, North Yorkshire"
+  }
+},
+{
+  "type": "node",
+  "id": 20910685,
+  "lat": 54.9738474,
+  "lon": -1.6131572,
+  "tags": {
+    "alt_name": "Newcastle",
+    "alt_name:la": "Novum Castellum",
+    "alt_name:mk": "Њукасл",
+    "is_in": "UK, England, Northumberland, Tyne & Wear",
+    "is_in:country": "United Kingdom",
+    "is_in:county": "Tyne and Wear",
+    "is_in:historic_county": "Northumberland",
+    "long_name:ur": "نیوکاسل اپون ٹائن",
+    "name": "Newcastle upon Tyne",
+    "name:ar": "نيوكاسل أبون تاين",
+    "name:az": "Nyukasl apon Tayn",
+    "name:be": "Ньюкасл-апан-Тайн",
+    "name:bg": "Нюкасъл ъпон Тайн",
+    "name:bn": "নিউক্যাসল আপন ট্যাইন",
+    "name:el": "Νιούκασλ",
+    "name:fa": "نیوکاسل آپون تاین",
+    "name:fr": "Newcastle upon Tyne",
+    "name:ga": "An Caisleán Nua",
+    "name:gd": "An Caisteal Nuadh",
+    "name:he": "ניוקאסל",
+    "name:hu": "Newcastle",
+    "name:ja": "ニューカッスル・アポン・タイン",
+    "name:ka": "ნიუკასლ-აპონ-ტაინი",
+    "name:kn": "ನ್ಯೀಕಾಸ್ಲ್",
+    "name:ko": "뉴캐슬어폰타인",
+    "name:la": "Novum Castellum super Tinam",
+    "name:lt": "Niukaslas prie Taino",
+    "name:lv": "Ņūkāsla pie Tainas",
+    "name:mk": "Њукасл на Тајн",
+    "name:ml": "ന്യൂകാസിൽ അപ്പോൺ ടൈൻ",
+    "name:mr": "न्यूकॅसल अपॉन टाईन",
+    "name:pa": "نیوکاسل",
+    "name:ro": "Newcastle upon Tyne",
+    "name:ru": "Ньюкасл-апон-Тайн",
+    "name:sr": "Њукасл на Тајну",
+    "name:ta": "டைன் ஆற்றங்கரை நியூ காசில்",
+    "name:th": "นิวคาสเซิลอะพอนไทน์",
+    "name:uk": "Ньюкасл",
+    "name:ur": "نیوکاسل",
+    "name:vi": "Newcastle trên sông Tyne",
+    "name:yi": "ניוקאסטל",
+    "name:zh": "紐卡素",
+    "name:zh-Hans": "泰恩河畔纽卡斯尔",
+    "name:zh-Hant": "泰恩河畔新堡",
+    "official_name:uk": "Ньюкасл-апон-Тайн",
+    "place": "city",
+    "population": "320605",
+    "population:date": "2024",
+    "wikidata": "Q1425428",
+    "wikipedia": "en:Newcastle upon Tyne"
+  }
+},
+{
+  "type": "node",
+  "id": 20919015,
+  "lat": 55.4133398,
+  "lon": -1.7072354,
+  "tags": {
+    "name": "Alnwick",
+    "name:ko": "알른윅",
+    "place": "town",
+    "population": "8000",
+    "source": "NPE",
+    "wikidata": "Q1002826",
+    "wikipedia": "en:Alnwick"
+  }
+},
+{
+  "type": "node",
+  "id": 20919048,
+  "lat": 55.1675437,
+  "lon": -1.6907444,
+  "tags": {
+    "name": "Morpeth",
+    "name:ko": "모페스",
+    "name:ru": "Морпет",
+    "place": "town",
+    "population": "14017",
+    "source": "NPE",
+    "wikidata": "Q736785",
+    "wikipedia": "en:Morpeth, Northumberland"
+  }
+},
+{
+  "type": "node",
+  "id": 20923539,
+  "lat": 54.4866202,
+  "lon": -0.6135859,
+  "tags": {
+    "is_in:country": "United Kingdom",
+    "is_in:country_code": "GB",
+    "is_in:county": "North Yorkshire",
+    "is_in:historic_county": "Yorkshire",
+    "name": "Whitby",
+    "name:pronunciation": "ˈwɪtbɪ",
+    "name:ur": "سکاربرا",
+    "place": "town",
+    "wikidata": "Q852778",
+    "wikipedia": "en:Whitby"
+  }
+},
+{
+  "type": "node",
+  "id": 20949228,
+  "lat": 54.8948478,
+  "lon": -2.9362311,
+  "tags": {
+    "alt_name:gd": "Cathair Luail",
+    "name": "Carlisle",
+    "name:ar": "كارلايل",
+    "name:be": "Карлайл",
+    "name:bg": "Карлайл",
+    "name:bn": "কার্লাইল",
+    "name:br": "Kêrliouelez",
+    "name:cs": "Carlisle",
+    "name:cy": "Caerliwelydd",
+    "name:el": "Κάρλαϊλ",
+    "name:en": "Carlisle",
+    "name:eo": "Carlisle",
+    "name:fa": "کارلایل",
+    "name:fy": "Carlisle",
+    "name:ga": "Cathair Luail",
+    "name:gd": "Cair Luail",
+    "name:he": "קרלייל",
+    "name:hu": "Carlisle",
+    "name:hy": "Կարլայլ",
+    "name:id": "Carlisle",
+    "name:ja": "カーライル",
+    "name:ka": "კარლაილი",
+    "name:kk": "Карлайл",
+    "name:ko": "칼라일",
+    "name:kw": "Karliwelydh",
+    "name:la": "Carliolum",
+    "name:lt": "Karlailas",
+    "name:lv": "Kārlaila",
+    "name:mk": "Карлајл",
+    "name:ml": "കാർലൈൽ",
+    "name:nl": "Carlisle",
+    "name:os": "Карлайл",
+    "name:ru": "Карлайл",
+    "name:sco": "Cairel",
+    "name:sr": "Карлајл",
+    "name:th": "คาร์ไลล์",
+    "name:tt": "Карлайл",
+    "name:uk": "Карлайл",
+    "name:ur": "کارلائیل",
+    "name:zh": "卡萊爾",
+    "place": "city",
+    "population": "72000",
+    "wikidata": "Q192896",
+    "wikipedia": "en:Carlisle"
+  }
+},
+{
+  "type": "node",
+  "id": 20958718,
+  "lat": 54.6857276,
+  "lon": -1.2093696,
+  "tags": {
+    "is_in": "Teesside,England,United Kingdom",
+    "is_in:municipality": "Hartlepool",
+    "name": "Hartlepool",
+    "name:ur": "ہارٹلے پول",
+    "place": "town",
+    "population": "92500",
+    "source:population": "2011 Census",
+    "wikidata": "Q215752",
+    "wikipedia": "en:Hartlepool"
+  }
+},
+{
+  "type": "node",
+  "id": 20958730,
+  "lat": 54.8372106,
+  "lon": -1.3355612,
+  "tags": {
+    "name": "Seaham",
+    "name:ur": "سی ہیم",
+    "place": "town",
+    "wikidata": "Q2345990",
+    "wikipedia": "en:Seaham"
+  }
+},
+{
+  "type": "node",
+  "id": 20959520,
+  "lat": 54.9058512,
+  "lon": -1.3828727,
+  "tags": {
+    "name": "Sunderland",
+    "name:ar": "سندرلاند",
+    "name:bn": "সান্ডারল্যান্ড",
+    "name:en": "Sunderland",
+    "name:hu": "Sunderland",
+    "name:ko": "선덜랜드",
+    "name:lt": "Sanderlandas",
+    "name:mk": "Сандерленд",
+    "name:ml": "സണ്ടർലൻഡ്",
+    "name:ru": "Сандерленд",
+    "name:sr": "Садерленд",
+    "name:uk": "Сандерленд",
+    "name:ur": "سنڈرلینڈ",
+    "place": "city",
+    "population": "275300",
+    "wikidata": "Q188304",
+    "wikipedia": "en:Sunderland"
+  }
+},
+{
+  "type": "node",
+  "id": 20960034,
+  "lat": 54.9987414,
+  "lon": -1.4321848,
+  "tags": {
+    "name": "South Shields",
+    "name:ur": "ساؤتھ شیلڈز",
+    "place": "town",
+    "wikidata": "Q279000",
+    "wikipedia": "en:South Shields"
+  }
+},
+{
+  "type": "node",
+  "id": 20960155,
+  "lat": 55.1270903,
+  "lon": -1.5099726,
+  "tags": {
+    "is_in": "Northumberland",
+    "name": "Blyth",
+    "name:lt": "Blaidas",
+    "place": "town",
+    "wikidata": "Q886899",
+    "wikipedia": "en:Blyth, Northumberland"
+  }
+},
+{
+  "type": "node",
+  "id": 20962688,
+  "lat": 55.7692442,
+  "lon": -2.0026472,
+  "tags": {
+    "alt_name": "Berwick;Berwick on Tweed",
+    "is_in": "England;Northumberland",
+    "is_in:country_code": "GB",
+    "is_in:county": "Northumberland",
+    "is_in:municipality": "Berwick-upon-Tweed",
+    "name": "Berwick-upon-Tweed",
+    "name:gd": "Bearaig a Deas",
+    "name:ko": "베릭어폰트위드",
+    "note": "Was a Scottish Town.",
+    "place": "town",
+    "population": "12043",
+    "short_name": "Berwick",
+    "wikidata": "Q504678",
+    "wikipedia": "en:Berwick-upon-Tweed"
+  }
+},
+{
+  "type": "node",
+  "id": 20967406,
+  "lat": 54.9705304,
+  "lon": -2.4582171,
+  "tags": {
+    "created_by": "JOSM",
+    "name": "Haltwhistle",
+    "place": "town",
+    "source": "NPE",
+    "wikidata": "Q748591"
+  }
+},
+{
+  "type": "node",
+  "id": 20968543,
+  "lat": 54.6433800,
+  "lon": -3.5453529,
+  "tags": {
+    "name": "Workington",
+    "place": "town",
+    "wikidata": "Q1538358",
+    "wikipedia": "en:Workington"
+  }
+},
+{
+  "type": "node",
+  "id": 20971777,
+  "lat": 54.5772273,
+  "lon": -2.4909298,
+  "tags": {
+    "name": "Appleby-in-Westmorland",
+    "place": "town",
+    "source": "Survey",
+    "wikidata": "Q621540",
+    "wikipedia": "en:Appleby-in-Westmorland"
+  }
+},
+{
+  "type": "node",
+  "id": 20981539,
+  "lat": 54.9953097,
+  "lon": -3.0669404,
+  "tags": {
+    "name": "Gretna",
+    "name:en": "Gretna",
+    "name:gd": "Greatna",
+    "place": "town",
+    "population": "3147",
+    "source": "NPE",
+    "wikidata": "Q2282115",
+    "wikipedia": "en:Gretna, Dumfries and Galloway"
+  }
+},
+{
+  "type": "node",
+  "id": 20981696,
+  "lat": 55.1218578,
+  "lon": -3.3552370,
+  "tags": {
+    "is_in": "Scotland",
+    "name": "Lockerbie",
+    "name:en": "Lockerbie",
+    "name:ga": "Locarbaidh",
+    "name:gd": "Locarbaidh",
+    "place": "town",
+    "population": "4287",
+    "wikidata": "Q216045",
+    "wikipedia": "en:Lockerbie"
+  }
+},
+{
+  "type": "node",
+  "id": 21181736,
+  "lat": 54.7770139,
+  "lon": -1.5756205,
+  "tags": {
+    "alt_name:mk": "Дарам",
+    "name": "Durham",
+    "name:af": "Durham",
+    "name:ang": "Dūnholm",
+    "name:ar": "درم",
+    "name:arz": "دورهام, انجلترا",
+    "name:ast": "Durham",
+    "name:azb": "دورام",
+    "name:ba": "Дарем",
+    "name:be": "Дарэм",
+    "name:bg": "Дърам",
+    "name:bn": "ডারহাম",
+    "name:br": "Durham",
+    "name:ca": "Durham",
+    "name:ceb": "Durham",
+    "name:cs": "Durham",
+    "name:cy": "Durham",
+    "name:da": "Durham",
+    "name:de": "Durham",
+    "name:diq": "Durham",
+    "name:el": "Ντάραμ",
+    "name:en": "Durham",
+    "name:es": "Durham",
+    "name:et": "Durham",
+    "name:eu": "Durham",
+    "name:fa": "دورام",
+    "name:fi": "Durham",
+    "name:fr": "Durham",
+    "name:fy": "Durham",
+    "name:ga": "Durham",
+    "name:gd": "Durham",
+    "name:gl": "Durham",
+    "name:he": "דרהאם",
+    "name:hi": "डरहम",
+    "name:hu": "Durham",
+    "name:hy": "Դարհեմ",
+    "name:id": "Durham",
+    "name:is": "Durham",
+    "name:it": "Durham",
+    "name:ja": "ダラム",
+    "name:kk": "Дарем",
+    "name:ko": "더럼",
+    "name:ku": "Durham",
+    "name:kw": "Durham",
+    "name:la": "Dunelmum",
+    "name:lt": "Daramas",
+    "name:lv": "Darema",
+    "name:mk": "Дарем",
+    "name:ml": "ഡറം",
+    "name:mzn": "دورهام",
+    "name:nan": "Durham",
+    "name:nl": "Durham",
+    "name:nn": "Durham",
+    "name:no": "Durham",
+    "name:pl": "Durham",
+    "name:pt": "Durham",
+    "name:qu": "Durham",
+    "name:ro": "Durham",
+    "name:ru": "Дарем",
+    "name:sh": "Durham",
+    "name:sk": "Durham",
+    "name:sr": "Дарам",
+    "name:sv": "Durham",
+    "name:szl": "Durham",
+    "name:tg": "Дарем",
+    "name:th": "เดอรัม",
+    "name:tl": "Lungsod ng Durham",
+    "name:tr": "Durham",
+    "name:ug": "Durham",
+    "name:uk": "Дарем",
+    "name:ur": "ڈرہم",
+    "name:vi": "Durham",
+    "name:war": "Durham",
+    "name:wuu": "达勒姆",
+    "name:yi": "דארהאם",
+    "name:yue": "對衡",
+    "name:zh": "达勒姆",
+    "name:zh-Hans": "达勒姆",
+    "name:zh-Hant": "達拉謨",
+    "place": "city",
+    "population": "42100",
+    "source:name": "common knowledge",
+    "wikidata": "Q179815",
+    "wikipedia": "en:Durham, England"
+  }
+},
+{
+  "type": "node",
+  "id": 21307362,
+  "lat": 54.2327725,
+  "lon": -1.3423775,
+  "tags": {
+    "historic:name": "New Thirsk",
+    "name": "Thirsk",
+    "name:pronunciation": "ˈθɜːsk",
+    "place": "town",
+    "wikidata": "Q641274",
+    "wikipedia": "en:Thirsk"
+  }
+},
+{
+  "type": "node",
+  "id": 21430932,
+  "lat": 54.9646163,
+  "lon": -1.7115301,
+  "tags": {
+    "name": "Blaydon on Tyne",
+    "place": "town",
+    "wikidata": "Q933113"
+  }
+},
+{
+  "type": "node",
+  "id": 21757412,
+  "lat": 55.4776435,
+  "lon": -2.5553768,
+  "tags": {
+    "alt_name:sco": "Jeddart",
+    "is_in": "Borders, Scotland",
+    "name": "Jedburgh",
+    "name:ang": "Jedworð",
+    "name:en": "Jedburgh",
+    "name:ga": "Deadard",
+    "name:gd": "Deadard",
+    "name:ja": "ジェドバラ",
+    "name:ko": "제드버러",
+    "name:ru": "Джедборо",
+    "name:sco": "Jethart",
+    "name:zh": "杰德堡",
+    "place": "town",
+    "population": "3890",
+    "wikidata": "Q1012401",
+    "wikimedia_commons": "Category:Jedburgh",
+    "wikipedia": "en:Jedburgh"
+  }
+},
+{
+  "type": "node",
+  "id": 23202285,
+  "lat": 54.3041258,
+  "lon": -2.1965261,
+  "tags": {
+    "name": "Hawes",
+    "name:pronunciation": "'hɔːz",
+    "place": "town",
+    "wikidata": "Q2225538",
+    "wikipedia": "en:Hawes"
+  }
+},
+{
+  "type": "node",
+  "id": 23202502,
+  "lat": 54.3098083,
+  "lon": -1.8295708,
+  "tags": {
+    "name": "Leyburn",
+    "name:pronunciation": "'leɪbɜːn",
+    "place": "town",
+    "wikidata": "Q2095799",
+    "wikipedia": "en:Leyburn"
+  }
+},
+{
+  "type": "node",
+  "id": 26236059,
+  "lat": 54.6239482,
+  "lon": -2.0829263,
+  "tags": {
+    "alt_name": "Middleton in Teesdale",
+    "name": "Middleton-in-Teesdale",
+    "old_name": "Middleton in Teasdale",
+    "place": "town",
+    "wikidata": "Q4305523",
+    "wikipedia": "en:Middleton-in-Teesdale"
+  }
+},
+{
+  "type": "node",
+  "id": 26405498,
+  "lat": 56.0713724,
+  "lon": -3.4616183,
+  "tags": {
+    "loc_name": "Dumfie",
+    "name": "Dunfermline",
+    "name:ar": "دنفيرملين",
+    "name:en": "Dunfermline",
+    "name:ga": "Dùn Phàrlain",
+    "name:gd": "Dùn Phàrlain",
+    "name:lt": "Danfermlinas",
+    "name:ml": "ഡൺഫേംലിൻ",
+    "name:ru": "Данфермлин",
+    "name:sco": "Dunfaurlin",
+    "name:sr": "Данфермлин",
+    "name:sr-Latn": "Danfermlin",
+    "name:uk": "Данфермлін",
+    "place": "city",
+    "population": "53100",
+    "source": "NPE",
+    "wikidata": "Q211950",
+    "wikipedia": "en:Dunfermline"
+  }
+},
+{
+  "type": "node",
+  "id": 26405720,
+  "lat": 55.9902293,
+  "lon": -3.3966999,
+  "tags": {
+    "alt_name": "Queensferry",
+    "alt_name:gd": "Taobh a Deas Chas Chaolais;Cas Faoileas;Cas Chaolas;Port na Banrighinn a Deas;Iomarach na Banrighinn a Deas",
+    "is_in": "Edinburgh, Scotland, UK",
+    "loc_name": "The Ferry",
+    "name": "South Queensferry",
+    "name:ga": "Cas Chaolas",
+    "name:gd": "Cas Chaolas",
+    "official_name:gd": "Port na Banrighinn a Deas",
+    "place": "town",
+    "population": "10216",
+    "population:date": "2022",
+    "source": "NPE",
+    "source:population": "https://www.scotlandscensus.gov.uk",
+    "wikidata": "Q767798",
+    "wikipedia": "en:South Queensferry"
+  }
+},
+{
+  "type": "node",
+  "id": 26701365,
+  "lat": 54.5760419,
+  "lon": -1.2344047,
+  "tags": {
+    "is_in": "Cleveland;Teesside;England;United Kingdom;Europe",
+    "is_in:country": "United Kingdom",
+    "is_in:country_code": "GB",
+    "is_in:county": "North Yorkshire",
+    "is_in:historic_county": "Yorkshire",
+    "name": "Middlesbrough",
+    "name:als": "Middlesbrough",
+    "name:ar": "ميدلزبرة",
+    "name:arz": "ميدلزبره",
+    "name:ast": "Middlesbrough",
+    "name:az": "Midlsbro",
+    "name:be": "Мідлсбра",
+    "name:be-tarask": "Мідлзбра",
+    "name:bg": "Мидълзбро",
+    "name:bs": "Middlesbrough",
+    "name:ca": "Middlesbrough",
+    "name:ceb": "Middlesbrough",
+    "name:cs": "Middlesbrough",
+    "name:cy": "Middlesbrough",
+    "name:da": "Middlesbrough",
+    "name:de": "Middlesbrough",
+    "name:el": "Μίντλεσμπρο",
+    "name:en": "Middlesbrough",
+    "name:es": "Middlesbrough",
+    "name:et": "Middlesbrough",
+    "name:eu": "Middlesbrough",
+    "name:fa": "میدلزبرو",
+    "name:fi": "Middlesbrough",
+    "name:fr": "Middlesbrough",
+    "name:fy": "Middlesbrough",
+    "name:ga": "Middlesbrough",
+    "name:he": "מידלסברו",
+    "name:hr": "Middlesbrough",
+    "name:hu": "Middlesbrough",
+    "name:hy": "Միդլսբրո",
+    "name:id": "Middlesbrough",
+    "name:is": "Middlesbrough",
+    "name:it": "Middlesbrough",
+    "name:ja": "ミドルズブラ",
+    "name:ka": "მიდლზბრო",
+    "name:kk": "Мидлсбро",
+    "name:ko": "미들즈브러",
+    "name:lb": "Middlesbrough",
+    "name:lt": "Midlsbro",
+    "name:lv": "Midlsbro",
+    "name:mr": "मिडल्सब्रो",
+    "name:nan": "Middlesbrough",
+    "name:nl": "Middlesbrough",
+    "name:nn": "Middlesbrough",
+    "name:no": "Middlesbrough",
+    "name:pl": "Middlesbrough",
+    "name:pronunciation": "mɪdəlzbrə",
+    "name:pt": "Middlesbrough",
+    "name:qu": "Middlesbrough",
+    "name:ro": "Middlesbrough",
+    "name:ru": "Мидлсбро",
+    "name:sco": "Middlesbrough",
+    "name:sd": "مڊل بورا",
+    "name:sh": "Middlesbrough",
+    "name:sk": "Middlesbrough",
+    "name:sr": "Мидлсбро",
+    "name:sv": "Middlesbrough",
+    "name:sw": "Middlesbrough",
+    "name:szl": "Middlesbrough",
+    "name:th": "มิดเดิลส์เบรอ",
+    "name:tr": "Middlesbrough",
+    "name:tt": "Мидлсбро",
+    "name:uk": "Мідлсбро",
+    "name:ur": "مڈلزبرا",
+    "name:vi": "Middlesbrough",
+    "name:war": "Middlesbrough",
+    "name:wuu": "米德尔斯伯勒",
+    "name:yi": "מידלזברא",
+    "name:yue": "米杜士堡",
+    "name:zh": "米德爾斯堡",
+    "place": "town",
+    "population": "138400",
+    "wikidata": "Q171866",
+    "wikipedia": "en:Middlesbrough"
+  }
+},
+{
+  "type": "node",
+  "id": 26701366,
+  "lat": 54.5242081,
+  "lon": -1.5555812,
+  "tags": {
+    "name": "Darlington",
+    "name:ar": "دارلينغتون",
+    "name:lt": "Darlingtonas",
+    "name:ur": "ڈارلنگٹن",
+    "place": "town",
+    "wikidata": "Q213181",
+    "wikipedia": "en:Darlington"
+  }
+},
+{
+  "type": "node",
+  "id": 26747494,
+  "lat": 54.9873333,
+  "lon": -3.2620207,
+  "tags": {
+    "alt_name:gd": "Inbhir Anainn",
+    "name": "Annan",
+    "name:en": "Annan",
+    "name:ga": "Inbhir Anann",
+    "name:gd": "Inbhir Anann",
+    "official_name:gd": "Anainn",
+    "place": "town",
+    "population": "8960",
+    "source": "NPE",
+    "wikidata": "Q564495",
+    "wikipedia": "en:Annan, Dumfries and Galloway"
+  }
+},
+{
+  "type": "node",
+  "id": 27159423,
+  "lat": 55.0177847,
+  "lon": -1.4256042,
+  "tags": {
+    "name": "Tynemouth",
+    "place": "town",
+    "wikidata": "Q1755020",
+    "wikipedia": "en:Tynemouth"
+  }
+},
+{
+  "type": "node",
+  "id": 27159426,
+  "lat": 55.0422091,
+  "lon": -1.4454353,
+  "tags": {
+    "is_in": "UK, England, Northumberland",
+    "name": "Whitley Bay",
+    "name:ur": "وٹلی بے",
+    "place": "town",
+    "wikidata": "Q2575441",
+    "wikipedia": "en:Whitley Bay"
+  }
+},
+{
+  "type": "node",
+  "id": 27159431,
+  "lat": 54.9911912,
+  "lon": -1.5342042,
+  "tags": {
+    "name": "Wallsend",
+    "place": "town",
+    "wikidata": "Q1248150",
+    "wikipedia": "en:Wallsend"
+  }
+},
+{
+  "type": "node",
+  "id": 27159433,
+  "lat": 54.9812514,
+  "lon": -1.4908447,
+  "tags": {
+    "is_in": "UK, England, Northumberland",
+    "name": "Jarrow",
+    "place": "town",
+    "wikidata": "Q782155",
+    "wikipedia": "en:Jarrow"
+  }
+},
+{
+  "type": "node",
+  "id": 27159441,
+  "lat": 54.9726376,
+  "lon": -1.5173449,
+  "tags": {
+    "is_in": "UK, England",
+    "name": "Hebburn",
+    "place": "town",
+    "wikidata": "Q984308",
+    "wikipedia": "en:Hebburn"
+  }
+},
+{
+  "type": "node",
+  "id": 27159445,
+  "lat": 54.9625789,
+  "lon": -1.6019294,
+  "tags": {
+    "name": "Gateshead",
+    "name:ar": "غيتسهيد",
+    "place": "town",
+    "population": "196151",
+    "wikidata": "Q216372",
+    "wikipedia": "en:Gateshead"
+  }
+},
+{
+  "type": "node",
+  "id": 27159449,
+  "lat": 54.8543237,
+  "lon": -1.5750431,
+  "tags": {
+    "name": "Chester-le-Street",
+    "name:lt": "Čester le Stritas",
+    "place": "town",
+    "wikidata": "Q2570025",
+    "wikipedia": "en:Chester-le-Street"
+  }
+},
+{
+  "type": "node",
+  "id": 27159843,
+  "lat": 54.3289795,
+  "lon": -2.7471830,
+  "tags": {
+    "name": "Kendal",
+    "old_name": "Kirkby Kendal",
+    "place": "town",
+    "population": "27500",
+    "wikidata": "Q994575",
+    "wikipedia": "en:Kendal"
+  }
+},
+{
+  "type": "node",
+  "id": 27159944,
+  "lat": 54.8246802,
+  "lon": -3.1610942,
+  "tags": {
+    "name": "Wigton",
+    "name:azb": "ویقتون",
+    "name:bn": "উইগটন",
+    "name:en": "Wigton",
+    "name:fa": "ویگتون",
+    "name:gu": "વિગટન",
+    "name:he": "ויגטון",
+    "name:ja": "ウィグトン",
+    "name:kn": "ವಿಗ್ಟನ್",
+    "name:ko": "위그턴",
+    "name:lt": "Vigtonas",
+    "name:ru": "Вигтон",
+    "name:ta": "விகிட்டான்",
+    "name:te": "విగ్టన్",
+    "name:ur": "وگٹن",
+    "name:zh": "威格顿",
+    "place": "town",
+    "population": "6013",
+    "population:date": "2021",
+    "source": "npe",
+    "source:population": "census",
+    "wikidata": "Q2227457",
+    "wikipedia": "en:Wigton"
+  }
+},
+{
+  "type": "node",
+  "id": 27160066,
+  "lat": 54.3794828,
+  "lon": -2.9061994,
+  "tags": {
+    "name": "Windermere",
+    "name:en": "Windermere",
+    "name:ur": "ونڈرمیر",
+    "name:zh": "温德米尔",
+    "old_name": "Birthwaite",
+    "place": "town",
+    "population": "8359",
+    "wikidata": "Q119936",
+    "wikipedia": "en:Windermere, Cumbria (town)"
+  }
+},
+{
+  "type": "node",
+  "id": 27160069,
+  "lat": 54.4319540,
+  "lon": -2.9630528,
+  "tags": {
+    "name": "Ambleside",
+    "place": "town",
+    "wikidata": "Q391805",
+    "wikipedia": "en:Ambleside"
+  }
+},
+{
+  "type": "node",
+  "id": 27160542,
+  "lat": 54.2456591,
+  "lon": -0.7765631,
+  "tags": {
+    "is_in": "UK,Yorkshire,North Yorkshire",
+    "name": "Pickering",
+    "note:population": "2007 census",
+    "place": "town",
+    "population": "7270",
+    "wikidata": "Q2092325",
+    "wikipedia": "en:Pickering, North Yorkshire"
+  }
+},
+{
+  "type": "node",
+  "id": 27495058,
+  "lat": 54.6072779,
+  "lon": -1.2910885,
+  "tags": {
+    "name": "Billingham",
+    "name:en": "Billingham",
+    "name:lt": "Bilinghamas",
+    "name:ur": "بلنگھم",
+    "place": "town",
+    "population": "35165",
+    "wikidata": "Q862891",
+    "wikipedia": "en:Billingham"
+  }
+},
+{
+  "type": "node",
+  "id": 27587998,
+  "lat": 54.8124898,
+  "lon": -2.4409724,
+  "tags": {
+    "name": "Alston",
+    "place": "town",
+    "wikidata": "Q2560190",
+    "wikipedia": "en:Alston, Cumbria"
+  }
+},
+{
+  "type": "node",
+  "id": 27593292,
+  "lat": 54.5448091,
+  "lon": -1.9246420,
+  "tags": {
+    "name": "Barnard Castle",
+    "name:ar": "قلعة بارنارد",
+    "name:ur": "برنرڈ کاسل",
+    "place": "town",
+    "population": "5500",
+    "postal_code": "DL12",
+    "wikidata": "Q808437",
+    "wikipedia": "en:Barnard Castle"
+  }
+},
+{
+  "type": "node",
+  "id": 27629057,
+  "lat": 55.0498798,
+  "lon": -1.7435142,
+  "tags": {
+    "name": "Ponteland",
+    "place": "town",
+    "wikidata": "Q2262154",
+    "wikipedia": "en:Ponteland"
+  }
+},
+{
+  "type": "node",
+  "id": 27647485,
+  "lat": 54.5359551,
+  "lon": -1.0510850,
+  "tags": {
+    "name": "Guisborough",
+    "name:pronunciation": "ˈɡɪzbərə",
+    "name:ur": "گیزبرا",
+    "place": "town",
+    "population": "18000",
+    "wikidata": "Q952490",
+    "wikipedia": "en:Guisborough"
+  }
+},
+{
+  "type": "node",
+  "id": 27648219,
+  "lat": 54.4702880,
+  "lon": -1.1908224,
+  "tags": {
+    "name": "Stokesley",
+    "place": "town",
+    "wikidata": "Q597894",
+    "wikipedia": "en:Stokesley"
+  }
+},
+{
+  "type": "node",
+  "id": 29071577,
+  "lat": 54.2096884,
+  "lon": -0.2888382,
+  "tags": {
+    "is_in": "UK,Yorkshire,North Yorkshire,resort towns",
+    "is_in:country": "UK",
+    "is_in:county": "North Yorkshire",
+    "is_in:historic_county": "Yorkshire",
+    "name": "Filey",
+    "name:pronunciation": "ˈfaɪlɪ",
+    "old_name": "Five Leys",
+    "place": "town",
+    "population": "6819",
+    "wikidata": "Q82334",
+    "wikipedia": "en:Filey"
+  }
+},
+{
+  "type": "node",
+  "id": 29072080,
+  "lat": 54.2705199,
+  "lon": -0.9324661,
+  "tags": {
+    "alt_name": "Kirbymoorside",
+    "is_in": "UK,Yorkshire,North Yorkshire",
+    "name": "Kirkbymoorside",
+    "name:pronunciation": "kɜːrbiˈmʊərsaɪd",
+    "place": "town",
+    "population": "3040"
+  }
+},
+{
+  "type": "node",
+  "id": 29072084,
+  "lat": 54.2461720,
+  "lon": -1.0612597,
+  "tags": {
+    "is_in": "UK,Yorkshire,North Yorkshire",
+    "name": "Helmsley",
+    "name:pronunciation": "'hɛlmzlɪ",
+    "place": "town",
+    "population": "1570",
+    "wikidata": "Q2073801",
+    "wikipedia": "en:Helmsley"
+  }
+},
+{
+  "type": "node",
+  "id": 29094633,
+  "lat": 55.9343917,
+  "lon": -3.4693866,
+  "tags": {
+    "name": "Broxburn",
+    "name:ga": "Srath Bhroc",
+    "name:gd": "Srath Bhroc",
+    "name:sco": "Brocksburn",
+    "place": "town",
+    "population": "15970",
+    "population:date": "mid-2020 estimate",
+    "source:population": "wikipedia",
+    "wikidata": "Q991350",
+    "wikipedia": "en:Broxburn"
+  }
+},
+{
+  "type": "node",
+  "id": 29208183,
+  "lat": 55.9560901,
+  "lon": -3.4019208,
+  "tags": {
+    "name": "Kirkliston",
+    "name:en": "Kirkliston",
+    "name:ga": "Eaglais Bhaile Lios",
+    "name:gd": "Eaglais Bhaile Lios",
+    "place": "town",
+    "population": "5280",
+    "population:date": "mid-2020 estimate",
+    "source:population": "wikipedia",
+    "wikidata": "Q239193",
+    "wikipedia": "en:Kirkliston"
+  }
+},
+{
+  "type": "node",
+  "id": 29270155,
+  "lat": 54.7475698,
+  "lon": -2.0067955,
+  "tags": {
+    "name": "Stanhope",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q428342",
+    "wikipedia": "en:Stanhope, County Durham"
+  }
+},
+{
+  "type": "node",
+  "id": 29270341,
+  "lat": 54.9728332,
+  "lon": -1.7626920,
+  "tags": {
+    "is_in": "Gateshead, England, UK",
+    "name": "Ryton",
+    "place": "town",
+    "postal_code": "NE40",
+    "source": "npe",
+    "wikidata": "Q3943165"
+  }
+},
+{
+  "type": "node",
+  "id": 29270422,
+  "lat": 54.7142025,
+  "lon": -3.4982669,
+  "tags": {
+    "name": "Maryport",
+    "name:azb": "ماریپورت",
+    "name:bg": "Мерипорт",
+    "name:bn": "ম্যারিপোর্ট",
+    "name:en": "Maryport",
+    "name:fa": "ماریپورت",
+    "name:gu": "મેરીપોર્ટ",
+    "name:ja": "メリーポート",
+    "name:kn": "ಮೇರಿಪೋರ್ಟ್",
+    "name:ko": "메리포트",
+    "name:lt": "Mariportas",
+    "name:ru": "Мэрипорт",
+    "name:ta": "மரிபோர்ட்",
+    "name:te": "మేరీపోర్ట్",
+    "name:ur": "میری پورٹ",
+    "name:zh": "瑪麗波特",
+    "place": "town",
+    "population": "10865",
+    "population:date": "2021",
+    "source": "npe",
+    "source:population": "census",
+    "wikidata": "Q640981",
+    "wikipedia": "en:Maryport"
+  }
+},
+{
+  "type": "node",
+  "id": 29270889,
+  "lat": 54.9458464,
+  "lon": -1.6761605,
+  "tags": {
+    "name": "Whickham",
+    "place": "town",
+    "population": "16262",
+    "source": "npe",
+    "wikidata": "Q2573389",
+    "wikipedia": "en:Whickham"
+  }
+},
+{
+  "type": "node",
+  "id": 29271031,
+  "lat": 54.8518781,
+  "lon": -1.8333741,
+  "tags": {
+    "name": "Consett",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q2080364",
+    "wikipedia": "en:Consett"
+  }
+},
+{
+  "type": "node",
+  "id": 29277629,
+  "lat": 54.8985648,
+  "lon": -1.5795659,
+  "tags": {
+    "is_in": "UK,England,Tyne and Wear",
+    "name": "Birtley",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q1614399",
+    "wikipedia": "en:Birtley, Tyne and Wear"
+  }
+},
+{
+  "type": "node",
+  "id": 29277934,
+  "lat": 54.8692401,
+  "lon": -3.3869124,
+  "tags": {
+    "alt_name": "Silloth-on-Solway",
+    "name": "Silloth",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q2570578"
+  }
+},
+{
+  "type": "node",
+  "id": 29283006,
+  "lat": 54.7641939,
+  "lon": -3.3286236,
+  "tags": {
+    "name": "Aspatria",
+    "name:azb": "اسپاتریا",
+    "name:bn": "এস্পাট্রিয়া",
+    "name:en": "Aspatria",
+    "name:fa": "اسپاتریا",
+    "name:gu": "એસ્પટ્રીયા",
+    "name:ja": "アスパトリア",
+    "name:kn": "ಆಸ್ಪ್ಯಾಟ್ರಿಯಾ",
+    "name:ko": "아스파트리아",
+    "name:lt": "Aspatrija",
+    "name:ru": "Аспэтрия",
+    "name:ta": "ஆஸ்பத்ரியா",
+    "name:te": "అస్పత్రా",
+    "name:ur": "ایسپیٹریا",
+    "name:zh": "阿斯帕特利亞",
+    "place": "town",
+    "population": "2813",
+    "population:date": "2021",
+    "source": "npe",
+    "source:population": "census",
+    "wikidata": "Q1857198",
+    "wikipedia": "en:Aspatria"
+  }
+},
+{
+  "type": "node",
+  "id": 29338624,
+  "lat": 56.0308767,
+  "lon": -3.3977498,
+  "tags": {
+    "loc_name": "Divit",
+    "name": "Inverkeithing",
+    "name:ga": "Inbhir Chéitinn",
+    "name:gd": "Inbhir Chèitinn",
+    "name:ru": "Инверкитинг",
+    "name:sco": "Inverkeithin",
+    "place": "town",
+    "population": "5265",
+    "source": "npe",
+    "wikidata": "Q1010422",
+    "wikipedia": "en:Inverkeithing"
+  }
+},
+{
+  "type": "node",
+  "id": 29338797,
+  "lat": 56.0707374,
+  "lon": -3.1742285,
+  "tags": {
+    "alt_name": "Ceann Gronn",
+    "name": "Kinghorn",
+    "name:en": "Kinghorn",
+    "name:ga": "Ceann Gronn",
+    "name:gd": "Ceann Gronn",
+    "place": "town",
+    "population": "2930",
+    "source": "npe",
+    "wikidata": "Q1010266",
+    "wikipedia": "en:Kinghorn"
+  }
+},
+{
+  "type": "node",
+  "id": 29338805,
+  "lat": 56.0593631,
+  "lon": -3.2330993,
+  "tags": {
+    "loc_name": "Bizland",
+    "name": "Burntisland",
+    "name:ga": "An tEilean Loisgte",
+    "name:gd": "An t-Eilean Loisgte",
+    "name:ru": "Бернтайленд",
+    "name:sco": "Bruntisland",
+    "place": "town",
+    "population": "6269",
+    "source": "npe;2011 census",
+    "wikidata": "Q1011521",
+    "wikipedia": "en:Burntisland"
+  }
+},
+{
+  "type": "node",
+  "id": 29338938,
+  "lat": 56.0370788,
+  "lon": -3.3548735,
+  "tags": {
+    "alt_name:sco": "Deggity",
+    "name": "Dalgety Bay",
+    "name:en": "Dalgety Bay",
+    "name:ga": "Bàgh Dhealgadaidh",
+    "name:gd": "Bàgh Dhealgadaidh",
+    "name:sco": "Dawgety",
+    "place": "town",
+    "population": "10030",
+    "source": "npe",
+    "wikidata": "Q1984807",
+    "wikipedia": "en:Dalgety Bay"
+  }
+},
+{
+  "type": "node",
+  "id": 29339103,
+  "lat": 56.0388706,
+  "lon": -3.4206538,
+  "tags": {
+    "name": "Rosyth",
+    "name:en": "Rosyth",
+    "name:ga": "Ros Fhìobh",
+    "name:gd": "Ros Fhìobh",
+    "name:ja": "ロサイス",
+    "name:ru": "Росайт",
+    "name:uk": "Росайт",
+    "place": "town",
+    "population": "12850",
+    "source": "npe",
+    "wikidata": "Q376329",
+    "wikipedia": "en:Rosyth"
+  }
+},
+{
+  "type": "node",
+  "id": 29340785,
+  "lat": 55.8751189,
+  "lon": -3.1059076,
+  "tags": {
+    "loc_name": "Boomtoon;The Rigg",
+    "name": "Bonnyrigg",
+    "name:ga": "Druim an Bhonnaich",
+    "name:gd": "Druim a' Bhonnaich",
+    "place": "town",
+    "population": "15677",
+    "source": "npe",
+    "wikidata": "Q4942522",
+    "wikipedia": "en:Bonnyrigg"
+  }
+},
+{
+  "type": "node",
+  "id": 29340892,
+  "lat": 55.8780811,
+  "lon": -3.1487772,
+  "tags": {
+    "name": "Loanhead",
+    "name:sco": "Loanheid",
+    "place": "town",
+    "population": "6900",
+    "source": "npe",
+    "wikidata": "Q1011156",
+    "wikipedia": "en:Loanhead"
+  }
+},
+{
+  "type": "node",
+  "id": 29342550,
+  "lat": 54.8722855,
+  "lon": -1.6963315,
+  "tags": {
+    "name": "Stanley",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q924360",
+    "wikipedia": "en:Stanley, County Durham"
+  }
+},
+{
+  "type": "node",
+  "id": 29343409,
+  "lat": 54.8406536,
+  "lon": -1.4699279,
+  "tags": {
+    "name": "Houghton-le-Spring",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q2326854",
+    "wikipedia": "en:Houghton-le-Spring"
+  }
+},
+{
+  "type": "node",
+  "id": 29344388,
+  "lat": 54.8212582,
+  "lon": -1.4527957,
+  "tags": {
+    "name": "Hetton-le-Hole",
+    "place": "town",
+    "wikidata": "Q691566"
+  }
+},
+{
+  "type": "node",
+  "id": 29345573,
+  "lat": 54.7300689,
+  "lon": -1.8834540,
+  "tags": {
+    "name": "Wolsingham",
+    "place": "town",
+    "source": "NPE",
+    "wikidata": "Q1613466",
+    "wikipedia": "en:Wolsingham"
+  }
+},
+{
+  "type": "node",
+  "id": 29367795,
+  "lat": 54.6636532,
+  "lon": -3.3657782,
+  "tags": {
+    "name": "Cockermouth",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q241684",
+    "wikipedia": "en:Cockermouth"
+  }
+},
+{
+  "type": "node",
+  "id": 29368445,
+  "lat": 54.6009812,
+  "lon": -3.1375822,
+  "tags": {
+    "alt_name": "Keswick-on-Derwentwater",
+    "name": "Keswick",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q1025076",
+    "wikipedia": "en:Keswick, Cumbria"
+  }
+},
+{
+  "type": "node",
+  "id": 29535454,
+  "lat": 54.4822397,
+  "lon": -3.5284111,
+  "tags": {
+    "name": "Egremont",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q2486621",
+    "wikipedia": "en:Egremont, Cumbria"
+  }
+},
+{
+  "type": "node",
+  "id": 29536111,
+  "lat": 54.4734508,
+  "lon": -2.3485894,
+  "tags": {
+    "name": "Kirkby Stephen",
+    "place": "town",
+    "wikidata": "Q1838138",
+    "wikipedia": "en:Kirkby Stephen"
+  }
+},
+{
+  "type": "node",
+  "id": 29537641,
+  "lat": 55.9556144,
+  "lon": -2.7793170,
+  "tags": {
+    "is_in": "East Lothian, Scotland, UK",
+    "loc_name": "Haddy;Hadders",
+    "name": "Haddington",
+    "name:az": "Haddinqton",
+    "name:be": "Хадынгтан",
+    "name:br": "Baile Adainn",
+    "name:ca": "Haddington",
+    "name:ceb": "Haddington",
+    "name:cy": "Haddington",
+    "name:de": "Haddington",
+    "name:en": "Haddington",
+    "name:es": "Haddington",
+    "name:eu": "Haddington",
+    "name:fa": "هدینگتون، لوتیان شرقی",
+    "name:fr": "Haddington",
+    "name:ga": "Baile Adainn",
+    "name:gd": "Baile Adainn",
+    "name:it": "Haddington",
+    "name:ko": "해딩턴",
+    "name:nl": "Haddington",
+    "name:nn": "Haddington",
+    "name:no": "Haddington",
+    "name:pl": "Haddington",
+    "name:ru": "Хаддингтон",
+    "name:sco": "Haidintoun",
+    "name:sh": "Haddington",
+    "name:sv": "Haddington",
+    "name:uk": "Гаддінгтон",
+    "name:zh": "哈丁敦",
+    "place": "town",
+    "population": "9944",
+    "wikidata": "Q2281658",
+    "wikipedia": "en:Haddington, East Lothian"
+  }
+},
+{
+  "type": "node",
+  "id": 29541260,
+  "lat": 54.3647264,
+  "lon": -2.9195522,
+  "tags": {
+    "name": "Bowness on Windermere",
+    "name:bar": "Bowness-on-Windermere",
+    "name:ceb": "Bowness-on-Windermere",
+    "name:cy": "Bowness-on-Windermere",
+    "name:de": "Bowness-on-Windermere",
+    "name:en": "Bowness-on-Windermere",
+    "name:es": "Bowness-on-Windermere",
+    "name:fa": "بونس آن ویندرمیر",
+    "name:fr": "Bowness-on-Windermere",
+    "name:ga": "Bowness-on-Windermere",
+    "name:it": "Bowness-on-Windermere",
+    "name:nl": "Bowness-on-Windermere",
+    "name:pl": "Bowness-on-Windermere",
+    "name:sh": "Bowness-on-Windermere",
+    "name:sv": "Bowness-on-Windermere",
+    "name:zh": "波尼斯-温德米尔",
+    "place": "town",
+    "population": "3814",
+    "wikidata": "Q895483",
+    "wikipedia": "en:Bowness-on-Windermere"
+  }
+},
+{
+  "type": "node",
+  "id": 29541385,
+  "lat": 56.0021385,
+  "lon": -2.5158237,
+  "tags": {
+    "is_in": "East Lothian, Scotland, UK",
+    "name": "Dunbar",
+    "name:cy": "Dùn Bàrr",
+    "name:ga": "Dún Bárr",
+    "name:gd": "Dùn Bàrr",
+    "name:ru": "Данбар",
+    "name:uk": "Данбар",
+    "place": "town",
+    "population": "9030",
+    "wikidata": "Q1002133",
+    "wikipedia": "en:Dunbar"
+  }
+},
+{
+  "type": "node",
+  "id": 29541796,
+  "lat": 54.3793525,
+  "lon": -1.6857570,
+  "tags": {
+    "is_in": "UK,England,Yorkshire,North Yorkshire",
+    "name": "Colburn",
+    "place": "town"
+  }
+},
+{
+  "type": "node",
+  "id": 29671318,
+  "lat": 54.2267255,
+  "lon": -2.7721758,
+  "tags": {
+    "name": "Milnthorpe",
+    "name:bn": "মিনথ্রোপ",
+    "name:en": "Milnthorpe",
+    "name:fa": "میلنثورپ",
+    "name:gu": "મિલનથોર્પ",
+    "name:ja": "ミルンソープ",
+    "name:kn": "ಮಿಲ್ನ್ಹಾರ್ಪ್",
+    "name:ko": "밀른쏘프",
+    "name:lt": "Milntorpas",
+    "name:ru": "Милнторп",
+    "name:ta": "மில்னதோர்ப்",
+    "name:zh": "密恩梭普",
+    "place": "town",
+    "population": "2225",
+    "population:date": "2021",
+    "source": "npe",
+    "source:population": "census",
+    "wikidata": "Q2570316",
+    "wikipedia": "en:Milnthorpe"
+  }
+},
+{
+  "type": "node",
+  "id": 29790672,
+  "lat": 54.5846769,
+  "lon": -0.9740921,
+  "tags": {
+    "is_in": "Redcar",
+    "is_in:municipality": "Redcar and Cleveland",
+    "long_name:ur": "سالٹبرن بائے دا سی",
+    "name": "Saltburn by the Sea",
+    "name:ur": "سالٹبرن",
+    "place": "town",
+    "wikidata": "Q2332298",
+    "wikipedia": "en:Saltburn-by-the-Sea"
+  }
+},
+{
+  "type": "node",
+  "id": 29792855,
+  "lat": 54.6179021,
+  "lon": -1.0687914,
+  "tags": {
+    "alt_name:ur": "ریڈکار",
+    "is_in:country": "United Kingdom",
+    "is_in:country_code": "GB",
+    "is_in:county": "North Yorkshire",
+    "is_in:historic_county": "Yorkshire",
+    "is_in:municipality": "Redcar and Cleveland",
+    "name": "Redcar",
+    "name:pronunciation": "ˈɹɛdkɑː",
+    "name:ur": "ریڈ کار",
+    "place": "town",
+    "population": "36000",
+    "wikidata": "Q1193749",
+    "wikipedia": "en:Redcar"
+  }
+},
+{
+  "type": "node",
+  "id": 29880576,
+  "lat": 54.3404812,
+  "lon": -1.4344936,
+  "tags": {
+    "name": "Northallerton",
+    "name:pronunciation": "nɔːˈθælətən",
+    "place": "town",
+    "source": "NPE",
+    "wikidata": "Q920381",
+    "wikipedia": "en:Northallerton"
+  }
+},
+{
+  "type": "node",
+  "id": 30171197,
+  "lat": 54.5401012,
+  "lon": -1.2935896,
+  "tags": {
+    "alt_name": "Thornaby",
+    "is_in:country": "United Kingdom",
+    "is_in:country_code": "GB",
+    "is_in:county": "North Yorkshire",
+    "is_in:historic_county": "Yorkshire",
+    "is_in:municipality": "Stockton-on-Tees",
+    "name": "Thornaby-on-Tees",
+    "name:pronunciation": "ˈθɔːnəbɪ ɒn ˈtiz",
+    "name:ur": "تھورنبی",
+    "place": "town",
+    "population": "24741",
+    "wikidata": "Q652078",
+    "wikipedia": "en:Thornaby-on-Tees"
+  }
+},
+{
+  "type": "node",
+  "id": 30171198,
+  "lat": 54.5179869,
+  "lon": -1.3178982,
+  "tags": {
+    "is_in": "Thornaby,Stockton-on-Tees, England, United Kingdom, Europe",
+    "is_in:country": "England",
+    "is_in:country_code": "GB",
+    "is_in:county": "North Yorkshire",
+    "is_in:municipality": "Stockton-on-Tees",
+    "name": "Ingleby Barwick",
+    "name:pronunciation": "ˈɪŋɡəlbɪ ˈbæɹɪk",
+    "name:ur": "انگلبی بارویک",
+    "place": "town",
+    "population": "20378",
+    "postal_code": "TS17",
+    "wikidata": "Q3096038",
+    "wikipedia": "en:Ingleby Barwick"
+  }
+},
+{
+  "type": "node",
+  "id": 30171200,
+  "lat": 54.5091419,
+  "lon": -1.3543412,
+  "tags": {
+    "addr:country": "GB",
+    "is_in:municipality": "Stockton-on-Tees",
+    "name": "Yarm",
+    "name:ur": "یارم",
+    "place": "town",
+    "population": "8384",
+    "source:population": "wikipedia",
+    "wikidata": "Q2462654",
+    "wikipedia": "en:Yarm"
+  }
+},
+{
+  "type": "node",
+  "id": 30228760,
+  "lat": 55.8272360,
+  "lon": -3.2218145,
+  "tags": {
+    "alt_name:gd": "Ceann na Cuthaige",
+    "is_in": "Midlothian, Scotland, UK",
+    "loc_name": "The Cuik;Peni",
+    "name": "Penicuik",
+    "name:fa": "پنیکوک",
+    "name:ga": "Peighinn na Cuthaig",
+    "name:gd": "Peighinn na Cuthaig",
+    "name:uk": "Пенік'юїк",
+    "place": "town",
+    "population": "15926",
+    "wikidata": "Q1011428",
+    "wikipedia": "en:Penicuik"
+  }
+},
+{
+  "type": "node",
+  "id": 30349906,
+  "lat": 55.9421202,
+  "lon": -3.0538516,
+  "tags": {
+    "is_in": "East Lothian, Scotland, UK",
+    "loc_name": "Mussie;Mussy",
+    "name": "Musselburgh",
+    "name:gd": "Baile nam Feusgan",
+    "name:sco": "Musselburrae",
+    "place": "town",
+    "wikidata": "Q37718",
+    "wikipedia": "en:Musselburgh"
+  }
+},
+{
+  "type": "node",
+  "id": 30349944,
+  "lat": 55.9706083,
+  "lon": -2.9576975,
+  "tags": {
+    "name": "Cockenzie and Port Seton",
+    "name:ga": "Cùil Choinnich",
+    "name:gd": "Cùil Choinnich",
+    "name:sco": "Cockennie",
+    "place": "town",
+    "wikidata": "Q1013257",
+    "wikipedia": "en:Cockenzie and Port Seton"
+  }
+},
+{
+  "type": "node",
+  "id": 31236389,
+  "lat": 55.3332407,
+  "lon": -3.4443570,
+  "tags": {
+    "is_in": "Dumfries and Galloway, Scotland, UK",
+    "name": "Moffat",
+    "name:en": "Moffat",
+    "name:sco": "Muffat",
+    "place": "town",
+    "population": "2582",
+    "wikidata": "Q646784",
+    "wikipedia": "en:Moffat"
+  }
+},
+{
+  "type": "node",
+  "id": 31315952,
+  "lat": 55.8943361,
+  "lon": -3.0700445,
+  "tags": {
+    "alt_name:gd": "Dail Chè",
+    "is_in": "Midlothian, Scotland, UK",
+    "name": "Dalkeith",
+    "name:az": "Dalkit",
+    "name:ga": "Dail Chèith",
+    "name:gd": "Dail Chèith",
+    "name:lt": "Dalkitas",
+    "name:ru": "Далкит",
+    "name:sco": "Dawkeith",
+    "name:uk": "Далкіт",
+    "place": "town",
+    "population": "12342",
+    "wikidata": "Q727520",
+    "wikipedia": "en:Dalkeith"
+  }
+},
+{
+  "type": "node",
+  "id": 31361404,
+  "lat": 54.3235933,
+  "lon": -2.5283641,
+  "tags": {
+    "name": "Sedbergh",
+    "name:ar": "سدبر",
+    "name:en": "Sedbergh",
+    "name:fa": "سدبر",
+    "name:he": "סדבר",
+    "name:pronunciation": "ˈsɛdbər",
+    "name:ru": "Седбер",
+    "name:ur": "سیڈبرگ",
+    "name:zh": "塞德伯",
+    "place": "town",
+    "population": "2816",
+    "population:date": "2021",
+    "source": "npe",
+    "source:population": "census",
+    "twin_town": "Zrece, Slovenia",
+    "wikidata": "Q600234",
+    "wikipedia": "en:Sedbergh"
+  }
+},
+{
+  "type": "node",
+  "id": 31475643,
+  "lat": 54.5537038,
+  "lon": -0.8852807,
+  "tags": {
+    "name": "Loftus",
+    "name:ur": "لوفٹس",
+    "place": "town",
+    "wikidata": "Q2400875",
+    "wikipedia": "en:Loftus, North Yorkshire"
+  }
+},
+{
+  "type": "node",
+  "id": 32053154,
+  "lat": 56.0581178,
+  "lon": -2.7209129,
+  "tags": {
+    "alt_name:gd": "Bearaig a Tuath",
+    "alt_name:sco": "North Berrick",
+    "is_in": "East Lothian, Scotland, UK",
+    "name": "North Berwick",
+    "name:ga": "Bearaig Thuath",
+    "name:gd": "Bearaig a Tuath",
+    "name:sco": "Northbarrick",
+    "place": "town",
+    "population": "6605",
+    "wikidata": "Q1012054",
+    "wikipedia": "en:North Berwick"
+  }
+},
+{
+  "type": "node",
+  "id": 33074862,
+  "lat": 54.7618912,
+  "lon": -1.3321519,
+  "tags": {
+    "name": "Peterlee",
+    "name:ru": "Питерли",
+    "name:ur": "پیٹرلی",
+    "place": "town",
+    "population": "20164",
+    "source:population": "2011 Census",
+    "wikidata": "Q2079502",
+    "wikipedia": "en:Peterlee"
+  }
+},
+{
+  "type": "node",
+  "id": 33593432,
+  "lat": 55.6190744,
+  "lon": -3.0633843,
+  "tags": {
+    "alt_name:gd": "Inbhir Lìteann",
+    "name": "Innerleithen",
+    "name:cy": "Inbhir Leithean",
+    "name:ga": "Inbhir Leithean",
+    "name:gd": "Inbhir Leithean",
+    "name:sco": "Henderleithen",
+    "name:zh": "因纳利森",
+    "place": "town",
+    "population": "3110",
+    "wikidata": "Q1010316",
+    "wikipedia": "en:Innerleithen"
+  }
+},
+{
+  "type": "node",
+  "id": 33609174,
+  "lat": 55.5975944,
+  "lon": -2.7199682,
+  "tags": {
+    "alt_name": "Maolros",
+    "name": "Melrose",
+    "name:en": "Melrose",
+    "name:ga": "Maolros",
+    "name:gd": "Maolros",
+    "name:sco": "Mewries",
+    "place": "town",
+    "population": "2307",
+    "wikidata": "Q632993",
+    "wikipedia": "en:Melrose, Scottish Borders"
+  }
+},
+{
+  "type": "node",
+  "id": 33808333,
+  "lat": 54.2854239,
+  "lon": -1.8056499,
+  "tags": {
+    "name": "Middleham",
+    "name:pronunciation": "ˈmɪdələm",
+    "place": "town",
+    "wikidata": "Q2701121",
+    "wikipedia": "en:Middleham"
+  }
+},
+{
+  "type": "node",
+  "id": 33809937,
+  "lat": 54.2220086,
+  "lon": -1.6564736,
+  "tags": {
+    "ele": "85",
+    "is_in:county": "Yorkshire",
+    "name": "Masham",
+    "name:pronunciation": "ˈmæsəm",
+    "place": "town",
+    "population": "1112",
+    "population:date": "2021-03-21",
+    "source:population": "citypopulation.de",
+    "wikidata": "Q2330678",
+    "wikipedia": "en:Masham"
+  }
+},
+{
+  "type": "node",
+  "id": 36318995,
+  "lat": 55.1288756,
+  "lon": -3.4412770,
+  "tags": {
+    "is_in": "Dumfries & Galloway, Scotland, UK",
+    "name": "Lochmaben",
+    "name:en": "Lochmaben",
+    "name:ga": "Loch Mhabain",
+    "name:gd": "Loch Mhabain",
+    "name:sco": "Lochmaiben",
+    "place": "town",
+    "population": "1942",
+    "wikidata": "Q3257725",
+    "wikipedia": "en:Lochmaben"
+  }
+},
+{
+  "type": "node",
+  "id": 54903776,
+  "lat": 54.4030680,
+  "lon": -1.7374542,
+  "tags": {
+    "name": "Richmond",
+    "name:pronunciation": "ˈɹɪt͡ʃmənd",
+    "place": "town",
+    "wikidata": "Q1009324",
+    "wikipedia": "en:Richmond, North Yorkshire"
+  }
+},
+{
+  "type": "node",
+  "id": 59664556,
+  "lat": 55.6517553,
+  "lon": -3.1885456,
+  "tags": {
+    "name": "Peebles",
+    "name:cy": "Na Pùballan",
+    "name:en": "Peebles",
+    "name:ga": "Na Pùballan",
+    "name:gd": "Na Pùballan",
+    "name:gd:genitive": "nam Pùballan",
+    "place": "town",
+    "population": "8376",
+    "wikidata": "Q1011507",
+    "wikipedia": "en:Peebles"
+  }
+},
+{
+  "type": "node",
+  "id": 63728559,
+  "lat": 55.5470714,
+  "lon": -2.8415411,
+  "tags": {
+    "name": "Selkirk",
+    "place": "town",
+    "population": "5784",
+    "wikidata": "Q772507",
+    "wikipedia": "en:Selkirk, Scottish Borders"
+  }
+},
+{
+  "type": "node",
+  "id": 97859675,
+  "lat": 54.2882012,
+  "lon": -1.5914458,
+  "tags": {
+    "is_in": "North Yorkshire, England",
+    "name": "Bedale",
+    "name:pronunciation": "ˈbiːdeɪl",
+    "place": "town",
+    "population": "4530",
+    "wikidata": "Q813810",
+    "wikipedia": "en:Bedale"
+  }
+},
+{
+  "type": "node",
+  "id": 199472970,
+  "lat": 55.8829582,
+  "lon": -3.5175773,
+  "tags": {
+    "alt_name:gd": "Baile Dhùn Lèibhe;Baile Lèibhinn",
+    "loc_name": "Livi",
+    "name": "Livingston",
+    "name:en": "Livingston",
+    "name:ga": "Baile Dhunléibhe",
+    "name:gd": "Baile Dhunlèibhe",
+    "name:sco": "Leivinstoun",
+    "place": "town",
+    "population": "56840",
+    "population:date": "mid-2020 estimate",
+    "source:population": "wikipedia",
+    "wikidata": "Q848287",
+    "wikipedia": "en:Livingston, West Lothian"
+  }
+},
+{
+  "type": "node",
+  "id": 199849393,
+  "lat": 55.8949215,
+  "lon": -3.4642504,
+  "tags": {
+    "name": "East Calder",
+    "name:en": "East Calder",
+    "name:ga": "Caladar an Ear",
+    "name:gd": "Caladar an Ear",
+    "place": "town",
+    "wikidata": "Q5327978",
+    "wikipedia": "en:East Calder"
+  }
+},
+{
+  "type": "node",
+  "id": 237674594,
+  "lat": 54.6639133,
+  "lon": -2.7522047,
+  "tags": {
+    "alt_name": "Perith",
+    "designation": "Town, Civil Parish",
+    "name": "Penrith",
+    "name:azb": "پنریث",
+    "name:bg": "Пенрит",
+    "name:bn": "পেনরিথ",
+    "name:en": "Penrith",
+    "name:fa": "پنریث",
+    "name:gd": "Pìorait",
+    "name:gu": "પેનરિથ",
+    "name:he": "פנרית'",
+    "name:ja": "ペンリス",
+    "name:kn": "ಪೆನ್ರಿತ್",
+    "name:ko": "펜리스",
+    "name:lt": "Penritas",
+    "name:mk": "Пенрит",
+    "name:ru": "Пенрит",
+    "name:ta": "பென்றித்",
+    "name:te": "పెన్రిత్",
+    "name:ur": "پینریتھ",
+    "name:zh": "彭里斯",
+    "old_name": "Penreth;Penred",
+    "place": "town",
+    "population": "16987",
+    "population:date": "2021",
+    "source:name:gd": "www.ainmean-aite.scot/penrith-piorait/",
+    "source:population": "census",
+    "wikidata": "Q798906",
+    "wikipedia": "en:Penrith, Cumbria"
+  }
+},
+{
+  "type": "node",
+  "id": 243094948,
+  "lat": 55.0091836,
+  "lon": -2.9713566,
+  "tags": {
+    "created_by": "JOSM",
+    "name": "Longtown",
+    "place": "town",
+    "source": "NPE",
+    "wikidata": "Q2360370"
+  }
+},
+{
+  "type": "node",
+  "id": 246555059,
+  "lat": 55.8722469,
+  "lon": -2.0893924,
+  "tags": {
+    "is_in:country_code": "GB",
+    "is_in:county": "Scottish Borders",
+    "is_in:historic_county": "Berwickshire",
+    "name": "Eyemouth",
+    "name:ga": "Inbhir Eighe",
+    "name:gd": "Inbhir Eighe",
+    "name:hy": "Այմութ",
+    "name:ru": "Аймут",
+    "name:sco": "Heymooth",
+    "name:zh": "艾茅斯",
+    "official_name:gd": "Eyemouth",
+    "place": "town",
+    "population": "3570",
+    "wikidata": "Q1020260",
+    "wikipedia": "en:Eyemouth"
+  }
+},
+{
+  "type": "node",
+  "id": 246698772,
+  "lat": 55.1832364,
+  "lon": -1.5702700,
+  "tags": {
+    "name": "Ashington",
+    "place": "town",
+    "wikidata": "Q202348",
+    "wikipedia": "en:Ashington"
+  }
+},
+{
+  "type": "node",
+  "id": 246699512,
+  "lat": 55.3337748,
+  "lon": -1.5839378,
+  "tags": {
+    "name": "Amble",
+    "name:ko": "암블",
+    "place": "town",
+    "population": "6025",
+    "postal_code": "NE65",
+    "wikidata": "Q1940839",
+    "wikipedia": "en:Amble"
+  }
+},
+{
+  "type": "node",
+  "id": 248674447,
+  "lat": 55.6156505,
+  "lon": -2.8061618,
+  "tags": {
+    "name": "Galashiels",
+    "name:hy": "Գալաշիլս",
+    "name:ru": "Галашилс",
+    "name:sco": "Gallae",
+    "name:zh": "加拉希尔斯",
+    "place": "town",
+    "population": "14994",
+    "reg_name": "Gala",
+    "wikidata": "Q1016925",
+    "wikipedia": "en:Galashiels"
+  }
+},
+{
+  "type": "node",
+  "id": 249984105,
+  "lat": 54.3735411,
+  "lon": -1.7208472,
+  "tags": {
+    "name": "Catterick Garrison",
+    "name:pronunciation": "ˈkætərɪk ˈɡæɹɪsən",
+    "place": "town",
+    "wikidata": "Q386087",
+    "wikipedia": "en:Catterick Garrison"
+  }
+},
+{
+  "type": "node",
+  "id": 255260672,
+  "lat": 55.4225640,
+  "lon": -2.7866951,
+  "tags": {
+    "name": "Hawick",
+    "name:el": "Χόικ",
+    "name:en": "Hawick",
+    "name:ga": "Hamhaig",
+    "name:gd": "Hamhaig",
+    "name:pronunciation": "ˈhɔɪk",
+    "name:ru": "Хоик",
+    "name:sco": "Haaick",
+    "name:uk": "Хоїк",
+    "name:zh": "霍伊克",
+    "official_name:gd": "Hawick",
+    "place": "town",
+    "population": "13730",
+    "wikidata": "Q407183",
+    "wikipedia": "en:Hawick"
+  }
+},
+{
+  "type": "node",
+  "id": 262389958,
+  "lat": 54.6640762,
+  "lon": -1.6752864,
+  "tags": {
+    "name": "Bishop Auckland",
+    "name:ur": "بشپ اوکلینڈ",
+    "place": "town",
+    "source": "NPE",
+    "wikidata": "Q866339",
+    "wikipedia": "en:Bishop Auckland"
+  }
+},
+{
+  "type": "node",
+  "id": 266743475,
+  "lat": 55.1323903,
+  "lon": -1.5980826,
+  "tags": {
+    "name": "Bedlington",
+    "place": "town",
+    "wikidata": "Q2249694",
+    "wikipedia": "en:Bedlington"
+  }
+},
+{
+  "type": "node",
+  "id": 272030943,
+  "lat": 54.5609063,
+  "lon": -0.9839132,
+  "tags": {
+    "alt_name": "Skelton",
+    "is_in": "Cleveland",
+    "name": "Skelton-in-Cleveland",
+    "place": "town",
+    "wikidata": "Q2361767",
+    "wikipedia": "en:Skelton-in-Cleveland"
+  }
+},
+{
+  "type": "node",
+  "id": 289354615,
+  "lat": 55.9593948,
+  "lon": -2.9842401,
+  "tags": {
+    "is_in": "East Lothian, Scotland, UK",
+    "name": "Prestonpans",
+    "name:sco": "The Pans",
+    "place": "town",
+    "population": "7153",
+    "wikidata": "Q7242055",
+    "wikipedia": "en:Prestonpans"
+  }
+},
+{
+  "type": "node",
+  "id": 289536869,
+  "lat": 55.0856300,
+  "lon": -1.5906820,
+  "tags": {
+    "name": "Cramlington",
+    "place": "town",
+    "wikidata": "Q918787",
+    "wikipedia": "en:Cramlington"
+  }
+},
+{
+  "type": "node",
+  "id": 290520443,
+  "lat": 54.6878678,
+  "lon": -1.5510360,
+  "tags": {
+    "name": "Ferryhill",
+    "note": "Sometimes referred to as \"Ferry Hill\" in 19th century documents.",
+    "old_name": "Ferry Hill",
+    "place": "town",
+    "source": "NPE",
+    "wikidata": "Q283382",
+    "wikipedia": "en:Ferryhill"
+  }
+},
+{
+  "type": "node",
+  "id": 292318332,
+  "lat": 55.9444972,
+  "lon": -2.9534938,
+  "tags": {
+    "is_in": "East Lothian, Scotland, UK",
+    "loc_name": "The Big T",
+    "name": "Tranent",
+    "name:gd": "Tranant",
+    "name:sco": "Turnent",
+    "place": "town",
+    "population": "11642",
+    "wikidata": "Q1011336",
+    "wikipedia": "en:Tranent"
+  }
+},
+{
+  "type": "node",
+  "id": 293715839,
+  "lat": 55.5458505,
+  "lon": -2.0147556,
+  "tags": {
+    "name": "Wooler",
+    "place": "town",
+    "wikidata": "Q2663783",
+    "wikipedia": "en:Wooler"
+  }
+},
+{
+  "type": "node",
+  "id": 297933306,
+  "lat": 55.0087655,
+  "lon": -1.4471035,
+  "tags": {
+    "name": "North Shields",
+    "place": "town",
+    "wikidata": "Q746096",
+    "wikipedia": "en:North Shields"
+  }
+},
+{
+  "type": "node",
+  "id": 306241158,
+  "lat": 54.9714780,
+  "lon": -2.1017927,
+  "tags": {
+    "name": "Hexham",
+    "place": "town",
+    "population": "12000",
+    "source": "NPE",
+    "wikidata": "Q947400",
+    "wikipedia": "en:Hexham"
+  }
+},
+{
+  "type": "node",
+  "id": 307483678,
+  "lat": 55.3096320,
+  "lon": -1.9117293,
+  "tags": {
+    "name": "Rothbury",
+    "place": "town",
+    "wikidata": "Q578750",
+    "wikipedia": "en:Rothbury"
+  }
+},
+{
+  "type": "node",
+  "id": 307717048,
+  "lat": 54.6995510,
+  "lon": -1.6011530,
+  "tags": {
+    "name": "Spennymoor",
+    "name:ur": "اسپینی مور",
+    "place": "town",
+    "source": "NPE",
+    "wikidata": "Q2219517",
+    "wikipedia": "en:Spennymoor"
+  }
+},
+{
+  "type": "node",
+  "id": 316252572,
+  "lat": 54.8986140,
+  "lon": -1.5288270,
+  "tags": {
+    "is_in": "Tyne & Wear",
+    "name": "Washington",
+    "place": "town",
+    "wikidata": "Q1018448",
+    "wikipedia": "en:Washington, Tyne and Wear"
+  }
+},
+{
+  "type": "node",
+  "id": 332309339,
+  "lat": 54.2018452,
+  "lon": -2.5967366,
+  "tags": {
+    "is_in": "South Lakeland, Cumbria",
+    "name": "Kirkby Lonsdale",
+    "place": "town",
+    "wikidata": "Q1573543",
+    "wikipedia": "en:Kirkby Lonsdale"
+  }
+},
+{
+  "type": "node",
+  "id": 335752759,
+  "lat": 54.7127896,
+  "lon": -1.7517085,
+  "tags": {
+    "name": "Crook",
+    "place": "town",
+    "source": "local_knowledge",
+    "wikidata": "Q1140962",
+    "wikipedia": "en:Crook, County Durham"
+  }
+},
+{
+  "type": "node",
+  "id": 343991446,
+  "lat": 54.9616395,
+  "lon": -1.8510879,
+  "tags": {
+    "name": "Prudhoe",
+    "place": "town"
+  }
+},
+{
+  "type": "node",
+  "id": 354939430,
+  "lat": 55.8435480,
+  "lon": -3.0478409,
+  "tags": {
+    "is_in": "Midlothian, Scotland, UK",
+    "name": "Gorebridge",
+    "name:sco": "Gorebrig",
+    "place": "town",
+    "population": "7160",
+    "wikidata": "Q1009833",
+    "wikipedia": "en:Gorebridge"
+  }
+},
+{
+  "type": "node",
+  "id": 354939531,
+  "lat": 55.8725932,
+  "lon": -3.0393013,
+  "tags": {
+    "name": "Mayfield",
+    "name:uk": "Мейфілд",
+    "place": "town",
+    "population": "12820",
+    "wikidata": "Q6797153",
+    "wikipedia": "en:Mayfield, Midlothian"
+  }
+},
+{
+  "type": "node",
+  "id": 354939766,
+  "lat": 55.8664019,
+  "lon": -3.0666188,
+  "tags": {
+    "alt_name:sco": "Nittoun;Nitten-by-the-Bing",
+    "name": "Newtongrange",
+    "name:sco": "Nitten",
+    "place": "town",
+    "wikidata": "Q7020516",
+    "wikipedia": "en:Newtongrange"
+  }
+},
+{
+  "type": "node",
+  "id": 356420273,
+  "lat": 55.7778420,
+  "lon": -2.3438476,
+  "tags": {
+    "alt_name:gd": "An Dùn",
+    "is_in:historic_county": "Berwickshire",
+    "name": "Duns",
+    "name:ga": "An Dún",
+    "name:gd": "Na Dùintean",
+    "name:ko": "던스",
+    "name:zh": "邓斯",
+    "old_name": "Dunse",
+    "place": "town",
+    "population": "2750",
+    "source": "NPE",
+    "wikidata": "Q425611",
+    "wikipedia": "en:Duns, Scottish Borders"
+  }
+},
+{
+  "type": "node",
+  "id": 366067322,
+  "lat": 55.5983788,
+  "lon": -2.4338366,
+  "tags": {
+    "alt_name:ga": "An Baile Dearg",
+    "alt_name:gd": "Cealsacigh;Cealso",
+    "is_in": "Borders",
+    "name": "Kelso",
+    "name:cy": "Calchfynydd",
+    "name:en": "Kelso",
+    "name:ga": "Cealsaidh",
+    "name:gd": "Cealsach",
+    "name:ru": "Келсо",
+    "name:sco": "Kelsae",
+    "name:zh": "凯尔索",
+    "place": "town",
+    "population": "5610",
+    "postal_code": "TD5",
+    "wikidata": "Q654945",
+    "wikipedia": "en:Kelso, Scottish Borders"
+  }
+},
+{
+  "type": "node",
+  "id": 420883681,
+  "lat": 55.1122294,
+  "lon": -1.5298126,
+  "tags": {
+    "name": "Newsham",
+    "place": "town"
+  }
+},
+{
+  "type": "node",
+  "id": 429824298,
+  "lat": 55.6511811,
+  "lon": -2.2529570,
+  "tags": {
+    "is_in:county": "Scottish Borders",
+    "is_in:historic_county": "Berwickshire",
+    "name": "Coldstream",
+    "name:gd": "An Sruthan Fuar",
+    "name:hy": "Քոլդստրիմ",
+    "name:ru": "Колдстрим",
+    "name:sco": "Caustrim",
+    "name:uk": "Колдстрім",
+    "name:zh": "科尔德斯特里姆",
+    "place": "town",
+    "population": "1870",
+    "source": "NPE",
+    "wikidata": "Q1018874",
+    "wikipedia": "en:Coldstream"
+  }
+},
+{
+  "type": "node",
+  "id": 433872009,
+  "lat": 54.6326158,
+  "lon": -1.6486032,
+  "tags": {
+    "name": "Shildon",
+    "place": "town",
+    "population": "9976",
+    "source": "NPE",
+    "wikidata": "Q2575415",
+    "wikipedia": "en:Shildon"
+  }
+},
+{
+  "type": "node",
+  "id": 435201042,
+  "lat": 55.1505895,
+  "lon": -2.9983313,
+  "tags": {
+    "name": "Langholm",
+    "name:en": "Langholm",
+    "name:gd": "Langaim",
+    "name:sco": "The Muckle Toun",
+    "place": "town",
+    "population": "2227",
+    "wikidata": "Q1014104",
+    "wikipedia": "en:Langholm"
+  }
+},
+{
+  "type": "node",
+  "id": 779118556,
+  "lat": 55.9601601,
+  "lon": -3.4664354,
+  "tags": {
+    "name": "Winchburgh",
+    "place": "town",
+    "population": "4283",
+    "population:date": "2022",
+    "source:population": "https://www.scotlandscensus.gov.uk",
+    "wikidata": "Q1009920",
+    "wikipedia": "en:Winchburgh"
+  }
+},
+{
+  "type": "node",
+  "id": 1549153013,
+  "lat": 54.5640940,
+  "lon": -1.3129164,
+  "tags": {
+    "alt_name:ur": "اسٹوکٹن آن ٹیز",
+    "is_in:country": "United Kingdom",
+    "is_in:country_code": "GB",
+    "is_in:municipality": "Stockton-on-Tees",
+    "name": "Stockton-on-Tees",
+    "name:ar": "استكتون أن تيز",
+    "name:arz": "ستوكتون اون تيز",
+    "name:azb": "استاکتون-آن-تیز",
+    "name:bg": "Стоктън он Тийс",
+    "name:ceb": "Stockton-on-Tees",
+    "name:cy": "Stockton-on-Tees",
+    "name:de": "Stockton-on-Tees",
+    "name:es": "Stockton-on-Tees",
+    "name:fa": "استاکتون-آن-تیز",
+    "name:fi": "Stockton-on-Tees",
+    "name:fr": "Stockton-on-Tees",
+    "name:ga": "Stockton-on-Tees",
+    "name:hak": "Stockton-on-Tees",
+    "name:it": "Stockton-on-Tees",
+    "name:ja": "ストックトン＝オン＝ティーズ",
+    "name:ko": "스톡턴온티스",
+    "name:nan": "Stockton-on-Tees",
+    "name:nl": "Stockton-on-Tees",
+    "name:nn": "Stockton-on-Tees",
+    "name:no": "Stockton-on-Tees",
+    "name:pl": "Stockton-on-Tees",
+    "name:pt": "Stockton-on-Tees",
+    "name:ro": "Stockton-on-Tees",
+    "name:ru": "Стоктон-он-Тис",
+    "name:sh": "Stockton-on-Tees",
+    "name:sr": "Стоктон на Тизу",
+    "name:sv": "Stockton-on-Tees",
+    "name:tt": "Стоктон-он-Тис",
+    "name:ur": "اسٹاکٹن آن ٹیز",
+    "name:zh": "蒂斯河畔斯托克頓",
+    "place": "town",
+    "population": "82729",
+    "wikidata": "Q989418",
+    "wikipedia": "en:Stockton-on-Tees"
+  }
+},
+{
+  "type": "node",
+  "id": 2992104729,
+  "lat": 55.8839143,
+  "lon": -3.3387606,
+  "tags": {
+    "name": "Balerno",
+    "name:ga": "Am Baile Áirneach",
+    "name:gd": "Am Baile Àirneach",
+    "place": "town",
+    "population": "9001",
+    "wikidata": "Q2880785",
+    "wikipedia": "en:Balerno"
+  }
+},
+{
+  "type": "node",
+  "id": 3624794399,
+  "lat": 54.5474199,
+  "lon": -3.5885335,
+  "tags": {
+    "name": "Whitehaven",
+    "place": "town",
+    "population": "25032",
+    "wikidata": "Q1012481",
+    "wikipedia": "en:Whitehaven"
+  }
+},
+{
+  "type": "node",
+  "id": 3894884871,
+  "lat": 54.5219045,
+  "lon": -3.5175191,
+  "tags": {
+    "name": "Cleator Moor",
+    "name:azb": "کلیتور مور",
+    "name:bn": "ক্লিটর মুর",
+    "name:en": "Cleator Moor",
+    "name:fa": "کلیتور مور",
+    "name:gu": "ક્લીટર મૂર",
+    "name:ja": "クリエーター・モーア",
+    "name:kn": "ಕ್ಲೇಟರ್ ಮೂರ್",
+    "name:ko": "클리터 무어",
+    "name:lt": "Klitor Muras",
+    "name:ru": "Клитор-Мур",
+    "name:ta": "கிலேட்டர் மூர்",
+    "name:te": "క్లిటర్ మూర్",
+    "name:ur": "کلیٹر مور",
+    "name:zh": "克利特穆爾",
+    "place": "town",
+    "population": "6686",
+    "population:date": "2021",
+    "source:population": "census",
+    "wikidata": "Q677656",
+    "wikipedia": "en:Cleator Moor"
+  }
+},
+{
+  "type": "node",
+  "id": 3981610658,
+  "lat": 54.9422402,
+  "lon": -2.7344533,
+  "tags": {
+    "name": "Brampton",
+    "place": "town",
+    "wikidata": "Q2491525",
+    "wikipedia": "en:Brampton, Carlisle"
+  }
+},
+{
+  "type": "node",
+  "id": 4698971585,
+  "lat": 54.2106855,
+  "lon": -3.2719019,
+  "tags": {
+    "name": "Millom",
+    "place": "town",
+    "wikidata": "Q368740",
+    "wikipedia": "en:Millom"
+  }
+},
+{
+  "type": "node",
+  "id": 5106274833,
+  "lat": 54.6219470,
+  "lon": -1.5663028,
+  "tags": {
+    "name": "Newton Aycliffe",
+    "name:ur": "نیوٹن اکلف",
+    "place": "town",
+    "wikidata": "Q339608",
+    "wikipedia": "en:Newton Aycliffe"
+  }
+},
+{
+  "type": "node",
+  "id": 5161263714,
+  "lat": 55.9749827,
+  "lon": -2.8951176,
+  "tags": {
+    "name": "Longniddry",
+    "name:ga": "Nuadh-Treabh Fada",
+    "name:gd": "Nuadh-Treabh Fada",
+    "name:sco": "Langniddry",
+    "place": "town",
+    "population": "2613",
+    "wikidata": "Q1016963",
+    "wikipedia": "en:Longniddry"
+  }
+},
+{
+  "type": "node",
+  "id": 6170835883,
+  "lat": 54.2776901,
+  "lon": -3.2113968,
+  "tags": {
+    "alt_name": "Broughton-in-Furness",
+    "loc_name": "Broughton",
+    "name": "Broughton in Furness",
+    "place": "town",
+    "wikidata": "Q990947",
+    "wikipedia": "en:Broughton-in-Furness"
+  }
+}
+
+  ]
+}
