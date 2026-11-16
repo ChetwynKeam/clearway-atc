@@ -1,9 +1,12 @@
 name: Fetch EHAM boards
 # For the Amsterdam Schiphol (EHAM) full-day timetable: avionio.com's AMS arrivals and departures boards, every page each
 # way, saved with the time of the fetch to the eham-boards branch. Each run adds a snapshot; tools/eham/merge_boards.py
-# joins them into one day (the boards reach about half a day ahead, so a morning and an evening fetch cover it).
+# joins them into one day. With ts (avionio's own parameter: the boards from that time) one run gets a whole past day;
+# without it, the boards from about six hours ago to tomorrow morning.
 on:
   workflow_dispatch:
+    inputs:
+      ts: { description: 'Boards from this time (ms since 1970, e.g. 04:00 UTC of the day wanted); empty for now', required: false, default: '' }
   push:
     branches: [eham-traffic]
     paths: ['.github/workflows/eham-boards.yml']
@@ -19,7 +22,7 @@ jobs:
           UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; A=""; D=""
           mkdir -p /tmp/b
           # TS: the boards from a given time (avionio's ts, ms since 1970) rather than from now: a whole past day in pages
-          TS=1794801600000; Q="ts=$TS&"; PAGES=$(seq 0 40)
+          TS="${{ github.event.inputs.ts }}"; [ -n "$TS" ] && Q="ts=$TS&" || Q=""; PAGES=$(seq 0 40)
           for P in $PAGES; do
             curl -sSL --compressed -m 30 -A "$UA" -o /tmp/b/a$P.html "https://www.avionio.com/en/airport/ams/arrivals?${Q}page=$P" && A="$A,/tmp/b/a$P.html"; sleep 1
             curl -sSL --compressed -m 30 -A "$UA" -o /tmp/b/d$P.html "https://www.avionio.com/en/airport/ams/departures?${Q}page=$P" && D="$D,/tmp/b/d$P.html"; sleep 1

@@ -745,3 +745,5 @@ APT.hangars = G.buildings.filter(b => b.roof === 'hangar').map(b => { const n = 
   .map(([h, node], i) => ({ id: 'H' + (i + 1), name: h.name || 'KLM hangar', in: inF0(...h.c), door: [GN[node].m, GN[node].off], node, to: ['pier'],
     fits: ac => /^(KLM|KLC|TRA)$/.test(ac.cs.slice(0, 3)), pick: ac => APT.standFor(ac) }));
 APT.queuePen = true;
+// the Academy's aerodrome figure: all six runways, the Polderbaan included (the ground view shows only the terminal area)
+APT.figView = v => { const c = EN(-420, 1915); v.cx = c[0]; v.cy = c[1]; v.scale = Math.min(W/(7800*M2NM), H/(9000*M2NM)); };
