@@ -1,0 +1,45 @@
+name: Fetch EHAM en-route data
+# For the Amsterdam Schiphol (EHAM) airspace: the LVNL eAIP's table of contents and its ENR 3 (ATS routes), ENR 4.4
+# (significant points) and ENR 6 (route charts) pages and PDFs, so the Dutch ATS route network can be added to the
+# airways the flights are planned on. Published to the eham-enr branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [eham-airspace]
+    paths: ['.github/workflows/eham-enr.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          set +e
+          mkdir out && cd out
+          UA="Mozilla/5.0 (clearway-atc-build; github.com/ChetwynKeam/clearway-atc)"
+          R="https://eaip.lvnl.nl/AIRAC%20AMDT%2012-2026_2026_11_26"
+          for P in "index-en-GB.html" "eAIP/EH-menu-en-GB.html" "eAIP/EH-toc-en-GB.html" "toc-frameset-en-GB.html" "eAIP/EH-ENR%203.2-en-GB.html" "eAIP/EH-ENR%203.3-en-GB.html" "eAIP/EH-ENR%203.4-en-GB.html" "eAIP/EH-ENR%203.5-en-GB.html" "eAIP/EH-ENR%203.6-en-GB.html" "eAIP/EH-ENR%204.4-en-GB.html" "eAIP/EH-ENR%206-en-GB.html" "eAIP/EH-ENR%201.3-en-GB.html" "eAIP/EH-ENR%202.2-en-GB.html"; do
+            curl -sSfL -m 120 -A "$UA" "$R/$P" -o "$(basename "$P" | sed 's/%20/_/g')" -w "$P %{http_code} %{size_download}\n"
+          done
+          # every page the menu or contents name for ENR 3 and ENR 6, and every PDF they link to
+          cat *.html | grep -oE 'href="[^"]*ENR[^"#]*(3|6)[^"#]*"' | sed 's/href="//;s/"$//' | sort -u > links.txt
+          cat links.txt
+          while read -r L; do
+            U=$(python3 -c "import sys,urllib.parse;print(urllib.parse.urljoin(sys.argv[1]+'/eAIP/x.html',sys.argv[2]))" "$R" "$L")
+            F="pages/$(basename "$L" | sed 's/%20/_/g')"; mkdir -p pages
+            curl -sSfL -m 180 -A "$UA" "$U" -o "$F" -w "$U %{http_code} %{size_download}\n"
+          done < links.txt
+          for F in pages/*.html; do grep -oE 'href="[^"]+\.pdf"' "$F" | sed 's/href="//;s/"$//'; done | sort -u > pdfs.txt
+          while read -r L; do
+            U=$(python3 -c "import sys,urllib.parse;print(urllib.parse.urljoin(sys.argv[1]+'/eAIP/x.html',sys.argv[2]))" "$R" "$L")
+            mkdir -p pdf; curl -sSfL -m 180 -A "$UA" "$U" -o "pdf/$(basename "$L" | sed 's/%20/_/g')" -w "$U %{http_code}\n"
+          done < pdfs.txt
+          find . -type f | sort; du -sh .
+      - name: Publish
+        run: |
+          cd out
+          git init -q -b eham-enr
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "EHAM ENR pages"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" eham-enr
