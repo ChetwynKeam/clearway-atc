@@ -1302,7 +1302,7 @@ const phaseRwy = k => k === 'hold' || k === 'rwy' ? (typeof depRw === 'function'
 function renderStrips(force){
   const mine = a => !!a.need && !aiOwns(a);   // waiting on you (not on an AI controller)
   const list = S.acs.filter(a => !dormant(a) || S.sel === a).sort((a,b) => (mine(b) - mine(a)) || (aiOwns(a) - aiOwns(b)) || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
-  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '') + (a.simCs || '')).join(',') + (typeof vehSig === 'function' ? vehSig() : '');
+  const sig = list.map(a => a.cs + a.state + (a.need||'') + (S.sel === a) + outOfCtl(a) + Math.round(a.alt/100) + a.freq + (a.rel ? relCls(a) : '') + (clrOf(a) || '') + (a.stand ? a.stand.id : '') + (aiOwns(a) ? seatOf(a) : '') + (a.simCs || '')).join(',') + (typeof VFR !== 'undefined' ? '|' + VFR.list.map(v => v.cs + v.st).join(',') : '') + (typeof vehSig === 'function' ? vehSig() : '');
   if (stripWin && stripWin.closed) closeStripBoard();
   if (stripDrag && !force) return;   // not while a strip is being dragged: the drop zone would go
   if (sig === stripSig && !force) return; stripSig = sig;
@@ -1321,7 +1321,8 @@ function renderStrips(force){
     for (const ac of L) el.appendChild(makeStrip(ac));
   }
   if (typeof vehStrips === 'function') { const VS = vehStrips(); if (VS.length) { const hd = document.createElement('div'); hd.className = 'bayhd bay-veh'; hd.innerHTML = '<span class="bl">Vehicles</span><span class="bn"></span><b></b>'; hd.querySelector('b').textContent = VS.length; el.appendChild(hd); for (const d of VS) el.appendChild(d); } }
-  if (!list.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
+  if (typeof vfrStrips === 'function') { const VS = vfrStrips(); if (VS.length) { const hd = document.createElement('div'); hd.className = 'bayhd bay-veh'; hd.innerHTML = '<span class="bl">VFR traffic</span><span class="bn"></span><b></b>'; hd.querySelector('b').textContent = VS.length; el.appendChild(hd); for (const d of VS) el.appendChild(d); } }
+  if (!list.length && !el.children.length) el.innerHTML = '<p class="empty">No traffic yet.</p>';
   const parked = S.acs.filter(dormant).length;
   { const n = S.acs.filter(mine).length, m = $('mtNeed'); if (m) { m.hidden = !n; m.textContent = n; } }
   $('stripCount').textContent = `${S.acs.length - parked} active · ${parked} parked · ${S.sched.filter(f => !f.spawned).length} to come`;

@@ -43,8 +43,8 @@ function cbAnswer(id, i){
 function cbStep(){
   if (!S.running) return;
   for (const c of CB.calls) if (c.st === 'RING' && S.t - c.t > CB_TIMEOUT) {
-    c.st = 'MISSED'; S.score.pts -= 5;
-    sys(`Missed call from ${c.from}: "${c.text.slice(0, 80)}${c.text.length > 80 ? '…' : ''}" (−5). ${c.missed || ''}`, true);
+    c.st = 'MISSED'; if (!c.free) S.score.pts -= 5;
+    if (!c.free) sys(`Missed call from ${c.from}: "${c.text.slice(0, 80)}${c.text.length > 80 ? '…' : ''}" (−5). ${c.missed || ''}`, true);
     try { c.onMiss && c.onMiss(); } catch (e) {}
     document.querySelectorAll(`.cb-toast[data-id="${c.id}"]`).forEach(n => n.remove());
     cbRender();
