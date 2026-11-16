@@ -45,6 +45,7 @@ for tb in p.tables:
         name = m2[1]; legs = []; arinc = None
         for r in tb[2:]:
             if r and r[0].startswith('['): arinc = r[0].strip('[]'); r = r[1:]
+            elif len(r) >= 4 and r[0] == '': r = r[1:]   # the ARINC column left empty on a STAR's later rows (BLUFA 1A)
             if len(r) >= 3 and re.match(r'^[A-Z0-9]{2,5}\b', r[1]): legs.append(dict(desc=r[0], abbr=r[1], pt=r[2], fo=(r[3] if len(r) > 3 else '') == 'Y'))
         STARS[name] = dict(arinc=arinc, remarks=tb[0][1] if len(tb[0]) > 1 else '', legs=legs); continue
     name, arinc = m[1], m[2]; remarks = tb[0][1] if len(tb[0]) > 1 else ''

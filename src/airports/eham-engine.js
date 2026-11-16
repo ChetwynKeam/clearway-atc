@@ -344,7 +344,7 @@ function drawEhamTop(){
 
 // ═════════════════════════ fixes, STARs, SIDs ═════════════════════════
 const STAR_LIST = Object.values(EHAM.STARS);
-const STAR_FIXES = new Set(STAR_LIST.flatMap(s => s.pts.map(p => p[0])));
+const STAR_FIXES = new Set([...STAR_LIST.flatMap(s => s.pts.map(p => p[0])), ...Object.values(EHAM.TRANS).flatMap(t => t.pts.map(p => p[0]))]);
 const SID_FIXES = new Set(Object.values(EHAM.SIDS).flatMap(s => s.pts));
 const APP_FIXES = new Set(Object.values(EHAM.ILS).flatMap(i => [i.ifx, i.faf]));
 for (const [id, p] of Object.entries(EHAM.FIX)) wp(id, p[0], p[1], (STAR_FIXES.has(id) || APP_FIXES.has(id)) && !/^AM\d/.test(id) ? {} : { minor: true });
@@ -359,6 +359,10 @@ const ENTRY_ALT = Object.fromEntries(GATES.map(g => [g, 15000]));
 const PRE_ALT = Object.fromEntries(GATES.map(g => [g, ENTRY_ALT[g] + 14000]));
 
 // ── approaches: the localiser from 3 NM outside the intermediate fix, the 3° glidepath from its altitude
+// a missed approach flown on a course ("track 055° MAG, climb to 2,000 ft") is laid out as hidden points along it, from the
+// threshold (MA06A ...), so the go-around follows it the way it follows fixes
+const missedIds = (rw, list) => { let at = THR[rw]; return list.map((m, i) => { if (typeof m === 'string') { at = WP[m] ? WP[m].p : at; return m; }
+  const id = `MA${rw}${'ABCDEF'[i]}`; at = add(at, m.crs, m.nm); WP[id] = { id, p: at, minor: true, hide: true }; return id; }); };
 const FINAL = {};
 for (const [rw, I] of Object.entries(EHAM.ILS)) {
   if (!THR[rw]) continue;
@@ -366,7 +370,7 @@ for (const [rw, I] of Object.entries(EHAM.ILS)) {
   const M = EHAM.MINS[I.cat], low = Math.round((elev + 1000)/100)*100;
   const F = { pts: [add(thr, out, dIF + 3), add(thr, out, dIF), thr], alts: [I.ifAlt, I.ifAlt, elev + 50], elev, entry: I.ifx, entryName: I.ifx, name: 'ILS ' + rw, alt: I.ifAlt,
     decName: I.faf, decNM: dFAF + 0.2, decMin: Math.max(1.6, dFAF - 1.6), minAlt: low, minText: `${low.toLocaleString('en-GB')} ft`,
-    mins: M, minRate: 300, missed: I.missed.slice(), missAlt: I.missAlt,
+    mins: M, minRate: 300, missed: missedIds(rw, I.missed), missAlt: I.missAlt,
     phrase: r => `cleared ILS approach runway ${r}, report established`, read: r => `cleared ILS ${r}, wilco`,
     decCall: r => `${APT.tower[0]}, ${I.faf.replace(/^AM/, 'A M ')}, ILS runway ${r}`, decNeed: `Inbound past the final approach fix, needs landing clearance`, decFail: 'not visual at minima' };
   F.cum = new Array(F.pts.length).fill(0); for (let i = F.pts.length - 2; i >= 0; i--) F.cum[i] = F.cum[i+1] + dist(...F.pts[i], ...F.pts[i+1]);
@@ -374,14 +378,34 @@ for (const [rw, I] of Object.entries(EHAM.ILS)) {
   F.prof = [[0, elev + 50], [meet, I.ifAlt], [F.cum[0] + 1, I.ifAlt]];
   FINAL[rw] = F;
 }
-// the route to the intermediate fix: the STAR to its initial approach fix, then (by day, radar vectors) the intermediate fix
+// the route on from the STAR: by day the approach controller vectors from the initial approach fix to the intermediate fix
+// (the route goes direct to it); at night every jet flies the night transition to the runway in use (1B to 06, 1H to 18C,
+// 1D to 18R: AD 2.22 para 2.7.2.2), and by day ARTIP traffic for 36R is given ARTIP 2X. ARR_ROUTE[gate] is keyed by
+// runway ('18R'), night transition ('18R:N') and ARTIP 2X ('36R:X'); APT.arrRoute picks the key for each arrival.
 const LAND_RWYS = Object.keys(FINAL);
-const ARR_ROUTE = Object.fromEntries(GATES.map(g => [g, Object.fromEntries(LAND_RWYS.map(rw => {
-  const st = starOf(g, rw).pts.map(p => p[0]);
-  return [rw, [...st, EHAM.ILS[rw].ifx]];
-}))]));
+const TRANS_OF = (iaf, rw, when) => Object.values(EHAM.TRANS).find(t => t.iaf === iaf && t.rwy === rw && t.when === when);
+const ARR_ROUTE = Object.fromEntries(GATES.map(g => { const st = starOf(g).pts.map(p => p[0]), iaf = IAF_OF(g), R = {};
+  for (const rw of LAND_RWYS) {
+    R[rw] = [...st, EHAM.ILS[rw].ifx];
+    const n = TRANS_OF(iaf, rw, 'night'), d = TRANS_OF(iaf, rw, 'day');
+    if (n) R[rw + ':N'] = [...st, ...n.pts.slice(1).map(p => p[0])];
+    if (d) R[rw + ':X'] = [...st, ...d.pts.slice(1).map(p => p[0])];
+  }
+  return [g, R]; }));
 const HOLD_AT = Object.fromEntries(GATES.map(g => [g, IAF_OF(g)]));
+// the night: 21:30 to 05:30 UTC in winter, 20:30 to 04:30 in summer, 22:30 to 06:30 Amsterdam time all year
+const nightNow = () => { const m = localMin(); return m != null && (m >= 22*60 + 30 || m < 6*60 + 30); };
+const isJetAc = o => { const t = TYPES[o.t || (o.perf && o.perf.icao)] || o.perf; return !t || t.shape !== 'prop' && (t.cruise || 300) >= 250; };
+function arrKeyOf(o){
+  const rw = landRw(o), iaf = IAF_OF(o.gate);
+  if (nightNow() && isJetAc(o) && TRANS_OF(iaf, rw, 'night')) return rw + ':N';
+  if (!nightNow() && TRANS_OF(iaf, rw, 'day')) return rw + ':X';
+  return rw;
+}
+// the altitudes along the routes: the STAR's (FL070 at the initial approach fix), the transitions' lowest altitudes, the
+// intermediate fixes'
 const ARR_ALT = (() => { const m = {}; for (const s of STAR_LIST) for (const [id, a] of s.pts) if (a && m[id] == null) m[id] = a;
+  for (const t of Object.values(EHAM.TRANS)) for (const [id, a] of t.pts.slice(1)) if (a && m[id] == null) m[id] = a;
   for (const I of Object.values(EHAM.ILS)) m[I.ifx] = I.ifAlt; return m; })();
 
 // ── departures: the SID of the take-off runway whose end is nearest the destination's bearing
@@ -463,7 +487,7 @@ const APT = {
   minsOk,
   splitRwy: true, rwyFor, depFor, configOf,
   rwyConfigs: Object.entries(CFG).map(([key, c]) => ({ key, name: c.name.split(':')[0], land: c.land[0], lands: c.land, deps: c.dep })),
-  depRwyOf, landRwyOf, arrRoute: o => landRw(o),
+  depRwyOf, landRwyOf, arrRoute: o => arrKeyOf(o),
   activeRwys: () => [...new Set([...landList(), ...depList()])],
   depRwys: () => depList(),
   appRwys: () => landList(),

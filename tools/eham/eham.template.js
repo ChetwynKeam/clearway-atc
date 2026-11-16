@@ -51,25 +51,34 @@ const EHAM = (() => {
   const STARS = {
     @@STARS@@
   };
-  // ── approaches (AD 2.19 and the ILS plates): the intermediate fix (9.3 NM, 3,000 ft) and the final approach fix (6.2 NM,
-  // 2,000 ft, where the glidepath is intercepted), and the missed approach as the plates' communication failure route
+  // ── approaches (AD 2.22 para 2.11.3, the ILS coding tables, and the ILS plates): the intermediate fix and its altitude, the
+  // final approach fix (6.2 NM out, 2,000 ft, where the glidepath is met: on 18C it is met from 3,000 ft at SIDNI, on 22
+  // from 3,000 ft at AM650), and the missed approach. A missed approach is a list of fixes and of legs flown on a course
+  // ({ crs: true course, nm }: "track 055° MAG, climb to 2,000 ft" is a leg on 057.8° true), to its altitude.
   const ILS = {
-    '06':  { loc: 'KAG', freq: '110.55', ifx: 'OSRON', ifAlt: 3000, faf: 'AM609', fafAlt: 2000, missed: ['SPL'], missAlt: 3000, cat: 3, missText: 'track 055° MAG, climb to 2,000 ft' },
-    '18C': { loc: 'ZWA', freq: '109.50', ifx: 'SIDNI', ifAlt: 3000, faf: 'AM630', fafAlt: 2000, missed: ['AM120'], missAlt: 3000, cat: 3, missText: 'track 181° MAG, climb to 2,000 ft' },
-    '18R': { loc: 'VPB', freq: '110.10', ifx: 'PEVOS', ifAlt: 3000, faf: 'AM621', fafAlt: 2000, missed: ['AM624'], missAlt: 2000, cat: 3, missText: 'turn right to AM624, 2,000 ft, then track 299° MAG' },
-    '22':  { loc: 'SCH', freq: '109.15', ifx: 'AM650', ifAlt: 3000, faf: 'LANSU', fafAlt: 2600, missed: ['PAM'], missAlt: 3000, cat: 1, missText: 'turn left to track 158° MAG, climb to 2,000 ft' },
-    '27':  { loc: 'BVB', freq: '111.55', ifx: 'TIDVO', ifAlt: 3000, faf: 'AM639', fafAlt: 2000, missed: ['AM260'], missAlt: 3000, cat: 3, missText: 'track 265° MAG, climb to 3,000 ft' },
-    '36C': { loc: 'MSA', freq: '108.75', ifx: 'OLGAX', ifAlt: 3000, faf: 'AM632', fafAlt: 2000, missed: ['AM280'], missAlt: 3000, cat: 3, missText: 'track 001° MAG, climb to 2,000 ft' },
-    '36R': { loc: 'ABA', freq: '111.95', ifx: 'NEWCO', ifAlt: 3000, faf: 'AM636', fafAlt: 2000, missed: ['AM637', 'AM163'], missAlt: 2000, cat: 3, missText: 'track 001° MAG to AM637, 1,500 ft, then AM163, 2,000 ft' }
+    '06':  { loc: 'KAG', freq: '110.55', ifx: 'OSRON', ifAlt: 2000, faf: 'AM609', fafAlt: 2000, missed: [{ crs: 57.8, nm: 6 }], missAlt: 2000, cat: 3, missText: 'track 055° MAG, climb to 2,000 ft' },
+    '18C': { loc: 'ZWA', freq: '109.50', ifx: 'SIDNI', ifAlt: 3000, faf: 'AM630', fafAlt: 2000, missed: [{ crs: 183.2, nm: 6 }], missAlt: 2000, cat: 3, missText: 'track 181° MAG, climb to 2,000 ft' },
+    '18R': { loc: 'VPB', freq: '110.10', ifx: 'PEVOS', ifAlt: 2000, faf: 'AM621', fafAlt: 2000, missed: ['AM624', { crs: 301.3, nm: 4 }], missAlt: 2000, cat: 3, missText: 'at 500 ft turn right direct AM624, 2,000 ft, then track 299° MAG' },
+    '22':  { loc: 'SCH', freq: '109.15', ifx: 'AM649', ifAlt: 3000, faf: 'AM650', fafAlt: 3000, missed: [{ crs: 221.3, nm: 1.5 }, { crs: 160.4, nm: 5 }], missAlt: 2000, cat: 1, missText: 'track 219° MAG to 400 ft, then turn left to track 158° MAG, climb to 2,000 ft' },
+    '27':  { loc: 'BVB', freq: '111.55', ifx: 'TIDVO', ifAlt: 2000, faf: 'AM639', fafAlt: 2000, missed: [{ crs: 267.0, nm: 7 }], missAlt: 3000, cat: 3, missText: 'track 265° MAG, climb to 3,000 ft' },
+    '36C': { loc: 'MSA', freq: '108.75', ifx: 'OLGAX', ifAlt: 2000, faf: 'AM632', fafAlt: 2000, missed: [{ crs: 3.2, nm: 6 }], missAlt: 2000, cat: 3, missText: 'track 001° MAG, climb to 2,000 ft' },
+    '36R': { loc: 'ABA', freq: '111.95', ifx: 'NEWCO', ifAlt: 2000, faf: 'AM636', fafAlt: 2000, missed: ['AM637', 'AM163'], missAlt: 2000, cat: 3, missText: 'track 001° MAG to AM637, not above 1,500 ft, then AM163, 2,000 ft' }
+  };
+  // ── RNAV transitions (AD 2.22 para 2.7.2 and 2.11.3): from the initial approach fixes ARTIP, RIVER and SUGOL to the ILS.
+  // At night (21:30 to 05:30 UTC, an hour earlier in summer: 22:30 to 06:30 local all year) every jet flies the night
+  // transition to 06, 18C or 18R (1B, 1H, 1D), a continuous descent; by day the approach controller vectors, except that
+  // ARTIP traffic for 36R may be given ARTIP 2X. Each point with its lowest altitude and highest speed.
+  const TRANS = {
+    @@TRANS@@
   };
   const MINS = { 3: { vis: 75, ceil: 0 }, 1: { vis: 550, ceil: 200 }, 0: { vis: 1500, ceil: 400 } };
-  // ── the holds at the initial approach fixes (STAR charts): FL070 to FL100, 250 kt; NARSO (FL200 and above, 220 kt) when
-  // ARTIP is full. inb TRUE inbound track
+  // ── the holds (AD 2.22 para 2.5.6.2): at the initial approach fixes from FL070, 250 kt, right-hand, 1 minute; NARSO
+  // (FL200 and above, 220 kt, left-hand) when ARTIP is full. inb TRUE inbound track (variation 2°E)
   const HOLDS_AIR = {
-    ARTIP: { inb: 272, turn: 'R', min: 7000, max: 10000, maxKt: 250 },
-    RIVER: { inb: 339, turn: 'R', min: 7000, max: 10000, maxKt: 250 },
-    SUGOL: { inb: 292, turn: 'R', min: 7000, max: 10000, maxKt: 250 },
-    NARSO: { inb: 177, turn: 'R', min: 20000, max: 24000, maxKt: 220 }
+    ARTIP: { inb: 253, turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // AD 2.22 para 2.5.6.2: 251° MAG
+    RIVER: { inb: 42,  turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // 040° MAG
+    SUGOL: { inb: 111, turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // 109° MAG
+    NARSO: { inb: 356, turn: 'L', min: 20000, max: 26000, maxKt: 220 }     // 354° MAG, left-hand
   };
 
   // ── SIDs (AD 2.22 para 1.5): RNAV1, every runway its own set, the letter of the designator the runway (S and Q 24, E 18L,
@@ -181,7 +190,7 @@ const EHAM = (() => {
 
   return {
     icao: 'EHAM', iata: 'AMS', name: 'Amsterdam Schiphol', city: 'Amsterdam', country: 'Netherlands', arp: P('521829N', '0044551E'), elev: -11,
-    VAR, FIX, NAV, RWY, STARS, ILS, MINS, HOLDS_AIR, SIDS, SID_BRG, INIT_CLIMB, DIR, PLACE_DIR, UNITS, CTR, TA, TZ, CONFIGS, TERMINAL_OF, TERMINAL_DEFAULT,
+    VAR, FIX, NAV, RWY, STARS, ILS, TRANS, MINS, HOLDS_AIR, SIDS, SID_BRG, INIT_CLIMB, DIR, PLACE_DIR, UNITS, CTR, TA, TZ, CONFIGS, TERMINAL_OF, TERMINAL_DEFAULT,
     TIMETABLE, LONG_STAY, EXTRA, EXERCISES, WX_PRESETS, TEL, AIRLINE_ICAO, AIRLINE_TYPE, TYPES, PLACES, AIRPORTS, ALTERNATES,
     data: { metar: 'eham/metar.txt', flights: 'eham/flights.json' },
     features: { roadCrossing: false, sra: false, parallelRunways: true, crossings: true, pointMerge: false, faa: false }
