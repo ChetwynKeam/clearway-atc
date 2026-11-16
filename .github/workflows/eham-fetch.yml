@@ -13,6 +13,7 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Download
         run: |
           set +e
@@ -40,7 +41,16 @@ jobs:
             done
             curl -sSfL -m 180 -A "$UA" "$ROOT/documents/PDF/AMDT.pdf" -o "$D/AMDT.pdf"
           done
-          find . -type f | sort; du -sh .
+          # the Schiphol boards (avionio.com's AMS arrivals and departures, every page each way, about half an hour a page):
+          # the real day the timetable is built from
+          cd "$GITHUB_WORKSPACE" && mkdir -p out/boards && A="" && D=""
+          for P in $(seq -6 60); do
+            curl -sSL --compressed -m 30 -A "$UA" -o out/boards/ams_a$P.html "https://www.avionio.com/en/airport/ams/arrivals?page=$P" && A="$A,out/boards/ams_a$P.html"; sleep 1
+            curl -sSL --compressed -m 30 -A "$UA" -o out/boards/ams_d$P.html "https://www.avionio.com/en/airport/ams/departures?page=$P" && D="$D,out/boards/ams_d$P.html"; sleep 1
+          done
+          python3 tools/avionio_flights.py "${A#,}" "${D#,}" out/boards.json Europe/Amsterdam || true
+          rm -rf out/boards
+          cd out && find . -type f | sort; du -sh .
       - name: Publish to eham-data branch
         run: |
           cd out
