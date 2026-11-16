@@ -123,6 +123,7 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 700; letter-spacing
 .app .seg button { border: 0; background: transparent; padding: 5px 10px; }
 .app .seg button.on { background: var(--accent-soft); }
 .app .seg.sm button { padding: 2px 8px; }
+.app .seg button.dim:not(.on) { color: var(--dim); text-decoration: line-through; }
 .toolbar > button { background: rgba(255,255,255,.96); box-shadow: var(--shadow-1); }
 .hud-score { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; pointer-events: none; max-width: calc(100% - 230px); }
 .hud-score span { background: rgba(255,255,255,.94); border: 1px solid var(--line); border-radius: 3px; padding: 2px 8px; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
@@ -2829,7 +2830,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
       <div><b>6</b><span>Runways, with the preferential runway system choosing which land and which depart</span></div>
       <div><b>3,800 m</b><span>The Polderbaan, 18R/36L, 60 m wide, reached by V over the A5 and the Hoofdvaart</span></div>
       <div><b>CAT III</b><span>ILS on 06, 18C, 18R, 27, 36C and 36R; CAT I on 22</span></div>
-      <div><b>South-west</b><span>The usual day: land 18R, depart 24 and 18L</span></div>
+      <div><b>68 · 74</b><span>Declared arrivals in an inbound peak and departures in an outbound peak, an hour</span></div>
       <div><b>3,000 ft</b><span>Transition altitude; arrivals hold at ARTIP, RIVER and SUGOL</span></div>
       <div><b>233</b><span>Stands at the piers B to H and M and the A, D, E, J, K, S and Y aprons, besides the U-apron and the de-icing pads</span></div>
     </div></div>
@@ -2846,6 +2847,8 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="16" cy="16" r="10"/><path d="M16 10v7M16 21v1"/></svg><h3>Hot spots HS1 to HS3</h3><p>C and D where they meet A and B; G1 opposite the K-apron exit GD; and the W9, W10, Z, A and B knot by the 36C end, where only south on A or north on B is possible after vacating.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h8v16H3zM13 8h8v16h-8zM23 12h6v12h-6z"/></svg><h3>Piers and aprons</h3><p>Every stand at its AIP coordinates: the B to H and M piers, the D- and E-aprons, the remote A-apron, the S-apron for cargo and the K-apron at Schiphol East. Stands too close to use together are never in use at once.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 8c8 0 12 4 12 10s4 8 12 8"/><circle cx="4" cy="8" r="2"/></svg><h3>STARs, holds and night transitions</h3><p>Ten RNAV STARs to ARTIP, RIVER and SUGOL, with their holds and NARSO above ARTIP. By day Schiphol Approach vectors from there to the ILS (ARTIP 2X for 36R); at night every jet flies the published transition to 06, 18C or 18R, a continuous descent from the IAF to the final approach.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 26h22M9 26V12M16 26V6M23 26V16"/></svg><h3>The preferential runway system</h3><p>The Besluit luchtverkeer's tables pick the runways: preferences 1 to 6b by day, N1 to N4 at night, by the wind (20 kt crosswind, 7 kt tailwind, none on a wet runway), the visibility and the daylight period. The capacity declaration's waves open a second landing runway in an inbound peak (68 an hour) and a second take-off runway in an outbound peak (74), and the ATIS panel shows what you achieve against them.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 6a10 10 0 1 0 6 14 8 8 0 0 1-6-14z"/></svg><h3>Dutch noise rules</h3><p>From 22:30 to 06:30 no landings on 18C, 24 or 36R and no take-offs from 36C or 18L, 04/22 and 09/27 closed; the Polderbaan only ever lands on 18R and departs from 36L. Night movements count against tonight's share of the season's limit, and departures stay on their SID to 3,000 ft by day and FL90 at night.</p></div>
     </div>
   </div></div>
 
@@ -2860,12 +2863,14 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
   <div class="section"><div class="wrap">
     <div class="sources">
       <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
-        <p class="note">Schiphol is in development: the aerodrome and the procedures are complete; the runway system rules and the full day of traffic follow. The R-apron is being rebuilt and has no stands in this AIRAC. The largest wingspan each stand takes is worked out from the spacing of its row, as the charts give it for few.</p></div>
+        <p class="note">Schiphol is in development: the aerodrome, the procedures and the runway system are complete; the full day of traffic follows. The AI Approach lands about half the declared peak rate; you can do better. The R-apron is being rebuilt and has no stands in this AIRAC. The largest wingspan each stand takes is worked out from the spacing of its row, as the charts give it for few.</p></div>
       <ul>
         <li><b>Aerodrome and ground movement charts</b>The runways, every stop bar and taxiway name and the hot spots.</li>
         <li><b>Parking and docking charts</b>The stands, at their AIP coordinates.</li>
         <li><b>AD 2.12 and 2.13</b>Runway ends, displaced thresholds and the intersection take-off positions.</li>
         <li><b>AD 2.22 coding tables</b>The 86 SIDs, the 10 STARs, the holds, the night and day transitions and every ILS with its missed approach.</li>
+        <li><b>AD 2.21 and the Besluit luchtverkeer</b>The preference tables, the wind and visibility criteria, the night runway restrictions and the noise routes.</li>
+        <li><b>Capacity declaration, winter 2026/27</b>The inbound and outbound peaks, off-peak and night rates and the night movement limit (Airport Coordination Netherlands).</li>
         <li><b>OpenStreetMap</b>Taxiway, apron and building geometry, the bridges and the street map under the scope.</li>
       </ul>
     </div>
@@ -6118,14 +6123,57 @@ const EHAM = (() => {
   const CTR = { n: ['Amsterdam Radar', '127.780'], e: ['Amsterdam Radar', '118.805'], s: ['Amsterdam Radar', '120.555'], w: ['Amsterdam Radar', '127.780'] };
   const TA = 3000, TZ = 'Europe/Amsterdam';
 
-  // ── runway combinations (preferential runway system, AD 2.21; refined in eham-engine.js): the landing runways and the
-  // take-off runways of each
-  const CONFIGS = {
-    south: { land: ['18R'], dep: ['24', '18L'], name: 'South: land 18R, depart 24 and 18L' },
-    north: { land: ['36R'], dep: ['36L'], name: 'North: land 36R, depart 36L' },
-    west:  { land: ['27'], dep: ['24'], name: 'West: land 27, depart 24' },
-    east:  { land: ['06'], dep: ['36L'], name: 'East: land 06, depart 36L' }
+  // ── the preferential runway system (Besluit luchtverkeer 2008 art. 3.1.5 and its tables, as amended; AD 2.21 para 4).
+  // Each preference: its main and second landing runways (L1, L2) and its main and second take-off runways (S1, S2).
+  // need: 'udp' good visibility and within the uniform daylight period, 'good' good visibility, 'marg' good or marginal
+  // visibility. conv: a dependent combination (a landing runway converging with a take-off runway, or a go-around across
+  // the departures), used only with the cloud base above 2,000 ft (LVNL, 2023). Preference 3 as changed in 2023 (LVNL's
+  // memo of 1 November 2023: land 06 and 18R, depart 09), and 2b (land 18R and 27) as in the 2026 table.
+  const PREF = {
+    day: [
+      { k: '1',  l: ['06', '36R'],  s: ['36L', '36C'], need: 'udp' },
+      { k: '2a', l: ['18R', '18C'], s: ['24', '18L'],  need: 'udp' },
+      { k: '2b', l: ['18R', '27'],  s: ['24', '18L'],  need: 'udp', conv: true },
+      { k: '3',  l: ['06', '18R'],  s: ['09'],         need: 'udp', conv: true },
+      { k: '4',  l: ['27', '18R'],  s: ['24', '18L'],  need: 'udp', conv: true },
+      { k: '5a', l: ['36R', '36C'], s: ['36L', '36C'], need: 'good' },
+      { k: '5b', l: ['18R', '18C'], s: ['18L', '18C'], need: 'good' },
+      { k: '6a', l: ['36R', '36C'], s: ['36L', '09'],  need: 'marg' },
+      { k: '6b', l: ['18R', '18C'], s: ['18L', '24'],  need: 'marg' }
+    ],
+    // 23:00 to 06:00 local: one landing and one take-off runway, in good or marginal visibility
+    night: [
+      { k: 'N1', l: ['06'],  s: ['36L'] },
+      { k: 'N2', l: ['18R'], s: ['24'] },
+      { k: 'N3', l: ['36C'], s: ['36L'] },
+      { k: 'N4', l: ['18R'], s: ['18C'] }
+    ]
   };
+  const NIGHT_TABLE = [23*60, 6*60];   // local time
+  // AD 2.21 para 5.1: runways never used one way, and the night restrictions (21:30 to 05:30 UTC in winter, 20:30 to
+  // 04:30 in summer: 22:30 to 06:30 local all year), from which ATC may deviate only when no other runway can be used
+  const ONEWAY = { arr: ['36L', '18L'], dep: ['18R', '36R'] };
+  const NIGHT_RWY = { at: [22*60 + 30, 6*60 + 30], arr: ['18C', '24', '36R', '04', '22', '09', '27'], dep: ['36C', '18L', '04', '22', '09', '27'] };
+  // wind criteria (AD 2.21 para 4.3.3; LVNL's runway allocation, Hesselink et al., ATM Seminar 2011): a runway is
+  // usable with a crosswind of 20 kt or less and a tailwind of 7 kt or less, gusts included (but only gusts of 10 kt or
+  // more over the mean wind), and no tailwind on a wet runway
+  const WIND = { cross: 20, tail: 7, tailWet: 0, gust: 10 };
+  // visibility (Besluit luchtverkeer): good from 5 km and a 1,000 ft cloud base, limited (low visibility) under 1,500 m
+  // or 300 ft, marginal in between
+  const VIS = { good: [5000, 1000], limited: [1500, 300] };
+  // the capacity declaration (Airport Coordination Netherlands, winter 2026/27 v1.0, 24 April 2026): the ATM modes and
+  // their hourly rates, and the day's mode schedule. The declaration's times are UTC (UTC+1 in winter); they are kept
+  // here in local time, the waves of KLM's hub following the local clock all year.
+  // L arrival peak (2 landing runways, 1 take-off), S departure peak (1 and 2), O off-peak (1 and 1), N night (1 and 1)
+  const CAP = { L: { arr: 68, dep: 38, name: 'Inbound peak' }, S: { arr: 36, dep: 74, name: 'Outbound peak' },
+    O: { arr: 36, dep: 40, name: 'Off-peak' }, N: { arr: 24, dep: 25, name: 'Night' } };
+  const hm = (h, m = 0) => h*60 + m;
+  const PEAKS = [
+    [hm(6), hm(7), 'O'], [hm(7), hm(7, 20), 'S'], [hm(7, 20), hm(7, 50), 'O'], [hm(7, 50), hm(9, 20), 'L'], [hm(9, 20), hm(10, 40), 'S'],
+    [hm(10, 40), hm(11), 'O'], [hm(11), hm(11, 40), 'L'], [hm(11, 40), hm(12, 40), 'S'], [hm(12, 40), hm(13), 'O'], [hm(13), hm(14), 'L'],
+    [hm(14), hm(15), 'S'], [hm(15), hm(15, 20), 'O'], [hm(15, 20), hm(16, 20), 'L'], [hm(16, 20), hm(18), 'S'], [hm(18), hm(18, 20), 'O'],
+    [hm(18, 20), hm(20), 'L'], [hm(20), hm(21, 40), 'S'], [hm(21, 40), hm(23), 'O']
+  ];
 
   // ── where each airline parks (Schiphol): KLM and the SkyTeam airlines at the B, C and D piers (Schengen) and the E, F
   // and G piers (intercontinental), KLM Cityhopper at B and C, the low-cost carriers at the H and M piers, cargo at the
@@ -6707,14 +6755,14 @@ const EHAM = (() => {
   const EXERCISES = {
     dep: { name: 'Schiphol 1 · A departure off 24', wx: 'south', rwy: '18R', sched: [{ cs: 'KLM1001', t: 'B738', k: 'DEP', d: 'EGLL', m: 0, stand: 'D5' }] },
     arr: { name: 'Schiphol 2 · From SUGOL to the ILS 18R', wx: 'south', rwy: '18R', sched: [{ cs: 'EZY7911', t: 'A320', k: 'ARR', o: 'EGKK', m: 0 }] },
-    mix: { name: 'Schiphol 3 · Land 18R, depart 24 and 18L', wx: 'south', rwy: '18R', sched: [{ cs: 'KLM1234', t: 'B738', k: 'ARR', o: 'EGLL', m: 0 },
+    mix: { name: 'Schiphol 3 · Land 18R, depart 24 and 18L', wx: 'south', rwy: '18R', peak: 'S', sched: [{ cs: 'KLM1234', t: 'B738', k: 'ARR', o: 'EGLL', m: 0 },
       { cs: 'KLC1361', t: 'E195', k: 'DEP', d: 'EDDF', m: 0, stand: 'B16' }, { cs: 'TRA5043', t: 'B738', k: 'DEP', d: 'LEMG', m: 2, stand: 'D7' }] }
   };
   const WX_PRESETS = {
-    south: { name: 'South-westerly: land 18R, depart 24 and 18L',  short: 'South-west', metar: 'EHAM 161225Z 22012KT 9999 FEW025 SCT040 11/07 Q1012' },
-    north: { name: 'Northerly: land 36R, depart 36L',              short: 'North',      metar: 'EHAM 161225Z 01010KT 9999 SCT030 08/03 Q1027' },
-    west:  { name: 'Westerly gale: land 27, depart 24',            short: 'Gale',       metar: 'EHAM 161225Z 26028G40KT 9000 -SHRA BKN018 10/07 Q0991' },
-    east:  { name: 'Easterly: land 06, depart 36L',                short: 'East',       metar: 'EHAM 161225Z 08012KT 9999 FEW030 05/M01 Q1030' },
+    south: { name: 'South-westerly: preference 2a, land 18R and 18C, depart 24 and 18L',  short: 'South-west', metar: 'EHAM 161225Z 22012KT 9999 FEW025 SCT040 11/07 Q1012' },
+    north: { name: 'Northerly: preference 1, land 06 and 36R, depart 36L and 36C', short: 'North',      metar: 'EHAM 161225Z 01010KT 9999 SCT030 08/03 Q1027' },
+    west:  { name: 'Westerly gale: one runway each, land 27, depart 24', short: 'Gale',       metar: 'EHAM 161225Z 26028G40KT 9000 -SHRA BKN018 10/07 Q0991' },
+    east:  { name: 'Easterly: preference 1, land 06 and 36R, depart 36L and 36C', short: 'East',       metar: 'EHAM 161225Z 08012KT 9999 FEW030 05/M01 Q1030' },
     fog:   { name: 'Fog: low visibility procedures, CAT III',      short: 'Fog',        metar: 'EHAM 160650Z 00000KT 0150 R18R/0200N FG VV001 03/03 Q1028' },
     calm:  { name: 'High pressure, light and variable',            short: 'Calm',       metar: 'EHAM 161225Z VRB02KT 9999 FEW040 09/03 Q1033' }
   };
@@ -6760,7 +6808,7 @@ const EHAM = (() => {
 
   return {
     icao: 'EHAM', iata: 'AMS', name: 'Amsterdam Schiphol', city: 'Amsterdam', country: 'Netherlands', arp: P('521829N', '0044551E'), elev: -11,
-    VAR, FIX, NAV, RWY, STARS, ILS, TRANS, MINS, HOLDS_AIR, SIDS, SID_BRG, INIT_CLIMB, DIR, PLACE_DIR, UNITS, CTR, TA, TZ, CONFIGS, TERMINAL_OF, TERMINAL_DEFAULT,
+    VAR, FIX, NAV, RWY, STARS, ILS, TRANS, MINS, HOLDS_AIR, SIDS, SID_BRG, INIT_CLIMB, DIR, PLACE_DIR, UNITS, CTR, TA, TZ, PREF, NIGHT_TABLE, ONEWAY, NIGHT_RWY, WIND, VIS, CAP, PEAKS, TERMINAL_OF, TERMINAL_DEFAULT,
     TIMETABLE, LONG_STAY, EXTRA, EXERCISES, WX_PRESETS, TEL, AIRLINE_ICAO, AIRLINE_TYPE, TYPES, PLACES, AIRPORTS, ALTERNATES,
     data: { metar: 'eham/metar.txt', flights: 'eham/flights.json' },
     features: { roadCrossing: false, sra: false, parallelRunways: true, crossings: true, pointMerge: false, faa: false }
@@ -6790,8 +6838,9 @@ if (typeof module !== 'undefined') module.exports = EHAM_GROUND;
 // Builds every global the engine reads from the chart data in eham.js (EHAM) and the aerodrome in eham-ground.js (metres
 // east and north of the ARP). Six runways, every one with its own frame: 18R/36L (the Polderbaan, 60 m wide, far to the
 // north-west), 18C/36C, 18L/36R (crossed by 09/27), 06/24, 09/27 and 04/22. The runways in use are a combination from the
-// preferential runway system (CONFIGS in eham.js): its landing runways, each fed by the arrivals from its own side, and its
-// take-off runways, each taking the departures whose direction suits it. S.rwy is the first landing runway, S.depRwy the
+// preferential runway system (PREF in eham.js, worked out below with the capacity declaration's modes): its landing
+// runways, each fed by the arrivals from its own side, and its take-off runways, each taking the departures whose
+// direction suits it. S.rwy is the first landing runway, S.depRwy the
 // first take-off runway; the runway operations panel can set every runway end on its own.
 Object.assign(TYPES, EHAM.TYPES);
 const LL = p => xy(p[0], p[1]);
@@ -6842,35 +6891,141 @@ function clockMs(){
   if (EXERCISES[mode]) return null;
   if (/^live/.test(mode)) return Date.now();
   const d = +((document.getElementById('daySel') || {}).value || 0), h = +((document.getElementById('hourSel') || {}).value || 12);
-  return Date.UTC(2026, 10, 16 + d, Math.floor(h));
+  return Date.UTC(2026, 9, 5 + d, Math.floor(h));   // as start() sets S.start
 }
 const localMin = () => { const t = clockMs(); if (t == null) return null; const L = new Date(t + amsOff(t)*60000); return L.getUTCHours()*60 + L.getUTCMinutes(); };
 
-// ═════════════════════════ runway combinations ═════════════════════════
-const CFG = EHAM.CONFIGS;
-// the combination a landing runway belongs to (the first one that lands on it)
-const configOf = rw => Object.keys(CFG).find(k => CFG[k].land.includes(rw)) || 'south';
-const cfgNow = () => configOf(S.rwy);
-const landList = () => CFG[cfgNow()].land;
-const depList = () => S.depRwy && !CFG[cfgNow()].dep.includes(S.depRwy) ? [S.depRwy] : CFG[cfgNow()].dep;
-const depFor = rw => CFG[configOf(rw)].dep[0];
-const depOf = () => S.depRwy || depFor(S.rwy);
-// by the wind (AD 2.21: tailwind and crosswind limits of the preferential system; gusts under 10 kt not counted): the
-// first combination in the order of preference whose runways all have a tailwind of 7 kt or less and a crosswind of
-// 20 kt or less, else the one with the most headwind
-const PREF = ['south', 'north', 'west', 'east'];
-function rwyFor(w){
-  const calm = w.vrb || w.spd < 4, g = gw => ({ ...w, gust: w.gust && w.gust - w.spd >= 10 ? w.gust : 0 });
-  const ok = k => [...CFG[k].land, ...CFG[k].dep].every(rw => { const c = windComp(g(w), crsOf(rw)); return calm || (c.headG >= -7 && c.crossG <= 20); });
-  const k = PREF.find(ok) || PREF.slice().sort((a, b) => windComp(w, crsOf(CFG[b].land[0])).head - windComp(w, crsOf(CFG[a].land[0])).head)[0];
-  return { land: CFG[k].land[0], dep: CFG[k].dep[0] };
+// ═════════════════════════ the preferential runway system ═════════════════════════
+// The combination in use is a preference from the Besluit luchtverkeer's tables (PREF in eham.js): by day (06:00 to
+// 23:00 local) preferences 1 to 6b, at night N1 to N4. The first whose runways all meet the wind criteria, whose
+// visibility and daylight condition holds, and which keeps to the AIP's runway restrictions, is the one in use.
+// How many of its runways are open is the capacity declaration's mode for the time (PEAKS, CAP): an inbound peak (L)
+// lands on L1 and L2 and departs from S1, an outbound peak (S) lands on L1 and departs from S1 and S2, off-peak (O)
+// and night (N) one of each. In low visibility only L1 lands; in a gale, when no preference passes with both its
+// runways, the first that passes with L1 and S1 alone is used (one runway each way), as in a real storm.
+// S.rwy is L1; the Flow buttons choose a preference (APT.setConfig), else the one the rules give for S.rwy.
+const PREF = EHAM.PREF, ALLP = [...PREF.day, ...PREF.night];
+const inLocal = ([a, b], m) => a <= b ? m >= a && m < b : m >= a || m < b;
+const exNow = () => { const ts = document.getElementById('trafficSel'); return ts && EXERCISES[ts.value] || (S.running && EXERCISES[S.mode]) || null; };
+const periodNow = () => { const m = localMin(); return m != null && inLocal(EHAM.NIGHT_TABLE, m) ? 'night' : 'day'; };
+// the capacity declaration's mode now (an exercise sets its own; without a clock, off-peak)
+function modeNow(){
+  const m = localMin();
+  if (m == null) { const E = exNow(); return E && E.peak || 'O'; }
+  if (inLocal(EHAM.NIGHT_TABLE, m)) return 'N';
+  const r = EHAM.PEAKS.find(([a, b]) => m >= a && m < b); return r ? r[2] : 'O';
 }
-// an arrival's landing runway: where two land, the one nearer its initial approach fix's side
+const visOf = w => w.vis < EHAM.VIS.limited[0] || w.ceil < EHAM.VIS.limited[1] ? 'limited' : w.vis >= EHAM.VIS.good[0] && w.ceil >= EHAM.VIS.good[1] ? 'good' : 'marginal';
+// the uniform daylight period: from 15 minutes before sunrise to 15 minutes after sunset (the sun about 3° below the horizon)
+const udpNow = () => { const t = clockMs(); return t == null || typeof sunElev !== 'function' || sunElev(t, EHAM.arp[0], EHAM.arp[1]) > -3.1; };
+const wetOf = w => (w.wx || []).some(x => /RA|DZ|SN|SG|PL|GR|GS|UP/.test(x));
+const gustOf = w => ({ ...w, gust: w.gust && w.gust - w.spd >= EHAM.WIND.gust ? w.gust : 0 });
+function windOk(w, rw){
+  if (w.vrb ? w.spd <= 6 : w.spd < 4) return true;
+  const c = windComp(gustOf(w), crsOf(rw)), tail = wetOf(w) ? EHAM.WIND.tailWet : EHAM.WIND.tail;
+  return Math.round(c.headG) >= -tail && Math.round(c.crossG) <= EHAM.WIND.cross && !(Math.round(c.headG) <= -tail && tail > 0 && Math.round(c.crossG) >= EHAM.WIND.cross);
+}
+// a runway not to be used this way now (AD 2.21 para 5.1)
+const rwyBanned = (rw, role, m = localMin()) => EHAM.ONEWAY[role].includes(rw) || (m != null && inLocal(EHAM.NIGHT_RWY.at, m) && EHAM.NIGHT_RWY[role].includes(rw));
+// the runways a preference opens in a mode (single: one landing and one take-off runway whatever the mode)
+function usedOf(c, M, w, single){
+  const lim = visOf(w) === 'limited';
+  return { land: !single && M === 'L' && c.l[1] && !lim ? c.l.slice(0, 2) : [c.l[0]], dep: !single && M === 'S' && c.s[1] ? c.s.slice(0, 2) : [c.s[0]] };
+}
+// whether a preference can be used: its conditions, its runways' wind and the restrictions
+function prefOk(c, w, M, single, strict = true){
+  const v = visOf(w);
+  if (c.need === 'udp' && !(v === 'good' && udpNow())) return false;
+  if (c.need === 'good' && v !== 'good') return false;
+  if (c.conv && w.ceil <= 2000) return false;
+  const u = usedOf(c, M, w, single);
+  if (strict && (u.land.some(r => rwyBanned(r, 'arr')) || u.dep.some(r => rwyBanned(r, 'dep')))) return false;
+  return [...u.land, ...u.dep].every(r => windOk(w, r));
+}
+// the preference the rules give: the first of the table in force that passes, in full, then with one runway each way;
+// then the other table's (the night procedures kept on to 06:30 while the day table's runways are still restricted, or
+// a night runway in the day when the wind rules out every day preference); then, no other runway being usable (AD 2.21
+// para 5.1 allows it), whatever restriction it breaks; at worst the one with the least crosswind and tailwind
+function bestPref(w = S.wx, M = modeNow(), T = PREF[periodNow()]){
+  const U = T === PREF.day ? PREF.night : PREF.day, NM = T === PREF.day ? 'N' : 'O';
+  for (const [L, m, single, strict] of [[T, M, false, true], [T, M, true, true], [U, NM, true, true], [T, M, false, false], [T, M, true, false], [U, NM, true, false]]) {
+    const c = L.find(c => prefOk(c, w, m, single, strict)); if (c) return { c, single: single || L !== T }; }
+  const bad = r => { const k = windComp(gustOf(w), crsOf(r)); return k.crossG - Math.min(0, k.headG)*3; };
+  return { c: ALLP.slice().sort((a, b) => Math.max(bad(a.l[0]), bad(a.s[0])) - Math.max(bad(b.l[0]), bad(b.s[0])))[0], single: true };
+}
+// the preference in use with L1 on a given runway: the one chosen on the Flow buttons, else the first that passes
+let MANUAL = null, PCACHE = { key: null, v: null };
+function prefFor(rw, w = S.wx){
+  const M = modeNow(), per = periodNow(), key = [rw, MANUAL, w.raw, w.dir, w.spd, w.gust, w.vis, w.ceil, M, per, Math.floor((localMin() ?? 0)/10)].join('|');
+  if (rw === S.rwy && PCACHE.key === key) return PCACHE.v;
+  const T = PREF[per], mine = T.filter(c => c.l[0] === rw);
+  let v = null;
+  const man = MANUAL && ALLP.find(c => c.k === MANUAL && c.l[0] === rw);
+  if (man) v = { c: man, single: !prefOk(man, w, M, false, false) && prefOk(man, w, M, true, false) };
+  if (!v) { const b = bestPref(w, M, T); if (b.c.l[0] === rw) v = b; }
+  if (!v) for (const single of [false, true]) { const c = mine.find(c => prefOk(c, w, M, single, true)) || mine.find(c => prefOk(c, w, M, single, false)); if (c) { v = { c, single }; break; } }
+  if (!v) { const c = mine[0] || ALLP.find(c => c.l[0] === rw) || ALLP.find(c => c.l.includes(rw)) || T[0]; v = { c, single: !mine[0] }; }
+  v = { ...v, ...usedOf(v.c, M, w, v.single), M };
+  if (rw === S.rwy) PCACHE = { key, v };
+  return v;
+}
+const cfgNow = () => prefFor(S.rwy);
+const configOf = rw => prefFor(rw).c.k;
+const landList = () => cfgNow().land;
+const depList = () => { const P = cfgNow(); return S.depRwy && !P.c.s.includes(S.depRwy) ? [S.depRwy] : P.dep; };
+const depFor = rw => prefFor(rw).dep[0];
+const depOf = () => S.depRwy || depFor(S.rwy);
+function rwyFor(w){ const b = bestPref(w); const u = usedOf(b.c, modeNow(), w, b.single); return { land: b.c.l[0], dep: u.dep[0] }; }
+// the clock (APT.onStep): at 23:00 and 06:00 local the night or day table comes in; at each change of mode the second
+// runway opens or closes. The achieved rates are counted here, for the ATIS panel.
+const MOVES = { arr: [], dep: [] };
+let stepWas = null, hooked = false;
+const hmLocal = m => String(Math.floor(m/60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const zOf = m => { const t = clockMs(); const off = t == null ? 60 : amsOff(t), z = ((m - off) % 1440 + 1440) % 1440; return String(Math.floor(z/60)).padStart(2, '0') + String(z % 60).padStart(2, '0') + 'Z'; };
+const prefText = P => `preference ${P.c.k}${P.single && P.c.l.length + P.c.s.length > 2 ? ' (one runway each way)' : ''}: land ${P.land.join(' and ')}, depart ${P.dep.join(' and ')}`;
+function stepPref(){
+  if (!hooked && typeof S !== 'undefined' && S.listeners) { hooked = true;
+    S.listeners.push((ev, d) => { if (ev === 'start') { MOVES.arr = []; MOVES.dep = []; stepWas = null; } else if (ev === 'rwy') stepWas = null; else if (ev === 'landed') MOVES.arr.push(S.t); else if (ev === 'takeoff') MOVES.dep.push(S.t); }); }
+  if (!S.running || exNow()) { stepWas = null; return; }
+  const per = periodNow(), M = modeNow(), P0 = cfgNow(), key = [per, M, P0.c.k, P0.land, P0.dep].join('|');
+  if (stepWas && key !== stepWas && !S.rops) {
+    const m = localMin(), at = `${hmLocal(m)} local (${zOf(m)})`, [wasPer, wasM] = stepWas.split('|');
+    if (wasPer !== per) {
+      MANUAL = null; PCACHE.key = null;
+      const b = bestPref(S.wx); S.rwy = b.c.l[0]; const P = prefFor(S.rwy); S.depRwy = P.dep[0];
+      sys(per === 'night' ? `${at}: the night preferences are in force until 06:00: ${prefText(P)}. Runways 04/22 and 09/27 closed until 06:30.` : `${at}: the day preferences are back: ${prefText(P)}.`);
+    } else {
+      PCACHE.key = null; const P = cfgNow(); if (!P.dep.includes(S.depRwy)) S.depRwy = P.dep[0];
+      if (wasM !== M) sys(`${at}: ${EHAM.CAP[M].name.toLowerCase().replace(/^./, c => c.toUpperCase())} (${M}), declared ${EHAM.CAP[M].arr} arrivals and ${EHAM.CAP[M].dep} departures an hour: ${prefText(P)}.`);
+      else sys(`${at}: ${inLocal(EHAM.NIGHT_RWY.at, m) ? 'the night runway restrictions apply until 06:30: ' : m >= 6*60 + 30 && m < 6*60 + 40 ? 'the night runway restrictions end: ' : ''}${prefText(P)}.`);
+    }
+    nextAtis(false); rerouteArrivals(); renderAtis(); emit('rwy', S.rwy);
+    const P1 = cfgNow(); stepWas = [periodNow(), modeNow(), P1.c.k, P1.land, P1.dep].join('|'); return;
+  }
+  stepWas = key;
+}
+// landings and take-offs in the last hour (scaled to an hour after the first 10 minutes)
+function achieved(){
+  const span = Math.min(3600, S.t), cut = S.t - 3600, n = L => L.filter(t => t > cut).length;
+  if (span < 600) return null;
+  return { arr: Math.round(n(MOVES.arr)*3600/span), dep: Math.round(n(MOVES.dep)*3600/span), min: Math.round(span/60) };
+}
+// the declared landing rate for the mode, with the runways actually open
+const arrCap = () => { const P = cfgNow(), M = P.M; return M === 'L' && P.land.length < 2 ? EHAM.CAP.O.arr : EHAM.CAP[M].arr; };
+const depCap = () => { const P = cfgNow(), M = P.M; return M === 'S' && P.dep.length < 2 ? EHAM.CAP.O.dep : EHAM.CAP[M].dep; };
+// an arrival's landing runway: where two land, the one on its initial approach fix's side (SUGOL's traffic to the
+// western runway, ARTIP's to the eastern), unless that runway already has two or more inbounds more than the other, as
+// the arrival manager balances the two landing runways. Chosen once per arrival (and again if the runways change).
 const IAF_OF = g => (EHAM.STARS[(EHAM.DIR[g] || {}).star] || {}).iaf || 'SUGOL';
 function landFor(ac){
   const L = landList(); if (L.length < 2 || !ac) return L[0];
-  const f = WP[IAF_OF(ac.gate)]; if (!f) return L[0];
-  return L.slice().sort((a, b) => dist(...f.p, ...THR[a]) - dist(...f.p, ...THR[b]))[0];
+  const sig = L.join(',');
+  if (ac.ehL && ac.ehLs === sig && L.includes(ac.ehL)) return ac.ehL;
+  const f = WP[IAF_OF(ac.gate)], side = f ? L.slice().sort((a, b) => dist(...f.p, ...THR[a]) - dist(...f.p, ...THR[b])) : L.slice();
+  const load = rw => S.acs.filter(o => o !== ac && o.kind === 'ARR' && o.airborne && !o.handed && o.ehLs === sig && (o.app || o.ehL) === rw).length;
+  const pick = load(side[0]) > load(side[1]) + 1 ? side[1] : side[0];
+  if (S.acs.includes(ac)) { ac.ehL = pick; ac.ehLs = sig; }
+  return pick;
 }
 // a departure's take-off runway: where two depart, the one whose heading is nearer the destination's bearing
 function depForAc(ac){
@@ -7247,7 +7402,7 @@ const depRwyOf = ac => {
   if (ac && ac.hp && HOLDS[ac.hp]) { const on = HOLDS[ac.hp].on; const d = depList().find(r => RWYS_BY_END(r).id === on); if (d) return d; }
   return depForAc(ac);
 };
-const flowName = () => CFG[cfgNow()].name;
+const flowName = () => { const P = cfgNow(); return `Preference ${P.c.k}${P.single && P.c.l.length + P.c.s.length > 2 ? ' (one runway each way)' : ''} · ${EHAM.CAP[P.M].name} (${P.M})`; };
 const twrOf = rw => EHAM.UNITS.twr.freq[RWYS_BY_END(rw).id] || '118.105';
 const APT = {
   toVis: 125,
@@ -7262,8 +7417,11 @@ const APT = {
   // independent parallel runways (18R, 18C and 36R, 36C more than 1.5 km apart): a departure off one and an arrival on
   // (or going around from) another close in are separated by the SID and missed approach tracks
   sepOk: (a, b, d) => { const rw = x => x.kind === 'ARR' ? (x.app || x.gaRwy) : depRw(x); const ra = rw(a), rb = rw(b);
-    if (!ra || !rb || RWYS_BY_END(ra) === RWYS_BY_END(rb)) return false;
-    return dist(a.x, a.y, ...ARP) < 10 && dist(b.x, b.y, ...ARP) < 10 && Math.abs(angDiff(crsOf(ra), crsOf(rb))) < 20; },
+    if (!ra || !rb || RWYS_BY_END(ra) === RWYS_BY_END(rb) || Math.abs(angDiff(crsOf(ra), crsOf(rb))) >= 20) return false;
+    // two arrivals both established on their localizers (independent parallel approaches, AD 2.22: no separation needed
+    // between them once established, with the no-transgression zone between the finals monitored)
+    if (a.kind === 'ARR' && b.kind === 'ARR' && a.mode === 'FINAL' && b.mode === 'FINAL') return true;
+    return dist(a.x, a.y, ...ARP) < 10 && dist(b.x, b.y, ...ARP) < 10; },
   xing: false, drawnTown: false, ta: EHAM.TA, initClimb: EHAM.INIT_CLIMB, gaAlt: 2000, appAlt: 2000, handoffNM: 25, climbFL: 240, divertAlt: 7000,
   area: { dep: 40, arr: 70, div: 45 }, roll: [70, RWY_M - 70], defRwy: '18R', defWx: 'south',
   appName: 'ILS approach', appShort: 'ILS', minsText: 'weather below the approach minima', reqApp: rw => 'ILS approach',
@@ -7274,7 +7432,15 @@ const APT = {
     gnd: (() => { const c = firstOf('D') ? firstOf('D').p : ARP; return [mOf(c), offOf(c), 4200, 3200]; })() },
   minsOk,
   splitRwy: true, rwyFor, depFor, configOf,
-  rwyConfigs: Object.entries(CFG).map(([key, c]) => ({ key, name: c.name.split(':')[0], land: c.land[0], lands: c.land, deps: c.dep })),
+  // the Flow buttons: the preferences of the table in force (day or night), each with the runways it opens now
+  get rwyConfigs(){ const M = modeNow(), w = S.wx, cur = cfgNow().c, T = PREF[periodNow()]; return (T.includes(cur) ? T : [...T, cur]).map(c => { const ok = prefOk(c, w, M, false), u = usedOf(c, M, w, !ok && prefOk(c, w, M, true));
+    return { key: c.k, name: c.k, land: c.l[0], lands: u.land, deps: u.dep, ok: ok || prefOk(c, w, M, true) }; }); },
+  setConfig(k){ const c = ALLP.find(c => c.k === k); if (!c) return;
+    MANUAL = k; PCACHE.key = null; S.rops = null; S.ropsV++; S.rwy = c.l[0]; const P = prefFor(S.rwy); S.depRwy = P.dep[0];
+    nextAtis(false); sys(`Runways: ${prefText(P)}. Information ${phonetic(S.atis)} is current.`);
+    if (!prefOk(c, S.wx, P.M, P.single)) sys(`Preference ${k} does not meet the wind, visibility or night criteria now: crews may refuse, and it counts against the noise rules.`, true);
+    rerouteArrivals(); renderAtis(); emit('rwy', S.rwy); },
+  arrCap, depCap, ropsCan: (e, role) => !((role === 'ARR' || role === 'MIX') && EHAM.ONEWAY.arr.includes(e)) && !((role === 'DEP' || role === 'MIX') && EHAM.ONEWAY.dep.includes(e)),
   depRwyOf, landRwyOf, arrRoute: o => arrKeyOf(o),
   activeRwys: () => [...new Set([...landList(), ...depList()])],
   depRwys: () => depList(),
@@ -7308,7 +7474,7 @@ const APT = {
   restricted: null,
   drawAirport: drawEham, drawAirportTop: drawEhamTop,
   entryCost: (ac, k, from) => 0,
-  onStep: () => {},
+  onStep: stepPref,
   gaEarly(ac, rw){},
   gaTurn(ac){ const rw = ac.gaRwy, F = FINAL[rw] || FINAL['18R'];
     if (ac.alt > ELEV + 700 || dist(ac.x, ac.y, ...(THR[rw] || ARP)) > 2) { ac.gaTurn = true; ac.mode = 'NAV'; ac.route = F.missed.slice(); ac.turnDir = 0; ac.tgtAlt = ac.cleared = Math.max(ac.cleared || 0, F.missAlt); } },
@@ -7354,8 +7520,10 @@ const APT = {
     atHoldPt: (ac, h) => h.rwy ? `holding short runway ${rwyName(HOLDS[h.id].on)} at ${PHON[h.id] || h.id}` : `holding at ${PHON[h.id] || h.id}`
   },
   atisPanel(w){
-    const c = windComp(w, crsOf(S.rwy)), bad = !minsOk(w, S.rwy), r = rwyFor(w);
-    return `<div class="warnline${bad ? ' bad' : ''}">${flowName()} · land ${landList().join(' and ')}, depart ${depList().join(' and ')}${r.land !== S.rwy ? ` (the wind favours ${r.land} / ${r.dep})` : ''} · ${bad ? 'below the minima' : 'ILS approaches'} · crosswind ${Math.round(Math.abs(c.crossG))} kt.</div>`;
+    const c = windComp(w, crsOf(S.rwy)), bad = !minsOk(w, S.rwy), r = rwyFor(w), P = cfgNow(), A = S.running ? achieved() : null;
+    const cap = `declared ${arrCap()} arrivals and ${depCap()} departures an hour${A ? `; achieved ${A.arr} and ${A.dep} an hour over the last ${A.min} min` : ''}`;
+    return `<div class="warnline${bad ? ' bad' : ''}">${flowName()} · land ${landList().join(' and ')}, depart ${depList().join(' and ')}${r.land !== S.rwy ? ` (the rules now give ${bestPref(w).c.k}: land ${r.land}, depart ${r.dep})` : ''} · ${bad ? 'below the minima' : 'ILS approaches'} · crosswind ${Math.round(Math.abs(c.crossG))} kt.</div>`
+      + `<div class="warnline dimmer">${cap}. ${visOf(w) === 'limited' ? 'Low visibility: one landing runway.' : visOf(w) === 'marginal' ? 'Marginal visibility: preferences 6a and 6b.' : !udpNow() && periodNow() === 'day' ? 'Outside the daylight period: preferences 5a to 6b.' : ''}</div>`;
   },
   atisLines({ w, L, E }){
     const cl = w.clouds.length ? w.clouds.map(c => { const m = c.match(/^(FEW|SCT|BKN|OVC|VV)(\d{3})/); return m ? `${{ FEW: 'few', SCT: 'scattered', BKN: 'broken', OVC: 'overcast', VV: 'vertical visibility' }[m[1]]} ${(+m[2]*100).toLocaleString('en-GB')} feet` : c; }).join(', ') : 'no significant cloud';
@@ -7996,7 +8164,7 @@ function wxLines(){
 const ROPS_ON = RWYS.length > 1 && !APT.noRops;
 const ropsEnds = ROPS_ON ? RW_ENDS.filter(e => !(APT.ropsSkip || []).includes(e)) : [];
 const ropsGroup = e => APT.ropsGroup ? APT.ropsGroup(e) : 'A';
-const ropsCan = (e, role) => role === 'OFF' || (role === 'DEP' ? true : !!FINAL[e]);   // landing needs an approach
+const ropsCan = (e, role) => role === 'OFF' || ((!APT.ropsCan || APT.ropsCan(e, role)) && (role === 'DEP' ? true : !!FINAL[e]));   // landing needs an approach (and some runways are one way only)
 const ropsHdg = e => (parseInt(e, 10) % 36) * 10;
 const ropsCompat = (a, b) => Math.abs(angDiff(ropsHdg(a), ropsHdg(b))) <= 50;       // opposite flows cannot both be live
 const ropsOther = e => { const R = rwyOf(e); return e === R.lo ? R.hi : R.lo; };
@@ -9001,6 +9169,7 @@ const vacAll = ac => [...new Set([...(APT.vacExits ? APT.vacExits(ac) : []), ...
 function exitCheck(ac, ex){
   const P = vacPos(ac); if (!P || !HOLDS[ex]) return null;
   const { R, dir, m, v } = P, f = FIL[ex] && FIL[ex][dir > 0 ? 'W' : 'E'], fm = f && f.length ? f[0][0] : HOLDS[ex].m;
+  if (HOLDS[ex].on && R.id && HOLDS[ex].on !== R.id) return null;   // an exit off another runway (planned before the runway changed)
   const ahead = (fm - m)*dir, need = 15 + stopDist(v, vacMax(ac)), back = ahead < need;
   return { ok: !back || !R.ends, back, ahead, dec: Math.max(0, v*v - VAC_TURN*VAC_TURN)*0.5144/(2*Math.max(1, ahead - 15)) };
 }
@@ -9605,7 +9774,7 @@ function commandRun(str){
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
       if (ac.depVac) { sys(`${ac.cs} is still vacating the runway: give it its taxi once it is clear.`); continue; }
       const ihp = toks[i+1] && IHPS[toks[i+1]] && !HOLDS[toks[i+1]] ? IHPS[toks[++i]] : null;   // an intermediate holding point on the way
-      let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' ? ac.hp : depHold(ac));
+      let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' && !(APT.taxiCheck && APT.taxiCheck(ac, ac.hp)) ? ac.hp : depHold(ac));   // its holding point, unless the runway has changed under it
       if (APT.depHoldAs) hp = APT.depHoldAs(ac, hp);   // a name with a holding point each side of the runway: the side departures use
       if (toks[i+1] === 'VIA' && /^(RWY|RUNWAY)$/.test(toks[i+2] || '') && toks[i-1] && HOLDS[toks[i]]) { i += 2; if (!rwyTaxi(ac, toks[i-2], said, reads)) return; continue; }   // along the runway
       const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
@@ -11327,7 +11496,7 @@ function renderAtis(){
     <div class="ph"><span class="lbl">ATIS</span><button id="atisRead" class="atis-letter" title="Read the ATIS broadcast">${S.atis}</button>${APT.splitRwy ? '' : `<span class="lbl dimmer">${phonetic(S.atis)}</span>`}
       <span class="grow"></span>${S.atisAlert ? '<button id="atisWarn" class="atis-warn" title="The ATIS has changed: check the runway in use and your clearances, then click to acknowledge">ATIS</button>' : ''}<span class="lbl">${APT.rwyConfigs ? 'Flow' : APT.splitRwy ? 'Land' : 'Runway'}</span>
       ${APT.rwyPickers ? APT.rwyPickers.map(k => `<span class="seg sm" title="${k.label}: runway in use"><span class="dimmer" style="padding:0 6px;align-self:center">${k.label}</span>${k.opts.map(r => `<button data-pk="${k.key}" data-r="${r}" class="${k.get() === r ? 'on' : ''}">${r}</button>`).join('')}</span>`).join('')
-        : APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" class="${!S.rops && APT.configOf(S.rwy) === c.key ? 'on' : ''}" title="Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}">${c.name}</button>`).join('')}</span>`
+        : APT.rwyConfigs ? `<span class="seg sm">${APT.rwyConfigs.map(c => `<button data-cfg="${c.land}" data-key="${c.key}" class="${!S.rops && APT.configOf(S.rwy) === c.key ? 'on' : ''}${c.ok === false ? ' dim' : ''}" title="${APT.setConfig ? `Preference ${c.key}: ` : ''}Land ${c.lands.join(' and ')}, depart ${c.deps.join(' and ')}${c.ok === false ? ' (not usable now)' : ''}">${c.name}</button>`).join('')}</span>`
         : RW_ENDS.length > 2 ? `<select id="rwSel" class="rwsel" aria-label="Landing runway">${RW_ENDS.map(r => `<option${r === S.rwy ? ' selected' : ''}>${r}</option>`).join('')}</select><span class="lbl">Dep</span><select id="drSel" class="rwsel" aria-label="Departure runway">${RW_ENDS.map(r => `<option${r === depRw() ? ' selected' : ''}>${r}</option>`).join('')}</select>`
         : `<span class="seg sm"><button id="rwHi" class="${S.rwy===RW_HI?'on':''}">${RW_HI}</button><button id="rwLo" class="${S.rwy===RW_LO?'on':''}">${RW_LO}</button></span>${APT.splitRwy ? `<span class="lbl">Dep</span><span class="seg sm"><button id="drHi" class="${depRw()===RW_HI?'on':''}">${RW_HI}</button><button id="drLo" class="${depRw()===RW_LO?'on':''}">${RW_LO}</button></span>` : ''}`}${ROPS_ON ? `<button id="ropsBtn" class="rops-btn${S.rops ? ' on' : ''}" title="Set each runway to arrivals, departures, mixed or closed">Runways${S.rops ? ' ·&nbsp;custom' : ''}</button>` : ''}</div>
     ${ROPS_ON && S.ropsOpen ? ropsPanel() : ''}
@@ -11363,7 +11532,7 @@ function renderAtis(){
   $('atis').querySelector('.metar').textContent = w.raw;
   $('atisRead').onclick = () => openAtis();
   if (APT.rwyPickers) $('atis').querySelectorAll('[data-pk]').forEach(bt => bt.onclick = () => APT.rwyPickers.find(k => k.key === bt.dataset.pk).set(bt.dataset.r));
-  if (APT.rwyConfigs) $('atis').querySelectorAll('[data-cfg]').forEach(bt => bt.onclick = () => setRwy(bt.dataset.cfg));
+  if (APT.rwyConfigs) $('atis').querySelectorAll('[data-cfg]').forEach(bt => bt.onclick = () => APT.setConfig ? APT.setConfig(bt.dataset.key) : setRwy(bt.dataset.cfg));   // Schiphol: a preference, several share a landing runway
   else if ($('rwSel')) { $('rwSel').onchange = e => setRwy(e.target.value); $('drSel').onchange = e => setDepRwy(e.target.value); }
   else { $('rwHi').onclick = () => setRwy(RW_HI); $('rwLo').onclick = () => setRwy(RW_LO); }
   if ($('drHi')) { $('drHi').onclick = () => setDepRwy(RW_HI); $('drLo').onclick = () => setDepRwy(RW_LO); }
@@ -17019,7 +17188,7 @@ function aiDirect(ac, seat){
 // never cleared that would land well before its slot (it would close up on the one ahead)
 // the airports it runs at: those where seeded all-AI runs showed it landing more and losing separation less than the
 // sequencing before it (tools/bench.cjs); elsewhere that sequencing is kept (aiSequenceOld) until it is tuned there
-const AMAN_ON = typeof AIRPORT !== 'undefined' && ['EIDW', 'EGLL', 'EGKK', 'LEMD', 'LPMA', 'LOWI', 'YSSY', 'EGPH'].includes(AIRPORT);
+const AMAN_ON = typeof AIRPORT !== 'undefined' && ['EIDW', 'EGLL', 'EGKK', 'LEMD', 'LPMA', 'LOWI', 'YSSY', 'EGPH', 'EHAM'].includes(AIRPORT);
 const AMAN_HORIZON = 1200;   // seconds to touchdown: further out an arrival has a slot, but its approach clearance waits
 // the arc fixes of a point merge (Dublin): where APT.aiFloor holds an arrival at the arc's level
 const arcFix = id => !!APT.aiFloor && APT.aiFloor({ kind: 'ARR', route: [id] }) > 0;
@@ -18158,8 +18327,9 @@ function teamAnswers(low){
 
 // ── what the team says
 // landings an hour the airport declares in good weather (its single landing runway, or the pair it lands on)
-const ARR_CAP = { EGLL: 44, EGKK: 30, EIDW: 32, EGCC: 34, EGAA: 20, EGGD: 20, EGPH: 22, EGNT: 18, KJFK: 40, OMDB: 40, YSSY: 44, LEMD: 48, LSGG: 28, EGLC: 18, LXGB: 10, LPMA: 12, LOWI: 12 };
-const capHour = () => { let c = ARR_CAP[APT.icao] || 28; if (S.lvpOn || (typeof lvpNeeded === 'function' && lvpNeeded())) c = Math.round(c*0.6); else if (S.wx.gust >= 25 || S.wx.cb) c = Math.round(c*0.85); return c; };
+const ARR_CAP = { EHAM: 68, EGLL: 44, EGKK: 30, EIDW: 32, EGCC: 34, EGAA: 20, EGGD: 20, EGPH: 22, EGNT: 18, KJFK: 40, OMDB: 40, YSSY: 44, LEMD: 48, LSGG: 28, EGLC: 18, LXGB: 10, LPMA: 12, LOWI: 12 };
+// (an airport with a declared rate for each mode of its runways gives it: APT.arrCap, Schiphol)
+const capHour = () => { let c = (APT.arrCap ? APT.arrCap() : ARR_CAP[APT.icao]) || 28; if (S.lvpOn || (typeof lvpNeeded === 'function' && lvpNeeded())) c = Math.round(c*0.6); else if (S.wx.gust >= 25 || S.wx.cb) c = Math.round(c*0.85); return c; };
 // flights due in the window (minutes from now): arrivals still to come (not yet on the scope, or in the air by their
 // estimate) and departures by their off-blocks time (parked ones by when they will ask to start, and any still to appear)
 function demandIn(from, to){
@@ -19332,7 +19502,7 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 // route's altitude. Turned off it lower than that, it flies over the towns the route avoids, and the complaints come in
 // (more of them at night). At night each movement also uses the airport's night quota: quota count (QC) points for
 // its noise class, and at some airports a number of movements; going over the session's share costs 20 points a time.
-// The UK airports use their real rules (NOISE_RULES below); everywhere else keeps the generic ones (GENERIC_NOISE).
+// The UK airports and Schiphol use their real rules (NOISE_RULES below); everywhere else keeps the generic ones (GENERIC_NOISE).
 //
 // Quota count. The Department for Transport's notice for Heathrow, Gatwick and Stansted (summer 2026, para 6.1 and the
 // Schedule, para 12.1: https://ops.group/blog/wp-content/uploads/2026/04/EGLL-EGKK-noise-quota-system.pdf) classes each
@@ -19462,6 +19632,20 @@ const NOISE_RULES = {
   // the SIDs and the omnidirectional departures, until 4,000 ft unless ATC authorise otherwise.
   EGNT: { name: 'Newcastle', night: [23*60, 7*60], quotas: [],
     npr: ac => isProp(ac) && mtomOf(ac) <= 5700 ? 0 : 4000 },
+  // Schiphol. No quota count: the Besluit luchtverkeer limits the night (23:00 to 07:00 local) to a number of
+  // movements, and the capacity declaration shares it out (winter 2026/27, Airport Coordination Netherlands: 8,839 night
+  // movements over the 22-week season; summer the rest of the yearly 27,000, 18,161). Aircraft with a cumulative noise
+  // margin under 13 EPNdB may not use the airport between 22:00 and 06:00 UTC (AD 2.21 para 6): a scheduling rule, kept
+  // out of the traffic rather than scored here. Departures stay on their SID until 3,000 ft by day; at night (23:00 to
+  // 06:00) jets stay on it until FL90 (9,000 ft here); light propeller aircraft are not bound. Runways (AD 2.21 para 5.1,
+  // 22:30 to 06:30 local): no landings on 18C, 24, 36R, 04/22 or 09/27 and no take-offs from 36C, 18L, 04/22 or 09/27,
+  // and never landings on 36L or 18L or take-offs from 18R or 36R. The preference tables are eham-engine.js's.
+  EHAM: { name: 'Schiphol', night: [23*60, 7*60],
+    quotas: [{ name: 'night period', at: [23*60, 7*60], mv: { summer: 18161, winter: 8839 } }],
+    npr: (ac, m) => isProp(ac) && mtomOf(ac) <= 5700 ? 0 : nzIn([23*60, 6*60], m) && !isProp(ac) ? 9000 : 3000,
+    rwyNight: { at: [22*60 + 30, 6*60 + 30], arr: ['18C', '24', '36R', '04', '22', '09', '27'], dep: ['36C', '18L', '04', '22', '09', '27'],
+      why: 'from 22:30 to 06:30 there are no landings on 18C, 24, 36R, 04/22 or 09/27 and no take-offs from 36C, 18L, 04/22 or 09/27 unless no other runway can be used' },
+    rwyAlways: { arr: ['36L', '18L'], dep: ['18R', '36R'], why: 'the Polderbaan lands on 18R and departs from 36L only, the Aalsmeerbaan lands on 36R and departs from 18L only' } },
   // Belfast City is open 06:30 to 21:30 (EGAC AD 2.3), so it has no night quota; no noise route altitude is published
   // for it, so the generic 4,000 ft is kept.
   EGAC: { name: 'Belfast City', generic: true, night: [23*60, 6*60], quotas: [], npr: () => 4000 },
@@ -19492,10 +19676,13 @@ function noiseCmd(ac, toks){
 function noiseMove(ac){
   if (aiOwns(ac)) return;
   const R = noiseRules(ac), arr = ac.kind === 'ARR', m = nzMin();
+  // rwys: closed both ways at night; arr and dep: closed to landings or to take-offs (Schiphol)
+  const rwOf = () => arr ? ac.app || landRw(ac) : ac.depRwy || depRw(ac), shut = X => X.rwys || X[arr ? 'arr' : 'dep'] || [];
   if (R.rwyNight && nzIn(R.rwyNight.at, m) && !ac.nRwy) {
-    const rw = arr ? ac.app || landRw(ac) : ac.depRwy || depRw(ac);
-    if (R.rwyNight.rwys.includes(rw)) { ac.nRwy = true; SC(ac).pts -= 5; sys(`Noise: ${ac.cs} ${arr ? 'landed on' : 'departed from'} ${rw} at night: at ${R.name} ${R.rwyNight.why} (−5).`, true); }
+    const rw = rwOf();
+    if (shut(R.rwyNight).includes(rw)) { ac.nRwy = true; SC(ac).pts -= 5; sys(`Noise: ${ac.cs} ${arr ? 'landed on' : 'departed from'} ${rw} at night: at ${R.name} ${R.rwyNight.why} (−5).`, true); }
   }
+  if (R.rwyAlways && !ac.nRwy) { const rw = rwOf(); if (shut(R.rwyAlways).includes(rw)) { ac.nRwy = true; SC(ac).pts -= 5; sys(`Noise: ${ac.cs} ${arr ? 'landed on' : 'departed from'} ${rw}: at ${R.name} ${R.rwyAlways.why} (−5).`, true); } }
   const real = !R.generic && QC_TYPE[ac.t], q = real ? real[arr ? 0 : 1] : { J: 8, H: 4, M: 1, L: 0.5 }[ac.perf.wake] ?? 1;
   R.quotas.forEach((Q, i) => {
     if (!nzIn(Q.at, m)) return;
@@ -19510,6 +19697,7 @@ function noisePanel(){
   R.quotas.forEach((Q, i) => {
     if (!nzIn(Q.at, m) && !nzIn(R.night, m)) return;
     const N = NOISE.q[i] || { qc: 0, mv: 0 }, c = quotaCap(Q, 'qc'), v = quotaCap(Q, 'mv');
+    if (!c && v) { L.push(`Night movements, ${Q.name} ${nzHM(Q.at[0])}–${nzHM(Q.at[1])}: ${N.mv} of ${v.cap} used (tonight's share of the ${v.season} ${v.lim.toLocaleString('en-GB')})`); return; }   // a movement limit only (Schiphol)
     L.push(`Night quota${R.generic ? '' : `, ${Q.name} ${nzHM(Q.at[0])}–${nzHM(Q.at[1])}`}: ${qcFmt(N.qc)} of ${c && (c.cap ?? c)} QC points${v ? `, ${N.mv} of ${v.cap} movements` : ''} used${c && c.lim ? ` (tonight's share of the ${c.season} ${c.lim.toLocaleString('en-GB')})` : ''}`);
   });
   if (R.rwyNight && nzIn(R.rwyNight.at, m)) L.push(`Night: ${R.rwyNight.why}.`);
