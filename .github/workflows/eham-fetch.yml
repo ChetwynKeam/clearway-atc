@@ -1,0 +1,50 @@
+name: Fetch EHAM data
+# One-off for the Amsterdam Schiphol (EHAM) airport build: the Dutch AIP (LVNL eAIP) part AD 2 EHAM and every chart it
+# lists in AD 2.24 (aerodrome, ground movement, parking/docking, SIDs, STARs, approaches), for the AIRAC amendments in
+# AMDTS, published to the eham-data branch. The aerodrome itself comes from the OpenStreetMap API (tools/eham/README.md).
+on:
+  workflow_dispatch:
+  push:
+    branches: [amsterdam-eham]
+    paths: ['.github/workflows/eham-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          set +e
+          mkdir -p out && cd out
+          UA="Mozilla/5.0 (clearway-atc-build; github.com/ChetwynKeam/clearway-atc)"
+          for A in "AIRAC%20AMDT%2012-2026_2026_11_26" "AIRAC%20AMDT%2011-2026_2026_10_29"; do
+            for ROOT in "https://eaip.lvnl.nl/web/eaip/$A" "https://eaip.lvnl.nl/$A"; do
+              D=$(echo "$A" | sed 's/%20/_/g'); mkdir -p "$D"
+              for P in "eAIP/EH-AD%202%20EHAM%201-en-GB.html" "eAIP/EH-AD%202%20EHAM%202-en-GB.html" "eAIP/EH-AD%202%20EHAM%203-en-GB.html" "EH-Cover%20Page-en-GB.html"; do
+                curl -sSfL -m 120 -A "$UA" "$ROOT/$P" -o "$D/$(basename "$P" | sed 's/%20/_/g')" && echo "OK $ROOT/$P"
+              done
+              if ls "$D"/*EHAM_1*.html >/dev/null 2>&1; then echo "$ROOT" > "$D/ROOT"; break; fi
+            done
+            ROOT=$(cat "$D/ROOT" 2>/dev/null) || continue
+            # every PDF the AD 2 pages link to (the charts of AD 2.24) and the AD 2 EHAM PDF
+            cat "$D"/*.html | grep -oE 'href="[^"]+\.pdf"' | sed 's/href="//;s/"$//' | sort -u > "$D/links.txt"
+            cat "$D/links.txt"
+            while read -r L; do
+              U=$(python3 -c "import sys,urllib.parse;print(urllib.parse.urljoin(sys.argv[1]+'/eAIP/x.html',sys.argv[2]))" "$ROOT" "$L")
+              F="$D/pdf/$(basename "$L" | sed 's/%20/_/g')"; mkdir -p "$D/pdf"
+              curl -sSfL -m 180 -A "$UA" "$U" -o "$F" && echo "got $F"
+            done < "$D/links.txt"
+            for C in ADC GMC-1 GMC-2 GMC-3 APDC-1 APDC-A APDC-B APDC-C APDC-D APDC-E APDC-F APDC-G APDC-H APDC-J APDC-K APDC-M APDC-R APDC-S APDC-U APDC-Y SID-OV STAR; do
+              F="$D/pdf/EHAM-$C.pdf"; [ -s "$F" ] || curl -sSfL -m 180 -A "$UA" "$ROOT/documents/Root_WePub/Charts/AD/EHAM/EHAM-$C.pdf" -o "$F" && echo "got $F"
+            done
+            curl -sSfL -m 180 -A "$UA" "$ROOT/documents/PDF/AMDT.pdf" -o "$D/AMDT.pdf"
+          done
+          find . -type f | sort; du -sh .
+      - name: Publish to eham-data branch
+        run: |
+          cd out
+          git init -q -b eham-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "EHAM data"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" eham-data
