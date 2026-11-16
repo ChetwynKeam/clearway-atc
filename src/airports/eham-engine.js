@@ -229,8 +229,12 @@ for (const [id, e, n] of G.nodes) gn(id, ...inF0(e, n));
 for (const [id, e, n] of G.rnodes) gn(id, ...inF0(e, n));
 // a runway crossing (through an x node on the centreline) follows its holding points' own links to the runway edge, so it
 // is an unpainted link (bare): drawn as those links and the runway, not as a lane of its own
+// the P-holding (P1, P2, P3 between B and A, north-east of the D and E piers): three one-way lanes, flown from B
+// towards A (south-west), where arrivals queue out of the way for a stand that is still occupied. ow: 1 a → b, -1 b → a
+const P_LANES = { 'n369>n352': -1, 'n359>n370': 1, 'n558>n560': -1 };
 for (const [a, b, tw, mid] of G.edges) { const n0 = GE.length; chain(a, mid.map(([e, n]) => inF0(e, n)), b, tw);
-  if (a[0] === 'x' || b[0] === 'x') for (let i = n0; i < GE.length; i++) GE[i].bare = true; }
+  if (a[0] === 'x' || b[0] === 'x') for (let i = n0; i < GE.length; i++) GE[i].bare = true;
+  const ow = P_LANES[a + '>' + b]; if (ow) for (let i = n0; i < GE.length; i++) GE[i].ow = ow; }
 const HOLDS = {}, FIL = {};
 const CAT23 = new Set(G.cat23 || []);
 for (const [k, [node, rwy, on, m, off, dirs, end]] of Object.entries(G.holds)) {
@@ -298,6 +302,9 @@ const PHON = {};
 for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
 for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);
 const IHP_LIST = (G.ihps || []).filter(([id, node]) => GN[node]).map(([id, node]) => ({ id, node, ph: twyWords(id), alias: [] }));
+// the P-holding positions: one in the middle of each lane (TAXI P1), where an arrival waits facing A for its stand
+for (const [id, a, b] of [['P1', 'n352', 'n369'], ['P2', 'n359', 'n370'], ['P3', 'n560', 'n558']])
+  IHP_LIST.push({ id, tw: id, at: [(GN[a].p[0] + GN[b].p[0])/2, (GN[a].p[1] + GN[b].p[1])/2], ph: twyWords(id), alias: [] });
 // ── the aprons ATC does not control (AD 2.20 paras 12 and 13). The J-apron, with taxiway A20 along it: Apron Control
 // (121.880) moves its aircraft, as far as the ATC service boundary on A20 at the apron's north end; the K-apron
 // (Schiphol-East, business aviation): Schiphol Amsterdam General Aviation (121.930) allocates the stands and
@@ -648,7 +655,7 @@ const APT = {
   get tower(){ return [EHAM.UNITS.twr.name, twrOf(S.rwy)]; },
   gnd: [EHAM.UNITS.gnd.name, EHAM.UNITS.gnd.freq],
   runways: RWY_LIST, rwyHalfWidth: 22.5, holdSigns: true,
-  ihps: IHP_LIST.map(({ id, node, alias }) => ({ id, node, alias })),
+  ihps: IHP_LIST.map(({ id, node, tw, at, alias }) => ({ id, node, tw, at, alias })),
   // independent parallel runways (18R, 18C and 36R, 36C more than 1.5 km apart): a departure off one and an arrival on
   // (or going around from) another close in are separated by the SID and missed approach tracks
   sepOk: (a, b, d) => { const rw = x => x.kind === 'ARR' ? (x.app || x.gaRwy) : depRw(x); const ra = rw(a), rb = rw(b);
