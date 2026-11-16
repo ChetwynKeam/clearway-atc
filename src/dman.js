@@ -217,10 +217,22 @@ function dmBody(){
 }
 function dmRender(){
   const on = DM.open || (DM.win && !DM.win.closed); if (!on) { clearInterval(DM.timer); DM.timer = 0; return; }
+  if (DM.touch) return;   // not while a finger (or the mouse) is on the table: it would jump back under it
   const html = dmBody();
-  const d = document.getElementById('dmandock'); if (d) { const b = d.querySelector('.dm-body'), st = b.scrollTop; b.innerHTML = html; b.scrollTop = st; }
-  if (DM.win && !DM.win.closed) { const b = DM.win.document.querySelector('.dm-body'); if (b) b.innerHTML = html; }
+  // redrawn every second: each table keeps its sideways scroll (on a phone it is wider than the screen), the panel its place
+  const put = b => { if (!b) return; const xs = [...b.querySelectorAll('.dm-wrap')].map(w => w.scrollLeft), st = b.scrollTop; b.innerHTML = html; b.querySelectorAll('.dm-wrap').forEach((w, i) => { w.scrollLeft = xs[i] ?? xs[0] ?? 0; }); b.scrollTop = st; };
+  const d = document.getElementById('dmandock'); if (d) put(d.querySelector('.dm-body'));
+  if (DM.win && !DM.win.closed) put(DM.win.document.querySelector('.dm-body'));
 }
+// a finger or the mouse held on the panel (scrolling the table): no redraw until a moment after it lets go
+function dmHold(doc){
+  const on = e => { if (e.target.closest && e.target.closest('.dm-body')) { DM.touch = true; clearTimeout(DM.touchT); } };
+  const off = () => { if (!DM.touch) return; clearTimeout(DM.touchT); DM.touchT = setTimeout(() => { DM.touch = false; dmRender(); }, 1500); };
+  doc.addEventListener('pointerdown', on, true); doc.addEventListener('touchstart', on, { capture: true, passive: true });
+  for (const ev of ['pointerup', 'pointercancel', 'touchend', 'touchcancel']) doc.addEventListener(ev, off, true);
+  doc.addEventListener('scroll', e => { if (e.target.classList && e.target.classList.contains('dm-wrap')) { DM.touch = true; off(); } }, true);
+}
+dmHold(document);
 function dmClick(e){
   const b = e.target.closest && e.target.closest('[data-dmd]'); if (b) { command(`${b.dataset.dmd} TSAT`); DM.planT = -1; dmRender(); return; }
   const tr = e.target.closest && e.target.closest('tr[data-dmcs]'); if (tr) { const ac = S.acs.find(a => a.cs === tr.dataset.dmcs); if (ac) select(ac); dmRender(); }
@@ -245,7 +257,7 @@ function dmPop(){
   if (DM.win && !DM.win.closed) { DM.win.focus(); return; }
   const w = popWin('cwDman', `${APT.icao} departure manager`, 900, 760); if (!w) return;
   DM.win = w; w.document.body.innerHTML = `<div class="cb-page am-page"><div class="cb-top"><b>${esc(APT.name)} · departure manager</b></div><div class="dm-body am-body"></div></div>`;
-  w.document.addEventListener('click', dmClick); w.document.addEventListener('change', dmChange);
+  w.document.addEventListener('click', dmClick); w.document.addEventListener('change', dmChange); dmHold(w.document);
   if (!DM.timer) DM.timer = setInterval(dmRender, 1000);
   dmRender();
 }
