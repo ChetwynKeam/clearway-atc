@@ -166,6 +166,7 @@ const AP_DATA = {ap_data};
 {r('gflow.js')}
 {r('voice.js')}
 {r('landline.js')}
+{r('liveshift.js')}
 {r('radio.js')}
 {r('site.js')}
 {site}

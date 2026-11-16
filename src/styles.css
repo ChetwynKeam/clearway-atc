@@ -1420,3 +1420,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
 .ll-fb{font:12px var(--font-data);padding:6px 14px;border-bottom:1px solid var(--line,#ccd);color:var(--ink-2)}
 .ll-fb.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 8%,transparent)}.ll-fb.bad{color:var(--alert);background:color-mix(in srgb,var(--alert) 7%,transparent)}
 .tc-in .ll-talk{flex:none}
+/* a break in a Live now shift (liveshift.js): a bar while the colleague has your positions */
+.lbrk{position:fixed;left:50%;top:62px;transform:translateX(-50%);z-index:90;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px);padding:8px 14px;border-radius:10px;background:var(--panel);color:var(--ink);border:1px solid var(--amber);box-shadow:var(--shadow-2,0 6px 20px rgba(0,0,0,.3));font-size:13px}
+.lbrk b{color:var(--amber)}.lbrk-t{font-family:var(--font-data);font-size:12px;color:var(--ink-2)}
+.lbrk{width:min(460px,calc(100vw - 20px));box-sizing:border-box}.lbrk .btn{padding:4px 10px;font-size:12px;min-height:0}

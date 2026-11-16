@@ -82,7 +82,7 @@ function llMatch(raw){
   if (/ regulat/.test(s) && !(typeof TEAM !== 'undefined' && TEAM.ask[0] && TEAM.ask[0].opts.some(o => (o.keys || []).includes('regulat')))) {
     if (typeof regulate !== 'function' || typeof TEAM === 'undefined' || !TEAM.people) return { why: 'The flow manager is only in the team chat on a shift.' };
     const n = (m = s.match(/ (\d{1,2}) /)) ? +m[1] : capHour(), r = regulate(n);
-    llTeam('ME', `Can we regulate the arrivals to ${n} an hour?`); llTeam('FMP', `Regulation in at ${n} an hour: ${r.n} inbound${r.n === 1 ? '' : 's'} delayed on the ground at origin, the longest by ${r.max} min.`);
+    llTeam('ME', `Can we regulate the arrivals to ${n} an hour?`); llTeam('FMP', r.live ? `I've asked for ${n} an hour: it would hold ${r.n} inbound${r.n === 1 ? '' : 's'} at origin, the longest by about ${r.max} min. They're real flights, so they still turn up when they really do.` : `Regulation in at ${n} an hour: ${r.n} inbound${r.n === 1 ? '' : 's'} delayed on the ground at origin, the longest by ${r.max} min.`);
     return { did: `arrivals regulated to ${n} an hour` };
   }
   // the call ringing on the board (the one named, else the oldest)
