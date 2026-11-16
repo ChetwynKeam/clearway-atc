@@ -167,6 +167,7 @@ const AP_DATA = {ap_data};
 {r('voice.js')}
 {r('landline.js')}
 {r('liveshift.js')}
+{r('standblock.js')}
 {r('radio.js')}
 {r('site.js')}
 {site}

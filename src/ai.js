@@ -346,6 +346,8 @@ function aiGround(ac){
     const sl = typeof SLOT !== 'undefined' && SLOT[ac.cs];
     if (sl && sl.ctot != null && nowMin() < sl.ctot - 20) return;   // its slot is a while off: it waits on stand
     { const fs = flowStop(ac); if (fs && fs.until - S.t > 300) { ac.aiWhy = `departures stopped until ${flowEnd(fs)}`; return; } if (/^departures stopped/.test(ac.aiWhy || '')) ac.aiWhy = ''; }   // a long departure stop: it waits on stand too
+    if (typeof blkWait === 'function' && blkWait(ac)) { ac.aiWhy = `waiting for ${(ac.blkBy || []).join(' and ') || 'the aircraft in the way'} to move`; return; }   // blocked in: the ones in the way move first (standblock.js)
+    if (/^waiting for .* to move$/.test(ac.aiWhy || '')) ac.aiWhy = '';
     if (!pushClear(ac) && aiSince(ac, n) < 150) return;
     if (!aiDo('GND', ac, 'PUSH')) aiDo('GND', ac, aiTaxiCmd(ac));
     return;
