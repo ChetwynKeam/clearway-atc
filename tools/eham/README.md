@@ -36,7 +36,9 @@ workspace).
      Hoofdvaart and the Hoofdweg).
 6. `make_profile.py boards-2026-11-16.json > ../../src/airports/eham.js`: the profile from `eham.template.js` (runways,
    ILS and missed approaches, frequencies, holds, the STARs to ARTIP, RIVER and SUGOL, the transitions and the SIDs,
-   airline and type tables) and the AMS boards
+   airline and type tables, the preferential runway system: the Besluit luchtverkeer's day and night preference tables,
+   AD 2.21's wind and visibility criteria and night runway restrictions, and the winter 2026/27 capacity declaration's
+   modes and wave schedule) and the AMS boards
    of Monday 16 November 2026 (from midday; the full day comes with Live now).
 7. `../eham_geo.py <eham-data>/geo ../../src/airports/eham.geo.json` (shapely): the approach map, the land less the
    IJsselmeer, the Markermeer and the other lakes.

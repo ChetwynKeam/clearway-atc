@@ -94,6 +94,7 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 700; letter-spacing
 .app .seg button { border: 0; background: transparent; padding: 5px 10px; }
 .app .seg button.on { background: var(--accent-soft); }
 .app .seg.sm button { padding: 2px 8px; }
+.app .seg button.dim:not(.on) { color: var(--dim); text-decoration: line-through; }
 .toolbar > button { background: rgba(255,255,255,.96); box-shadow: var(--shadow-1); }
 .hud-score { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; pointer-events: none; max-width: calc(100% - 230px); }
 .hud-score span { background: rgba(255,255,255,.94); border: 1px solid var(--line); border-radius: 3px; padding: 2px 8px; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }

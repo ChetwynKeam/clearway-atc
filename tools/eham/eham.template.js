@@ -107,14 +107,57 @@ const EHAM = (() => {
   const CTR = { n: ['Amsterdam Radar', '127.780'], e: ['Amsterdam Radar', '118.805'], s: ['Amsterdam Radar', '120.555'], w: ['Amsterdam Radar', '127.780'] };
   const TA = 3000, TZ = 'Europe/Amsterdam';
 
-  // ── runway combinations (preferential runway system, AD 2.21; refined in eham-engine.js): the landing runways and the
-  // take-off runways of each
-  const CONFIGS = {
-    south: { land: ['18R'], dep: ['24', '18L'], name: 'South: land 18R, depart 24 and 18L' },
-    north: { land: ['36R'], dep: ['36L'], name: 'North: land 36R, depart 36L' },
-    west:  { land: ['27'], dep: ['24'], name: 'West: land 27, depart 24' },
-    east:  { land: ['06'], dep: ['36L'], name: 'East: land 06, depart 36L' }
+  // ── the preferential runway system (Besluit luchtverkeer 2008 art. 3.1.5 and its tables, as amended; AD 2.21 para 4).
+  // Each preference: its main and second landing runways (L1, L2) and its main and second take-off runways (S1, S2).
+  // need: 'udp' good visibility and within the uniform daylight period, 'good' good visibility, 'marg' good or marginal
+  // visibility. conv: a dependent combination (a landing runway converging with a take-off runway, or a go-around across
+  // the departures), used only with the cloud base above 2,000 ft (LVNL, 2023). Preference 3 as changed in 2023 (LVNL's
+  // memo of 1 November 2023: land 06 and 18R, depart 09), and 2b (land 18R and 27) as in the 2026 table.
+  const PREF = {
+    day: [
+      { k: '1',  l: ['06', '36R'],  s: ['36L', '36C'], need: 'udp' },
+      { k: '2a', l: ['18R', '18C'], s: ['24', '18L'],  need: 'udp' },
+      { k: '2b', l: ['18R', '27'],  s: ['24', '18L'],  need: 'udp', conv: true },
+      { k: '3',  l: ['06', '18R'],  s: ['09'],         need: 'udp', conv: true },
+      { k: '4',  l: ['27', '18R'],  s: ['24', '18L'],  need: 'udp', conv: true },
+      { k: '5a', l: ['36R', '36C'], s: ['36L', '36C'], need: 'good' },
+      { k: '5b', l: ['18R', '18C'], s: ['18L', '18C'], need: 'good' },
+      { k: '6a', l: ['36R', '36C'], s: ['36L', '09'],  need: 'marg' },
+      { k: '6b', l: ['18R', '18C'], s: ['18L', '24'],  need: 'marg' }
+    ],
+    // 23:00 to 06:00 local: one landing and one take-off runway, in good or marginal visibility
+    night: [
+      { k: 'N1', l: ['06'],  s: ['36L'] },
+      { k: 'N2', l: ['18R'], s: ['24'] },
+      { k: 'N3', l: ['36C'], s: ['36L'] },
+      { k: 'N4', l: ['18R'], s: ['18C'] }
+    ]
   };
+  const NIGHT_TABLE = [23*60, 6*60];   // local time
+  // AD 2.21 para 5.1: runways never used one way, and the night restrictions (21:30 to 05:30 UTC in winter, 20:30 to
+  // 04:30 in summer: 22:30 to 06:30 local all year), from which ATC may deviate only when no other runway can be used
+  const ONEWAY = { arr: ['36L', '18L'], dep: ['18R', '36R'] };
+  const NIGHT_RWY = { at: [22*60 + 30, 6*60 + 30], arr: ['18C', '24', '36R', '04', '22', '09', '27'], dep: ['36C', '18L', '04', '22', '09', '27'] };
+  // wind criteria (AD 2.21 para 4.3.3; LVNL's runway allocation, Hesselink et al., ATM Seminar 2011): a runway is
+  // usable with a crosswind of 20 kt or less and a tailwind of 7 kt or less, gusts included (but only gusts of 10 kt or
+  // more over the mean wind), and no tailwind on a wet runway
+  const WIND = { cross: 20, tail: 7, tailWet: 0, gust: 10 };
+  // visibility (Besluit luchtverkeer): good from 5 km and a 1,000 ft cloud base, limited (low visibility) under 1,500 m
+  // or 300 ft, marginal in between
+  const VIS = { good: [5000, 1000], limited: [1500, 300] };
+  // the capacity declaration (Airport Coordination Netherlands, winter 2026/27 v1.0, 24 April 2026): the ATM modes and
+  // their hourly rates, and the day's mode schedule. The declaration's times are UTC (UTC+1 in winter); they are kept
+  // here in local time, the waves of KLM's hub following the local clock all year.
+  // L arrival peak (2 landing runways, 1 take-off), S departure peak (1 and 2), O off-peak (1 and 1), N night (1 and 1)
+  const CAP = { L: { arr: 68, dep: 38, name: 'Inbound peak' }, S: { arr: 36, dep: 74, name: 'Outbound peak' },
+    O: { arr: 36, dep: 40, name: 'Off-peak' }, N: { arr: 24, dep: 25, name: 'Night' } };
+  const hm = (h, m = 0) => h*60 + m;
+  const PEAKS = [
+    [hm(6), hm(7), 'O'], [hm(7), hm(7, 20), 'S'], [hm(7, 20), hm(7, 50), 'O'], [hm(7, 50), hm(9, 20), 'L'], [hm(9, 20), hm(10, 40), 'S'],
+    [hm(10, 40), hm(11), 'O'], [hm(11), hm(11, 40), 'L'], [hm(11, 40), hm(12, 40), 'S'], [hm(12, 40), hm(13), 'O'], [hm(13), hm(14), 'L'],
+    [hm(14), hm(15), 'S'], [hm(15), hm(15, 20), 'O'], [hm(15, 20), hm(16, 20), 'L'], [hm(16, 20), hm(18), 'S'], [hm(18), hm(18, 20), 'O'],
+    [hm(18, 20), hm(20), 'L'], [hm(20), hm(21, 40), 'S'], [hm(21, 40), hm(23), 'O']
+  ];
 
   // ── where each airline parks (Schiphol): KLM and the SkyTeam airlines at the B, C and D piers (Schengen) and the E, F
   // and G piers (intercontinental), KLM Cityhopper at B and C, the low-cost carriers at the H and M piers, cargo at the
@@ -137,14 +180,14 @@ const EHAM = (() => {
   const EXERCISES = {
     dep: { name: 'Schiphol 1 · A departure off 24', wx: 'south', rwy: '18R', sched: [{ cs: 'KLM1001', t: 'B738', k: 'DEP', d: 'EGLL', m: 0, stand: 'D5' }] },
     arr: { name: 'Schiphol 2 · From SUGOL to the ILS 18R', wx: 'south', rwy: '18R', sched: [{ cs: 'EZY7911', t: 'A320', k: 'ARR', o: 'EGKK', m: 0 }] },
-    mix: { name: 'Schiphol 3 · Land 18R, depart 24 and 18L', wx: 'south', rwy: '18R', sched: [{ cs: 'KLM1234', t: 'B738', k: 'ARR', o: 'EGLL', m: 0 },
+    mix: { name: 'Schiphol 3 · Land 18R, depart 24 and 18L', wx: 'south', rwy: '18R', peak: 'S', sched: [{ cs: 'KLM1234', t: 'B738', k: 'ARR', o: 'EGLL', m: 0 },
       { cs: 'KLC1361', t: 'E195', k: 'DEP', d: 'EDDF', m: 0, stand: 'B16' }, { cs: 'TRA5043', t: 'B738', k: 'DEP', d: 'LEMG', m: 2, stand: 'D7' }] }
   };
   const WX_PRESETS = {
-    south: { name: 'South-westerly: land 18R, depart 24 and 18L',  short: 'South-west', metar: 'EHAM 161225Z 22012KT 9999 FEW025 SCT040 11/07 Q1012' },
-    north: { name: 'Northerly: land 36R, depart 36L',              short: 'North',      metar: 'EHAM 161225Z 01010KT 9999 SCT030 08/03 Q1027' },
-    west:  { name: 'Westerly gale: land 27, depart 24',            short: 'Gale',       metar: 'EHAM 161225Z 26028G40KT 9000 -SHRA BKN018 10/07 Q0991' },
-    east:  { name: 'Easterly: land 06, depart 36L',                short: 'East',       metar: 'EHAM 161225Z 08012KT 9999 FEW030 05/M01 Q1030' },
+    south: { name: 'South-westerly: preference 2a, land 18R and 18C, depart 24 and 18L',  short: 'South-west', metar: 'EHAM 161225Z 22012KT 9999 FEW025 SCT040 11/07 Q1012' },
+    north: { name: 'Northerly: preference 1, land 06 and 36R, depart 36L and 36C', short: 'North',      metar: 'EHAM 161225Z 01010KT 9999 SCT030 08/03 Q1027' },
+    west:  { name: 'Westerly gale: one runway each, land 27, depart 24', short: 'Gale',       metar: 'EHAM 161225Z 26028G40KT 9000 -SHRA BKN018 10/07 Q0991' },
+    east:  { name: 'Easterly: preference 1, land 06 and 36R, depart 36L and 36C', short: 'East',       metar: 'EHAM 161225Z 08012KT 9999 FEW030 05/M01 Q1030' },
     fog:   { name: 'Fog: low visibility procedures, CAT III',      short: 'Fog',        metar: 'EHAM 160650Z 00000KT 0150 R18R/0200N FG VV001 03/03 Q1028' },
     calm:  { name: 'High pressure, light and variable',            short: 'Calm',       metar: 'EHAM 161225Z VRB02KT 9999 FEW040 09/03 Q1033' }
   };
@@ -190,7 +233,7 @@ const EHAM = (() => {
 
   return {
     icao: 'EHAM', iata: 'AMS', name: 'Amsterdam Schiphol', city: 'Amsterdam', country: 'Netherlands', arp: P('521829N', '0044551E'), elev: -11,
-    VAR, FIX, NAV, RWY, STARS, ILS, TRANS, MINS, HOLDS_AIR, SIDS, SID_BRG, INIT_CLIMB, DIR, PLACE_DIR, UNITS, CTR, TA, TZ, CONFIGS, TERMINAL_OF, TERMINAL_DEFAULT,
+    VAR, FIX, NAV, RWY, STARS, ILS, TRANS, MINS, HOLDS_AIR, SIDS, SID_BRG, INIT_CLIMB, DIR, PLACE_DIR, UNITS, CTR, TA, TZ, PREF, NIGHT_TABLE, ONEWAY, NIGHT_RWY, WIND, VIS, CAP, PEAKS, TERMINAL_OF, TERMINAL_DEFAULT,
     TIMETABLE, LONG_STAY, EXTRA, EXERCISES, WX_PRESETS, TEL, AIRLINE_ICAO, AIRLINE_TYPE, TYPES, PLACES, AIRPORTS, ALTERNATES,
     data: { metar: 'eham/metar.txt', flights: 'eham/flights.json' },
     features: { roadCrossing: false, sra: false, parallelRunways: true, crossings: true, pointMerge: false, faa: false }
