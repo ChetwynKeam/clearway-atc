@@ -1816,6 +1816,7 @@ function commandRun(str){
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
       if (driveOut(ac)) { sys(`${APT.standWord === 'gate' ? 'Gate' : 'Stand'} ${ac.stand.id} is a taxi-in, taxi-out stand: no push back. Give ${ac.cs} its taxi (TAXI) and it taxis out forwards.`); continue; }
       const dir = pushDir(ac, toks[i+1]); if (dir) i++;
+      { const why = typeof blkPushCheck === 'function' && blkPushCheck(ac, dir || pushFace(ac)); if (why) { sys(why, true); continue; } }   // something parked in the way (standblock.js)
       const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac), ac);
       ac.pushPts = pushPath(ac, face);
       setPath(ac, ac.pushPts, 3, ['pushed'], { reverse: true });
@@ -1876,6 +1877,7 @@ function commandRun(str){
       if (toks[i+1] === 'VIA' && /^(RWY|RUNWAY)$/.test(toks[i+2] || '') && toks[i-1] && HOLDS[toks[i]]) { i += 2; if (!rwyTaxi(ac, toks[i-2], said, reads)) return; continue; }   // along the runway
       const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
       { const why = APT.taxiCheck && APT.taxiCheck(ac, hp); if (why) { sys(why); continue; } }
+      if (ac.state === 'PARKED') { const why = typeof blkPushCheck === 'function' && blkPushCheck(ac); if (why) { sys(why, true); continue; } }   // off its stand: not with something parked in the way (standblock.js)
       const rt = ihp ? routeAc(ac, ihp.node, viaPen(via)) : taxiRoute(ac, hp, via);
       if (!rt) { sys(`No taxi route to holding point ${ihp ? ihp.id : hp}${taxiStart(ac)[1] != null ? ` going the way ${ac.cs} is facing: it can't turn round on the taxiway${ac.pushed && !ac.leftStand ? ' (Pull back to stand, then push the other way)' : ''}` : ''}.`); continue; }
       ac.hp = hp;
@@ -2172,6 +2174,7 @@ function step(dt){
   if (typeof cbStep === 'function') cbStep();
   if (typeof holdStep === 'function') holdStep(dt);
   if (typeof dmanStep === 'function') dmanStep();
+  if (typeof blkStep === 'function') blkStep();   // aircraft parked in the way of a departure moved first (standblock.js)
   if (typeof eqStep === 'function') eqStep();
   if (typeof vfrStep === 'function') vfrStep(dt);
   if (typeof ojtiStep === 'function') ojtiStep();
