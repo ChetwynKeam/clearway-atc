@@ -17,7 +17,7 @@
 //          EXIT_DEAD  an exit from which no stand can be reached facing forward
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
-const ALL = ['lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'yssy', 'egkk', 'lemd', 'egcc', 'egll', 'eidw', 'omdb', 'egaa', 'eggd', 'lsgg', 'egph'];
+const ALL = ['lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'yssy', 'egkk', 'lemd', 'egcc', 'egll', 'eidw', 'omdb', 'egaa', 'eggd', 'lsgg', 'egph', 'egnt'];
 const args = process.argv.slice(2), SHOTS = args.includes('--shots'), codes = args.filter(a => !a.startsWith('--')).length ? args.filter(a => !a.startsWith('--')) : ALL;
 const WT = { DEP_NONE: 5, ARR_NONE: 5, DEP_TURN: 3, ARR_TURN: 3, STAND_OFFPAVE: 3, GAP: 3, KINK: 3, ARR_INTO: 2, XCROSS: 2, OFFPAVE: 2, EXIT_DEAD: 2, ISLAND: 2, DEP_DETOUR: 1, DEADEND: 0.5, ORPHAN: 0 };
 const scoreOf = count => Object.entries(count).reduce((t, [k, n]) => t + (WT[k] ?? 1)*n, 0);
@@ -65,7 +65,10 @@ function audit(){
   // an airfield: a network with a holding point on it (Belfast has two). Nodes cut off from every airfield are an island
   const fields = new Set(Object.values(HOLDS).map(h => comp.get(h.node)));
   const field = id => comp.get(id);
-  sizes.forEach((n, c) => { if (c === main || (fields.has(c) && n > 30)) return; const mem = ids.filter(i => comp.get(i) === c), st = mem.filter(i => standNodes.has(i)).length;
+  // a network reached only over the runway, whose departures line up by backtracking on it (Newcastle's Golf Apron and
+  // maintenance area: H.back), is an airfield of its own however small
+  const backField = new Set(Object.values(HOLDS).filter(h => (h.back || []).length).map(h => comp.get(h.node)));
+  sizes.forEach((n, c) => { if (c === main || (fields.has(c) && n > 30) || backField.has(c)) return; const mem = ids.filter(i => comp.get(i) === c), st = mem.filter(i => standNodes.has(i)).length;
     add(n === 1 && !st ? 'ORPHAN' : 'ISLAND', mem[0], `${n} nodes cut off from the main network${st ? `, with ${st} stands` : ''}`, GN[mem[0]].p); });
   const deg = id => waysOn(id).filter(([v]) => !isR(v)).length + waysOn(id).filter(([v]) => isR(v)).length;
   const ends = ids.filter(id => !isR(id) && deg(id) === 1 && !standNodes.has(id) && !holdNodes.has(id) && !GN[id].adj.some(([v]) => isR(v)));   // a runway entry's end is joined to the runway
@@ -125,7 +128,8 @@ function audit(){
   // ── runway ends and their holding points ──
   const endsOf = new Set(); for (const h of Object.values(HOLDS)) for (const d of h.dirs || []) endsOf.add(d);
   const rwEnds = [...endsOf];
-  const holdsAt = rw => { const ks = Object.keys(HOLDS).filter(k => HOLDS[k].end === rw); return ks.length ? ks : Object.keys(HOLDS).filter(k => (HOLDS[k].dirs || []).includes(rw)); };
+  // a runway end's departure holding points: those at that end, and those that line up by backtracking to it (H.back)
+  const holdsAt = rw => { const ks = Object.keys(HOLDS).filter(k => HOLDS[k].end === rw || (HOLDS[k].back || []).includes(rw)); return ks.length ? ks : Object.keys(HOLDS).filter(k => (HOLDS[k].dirs || []).includes(rw)); };
   const holdsOn = rw => Object.keys(HOLDS).filter(k => (HOLDS[k].dirs || []).includes(rw));
   const pl = r => r ? pathLen(r.nodes) : Infinity;
   const stats = { stands: STANDS.length, nodes: N, edges: GE.length, rwEnds, depPairs: 0, arrPairs: 0 };

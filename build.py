@@ -6,7 +6,8 @@ EGKK: dist/egkk/index.html and dist/london-gatwick-atc.html; LEMD: dist/lemd/ind
 EGCC: dist/egcc/index.html and dist/manchester-atc.html; EGLL: dist/egll/index.html and dist/london-heathrow-atc.html;
 EGGD: dist/eggd/index.html and dist/bristol-atc.html; LSGG: dist/lsgg/index.html and dist/geneva-atc.html; YSSY: dist/yssy/index.html and dist/sydney-atc.html;
 EIDW: dist/eidw/index.html and dist/dublin-atc.html; OMDB: dist/omdb/index.html and dist/dubai-atc.html;
-EGPH: dist/egph/index.html and dist/edinburgh-atc.html."""
+EGPH: dist/egph/index.html and dist/edinburgh-atc.html;
+EGNT: dist/egnt/index.html and dist/newcastle-atc.html."""
 import pathlib
 root = pathlib.Path(__file__).parent
 src = root/'src'
@@ -65,6 +66,9 @@ AIRPORTS = {
     'LSGG': dict(title='Geneva · Clearway ATC Simulator', desc='Clearway: air traffic control at Geneva (LSGG), between the Jura and the Alps: one runway, 04/22, three round satellites with taxi-in, taxi-out stands and apron buses, RNAV SIDs, ILS approaches and live traffic.',
                  geo='airports/lsgg.geo.json', profile=['airports/lsgg.js', 'airports/lsgg-ground.js', 'airports/lsgg-engine.js'], site=['airports/lsgg-site.js'], artifact='geneva-atc.html', page='lsgg/index.html',
                  data=('LSGG', 'airports/lsgg.js')),
+    'EGNT': dict(title='Newcastle · Clearway ATC Simulator', desc='Clearway: air traffic control at Newcastle (EGNT): one runway, 07/25, with taxiway Delta the length of it, GIRLI SIDs and omni-directional departures, the POL and RIMTO STARs to the ETSES hold, ILS and RNP approaches, every stand and holding point off the AIP charts and a real day of Jet2, easyJet, Ryanair and KLM traffic.',
+                 geo='airports/egnt.geo.json', profile=['airports/egnt.js', 'airports/egnt-ground.js', 'airports/egnt-engine.js'], site=['airports/egnt-site.js'], artifact='newcastle-atc.html', page='egnt/index.html',
+                 data=('EGNT', 'airports/egnt.js')),
 }
 # One website: the airport whose page is index.html hosts every page of the site (home, airports, every briefing, the
 # whole Academy, Career). The other airports' pages only run their simulator (#sim, #ex/<key>, #wx/<preset>, #live)

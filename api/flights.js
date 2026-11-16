@@ -23,6 +23,7 @@ const BOARDS = {
   EIDW: { codes: ['dub'], tz: 'Europe/Dublin', pages: [-1, 0, 1, 2] },
   OMDB: { codes: ['dxb'], tz: 'Asia/Dubai', pages: [-1, 0, 1, 2, 3] },
   LSGG: { codes: ['gva'], tz: 'Europe/Zurich', pages: [-1, 0, 1, 2] },
+  EGNT: { codes: ['ncl'], tz: 'Europe/London', pages: [-1, 0, 1, 2] },
 };
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, OPTIONS' };
 const MON = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };

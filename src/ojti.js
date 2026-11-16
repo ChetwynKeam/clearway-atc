@@ -220,6 +220,14 @@ const NOISE_RULES = {
   // any turn (EGAA AD 2.21 para 3).
   EGAA: { name: 'Belfast International', night: [22*60, 7*60], quotas: [],
     npr: (ac, m) => nzIn([22*60, 7*60], m) && mtomOf(ac) > 5700 ? 2000 : 0, what: 'turned off the runway track' },
+  // Newcastle. No night quota and no night restrictions: ACL's summer 2026 capacity declaration gives its night noise
+  // policy as "no restrictions" (https://www.acl-uk.org/wp-content/uploads/2026/02/NCL-Cap-Dec-S26.pdf), and the noise
+  // action plan 2024-28 (https://www.newcastleairport.com/media/ofoemavz/noise-action-plan-2025-lr-compressed_compressed-1.pdf)
+  // adds none; 23:00 to 07:00 is kept as the night period it reports against. NPRs (EGNT AD 2.21; the VATSIM UK vMATS
+  // Part 2, GEN 2.1): every jet, and any other aircraft over 5,700 kg, stays on its noise preferential route, built into
+  // the SIDs and the omnidirectional departures, until 4,000 ft unless ATC authorise otherwise.
+  EGNT: { name: 'Newcastle', night: [23*60, 7*60], quotas: [],
+    npr: ac => isProp(ac) && mtomOf(ac) <= 5700 ? 0 : 4000 },
   // Belfast City is open 06:30 to 21:30 (EGAC AD 2.3), so it has no night quota; no noise route altitude is published
   // for it, so the generic 4,000 ft is kept.
   EGAC: { name: 'Belfast City', generic: true, night: [23*60, 6*60], quotas: [], npr: () => 4000 },
