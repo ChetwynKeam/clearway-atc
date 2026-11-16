@@ -1993,6 +1993,12 @@
         <div class="sub">LSGG · RWY 04/22 3,919 m · ELEV 1,411 ft · ILS · TA 7000 · Arrival 136.255 · Departure 119.530 · Tower 118.705 · Ground 121.680</div>
         <p style="margin-top:14px">You hold all the positions for the shift you pick below. Bring arrivals off their STARs onto the ILS, and fit the departures from the terminal, the satellites and the aprons between the landings on the one runway. The satellite stands are taxi-in, taxi-out, and apron buses carry the passengers.</p>
         </div>
+        <div data-only="EHAM">
+        <div class="eyebrow">Position briefing</div>
+        <h1>Schiphol Approach, Tower &amp; Ground</h1>
+        <div class="sub">EHAM · six runways: 18R/36L 3800 × 60 m (Polderbaan), 18C/36C 3300 m, 18L/36R 3400 m, 06/24 3500 m, 09/27 3453 m, 04/22 2014 m · ELEV −11 ft · ILS CAT III · TA 3000 · Approach 121.205 · Arrival 118.405 · Tower 118.280 / 118.105 / 119.230 / 135.110 · Ground 121.560 / 121.905 / 121.805 / 121.705 · Delivery 121.980</div>
+        <p style="margin-top:14px">You hold every position for the shift you pick below. The preferential runway system sets the combination: in the usual south-westerly arrivals land on 18R, the Polderbaan, and departures leave from 24 and 18L. Bring arrivals off the STARs to ARTIP, RIVER and SUGOL onto the ILS, and send each departure to the take-off runway that suits its direction. Each runway pair has its own Tower and Ground frequency.</p>
+        </div>
         <div data-only="EGPH">
         <div class="eyebrow">Position briefing</div>
         <h1>Edinburgh Approach, Tower &amp; Ground</h1>
@@ -2128,6 +2134,11 @@
           <li>Runway 22 departures enter at Alfa at the north-east end, runway 04 departures at Golf at the south-west end. The satellite stands (31 to 34, 42 to 44, 121 to 127) have no push back: give the aircraft its TAXI and it leaves forwards. North Apron traffic stays on its own side: it vacates at Q or P and departs from Q1 (04) or P1 (22), the intersections on taxiways Q and P. Intersection departures from the south side: F for 04, C for 22.</li>
           <li>Type commands in the bar under the scope, for example <code>SWR123 TAXI</code> or <code>EZY8821 A100 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
+        <ul data-only="EHAM">
+          <li>Several runways at once: arrivals land on the runway on their side (18R in the south-westerly), departures take off from the runway that suits their direction (24 or 18L). Independent parallel runways need no gaps between them.</li>
+          <li>Departures enter at the runway ends (S7 for 24, E6 for 18L, W1 for 18C, V4 for 36L) or at the AIP's intersections; heavies use the full length. Hot spots HS1 (C and D at A and B), HS2 (G1 by the K-apron exit GD) and HS3 (W9, W10, Z, A and B by the 36C end) are marked on the ground view.</li>
+          <li>Type commands in the bar under the scope, for example <code>KLM1001 PUSH</code> or <code>EZY7911 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
+        </ul>
         <ul data-only="EGPH">
           <li>One runway for everything: space arrivals on final with a gap for a departure, line the departure up behind each landing and clear it once the arrival has vacated onto Alfa.</li>
           <li>Runway 24 departures enter at Delta 1 (or Charlie 1, an intersection), runway 06 departures at Alfa 1 (or Bravo 1). No releases are needed. Heavies and Code E aircraft use the full length and vacate at the end. Hot spot HS1 is where Charlie, Lima and Mike meet Alfa.</li>
@@ -2159,7 +2170,7 @@
           <li>Type commands in the bar under the scope, for example <code>TAP1681 A30 APP</code>, or use the buttons on the selected flight. The Academy has the full list.</li>
         </ul>
         <div class="row"><button class="btn primary" id="startBtn">Open the position</button><button class="btn" id="newBtn" type="button">New session</button><a class="btn" href="#training">Training guide</a></div>
-        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span><span data-only="KJFK">Data from FAA terminal procedures for KJFK.</span><span data-only="EGKK">Data from UK AIP AD 2 EGKK.</span><span data-only="EGCC">Data from UK AIP AD 2 EGCC.</span><span data-only="EGGD">Data from UK AIP AD 2 EGGD.</span><span data-only="EGNT">Data from UK AIP AD 2 EGNT.</span><span data-only="EGPH">Data from UK AIP AD 2 EGPH.</span><span data-only="EGAA">Data from UK AIP AD 2 EGAA and EGAC.</span><span data-only="EGLL">Data from UK AIP AD 2 EGLL.</span><span data-only="LEMD">Data from AIP España AD 2 LEMD.</span><span data-only="YSSY">Data from Airservices Australia AIP and ERSA for YSSY.</span><span data-only="EIDW">Data from AIP Ireland AD 2 EIDW.</span><span data-only="OMDB">Data from the UAE AIP AD 2 OMDB.</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
+        <p class="fine"><span data-only="LXGB">Data from UK Mil AIP AD 2 LXGB.</span><span data-only="LPMA">Data from AIP Portugal AD 2 LPMA.</span><span data-only="EGLC">Data from UK AIP AD 2 EGLC.</span><span data-only="LOWI">Data from AIP Austria AD 2 LOWI.</span><span data-only="KJFK">Data from FAA terminal procedures for KJFK.</span><span data-only="EGKK">Data from UK AIP AD 2 EGKK.</span><span data-only="EGCC">Data from UK AIP AD 2 EGCC.</span><span data-only="EGGD">Data from UK AIP AD 2 EGGD.</span><span data-only="EGNT">Data from UK AIP AD 2 EGNT.</span><span data-only="EGPH">Data from UK AIP AD 2 EGPH.</span><span data-only="EGAA">Data from UK AIP AD 2 EGAA and EGAC.</span><span data-only="EGLL">Data from UK AIP AD 2 EGLL.</span><span data-only="LEMD">Data from AIP España AD 2 LEMD.</span><span data-only="YSSY">Data from Airservices Australia AIP and ERSA for YSSY.</span><span data-only="EIDW">Data from AIP Ireland AD 2 EIDW.</span><span data-only="OMDB">Data from the UAE AIP AD 2 OMDB.</span><span data-only="EHAM">Data from the Dutch AIP AD 2 EHAM (LVNL).</span> Map data © OpenStreetMap contributors. Representative airline timetable. Not for real-world navigation.</p>
       </div>
     </div>
   </div>

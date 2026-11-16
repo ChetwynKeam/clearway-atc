@@ -1498,14 +1498,17 @@ function vacSpeed(ac, dt){
   const P = ac.path.pts, cur = ac.gs || 0, dec = ac.vacDec || VAC_DEC;   // vacDec: braking planned for a given exit
   let v = cur > VAC_RWY ? Math.max(VAC_RWY, cur - (ac.vacDec ? Math.min(4.2, ac.vacDec) : 4.2)*dt) : Math.min(VAC_RWY, cur + 2*dt);
   let d = 0, from = [ac.x, ac.y];
-  let turnV = VAC_TURN;
+  let turnV = VAC_TURN, dBend = null;
   for (const p of P) {
     const seg = dist(...from, ...p); if (seg < 1e-6) continue;
     if (p.tight) { d += seg; turnV = PAD_V; break; }   // the turning pad: down to walking pace before it
-    if (Math.abs(angDiff(ac.hdg, brg(...from, ...p))) > 25) break;
+    const off = Math.abs(angDiff(ac.hdg, brg(...from, ...p)));
+    if (off > 25) break;
+    if (off > 12 && dBend == null) dBend = d;          // the start of a rapid exit's sweep off the runway: no faster than VAC_RWY into it
     d += seg; from = p;
   }
-  return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, Math.sqrt(turnV*turnV + 2*dec*d*3600)));
+  const lim = dBend == null ? Infinity : Math.sqrt(VAC_RWY*VAC_RWY + 2*dec*dBend*3600);
+  return Math.max(Math.min(ac.path.spd, cur, turnV), Math.min(v, lim, Math.sqrt(turnV*turnV + 2*dec*d*3600)));
 }
 // v: the speed it reaches the holding point at, cleared on while still taxiing: it keeps rolling onto the runway
 // Taxiing along a runway (TAXI <holding point> VIA RWY): from the holding point it is at, onto the runway, along the
@@ -1543,8 +1546,9 @@ function rwyTaxi(ac, B, said, reads){
 }
 function startLineUp(ac, v){
   // the holding point is on one runway: if the departure runway in use is another one (it was changed while this aircraft taxied), line up for the end of this runway
+  // (from a holding point at a runway end, only away from that end: the 18L end at Schiphol, E6, has no runway to the north)
   { const R0 = HOLDS[ac.hp] && holdRwy(ac.hp); ac.depRwyLock = false;
-    if (R0 && rwyOf(depRw(ac)).id !== R0.id) { const ds = (HOLDS[ac.hp].dirs || []).filter(d => rwyOf(d).id === R0.id), pick = ds.find(d => d === S.rwy) || ds[0]; if (pick) { ac.depRwy = pick; ac.depRwyLock = true; } }
+    if (R0 && rwyOf(depRw(ac)).id !== R0.id) { const E0 = HOLDS[ac.hp].end, ds = (HOLDS[ac.hp].dirs || []).filter(d => rwyOf(d).id === R0.id && (!E0 || d === E0)), pick = ds.find(d => d === S.rwy) || ds[0]; if (pick) { ac.depRwy = pick; ac.depRwyLock = true; } }
     // once on the runway it departs the way it lined up: a change of runway direction meanwhile doesn't swing it round
     // where it stands (it would take off from the far end, downwind)
     else if (R0) { ac.depRwy = depRw(ac); ac.depRwyLock = true; } }
