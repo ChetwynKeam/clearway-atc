@@ -50,6 +50,7 @@ function cbStep(){
     cbRender();
   }
   if (Math.floor(S.t) % 15 === 0) { cbEstimates(); cbDirect(); cbRelCancel(); }
+  if (/^live/.test(S.mode) && typeof cbTrail === 'function') cbTrail();
 }
 
 // ── the calls
@@ -64,7 +65,9 @@ function cbEstimates(){
     const fix = (ARR_ROUTE[b.gate] && ARR_ROUTE[b.gate][arrKey(b)] || [])[0] || 'the boundary';
     cbAdd({ from: areaName(), text: `Estimates ${a.cs} and ${b.cs}, ${fix} at ${hhmmOf(a.m)} and ${hhmmOf(b.m)}, same level. Do you accept them as they are?`, opts: [
       { label: 'Accept, I\'ll sequence them', reply: `${APT.coordName}: accepted, ${a.cs} and ${b.cs}.` },
-      { label: 'Request 10 NM in trail', do: () => { if (!b.spawned) b.m = Math.max(b.m, a.m) + rnd(2, 3); }, reply: `${areaName()}: 10 in trail, ${b.cs} new estimate ${hhmmOf(b.m)}.` }],
+      // (Live now: a real flight keeps its time on the board, which is how the real aircraft is recognised; the area
+      // spaces it at the boundary instead, liveshift.js cbTrail)
+      { label: 'Request 10 NM in trail', do: () => { if (b.real && /^live/.test(S.mode)) b.trail = a.cs; else if (!b.spawned) b.m = Math.max(b.m, a.m) + rnd(2, 3); }, get reply(){ return b.trail ? `${areaName()}: 10 in trail, ${b.cs} will be behind ${a.cs} at the boundary.` : `${areaName()}: 10 in trail, ${b.cs} new estimate ${hhmmOf(b.m)}.`; } }],
       missed: 'They come as they are.' });
     return;
   }

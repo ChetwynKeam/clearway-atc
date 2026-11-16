@@ -79,7 +79,7 @@ function buildSchedule(mode, day = 0, hour = 17){
 function parseMetar(m){
   m = m.trim().toUpperCase().replace(/\s+/g,' ');
   const w = { raw: m, dir: 0, spd: 0, gust: 0, vrb: false, vis: 9999, ceil: 9999, qnh: 1013, inhg: 29.92, temp: 15, dew: 10, wx: [], cb: false, clouds: [] };
-  for (const tok of m.split(' RMK ')[0].split(' ')) {   // remarks (US METARs) are not weather
+  for (const tok of m.split(' RMK ')[0].split(/ (?:TEMPO|BECMG|NOSIG)\b/)[0].split(' ')) {   // remarks (US METARs) are not weather, nor the trend (TEMPO, BECMG: what may come, not what is)
     let r;
     if ((r = tok.match(/^(\d{3}|VRB)(\d{2,3})(G(\d{2,3}))?(KT|MPS)$/))) { const f = r[5]==='MPS' ? 1.944 : 1; w.vrb = r[1]==='VRB'; w.dir = w.vrb ? 0 : +r[1]; w.spd = Math.round(+r[2]*f); w.gust = r[4] ? Math.round(+r[4]*f) : 0; }
     else if (/^\d{4}$/.test(tok)) w.vis = +tok;

@@ -89,7 +89,8 @@ function shiftBrief(out){
   const on = a => a.state !== 'PRE' && !outOfCtl(a);
   const air = S.acs.filter(a => on(a) && a.airborne), hold = air.filter(a => a.mode === 'HOLD');
   const taxi = S.acs.filter(a => on(a) && a.ground && (a.path || a.hsAt || a.onRwy)), waiting = S.acs.filter(a => on(a) && a.ground && a.need && !a.path);
-  const soon = S.sched.filter(f => !f.spawned && f.m*60 - S.t < 1800 && f.m*60 >= S.t - 60), arr = soon.filter(f => f.k === 'ARR').length, dep = soon.length - arr;
+  const soon = S.sched.filter(f => !f.spawned && f.m*60 - S.t < 1800 && f.m*60 >= S.t - 60), LD = /^live/.test(S.mode) && typeof liveDemand === 'function' ? liveDemand(0, 30) : null;
+  const arr = LD ? LD.arr : soon.filter(f => f.k === 'ARR').length, dep = LD ? LD.dep : soon.length - soon.filter(f => f.k === 'ARR').length;   // (Live now: today's real flights still to come)
   const dep0 = typeof depRw === 'function' ? depRw() : S.rwy, st = typeof sunTimes === 'function' ? sunTimes() : {};
   const L = [];
   L.push(['Position', `${mine.length ? mine.map(k => `${AI_NAME[k]} (${seatUnit(k)})`).join(', ') : 'none: every position is on AI'}${ais.length && mine.length ? `. AI colleagues on ${ais.map(k => AI_NAME[k]).join(', ')}` : ''}.`]);
@@ -104,14 +105,14 @@ function shiftBrief(out){
 }
 function shiftModal(out){
   document.getElementById('handover')?.remove();
-  const wasPaused = S.paused; S.paused = true;
+  const wasPaused = S.paused; if (!(SHIFT && SHIFT.live && !out)) S.paused = true;   // (Live now runs on while you take over)
   const box = document.createElement('div'); box.className = 'debrief'; box.id = 'handover';
   box.innerHTML = `<div class="db-card ho-card" role="dialog" aria-label="Handover"><div class="db-hd"><b>${out ? 'Handing over to your relief' : 'Taking over the position'}</b><span class="db-sum">${hmZ(S.t)}</span><span class="grow"></span></div>
     <dl class="ho-list"></dl><div class="ho-ctl">${out ? '<button type="button" class="btn" data-h="debrief">Open the debrief</button><button type="button" class="btn ghost" data-h="close">Close</button>' : '<button type="button" class="btn" data-h="close">I have the position</button>'}</div></div>`;
   const dl = box.querySelector('.ho-list');
   for (const [k, v] of shiftBrief(out)) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
   document.body.appendChild(box);
-  box.querySelector('[data-h="close"]').onclick = () => { box.remove(); S.paused = out ? true : wasPaused; if (!out) sys(`Handover complete: you have the position until ${hmZ(SHIFT.end)}.`); };
+  box.querySelector('[data-h="close"]').onclick = () => { box.remove(); S.paused = out ? true : wasPaused; if (!out) { if (typeof shiftTaken === 'function') shiftTaken(); sys(`Handover complete: you have the position until ${hmZ(SHIFT.end)}.`); } };
   const d = box.querySelector('[data-h="debrief"]'); if (d) d.onclick = () => { box.remove(); if (typeof openDebrief === 'function') openDebrief(); };
 }
 
@@ -147,7 +148,8 @@ const supSay = t => typeof TEAM !== 'undefined' && TEAM.people ? teamSay('SUP', 
 function shiftStep(){
   if (!SHIFT || !S.running) return;
   while (SHIFT.plan.length && S.t >= SHIFT.plan[0].at) { const p = SHIFT.plan.shift(); wxApply({ ...wxParts(S.wx), ...p.f }, p.why); }
-  if (SHIFT.onBreak) return;   // the colleague on your positions
+  if (SHIFT.onBreak) { if (SHIFT.liveBrk) { liveBreakTick(); if (S.t >= SHIFT.liveBrk.end) liveBreakEnd(); } return; }   // the colleague on your positions (Live now: for 30 real minutes)
+  if (SHIFT.hoSeats) return;   // Live now: the outgoing controller still has your positions
   breakStep();
   if (S.t - SHIFT.staffT >= 30) { SHIFT.staffT = S.t; shiftStaff(); }
   if (!SHIFT.warned && SHIFT.end - S.t <= 900) { SHIFT.warned = true; sys(`Your relief arrives at ${hmZ(SHIFT.end)}, in 15 minutes.`); }
@@ -158,11 +160,12 @@ S.listeners.push(ev => {
   if (SHIFT && SHIFT.orig) for (const k of AI_SEATS) S.seats[k] = SHIFT.orig[k];   // the last shift's splits do not carry over
   SHIFT = null;
   const el = document.getElementById('shiftSel'), len = el ? +el.value : 0;
-  if (!len || EXERCISES[S.mode] || /^live/.test(S.mode)) return;
-  const P = wxPlan(len);
+  if (!len || EXERCISES[S.mode]) return;
+  const live = /^live/.test(S.mode);   // Live now: the live weather, no forecast plan, and real time (liveshift.js)
+  const P = live ? { out: [], text: `${typeof metTrend === 'function' ? metTrend(S.wx.raw) : ''} It's the live weather: there is no forecast plan in Live now.` } : wxPlan(len);
   S.wshift = null;   // the shift's forecast replaces the random wind shifts
-  SHIFT = { len, onT: S.t, end: S.t + len*60, plan: P.out.sort((a, b) => a.at - b.at), trend: P.text, splits: [], orig: { ...S.seats }, staffT: 0, busyT: 0, quietT: 0 };
-  setTimeout(() => { if (SHIFT && S.running) (typeof teamHandover === 'function' ? teamHandover() : shiftModal(false)); }, 0);
+  SHIFT = { len, onT: S.t, end: S.t + len*60, plan: P.out.sort((a, b) => a.at - b.at), trend: P.text, splits: [], orig: { ...S.seats }, staffT: 0, busyT: 0, quietT: 0, live };
+  setTimeout(() => { if (SHIFT && S.running) { if (live && typeof liveHandoverSeats === 'function') liveHandoverSeats(); (typeof teamHandover === 'function' ? teamHandover() : shiftModal(false)); } }, 0);
 });
 
 // ── rest breaks. UK rules allow at most two hours on position; then a 30-minute break while a colleague works it.
@@ -181,17 +184,18 @@ function breakStep(){
 }
 function breakModal(){
   document.getElementById('handover')?.remove();
-  S.paused = true;
+  if (!SHIFT.live) S.paused = true;   // (Live now runs on in real time)
   const can = (SHIFT.putOff || 0) < 2 && !SHIFT.overT;
   const box = document.createElement('div'); box.className = 'debrief'; box.id = 'handover';
   box.innerHTML = `<div class="db-card ho-card" role="dialog" aria-label="Break"><div class="db-hd"><b>Time for your break</b><span class="db-sum">${hmZ(S.t)}</span></div>
-    <p class="ho-p">You have been on position for ${Math.round((S.t - SHIFT.onT)/60)} minutes. ${typeof TEAM !== 'undefined' && TEAM.people ? TEAM.people.REL : 'A colleague'} takes your positions for 30 minutes; the game runs the half hour through and you come back to a briefing.</p>
+    <p class="ho-p">You have been on position for ${Math.round((S.t - SHIFT.onT)/60)} minutes. ${typeof TEAM !== 'undefined' && TEAM.people ? TEAM.people.REL : 'A colleague'} takes your positions for 30 minutes; ${SHIFT.live ? `in Live now that's 30 real minutes (back at ${hmZ(S.t + BRK_LEN)}), with the traffic carrying on. Or skip the break, which costs ${BRK_SKIP} points.` : 'the game runs the half hour through and you come back to a briefing.'}</p>
     <div class="ho-bar" hidden><i></i></div>
-    <div class="ho-ctl">${can ? '<button type="button" class="btn ghost" data-h="later">Ten more minutes</button>' : ''}<button type="button" class="btn" data-h="go">Hand over and take the break</button></div></div>`;
+    <div class="ho-ctl">${can ? '<button type="button" class="btn ghost" data-h="later">Ten more minutes</button>' : ''}${SHIFT.live ? '<button type="button" class="btn ghost" data-h="skip">Skip the break</button>' : ''}<button type="button" class="btn" data-h="go">Hand over and take the break</button></div></div>`;
   document.body.appendChild(box);
   const later = box.querySelector('[data-h="later"]');
-  if (later) later.onclick = () => { SHIFT.putOff = (SHIFT.putOff || 0) + 1; SHIFT.brkAsk = false; SHIFT.brkWarn = true; box.remove(); S.paused = false; supSay(`OK, ten more minutes${SHIFT.putOff >= 2 ? ', but that\'s the last time' : ''}.`); };
-  box.querySelector('[data-h="go"]').onclick = () => breakRun(box);
+  if (later) later.onclick = () => { SHIFT.putOff = (SHIFT.putOff || 0) + 1; SHIFT.brkAsk = false; SHIFT.brkWarn = true; box.remove(); if (!SHIFT.live) S.paused = false; supSay(`OK, ten more minutes${SHIFT.putOff >= 2 ? ', but that\'s the last time' : ''}.`); };
+  box.querySelector('[data-h="go"]').onclick = () => SHIFT.live ? liveBreakTake(box) : breakRun(box);
+  const sk = box.querySelector('[data-h="skip"]'); if (sk) sk.onclick = () => liveBreakSkip(box);
 }
 function breakRun(box){
   const mine = AI_SEATS.filter(k => S.seats[k] !== 'AI'), before = { rwy: S.rwy, dep: typeof depRw === 'function' ? depRw() : S.rwy, wx: S.wx.raw, atis: S.atis, lvp: !!S.lvpOn, land: S.aiScore.landed, dept: S.aiScore.departed, los: S.aiScore.los, ga: S.aiScore.ga };

@@ -191,6 +191,7 @@ const capHour = () => { let c = ARR_CAP[APT.icao] || 28; if (S.lvpOn || (typeof 
 // flights due in the window (minutes from now): arrivals still to come (not yet on the scope, or in the air by their
 // estimate) and departures by their off-blocks time (parked ones by when they will ask to start, and any still to appear)
 function demandIn(from, to){
+  if (/^live/.test(S.mode) && typeof liveDemand === 'function') { const L = liveDemand(from, to); if (L) return L; }   // Live now: today's real flights still to come (liveshift.js)
   const t0 = S.t + from*60, t1 = S.t + to*60, inW = t => t >= t0 && t < t1;
   let arr = S.sched.filter(f => f.k === 'ARR' && !f.spawned && inW(f.m*60)).length;
   for (const ac of S.acs) if (ac.kind === 'ARR' && ac.airborne && !outOfCtl(ac) && ac.state !== 'DIVERTING') { let e = 600; try { if (typeof eta === 'function') e = eta(ac); } catch (_) {} if (inW(S.t + (isFinite(e) ? e : 600))) arr++; }
@@ -212,11 +213,13 @@ function worksLine(w){
 }
 function regulate(rate){
   // the FMP spaces the inbounds still to come over the next two hours so no more than the capacity arrive in an hour
-  const gap = 60/rate, list = S.sched.filter(f => f.k === 'ARR' && !f.spawned && !f.hold && f.m*60 >= S.t && f.m*60 < S.t + 7200).sort((a, b) => a.m - b.m);
+  // (Live now: the real flights keep their times, which is how live.js knows each real aircraft as its flight; the plan
+  // is worked out and described, not applied)
+  const live = /^live/.test(S.mode), gap = 60/rate, list = S.sched.filter(f => f.k === 'ARR' && !f.spawned && !f.hold && f.m*60 >= S.t && f.m*60 < S.t + 7200).sort((a, b) => a.m - b.m);
   let last = S.t/60 + 6, n = 0, max = 0;
-  for (const f of list) { const want = Math.max(f.m, last + gap); if (want > f.m + 0.5) { max = Math.max(max, want - f.m); n++; f.m = want; } last = f.m; }
+  for (const f of list) { const want = Math.max(f.m, last + gap); if (want > f.m + 0.5) { max = Math.max(max, want - f.m); n++; if (!live) f.m = want; } last = live ? Math.max(f.m, want) : f.m; }
   TEAM.strat.reg = rate;
-  return { n, max: Math.round(max) };
+  return { n, max: Math.round(max), live };
 }
 function teamScript(){
   const o = TEAM.people, mine = AI_SEATS.filter(k => S.seats[k] !== 'AI');
@@ -229,7 +232,7 @@ function teamScript(){
   // the questions
   const h = demandIn(-2, 60), cap = capHour();
   if (h.arr > cap*0.85) teamAsk({ text: `That's ${h.arr} inbound against about ${cap} an hour. Do you want the FMP to put a regulation on the arrivals?`, opts: [
-    { label: `Yes, regulate to ${cap} an hour`, keys: ['yes', 'regulat', 'cap'], do: () => { const r = regulate(cap); TEAM.regMsg = r; }, by: 'FMP', get reply(){ const r = TEAM.regMsg || { n: 0, max: 0 }; return `Regulation in at ${cap} an hour: ${r.n} inbound${r.n === 1 ? '' : 's'} delayed on the ground at origin, the longest by ${r.max} min.`; } },
+    { label: `Yes, regulate to ${cap} an hour`, keys: ['yes', 'regulat', 'cap'], do: () => { const r = regulate(cap); TEAM.regMsg = r; }, by: 'FMP', get reply(){ const r = TEAM.regMsg || { n: 0, max: 0 }; return r.live ? `I've asked for ${cap} an hour: it would hold ${r.n} inbound${r.n === 1 ? '' : 's'} at origin, the longest by about ${r.max} min. These are today's real flights, so they still turn up when they really do: treat it as the plan and expect holding at the peak until it bites.` : `Regulation in at ${cap} an hour: ${r.n} inbound${r.n === 1 ? '' : 's'} delayed on the ground at origin, the longest by ${r.max} min.`; } },
     { label: 'No, we\'ll hold them', keys: ['no', 'hold'], reply: 'OK. The stacks will fill at the peak: keep an eye on the holding times.' }] });
   const tr = (SHIFT && SHIFT.trend) || '';
   if (/fog|mist/i.test(tr) || (typeof lvpPrep === 'function' && lvpPrep() && !S.lvpOn)) teamAsk({ text: 'With the fog about: do you want LVP declared early, as soon as the RVR is under 1,500 metres, so the gaps are set before it gets thick?', opts: [
@@ -256,7 +259,7 @@ function teamScript(){
 // ── the window: the briefing at the top, the chat under it
 function teamOpen(handover){
   document.getElementById('teamchat')?.remove();
-  const wasPaused = S.paused; if (handover) S.paused = true;
+  const wasPaused = S.paused; if (handover && !(typeof SHIFT !== 'undefined' && SHIFT && SHIFT.live)) S.paused = true;   // (Live now runs on: liveshift.js)
   TEAM.open = true; TEAM.unread = 0; teamBadge();
   const box = document.createElement('div'); box.className = 'debrief'; box.id = 'teamchat';
   box.innerHTML = `<div class="db-card tc-card" role="dialog" aria-label="Team chat"><div class="db-hd"><b>${handover ? 'Shift handover · team chat' : 'Team chat'}</b><span class="db-sum">${hmZ(S.t)}</span><span class="grow"></span>${handover ? '' : '<button type="button" class="db-x" aria-label="Close">✕</button>'}</div>
@@ -272,7 +275,7 @@ function teamOpen(handover){
   const take = box.querySelector('[data-h="take"]');
   if (take) take.onclick = () => {
     // anything not answered keeps the plan as it is
-    TEAM.ask.length = 0; close(); S.paused = false;
+    TEAM.ask.length = 0; close(); S.paused = false; if (typeof shiftTaken === 'function') shiftTaken();
     teamSay('OUT', 'You have it. Cheers!', true);
     sys(`Handover complete: you have the position until ${hmZ(SHIFT.end)}.${TEAM.strat.reg ? ` Arrivals regulated to ${TEAM.strat.reg} an hour.` : ''}`);
   };
