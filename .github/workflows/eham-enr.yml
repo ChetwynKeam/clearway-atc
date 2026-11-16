@@ -22,6 +22,14 @@ jobs:
           for P in "index-en-GB.html" "eAIP/EH-menu-en-GB.html" "eAIP/EH-toc-en-GB.html" "toc-frameset-en-GB.html" "eAIP/EH-ENR%203.2-en-GB.html" "eAIP/EH-ENR%203.3-en-GB.html" "eAIP/EH-ENR%203.4-en-GB.html" "eAIP/EH-ENR%203.5-en-GB.html" "eAIP/EH-ENR%203.6-en-GB.html" "eAIP/EH-ENR%204.4-en-GB.html" "eAIP/EH-ENR%206-en-GB.html" "eAIP/EH-ENR%201.3-en-GB.html" "eAIP/EH-ENR%202.2-en-GB.html"; do
             curl -sSfL -m 120 -A "$UA" "$R/$P" -o "$(basename "$P" | sed 's/%20/_/g')" -w "$P %{http_code} %{size_download}\n"
           done
+          # the PDF editions of the ENR 3 sections (the HTML of ENR 3.2 carries the introduction only)
+          mkdir -p enrpdf
+          for P in "EH-ENR%203.2-en-GB.pdf" "EH-ENR%203.3-en-GB.pdf" "EH-ENR%203.1-en-GB.pdf" "EH-ENR%204.4-en-GB.pdf" "EH-ENR%203-en-GB.pdf" "EH-ENR-en-GB.pdf"; do
+            for D in "documents/PDF" "eAIP/pdf" "pdf" "documents/Root_WePub/PDF"; do
+              curl -sSfL -m 120 -A "$UA" "$R/$D/$P" -o "enrpdf/$(echo $P | sed 's/%20/_/g')" -w "$D/$P %{http_code} %{size_download}\n" && break
+            done
+          done
+          grep -oE '(src|href)="[^"]+"' EH-ENR_3.2-en-GB.html | sort -u
           # every page the menu or contents name for ENR 3 and ENR 6, and every PDF they link to
           cat *.html | grep -oE 'href="[^"]*ENR[^"#]*(3|6)[^"#]*"' | sed 's/href="//;s/"$//' | sort -u > links.txt
           cat links.txt
