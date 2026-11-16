@@ -163,7 +163,9 @@ function depSecs(ac){
 // towards it (Innsbruck: land 26, depart 08) five minutes more, so it is well clear before they meet
 const clearS = ac => { const a = arrNear(rwyOf(depRw(ac)), ac); return depSecs(ac) + (typeof mixOf === 'function' && mixOf(rwyOf(depRw(ac))) ? MIX_CLR : 110) + (a.opp ? 300 : a.head ? 150 : 0); };
 // how long a landing occupies the runway, learned from the landings so far (a backtrack at Gibraltar takes minutes)
-const occS = R => (S.aiOcc && S.aiOcc[R.id]) || (BIG_GROUND ? 75 : 150);
+// APT.occPad: seconds on top, where the usual exit keeps a landing close to the runway for a long way after it turns
+// off (Newcastle's Bravo, which runs beside 25 for 230 m to its holding point), so the average alone leaves gaps too short
+const occS = R => ((S.aiOcc && S.aiOcc[R.id]) || (BIG_GROUND ? 75 : 150)) + (APT.occPad || 0);
 // departures waiting for a runway (or one crossing it): Approach leaves them a gap (the landing ahead vacates, then
 // the departure lines up and rolls before the next one is close)
 // (asked for every arrival every second and dear, through arrNear: worked out once per runway per second, and again

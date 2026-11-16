@@ -403,6 +403,12 @@ const APT = {
   // the runway check starts from a holding point the departures are not queueing at: A1 and D1 are the runway ends' only
   // entries, where the departures line up
   rcAvoid: ['A1', 'D1'],
+  // landings on 25 turn off at Bravo, which runs beside the runway for 230 m to its holding point: Approach leaves 30 s
+  // more between arrivals than the measured occupancy alone (ai.js occS)
+  occPad: 30,
+  // one departure on the runway at a time: the runway is entered only at its ends, and a backtrack from the south side
+  // turns round on the end where a departure from D1 or A1 would be lined up (sim.js LU_MAX)
+  luMax: 1,
   sidAlt: ac => sidTopOf(ac.sid),
   remoteAreas: [],
   areaNames: { civil: 'stands', cargo: 'Golf Apron stands' },
