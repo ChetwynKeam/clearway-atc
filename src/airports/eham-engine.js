@@ -289,12 +289,19 @@ const intxHolds = rw => Object.keys(HOLDS).filter(k => { const H = HOLDS[k], R =
 const depHolds = rw => [...endHolds(rw), ...intxHolds(rw)];
 const depHoldAs = (ac, hp) => { const rw = depRw(ac), ok = depHolds(rw); if (!HOLDS[hp] || ok.includes(hp)) return hp;
   return ok.find(k => HOLDS[k].ref === HOLDS[hp].ref) || hp; };
+// a departure's holding point: the runway end nearest by the taxi route; a medium (not a heavy) may be sent to an
+// intersection with 2,500 m or more of runway ahead when the queue at the end is long, as Schiphol's Tower does (24 from
+// S5 and S6, 36L from V2, 18L from E5): about a minute and a half for each aircraft already waiting there
 function depHold(ac){
   const rw = depRw(ac), from = ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)) || {}).id;
-  const ks = endHolds(rw).length ? endHolds(rw) : depHolds(rw); let best = ks[0], bl = Infinity;
+  const ends = endHolds(rw).length ? endHolds(rw) : depHolds(rw), med = ac.perf && ac.perf.wake !== 'H' && ac.perf.wake !== 'J';
+  const ks = med ? [...ends, ...intxHolds(rw).filter(k => intxRun(k, rw) >= 2500)] : ends;
+  let best = ends[0], bl = Infinity;
   if (!from) return best;
+  const q = k => S.acs.filter(o => o !== ac && o.kind === 'DEP' && !o.airborne && o.hp === k && /TAXI|HOLDPT|HELD|LINEUP/.test(o.state)).length;
   const rs = routesFrom(from, ks.map(k => HOLDS[k].node));
-  for (const k of ks) { const r = rs.get(HOLDS[k].node), L = r ? pathLen(r.nodes) : Infinity; if (L < bl) { bl = L; best = k; } }
+  for (const k of ks) { const r = rs.get(HOLDS[k].node), L = r ? pathLen(r.nodes) : Infinity, c = L/12*3600 + 90*q(k) + (ends.includes(k) ? 0 : 60);
+    if (c < bl) { bl = c; best = k; } }
   return best;
 }
 function pushRec(ac){
