@@ -1,0 +1,47 @@
+name: Fetch Newcastle OSM data
+# One-off: downloads from OpenStreetMap, into the osm-data-egnt branch, what the Newcastle (EGNT) build takes from it:
+# the aerodrome (airside roads, buildings, fire station, fuel: tools/vehicles_osm.py; the taxiways, holding points and
+# stands themselves come from the AIP charts, tools/egnt/chart_extract.py), and for the approach map the North Sea coast
+# from the Tees to the Scottish border, the towns and the other airfields (tools/egnt/make_geo.py).
+on:
+  workflow_dispatch:
+  push:
+    branches: [newcastle-egnt]
+    paths: ['.github/workflows/egnt-osm-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          q() {  # name query: tries every server a few times, at most ~10 minutes in all, and says how it went
+            S=$(date +%s)
+            while [ $(( $(date +%s) - S )) -lt 600 ]; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                if curl -sSf -m 240 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.tmp" && head -c 1 "$1.tmp" | grep -q '{'; then mv "$1.tmp" "$1.json"; echo "OK $1 from $H"; return 0; fi
+                echo "retry $1 ($H)"; sleep 8
+              done
+            done
+            echo "FAILED $1"; rm -f "$1.tmp"
+          }
+          B="55.018,-1.735,55.058,-1.650"
+          q aerodrome "[out:json][timeout:180];(way[highway]($B);way[aeroway]($B);node[aeroway]($B);relation[aeroway]($B);nwr[amenity~\"fire_station|fuel\"]($B);nwr[emergency]($B);way[building]($B);way[man_made~\"storage_tank|works\"]($B);way[landuse~\"industrial|garages\"]($B);way[barrier~\"fence|wall|gate\"]($B);node[barrier]($B);way[railway]($B););out geom;" &
+          t() { q "coast_$1" "[out:json][timeout:220];way[natural=coastline]($2);out geom;"; }
+          t a 54.20,-3.60,55.10,-0.20 &
+          t b 55.10,-3.60,56.10,-0.20 &
+          q towns "[out:json][timeout:120];(node[place~\"city|town\"](54.2,-3.6,56.1,-0.2););out;" &
+          q airports "[out:json][timeout:120];(nwr[aeroway=aerodrome][icao](54.0,-4.0,56.3,0.0););out center;" &
+          q rivers "[out:json][timeout:180];(relation[waterway=river][name~\"^River (Tyne|Wear|Tees)$\"](54.4,-2.6,55.2,-1.0);way[natural=water][water~\"river|tidal\"](54.85,-2.0,55.05,-1.35););out geom;" &
+          wait
+          ls -la
+      - name: Publish to osm-data-egnt branch
+        run: |
+          cd out
+          git init -q -b osm-data-egnt
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OSM data for EGNT"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" osm-data-egnt
