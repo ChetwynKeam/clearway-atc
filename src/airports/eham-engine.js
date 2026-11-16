@@ -168,6 +168,31 @@ function stepPref(){
   }
   stepWas = key;
 }
+// the uncontrolled aprons, as the clock runs. A departure on a J or K stand: when it asks for start-up, the apron's own
+// unit pushes it and brings it to the boundary (A20B or GD), where it calls Schiphol Ground for taxi. An arrival for a J
+// or K stand taxis as far as the boundary (GL for the K-apron, or GD) and is handed over there: the apron unit parks it.
+const unctlOf = ac => ac && ac.stand && UNCTL[ac.stand.term] && UNCTL[ac.stand.term].node ? UNCTL[ac.stand.term] : null;
+function stepAprons(){
+  if (!S.running || exNow()) return;
+  for (const ac of S.acs) {
+    const U = unctlOf(ac); if (!U || !ac.ground || ac.handed) continue;
+    if (ac.kind === 'DEP') {
+      if (ac.apr === 'done') continue;
+      if (!ac.apr && ac.state === 'PARKED' && ac.need === 'Request start-up' && !ac.leftStand) {
+        if (aiDo('GND', ac, 'PUSH')) { ac.apr = 'push'; sys(`${ac.cs} on ${ac.stand.id}: ${U.unit} (${U.freq}) has it pushed and moved to ${U.where}; it calls you there for taxi.`); }
+      } else if (ac.apr === 'push' && ac.need === 'Ready to taxi') {
+        if (aiDo('GND', ac, `TAXI ${U.ihp}`)) ac.apr = 'taxi';
+      } else if (ac.apr === 'taxi' && ac.holdAt === U.ihp && !ac.path) {
+        ac.apr = 'done'; ac.need = 'Ready to taxi';
+        pilot(ac, `${EHAM.UNITS.gnd.name}, holding at ${U.ihp === 'GD' ? PHON.GD : 'the A20 boundary'}, request taxi`);
+      }
+    } else if (!ac.apr && ac.path && !ac.onRwy && ac.taxiIn) {
+      const at = [U.node, U.entry && IHPS[U.entry] && IHPS[U.entry].node].filter(Boolean).find(n => dist(ac.x, ac.y, ...GN[n].p) < 40*M2NM);
+      if (at) { ac.apr = 'in'; ac.aiSeat = 'GND'; ac.need = null;
+        sys(`${ac.cs} at ${at === U.node ? U.where : U.entry}: over to ${U.unit} ${U.freq}, who parks it on ${ac.stand.id}.`); }
+    }
+  }
+}
 // landings and take-offs in the last hour (scaled to an hour after the first 10 minutes)
 function achieved(){
   const span = Math.min(3600, S.t), cut = S.t - 3600, n = L => L.filter(t => t > cut).length;
@@ -273,6 +298,19 @@ const PHON = {};
 for (const e of GE) if (e.tw && e.tw !== 'APRON' && !PHON[e.tw]) PHON[e.tw] = twyWords(e.tw);
 for (const k of Object.keys(HOLDS)) PHON[k] = twyWords(k);
 const IHP_LIST = (G.ihps || []).filter(([id, node]) => GN[node]).map(([id, node]) => ({ id, node, ph: twyWords(id), alias: [] }));
+// ── the aprons ATC does not control (AD 2.20 paras 12 and 13). The J-apron, with taxiway A20 along it: Apron Control
+// (121.880) moves its aircraft, as far as the ATC service boundary on A20 at the apron's north end; the K-apron
+// (Schiphol-East, business aviation): Schiphol Amsterdam General Aviation (121.930) allocates the stands and
+// lets aircraft taxi out as far as intermediate holding position GD, entered by GL. Their holding positions are found on
+// the taxiways (the boundary is where A20 leaves the apron north of J80, GD where its lanes join before taxiway G).
+const nodeOn = (tw, e, n) => { const p = EN(e, n); let best = null, bd = Infinity;
+  for (const x of GE) if (x.tw === tw) for (const id of [x.a, x.b]) { const d = dist(...GN[id].p, ...p); if (d < bd) { bd = d; best = id; } }
+  return best; };
+const UNCTL = {
+  J: { ihp: 'A20B', node: nodeOn('A20', -1241, 603), unit: 'Apron Control', freq: '121.880', gnd: '121.905', where: 'the ATC service boundary on A20' },
+  K: { ihp: 'GD', node: nodeOn('GD', 2755, 491), entry: 'GL', unit: 'Schiphol Amsterdam General Aviation', freq: '121.930', gnd: '121.805', where: 'GD' }
+};
+for (const k in UNCTL) { const U = UNCTL[k]; if (U.node && !IHP_LIST.some(h => h.id === U.ihp)) IHP_LIST.push({ id: U.ihp, node: U.node, ph: U.ihp === 'A20B' ? 'the A20 boundary' : twyWords(U.ihp), alias: [] }); }
 for (const h of IHP_LIST) PHON[h.id] = h.ph;
 for (const [k, [ref, w]] of Object.entries(G.hside || {})) { PHON[k] = twyWords(ref) + (w ? ', ' + w : ''); for (const v of Object.keys(HOLDS)) if (HOLDS[v].ref === k) PHON[v] = PHON[k]; }
 PHON.APRON = 'the apron';
@@ -289,12 +327,20 @@ const intxHolds = rw => Object.keys(HOLDS).filter(k => { const H = HOLDS[k], R =
 const depHolds = rw => [...endHolds(rw), ...intxHolds(rw)];
 const depHoldAs = (ac, hp) => { const rw = depRw(ac), ok = depHolds(rw); if (!HOLDS[hp] || ok.includes(hp)) return hp;
   return ok.find(k => HOLDS[k].ref === HOLDS[hp].ref) || hp; };
+// a departure's holding point: the runway end nearest by the taxi route; a medium (not a heavy) may be sent to an
+// intersection with 2,500 m or more of runway ahead when the queue at the end is long, as Schiphol's Tower does (24 from
+// S5 and S6, 36L from V2, 18L from E5): about a minute and a half for each aircraft already waiting there
 function depHold(ac){
   const rw = depRw(ac), from = ac.stand && !ac.leftStand ? ac.stand.node : (nearestNode([ac.x, ac.y], n => !/^R/.test(n.id)) || {}).id;
-  const ks = endHolds(rw).length ? endHolds(rw) : depHolds(rw); let best = ks[0], bl = Infinity;
+  const ends = endHolds(rw).length ? endHolds(rw) : depHolds(rw), med = ac.perf && ac.perf.wake !== 'H' && ac.perf.wake !== 'J';
+  const ks = med ? [...ends, ...intxHolds(rw).filter(k => intxRun(k, rw) >= 2500)] : ends;
+  let best = ends[0], bl = Infinity;
   if (!from) return best;
+  const q = k => S.acs.filter(o => o !== ac && o.kind === 'DEP' && !o.airborne && o.hp === k && /TAXI|HOLDPT|HELD|LINEUP/.test(o.state)).length;
   const rs = routesFrom(from, ks.map(k => HOLDS[k].node));
-  for (const k of ks) { const r = rs.get(HOLDS[k].node), L = r ? pathLen(r.nodes) : Infinity; if (L < bl) { bl = L; best = k; } }
+  // an intersection that needs a runway crossing to reach costs four minutes more (one the far side of a runway is no help)
+  for (const k of ks) { const r = rs.get(HOLDS[k].node), L = r ? pathLen(r.nodes) : Infinity, x = r ? r.nodes.filter(id => /^x/.test(id)).length : 0, c = L/12*3600 + 90*q(k) + (ends.includes(k) ? 0 : 60 + 240*x);
+    if (c < bl) { bl = c; best = k; } }
   return best;
 }
 function pushRec(ac){
@@ -622,7 +668,9 @@ const APT = {
     const pick = list => { const free = list.filter(s => standFree(s, ac)).sort((a, b) => (a.maxSpan || 80) - (b.maxSpan || 80)), best = free.filter(s => (s.maxSpan || 80) <= (free[0] && free[0].maxSpan || 80) + 8);
       return best[Math.floor(Math.random()*best.length)] || null; };
     const al = ac.cs.slice(0, 3), long = ac.perf.wake === 'H' || ac.perf.wake === 'J';
-    const order = long ? ['E', 'F', 'G', 'D', 'H', 'DA', 'EA', 'S'] : (EHAM.TERMINAL_OF[al] || EHAM.TERMINAL_DEFAULT).concat(['D', 'B', 'C', 'H', 'M', 'DA', 'EA', 'A', 'Y']);
+    // business jets to the K-apron at Schiphol-East; the J-apron's remote stands take the overflow (AD 2.20 paras 12, 13)
+    if (ac.perf.shape === 'biz' || ac.perf.wake === 'L') { const s = pick(STANDS.filter(s => s.term === 'K')); if (s) return s; }
+    const order = long ? ['E', 'F', 'G', 'D', 'H', 'DA', 'EA', 'J', 'S'] : (EHAM.TERMINAL_OF[al] || EHAM.TERMINAL_DEFAULT).concat(['D', 'B', 'C', 'H', 'M', 'DA', 'EA', 'J', 'A', 'Y']);
     for (const t of order) { const s = pick(STANDS.filter(s => s.term === t)); if (s) return s; }
     return pick(STANDS.filter(s => s.area !== 'ga')) || pick(STANDS); },
   inboundAlt: g => 10000,
@@ -638,7 +686,7 @@ const APT = {
   restricted: null,
   drawAirport: drawEham, drawAirportTop: drawEhamTop,
   entryCost: (ac, k, from) => 0,
-  onStep: stepPref,
+  onStep: () => { stepPref(); stepAprons(); },
   gaEarly(ac, rw){},
   gaTurn(ac){ const rw = ac.gaRwy, F = FINAL[rw] || FINAL['18R'];
     if (ac.alt > ELEV + 700 || dist(ac.x, ac.y, ...(THR[rw] || ARP)) > 2) { ac.gaTurn = true; ac.mode = 'NAV'; ac.route = F.missed.slice(); ac.turnDir = 0; ac.tgtAlt = ac.cleared = Math.max(ac.cleared || 0, F.missAlt); } },
@@ -738,3 +786,5 @@ APT.hangars = G.buildings.filter(b => b.roof === 'hangar').map(b => { const n = 
   .map(([h, node], i) => ({ id: 'H' + (i + 1), name: h.name || 'KLM hangar', in: inF0(...h.c), door: [GN[node].m, GN[node].off], node, to: ['pier'],
     fits: ac => /^(KLM|KLC|TRA)$/.test(ac.cs.slice(0, 3)), pick: ac => APT.standFor(ac) }));
 APT.queuePen = true;
+// the Academy's aerodrome figure: all six runways, the Polderbaan included (the ground view shows only the terminal area)
+APT.figView = v => { const c = EN(-420, 1915); v.cx = c[0]; v.cy = c[1]; v.scale = Math.min(W/(7800*M2NM), H/(9000*M2NM)); };

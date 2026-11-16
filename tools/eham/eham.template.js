@@ -200,7 +200,8 @@ const EHAM = (() => {
     AAL: 'American', MNB: 'Black Sea', ICE: 'Iceair', THA: 'Thai', SXN: 'Sunexpress', SEH: 'Sky Express', GTI: 'Giant', MSR: 'Egyptair', AMX: 'Aeromexico',
     KQA: 'Kenya', NSZ: 'Rednose', AZG: 'Silk West', NOZ: 'Nordic', AEA: 'Europa', ANE: 'Air Nostrum', ASL: 'Air Serbia', MAC: 'Arabia Maroc', ACA: 'Air Canada',
     CPA: 'Cathay', GER: 'Air Peace', GIA: 'Indonesia', SOU: 'Southern Skies', TCD: 'Tedi', RBA: 'Brunei', TAM: 'Tam', AEE: 'Aegean', BEL: 'Beeline',
-    WZZ: 'Wizz Air', EDW: 'Edelweiss', TVF: 'France Soleil', FIN: 'Finnair', CSA: 'CSA', LGL: 'Luxair', RAM: 'Royalair Maroc', RJA: 'Jordanian', ELY: 'Elal' };
+    WZZ: 'Wizz Air', EDW: 'Edelweiss', TVF: 'France Soleil', FIN: 'Finnair', CSA: 'CSA', LGL: 'Luxair', RAM: 'Royalair Maroc', RJA: 'Jordanian', ELY: 'Elal',
+    CAL: 'Dynasty', LZB: 'Flying Bulgaria', KMM: 'Maltese', CTN: 'Croatia', CLX: 'Cargolux', AIC: 'Air India', BCS: 'Eurotrans', DLA: 'Dolomiti', TAY: 'Quality' };
   const AIRLINE_ICAO = {};
   const AIRLINE_TYPE = { KLM: 'B738', KLC: 'E195', TRA: 'B738', DAL: 'A333', EJU: 'A320', EZY: 'A320', DLH: 'A20N', RYR: 'B738', AUA: 'A320', SWR: 'BCS3',
     VLG: 'A320', SAS: 'A20N', CFE: 'E190', ITY: 'A20N', UAL: 'B763', BAW: 'A320', QTR: 'B77W', AFR: 'A320', UAE: 'A388', THY: 'A321' };

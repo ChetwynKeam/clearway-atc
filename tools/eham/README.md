@@ -38,8 +38,11 @@ workspace).
    ILS and missed approaches, frequencies, holds, the STARs to ARTIP, RIVER and SUGOL, the transitions and the SIDs,
    airline and type tables, the preferential runway system: the Besluit luchtverkeer's day and night preference tables,
    AD 2.21's wind and visibility criteria and night runway restrictions, and the winter 2026/27 capacity declaration's
-   modes and wave schedule) and the AMS boards
-   of Monday 16 November 2026 (from midday; the full day comes with Live now).
+   modes and wave schedule) and the AMS boards of Monday 16 November 2026, the whole day (1,261 movements), fetched by
+   `.github/workflows/eham-boards.yml` with avionio's `ts` parameter to the `eham-boards` branch (`merge_boards.py` joins
+   several snapshots into one day where no single one covers it). The boards give no aircraft types: they are by airline
+   and route (KLM's 737s on its trunk routes, Cityhopper's Embraers on the other KL numbers, the long-haul fleet by
+   destination).
 7. `../eham_geo.py <eham-data>/geo ../../src/airports/eham.geo.json` (shapely): the approach map, the land less the
    IJsselmeer, the Markermeer and the other lakes.
 8. `../vehicles_osm.py EHAM aerodrome.json ../../src/airports/eham-veh.js`, then `../synth_bridges.py EHAM aerodrome.json

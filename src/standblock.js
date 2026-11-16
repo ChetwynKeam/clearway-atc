@@ -51,8 +51,12 @@ function blkBlockers(ac, face){
   if (!ac.stand || ac.stand.area === 'hangar') return [];
   const pts = blkWay(ac, face); if (!pts) return [];
   const out = [];
+  // the way's bounding box, widened by the largest aircraft's reach (80 m): a stand outside it cannot be in the way
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; const pad = 80*M2NM;
+  for (const q of pts) { if (q[0] < x0) x0 = q[0]; if (q[0] > x1) x1 = q[0]; if (q[1] < y0) y0 = q[1]; if (q[1] > y1) y1 = q[1]; }
   for (const o of S.acs) {
     if (o === ac || !o.ground || !o.stand || o.stand === ac.stand) continue;
+    const sp = o.stand.p; if (!sp || sp[0] < x0 - pad || sp[0] > x1 + pad || sp[1] < y0 - pad || sp[1] > y1 + pad) continue;
     const parked = (o.state === 'PARKED' || o.state === 'ONSTAND') && !o.leftStand && dist(o.x, o.y, ...o.stand.p) < 15*M2NM;
     if (!parked) continue;
     if (blkHit(pts, ac, o.stand, o)) out.push(o);

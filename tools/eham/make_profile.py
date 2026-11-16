@@ -85,19 +85,25 @@ ICAO = {'KL': 'KLM', 'HV': 'TRA', 'DL': 'DAL', 'EC': 'EJU', 'LH': 'DLH', 'U2': '
         'KQ': 'KQA', 'D8': 'NSZ', '7L': 'AZG', 'DY': 'NOZ', 'UX': 'AEA', 'YW': 'ANE', 'JU': 'ASL', '3O': 'MAC', 'AC': 'ACA', 'CX': 'CPA', 'ZQ': 'GER',
         'GA': 'GIA', 'PL': 'SOU', 'CD': 'TCD', 'BI': 'RBA', 'JJ': 'TAM', 'A3': 'AEE', 'SN': 'BEL', 'W6': 'WZZ', 'WK': 'EDW', 'TO': 'TVF', 'A9': 'TGZ',
         'BJ': 'LBT', '2L': 'OAW', 'PS': 'AUI', 'JL': 'JAL', 'KE': 'KAL', 'NH': 'ANA', 'MU': 'CES', 'HU': 'CHH', 'EY': 'ETD', 'ET': 'ETH', 'RJ': 'RJA',
-        'AT': 'RAM', 'LY': 'ELY', '6E': 'IGO', 'MH': 'MAS', 'SV': 'SVA', 'PG': 'BKP', 'AY': 'FIN', 'BG': 'BBC', 'OK': 'CSA', 'JP': 'ADR', 'LG': 'LGL'}
-SHORT = {'KLM': ['B738', 'B739', 'B737', 'E195', 'E295', 'B738'], 'KLC': ['E195', 'E295', 'E175', 'E190'], 'TRA': ['B738', 'B38M', 'A20N'], 'EJU': ['A320', 'A20N', 'A319'],
+        'AT': 'RAM', 'LY': 'ELY', '6E': 'IGO', 'MH': 'MAS', 'SV': 'SVA', 'PG': 'BKP', 'AY': 'FIN', 'BG': 'BBC', 'OK': 'CSA', 'JP': 'ADR', 'LG': 'LGL',
+        'CI': 'CAL', 'FB': 'LZB', 'KM': 'KMM', 'OU': 'CTN', 'CV': 'CLX', 'AI': 'AIC', 'QY': 'BCS', 'EN': 'DLA', '3V': 'TAY'}
+SHORT = {'KLM': ['B738', 'B739', 'B737', 'B738', 'A21N'], 'KLC': ['E195', 'E295', 'E175', 'E175'], 'TRA': ['B738', 'B38M', 'A20N'], 'EJU': ['A320', 'A20N', 'A319'],
          'EZY': ['A320', 'A319'], 'DLH': ['A20N', 'A321', 'A319'], 'RYR': ['B738', 'B38M'], 'AUA': ['A320', 'E195'], 'SWR': ['BCS3', 'A320'], 'VLG': ['A320'],
          'SAS': ['A20N'], 'CFE': ['E190'], 'ITY': ['A20N'], 'BAW': ['A320', 'A20N'], 'TFL': ['B38M'], 'AFR': ['A320', 'A20N'], 'THY': ['A321', 'A21N'],
          'EIN': ['A320'], 'TAP': ['A20N'], 'LOT': ['E195', 'B38M'], 'BTI': ['BCS3'], 'SXS': ['B38M'], 'IBE': ['A320'], 'PGT': ['A20N'], 'ROT': ['B738'],
          'ICE': ['B38M'], 'SXN': ['B738'], 'SEH': ['A320'], 'NSZ': ['B38M'], 'NOZ': ['B38M'], 'AEA': ['B738'], 'ANE': ['CRJ9'], 'MAC': ['A320'], 'TCD': ['A320'],
          'AEE': ['A20N'], 'BEL': ['A320'], 'WZZ': ['A21N'], 'EDW': ['A320'], 'TVF': ['B738'], 'LBT': ['A320'], 'FIN': ['A320'], 'CSA': ['A320'], 'LGL': ['E295'],
-         'RAM': ['B738'], 'MSR': ['B738'], 'RJA': ['A320'], 'ELY': ['B738'], 'AZG': ['B744'], 'MPH': ['B744'], 'CKK': ['B744'], 'GTI': ['B744'], 'ASL': ['A320']}
-LONG = {'KLM': {'*': 'B77W', 'KJFK': 'B789', 'TNCC': 'A333', 'TNCB': 'A333', 'KMSP': 'A333', 'OMDB': 'B78X', 'RJBB': 'B789', 'SBGR': 'B77W', 'RKSI': 'B78X'},
+         'RAM': ['B738'], 'MSR': ['B738'], 'LZB': ['A320'], 'KMM': ['A20N'], 'CTN': ['A20N'], 'BCS': ['A332'], 'DLA': ['E195'], 'TAY': ['B744'], 'CLX': ['B744'], 'RJA': ['A320'], 'ELY': ['B738'], 'AZG': ['B744'], 'MPH': ['B744'], 'CKK': ['B744'], 'GTI': ['B744'], 'ASL': ['A320']}
+LONG = {'KLM': {'*': ['B77W', 'B789', 'B78X', 'A333', 'B77W'], 'KJFK': 'B789', 'TNCC': 'A333', 'TNCB': 'A333', 'KMSP': 'A333', 'OMDB': 'B78X', 'RJBB': 'B789', 'SBGR': 'B77W', 'RKSI': 'B78X'},
         'DAL': {'*': 'A333'}, 'UAL': {'*': 'B763'}, 'AAL': {'*': 'B788'}, 'QTR': {'*': 'B77W'}, 'UAE': {'*': 'A388'}, 'CSN': {'*': 'B789'}, 'SIA': {'*': 'A359'},
         'CCA': {'*': 'A333'}, 'THA': {'*': 'B77W'}, 'AMX': {'*': 'B789'}, 'KQA': {'*': 'B788'}, 'ACA': {'*': 'B789'}, 'CPA': {'*': 'A35K'}, 'GIA': {'*': 'A339'},
         'TAM': {'*': 'B77W'}, 'MNB': {'*': 'B744'}, 'CKK': {'*': 'B744'}, 'TKJ': {'*': 'B77W'}, 'GER': {'*': 'B788'}, 'SOU': {'*': 'B789'}, 'RBA': {'*': 'B788'},
-        'TRA': {'*': 'B738'}, 'TFL': {'*': 'B788'}, 'ETD': {'*': 'B789'}, 'MAS': {'*': 'A359'}}
+        'TRA': {'*': 'B738'}, 'TFL': {'*': 'B788'}, 'CAL': {'*': 'A359'}, 'AIC': {'*': 'B788'}, 'CLX': {'*': 'B744'}, 'ETD': {'*': 'B789'}, 'MAS': {'*': 'A359'}}
+# KLM's European routes flown by its own 737s (and A321neos); the rest go to KLM Cityhopper's Embraer 175s and 195s, which
+# fly on KL flight numbers with the KLM callsign
+KLM_737 = {'EGLL', 'LFPG', 'LEMD', 'LEBL', 'LIRF', 'LIMC', 'LPPT', 'EKCH', 'ESSA', 'ENGM', 'EFHK', 'LOWW', 'LSZH', 'LSGG', 'EDDM', 'EIDW', 'LGAV',
+           'LTFM', 'LHBP', 'EPWA', 'LKPR', 'LEPA', 'LEMG', 'LEAL', 'GCLP', 'GCTS', 'GCRR', 'LCLK', 'LLBG', 'HECA', 'GMMN', 'UUEE', 'LROP', 'LBSF',
+           'LIPZ', 'LIRN', 'LICC', 'LEVC', 'LPFR', 'LEIB', 'LGIR', 'LGRP', 'BIKF', 'LYBE', 'LDZA', 'LWSK', 'OLBA', 'OJAI', 'DTTA', 'EGKK', 'EGCC', 'EGPH'}
 def is_long(icao): return icao[0] in 'KCMSTRZVWOFDHL' and icao[:2] not in ('LE', 'LF', 'LI', 'LP', 'LG', 'LH', 'LK', 'LO', 'LR', 'LS', 'LT', 'LJ', 'LD', 'LB', 'LZ', 'LW', 'LY', 'LU', 'LA', 'LC', 'LL', 'LM', 'LN', 'LQ', 'LX') and not icao.startswith(('GC', 'GM', 'GV', 'HE', 'DT', 'OJ', 'LL'))
 def hm(s): h, m = s.split(':'); return int(h)*60 + int(m)
 def hh(m): return '%02d:%02d' % (m // 60 % 24, m % 60)
@@ -112,7 +118,10 @@ def rows(path):
         if not m: return None
         a, n = m[1], m[2]; al = ICAO.get(a); place = place_icao(r['place'], a)
         if not al or not place or place not in AP: return None
-        if is_long(place) and al in LONG: L = LONG[al]; t = L.get(place) or L['*']
+        if is_long(place) and al in LONG:
+            L = LONG[al]; t = L.get(place) or L['*']
+            if isinstance(t, list): t = t[int(re.sub(r'\D', '', n) or 0) % len(t)]
+        elif al == 'KLM' and place not in KLM_737: T = SHORT['KLC']; t = T[int(re.sub(r'\D', '', n) or 0) % len(T)]   # KLM Cityhopper's Embraers, on KL numbers
         else: T = SHORT.get(al, ['A320']); t = T[int(re.sub(r'\D', '', n) or 0) % len(T)]
         return dict(cs=al + n, al=al, t=t, place=place, tm=(hm(r['sched']) - off) % 1440)
     A = [x for x in map(conv, arr) if x]; D = [x for x in map(conv, dep) if x]

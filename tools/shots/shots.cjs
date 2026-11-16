@@ -25,6 +25,7 @@ const AIRPORTS = [
   { k: 'lsgg', twr: 1.5, gnd: 1.5, file: 'geneva-atc.html', mins: 40, hour: '12' },
   { k: 'omdb', twr: 1.1, gnd: 1.4, file: 'dubai-atc.html', mins: 40, hour: '08' },
   { k: 'egph', twr: 1.3, gnd: 1.6, file: 'edinburgh-atc.html', mins: 40, hour: '12' },
+  { k: 'eham', twr: 1.0, gnd: 1.3, file: 'amsterdam-atc.html', mins: 40, hour: '11', ai: true },   // Schiphol's peak is too busy for the bot: the AI works every seat
 ];
 fs.mkdirSync(OUT, { recursive: true });
 const jpg = p => ({ path: path.join(OUT, p), type: 'jpeg', quality: 84 });
@@ -59,13 +60,13 @@ async function view(pg, k, zoom = 1, theme = 'light', pick){
     pg.on('pageerror', e => errs.push(e.message));
     await pg.goto(`${BASE}/${A.file}#sim`); await pg.waitForTimeout(1500);
     await pg.addScriptTag({ content: BOT });
-    const sc = await pg.evaluate(([mins, hour]) => {
+    const sc = await pg.evaluate(([mins, hour, ai]) => {
       const tr = document.getElementById('trafficSel'); tr.value = 'summer'; tr.dispatchEvent(new Event('change'));
       document.getElementById('hourSel').value = hour; document.getElementById('emgSel').value = 'off';
-      __start();
+      __start(); if (ai) { for (const k of AI_SEATS) S.seats[k] = 'AI'; window.__bot = () => {}; }
       for (let i = 0; i < mins*60; i++) { __step(1); if (i % 5 === 0) __bot(); }
       S.paused = true; return S.score;
-    }, [A.mins, A.hour]);
+    }, [A.mins, A.hour, !!A.ai]);
     console.log(A.k, JSON.stringify(sc));
     const scope = pg.locator('#scope');
     if (A.full) {
