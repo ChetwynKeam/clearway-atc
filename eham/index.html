@@ -2845,6 +2845,7 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 22h24"/><path d="M8 22v-6h16v6"/></svg><h3>Taxiway bridges</h3><p>A and B cross the A4 by the 36C end; V crosses the A5 (in its tunnel) and bridges the Hoofdvaart and the Hoofdweg on the long taxi to the Polderbaan.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="16" cy="16" r="10"/><path d="M16 10v7M16 21v1"/></svg><h3>Hot spots HS1 to HS3</h3><p>C and D where they meet A and B; G1 opposite the K-apron exit GD; and the W9, W10, Z, A and B knot by the 36C end, where only south on A or north on B is possible after vacating.</p></div>
       <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h8v16H3zM13 8h8v16h-8zM23 12h6v12h-6z"/></svg><h3>Piers and aprons</h3><p>Every stand at its AIP coordinates: the B to H and M piers, the D- and E-aprons, the remote A-apron, the S-apron for cargo and the K-apron at Schiphol East. Stands too close to use together are never in use at once.</p></div>
+      <div class="feature"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 8c8 0 12 4 12 10s4 8 12 8"/><circle cx="4" cy="8" r="2"/></svg><h3>STARs, holds and night transitions</h3><p>Ten RNAV STARs to ARTIP, RIVER and SUGOL, with their holds and NARSO above ARTIP. By day Schiphol Approach vectors from there to the ILS (ARTIP 2X for 36R); at night every jet flies the published transition to 06, 18C or 18R, a continuous descent from the IAF to the final approach.</p></div>
     </div>
   </div></div>
 
@@ -2859,12 +2860,12 @@ body[data-route="sim"] .sysbar, body[data-route="sim"] .sb-menupop, body[data-ro
   <div class="section"><div class="wrap">
     <div class="sources">
       <div><div class="eyebrow">Sources and accuracy</div><h2 style="font-size:clamp(30px,3.6vw,42px);margin:10px 0 16px">What is real and what is modelled.</h2>
-        <p class="note">Schiphol is in development: the aerodrome is complete, the airspace, the runway system rules and the full day of traffic follow. The R-apron is being rebuilt and has no stands in this AIRAC. The largest wingspan each stand takes is worked out from the spacing of its row, as the charts give it for few.</p></div>
+        <p class="note">Schiphol is in development: the aerodrome and the procedures are complete; the runway system rules and the full day of traffic follow. The R-apron is being rebuilt and has no stands in this AIRAC. The largest wingspan each stand takes is worked out from the spacing of its row, as the charts give it for few.</p></div>
       <ul>
         <li><b>Aerodrome and ground movement charts</b>The runways, every stop bar and taxiway name and the hot spots.</li>
         <li><b>Parking and docking charts</b>The stands, at their AIP coordinates.</li>
         <li><b>AD 2.12 and 2.13</b>Runway ends, displaced thresholds and the intersection take-off positions.</li>
-        <li><b>AD 2.22 coding tables</b>The SIDs and STARs.</li>
+        <li><b>AD 2.22 coding tables</b>The 86 SIDs, the 10 STARs, the holds, the night and day transitions and every ILS with its missed approach.</li>
         <li><b>OpenStreetMap</b>Taxiway, apron and building geometry, the bridges and the street map under the scope.</li>
       </ul>
     </div>
@@ -5900,23 +5901,27 @@ const EHAM = (() => {
     AM062: [52.259139, 4.724583], AM063: [52.275278, 4.747611], AM064: [52.251167, 4.789639], AM069: [52.151556, 4.929306], AM070: [52.334750, 5.092194],
     AM072: [52.020583, 4.843000], AM073: [52.214194, 4.807722], AM074: [52.166167, 4.757028], AM075: [52.156139, 4.757444], AM081: [52.423556, 4.845694],
     AM082: [52.424139, 4.988833], AM084: [52.395194, 4.715139], AM087: [52.479944, 4.772167], AM088: [52.487444, 4.915333], AM090: [52.467222, 4.534361],
-    AM094: [52.466083, 4.661333], AM095: [52.276972, 4.705667], AM096: [52.274083, 4.672806], AM097: [52.320778, 4.642111], AM120: [52.403556, 4.881194],
-    AM125: [52.276750, 4.687111], AM156: [52.241028, 4.691611], AM157: [52.228278, 4.711111], AM160: [52.225000, 4.905000], AM163: [52.505000, 4.797361],
-    AM260: [52.402889, 4.853306], AM280: [52.247750, 4.596250], AM609: [52.234583, 4.595750], AM621: [52.462694, 4.721111], AM624: [52.352667, 4.548694],
-    AM630: [52.433806, 4.749444], AM632: [52.203444, 4.728306], AM636: [52.188472, 4.767889], AM637: [52.373389, 4.785000], AM639: [52.323944, 4.964000],
-    AM650: [52.430333, 4.970167], ANDIK: [52.739444, 5.270556], ARNEM: [52.096389, 6.076667], ARTIP: [52.511222, 5.569083], BAHSI: [52.422833, 4.488972],
-    BERGI: [52.748889, 4.358889], BETUS: [52.688056, 5.162500], DENAG: [52.082389, 3.890806], DENUT: [51.236111, 3.657500], DOFMU: [51.741389, 4.243611],
-    EDUPO: [51.975556, 5.835833], ELPAT: [52.127500, 5.951111], ETPOS: [52.585111, 3.414167], HAMZA: [51.722722, 3.858167], HELEN: [51.235278, 3.869722],
-    IDRID: [51.996111, 3.496111], IVLUT: [52.244167, 5.256944], KUDAD: [51.667500, 4.567500], LAMSO: [52.732778, 2.994444], LANSU: [52.414028, 4.946667],
-    LARAS: [51.834444, 4.697222], LEKKO: [51.924167, 4.767222], LEVKI: [52.431056, 4.718472], LISOH: [52.291361, 4.736361], LOPIK: [51.930833, 5.129167],
-    LUNIX: [52.109722, 5.565278], LUTEX: [52.681444, 3.468556], MOLIX: [52.821944, 3.068611], MONIL: [52.760833, 3.746667], NARSO: [52.715306, 6.709556],
-    NEWCO: [52.135306, 4.763000], NOPSU: [52.586944, 4.950806], NORKU: [52.215556, 6.976389], NYKER: [52.230278, 5.528889], OGINA: [52.097500, 5.054722],
+    AM094: [52.466083, 4.661333], AM095: [52.276972, 4.705667], AM096: [52.274083, 4.672806], AM097: [52.320778, 4.642111], AM110: [52.221278, 4.561333],
+    AM125: [52.276750, 4.687111], AM156: [52.241028, 4.691611], AM157: [52.228278, 4.711111], AM163: [52.505000, 4.797361], AM602: [52.688278, 4.680083],
+    AM603: [52.688139, 4.513361], AM607: [52.583889, 4.646889], AM608: [52.539417, 4.728139], AM609: [52.234583, 4.595750], AM610: [52.205361, 4.221583],
+    AM612: [52.328167, 4.375917], AM613: [52.209083, 4.462556], AM614: [52.207972, 4.526972], AM617: [52.333639, 4.928194], AM621: [52.462694, 4.721111],
+    AM624: [52.352667, 4.548694], AM627: [52.293389, 4.289056], AM630: [52.433806, 4.749444], AM632: [52.203444, 4.728306], AM636: [52.188472, 4.767889],
+    AM637: [52.373389, 4.785000], AM639: [52.323944, 4.964000], AM649: [52.467778, 5.024250], AM650: [52.430333, 4.970167], AM665: [52.246250, 5.041583],
+    AM667: [52.110583, 4.909500], AM668: [52.110639, 4.801361], AM669: [52.155222, 4.764833], ANDIK: [52.739444, 5.270556], ARNEM: [52.096389, 6.076667],
+    ARTIP: [52.511222, 5.569083], BAHSI: [52.422833, 4.488972], BERGI: [52.748889, 4.358889], BETUS: [52.688056, 5.162500], BLUFA: [52.836111, 6.333333],
+    DENAG: [52.082389, 3.890806], DENUT: [51.236111, 3.657500], DOFMU: [51.741389, 4.243611], EDUPO: [51.975556, 5.835833], ELPAT: [52.127500, 5.951111],
+    ETPOS: [52.585111, 3.414167], HAMZA: [51.722722, 3.858167], HELEN: [51.235278, 3.869722], IDRID: [51.996111, 3.496111], INBAM: [52.353111, 5.252972],
+    IVLUT: [52.244167, 5.256944], KUDAD: [51.667500, 4.567500], LAMSO: [52.732778, 2.994444], LARAS: [51.834444, 4.697222], LEKKO: [51.924167, 4.767222],
+    LEVKI: [52.431056, 4.718472], LISOH: [52.291361, 4.736361], LOPIK: [51.930833, 5.129167], LUNIX: [52.109722, 5.565278], LUTEX: [52.681444, 3.468556],
+    MOLIX: [52.821944, 3.068611], MONIL: [52.760833, 3.746667], NARSO: [52.715306, 6.709556], NETOM: [52.422444, 4.387917], NEWCO: [52.135306, 4.763000],
+    NIRSI: [52.583889, 4.513361], NOPSU: [52.586944, 4.950806], NORKU: [52.215556, 6.976389], NYKER: [52.230278, 5.528889], OGINA: [52.097500, 5.054722],
     OGOSU: [52.187694, 4.820667], OKUDO: [52.214194, 4.807722], OLGAX: [52.150278, 4.723444], OSKUR: [52.490444, 6.024028], OSRON: [52.206167, 4.522389],
-    OTNES: [52.257861, 4.774417], PESER: [51.614639, 4.526806], PEVOS: [52.515889, 4.725972], REDFA: [52.114722, 2.488056], RENDI: [52.061667, 5.675556],
-    RIKOR: [52.378000, 4.769278], RIVER: [51.912778, 4.132583], RKN: [52.133333, 6.763889], ROBIS: [52.468611, 6.467222], ROBVI: [52.571639, 3.776444],
-    RONSA: [51.504083, 4.441778], ROVEN: [51.963056, 5.114722], SIDNI: [52.486944, 4.754361], SONSA: [52.330889, 6.745583], SUGOL: [52.525500, 3.967361],
-    SULUT: [52.447917, 3.421056], TIDVO: [52.326750, 5.050806], TOPPA: [53.402500, 3.561389], TORGA: [52.598556, 5.203194], VALKO: [52.071389, 3.839722],
-    VOLLA: [52.314167, 4.156194], WISPA: [52.665917, 4.372167], WOODY: [51.405556, 4.366389], YENZO: [51.720528, 3.642889]
+    OTNES: [52.257861, 4.774417], PESER: [51.614639, 4.526806], PEVOS: [52.515889, 4.725972], PORWA: [52.066361, 4.116056], REDFA: [52.114722, 2.488056],
+    RENDI: [52.061667, 5.675556], RIKOR: [52.378000, 4.769278], RIVER: [51.912778, 4.132583], RKN: [52.133333, 6.763889], ROBIS: [52.468611, 6.467222],
+    ROBVI: [52.571639, 3.776444], RONSA: [51.504083, 4.441778], ROVEN: [51.963056, 5.114722], SETWO: [52.331528, 4.682889], SIDNI: [52.486944, 4.754361],
+    SOKSI: [52.237389, 4.364444], SONSA: [52.330889, 6.745583], SUGOL: [52.525500, 3.967361], SULUT: [52.447917, 3.421056], TIDVO: [52.326750, 5.050806],
+    TOPPA: [53.402500, 3.561389], TORGA: [52.598556, 5.203194], VALKO: [52.071389, 3.839722], VOLLA: [52.314167, 4.156194], WINJA: [52.688167, 4.849139],
+    WISPA: [52.665917, 4.372167], WOODY: [51.405556, 4.366389], YENZO: [51.720528, 3.642889]
   };
   // the navaids (ENR 4.1): Schiphol VOR/DME on the field, Pampus DME to the east, Spijkerboor VOR/DME to the north
   const NAV = {
@@ -5943,6 +5948,7 @@ const EHAM = (() => {
   // ── STARs (AD 2.22 para 2.4): RNAV1 from the FIR to an initial approach fix, crossed between FL100 and FL070 at 250 kt:
   // ARTIP (east), RIVER (south) or SUGOL (west). By day Schiphol Approach vectors from there to the ILS.
   const STARS = {
+    'BLUFA1A': { name: 'BLUFA1A', spoken: 'Blufa One Alpha', iaf: 'ARTIP', level: 7000, pts: [['BLUFA'], ['ARTIP', 7000]] },
     'DENUT3A': { name: 'DENUT3A', spoken: 'Denut Three Alpha', iaf: 'RIVER', level: 7000, pts: [['DENUT'], ['YENZO'], ['RIVER', 7000]] },
     'HELEN2A': { name: 'HELEN2A', spoken: 'Helen Two Alpha', iaf: 'RIVER', level: 7000, pts: [['HELEN'], ['HAMZA'], ['RIVER', 7000]] },
     'LAMSO2A': { name: 'LAMSO2A', spoken: 'Lamso Two Alpha', iaf: 'SUGOL', level: 7000, pts: [['LAMSO'], ['ETPOS'], ['SUGOL', 7000]] },
@@ -5953,25 +5959,43 @@ const EHAM = (() => {
     'RKN2A': { name: 'RKN2A', spoken: 'Rkn Two Alpha', iaf: 'ARTIP', level: 7000, pts: [['RKN'], ['OSKUR'], ['ARTIP', 7000]] },
     'TOPPA2A': { name: 'TOPPA2A', spoken: 'Toppa Two Alpha', iaf: 'SUGOL', level: 7000, pts: [['TOPPA'], ['MONIL'], ['ROBVI'], ['SUGOL', 7000]] }
   };
-  // ── approaches (AD 2.19 and the ILS plates): the intermediate fix (9.3 NM, 3,000 ft) and the final approach fix (6.2 NM,
-  // 2,000 ft, where the glidepath is intercepted), and the missed approach as the plates' communication failure route
+  // ── approaches (AD 2.22 para 2.11.3, the ILS coding tables, and the ILS plates): the intermediate fix and its altitude, the
+  // final approach fix (6.2 NM out, 2,000 ft, where the glidepath is met: on 18C it is met from 3,000 ft at SIDNI, on 22
+  // from 3,000 ft at AM650), and the missed approach. A missed approach is a list of fixes and of legs flown on a course
+  // ({ crs: true course, nm }: "track 055° MAG, climb to 2,000 ft" is a leg on 057.8° true), to its altitude.
   const ILS = {
-    '06':  { loc: 'KAG', freq: '110.55', ifx: 'OSRON', ifAlt: 3000, faf: 'AM609', fafAlt: 2000, missed: ['SPL'], missAlt: 3000, cat: 3, missText: 'track 055° MAG, climb to 2,000 ft' },
-    '18C': { loc: 'ZWA', freq: '109.50', ifx: 'SIDNI', ifAlt: 3000, faf: 'AM630', fafAlt: 2000, missed: ['AM120'], missAlt: 3000, cat: 3, missText: 'track 181° MAG, climb to 2,000 ft' },
-    '18R': { loc: 'VPB', freq: '110.10', ifx: 'PEVOS', ifAlt: 3000, faf: 'AM621', fafAlt: 2000, missed: ['AM624'], missAlt: 2000, cat: 3, missText: 'turn right to AM624, 2,000 ft, then track 299° MAG' },
-    '22':  { loc: 'SCH', freq: '109.15', ifx: 'AM650', ifAlt: 3000, faf: 'LANSU', fafAlt: 2600, missed: ['PAM'], missAlt: 3000, cat: 1, missText: 'turn left to track 158° MAG, climb to 2,000 ft' },
-    '27':  { loc: 'BVB', freq: '111.55', ifx: 'TIDVO', ifAlt: 3000, faf: 'AM639', fafAlt: 2000, missed: ['AM260'], missAlt: 3000, cat: 3, missText: 'track 265° MAG, climb to 3,000 ft' },
-    '36C': { loc: 'MSA', freq: '108.75', ifx: 'OLGAX', ifAlt: 3000, faf: 'AM632', fafAlt: 2000, missed: ['AM280'], missAlt: 3000, cat: 3, missText: 'track 001° MAG, climb to 2,000 ft' },
-    '36R': { loc: 'ABA', freq: '111.95', ifx: 'NEWCO', ifAlt: 3000, faf: 'AM636', fafAlt: 2000, missed: ['AM637', 'AM163'], missAlt: 2000, cat: 3, missText: 'track 001° MAG to AM637, 1,500 ft, then AM163, 2,000 ft' }
+    '06':  { loc: 'KAG', freq: '110.55', ifx: 'OSRON', ifAlt: 2000, faf: 'AM609', fafAlt: 2000, missed: [{ crs: 57.8, nm: 6 }], missAlt: 2000, cat: 3, missText: 'track 055° MAG, climb to 2,000 ft' },
+    '18C': { loc: 'ZWA', freq: '109.50', ifx: 'SIDNI', ifAlt: 3000, faf: 'AM630', fafAlt: 2000, missed: [{ crs: 183.2, nm: 6 }], missAlt: 2000, cat: 3, missText: 'track 181° MAG, climb to 2,000 ft' },
+    '18R': { loc: 'VPB', freq: '110.10', ifx: 'PEVOS', ifAlt: 2000, faf: 'AM621', fafAlt: 2000, missed: ['AM624', { crs: 301.3, nm: 4 }], missAlt: 2000, cat: 3, missText: 'at 500 ft turn right direct AM624, 2,000 ft, then track 299° MAG' },
+    '22':  { loc: 'SCH', freq: '109.15', ifx: 'AM649', ifAlt: 3000, faf: 'AM650', fafAlt: 3000, missed: [{ crs: 221.3, nm: 1.5 }, { crs: 160.4, nm: 5 }], missAlt: 2000, cat: 1, missText: 'track 219° MAG to 400 ft, then turn left to track 158° MAG, climb to 2,000 ft' },
+    '27':  { loc: 'BVB', freq: '111.55', ifx: 'TIDVO', ifAlt: 2000, faf: 'AM639', fafAlt: 2000, missed: [{ crs: 267.0, nm: 7 }], missAlt: 3000, cat: 3, missText: 'track 265° MAG, climb to 3,000 ft' },
+    '36C': { loc: 'MSA', freq: '108.75', ifx: 'OLGAX', ifAlt: 2000, faf: 'AM632', fafAlt: 2000, missed: [{ crs: 3.2, nm: 6 }], missAlt: 2000, cat: 3, missText: 'track 001° MAG, climb to 2,000 ft' },
+    '36R': { loc: 'ABA', freq: '111.95', ifx: 'NEWCO', ifAlt: 2000, faf: 'AM636', fafAlt: 2000, missed: ['AM637', 'AM163'], missAlt: 2000, cat: 3, missText: 'track 001° MAG to AM637, not above 1,500 ft, then AM163, 2,000 ft' }
+  };
+  // ── RNAV transitions (AD 2.22 para 2.7.2 and 2.11.3): from the initial approach fixes ARTIP, RIVER and SUGOL to the ILS.
+  // At night (21:30 to 05:30 UTC, an hour earlier in summer: 22:30 to 06:30 local all year) every jet flies the night
+  // transition to 06, 18C or 18R (1B, 1H, 1D), a continuous descent; by day the approach controller vectors, except that
+  // ARTIP traffic for 36R may be given ARTIP 2X. Each point with its lowest altitude and highest speed.
+  const TRANS = {
+    'ARTIP1B': { iaf: 'ARTIP', rwy: '06', when: 'night', pts: [['ARTIP', 10000, null], ['PAM', null, null], ['AM617', 10000, 250], ['SETWO', 7000, null], ['AM612', null, null], ['SOKSI', 4000, 220], ['AM613', null, null], ['AM614', 2900, null], ['AM110', null, null], ['AM609', 2000, null]] },
+    'ARTIP1D': { iaf: 'ARTIP', rwy: '18R', when: 'night', pts: [['ARTIP', 10000, null], ['WINJA', 10000, 250], ['AM602', 7000, null], ['AM603', null, null], ['NIRSI', 5500, 220], ['AM607', null, null], ['AM608', 3400, null], ['AM621', 2000, null]] },
+    'ARTIP1H': { iaf: 'ARTIP', rwy: '18C', when: 'night', pts: [['ARTIP', 10000, null], ['WINJA', 10000, 250], ['AM602', 7000, null], ['AM603', null, null], ['NIRSI', 5500, 220], ['AM607', null, null], ['AM608', 3400, null], ['SIDNI', null, null]] },
+    'ARTIP2X': { iaf: 'ARTIP', rwy: '36R', when: 'day', pts: [['ARTIP', 7000, 250], ['INBAM', null, null], ['AM665', null, 220], ['AM667', null, null], ['AM668', null, 180], ['AM669', 2000, null], ['AM636', 2000, null]] },
+    'RIVER1B': { iaf: 'RIVER', rwy: '06', when: 'night', pts: [['RIVER', 10000, null], ['PORWA', 7000, 250], ['AM610', null, null], ['SOKSI', 4000, 220], ['AM613', null, null], ['AM614', 2900, null], ['AM110', null, null], ['AM609', 2000, null]] },
+    'RIVER1D': { iaf: 'RIVER', rwy: '18R', when: 'night', pts: [['RIVER', 10000, null], ['PORWA', null, null], ['AM627', 10000, 250], ['NETOM', 7000, null], ['NIRSI', 5500, 220], ['AM607', null, null], ['AM608', 3400, null], ['AM621', 2000, null]] },
+    'RIVER1H': { iaf: 'RIVER', rwy: '18C', when: 'night', pts: [['RIVER', 10000, null], ['PORWA', null, null], ['AM627', 10000, 250], ['NETOM', 7000, null], ['NIRSI', 5500, 220], ['AM607', null, null], ['AM608', 3400, null], ['SIDNI', null, null]] },
+    'SUGOL1B': { iaf: 'SUGOL', rwy: '06', when: 'night', pts: [['SUGOL', 10000, null], ['NETOM', null, 250], ['SOKSI', 4000, 220], ['AM613', null, null], ['AM614', 2900, null], ['AM110', null, null], ['AM609', 2000, null]] },
+    'SUGOL1D': { iaf: 'SUGOL', rwy: '18R', when: 'night', pts: [['SUGOL', 10000, null], ['NETOM', 7000, 250], ['NIRSI', 5500, 220], ['AM607', null, null], ['AM608', 3400, null], ['AM621', 2000, null]] },
+    'SUGOL1H': { iaf: 'SUGOL', rwy: '18C', when: 'night', pts: [['SUGOL', 10000, null], ['NETOM', 7000, 250], ['NIRSI', 5500, 220], ['AM607', null, null], ['AM608', 3400, null], ['SIDNI', null, null]] }
   };
   const MINS = { 3: { vis: 75, ceil: 0 }, 1: { vis: 550, ceil: 200 }, 0: { vis: 1500, ceil: 400 } };
-  // ── the holds at the initial approach fixes (STAR charts): FL070 to FL100, 250 kt; NARSO (FL200 and above, 220 kt) when
-  // ARTIP is full. inb TRUE inbound track
+  // ── the holds (AD 2.22 para 2.5.6.2): at the initial approach fixes from FL070, 250 kt, right-hand, 1 minute; NARSO
+  // (FL200 and above, 220 kt, left-hand) when ARTIP is full. inb TRUE inbound track (variation 2°E)
   const HOLDS_AIR = {
-    ARTIP: { inb: 272, turn: 'R', min: 7000, max: 10000, maxKt: 250 },
-    RIVER: { inb: 339, turn: 'R', min: 7000, max: 10000, maxKt: 250 },
-    SUGOL: { inb: 292, turn: 'R', min: 7000, max: 10000, maxKt: 250 },
-    NARSO: { inb: 177, turn: 'R', min: 20000, max: 24000, maxKt: 220 }
+    ARTIP: { inb: 253, turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // AD 2.22 para 2.5.6.2: 251° MAG
+    RIVER: { inb: 42,  turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // 040° MAG
+    SUGOL: { inb: 111, turn: 'R', min: 7000, max: 10000, maxKt: 250 },     // 109° MAG
+    NARSO: { inb: 356, turn: 'L', min: 20000, max: 26000, maxKt: 220 }     // 354° MAG, left-hand
   };
 
   // ── SIDs (AD 2.22 para 1.5): RNAV1, every runway its own set, the letter of the designator the runway (S and Q 24, E 18L,
@@ -6067,6 +6091,7 @@ const EHAM = (() => {
   const INIT_CLIMB = 6000;
   // ── the direction sectors: the STAR an arrival comes by
   const DIR = {
+    "BLUFA": { brg: 60, entry: 'BLUFA', star: 'BLUFA1A' },
     "NORKU": { brg: 93, entry: 'NORKU', star: 'NORKU2A' },
     "RKN": { brg: 97, entry: 'RKN', star: 'RKN2A' },
     "PESER": { brg: 192, entry: 'PESER', star: 'PESER3A' },
@@ -6078,7 +6103,7 @@ const EHAM = (() => {
     "TOPPA": { brg: 327, entry: 'TOPPA', star: 'TOPPA2A' }
   };
   const SID_BRG = { ANDIK: 35, ARNEM: 104, BERGI: 331, EDUPO: 116, IDRID: 249, LOPIK: 149, WOODY: 195 };
-  const PLACE_DIR = { BIKF: "TOPPA", CYUL: "MOLIX", CYVR: "TOPPA", CYYZ: "MOLIX", DGAA: "PESER", DNMM: "PESER", EBBR: "PESER", EDDB: "NORKU", EDDF: "RKN", EDDH: "NORKU", EDDL: "RKN", EDDM: "RKN", EDDN: "RKN", EDDS: "RKN", EDDV: "NORKU", EDDW: "NORKU", EETN: "NORKU", EFHK: "NORKU", EGAA: "LAMSO", EGBB: "REDFA", EGCC: "LAMSO", EGFF: "REDFA", EGGD: "REDFA", EGGP: "LAMSO", EGHI: "REDFA", EGKK: "REDFA", EGLC: "REDFA", EGLL: "REDFA", EGNJ: "LAMSO", EGNM: "MOLIX", EGNT: "MOLIX", EGNV: "MOLIX", EGPD: "TOPPA", EGPE: "TOPPA", EGPF: "MOLIX", EGPH: "MOLIX", EGSH: "LAMSO", EGTE: "REDFA", EHEH: "PESER", EHGG: "NORKU", EHRD: "HELEN", EICK: "REDFA", EIDW: "LAMSO", EKBI: "NORKU", EKCH: "NORKU", EKYT: "TOPPA", ELLX: "PESER", ENAL: "TOPPA", ENBR: "TOPPA", ENCN: "TOPPA", ENGM: "TOPPA", ENVA: "TOPPA", ENZV: "TOPPA", EPGD: "NORKU", EPKK: "RKN", EPPO: "NORKU", EPWA: "NORKU", EPWR: "NORKU", ESGG: "NORKU", ESSA: "NORKU", ESSL: "NORKU", EVRA: "NORKU", GCLP: "DENUT", GCRR: "DENUT", GCTS: "DENUT", GMMN: "HELEN", GMMW: "HELEN", GMMX: "HELEN", GVAC: "DENUT", GVNP: "DENUT", HECA: "RKN", HEGN: "RKN", HEMA: "RKN", HKJK: "RKN", HTDA: "RKN", KATL: "LAMSO", KBOS: "LAMSO", KDCA: "LAMSO", KDTW: "MOLIX", KEWR: "LAMSO", KIAH: "MOLIX", KJFK: "LAMSO", KLAX: "TOPPA", KMCO: "LAMSO", KMIA: "LAMSO", KMSP: "MOLIX", KORD: "MOLIX", KPHL: "LAMSO", KSAN: "TOPPA", KSEA: "TOPPA", KSFO: "TOPPA", KSLC: "TOPPA", KTPA: "LAMSO", LDZA: "RKN", LEAL: "PESER", LEBB: "DENUT", LEBL: "PESER", LEIB: "PESER", LEMD: "HELEN", LEMG: "HELEN", LEVC: "PESER", LEZL: "DENUT", LFBD: "HELEN", LFBO: "PESER", LFLL: "PESER", LFML: "PESER", LFMN: "PESER", LFMT: "PESER", LFPG: "HELEN", LFRN: "DENUT", LFRS: "DENUT", LFSB: "PESER", LGAV: "RKN", LGTS: "RKN", LHBP: "RKN", LICJ: "PESER", LIMF: "PESER", LIMJ: "PESER", LIML: "PESER", LIPE: "PESER", LIPZ: "RKN", LIRF: "PESER", LIRI: "PESER", LIRP: "PESER", LIRQ: "PESER", LJLJ: "RKN", LKPR: "RKN", LLBG: "RKN", LMML: "PESER", LOWW: "RKN", LPFR: "DENUT", LPMA: "DENUT", LPPR: "DENUT", LPPT: "DENUT", LROP: "RKN", LSGG: "PESER", LSZH: "PESER", LTAC: "RKN", LTAI: "RKN", LTBJ: "RKN", LTFM: "RKN", LYBE: "RKN", MMMX: "LAMSO", MMUN: "LAMSO", MROC: "REDFA", OEJN: "RKN", OMAA: "RKN", OMDB: "RKN", OTHH: "RKN", RCTP: "NORKU", RJAA: "NORKU", RJBB: "NORKU", RKSI: "NORKU", SAEZ: "DENUT", SBGL: "DENUT", SBGR: "DENUT", SEGU: "REDFA", SKBO: "REDFA", SPJC: "REDFA", TJBQ: "REDFA", TNCA: "REDFA", TNCC: "REDFA", UBBB: "NORKU", VABB: "RKN", VHHH: "NORKU", VIDP: "NORKU", VTBS: "NORKU", WIII: "NORKU", WMKK: "NORKU", WSSS: "NORKU", ZBAD: "NORKU", ZGGG: "NORKU", ZSPD: "NORKU" };
+  const PLACE_DIR = { BIKF: "TOPPA", CYUL: "MOLIX", CYVR: "TOPPA", CYYZ: "MOLIX", DGAA: "PESER", DNMM: "PESER", EBBR: "PESER", EDDB: "NORKU", EDDF: "RKN", EDDH: "BLUFA", EDDL: "RKN", EDDM: "RKN", EDDN: "RKN", EDDS: "RKN", EDDV: "NORKU", EDDW: "BLUFA", EETN: "BLUFA", EFHK: "BLUFA", EGAA: "LAMSO", EGBB: "REDFA", EGCC: "LAMSO", EGFF: "REDFA", EGGD: "REDFA", EGGP: "LAMSO", EGHI: "REDFA", EGKK: "REDFA", EGLC: "REDFA", EGLL: "REDFA", EGNJ: "LAMSO", EGNM: "MOLIX", EGNT: "MOLIX", EGNV: "MOLIX", EGPD: "TOPPA", EGPE: "TOPPA", EGPF: "MOLIX", EGPH: "MOLIX", EGSH: "LAMSO", EGTE: "REDFA", EHEH: "PESER", EHGG: "BLUFA", EHRD: "HELEN", EICK: "REDFA", EIDW: "LAMSO", EKBI: "BLUFA", EKCH: "BLUFA", EKYT: "BLUFA", ELLX: "PESER", ENAL: "TOPPA", ENBR: "TOPPA", ENCN: "BLUFA", ENGM: "BLUFA", ENVA: "BLUFA", ENZV: "TOPPA", EPGD: "BLUFA", EPKK: "RKN", EPPO: "NORKU", EPWA: "NORKU", EPWR: "NORKU", ESGG: "BLUFA", ESSA: "BLUFA", ESSL: "BLUFA", EVRA: "BLUFA", GCLP: "DENUT", GCRR: "DENUT", GCTS: "DENUT", GMMN: "HELEN", GMMW: "HELEN", GMMX: "HELEN", GVAC: "DENUT", GVNP: "DENUT", HECA: "RKN", HEGN: "RKN", HEMA: "RKN", HKJK: "RKN", HTDA: "RKN", KATL: "LAMSO", KBOS: "LAMSO", KDCA: "LAMSO", KDTW: "MOLIX", KEWR: "LAMSO", KIAH: "MOLIX", KJFK: "LAMSO", KLAX: "TOPPA", KMCO: "LAMSO", KMIA: "LAMSO", KMSP: "MOLIX", KORD: "MOLIX", KPHL: "LAMSO", KSAN: "TOPPA", KSEA: "TOPPA", KSFO: "TOPPA", KSLC: "TOPPA", KTPA: "LAMSO", LDZA: "RKN", LEAL: "PESER", LEBB: "DENUT", LEBL: "PESER", LEIB: "PESER", LEMD: "HELEN", LEMG: "HELEN", LEVC: "PESER", LEZL: "DENUT", LFBD: "HELEN", LFBO: "PESER", LFLL: "PESER", LFML: "PESER", LFMN: "PESER", LFMT: "PESER", LFPG: "HELEN", LFRN: "DENUT", LFRS: "DENUT", LFSB: "PESER", LGAV: "RKN", LGTS: "RKN", LHBP: "RKN", LICJ: "PESER", LIMF: "PESER", LIMJ: "PESER", LIML: "PESER", LIPE: "PESER", LIPZ: "RKN", LIRF: "PESER", LIRI: "PESER", LIRP: "PESER", LIRQ: "PESER", LJLJ: "RKN", LKPR: "RKN", LLBG: "RKN", LMML: "PESER", LOWW: "RKN", LPFR: "DENUT", LPMA: "DENUT", LPPR: "DENUT", LPPT: "DENUT", LROP: "RKN", LSGG: "PESER", LSZH: "PESER", LTAC: "RKN", LTAI: "RKN", LTBJ: "RKN", LTFM: "RKN", LYBE: "RKN", MMMX: "LAMSO", MMUN: "LAMSO", MROC: "REDFA", OEJN: "RKN", OMAA: "RKN", OMDB: "RKN", OTHH: "RKN", RCTP: "BLUFA", RJAA: "BLUFA", RJBB: "BLUFA", RKSI: "BLUFA", SAEZ: "DENUT", SBGL: "DENUT", SBGR: "DENUT", SEGU: "REDFA", SKBO: "REDFA", SPJC: "REDFA", TJBQ: "REDFA", TNCA: "REDFA", TNCC: "REDFA", UBBB: "NORKU", VABB: "RKN", VHHH: "BLUFA", VIDP: "NORKU", VTBS: "NORKU", WIII: "NORKU", WMKK: "NORKU", WSSS: "NORKU", ZBAD: "BLUFA", ZGGG: "BLUFA", ZSPD: "BLUFA" };
 
   // ── units and frequencies (AD 2.18): Schiphol Delivery, Planner (start-up), Ground by sector, a Tower for each runway,
   // Approach (east via ARTIP, west and south via SUGOL and RIVER), Arrival (the final director) and Departure
@@ -6735,7 +6760,7 @@ const EHAM = (() => {
 
   return {
     icao: 'EHAM', iata: 'AMS', name: 'Amsterdam Schiphol', city: 'Amsterdam', country: 'Netherlands', arp: P('521829N', '0044551E'), elev: -11,
-    VAR, FIX, NAV, RWY, STARS, ILS, MINS, HOLDS_AIR, SIDS, SID_BRG, INIT_CLIMB, DIR, PLACE_DIR, UNITS, CTR, TA, TZ, CONFIGS, TERMINAL_OF, TERMINAL_DEFAULT,
+    VAR, FIX, NAV, RWY, STARS, ILS, TRANS, MINS, HOLDS_AIR, SIDS, SID_BRG, INIT_CLIMB, DIR, PLACE_DIR, UNITS, CTR, TA, TZ, CONFIGS, TERMINAL_OF, TERMINAL_DEFAULT,
     TIMETABLE, LONG_STAY, EXTRA, EXERCISES, WX_PRESETS, TEL, AIRLINE_ICAO, AIRLINE_TYPE, TYPES, PLACES, AIRPORTS, ALTERNATES,
     data: { metar: 'eham/metar.txt', flights: 'eham/flights.json' },
     features: { roadCrossing: false, sra: false, parallelRunways: true, crossings: true, pointMerge: false, faa: false }
@@ -7107,7 +7132,7 @@ function drawEhamTop(){
 
 // ═════════════════════════ fixes, STARs, SIDs ═════════════════════════
 const STAR_LIST = Object.values(EHAM.STARS);
-const STAR_FIXES = new Set(STAR_LIST.flatMap(s => s.pts.map(p => p[0])));
+const STAR_FIXES = new Set([...STAR_LIST.flatMap(s => s.pts.map(p => p[0])), ...Object.values(EHAM.TRANS).flatMap(t => t.pts.map(p => p[0]))]);
 const SID_FIXES = new Set(Object.values(EHAM.SIDS).flatMap(s => s.pts));
 const APP_FIXES = new Set(Object.values(EHAM.ILS).flatMap(i => [i.ifx, i.faf]));
 for (const [id, p] of Object.entries(EHAM.FIX)) wp(id, p[0], p[1], (STAR_FIXES.has(id) || APP_FIXES.has(id)) && !/^AM\d/.test(id) ? {} : { minor: true });
@@ -7122,6 +7147,10 @@ const ENTRY_ALT = Object.fromEntries(GATES.map(g => [g, 15000]));
 const PRE_ALT = Object.fromEntries(GATES.map(g => [g, ENTRY_ALT[g] + 14000]));
 
 // ── approaches: the localiser from 3 NM outside the intermediate fix, the 3° glidepath from its altitude
+// a missed approach flown on a course ("track 055° MAG, climb to 2,000 ft") is laid out as hidden points along it, from the
+// threshold (MA06A ...), so the go-around follows it the way it follows fixes
+const missedIds = (rw, list) => { let at = THR[rw]; return list.map((m, i) => { if (typeof m === 'string') { at = WP[m] ? WP[m].p : at; return m; }
+  const id = `MA${rw}${'ABCDEF'[i]}`; at = add(at, m.crs, m.nm); WP[id] = { id, p: at, minor: true, hide: true }; return id; }); };
 const FINAL = {};
 for (const [rw, I] of Object.entries(EHAM.ILS)) {
   if (!THR[rw]) continue;
@@ -7129,7 +7158,7 @@ for (const [rw, I] of Object.entries(EHAM.ILS)) {
   const M = EHAM.MINS[I.cat], low = Math.round((elev + 1000)/100)*100;
   const F = { pts: [add(thr, out, dIF + 3), add(thr, out, dIF), thr], alts: [I.ifAlt, I.ifAlt, elev + 50], elev, entry: I.ifx, entryName: I.ifx, name: 'ILS ' + rw, alt: I.ifAlt,
     decName: I.faf, decNM: dFAF + 0.2, decMin: Math.max(1.6, dFAF - 1.6), minAlt: low, minText: `${low.toLocaleString('en-GB')} ft`,
-    mins: M, minRate: 300, missed: I.missed.slice(), missAlt: I.missAlt,
+    mins: M, minRate: 300, missed: missedIds(rw, I.missed), missAlt: I.missAlt,
     phrase: r => `cleared ILS approach runway ${r}, report established`, read: r => `cleared ILS ${r}, wilco`,
     decCall: r => `${APT.tower[0]}, ${I.faf.replace(/^AM/, 'A M ')}, ILS runway ${r}`, decNeed: `Inbound past the final approach fix, needs landing clearance`, decFail: 'not visual at minima' };
   F.cum = new Array(F.pts.length).fill(0); for (let i = F.pts.length - 2; i >= 0; i--) F.cum[i] = F.cum[i+1] + dist(...F.pts[i], ...F.pts[i+1]);
@@ -7137,14 +7166,34 @@ for (const [rw, I] of Object.entries(EHAM.ILS)) {
   F.prof = [[0, elev + 50], [meet, I.ifAlt], [F.cum[0] + 1, I.ifAlt]];
   FINAL[rw] = F;
 }
-// the route to the intermediate fix: the STAR to its initial approach fix, then (by day, radar vectors) the intermediate fix
+// the route on from the STAR: by day the approach controller vectors from the initial approach fix to the intermediate fix
+// (the route goes direct to it); at night every jet flies the night transition to the runway in use (1B to 06, 1H to 18C,
+// 1D to 18R: AD 2.22 para 2.7.2.2), and by day ARTIP traffic for 36R is given ARTIP 2X. ARR_ROUTE[gate] is keyed by
+// runway ('18R'), night transition ('18R:N') and ARTIP 2X ('36R:X'); APT.arrRoute picks the key for each arrival.
 const LAND_RWYS = Object.keys(FINAL);
-const ARR_ROUTE = Object.fromEntries(GATES.map(g => [g, Object.fromEntries(LAND_RWYS.map(rw => {
-  const st = starOf(g, rw).pts.map(p => p[0]);
-  return [rw, [...st, EHAM.ILS[rw].ifx]];
-}))]));
+const TRANS_OF = (iaf, rw, when) => Object.values(EHAM.TRANS).find(t => t.iaf === iaf && t.rwy === rw && t.when === when);
+const ARR_ROUTE = Object.fromEntries(GATES.map(g => { const st = starOf(g).pts.map(p => p[0]), iaf = IAF_OF(g), R = {};
+  for (const rw of LAND_RWYS) {
+    R[rw] = [...st, EHAM.ILS[rw].ifx];
+    const n = TRANS_OF(iaf, rw, 'night'), d = TRANS_OF(iaf, rw, 'day');
+    if (n) R[rw + ':N'] = [...st, ...n.pts.slice(1).map(p => p[0])];
+    if (d) R[rw + ':X'] = [...st, ...d.pts.slice(1).map(p => p[0])];
+  }
+  return [g, R]; }));
 const HOLD_AT = Object.fromEntries(GATES.map(g => [g, IAF_OF(g)]));
+// the night: 21:30 to 05:30 UTC in winter, 20:30 to 04:30 in summer, 22:30 to 06:30 Amsterdam time all year
+const nightNow = () => { const m = localMin(); return m != null && (m >= 22*60 + 30 || m < 6*60 + 30); };
+const isJetAc = o => { const t = TYPES[o.t || (o.perf && o.perf.icao)] || o.perf; return !t || t.shape !== 'prop' && (t.cruise || 300) >= 250; };
+function arrKeyOf(o){
+  const rw = landRw(o), iaf = IAF_OF(o.gate);
+  if (nightNow() && isJetAc(o) && TRANS_OF(iaf, rw, 'night')) return rw + ':N';
+  if (!nightNow() && TRANS_OF(iaf, rw, 'day')) return rw + ':X';
+  return rw;
+}
+// the altitudes along the routes: the STAR's (FL070 at the initial approach fix), the transitions' lowest altitudes, the
+// intermediate fixes'
 const ARR_ALT = (() => { const m = {}; for (const s of STAR_LIST) for (const [id, a] of s.pts) if (a && m[id] == null) m[id] = a;
+  for (const t of Object.values(EHAM.TRANS)) for (const [id, a] of t.pts.slice(1)) if (a && m[id] == null) m[id] = a;
   for (const I of Object.values(EHAM.ILS)) m[I.ifx] = I.ifAlt; return m; })();
 
 // ── departures: the SID of the take-off runway whose end is nearest the destination's bearing
@@ -7226,7 +7275,7 @@ const APT = {
   minsOk,
   splitRwy: true, rwyFor, depFor, configOf,
   rwyConfigs: Object.entries(CFG).map(([key, c]) => ({ key, name: c.name.split(':')[0], land: c.land[0], lands: c.land, deps: c.dep })),
-  depRwyOf, landRwyOf, arrRoute: o => landRw(o),
+  depRwyOf, landRwyOf, arrRoute: o => arrKeyOf(o),
   activeRwys: () => [...new Set([...landList(), ...depList()])],
   depRwys: () => depList(),
   appRwys: () => landList(),
@@ -21541,7 +21590,7 @@ Object.assign(COACH, {
   ],
   sarr: [
     { h: 'An arrival from the south-west', p: 'EZY7911 from Gatwick comes in on a STAR to SUGOL, the initial approach fix west of the field at 7,000 ft. It checks in descending.', cmd: null, ok: () => !!A('EZY7911') && A('EZY7911').state !== 'PRE' },
-    { h: 'Towards the ILS 18R', p: 'From SUGOL it goes for PEVOS, the 18R intermediate fix at 3,000 ft. Descend it with <code>EZY7911 A30</code> and send it on with <code>EZY7911 DCT PEVOS</code>.', cmd: ['EZY7911 A30', 'EZY7911 DCT PEVOS'], ok: () => !!A('EZY7911') && (A('EZY7911').tgtAlt || 99999) <= 4000 || sn('EZY7911').landed },
+    { h: 'Towards the ILS 18R', p: 'From SUGOL it goes for PEVOS, the 18R intermediate fix at 2,000 ft. Descend it with <code>EZY7911 A20</code> and send it on with <code>EZY7911 DCT PEVOS</code>.', cmd: ['EZY7911 A20', 'EZY7911 DCT PEVOS'], ok: () => !!A('EZY7911') && (A('EZY7911').tgtAlt || 99999) <= 3000 || sn('EZY7911').landed },
     { h: 'Clear the ILS 18R', p: 'Type <code>EZY7911 APP</code>: "cleared ILS approach runway 18R, report established". The final approach fix is AM621, 6.2 NM out.', cmd: 'EZY7911 APP', ok: () => !!A('EZY7911') && !!A('EZY7911').app || sn('EZY7911').landed },
     { h: 'Tower and landing clearance', p: 'Send it to Schiphol Tower on 118.280, the 18R/36L tower frequency, with <code>EZY7911 HO</code>, then <code>EZY7911 CTL</code>.', cmd: ['EZY7911 HO', 'EZY7911 CTL'], ok: () => !!(A('EZY7911') && A('EZY7911').ctl) || sn('EZY7911').landed },
     taxiInStep('EZY7911', 'Clear of 18R it stops and calls Ground. The taxi in from the Polderbaan is the longest at Schiphol, by V and over the A5 (in its tunnel) and the bridge over the Hoofdvaart and the Hoofdweg: press <b>Taxi to stand</b> or type <code>EZY7911 TAXI</code>.', 'Taxi EZY7911 to its stand'),
