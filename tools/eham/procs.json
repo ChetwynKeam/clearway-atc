@@ -1,0 +1,6038 @@
+{
+"fixes": {
+"AM095": [
+"521637.11N",
+"0044220.44E"
+],
+"AM125": [
+"521536.31N",
+"0044113.63E"
+],
+"AM157": [
+"521341.78N",
+"0044239.95E"
+],
+"AM158": [
+"521520.46N",
+"0044338.79E"
+],
+"AM159": [
+"521516.99N",
+"0044410.51E"
+],
+"AM003": [
+"521024.55N",
+"0044446.16E"
+],
+"AM004": [
+"515918.69N",
+"0044904.07E"
+],
+"AM156": [
+"521427.71N",
+"0044129.83E"
+],
+"AM096": [
+"521626.65N",
+"0044022.06E"
+],
+"AM097": [
+"521914.81N",
+"0043831.63E"
+],
+"AM098": [
+"521753.74N",
+"0044102.01E"
+],
+"AM099": [
+"521816.81N",
+"0044112.60E"
+]
+},
+"sids": {
+"ANDIK 3F": {
+"arinc": "ANDI3F",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 4.0% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM019",
+"fo": false,
+"crs": "039 / (041.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM020",
+"fo": false,
+"crs": "089 / (091.1)",
+"nav": "-",
+"dist": "3.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM043",
+"fo": false,
+"crs": "052 / (054.5)",
+"nav": "-",
+"dist": "9.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "012 / (015.0)",
+"nav": "-",
+"dist": "19.5",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 3F": {
+"arinc": "ARNE3F",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 4.0% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "039 / (041.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM060",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "103 / (105.7)",
+"nav": "-",
+"dist": "13.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BERGI 2F": {
+"arinc": "BERG2F",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 5.7% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM019",
+"fo": false,
+"crs": "039 / (041.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "360 / (002.8)",
+"nav": "-",
+"dist": "12.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "302 / (304.9)",
+"nav": "-",
+"dist": "22.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 2F": {
+"arinc": "KUDA2F",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 4.0% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "039 / (041.5)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM036",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM072",
+"fo": false,
+"crs": "178 / (180.7)",
+"nav": "-",
+"dist": "14.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "203 / (205.9)",
+"nav": "-",
+"dist": "6.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 2F": {
+"arinc": "LOPI2F",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8.\n \n Minimum climb gradient: 4.0% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "039 / (041.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM061",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "OGINA",
+"fo": false,
+"crs": "139 / (141.4)",
+"nav": "-",
+"dist": "9.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "162 / (164.6)",
+"nav": "-",
+"dist": "10.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 2F": {
+"arinc": "REND2F",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 4.0% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "039 / (041.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM060",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "103 / (105.7)",
+"nav": "-",
+"dist": "13.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VOLLA 2F": {
+"arinc": "VOLL2F",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 5.7% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM059",
+"fo": false,
+"crs": "039 / (041.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM094",
+"fo": false,
+"crs": "314 / (316.0)",
+"nav": "-",
+"dist": "10.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM090",
+"fo": false,
+"crs": "268 / (270.9)",
+"nav": "-",
+"dist": "4.7",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BAHSI",
+"fo": false,
+"crs": "210 / (212.0)",
+"nav": "-",
+"dist": "3.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VOLLA",
+"fo": false,
+"crs": "240 / (242.1)",
+"nav": "-",
+"dist": "13.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "230 / (232.2)",
+"nav": "-",
+"dist": "31.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ANDIK 3R": {
+"arinc": "ANDI3R",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM014",
+"fo": false,
+"crs": "056 / (058.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM020",
+"fo": false,
+"crs": "089 / (091.1)",
+"nav": "-",
+"dist": "2.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM043",
+"fo": false,
+"crs": "052 / (054.5)",
+"nav": "-",
+"dist": "9.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "012 / (015.0)",
+"nav": "-",
+"dist": "19.5",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 3R": {
+"arinc": "ARNE3R",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "056 / (058.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM018",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "103 / (105.7)",
+"nav": "-",
+"dist": "16.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 2R": {
+"arinc": "KUDA2R",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "056 / (058.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM036",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM072",
+"fo": false,
+"crs": "178 / (180.7)",
+"nav": "-",
+"dist": "14.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "203 / (205.9)",
+"nav": "-",
+"dist": "6.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 2R": {
+"arinc": "LOPI2R",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8. \n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "056 / (058.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM036",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "OGINA",
+"fo": false,
+"crs": "139 / (141.4)",
+"nav": "-",
+"dist": "12.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "162 / (164.6)",
+"nav": "-",
+"dist": "10.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 2R": {
+"arinc": "REND2R",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8. \n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "056 / (058.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM018",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "103 / (105.7)",
+"nav": "-",
+"dist": "16.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VOLLA 2R": {
+"arinc": "VOLL2R",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 4.6% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM014",
+"fo": false,
+"crs": "056 / (058.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM094",
+"fo": false,
+"crs": "314 / (316.1)",
+"nav": "-",
+"dist": "10.7",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM090",
+"fo": false,
+"crs": "269 / (270.9)",
+"nav": "-",
+"dist": "4.7",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BAHSI",
+"fo": false,
+"crs": "210 / (212.0)",
+"nav": "-",
+"dist": "3.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VOLLA",
+"fo": false,
+"crs": "240 / (242.1)",
+"nav": "-",
+"dist": "13.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "230 / (232.2)",
+"nav": "-",
+"dist": "31.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ANDIK 2T": {
+"arinc": "ANDI2T",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 4.6% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM014",
+"fo": false,
+"crs": "056 / (058.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM021",
+"fo": false,
+"crs": "315 / (317.6)",
+"nav": "-",
+"dist": "11.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "060 / (062.2)",
+"nav": "-",
+"dist": "8.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "049 / (051.7)",
+"nav": "-",
+"dist": "19.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 3T": {
+"arinc": "ARNE3T",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "056 / (058.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM036",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM017",
+"fo": false,
+"crs": "139 / (141.4)",
+"nav": "-",
+"dist": "5.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "070 / (072.9)",
+"nav": "-",
+"dist": "12.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 2T": {
+"arinc": "KUDA2T",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "056 / (058.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM036",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM038",
+"fo": false,
+"crs": "139 / (141.4)",
+"nav": "-",
+"dist": "6.7",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "203 / (206.0)",
+"nav": "-",
+"dist": "16.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 2T": {
+"arinc": "REND2T",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "056 / (058.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM036",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM017",
+"fo": false,
+"crs": "139 / (141.4)",
+"nav": "-",
+"dist": "5.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "070 / (072.9)",
+"nav": "-",
+"dist": "12.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ANDIK 2N": {
+"arinc": "ANDI2N",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 3.8% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "084 / (086.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM052",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM043",
+"fo": false,
+"crs": "052 / (054.4)",
+"nav": "-",
+"dist": "10.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "012 / (015.0)",
+"nav": "-",
+"dist": "19.5",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 3N": {
+"arinc": "ARNE3N",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 3.8% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM055",
+"fo": false,
+"crs": "084 / (086.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM042",
+"fo": false,
+"crs": "111 / (113.2)",
+"nav": "-",
+"dist": "3.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "103 / (105.8)",
+"nav": "-",
+"dist": "11.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BERGI 3N": {
+"arinc": "BERG3N",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 5.0% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "084 / (086.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM053",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM094",
+"fo": false,
+"crs": "313 / (315.2)",
+"nav": "-",
+"dist": "6.7",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM022",
+"fo": false,
+"crs": "336 / (338.4)",
+"nav": "-",
+"dist": "13.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "302 / (304.6)",
+"nav": "-",
+"dist": "7.2",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"IDRID 2N": {
+"arinc": "IDRI2N",
+"remarks": "See paragraph 1.5.2 specific remark: 4, 8.\n \n Minimum climb gradient: 5.0% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "084 / (086.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM053",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM094",
+"fo": false,
+"crs": "313 / (315.2)",
+"nav": "-",
+"dist": "6.7",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM090",
+"fo": false,
+"crs": "269 / (270.9)",
+"nav": "-",
+"dist": "4.7",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BAHSI",
+"fo": false,
+"crs": "210/ (212.0)",
+"nav": "-",
+"dist": "3.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VOLLA",
+"fo": false,
+"crs": "240 / (242.1)",
+"nav": "-",
+"dist": "13.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "230 / (232.2)",
+"nav": "-",
+"dist": "31.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 2N": {
+"arinc": "KUDA2N",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 3.8% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "084 / (086.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM036",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM072",
+"fo": false,
+"crs": "178 / (180.7)",
+"nav": "-",
+"dist": "14.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "203 / (205.9)",
+"nav": "-",
+"dist": "6.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 2N": {
+"arinc": "LOPI2N",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8.\n \n Minimum climb gradient: 3.8% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "084 / (086.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM036",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "OGINA",
+"fo": false,
+"crs": "139 / (141.4)",
+"nav": "-",
+"dist": "12.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "162 / (164.6)",
+"nav": "-",
+"dist": "10.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 2N": {
+"arinc": "REND2N",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 3.8% to 1000 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM055",
+"fo": false,
+"crs": "084 / (086.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM042",
+"fo": false,
+"crs": "111 / (113.2)",
+"nav": "-",
+"dist": "3.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "103 / (105.8)",
+"nav": "-",
+"dist": "11.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VALKO 5M": {
+"arinc": "VALK5M",
+"remarks": "See paragraph 1.5.2 specific remark: 4, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "084 / (086.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM030",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM025",
+"fo": false,
+"crs": "212 / (214.5)",
+"nav": "-",
+"dist": "4.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM040",
+"fo": false,
+"crs": "237 / (239.2)",
+"nav": "-",
+"dist": "11.7",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VALKO",
+"fo": false,
+"crs": "263 / (265.0)",
+"nav": "-",
+"dist": "23.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "248 / (250.6)",
+"nav": "-",
+"dist": "13.5",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BETUS 6Y": {
+"arinc": "BETU6Y",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "LISOH",
+"fo": true,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM049",
+"fo": false,
+"crs": "300 / (302.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "028 / (030.4)",
+"nav": "-",
+"dist": "17.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BETUS",
+"fo": false,
+"crs": "049 / (051.7)",
+"nav": "-",
+"dist": "14.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "049 / (051.9)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"DENAG 7X": {
+"arinc": "DENA7X",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "LISOH",
+"fo": true,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM051",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM009",
+"fo": false,
+"crs": "249 / (251.3)",
+"nav": "-",
+"dist": "3.8",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "DENAG",
+"fo": false,
+"crs": "249 / (251.2)",
+"nav": "-",
+"dist": "26.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "248 / (250.7)",
+"nav": "-",
+"dist": "15.5",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"EDUPO 3X": {
+"arinc": "EDUP3X",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM046",
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "116 / (118.3)",
+"nav": "-",
+"dist": "5.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "070 / (072.8)",
+"nav": "-",
+"dist": "14.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ELPAT 3X": {
+"arinc": "ELPA3X",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM046",
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "116 / (118.3)",
+"nav": "-",
+"dist": "5.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "070 / (072.8)",
+"nav": "-",
+"dist": "14.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ELPAT",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "16.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.8)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LARAS 2X": {
+"arinc": "LARA2X",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM046",
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM074",
+"fo": false,
+"crs": "160 / (162.0)",
+"nav": "-",
+"dist": "3.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "176 / (178.5)",
+"nav": "-",
+"dist": "14.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LARAS",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "6.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "28.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ROVEN 3X": {
+"arinc": "ROVE3X",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM046",
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM069",
+"fo": false,
+"crs": "116 / (118.3)",
+"nav": "-",
+"dist": "8.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ROVEN",
+"fo": false,
+"crs": "146 / (148.7)",
+"nav": "-",
+"dist": "13.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "162 / (164.6)",
+"nav": "-",
+"dist": "2.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"TORGA 2X": {
+"arinc": "TORG2X",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM046",
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "116 / (118.3)",
+"nav": "-",
+"dist": "5.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "037 / (039.8)",
+"nav": "-",
+"dist": "12.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "TORGA",
+"fo": false,
+"crs": "012 / (014.4)",
+"nav": "-",
+"dist": "16.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "014 / (016.2)",
+"nav": "-",
+"dist": "8.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"WISPA 4X": {
+"arinc": "WISP4X",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "LISOH",
+"fo": true,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM051",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM009",
+"fo": false,
+"crs": "249 / (251.3)",
+"nav": "-",
+"dist": "3.8",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM028",
+"fo": false,
+"crs": "326 / (328.6)",
+"nav": "-",
+"dist": "9.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WISPA",
+"fo": false,
+"crs": "352 / (354.5)",
+"nav": "-",
+"dist": "18.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "352 / (354.5)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ANDIK 4E": {
+"arinc": "ANDI4E",
+"remarks": "See paragraph 1.5.2 specific remark: 7, 8. \n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "OTNES",
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM047",
+"fo": false,
+"crs": "090 / (092.0)",
+"nav": "-",
+"dist": "2.8",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM024",
+"fo": false,
+"crs": "090 / (092.1)",
+"nav": "-",
+"dist": "4.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "037 / (039.9)",
+"nav": "-",
+"dist": "6.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "012 / (015.0)",
+"nav": "-",
+"dist": "25.2",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 5E": {
+"arinc": "ARNE5E",
+"remarks": "See paragraph 1.5.2 specific remark: 7, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "OTNES",
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM047",
+"fo": false,
+"crs": "090 / (092.5)",
+"nav": "-",
+"dist": "2.8",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "090 / (092.5)",
+"nav": "-",
+"dist": "15.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BERGI 4E": {
+"arinc": "BERG4E",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM029",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM009",
+"fo": false,
+"crs": "280 / (282.5)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM028",
+"fo": false,
+"crs": "326 / (328.6)",
+"nav": "-",
+"dist": "9.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "352 / (354.5)",
+"nav": "-",
+"dist": "23.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 3E": {
+"arinc": "KUDA3E",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "OKUDO",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "182 / (184.9)",
+"nav": "-",
+"dist": "17.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 5E": {
+"arinc": "LOPI5E",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8. \n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "OGOSU",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM050",
+"fo": false,
+"crs": "116 / (118.4)",
+"nav": "-",
+"dist": "4.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "147 / (149.8)",
+"nav": "-",
+"dist": "15.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 3E": {
+"arinc": "REND3E",
+"remarks": "See paragraph 1.5.2 specific remark: 7, 8. \n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "OTNES",
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM047",
+"fo": false,
+"crs": "090 / (092.5)",
+"nav": "-",
+"dist": "2.8",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "090 / (092.5)",
+"nav": "-",
+"dist": "15.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VALKO 5E": {
+"arinc": "VALK5E",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "181 / (183.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM029",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM009",
+"fo": false,
+"crs": "280 / (282.5)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VALKO",
+"fo": false,
+"crs": "249 / (251.2)",
+"nav": "-",
+"dist": "28.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "248 / (250.6)",
+"nav": "-",
+"dist": "13.5",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ANDIK 3G": {
+"arinc": "ANDI3G",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "219 / (221.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM023",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM027",
+"fo": false,
+"crs": "090 / (092.5)",
+"nav": "-",
+"dist": "6.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "023 / (025.8)",
+"nav": "-",
+"dist": "5.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "012 / (015.0)",
+"nav": "-",
+"dist": "25.2",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 4G": {
+"arinc": "ARNE4G",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "219 / (221.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM023",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "090 / (092.5)",
+"nav": "-",
+"dist": "15.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BERGI 2G": {
+"arinc": "BERG2G",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM063",
+"fo": false,
+"crs": "219 / (221.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM041",
+"fo": false,
+"crs": "281 / (283.7)",
+"nav": "-",
+"dist": "12.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "352 / (354.5)",
+"nav": "-",
+"dist": "25.7",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 2G": {
+"arinc": "KUDA2G",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "219 / (221.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM064",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM073",
+"fo": false,
+"crs": "161 / (163.3)",
+"nav": "-",
+"dist": "2.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "182 / (184.9)",
+"nav": "-",
+"dist": "17.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 2G": {
+"arinc": "LOPI2G",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8. \n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "219 / (221.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM064",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM029",
+"fo": false,
+"crs": "161 / (163.3)",
+"nav": "-",
+"dist": "4.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM050",
+"fo": false,
+"crs": "116 / (118.4)",
+"nav": "-",
+"dist": "4.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "147 / (149.8)",
+"nav": "-",
+"dist": "15.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 2G": {
+"arinc": "REND2G",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "219 / (221.4)",
+"nav": "-",
+"dist": "-",
+"turn": "L",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM023",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "090 / (092.5)",
+"nav": "-",
+"dist": "15.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VALKO 3G": {
+"arinc": "VALK3G",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM062",
+"fo": false,
+"crs": "219 / (221.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM009",
+"fo": false,
+"crs": "249 / (251.3)",
+"nav": "-",
+"dist": "6.6",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VALKO",
+"fo": false,
+"crs": "249 / (251.2)",
+"nav": "-",
+"dist": "28.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "248 / (250.6)",
+"nav": "-",
+"dist": "13.5",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ANDIK 1Q": {
+"arinc": "ANDI1Q",
+"remarks": "See paragraph 1.5.2 specific remark: 5, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM005",
+"fo": true,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM008",
+"fo": false,
+"crs": "116 / (118.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "118 / (120.2)",
+"nav": "-",
+"dist": "4.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "037 / (039.8)",
+"nav": "-",
+"dist": "12.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "012 / (015.0)",
+"nav": "-",
+"dist": "25.2",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ANDIK 3S": {
+"arinc": "ANDI3S",
+"remarks": "See paragraph 1.5.2 specific remark: 5, 6, 9.\n \n Minimum climb gradient 6.7% to 390 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM095",
+"fo": false,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM158, radius 1.510 NM)",
+"fix": "AM125",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "1.3",
+"turn": "L",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM159, radius 1.840 NM)",
+"fix": "AM157",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "2.2",
+"turn": "L",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM008",
+"fo": false,
+"crs": "118 / (120.3)",
+"nav": "-",
+"dist": "2.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "118 / (120.2)",
+"nav": "-",
+"dist": "4.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "037 / (039.8)",
+"nav": "-",
+"dist": "12.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "012 / (015.0)",
+"nav": "-",
+"dist": "25.2",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 1Q": {
+"arinc": "ARNE1Q",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM005",
+"fo": true,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM008",
+"fo": false,
+"crs": "116 / (118.6)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "118 / (120.2)",
+"nav": "-",
+"dist": "4.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "070 / (072.8)",
+"nav": "-",
+"dist": "14.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 4S": {
+"arinc": "ARNE4S",
+"remarks": "See paragraph 1.5.2 specific remark: 6, 9.\n \n Minimum climb gradient 6.7% to 390 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM095",
+"fo": false,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM158, radius 1.510 NM)",
+"fix": "AM125",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "1.3",
+"turn": "L",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM159, radius 1.840 NM)",
+"fix": "AM157",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "2.2",
+"turn": "L",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM008",
+"fo": false,
+"crs": "118 / (120.3)",
+"nav": "-",
+"dist": "2.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "118 / (120.2)",
+"nav": "-",
+"dist": "4.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "070 / (072.8)",
+"nav": "-",
+"dist": "14.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BERGI 2S": {
+"arinc": "BERG2S",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM001",
+"fo": false,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM051",
+"fo": false,
+"crs": "222 / (224.4)",
+"nav": "-",
+"dist": "2.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM009",
+"fo": false,
+"crs": "249 / (251.3)",
+"nav": "-",
+"dist": "3.8",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM028",
+"fo": false,
+"crs": "326 / (328.6)",
+"nav": "-",
+"dist": "9.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "352 / (354.5)",
+"nav": "-",
+"dist": "23.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 1Q": {
+"arinc": "KUDA1Q",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM005",
+"fo": true,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM003",
+"fo": false,
+"crs": "151 / (153.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM004",
+"fo": false,
+"crs": "164 / (166.6)",
+"nav": "-",
+"dist": "11.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "203 / (205.9)",
+"nav": "-",
+"dist": "4.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 4S": {
+"arinc": "KUDA4S",
+"remarks": "See paragraph 1.5.2 specific remark: 6, 9.\n \n Minimum climb gradient 6.7% to 390 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM095",
+"fo": false,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM158, radius 1.510 NM)",
+"fix": "AM125",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "1.3",
+"turn": "L",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM159, radius 1.840 NM)",
+"fix": "AM156",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "1.2",
+"turn": "L",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM003",
+"fo": false,
+"crs": "151 / (153.6)",
+"nav": "-",
+"dist": "4.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM004",
+"fo": false,
+"crs": "164 / (166.6)",
+"nav": "-",
+"dist": "11.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "203 / (205.9)",
+"nav": "-",
+"dist": "4.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 1Q": {
+"arinc": "LOPI1Q",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8. \n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM005",
+"fo": true,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM008",
+"fo": false,
+"crs": "116 / (118.6)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM050",
+"fo": false,
+"crs": "117 / (119.6)",
+"nav": "-",
+"dist": "6.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "147 / (149.8)",
+"nav": "-",
+"dist": "15.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 4S": {
+"arinc": "LOPI4S",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 6, 9.\n \n Minimum climb gradient 6.7% to 390 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM095",
+"fo": false,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM158, radius 1.510 NM)",
+"fix": "AM125",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "1.3",
+"turn": "L",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM159, radius 1.840 NM)",
+"fix": "AM157",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "2.2",
+"turn": "L",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM008",
+"fo": false,
+"crs": "118 / (120.3)",
+"nav": "-",
+"dist": "2.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM050",
+"fo": false,
+"crs": "117 / (119.6)",
+"nav": "-",
+"dist": "6.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "147 / (149.8)",
+"nav": "-",
+"dist": "15.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 1Q": {
+"arinc": "REND1Q",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM005",
+"fo": true,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM008",
+"fo": false,
+"crs": "116 / (118.6)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "118 / (120.2)",
+"nav": "-",
+"dist": "4.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "070 / (072.8)",
+"nav": "-",
+"dist": "14.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 3S": {
+"arinc": "REND3S",
+"remarks": "See paragraph 1.5.2 specific remark: 6, 9.\n \n Minimum climb gradient 6.7% to 390 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM095",
+"fo": false,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM158, radius 1.510 NM)",
+"fix": "AM125",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "1.3",
+"turn": "L",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM159, radius 1.840 NM)",
+"fix": "AM157",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "2.2",
+"turn": "L",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM008",
+"fo": false,
+"crs": "118 / (120.3)",
+"nav": "-",
+"dist": "2.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM026",
+"fo": false,
+"crs": "118 / (120.2)",
+"nav": "-",
+"dist": "4.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "070 / (072.8)",
+"nav": "-",
+"dist": "14.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"SPY 1J": {
+"arinc": "SPY1J",
+"remarks": "See paragraph 1.5.2 specific remark: 5, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM001",
+"fo": true,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM049",
+"fo": false,
+"crs": "300 / (302.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "028 / (030.4)",
+"nav": "-",
+"dist": "17.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "049 / (051.7)",
+"nav": "-",
+"dist": "19.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"SPY 5K": {
+"arinc": "SPY5K",
+"remarks": "See paragraph 1.5.2 specific remark: 5, 6, 9.\n \n Minimum climb gradient: 7.5% to 450 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM095",
+"fo": false,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM098, radius 1.510 NM)",
+"fix": "AM096",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "1.3",
+"turn": "R",
+"alt": null,
+"spd": null
+},
+{
+"pt": "RF (centre AM099, radius 1.910 NM)",
+"fix": "AM097",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "3.5",
+"turn": "R",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "028 / (030.4)",
+"nav": "-",
+"dist": "15.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "049 / (051.7)",
+"nav": "-",
+"dist": "19.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VALKO 3S": {
+"arinc": "VALK3S",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM001",
+"fo": false,
+"crs": "236 / (238.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM051",
+"fo": false,
+"crs": "222 / (224.4)",
+"nav": "-",
+"dist": "2.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM009",
+"fo": false,
+"crs": "249 / (251.3)",
+"nav": "-",
+"dist": "3.8",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VALKO",
+"fo": false,
+"crs": "249 / (251.2)",
+"nav": "-",
+"dist": "28.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "248 / (250.6)",
+"nav": "-",
+"dist": "13.5",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 3P": {
+"arinc": "ARNE3P",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "264 / (266.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM056",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM032",
+"fo": false,
+"crs": "208 / (210.4)",
+"nav": "-",
+"dist": "4.5",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM075",
+"fo": false,
+"crs": "134 / (136.1)",
+"nav": "-",
+"dist": "9.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "071 / (073.8)",
+"nav": "-",
+"dist": "19.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "092 / (094.6)",
+"nav": "-",
+"dist": "10.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BERGI 2P": {
+"arinc": "BERG2P",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "264 / (266.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM058",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM041",
+"fo": false,
+"crs": "265 / (267.4)",
+"nav": "-",
+"dist": "9.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "352 / (354.5)",
+"nav": "-",
+"dist": "25.7",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 2P": {
+"arinc": "KUDA2P",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "264 / (266.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM056",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM032",
+"fo": false,
+"crs": "208 / (210.4)",
+"nav": "-",
+"dist": "4.5",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM075",
+"fo": false,
+"crs": "134 / (136.1)",
+"nav": "",
+"dist": "9.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "176 / (178.5)",
+"nav": "-",
+"dist": "13.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 2P": {
+"arinc": "LOPI2P",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "264 / (266.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM056",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM032",
+"fo": false,
+"crs": "208 / (210.4)",
+"nav": "-",
+"dist": "4.5",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM075",
+"fo": false,
+"crs": "134 / (136.1)",
+"nav": "-",
+"dist": "9.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "132 / (134.4)",
+"nav": "-",
+"dist": "19.3",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 2P": {
+"arinc": "REND2P",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "264 / (266.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM056",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM032",
+"fo": false,
+"crs": "208 / (210.4)",
+"nav": "",
+"dist": "4.5",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM075",
+"fo": false,
+"crs": "134 / (136.1)",
+"nav": "",
+"dist": "9.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "071 / (073.8)",
+"nav": "-",
+"dist": "19.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"SPY 2P": {
+"arinc": "SPY2P",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "264 / (266.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM057",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "028 / (030.4)",
+"nav": "-",
+"dist": "11.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "049 / (051.7)",
+"nav": "-",
+"dist": "19.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VOLLA 2P": {
+"arinc": "VOLL2P",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "264 / (266.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "AM058",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VOLLA",
+"fo": false,
+"crs": "265 / (267.4)",
+"nav": "-",
+"dist": "19.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "230 / (232.2)",
+"nav": "-",
+"dist": "31.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"IVLUT 4W": {
+"arinc": "IVLU4W",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 5.4% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "RIKOR",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM081",
+"fo": false,
+"crs": "043 / (045.7)",
+"nav": "-",
+"dist": "3.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM082",
+"fo": false,
+"crs": "087 / (089.6)",
+"nav": "-",
+"dist": "5.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "142 / (144.7)",
+"nav": "-",
+"dist": "6.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "129 / (131.8)",
+"nav": "-",
+"dist": "8.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "19.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"NOPSU 3W": {
+"arinc": "NOPS3W",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 5.4% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "RIKOR",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM044",
+"fo": false,
+"crs": "043 / (045.3)",
+"nav": "-",
+"dist": "4.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "354 / (356.7)",
+"nav": "-",
+"dist": "6.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NOPSU",
+"fo": false,
+"crs": "049 / (051.7)",
+"nav": "-",
+"dist": "4.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "049 / (051.8)",
+"nav": "-",
+"dist": "14.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"NYKER 5W": {
+"arinc": "NYKE5W",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 5.4% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "RIKOR",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM081",
+"fo": false,
+"crs": "043 / (045.7)",
+"nav": "-",
+"dist": "3.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM082",
+"fo": false,
+"crs": "087 / (089.6)",
+"nav": "-",
+"dist": "5.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "142 / (144.7)",
+"nav": "-",
+"dist": "6.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NYKER",
+"fo": false,
+"crs": "109 / (111.1)",
+"nav": "-",
+"dist": "17.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.5)",
+"nav": "-",
+"dist": "21.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"OGINA 4W": {
+"arinc": "OGIN4W",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8.\n \n Minimum climb gradient: 5.4% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "RIKOR",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM070",
+"fo": false,
+"crs": "101 / (103.1)",
+"nav": "-",
+"dist": "3.0",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM036",
+"fo": false,
+"crs": "178 / (180.7)",
+"nav": "-",
+"dist": "6.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "OGINA",
+"fo": false,
+"crs": "139 / (141.4)",
+"nav": "-",
+"dist": "12.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "162 / (164.6)",
+"nav": "-",
+"dist": "10.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"WOODY 3W": {
+"arinc": "WOOD3W",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 5.4% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "DF",
+"fix": "RIKOR",
+"fo": false,
+"crs": "-",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM070",
+"fo": false,
+"crs": "101 / (103.1)",
+"nav": "-",
+"dist": "3.0",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM036",
+"fo": false,
+"crs": "178 / (180.7)",
+"nav": "-",
+"dist": "6.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM072",
+"fo": false,
+"crs": "178 / (180.7)",
+"nav": "-",
+"dist": "14.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "203 / (205.9)",
+"nav": "-",
+"dist": "6.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "34.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 2V": {
+"arinc": "ARNE2V",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8.\n \n Minimum climb gradient: 5.0% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM012",
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM087",
+"fo": false,
+"crs": "027 / (029.2)",
+"nav": "-",
+"dist": "4.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM088",
+"fo": false,
+"crs": "083 / (085.0)",
+"nav": "-",
+"dist": "5.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "142 / (144.6)",
+"nav": "-",
+"dist": "11.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.1)",
+"nav": "-",
+"dist": "39.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BERGI 5V": {
+"arinc": "BERG5V",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "LEVKI",
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM094",
+"fo": false,
+"crs": "313 / (315.1)",
+"nav": "-",
+"dist": "3.0",
+"turn": "-",
+"alt": "+ 2500",
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM034",
+"fo": false,
+"crs": "313 / (315.1)",
+"nav": "-",
+"dist": "4.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "328 / (330.2)",
+"nav": "-",
+"dist": "16.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"KUDAD 2V": {
+"arinc": "KUDA2V",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8.\n \n Minimum climb gradient: 5.0% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM084",
+"fo": true,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM045",
+"fo": false,
+"crs": "167 / (169.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM036",
+"fo": false,
+"crs": "168 / (170.0)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM072",
+"fo": false,
+"crs": "178 / (180.7)",
+"nav": "",
+"dist": "14.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LEKKO",
+"fo": false,
+"crs": "203 / (205.9)",
+"nav": "-",
+"dist": "6.4",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "KUDAD",
+"fo": false,
+"crs": "203 / (205.8)",
+"nav": "-",
+"dist": "17.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.7)",
+"nav": "-",
+"dist": "17.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 4V": {
+"arinc": "LOPI4V",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 3, 8.\n \n Minimum climb gradient: 5.0% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM084",
+"fo": true,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM045",
+"fo": false,
+"crs": "167 / (169.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": "- 220"
+},
+{
+"pt": "TF",
+"fix": "AM036",
+"fo": false,
+"crs": "168 / (170.0)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "OGINA",
+"fo": false,
+"crs": "139 / (141.4)",
+"nav": "-",
+"dist": "12.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "162 / (164.6)",
+"nav": "-",
+"dist": "10.4",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 2V": {
+"arinc": "REND2V",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8.\n \n Minimum climb gradient: 5.0% to 1900 FT AMSL. If unable, report to ATC.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "AM012",
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM087",
+"fo": false,
+"crs": "027 / (029.2)",
+"nav": "-",
+"dist": "4.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM088",
+"fo": false,
+"crs": "083 / (085.0)",
+"nav": "-",
+"dist": "5.3",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "142 / (144.6)",
+"nav": "-",
+"dist": "11.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "129 / (131.8)",
+"nav": "-",
+"dist": "8.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "128 / (130.9)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"SPY 4V": {
+"arinc": "SPY4V",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "LEVKI",
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM013",
+"fo": false,
+"crs": "001 / (003.3)",
+"nav": "-",
+"dist": "6.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "NOPSU",
+"fo": false,
+"crs": "070 / (072.5)",
+"nav": "-",
+"dist": "8.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ANDIK",
+"fo": false,
+"crs": "049 / (051.8)",
+"nav": "-",
+"dist": "14.8",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VOLLA 3V": {
+"arinc": "VOLL3V",
+"remarks": "See paragraph 1.5.2 specific remark: 3, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CF",
+"fix": "LEVKI",
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM094",
+"fo": false,
+"crs": "313 / (315.1)",
+"nav": "-",
+"dist": "3.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM090",
+"fo": false,
+"crs": "269 / (270.9)",
+"nav": "-",
+"dist": "4.7",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BAHSI",
+"fo": false,
+"crs": "210 / (212.0)",
+"nav": "-",
+"dist": "3.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VOLLA",
+"fo": false,
+"crs": "240 / (242.1)",
+"nav": "-",
+"dist": "13.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "230 / (232.2)",
+"nav": "-",
+"dist": "31.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"ARNEM 2Z": {
+"arinc": "ARNE2Z",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM013",
+"fo": false,
+"crs": "001 / (003.3)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "091 / (093.3)",
+"nav": "-",
+"dist": "4.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "142 / (144.6)",
+"nav": "-",
+"dist": "15.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "ARNEM",
+"fo": false,
+"crs": "109 / (111.1)",
+"nav": "-",
+"dist": "39.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"BERGI 2Z": {
+"arinc": "BERG2Z",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM015",
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "BERGI",
+"fo": false,
+"crs": "302 / (304.8)",
+"nav": "-",
+"dist": "16.7",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"LOPIK 2Z": {
+"arinc": "LOPI2Z",
+"remarks": "See paragraph 1.5.2 specific remark: 1, 2, 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM013",
+"fo": false,
+"crs": "001 / (003.3)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "091 / (093.3)",
+"nav": "-",
+"dist": "4.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LOPIK",
+"fo": false,
+"crs": "162 / (164.4)",
+"nav": "-",
+"dist": "38.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RENDI 2Z": {
+"arinc": "REND2Z",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 119.055.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM013",
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "SPY",
+"fo": false,
+"crs": "091 / (093.3)",
+"nav": "-",
+"dist": "4.6",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "PAM",
+"fo": false,
+"crs": "142 / (144.6)",
+"nav": "-",
+"dist": "15.1",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IVLUT",
+"fo": false,
+"crs": "129 / (131.8)",
+"nav": "-",
+"dist": "8.2",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "LUNIX",
+"fo": false,
+"crs": "123 / (125.2)",
+"nav": "-",
+"dist": "14.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RENDI",
+"fo": false,
+"crs": "123 / (125.4)",
+"nav": "-",
+"dist": "5.0",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "EDUPO",
+"fo": false,
+"crs": "126 / (128.7)",
+"nav": "-",
+"dist": "7.9",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"RONSA 1Z": {
+"arinc": "RONS1Z",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Minimum climb gradient: 5.3% to 700 FT AMSL.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "-",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM015",
+"fo": false,
+"crs": "001 / (003.5)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM006",
+"fo": false,
+"crs": "268 / (270.0)",
+"nav": "-",
+"dist": "6.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM016",
+"fo": false,
+"crs": "200 / (202.8)",
+"nav": "-",
+"dist": "12.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "RONSA",
+"fo": false,
+"crs": "177 / (178.9)",
+"nav": "-",
+"dist": "53.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "WOODY",
+"fo": false,
+"crs": "203 / (205.6)",
+"nav": "-",
+"dist": "6.6",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+},
+"VOLLA 2Z": {
+"arinc": "VOLL2Z",
+"remarks": "See paragraph 1.5.2 specific remark: 8.\n \n Passing 2000 FT AMSL contact Schiphol DEP 121.205.\n \n After departure climb to FL 060.",
+"legs": [
+{
+"pt": "CA",
+"fix": null,
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "-",
+"dist": "-",
+"turn": "R",
+"alt": "+ 500",
+"spd": null
+},
+{
+"pt": "CF",
+"fix": "AM015",
+"fo": false,
+"crs": "001 / (003.4)",
+"nav": "SPL",
+"dist": "-",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM006",
+"fo": false,
+"crs": "268 / (270.0)",
+"nav": "-",
+"dist": "6.9",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "AM016",
+"fo": false,
+"crs": "200 / (202.8)",
+"nav": "-",
+"dist": "12.5",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "VOLLA",
+"fo": false,
+"crs": "240 / (242.0)",
+"nav": "-",
+"dist": "10.8",
+"turn": "-",
+"alt": null,
+"spd": null
+},
+{
+"pt": "TF",
+"fix": "IDRID",
+"fo": false,
+"crs": "230 / (232.2)",
+"nav": "-",
+"dist": "31.0",
+"turn": "-",
+"alt": null,
+"spd": null
+}
+]
+}
+},
+"stars": {
+"BLUFA 1A": {
+"arinc": "BLUF1A",
+"remarks": "RNAV 1 required.\n \n MAX FL 260 30 NM before BLUFA.",
+"legs": [
+{
+"desc": "BLUFA, below FL 260",
+"abbr": "BLUFA [F260-]",
+"pt": "IF",
+"fo": false
+}
+]
+},
+"DENUT 3A": {
+"arinc": "DENU3A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "DENUT, at or below FL 240",
+"abbr": "DENUT [F240-]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To YENZO",
+"abbr": "YENZO",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To RIVER, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "RIVER [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+},
+"HELEN 2A": {
+"arinc": "HELE2A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "HELEN, at or below FL 240",
+"abbr": "HELEN [F240-]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To HAMZA",
+"abbr": "HAMZA",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To RIVER, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "RIVER [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+},
+"LAMSO 2A": {
+"arinc": "LAMS2A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "LAMSO, at or below FL 230",
+"abbr": "LAMSO [F230-]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To ETPOS",
+"abbr": "ETPOS",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To SUGOL, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "SUGOL [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+},
+"MOLIX 2A": {
+"arinc": "MOLI2A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "MOLIX, at or below FL 230",
+"abbr": "MOLIX [F230-]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To LUTEX",
+"abbr": "LUTEX",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To ROBVI",
+"abbr": "ROBVI",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To SUGOL, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "SUGOL [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+},
+"NORKU 2A": {
+"arinc": "NORK2A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "NORKU, between FL 280 and FL 200",
+"abbr": "NORKU [B F280 F200]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To SONSA",
+"abbr": "SONSA",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To ROBIS",
+"abbr": "ROBIS",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To OSKUR",
+"abbr": "OSKUR",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To ARTIP, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "ARTIP [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+},
+"PESER 3A": {
+"arinc": "PESE3A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "PESER, at or below FL 070",
+"abbr": "PESER [F070-]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To DOFMU",
+"abbr": "DOFMU",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To RIVER, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "RIVER [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+},
+"REDFA 1A": {
+"arinc": "REDF1A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "REDFA, at or below FL 230",
+"abbr": "REDFA [F230-]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To SULUT",
+"abbr": "SULUT",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To SUGOL, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "SUGOL [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+},
+"RKN 2A": {
+"arinc": "RKN2A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "RKN, at or below FL 180",
+"abbr": "RKN [F180-]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To OSKUR",
+"abbr": "OSKUR",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To ARTIP, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "ARTIP [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+},
+"TOPPA 2A": {
+"arinc": "TOPP2A",
+"remarks": "RNAV 1 required.",
+"legs": [
+{
+"desc": "TOPPA, at or below FL 250",
+"abbr": "TOPPA [F250-]",
+"pt": "IF",
+"fo": false
+},
+{
+"desc": "To MONIL",
+"abbr": "MONIL",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To ROBVI",
+"abbr": "ROBVI",
+"pt": "TF",
+"fo": false
+},
+{
+"desc": "To SUGOL, MAX 250 KIAS, between FL 100 and FL 070",
+"abbr": "SUGOL [K250-, B F100 F070]",
+"pt": "TF",
+"fo": false
+}
+]
+}
+}
+}

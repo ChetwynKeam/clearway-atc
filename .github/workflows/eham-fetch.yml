@@ -1,0 +1,78 @@
+name: Fetch EHAM data
+# One-off for the Amsterdam Schiphol (EHAM) airport build: the Dutch AIP (LVNL eAIP) part AD 2 EHAM and every chart it
+# lists in AD 2.24 (aerodrome, ground movement, parking/docking, SIDs, STARs, approaches), for the AIRAC amendments in
+# AMDTS, published to the eham-data branch. The aerodrome itself comes from the OpenStreetMap API (tools/eham/README.md).
+on:
+  workflow_dispatch:
+  push:
+    branches: [amsterdam-eham]
+    paths: ['.github/workflows/eham-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download
+        run: |
+          set +e
+          mkdir -p out && cd out
+          UA="Mozilla/5.0 (clearway-atc-build; github.com/ChetwynKeam/clearway-atc)"
+          for A in "AIRAC%20AMDT%2012-2026_2026_11_26" "AIRAC%20AMDT%2011-2026_2026_10_29"; do
+            for ROOT in "https://eaip.lvnl.nl/web/eaip/$A" "https://eaip.lvnl.nl/$A"; do
+              D=$(echo "$A" | sed 's/%20/_/g'); mkdir -p "$D"
+              for P in "eAIP/EH-ENR%203.1-en-GB.html" "eAIP/EH-ENR%203.2-en-GB.html" "eAIP/EH-ENR%203.3-en-GB.html" "eAIP/EH-ENR%204.1-en-GB.html" "eAIP/EH-ENR%204.4-en-GB.html" "eAIP/EH-ENR%202.1-en-GB.html" "eAIP/EH-AD%202%20EHAM%201-en-GB.html" "eAIP/EH-AD%202%20EHAM%202-en-GB.html" "eAIP/EH-AD%202%20EHAM%203-en-GB.html" "EH-Cover%20Page-en-GB.html"; do
+                curl -sSfL -m 120 -A "$UA" "$ROOT/$P" -o "$D/$(basename "$P" | sed 's/%20/_/g')" && echo "OK $ROOT/$P"
+              done
+              if ls "$D"/*EHAM_1*.html >/dev/null 2>&1; then echo "$ROOT" > "$D/ROOT"; break; fi
+            done
+            ROOT=$(cat "$D/ROOT" 2>/dev/null) || continue
+            # every PDF the AD 2 pages link to (the charts of AD 2.24) and the AD 2 EHAM PDF
+            cat "$D"/*.html | grep -oE 'href="[^"]+\.pdf"' | sed 's/href="//;s/"$//' | sort -u > "$D/links.txt"
+            cat "$D/links.txt"
+            while read -r L; do
+              U=$(python3 -c "import sys,urllib.parse;print(urllib.parse.urljoin(sys.argv[1]+'/eAIP/x.html',sys.argv[2]))" "$ROOT" "$L")
+              F="$D/pdf/$(basename "$L" | sed 's/%20/_/g')"; mkdir -p "$D/pdf"
+              curl -sSfL -m 180 -A "$UA" "$U" -o "$F" && echo "got $F"
+            done < "$D/links.txt"
+            for C in ADC GMC-1 GMC-2 GMC-3 APDC-1 APDC-A APDC-B APDC-C APDC-D APDC-E APDC-F APDC-G APDC-H APDC-J APDC-K APDC-M APDC-R APDC-S APDC-U APDC-Y SID-OV STAR; do
+              F="$D/pdf/EHAM-$C.pdf"; [ -s "$F" ] || curl -sSfL -m 180 -A "$UA" "$ROOT/documents/Root_WePub/Charts/AD/EHAM/EHAM-$C.pdf" -o "$F" && echo "got $F"
+            done
+            curl -sSfL -m 180 -A "$UA" "$ROOT/documents/PDF/AMDT.pdf" -o "$D/AMDT.pdf"
+          done
+          # the approach map: the coast, the IJsselmeer and Markermeer, towns, the borders and the other airfields (OpenStreetMap)
+          mkdir -p "$GITHUB_WORKSPACE/out/geo" && cd "$GITHUB_WORKSPACE/out/geo"
+          q() {
+            S=$(date +%s)
+            while [ $(( $(date +%s) - S )) -lt 480 ]; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                if curl -sSf -m 180 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.tmp" && head -c 1 "$1.tmp" | grep -q '{'; then mv "$1.tmp" "$1.json"; echo "OK $1 from $H"; return 0; fi
+                echo "retry $1 ($H)"; sleep 5
+              done
+            done
+            echo "FAILED $1"; rm -f "$1.tmp"
+          }
+          q coast "[out:json][timeout:180];way[natural=coastline](51.0,2.6,53.9,7.3);out geom;" &
+          q water "[out:json][timeout:180];(way[natural=water](52.0,4.4,53.2,5.9)(if:length()>20000);relation[natural=water][name~\"IJsselmeer|Markermeer|Noordzeekanaal|IJmeer|Gooimeer|Veluwemeer|Ketelmeer|Wadden\"](51.8,4.0,53.5,6.2););out geom;" &
+          q towns "[out:json][timeout:90];node[place~\"^(city|town)$\"](51.6,3.6,53.3,6.4);out;" &
+          q borders "[out:json][timeout:180];relation[boundary=administrative][admin_level=2][name~\"Nederland|België|Belgique|Deutschland\"];way(r);out geom;" &
+          q airports "[out:json][timeout:120];nwr[aeroway=aerodrome][icao](51.0,2.6,53.9,7.3);out center;" &
+          wait
+          # the Schiphol boards (avionio.com's AMS arrivals and departures, every page each way, about half an hour a page):
+          # the real day the timetable is built from
+          cd "$GITHUB_WORKSPACE" && mkdir -p out/boards && A="" && D=""
+          for P in $(seq -6 60); do
+            curl -sSL --compressed -m 30 -A "$UA" -o out/boards/ams_a$P.html "https://www.avionio.com/en/airport/ams/arrivals?page=$P" && A="$A,out/boards/ams_a$P.html"; sleep 1
+            curl -sSL --compressed -m 30 -A "$UA" -o out/boards/ams_d$P.html "https://www.avionio.com/en/airport/ams/departures?page=$P" && D="$D,out/boards/ams_d$P.html"; sleep 1
+          done
+          python3 tools/avionio_flights.py "${A#,}" "${D#,}" out/boards.json Europe/Amsterdam || true
+          rm -rf out/boards
+          cd out && find . -type f | sort; du -sh .
+      - name: Publish to eham-data branch
+        run: |
+          cd out
+          git init -q -b eham-data
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "EHAM data"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" eham-data
