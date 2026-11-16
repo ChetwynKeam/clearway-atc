@@ -199,6 +199,21 @@ const NOISE_RULES = {
   EGGD: { name: 'Bristol', night: [23*60, 7*60],
     quotas: [{ name: 'night quota', at: [23*60 + 30, 6*60], qc: { summer: 1260, winter: 900 }, mv: { summer: 3500 } }],
     npr: ac => mtomOf(ac) <= 5700 ? 0 : 4000 },
+  // Edinburgh. A 24-hour airport with no night quota and no night movement limit (CAA airport noise returns, April 2026:
+  // https://www.caa.co.uk/media/kypphyik/edinburgh-april-2026.pdf; noise action plan 2024-2028). AD 2.21: noise limits of
+  // 94 dBA by day and 87 dBA from 23:30 to 06:00 at the monitors, reverse thrust avoided 23:00 to 06:00, no visual
+  // approaches by IFR flights 22:30 to 06:30, and the noise preferential routes, flown by every departing jet and every
+  // other departure over 5,700 kg. Each route ends: off 24 at I-TH D7 for Talla (about 3,000 ft), at 3,000 ft for Saint
+  // Abbs/NATEB, Grice and the others, at 6,000 ft for Gosam; off 06 at TLA D30 for Talla (about 4,000 ft), at I-VG D7 for
+  // Saint Abbs and the others (about 3,000 ft), 3,000 ft for Grice and 6,000 ft for Gosam.
+  EGPH: { name: 'Edinburgh', night: [23*60 + 30, 6*60], quotas: [],
+    npr: ac => {
+      if (isProp(ac) && mtomOf(ac) <= 5700) return 0;
+      const sid = String(ac.sid || '').replace(/\d.*$/, ''), rw = ac.depRwy || '';
+      if (sid === 'GOSAM') return 6000;
+      if (sid === 'TLA') return /^06/.test(rw) ? 4000 : 3000;
+      return 3000;
+    } },
   // Belfast International. No night quota and no noise planning conditions, and no SIDs, so no noise preferential routes
   // (its noise action plan 2018-23, https://www.belfastairport.com/media/2076/bia-end-round-3-noise-action-plan-
   // 2018-23-v3-draft.pdf). From 22:00 to 07:00 departures over 5,700 kg climb on the runway track to 2,000 ft before
