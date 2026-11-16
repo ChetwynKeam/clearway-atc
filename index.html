@@ -5572,7 +5572,8 @@ const TAXI_MEMO = new Map();
 // the ground flow plan (gflow.js): the way traffic uses each taxiway for the runways in use. Going against a one-way flow
 // costs four times as much, so routes keep to the flow unless the other way is much shorter
 let GFLOW_DIR = null;
-const gfK = (e, u) => { if (!GFLOW_DIR) return 1; const d = GFLOW_DIR.get(e); return d && ((d > 0) !== (e.a === u)) ? 4 : 1; };
+// e.ow: a one-way taxiway fixed by the airport (1: only a → b, -1: only b → a); against it costs so much no route takes it
+const gfK = (e, u) => { if (e.ow) return (e.a === u) === (e.ow > 0) ? 1 : 1e4; if (!GFLOW_DIR) return 1; const d = GFLOW_DIR.get(e); return d && ((d > 0) !== (e.a === u)) ? 4 : 1; };
 // pen (optional): a cost multiplier per edge, to find alternative routings at big airports
 // face (optional): the way the aircraft at `from` is pointing. An aircraft can't turn round on a taxiway, so the route
 // then starts within 100 degrees of that heading and never doubles back on itself at a node further on
@@ -5705,6 +5706,7 @@ function splitAt(id, p, tw){
   GE.splice(GE.indexOf(e), 1);
   GN[e.a].adj = GN[e.a].adj.filter(([v, x]) => x !== e); GN[e.b].adj = GN[e.b].adj.filter(([v, x]) => x !== e);
   ge(e.a, id, tw); ge(id, e.b, tw);
+  if (e.ow) GE[GE.length - 1].ow = GE[GE.length - 2].ow = e.ow;   // (the halves keep a fixed one-way direction)
   return id;
 }
 function viaOf(tws, hp){ const ref = HOLDS[hp] && HOLDS[hp].ref, base = HOLDS[hp] && HOLDS[hp].base, v = []; for (const t of tws) if (t !== 'APRON' && t !== hp && t !== ref && v[v.length-1] !== t) v.push(t); if (base && v[v.length-1] === base) v.pop(); return v; }
