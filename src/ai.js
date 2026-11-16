@@ -795,7 +795,7 @@ function aiDirect(ac, seat){
 // never cleared that would land well before its slot (it would close up on the one ahead)
 // the airports it runs at: those where seeded all-AI runs showed it landing more and losing separation less than the
 // sequencing before it (tools/bench.cjs); elsewhere that sequencing is kept (aiSequenceOld) until it is tuned there
-const AMAN_ON = typeof AIRPORT !== 'undefined' && ['EIDW', 'EGLL', 'EGKK', 'LEMD', 'LPMA', 'LOWI', 'YSSY'].includes(AIRPORT);
+const AMAN_ON = typeof AIRPORT !== 'undefined' && ['EIDW', 'EGLL', 'EGKK', 'LEMD', 'LPMA', 'LOWI', 'YSSY', 'EGPH'].includes(AIRPORT);
 const AMAN_HORIZON = 1200;   // seconds to touchdown: further out an arrival has a slot, but its approach clearance waits
 // the arc fixes of a point merge (Dublin): where APT.aiFloor holds an arrival at the arc's level
 const arcFix = id => !!APT.aiFloor && APT.aiFloor({ kind: 'ARR', route: [id] }) > 0;

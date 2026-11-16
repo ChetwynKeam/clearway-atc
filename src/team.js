@@ -186,7 +186,7 @@ function teamAnswers(low){
 
 // ── what the team says
 // landings an hour the airport declares in good weather (its single landing runway, or the pair it lands on)
-const ARR_CAP = { EGLL: 44, EGKK: 30, EIDW: 32, EGCC: 34, EGAA: 20, EGGD: 20, KJFK: 40, OMDB: 40, YSSY: 44, LEMD: 48, LSGG: 28, EGLC: 18, LXGB: 10, LPMA: 12, LOWI: 12 };
+const ARR_CAP = { EGLL: 44, EGKK: 30, EIDW: 32, EGCC: 34, EGAA: 20, EGGD: 20, EGPH: 22, KJFK: 40, OMDB: 40, YSSY: 44, LEMD: 48, LSGG: 28, EGLC: 18, LXGB: 10, LPMA: 12, LOWI: 12 };
 const capHour = () => { let c = ARR_CAP[APT.icao] || 28; if (S.lvpOn || (typeof lvpNeeded === 'function' && lvpNeeded())) c = Math.round(c*0.6); else if (S.wx.gust >= 25 || S.wx.cb) c = Math.round(c*0.85); return c; };
 // flights due in the window (minutes from now): arrivals still to come (not yet on the scope, or in the air by their
 // estimate) and departures by their off-blocks time (parked ones by when they will ask to start, and any still to appear)

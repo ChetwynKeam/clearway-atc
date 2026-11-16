@@ -17,7 +17,7 @@
 //          EXIT_DEAD  an exit from which no stand can be reached facing forward
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
-const ALL = ['lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'yssy', 'egkk', 'lemd', 'egcc', 'egll', 'eidw', 'omdb', 'egaa', 'eggd', 'lsgg'];
+const ALL = ['lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'yssy', 'egkk', 'lemd', 'egcc', 'egll', 'eidw', 'omdb', 'egaa', 'eggd', 'lsgg', 'egph'];
 const args = process.argv.slice(2), SHOTS = args.includes('--shots'), codes = args.filter(a => !a.startsWith('--')).length ? args.filter(a => !a.startsWith('--')) : ALL;
 const WT = { DEP_NONE: 5, ARR_NONE: 5, DEP_TURN: 3, ARR_TURN: 3, STAND_OFFPAVE: 3, GAP: 3, KINK: 3, ARR_INTO: 2, XCROSS: 2, OFFPAVE: 2, EXIT_DEAD: 2, ISLAND: 2, DEP_DETOUR: 1, DEADEND: 0.5, ORPHAN: 0 };
 const scoreOf = count => Object.entries(count).reduce((t, [k, n]) => t + (WT[k] ?? 1)*n, 0);
