@@ -16402,7 +16402,7 @@ function aiDirect(ac, seat){
     const d = dist(ac.x, ac.y, ...w.p), save = along[i + 1] - d; if (save < 2) continue;
     // a turn at the fix it can fly: onto the next leg, or on to the final
     const nx = i < rt.length - 1 ? WP[rt[i + 1]].p : arr && ac.app ? F.pts[F.pts.length - 1] : null;
-    if (nx && Math.abs(angDiff(brg(ac.x, ac.y, ...w.p), brg(...w.p, ...nx))) > (arr && i === rt.length - 1 ? 60 : 90)) continue;
+    if (nx && Math.abs(angDiff(brg(ac.x, ac.y, ...w.p), brg(...w.p, ...nx))) > (arr && i === rt.length - 1 ? 45 : 90)) continue;
     let lo = ac.alt, hi = ac.tgtAlt ?? ac.alt;
     if (arr) {
       // down in time: to the approach altitude at its start, or to the bottom of the stack at the hold
