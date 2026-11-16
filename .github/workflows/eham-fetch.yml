@@ -55,7 +55,7 @@ jobs:
           }
           q coast "[out:json][timeout:180];way[natural=coastline](51.0,2.6,53.9,7.3);out geom;" &
           q water "[out:json][timeout:180];(way[natural=water](52.0,4.4,53.2,5.9)(if:length()>20000);relation[natural=water][name~\"IJsselmeer|Markermeer|Noordzeekanaal|IJmeer|Gooimeer|Veluwemeer|Ketelmeer|Wadden\"](51.8,4.0,53.5,6.2););out geom;" &
-          q towns "[out:json][timeout:120];node[place~\"city|town\"](51.0,2.6,53.9,7.3);out;" &
+          q towns "[out:json][timeout:90];node[place~\"^(city|town)$\"](51.6,3.6,53.3,6.4);out;" &
           q borders "[out:json][timeout:180];relation[boundary=administrative][admin_level=2][name~\"Nederland|België|Belgique|Deutschland\"];way(r);out geom;" &
           q airports "[out:json][timeout:120];nwr[aeroway=aerodrome][icao](51.0,2.6,53.9,7.3);out center;" &
           wait
