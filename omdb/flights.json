@@ -1,863 +1,93 @@
 {
- "updated": "2026-11-15T23:42:25Z",
+ "updated": "2026-11-16T03:09:12Z",
  "source": "avionio.com",
  "days": {
   "2026-11-16": {
    "utcOffsetMin": 240,
    "arr": [
     {
-     "place": "Gassim",
-     "flight": "SV592",
-     "sched": "03:00",
-     "status": "Landed",
-     "expected": "02:51"
-    },
-    {
-     "place": "Istanbul",
-     "flight": "TK758",
-     "sched": "03:10",
-     "status": "Landed",
-     "expected": "02:52"
-    },
-    {
-     "place": "Phuket",
-     "flight": "EK397",
-     "sched": "03:15",
-     "status": "Estimated",
-     "expected": "02:59"
-    },
-    {
-     "place": "Amman",
-     "flight": "FZ144",
-     "sched": "03:15",
-     "status": "Estimated",
-     "expected": "03:00"
-    },
-    {
-     "place": "Istanbul",
-     "flight": "VF143",
-     "sched": "03:15",
-     "status": "Landed",
-     "expected": "01:49"
-    },
-    {
-     "place": "Bangkok",
-     "flight": "FZ1336",
-     "sched": "03:20",
-     "status": "Landed",
-     "expected": "02:30"
-    },
-    {
-     "place": "Baku",
-     "flight": "FZ734",
-     "sched": "03:20",
-     "status": "Estimated",
-     "expected": "03:04"
-    },
-    {
-     "place": "Islamabad",
-     "flight": "PA210",
-     "sched": "03:25",
-     "status": "Estimated",
-     "expected": "04:30"
-    },
-    {
-     "place": "Kathmandu",
-     "flight": "FZ574",
-     "sched": "03:45",
-     "status": "Estimated",
-     "expected": "03:41"
-    },
-    {
-     "place": "Bahrain",
-     "flight": "GF500",
-     "sched": "03:45",
-     "status": "Estimated",
-     "expected": "03:27"
-    },
-    {
-     "place": "Cairo",
-     "flight": "MS910",
-     "sched": "03:45",
-     "status": "Estimated",
-     "expected": "03:43"
-    },
-    {
-     "place": "Doha",
-     "flight": "QR1002",
-     "sched": "03:50",
-     "status": "Estimated",
-     "expected": "03:59"
-    },
-    {
-     "place": "Tiruchirappalli",
-     "flight": "IX619",
-     "sched": "03:55",
-     "status": "Estimated",
-     "expected": "03:36"
-    },
-    {
-     "place": "Kozhikode",
-     "flight": "6E1473",
-     "sched": "04:05",
-     "status": "Estimated",
-     "expected": "03:43"
-    },
-    {
-     "place": "Zanzibar",
-     "flight": "FZ1688",
-     "sched": "04:05",
-     "status": "Estimated",
-     "expected": "03:22"
-    },
-    {
-     "place": "Asmara",
-     "flight": "FZ646",
-     "sched": "04:05",
-     "status": "Estimated",
-     "expected": "03:04"
-    },
-    {
-     "place": "Ankara",
-     "flight": "VF549",
-     "sched": "04:05",
-     "status": "Landed",
-     "expected": "02:45"
-    },
-    {
-     "place": "Singapore",
-     "flight": "EK353",
-     "sched": "04:10",
-     "status": "Estimated",
-     "expected": "03:58"
-    },
-    {
-     "place": "Ho Chi Minh City",
-     "flight": "EK393",
-     "sched": "04:10",
-     "status": "Estimated",
-     "expected": "03:59"
-    },
-    {
-     "place": "Addis Ababa",
-     "flight": "ET612",
-     "sched": "04:10",
-     "status": "Estimated",
-     "expected": "04:03"
-    },
-    {
-     "place": "Amman",
-     "flight": "RJ612",
-     "sched": "04:15",
-     "status": "Estimated",
-     "expected": "03:53"
-    },
-    {
-     "place": "Dhaka",
-     "flight": "EK585",
-     "sched": "04:25",
-     "status": "Estimated",
-     "expected": "04:03"
-    },
-    {
-     "place": "Mahe Island",
-     "flight": "EK708",
-     "sched": "04:25",
-     "status": "Estimated",
-     "expected": "03:57"
-    },
-    {
-     "place": "Kazan",
-     "flight": "FZ984",
-     "sched": "04:30",
-     "status": "Estimated",
-     "expected": "04:24"
-    },
-    {
-     "place": "Entebbe",
-     "flight": "UR444",
-     "sched": "04:30",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Sydney",
-     "flight": "EK417",
-     "sched": "04:35",
-     "status": "Estimated",
-     "expected": "04:29"
-    },
-    {
-     "place": "Lagos",
-     "flight": "EK784",
-     "sched": "04:35",
-     "status": "Estimated",
-     "expected": "04:37"
-    },
-    {
-     "place": "Nairobi",
-     "flight": "FZ1582",
-     "sched": "04:35",
-     "status": "Estimated",
-     "expected": "04:20"
-    },
-    {
-     "place": "Kannur",
-     "flight": "IX693",
-     "sched": "04:35",
-     "status": "Estimated",
-     "expected": "04:27"
-    },
-    {
-     "place": "Tokyo",
-     "flight": "EK321",
-     "sched": "04:40",
-     "status": "Estimated",
-     "expected": "04:27"
-    },
-    {
-     "place": "Kuala Lumpur",
-     "flight": "EK343",
-     "sched": "04:40",
-     "status": "Estimated",
-     "expected": "04:34"
-    },
-    {
-     "place": "Manila",
-     "flight": "EK335",
-     "sched": "04:45",
-     "status": "Estimated",
-     "expected": "04:21"
-    },
-    {
-     "place": "Taipei",
-     "flight": "EK367",
-     "sched": "04:45",
-     "status": "Estimated",
-     "expected": "04:27"
-    },
-    {
-     "place": "Nairobi",
-     "flight": "EK722",
-     "sched": "04:45",
-     "status": "Estimated",
-     "expected": "04:26"
-    },
-    {
-     "place": "Madinah",
-     "flight": "FZ828",
-     "sched": "04:45",
-     "status": "Estimated",
-     "expected": "04:23"
-    },
-    {
-     "place": "Moscow",
-     "flight": "FZ966",
-     "sched": "04:45",
-     "status": "Estimated",
-     "expected": "03:57"
-    },
-    {
-     "place": "Guangzhou",
-     "flight": "EK363",
-     "sched": "04:50",
-     "status": "Estimated",
-     "expected": "04:49"
-    },
-    {
-     "place": "Istanbul",
-     "flight": "EK118",
-     "sched": "04:55",
-     "status": "Estimated",
-     "expected": "04:59"
-    },
-    {
-     "place": "Saint Petersburg",
-     "flight": "EK176",
-     "sched": "04:55",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Bangkok",
-     "flight": "EK385",
-     "sched": "04:55",
-     "status": "Estimated",
-     "expected": "04:32"
-    },
-    {
-     "place": "Gassim",
-     "flight": "FZ872",
-     "sched": "04:55",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Jeddah",
-     "flight": "SV590",
-     "sched": "04:55",
-     "status": "Estimated",
-     "expected": "04:44"
-    },
-    {
-     "place": "Hanoi",
-     "flight": "EK395",
-     "sched": "05:00",
-     "status": "Estimated",
-     "expected": "04:53"
-    },
-    {
-     "place": "Seoul",
-     "flight": "EK323",
-     "sched": "05:05",
-     "status": "Estimated",
-     "expected": "04:33"
-    },
-    {
-     "place": "Mauritius",
-     "flight": "EK704",
-     "sched": "05:05",
-     "status": "Estimated",
-     "expected": "04:34"
-    },
-    {
-     "place": "Johannesburg",
-     "flight": "EK764",
-     "sched": "05:05",
-     "status": "Estimated",
-     "expected": "06:05"
-    },
-    {
-     "place": "Lahore",
-     "flight": "PA410",
-     "sched": "05:05",
-     "status": "Estimated",
-     "expected": "04:44"
-    },
-    {
-     "place": "Shanghai",
-     "flight": "EK303",
-     "sched": "05:10",
-     "status": "Estimated",
-     "expected": "04:45"
-    },
-    {
-     "place": "Kochi",
-     "flight": "FZ454",
-     "sched": "05:10",
-     "status": "Estimated",
-     "expected": "05:16"
-    },
-    {
-     "place": "Colombo",
-     "flight": "FZ570",
-     "sched": "05:10",
-     "status": "Estimated",
-     "expected": "05:55"
-    },
-    {
-     "place": "Auckland",
-     "flight": "EK449",
-     "sched": "05:15",
-     "status": "Estimated",
-     "expected": "05:19"
-    },
-    {
-     "place": "Saint Petersburg",
-     "flight": "FZ992",
-     "sched": "05:15",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Shenzhen",
-     "flight": "EK329",
-     "sched": "05:20",
-     "status": "Estimated",
-     "expected": "05:25"
-    },
-    {
-     "place": "Sydney",
-     "flight": "EK413",
-     "sched": "05:20",
-     "status": "Estimated",
-     "expected": "05:14"
-    },
-    {
-     "place": "Adelaide",
-     "flight": "EK441",
-     "sched": "05:20",
-     "status": "Estimated",
-     "expected": "05:28"
-    },
-    {
-     "place": "Moscow",
-     "flight": "FZ988",
-     "sched": "05:20",
-     "status": "Estimated",
-     "expected": "04:21"
-    },
-    {
-     "place": "Perth",
-     "flight": "EK421",
-     "sched": "05:25",
-     "status": "Estimated",
-     "expected": "05:34"
-    },
-    {
-     "place": "Sialkot",
-     "flight": "EK619",
-     "sched": "05:25",
-     "status": "Estimated",
-     "expected": "05:14"
-    },
-    {
-     "place": "Durban",
-     "flight": "EK776",
-     "sched": "05:25",
-     "status": "Estimated",
-     "expected": "04:58"
-    },
-    {
-     "place": "Rome",
-     "flight": "EK96",
-     "sched": "05:25",
-     "status": "Estimated",
-     "expected": "05:09"
-    },
-    {
-     "place": "Hyderabad",
-     "flight": "FZ436",
-     "sched": "05:25",
-     "status": "Estimated",
-     "expected": "05:35"
-    },
-    {
-     "place": "Kolkata",
-     "flight": "FZ462",
-     "sched": "05:25",
-     "status": "Estimated",
-     "expected": "05:29"
-    },
-    {
-     "place": "Beijing",
-     "flight": "EK307",
-     "sched": "05:30",
-     "status": "Estimated",
-     "expected": "05:08"
-    },
-    {
-     "place": "Osaka",
-     "flight": "EK317",
-     "sched": "05:30",
-     "status": "Estimated",
-     "expected": "05:11"
-    },
-    {
-     "place": "Tokyo",
-     "flight": "EK319",
-     "sched": "05:30",
-     "status": "Estimated",
-     "expected": "05:13"
-    },
-    {
-     "place": "Jakarta",
-     "flight": "EK359",
-     "sched": "05:30",
-     "status": "Estimated",
-     "expected": "05:30"
-    },
-    {
-     "place": "Brisbane",
-     "flight": "EK435",
-     "sched": "05:30",
-     "status": "Estimated",
-     "expected": "05:18"
-    },
-    {
-     "place": "Islamabad",
-     "flight": "PK233",
-     "sched": "05:30",
-     "status": "Estimated",
-     "expected": "04:16"
-    },
-    {
-     "place": "Hong Kong",
-     "flight": "EK381",
-     "sched": "05:40",
-     "status": "Estimated",
-     "expected": "05:31"
-    },
-    {
-     "place": "Melbourne",
-     "flight": "EK407",
-     "sched": "05:40",
-     "status": "Estimated",
-     "expected": "05:31"
-    },
-    {
-     "place": "Denpasar-Bali",
-     "flight": "EK399",
-     "sched": "05:45",
-     "status": "Estimated",
-     "expected": "05:45"
-    },
-    {
-     "place": "Colombo",
-     "flight": "EK649",
-     "sched": "05:45",
-     "status": "Estimated",
-     "expected": "05:24"
-    },
-    {
-     "place": "Nairobi",
-     "flight": "KQ304",
-     "sched": "05:45",
-     "status": "Estimated",
-     "expected": "05:48"
-    },
-    {
-     "place": "Moscow",
-     "flight": "EK132",
-     "sched": "05:50",
-     "status": "Estimated",
-     "expected": "05:16"
-    },
-    {
-     "place": "Muscat",
-     "flight": "EK867",
-     "sched": "05:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "London",
-     "flight": "EK32",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "05:46"
-    },
-    {
-     "place": "Bangkok",
-     "flight": "EK377",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "05:38"
-    },
-    {
-     "place": "Lahore",
-     "flight": "EK623",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Cape Town",
-     "flight": "EK771",
-     "sched": "05:55",
-     "status": "Estimated",
-     "expected": "05:38"
-    },
-    {
-     "place": "Brussels",
-     "flight": "EK182",
-     "sched": "06:00",
-     "status": "Estimated",
-     "expected": "05:37"
-    },
-    {
-     "place": "Singapore",
-     "flight": "EK349",
-     "sched": "06:00",
-     "status": "Estimated",
-     "expected": "05:50"
-    },
-    {
-     "place": "Warsaw",
-     "flight": "FZ1840",
-     "sched": "06:00",
-     "status": "Estimated",
-     "expected": "05:56"
-    },
-    {
-     "place": "Lahore",
-     "flight": "PK203",
-     "sched": "06:00",
-     "status": "Estimated",
-     "expected": "05:44"
-    },
-    {
-     "place": "Bahrain",
-     "flight": "EK836",
-     "sched": "06:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Geneva",
-     "flight": "EK84",
-     "sched": "06:05",
-     "status": "Estimated",
-     "expected": "05:39"
-    },
-    {
-     "place": "Bucharest",
-     "flight": "FZ1796",
-     "sched": "06:05",
-     "status": "Estimated",
-     "expected": "06:16"
-    },
-    {
-     "place": "Barcelona",
-     "flight": "EK188",
-     "sched": "06:10",
-     "status": "Estimated",
-     "expected": "06:05"
-    },
-    {
-     "place": "Mumbai",
-     "flight": "EK501",
-     "sched": "06:10",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Cairo",
-     "flight": "EK926",
-     "sched": "06:10",
-     "status": "Estimated",
-     "expected": "06:21"
-    },
-    {
-     "place": "Giza",
-     "flight": "FZ192",
-     "sched": "06:10",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Ahmedabad",
-     "flight": "EK539",
-     "sched": "06:15",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Hangzhou",
-     "flight": "EK311",
-     "sched": "06:20",
-     "status": "Estimated",
-     "expected": "05:22"
-    },
-    {
-     "place": "Duesseldorf",
-     "flight": "EK58",
-     "sched": "06:20",
-     "status": "Estimated",
-     "expected": "06:05"
-    },
-    {
-     "place": "Moscow",
-     "flight": "FZ976",
-     "sched": "06:20",
-     "status": "Estimated",
-     "expected": "06:08"
-    },
-    {
-     "place": "Samara",
-     "flight": "FZ996",
-     "sched": "06:20",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Leipzig/Halle",
-     "flight": "3S586",
-     "sched": "06:21",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Vienna",
-     "flight": "EK126",
-     "sched": "06:25",
-     "status": "Estimated",
-     "expected": "06:19"
-    },
-    {
-     "place": "Lusaka",
-     "flight": "EK714",
-     "sched": "06:25",
-     "status": "Estimated",
-     "expected": "06:23"
-    },
-    {
-     "place": "Hamburg",
-     "flight": "EK62",
-     "sched": "06:30",
-     "status": "Estimated",
-     "expected": "06:24"
-    },
-    {
-     "place": "Delhi",
-     "flight": "EK513",
-     "sched": "06:35",
-     "status": "Estimated",
-     "expected": "06:30"
-    },
-    {
-     "place": "Munich",
-     "flight": "EK52",
-     "sched": "06:35",
-     "status": "Estimated",
-     "expected": "06:40"
-    },
-    {
-     "place": "Milan",
-     "flight": "EK92",
-     "sched": "06:35",
-     "status": "Landed",
-     "expected": "06:58"
-    },
-    {
-     "place": "Belgrade",
-     "flight": "FZ1750",
-     "sched": "06:35",
-     "status": "Estimated",
-     "expected": "06:40"
-    },
-    {
-     "place": "Bangkok",
-     "flight": "EK371",
-     "sched": "06:40",
-     "status": "Estimated",
-     "expected": "06:10"
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "EK48",
-     "sched": "06:40",
-     "status": "Estimated",
-     "expected": "06:22"
-    },
-    {
-     "place": "Hyderabad",
-     "flight": "EK525",
-     "sched": "06:40",
-     "status": "Estimated",
-     "expected": "06:43"
-    },
-    {
-     "place": "Chennai",
-     "flight": "EK543",
-     "sched": "06:40",
-     "status": "Estimated",
-     "expected": "06:56"
-    },
-    {
-     "place": "Tokyo",
-     "flight": "EK313",
-     "sched": "06:55",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Accra",
-     "flight": "EK788",
-     "sched": "06:55",
-     "status": "Estimated",
-     "expected": "07:23"
-    },
-    {
-     "place": "Istanbul",
-     "flight": "TK762",
-     "sched": "06:55",
-     "status": "Estimated",
-     "expected": "07:00"
-    },
-    {
      "place": "Budapest",
      "flight": "FZ1406",
      "sched": "07:00",
-     "status": "Estimated",
-     "expected": "06:47"
+     "status": "Landed",
+     "expected": "06:25"
     },
     {
      "place": "Kochi",
      "flight": "EK533",
      "sched": "07:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "06:55"
     },
     {
      "place": "Zurich",
      "flight": "EK86",
      "sched": "07:05",
      "status": "Estimated",
-     "expected": "07:12"
+     "expected": "06:36"
     },
     {
      "place": "Bengaluru",
      "flight": "EK569",
      "sched": "07:10",
      "status": "Estimated",
-     "expected": ""
+     "expected": "09:04"
     },
     {
      "place": "London",
      "flight": "EK68",
      "sched": "07:10",
      "status": "Estimated",
-     "expected": "07:04"
+     "expected": "06:32"
     },
     {
      "place": "Thiruvananthapuram",
      "flight": "EK523",
      "sched": "07:15",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:26"
     },
     {
      "place": "Mumbai",
      "flight": "FZ446",
      "sched": "07:15",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:11"
     },
     {
      "place": "London",
      "flight": "EK10",
      "sched": "07:20",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:18"
     },
     {
      "place": "Paris",
      "flight": "EK76",
      "sched": "07:20",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:14"
     },
     {
      "place": "Cape Town",
      "flight": "EK779",
      "sched": "07:25",
      "status": "Estimated",
-     "expected": "06:44"
+     "expected": "06:47"
     },
     {
      "place": "Istanbul",
      "flight": "FZ756",
      "sched": "07:25",
      "status": "Estimated",
-     "expected": "07:05"
+     "expected": "06:51"
     },
     {
      "place": "Amsterdam",
      "flight": "EK150",
      "sched": "07:30",
      "status": "Estimated",
-     "expected": "07:30"
+     "expected": "06:52"
     },
     {
      "place": "Tashkent",
@@ -885,14 +115,14 @@
      "flight": "FZ1782",
      "sched": "07:45",
      "status": "Estimated",
-     "expected": "07:13"
+     "expected": "06:50"
     },
     {
      "place": "Moscow",
      "flight": "FZ968",
      "sched": "07:45",
      "status": "Estimated",
-     "expected": "07:14"
+     "expected": "06:51"
     },
     {
      "place": "Adler/Sochi",
@@ -906,35 +136,35 @@
      "flight": "FZ980",
      "sched": "07:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:10"
     },
     {
      "place": "Birmingham",
      "flight": "EK38",
      "sched": "07:50",
      "status": "Estimated",
-     "expected": "08:24"
+     "expected": "07:49"
     },
     {
      "place": "Dakar",
      "flight": "EK795",
      "sched": "07:50",
      "status": "Estimated",
-     "expected": "07:42"
+     "expected": "07:37"
     },
     {
      "place": "Manchester",
      "flight": "EK20",
      "sched": "07:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:59"
     },
     {
      "place": "Ashgabat",
      "flight": "FZ732",
      "sched": "07:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:57"
     },
     {
      "place": "Montreal",
@@ -948,84 +178,84 @@
      "flight": "FZ1716",
      "sched": "08:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:19"
     },
     {
      "place": "Edinburgh",
      "flight": "EK24",
      "sched": "08:05",
      "status": "Estimated",
-     "expected": "07:48"
+     "expected": "07:44"
     },
     {
      "place": "Dublin",
      "flight": "EK164",
      "sched": "08:10",
      "status": "Estimated",
-     "expected": "08:26"
+     "expected": "08:21"
     },
     {
      "place": "New York",
      "flight": "EK204",
      "sched": "08:10",
      "status": "Estimated",
-     "expected": ""
+     "expected": "09:28"
     },
     {
      "place": "Moscow",
      "flight": "SU524",
      "sched": "08:10",
      "status": "Estimated",
-     "expected": ""
+     "expected": "09:16"
     },
     {
      "place": "Lisbon",
      "flight": "EK194",
      "sched": "08:15",
      "status": "Estimated",
-     "expected": "08:16"
+     "expected": "08:06"
     },
     {
      "place": "Johannesburg",
      "flight": "EK766",
      "sched": "08:15",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:12"
     },
     {
      "place": "Kazan",
      "flight": "FZ974",
      "sched": "08:15",
      "status": "Estimated",
-     "expected": ""
+     "expected": "07:59"
     },
     {
      "place": "Washington",
      "flight": "EK232",
      "sched": "08:20",
      "status": "Estimated",
-     "expected": "02:04"
+     "expected": "06:44"
     },
     {
      "place": "Madinah",
      "flight": "EK808",
      "sched": "08:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:02"
     },
     {
      "place": "Novosibirsk",
      "flight": "FZ964",
      "sched": "08:20",
      "status": "Estimated",
-     "expected": "07:47"
+     "expected": "07:45"
     },
     {
      "place": "Dushanbe",
      "flight": "FZ778",
      "sched": "08:35",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:50"
     },
     {
      "place": "Makhachkala",
@@ -1038,7 +268,7 @@
      "place": "Mineralnye Vody",
      "flight": "FZ978",
      "sched": "08:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1046,14 +276,14 @@
      "flight": "EK6",
      "sched": "08:45",
      "status": "Estimated",
-     "expected": "08:58"
+     "expected": "08:33"
     },
     {
      "place": "Moscow",
      "flight": "FZ952",
      "sched": "08:50",
      "status": "Estimated",
-     "expected": "08:12"
+     "expected": "07:58"
     },
     {
      "place": "Ahmedabad",
@@ -1067,62 +297,62 @@
      "flight": "IX107",
      "sched": "08:55",
      "status": "Estimated",
-     "expected": ""
+     "expected": "08:10"
     },
     {
      "place": "Surat",
      "flight": "IX335",
      "sched": "08:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "08:37"
     },
     {
      "place": "Astana",
      "flight": "FZ1304",
      "sched": "09:10",
      "status": "Estimated",
-     "expected": "08:33"
+     "expected": "08:39"
     },
     {
      "place": "Bishkek",
      "flight": "FZ1690",
      "sched": "09:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:18"
     },
     {
      "place": "Bengaluru",
      "flight": "6E1485",
      "sched": "09:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:21"
     },
     {
      "place": "Cairo",
      "flight": "MS901",
      "sched": "09:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:20"
     },
     {
      "place": "Almaty",
      "flight": "FZ1240",
      "sched": "09:45",
      "status": "Estimated",
-     "expected": ""
+     "expected": "10:27"
     },
     {
      "place": "Peshawar",
      "flight": "PK283",
      "sched": "09:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "09:09"
     },
     {
      "place": "Jeddah",
      "flight": "SV566",
      "sched": "09:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1143,7 +373,7 @@
      "place": "Delhi",
      "flight": "AI929",
      "sched": "10:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1154,24 +384,31 @@
      "expected": "09:57"
     },
     {
+     "place": "Kathmandu",
+     "flight": "H9757",
+     "sched": "10:15",
+     "status": "Unknown",
+     "expected": ""
+    },
+    {
      "place": "Hyderabad",
      "flight": "6E1465",
      "sched": "10:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Addis Ababa",
      "flight": "FZ642",
      "sched": "10:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Delhi",
      "flight": "6E1461",
      "sched": "10:25",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1199,7 +436,7 @@
      "place": "Kochi",
      "flight": "6E1475",
      "sched": "10:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1210,38 +447,45 @@
      "expected": ""
     },
     {
+     "place": "Dammam",
+     "flight": "XY811",
+     "sched": "10:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "London",
      "flight": "EK70",
      "sched": "11:00",
      "status": "Estimated",
-     "expected": ""
+     "expected": "11:08"
     },
     {
      "place": "Kathmandu",
      "flight": "FZ8400",
      "sched": "11:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Tashkent",
      "flight": "HY333",
      "sched": "11:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Almaty",
      "flight": "KC899",
      "sched": "11:00",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Kochi",
      "flight": "IX505",
      "sched": "11:05",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1283,7 +527,7 @@
      "place": "Tashkent",
      "flight": "C6351",
      "sched": "11:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1297,14 +541,14 @@
      "place": "Dhaka",
      "flight": "FZ502",
      "sched": "11:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Thiruvananthapuram",
      "flight": "IX581",
      "sched": "11:35",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1319,7 +563,14 @@
      "flight": "EK309",
      "sched": "11:40",
      "status": "Estimated",
-     "expected": "11:17"
+     "expected": "11:16"
+    },
+    {
+     "place": "Doha",
+     "flight": "QR1022",
+     "sched": "11:40",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Ahwaz",
@@ -1332,15 +583,15 @@
      "place": "Novosibirsk",
      "flight": "S75785",
      "sched": "11:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:30"
     },
     {
      "place": "Astana",
      "flight": "KC205",
      "sched": "11:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:17"
     },
     {
      "place": "Delhi",
@@ -1353,8 +604,8 @@
      "place": "Chittagong",
      "flight": "BS343",
      "sched": "11:55",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "11:36"
     },
     {
      "place": "Riyadh",
@@ -1368,6 +619,13 @@
      "flight": "EK305",
      "sched": "12:05",
      "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Bahrain",
+     "flight": "GF504",
+     "sched": "12:05",
+     "status": "Scheduled",
      "expected": ""
     },
     {
@@ -1392,11 +650,39 @@
      "expected": ""
     },
     {
+     "place": "Doha",
+     "flight": "FZ2",
+     "sched": "12:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Fort Worth",
      "flight": "EK222",
      "sched": "12:15",
      "status": "Estimated",
      "expected": "12:15"
+    },
+    {
+     "place": "Bahrain",
+     "flight": "EK838",
+     "sched": "12:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kuwait",
+     "flight": "KU671",
+     "sched": "12:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Hyderabad",
+     "flight": "EK527",
+     "sched": "12:25",
+     "status": "Scheduled",
+     "expected": ""
     },
     {
      "place": "Male",
@@ -1437,7 +723,7 @@
      "place": "Kathmandu",
      "flight": "FZ1134",
      "sched": "12:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1451,14 +737,14 @@
      "place": "Colombo",
      "flight": "FZ580",
      "sched": "12:50",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Phuket",
      "flight": "EK391",
      "sched": "12:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1479,7 +765,7 @@
      "place": "Chittagong",
      "flight": "FZ564",
      "sched": "12:55",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1504,10 +790,17 @@
      "expected": ""
     },
     {
+     "place": "Jeddah",
+     "flight": "SV568",
+     "sched": "13:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Bangkok",
      "flight": "EK375",
      "sched": "13:15",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1536,13 +829,13 @@
      "flight": "EK337",
      "sched": "13:20",
      "status": "Estimated",
-     "expected": ""
+     "expected": "12:29"
     },
     {
      "place": "Kuala Lumpur",
      "flight": "EK345",
      "sched": "13:20",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1560,16 +853,58 @@
      "expected": ""
     },
     {
+     "place": "Karachi",
+     "flight": "EK601",
+     "sched": "13:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Baghdad",
+     "flight": "IA123",
+     "sched": "13:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Istanbul",
+     "flight": "TK764",
+     "sched": "13:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Yekaterinburg",
      "flight": "FZ998",
      "sched": "13:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "Cairo",
      "flight": "EK930",
      "sched": "13:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tehran",
+     "flight": "B99720",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Singapore",
+     "flight": "EK315",
+     "sched": "14:00",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Damascus",
+     "flight": "RB515",
+     "sched": "14:00",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1588,9 +923,23 @@
      "expected": ""
     },
     {
+     "place": "Multan",
+     "flight": "PA810",
+     "sched": "14:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Hong Kong",
      "flight": "EK9849",
      "sched": "14:35",
+     "status": "Estimated",
+     "expected": "14:43"
+    },
+    {
+     "place": "Madinah",
+     "flight": "EK2538",
+     "sched": "14:40",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1602,9 +951,65 @@
      "expected": ""
     },
     {
+     "place": "Jeddah",
+     "flight": "EK806",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tashkent",
+     "flight": "FZ1402",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cairo",
+     "flight": "MS912",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Lahore",
+     "flight": "PF786",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Bangkok",
      "flight": "FZ1584",
      "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Addis Ababa",
+     "flight": "ET602",
+     "sched": "15:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Islamabad",
+     "flight": "PA216",
+     "sched": "15:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Athens",
+     "flight": "A3958",
+     "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Mangalore",
+     "flight": "IX835",
+     "sched": "16:00",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1616,9 +1021,51 @@
      "expected": ""
     },
     {
+     "place": "Mangalore",
+     "flight": "6E1467",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Male",
+     "flight": "FZ1026",
+     "sched": "16:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Benghazi",
+     "flight": "NB740",
+     "sched": "16:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Moscow",
      "flight": "SU526",
      "sched": "17:00",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Kozhikode",
+     "flight": "IX391",
+     "sched": "17:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Entebbe",
+     "flight": "FZ620",
+     "sched": "17:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Moscow",
+     "flight": "EK130",
+     "sched": "18:00",
      "status": "Scheduled",
      "expected": ""
     },
@@ -1634,28 +1081,28 @@
      "flight": "EK230",
      "sched": "19:05",
      "status": "Estimated",
-     "expected": ""
+     "expected": "19:16"
     },
     {
      "place": "Orlando",
      "flight": "EK220",
      "sched": "19:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:18"
     },
     {
      "place": "Chicago",
      "flight": "EK236",
      "sched": "19:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "18:43"
     },
     {
      "place": "Boston",
      "flight": "EK238",
      "sched": "19:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:30"
     },
     {
      "place": "Milan",
@@ -1668,7 +1115,7 @@
      "place": "Houston",
      "flight": "EK212",
      "sched": "19:45",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -1679,10 +1126,31 @@
      "expected": ""
     },
     {
+     "place": "Paris",
+     "flight": "EK72",
+     "sched": "19:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Los Angeles",
      "flight": "EK216",
      "sched": "19:50",
-     "status": "Estimated",
+     "status": "Cancelled",
+     "expected": ""
+    },
+    {
+     "place": "Manchester",
+     "flight": "EK22",
+     "sched": "19:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Johannesburg",
+     "flight": "EK768",
+     "sched": "20:10",
+     "status": "Scheduled",
      "expected": ""
     },
     {
@@ -1716,655 +1184,172 @@
    ],
    "dep": [
     {
-     "place": "Phuket",
-     "flight": "EK378",
-     "sched": "03:00",
-     "status": "Estimated",
-     "expected": "03:30"
-    },
-    {
-     "place": "Kathmandu",
-     "flight": "H9766",
-     "sched": "03:00",
-     "status": "Estimated",
-     "expected": "03:00"
-    },
-    {
-     "place": "Orlando",
-     "flight": "EK219",
-     "sched": "03:05",
-     "status": "Estimated",
-     "expected": "03:29"
-    },
-    {
-     "place": "Osaka",
-     "flight": "EK316",
-     "sched": "03:05",
-     "status": "Estimated",
-     "expected": "03:33"
-    },
-    {
-     "place": "Bangkok",
-     "flight": "EK384",
-     "sched": "03:05",
-     "status": "Estimated",
-     "expected": "03:37"
-    },
-    {
-     "place": "Shanghai",
-     "flight": "EK302",
-     "sched": "03:10",
-     "status": "Estimated",
-     "expected": "03:25"
-    },
-    {
-     "place": "Denpasar-Bali",
-     "flight": "EK368",
-     "sched": "03:10",
-     "status": "Estimated",
-     "expected": "03:15"
-    },
-    {
-     "place": "Islamabad",
-     "flight": "EK612",
-     "sched": "03:10",
-     "status": "Estimated",
-     "expected": "03:40"
-    },
-    {
-     "place": "London",
-     "flight": "EK7",
-     "sched": "03:10",
-     "status": "Estimated",
-     "expected": "03:20"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "EK145",
-     "sched": "03:15",
-     "status": "Estimated",
-     "expected": "03:20"
-    },
-    {
-     "place": "Singapore",
-     "flight": "EK354",
-     "sched": "03:15",
-     "status": "Estimated",
-     "expected": "03:15"
-    },
-    {
-     "place": "Mangalore",
-     "flight": "6E1468",
-     "sched": "03:20",
-     "status": "Estimated",
-     "expected": "03:25"
-    },
-    {
-     "place": "Beijing",
-     "flight": "EK306",
-     "sched": "03:20",
-     "status": "Estimated",
-     "expected": "03:20"
-    },
-    {
-     "place": "Frankfurt",
-     "flight": "EK43",
-     "sched": "03:20",
-     "status": "Estimated",
-     "expected": "03:20"
-    },
-    {
-     "place": "Paris",
-     "flight": "EK71",
-     "sched": "03:20",
-     "status": "Estimated",
-     "expected": "03:20"
-    },
-    {
-     "place": "Bucharest",
-     "flight": "FZ1709",
-     "sched": "03:25",
-     "status": "Estimated",
-     "expected": "03:35"
-    },
-    {
-     "place": "Istanbul",
-     "flight": "PC741",
-     "sched": "03:25",
-     "status": "Estimated",
-     "expected": "03:51"
-    },
-    {
-     "place": "Toronto",
-     "flight": "EK241",
-     "sched": "03:30",
-     "status": "Estimated",
-     "expected": "03:40"
-    },
-    {
-     "place": "Seoul",
-     "flight": "EK322",
-     "sched": "03:30",
-     "status": "Estimated",
-     "expected": "03:30"
-    },
-    {
-     "place": "Hong Kong",
-     "flight": "EK382",
-     "sched": "03:30",
-     "status": "Estimated",
-     "expected": "03:30"
-    },
-    {
-     "place": "Hyderabad",
-     "flight": "EK526",
-     "sched": "03:30",
-     "status": "Estimated",
-     "expected": "03:30"
-    },
-    {
-     "place": "Manila",
-     "flight": "EK332",
-     "sched": "03:40",
-     "status": "Estimated",
-     "expected": "03:40"
-    },
-    {
-     "place": "Kuala Lumpur",
-     "flight": "EK346",
-     "sched": "03:40",
-     "status": "Estimated",
-     "expected": "03:40"
-    },
-    {
-     "place": "Taipei",
-     "flight": "EK366",
-     "sched": "03:40",
-     "status": "Estimated",
-     "expected": "03:40"
-    },
-    {
-     "place": "Hanoi",
-     "flight": "EK394",
-     "sched": "03:40",
-     "status": "Estimated",
-     "expected": "03:40"
-    },
-    {
-     "place": "Bengaluru",
-     "flight": "EK564",
-     "sched": "03:40",
-     "status": "Estimated",
-     "expected": "03:40"
-    },
-    {
-     "place": "Barcelona",
-     "flight": "EK255",
-     "sched": "03:45",
-     "status": "Estimated",
-     "expected": "03:45"
-    },
-    {
-     "place": "Bangkok",
-     "flight": "EK376",
-     "sched": "03:50",
-     "status": "Estimated",
-     "expected": "03:50"
-    },
-    {
-     "place": "Cape Town",
-     "flight": "EK772",
-     "sched": "03:50",
-     "status": "Estimated",
-     "expected": "03:50"
-    },
-    {
-     "place": "Antalya",
-     "flight": "XQ209",
-     "sched": "03:50",
-     "status": "Estimated",
-     "expected": "03:50"
-    },
-    {
-     "place": "Mumbai",
-     "flight": "EK504",
-     "sched": "03:55",
-     "status": "Estimated",
-     "expected": "03:55"
-    },
-    {
-     "place": "Ho Chi Minh City",
-     "flight": "EK364",
-     "sched": "04:00",
-     "status": "Estimated",
-     "expected": "04:00"
-    },
-    {
-     "place": "Kandahar",
-     "flight": "FG404",
-     "sched": "04:00",
-     "status": "Estimated",
-     "expected": ""
-    },
-    {
-     "place": "Kabul",
-     "flight": "RQ902",
-     "sched": "04:00",
-     "status": "Estimated",
-     "expected": "04:00"
-    },
-    {
-     "place": "Dar es Salaam",
-     "flight": "TC405",
-     "sched": "04:00",
-     "status": "Estimated",
-     "expected": "05:10"
-    },
-    {
-     "place": "Jeddah",
-     "flight": "SV599",
-     "sched": "04:05",
-     "status": "Estimated",
-     "expected": "04:05"
-    },
-    {
-     "place": "Lahore",
-     "flight": "EK624",
-     "sched": "04:10",
-     "status": "Estimated",
-     "expected": "04:10"
-    },
-    {
-     "place": "Johannesburg",
-     "flight": "EK761",
-     "sched": "04:10",
-     "status": "Estimated",
-     "expected": "04:10"
-    },
-    {
-     "place": "Cairo",
-     "flight": "EK929",
-     "sched": "04:10",
-     "status": "Estimated",
-     "expected": "04:10"
-    },
-    {
-     "place": "Jeddah",
-     "flight": "FZ831",
-     "sched": "04:10",
-     "status": "Estimated",
-     "expected": "04:10"
-    },
-    {
-     "place": "Kathmandu",
-     "flight": "RA230",
-     "sched": "04:10",
-     "status": "Estimated",
-     "expected": "04:10"
-    },
-    {
-     "place": "Delhi",
-     "flight": "EK510",
-     "sched": "04:15",
-     "status": "Estimated",
-     "expected": "04:15"
-    },
-    {
-     "place": "Male",
-     "flight": "EK658",
-     "sched": "04:15",
-     "status": "Estimated",
-     "expected": "04:15"
-    },
-    {
-     "place": "Milan",
-     "flight": "EK101",
-     "sched": "04:20",
-     "status": "Estimated",
-     "expected": "04:20"
-    },
-    {
-     "place": "Jakarta",
-     "flight": "EK356",
-     "sched": "04:20",
-     "status": "Estimated",
-     "expected": "04:20"
-    },
-    {
-     "place": "Addis Ababa",
-     "flight": "ET601",
-     "sched": "04:25",
-     "status": "Estimated",
-     "expected": "04:25"
-    },
-    {
-     "place": "Kabul",
-     "flight": "FZ301",
-     "sched": "04:25",
-     "status": "Estimated",
-     "expected": "04:25"
-    },
-    {
-     "place": "Istanbul",
-     "flight": "VF144",
-     "sched": "04:25",
-     "status": "Estimated",
-     "expected": "04:35"
-    },
-    {
-     "place": "Tashkent",
-     "flight": "FZ1401",
-     "sched": "04:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Seoul",
-     "flight": "EK324",
-     "sched": "04:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Kabul",
-     "flight": "FG402",
-     "sched": "05:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Cairo",
-     "flight": "MS911",
-     "sched": "05:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Islamabad",
-     "flight": "PA211",
-     "sched": "05:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Gassim",
-     "flight": "SV593",
-     "sched": "05:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Delhi",
-     "flight": "FZ441",
-     "sched": "05:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Kozhikode",
-     "flight": "6E1474",
-     "sched": "05:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Doha",
-     "flight": "QR1003",
-     "sched": "05:20",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Entebbe",
-     "flight": "FZ619",
-     "sched": "05:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Tiruchirappalli",
-     "flight": "IX620",
-     "sched": "05:35",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Addis Ababa",
-     "flight": "ET613",
-     "sched": "05:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Karachi",
-     "flight": "FZ333",
-     "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Jeddah",
-     "flight": "SV591",
-     "sched": "06:00",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Kannur",
-     "flight": "IX694",
-     "sched": "06:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Multan",
-     "flight": "PA811",
-     "sched": "06:15",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Bosaso",
-     "flight": "D3187",
-     "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Entebbe",
-     "flight": "UR445",
-     "sched": "06:30",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Peshawar",
-     "flight": "PK284",
-     "sched": "06:40",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Amman",
-     "flight": "RJ613",
-     "sched": "06:45",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Nairobi",
-     "flight": "KQ305",
-     "sched": "06:55",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
      "place": "Ankara",
      "flight": "VF550",
      "sched": "07:00",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:00"
     },
     {
      "place": "Dublin",
      "flight": "EK161",
      "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:05"
     },
     {
      "place": "Jeddah",
      "flight": "EK805",
      "sched": "07:05",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:05"
     },
     {
      "place": "Manchester",
      "flight": "EK17",
      "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:20"
     },
     {
      "place": "Muscat",
      "flight": "FZ45",
      "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:10"
     },
     {
      "place": "Lahore",
      "flight": "PK204",
      "sched": "07:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:10"
     },
     {
      "place": "Lisbon",
      "flight": "EK191",
      "sched": "07:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:15"
     },
     {
      "place": "Glasgow",
      "flight": "EK27",
      "sched": "07:15",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:25"
     },
     {
      "place": "Bahrain",
      "flight": "FZ23",
      "sched": "07:20",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:20"
     },
     {
      "place": "Madrid",
      "flight": "EK141",
      "sched": "07:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:45"
     },
     {
      "place": "Newcastle",
      "flight": "EK35",
      "sched": "07:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:25"
     },
     {
      "place": "Casablanca",
      "flight": "EK751",
      "sched": "07:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:25"
     },
     {
      "place": "Accra",
      "flight": "EK787",
      "sched": "07:25",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:25"
     },
     {
      "place": "Karachi",
      "flight": "EK600",
      "sched": "07:30",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:30"
     },
     {
      "place": "Larnaca",
      "flight": "EK109",
      "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:35"
     },
     {
      "place": "Oslo",
      "flight": "EK159",
      "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:35"
     },
     {
      "place": "Yerevan",
      "flight": "FZ717",
      "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:35"
     },
     {
      "place": "Bahrain",
      "flight": "GF501",
      "sched": "07:35",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:35"
     },
     {
      "place": "London",
      "flight": "EK15",
      "sched": "07:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:40"
     },
     {
      "place": "Birmingham",
      "flight": "EK39",
      "sched": "07:40",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:40"
     },
     {
      "place": "Kuwait",
      "flight": "EK855",
      "sched": "07:40",
-     "status": "Scheduled",
+     "status": "Estimated",
      "expected": ""
     },
     {
      "place": "London",
      "flight": "EK1",
      "sched": "07:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:45"
     },
     {
      "place": "Madinah",
      "flight": "EK2537",
      "sched": "07:45",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:45"
     },
     {
      "place": "Paris",
      "flight": "EK73",
      "sched": "07:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "07:50"
     },
     {
      "place": "Mauritius",
@@ -2955,6 +1940,482 @@
      "expected": ""
     },
     {
+     "place": "Kabul",
+     "flight": "7C840",
+     "sched": "10:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Johannesburg",
+     "flight": "EK763",
+     "sched": "10:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Male",
+     "flight": "FZ1569",
+     "sched": "10:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Zanzibar",
+     "flight": "FZ1687",
+     "sched": "10:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Yerevan",
+     "flight": "FZ715",
+     "sched": "10:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Sydney",
+     "flight": "EK412",
+     "sched": "10:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Male",
+     "flight": "EK660",
+     "sched": "10:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Chennai",
+     "flight": "6E1472",
+     "sched": "10:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Brisbane",
+     "flight": "EK434",
+     "sched": "10:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Colombo",
+     "flight": "FZ549",
+     "sched": "10:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Sarajevo",
+     "flight": "FZ761",
+     "sched": "10:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cape Town",
+     "flight": "EK778",
+     "sched": "10:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dhaka",
+     "flight": "EK586",
+     "sched": "10:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Mauritius",
+     "flight": "EK703",
+     "sched": "10:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Nairobi",
+     "flight": "EK719",
+     "sched": "10:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Lagos",
+     "flight": "EK783",
+     "sched": "10:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Phuket",
+     "flight": "EK396",
+     "sched": "10:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kuala Lumpur",
+     "flight": "EK342",
+     "sched": "10:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Guangzhou",
+     "flight": "EK362",
+     "sched": "10:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Hong Kong",
+     "flight": "EK380",
+     "sched": "10:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Durban",
+     "flight": "EK775",
+     "sched": "10:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cairo",
+     "flight": "MS902",
+     "sched": "10:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Shenzhen",
+     "flight": "EK328",
+     "sched": "10:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Jakarta",
+     "flight": "EK358",
+     "sched": "10:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kuwait",
+     "flight": "J9122",
+     "sched": "10:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Benghazi",
+     "flight": "FZ1615",
+     "sched": "10:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Beijing",
+     "flight": "EK308",
+     "sched": "11:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Hangzhou",
+     "flight": "EK310",
+     "sched": "11:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bangkok",
+     "flight": "FZ1335",
+     "sched": "11:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Muscat",
+     "flight": "FZ41",
+     "sched": "11:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Islamabad",
+     "flight": "PK212",
+     "sched": "11:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Moscow",
+     "flight": "SU525",
+     "sched": "11:10",
+     "status": "Estimated",
+     "expected": ""
+    },
+    {
+     "place": "Madinah",
+     "flight": "SV567",
+     "sched": "11:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kathmandu",
+     "flight": "H9758",
+     "sched": "11:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Ahmedabad",
+     "flight": "6E1478",
+     "sched": "11:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Delhi",
+     "flight": "6E1462",
+     "sched": "11:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Baghdad",
+     "flight": "FZ201",
+     "sched": "11:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Athens",
+     "flight": "EK209",
+     "sched": "11:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Riyadh",
+     "flight": "XY202",
+     "sched": "11:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Chandigarh",
+     "flight": "6E1482",
+     "sched": "11:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Delhi",
+     "flight": "AI930",
+     "sched": "11:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Doha",
+     "flight": "QR1007",
+     "sched": "11:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Cairo",
+     "flight": "EK921",
+     "sched": "12:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Almaty",
+     "flight": "KC900",
+     "sched": "12:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Dammam",
+     "flight": "XY812",
+     "sched": "12:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kochi",
+     "flight": "IX506",
+     "sched": "12:05",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "EK31",
+     "sched": "12:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Mumbai",
+     "flight": "6E1452",
+     "sched": "12:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kabul",
+     "flight": "FZ307",
+     "sched": "12:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Faisalabad",
+     "flight": "FZ391",
+     "sched": "12:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tbilisi",
+     "flight": "FZ711",
+     "sched": "12:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Jeddah",
+     "flight": "XY502",
+     "sched": "12:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Karachi",
+     "flight": "FZ335",
+     "sched": "12:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Sialkot",
+     "flight": "FZ337",
+     "sched": "12:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tashkent",
+     "flight": "HY334",
+     "sched": "12:30",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Multan",
+     "flight": "FZ325",
+     "sched": "12:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Ahwaz",
+     "flight": "KRU5500",
+     "sched": "12:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Basrah",
+     "flight": "FZ1227",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Bahrain",
+     "flight": "GF505",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Astana",
+     "flight": "KC206",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amritsar",
+     "flight": "SG5156",
+     "sched": "12:50",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Chittagong",
+     "flight": "BS344",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Kathmandu",
+     "flight": "FZ1537",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Madinah",
+     "flight": "FZ897",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Novosibirsk",
+     "flight": "S75786",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tashkent",
+     "flight": "C6352",
+     "sched": "13:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Moscow",
+     "flight": "FZ965",
+     "sched": "13:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Thiruvananthapuram",
+     "flight": "IX582",
+     "sched": "13:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Milan",
      "flight": "EK91",
      "sched": "15:30",
@@ -2967,9 +2428,23 @@
    "utcOffsetMin": 240,
    "arr": [
     {
+     "place": "Rio de Janeiro",
+     "flight": "EK248",
+     "sched": "00:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Saint Petersburg",
      "flight": "EK176",
      "sched": "04:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Auckland",
+     "flight": "EK449",
+     "sched": "05:15",
      "status": "Scheduled",
      "expected": ""
     },
