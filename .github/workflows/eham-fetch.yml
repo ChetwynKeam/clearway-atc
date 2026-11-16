@@ -41,6 +41,24 @@ jobs:
             done
             curl -sSfL -m 180 -A "$UA" "$ROOT/documents/PDF/AMDT.pdf" -o "$D/AMDT.pdf"
           done
+          # the approach map: the coast, the IJsselmeer and Markermeer, towns, the borders and the other airfields (OpenStreetMap)
+          mkdir -p "$GITHUB_WORKSPACE/out/geo" && cd "$GITHUB_WORKSPACE/out/geo"
+          q() {
+            S=$(date +%s)
+            while [ $(( $(date +%s) - S )) -lt 480 ]; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                if curl -sSf -m 180 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.tmp" && head -c 1 "$1.tmp" | grep -q '{'; then mv "$1.tmp" "$1.json"; echo "OK $1 from $H"; return 0; fi
+                echo "retry $1 ($H)"; sleep 5
+              done
+            done
+            echo "FAILED $1"; rm -f "$1.tmp"
+          }
+          q coast "[out:json][timeout:180];way[natural=coastline](51.0,2.6,53.9,7.3);out geom;" &
+          q water "[out:json][timeout:180];(way[natural=water](52.0,4.4,53.2,5.9)(if:length()>20000);relation[natural=water][name~\"IJsselmeer|Markermeer|Noordzeekanaal|IJmeer|Gooimeer|Veluwemeer|Ketelmeer|Wadden\"](51.8,4.0,53.5,6.2););out geom;" &
+          q towns "[out:json][timeout:120];node[place~\"city|town\"](51.0,2.6,53.9,7.3);out;" &
+          q borders "[out:json][timeout:180];relation[boundary=administrative][admin_level=2][name~\"Nederland|België|Belgique|Deutschland\"];way(r);out geom;" &
+          q airports "[out:json][timeout:120];nwr[aeroway=aerodrome][icao](51.0,2.6,53.9,7.3);out center;" &
+          wait
           # the Schiphol boards (avionio.com's AMS arrivals and departures, every page each way, about half an hour a page):
           # the real day the timetable is built from
           cd "$GITHUB_WORKSPACE" && mkdir -p out/boards && A="" && D=""
