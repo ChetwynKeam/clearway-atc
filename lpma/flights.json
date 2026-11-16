@@ -1,24 +1,10 @@
 {
- "updated": "2026-11-16T11:06:50Z",
+ "updated": "2026-11-16T12:11:52Z",
  "source": "madeiraairport.pt",
  "days": {
   "2026-11-16": {
    "utcOffsetMin": 0,
    "arr": [
-    {
-     "place": "Lisboa",
-     "flight": "TP1685",
-     "sched": "09:15",
-     "status": "Arrived",
-     "expected": "09:11"
-    },
-    {
-     "place": "Amsterdam",
-     "flight": "HV6635",
-     "sched": "09:35",
-     "status": "Arrived",
-     "expected": "10:50"
-    },
     {
      "place": "Lisboa",
      "flight": "TP1687",
@@ -58,8 +44,8 @@
      "place": "Bristol",
      "flight": "EZY2877",
      "sched": "11:35",
-     "status": "Estimated",
-     "expected": "11:35"
+     "status": "Arrived",
+     "expected": "11:13"
     },
     {
      "place": "London Gatwick",
@@ -72,22 +58,22 @@
      "place": "Manchester",
      "flight": "TOM2102",
      "sched": "12:00",
-     "status": "Estimated",
+     "status": "Arrived",
      "expected": "11:40"
     },
     {
      "place": "Copenhagen",
      "flight": "DK1124",
      "sched": "12:10",
-     "status": "Estimated",
-     "expected": "11:50"
+     "status": "Arrived",
+     "expected": "11:54"
     },
     {
      "place": "Helsinki Vantaa",
      "flight": "DK1308",
      "sched": "12:10",
-     "status": "Estimated",
-     "expected": "11:50"
+     "status": "Arrived",
+     "expected": "11:46"
     },
     {
      "place": "Ponta Delgada",
@@ -107,15 +93,15 @@
      "place": "Faro",
      "flight": "TP1716",
      "sched": "12:55",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:30"
     },
     {
      "place": "London Luton",
      "flight": "LS3833",
      "sched": "13:00",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "12:25"
     },
     {
      "place": "London Stansted",
@@ -128,15 +114,15 @@
      "place": "Lisboa",
      "flight": "TP1689",
      "sched": "13:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:05"
     },
     {
      "place": "Porto",
      "flight": "FR6049",
      "sched": "13:25",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:20"
     },
     {
      "place": "Glasgow",
@@ -149,8 +135,8 @@
      "place": "Edinburgh",
      "flight": "LS735",
      "sched": "13:40",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "13:00"
     },
     {
      "place": "Manchester",
@@ -212,8 +198,8 @@
      "place": "Lisboa",
      "flight": "EJU7633",
      "sched": "15:35",
-     "status": "",
-     "expected": ""
+     "status": "Estimated",
+     "expected": "15:35"
     },
     {
      "place": "Helsinki Vantaa",
@@ -331,20 +317,6 @@
    "dep": [
     {
      "place": "Lisboa",
-     "flight": "EJU7632",
-     "sched": "09:05",
-     "status": "Departed",
-     "expected": "09:01"
-    },
-    {
-     "place": "Porto",
-     "flight": "EJU6832",
-     "sched": "09:25",
-     "status": "Departed",
-     "expected": "09:24"
-    },
-    {
-     "place": "Lisboa",
      "flight": "TP1686",
      "sched": "10:15",
      "status": "Departed",
@@ -354,63 +326,63 @@
      "place": "Amsterdam",
      "flight": "HV6636",
      "sched": "10:25",
-     "status": "Estimated",
-     "expected": "11:45"
+     "status": "Closed",
+     "expected": ""
     },
     {
      "place": "Gran Canaria",
      "flight": "NT4073",
      "sched": "11:10",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "11:37"
     },
     {
      "place": "Lisboa",
      "flight": "TP1688",
      "sched": "11:10",
-     "status": "Closed",
-     "expected": ""
+     "status": "Departed",
+     "expected": "11:09"
     },
     {
      "place": "Berlin Brandenburg",
      "flight": "EJU5334",
      "sched": "11:35",
-     "status": "Boarding",
-     "expected": ""
+     "status": "Departed",
+     "expected": "11:43"
     },
     {
      "place": "London Gatwick",
      "flight": "EZY8520",
      "sched": "11:40",
-     "status": "Final Call",
-     "expected": ""
+     "status": "Departed",
+     "expected": "11:50"
     },
     {
      "place": "Riga",
      "flight": "BT768",
      "sched": "11:50",
-     "status": "",
-     "expected": ""
+     "status": "Departed",
+     "expected": "11:57"
     },
     {
      "place": "Bournemouth",
      "flight": "LS3624",
      "sched": "12:15",
-     "status": "",
+     "status": "Closed",
      "expected": ""
     },
     {
      "place": "Bristol",
      "flight": "EZY2878",
      "sched": "12:30",
-     "status": "",
+     "status": "Boarding",
      "expected": ""
     },
     {
      "place": "London Gatwick",
      "flight": "BA2717",
      "sched": "12:30",
-     "status": "",
+     "status": "Final Call",
      "expected": ""
     },
     {
