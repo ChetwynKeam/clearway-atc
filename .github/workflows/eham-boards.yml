@@ -1,0 +1,33 @@
+name: Fetch EHAM boards
+# For the Amsterdam Schiphol (EHAM) full-day timetable: avionio.com's AMS arrivals and departures boards, every page each
+# way, saved with the time of the fetch to the eham-boards branch. Each run adds a snapshot; tools/eham/merge_boards.py
+# joins them into one day (the boards reach about half a day ahead, so a morning and an evening fetch cover it).
+on:
+  workflow_dispatch:
+  push:
+    branches: [eham-traffic]
+    paths: ['.github/workflows/eham-boards.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the boards
+        run: |
+          UA="Mozilla/5.0 (clearway-atc; github.com/ChetwynKeam/clearway-atc)"; A=""; D=""
+          mkdir -p /tmp/b
+          for P in $(seq -12 80); do
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/b/a$P.html "https://www.avionio.com/en/airport/ams/arrivals?page=$P" && A="$A,/tmp/b/a$P.html"; sleep 1
+            curl -sSL --compressed -m 30 -A "$UA" -o /tmp/b/d$P.html "https://www.avionio.com/en/airport/ams/departures?page=$P" && D="$D,/tmp/b/d$P.html"; sleep 1
+          done
+          STAMP=$(date -u +%Y%m%dT%H%MZ)
+          python3 tools/avionio_flights.py "${A#,}" "${D#,}" /tmp/boards-$STAMP.json Europe/Amsterdam
+          echo "STAMP=$STAMP" >> $GITHUB_ENV
+      - name: Add the snapshot to the eham-boards branch
+        run: |
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch -q origin eham-boards; then git checkout -q -B eham-boards FETCH_HEAD; else git checkout -q --orphan eham-boards && git rm -rqf .; fi
+          cp /tmp/boards-$STAMP.json . && git add boards-$STAMP.json && git commit -qm "AMS boards $STAMP"
+          git push -q "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" eham-boards
