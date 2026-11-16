@@ -18320,16 +18320,47 @@ function vfrStep(dt){
   }
   VFR.list = VFR.list.filter(v => v.st !== 'GONE' || S.t - v.t0 < 1800);
 }
+// the shapes, in metres (nose up, y forward): a helicopter's fuselage, tail boom and fin under a turning rotor disc;
+// a high-wing (C172) or low-wing (PA28) light aircraft. Drawn to scale when zoomed in, never smaller than a
+// readable symbol. Police helicopters in blue and yellow, the air ambulance in red and yellow, the rest white.
+const VFR_LOOK = { police: ['#1f4fa8', '#f5d100'], ambulance: ['#d42a2a', '#f5d100'], heli: ['#e9eef2', '#8aa0ad'], plane: ['#f4f6f8', '#7d8e99'] };
+function vfrShape(v, X, Y, col){
+  const realPx = V.scale/1852, len = v.heli ? 12 : 8.5, k = Math.max(realPx, 16/len);   // px per metre
+  const look = v.hems ? VFR_LOOK.ambulance : /police/.test(v.who) ? VFR_LOOK.police : v.heli ? VFR_LOOK.heli : VFR_LOOK.plane;
+  cx.save(); cx.translate(X, Y); cx.rotate(v.hdg*D2R); cx.scale(k, k); cx.lineWidth = 1/k;
+  const P = pts => { cx.beginPath(); pts.forEach(([x, y], i) => i ? cx.lineTo(x, -y) : cx.moveTo(x, -y)); cx.closePath(); };
+  if (v.heli) {
+    cx.fillStyle = look[1]; P([[-0.35, -1], [0.35, -1], [0.3, -7], [-0.3, -7]]); cx.fill();                       // tail boom
+    P([[-0.15, -6.3], [1.6, -7.2], [1.6, -7.6], [-0.15, -7.4]]); cx.fill();                                      // fin / stabiliser
+    cx.fillStyle = look[0]; cx.strokeStyle = 'rgba(0,0,0,.55)';
+    cx.beginPath(); cx.ellipse(0, -0.6, 1.3, 3.1, 0, 0, 7); cx.fill(); cx.stroke();                                // cabin
+    cx.fillStyle = 'rgba(160,210,255,.85)'; cx.beginPath(); cx.ellipse(0, -2.6, 0.9, 0.9, 0, Math.PI, 0); cx.fill(); // screen
+    const r = 5.2, t = (performance.now()/1000)*18;                                                               // rotor
+    cx.fillStyle = 'rgba(210,220,230,.22)'; cx.beginPath(); cx.arc(0, 0.3, r, 0, 7); cx.fill();
+    cx.strokeStyle = 'rgba(150,160,168,.95)'; cx.lineWidth = 0.35;
+    for (let i = 0; i < 4; i++) { const a = t + i*Math.PI/2; cx.beginPath(); cx.moveTo(0, 0.3); cx.lineTo(Math.cos(a)*r, 0.3 + Math.sin(a)*r); cx.stroke(); }
+  } else {
+    const high = v.t === 'C172';
+    cx.fillStyle = look[0]; cx.strokeStyle = 'rgba(0,0,0,.6)';
+    P([[-0.55, 4], [0.55, 4], [0.5, -3.3], [-0.5, -3.3]]); cx.fill(); cx.stroke();                                // fuselage
+    P([[-5.5, high ? 1.2 : 0.8], [5.5, high ? 1.2 : 0.8], [5.3, high ? -0.2 : -0.6], [-5.3, high ? -0.2 : -0.6]]); cx.fill(); cx.stroke();   // wing
+    P([[-1.8, -2.6], [1.8, -2.6], [1.7, -3.4], [-1.7, -3.4]]); cx.fill(); cx.stroke();                            // tailplane
+    cx.fillStyle = look[1]; P([[-0.12, -2.2], [0.12, -2.2], [0.12, -3.4], [-0.12, -3.4]]); cx.fill();            // fin
+    cx.strokeStyle = 'rgba(40,40,40,.7)'; cx.lineWidth = 0.25; cx.beginPath(); cx.moveTo(-0.9, -4.15); cx.lineTo(0.9, -4.15); cx.stroke();  // propeller
+  }
+  cx.restore();
+  // a ring in the status colour, so waiting and cleared still read at a glance
+  cx.strokeStyle = col; cx.lineWidth = 1.5; cx.beginPath(); cx.arc(X, Y, Math.max(10, len*k*0.6), 0, 7); cx.stroke();
+}
 function drawVfr(){
   if (!S.running || (typeof EQ !== 'undefined' && EQ.on && EQ.on.k === 'radar')) return;
   cx.save(); cx.font = `11px ${typeof FONT_L !== 'undefined' ? FONT_L : 'monospace'}`;
   for (const v of VFR.list) {
     if (v.st === 'GONE') continue;
     const X = sx(v.x), Y = sy(v.y), col = v.st === 'CALL' ? '#f0a020' : '#c7a6ff';
-    cx.strokeStyle = cx.fillStyle = col; cx.lineWidth = 1.5;
-    if (v.heli) { cx.beginPath(); cx.arc(X, Y, 5, 0, 7); cx.stroke(); cx.beginPath(); cx.moveTo(X - 7, Y); cx.lineTo(X + 7, Y); cx.stroke(); }
-    else { cx.beginPath(); cx.moveTo(X, Y - 5); cx.lineTo(X + 5, Y); cx.lineTo(X, Y + 5); cx.lineTo(X - 5, Y); cx.closePath(); cx.stroke(); }
-    cx.fillText(`${v.cs} ${String(Math.round(v.alt/100)).padStart(3, '0')} VFR${v.st === 'CALL' ? ' ?' : v.st === 'ORBIT' ? ' ⟳' : ''}`, X + 8, Y - 6);
+    vfrShape(v, X, Y, col);
+    const off = Math.max(14, (v.heli ? 12 : 8.5)*Math.max(V.scale/1852, 16/(v.heli ? 12 : 8.5))*0.6 + 4);
+    cx.fillStyle = col; cx.fillText(`${v.cs} ${String(Math.round(v.alt/100)).padStart(3, '0')} VFR${v.st === 'CALL' ? ' ?' : v.st === 'ORBIT' ? ' ⟳' : ''}`, X + off, Y - 6);
   }
   cx.restore();
 }
