@@ -1,10 +1,24 @@
 {
- "updated": "2026-11-20T13:58:32Z",
+ "updated": "2026-11-20T21:40:31Z",
  "source": "avionio.com",
  "days": {
   "2026-11-20": {
    "utcOffsetMin": 60,
    "arr": [
+    {
+     "place": "Sofia",
+     "flight": "EGT580",
+     "sched": "09:57",
+     "status": "Estimated",
+     "expected": "09:36"
+    },
+    {
+     "place": "Hamburg",
+     "flight": "FTY14",
+     "sched": "11:36",
+     "status": "Landed",
+     "expected": "12:19"
+    },
     {
      "place": "Vienna",
      "flight": "OS105",
@@ -23,38 +37,45 @@
      "place": "Vienna",
      "flight": "OS107",
      "sched": "18:10",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Landed",
+     "expected": "18:13"
     }
    ],
    "dep": [
     {
+     "place": "Sofia",
+     "flight": "EGT580",
+     "sched": "11:00",
+     "status": "Departed",
+     "expected": "10:53"
+    },
+    {
      "place": "Geneva",
      "flight": "ALE85",
      "sched": "14:30",
-     "status": "Estimated",
-     "expected": "14:35"
+     "status": "Departed",
+     "expected": "14:29"
     },
     {
      "place": "London",
      "flight": "U28698",
      "sched": "15:10",
-     "status": "Estimated",
-     "expected": "15:10"
+     "status": "Departed",
+     "expected": "15:11"
     },
     {
      "place": "Vienna",
      "flight": "OS106",
      "sched": "15:15",
-     "status": "Estimated",
-     "expected": "15:24"
+     "status": "Departed",
+     "expected": "15:18"
     },
     {
      "place": "Vienna",
      "flight": "OS108",
      "sched": "18:50",
-     "status": "Scheduled",
-     "expected": ""
+     "status": "Departed",
+     "expected": "19:02"
     }
    ]
   }
