@@ -1277,7 +1277,9 @@ const stopDist = (v, dec = VAC_DEC) => Math.max(0, v*v - VAC_TURN*VAC_TURN)/(2*d
 // exit, firmer for a near one, up to about what the type does with firm manual braking (VAC_MAX, kt/s). An exit it can't
 // make is refused; on a runway with turning pads one it has passed is reached by backtracking instead.
 const VAC_MAX = { L: 5.5, M: 5, H: 4.5 }, VAC_SOFT = 2;
-const vacMax = ac => VAC_MAX[ac.perf.wake] || 5;
+// a wet or contaminated runway takes a share of the braking away (fieldfx.js: the runway surface condition)
+const rwyBrake = () => typeof fxBrake === 'function' ? fxBrake() : 1;
+const vacMax = ac => (VAC_MAX[ac.perf.wake] || 5)*rwyBrake();
 const exitWord = e => PHON[e] || (HOLDS[e] && PHON[HOLDS[e].ref]) || String(e).replace(/~\d+$/, '');
 // the runway it is landing or rolling on, which way, where it is along it (m; airborne: where it will touch down) and how fast
 function vacPos(ac){
@@ -1929,6 +1931,9 @@ function commandRun(str){
       { const [sa, ra] = PH.cross(ac, rwyName(want)), c = tx.length === 1 ? tx[0] : null, pre = c ? `behind the ${c.kind === 'ARR' ? 'landing' : 'departing'} ${typeSay(c.t)}, ` : '';
         said.push(pre + sa + (c ? ' behind' : '')); reads.push(pre + ra + (c ? ' behind' : '')); }
       if (ac.hsAt === want && ac.need && ac.need.startsWith('Holding short')) ac.need = null;
+    } else if ((t === 'STOP' || t === 'RTO') && ac.state === 'TAKEOFF' && typeof fxReject === 'function') { fxReject(ac, said, reads);   // reject the take-off
+    } else if ((t === 'CXL' || t === 'CANCEL') && ac.kind === 'ARR' && air && ac.ctl && typeof fxReject === 'function') {
+      ac.ctl = false; ac.warnedCtl = false; said.push('cancel landing clearance, continue approach'); reads.push('cancelling landing clearance, continuing approach');
     } else if (t === 'HP' || t === 'STOP') {
       if (air || !ac.path || ac.state === 'TAKEOFF') { sys(`${ac.cs} is not taxiing.`); continue; }
       ac.held = true; said.push('hold position'); reads.push('holding position');
@@ -1940,6 +1945,7 @@ function commandRun(str){
       if (ac.luq || ac.luAfter || (ac.cto && ac.state === 'TAXI')) { sys(`${ac.cs} is already cleared onto the runway.`); continue; }
       { const q = luTaxi(ac) && S.acs.find(o => o !== ac && o.ground && o.hp === ac.hp && o.state === 'HOLDPT'); if (q) sys(`Careful: ${q.cs} is ahead of ${ac.cs} at ${ac.hp}.`, true); }
       { const f = luFull(ac); if (f) { sys(`${f}: no more than ${luMaxWord()} at once, each from its own holding point.`, true); continue; } }
+      { const u = typeof fxToShort === 'function' && fxToShort(ac); if (u) { atc(ac, `runway ${depRw(ac)}, line up and wait`); pilot(ac, u); ac.need = 'Needs full length'; continue; } }   // not enough runway from this entry
       const others = luOthers(ac), me = luM(ac), near = others.find(o => Math.abs(luM(o) - me) < 300), tr = luTraffic(ac);
       if (S.acs.some(o => o !== ac && onRunway(o, depRw(ac)) && !others.includes(o) && !(tr && o === tr.o) && !xFar(o, ac))) sys('Careful: the runway is occupied.', true);
       else if (near) sys(`Careful: ${near.cs} is lined up at about the same point as ${ac.cs}.`, true);
@@ -1963,6 +1969,7 @@ function commandRun(str){
       { const tl = APT.toLimit && APT.toLimit(depRw(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl} for take-off, we'll wait at the holding point`); return; } }
       if (ac.deice && ac.deice.st === 'DONE' && S.t > ac.deice.until) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'unable, our de-icing holdover time has expired, we need de-icing again'); ac.deice = { st: 'ASK' }; ac.need = 'Request de-icing'; SC(ac).pts -= 5; return; }
       { const tl = (typeof lvtoLimit === 'function' && lvtoLimit(ac)) || (typeof worksToLimit === 'function' && worksToLimit(ac)); if (tl) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, ${tl}`); ac.need = 'Unable take-off'; renderSel(); return; } }
+      { const u = typeof fxToShort === 'function' && fxToShort(ac); if (u) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, u); ac.need = 'Needs full length'; return; } }
       if (S.wx.vis < toVisMin()) { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, `unable, visibility is below our ${toVisMin().toLocaleString('en-GB')} metre departure minimum`); return; }
       if (S.xing.st !== 'CLOSED') { atc(ac, `runway ${depRw(ac)}, cleared for takeoff`); pilot(ac, 'negative, the road crossing is still open, holding position'); return; }
       { const blk = rwyBlocked(depRw(ac)); if (blk) { sys(`Runway ${depRw(ac)} is closed (${blk}): hold ${ac.cs}.`, true); continue; } }
@@ -2204,6 +2211,7 @@ function step(dt){
   if (typeof eqStep === 'function') eqStep();
   if (typeof vfrStep === 'function') vfrStep(dt);
   if (typeof ojtiStep === 'function') ojtiStep();
+  if (typeof fxStep === 'function') fxStep(dt);   // runway condition, jet blast (fieldfx.js)
   stepWindShift(); stepReadbacks(); stepSimilarCs(); stepCsErr();
   if (APT.onStep) APT.onStep(dt);   // airport-specific clockwork (Heathrow's 15:00 runway alternation)
   for (const f of S.sched) if (!f.spawned && !f.hold && !(f.k === 'ARR' && (S.t < (S.liveWait || 0) || (typeof liveHoldArr === 'function' && liveHoldArr(f)))) && S.t >= f.m*60 - (f.k === 'ARR' && f.m > 0 ? PRE_LEAD : 0)) { f.spawned = true; if (f.k === 'ARR') spawnArrival(f); else if (f.k === 'RES') spawnResident(f); else if (!spawnDeparture(f) && f.gen) { f.spawned = false; f.m += 1; } }   // a made-up departure waits a minute for a free stand
@@ -2628,6 +2636,7 @@ function stepGround(ac, dt){
     let spd = ac.path.reverse ? ac.path.spd : Math.min(ac.path.spd, taxiLimit(ac));
     if (ac.state === 'VACATING' && ac.onRwy) spd = Math.min(vacSpeed(ac, dt), spd < ac.path.spd ? spd : Infinity);
     if (ac.held) spd = 0;
+    if (typeof fxTaxiSpd === 'function') spd = fxTaxiSpd(ac, spd);   // jet blast ahead, a slippery surface (fieldfx.js)
     // a runway in use ahead: stop at its holding position until cleared to cross (CROSS)
     { const k = xingAhead(ac);
       if (k >= 0) {
@@ -2730,7 +2739,7 @@ function stepGround(ac, dt){
   if (ac.onRwy && ac.state === 'VACATING' && !ac.xcross && Math.abs(rwyById(ac.rwyId).offOf([ac.x, ac.y])) > 45) ac.onRwy = false;
   if (ac.state === 'ROLLOUT') {
     const R = rwyById(ac.rwyId);
-    ac.ias = Math.max(15, ac.ias - 4.2*dt); ac.gs = ac.ias;
+    ac.ias = Math.max(15, ac.ias - 4.2*rwyBrake()*dt); ac.gs = ac.ias;
     const mv = ac.ias/3600*dt; ac.x += R.RU[0]*ac.rollDir*mv; ac.y += R.RU[1]*ac.rollDir*mv;
     const m = R.mOf([ac.x, ac.y]), off = R.offOf([ac.x, ac.y]);
     if (Math.abs(off) > 0.05) [ac.x, ac.y] = R.rm(m, off*Math.exp(-dt*1.5));   // keep the roll-out on the centreline
@@ -2742,7 +2751,8 @@ function stepGround(ac, dt){
       pilot(ac, `${ac.backtrack ? 'backtracking, ' : ''}vacating via ${exitWord(ac.exit)}, ${ac.stand ? 'for stand ' + ac.stand.id : 'as directed'}`);
     }
   }
-  if (ac.state === 'TAKEOFF') {
+  if (ac.state === 'TAKEOFF' && ac.rto && typeof fxRtoStep === 'function') fxRtoStep(ac, dt);   // a rejected take-off: braking to a stop
+  else if (ac.state === 'TAKEOFF') {
     ac.ias += (ac.perf.wake === 'H' ? 4.0 : 4.2)*dt; ac.gs = ac.ias;
     const R = rwyOf(ac.depRwy), u = ac.depRwy === R.hi ? -1 : 1, mv = ac.ias/3600*dt;
     ac.x += R.RU[0]*u*mv; ac.y += R.RU[1]*u*mv;
