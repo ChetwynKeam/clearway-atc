@@ -743,7 +743,7 @@ function gaStep(){
     // back at the southside after a full stop: parked, off the frequency
     if (ac.kind === 'ARR' && ac.stand) { if (ac.stand.occ === ac) ac.stand.occ = null; ac.stand = null; }   // no airline stand for it: it goes home to the southside
     if (ac.kind === 'ARR' && ac.ground && !ac.onRwy && (ac.need === `Holding at ${GA.ihp}` || (!ac.path && GN.n45 && dist(ac.x, ac.y, ...GN.n45.p) < 0.03))) { ac.gaHome ??= S.t;
-      if (S.t - ac.gaHome > 20) { pilot(ac, 'parking at the southside, thanks for your help'); GA.regs.delete(ac.cs); S.acs = S.acs.filter(x => x !== ac); if (S.sel === ac) S.sel = null; }   // parked: gone quietly, not "removed" }
+      if (S.t - ac.gaHome > 20) { pilot(ac, 'parking at the southside, thanks for your help'); GA.regs.delete(ac.cs); S.acs = S.acs.filter(x => x !== ac); if (S.sel === ac) S.sel = null; } }   // parked: gone quietly, not "removed"
     if (ac.kind === 'ARR' && ac.need === 'Needs a stand') ac.need = 'Request taxi';
     if (ac.kind === 'ARR' && ac.need === 'Request taxi' && !ac.gaHint && seatOf(ac) && !aiOwns(ac)) { ac.gaHint = true; sys(`${ac.cs} wants the southside: ${ac.cs} TAXI ${GA.ihp}.`); }
   }
