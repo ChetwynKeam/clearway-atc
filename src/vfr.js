@@ -24,9 +24,18 @@ function vfrSpawn(){
   const R = RADAR_REF, b = rnd(0, 360)*D2R, b2 = b + Math.PI + rnd(-0.6, 0.6), r = 11;
   const from = [R[0] + Math.sin(b)*r, R[1] + Math.cos(b)*r], to = [R[0] + Math.sin(b2)*(r + 3), R[1] + Math.cos(b2)*(r + 3)];
   const compass = a => ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'][Math.round(((a/D2R) % 360 + 360) % 360/45) % 8];
-  const v = { id, cs, ...T, x: from[0], y: from[1], hdg: 0, to, wait: [...from], st: 'CALL', t0: S.t, alt0: T.alt, asked: compass(b), dest: compass(b2) };
+  const v = { id, ...T, cs, x: from[0], y: from[1], hdg: 0, to, wait: [...from], st: 'CALL', t0: S.t, alt0: T.alt, asked: compass(b), dest: compass(b2) };
   v.hdg = brg(v.x, v.y, ...R);
+  // APT.vfrLead (NM): it shows that much further out first, inbound and not yet on frequency, and calls on reaching its
+  // waiting point (fieldfx.js turns this on for Bristol)
+  const lead = APT.vfrLead || 0;
+  if (lead > 0) { v.x = R[0] + Math.sin(b)*(r + lead); v.y = R[1] + Math.cos(b)*(r + lead); v.hdg = brg(v.x, v.y, ...from); v.st = 'INBOUND'; VFR.list.push(v); return; }
   VFR.list.push(v);
+  vfrCall(v);
+}
+// its first call, and the answers on the coordination board
+function vfrCall(v){
+  v.st = 'CALL'; v.t0 = S.t;
   const svfr = S.wx.vis < 5000 || S.wx.ceil < 1500;
   v.call = `${APT.radar[0]}, ${v.cs}, ${v.hems ? 'HEMS priority, ' : ''}${/^[AEIOU]/.test(v.t) ? 'an' : 'a'} ${v.t}, ${v.who}, ${v.asked} of the zone, request ${svfr ? 'special VFR ' : ''}zone transit to the ${v.dest}, not above ${v.alt.toLocaleString('en-GB')} feet`;
   vfrSay(v, v.call);
@@ -40,6 +49,7 @@ const vfrMine = () => S.seats && S.seats.APP !== 'AI';
 function vfrCommand(toks){
   const id = toks[0] && toks[0].replace('-', ''), v = VFR.list.find(x => x.id === id && x.st !== 'GONE'); if (!v) return false;
   const c = toks[1], svfr = S.wx.vis < 5000 || S.wx.ceil < 1500;
+  if (v.st === 'INBOUND') { sys(`${v.cs} is not on your frequency yet: it calls when it reaches the zone.`); return true; }
   if (c === 'CROSS' || c === 'SVFR') {
     if (svfr && c !== 'SVFR') { sys(`${v.cs}: the weather is below VFR minima in the zone, it needs a special VFR clearance (SVFR).`, true); return true; }
     v.st = 'TRANSIT'; v.clrT = S.t;
@@ -62,7 +72,11 @@ function vfrStep(dt){
   for (const v of VFR.list) {
     if (v.st === 'GONE') continue;
     const sp = v.spd/3600*dt;
-    if (v.st === 'CALL' || v.st === 'ORBIT') {   // orbiting where it waits, a mile across
+    if (v.st === 'INBOUND') {   // on its way in, not yet on frequency: it calls at its waiting point
+      const h = brg(v.x, v.y, ...v.wait); v.hdg = norm(v.hdg + clamp(angDiff(v.hdg, h), -4*dt, 4*dt));
+      v.x += Math.sin(v.hdg*D2R)*sp; v.y += Math.cos(v.hdg*D2R)*sp;
+      if (dist(v.x, v.y, ...v.wait) < 0.4) vfrCall(v);
+    } else if (v.st === 'CALL' || v.st === 'ORBIT') {   // orbiting where it waits, a mile across
       v.hdg = norm(v.hdg + (v.heli ? 4 : 3)*dt); v.x += Math.sin(v.hdg*D2R)*sp; v.y += Math.cos(v.hdg*D2R)*sp;
       if (v.st === 'CALL' && v.hems && !v.hemsLate && S.t - v.t0 > 120 && vfrMine()) { v.hemsLate = true; S.score.pts -= 10; sys(`${v.cs} is an air ambulance on a priority flight: it has been kept waiting more than two minutes (−10).`, true); }
       if (v.st === 'CALL' && S.t - v.t0 > 180) { v.st = 'GONE'; vfrSay(v, `we'll route round the zone, ${v.cs}`); if (vfrMine()) { S.score.pts -= 3; sys(`${v.cs} gave up waiting and went round the zone (−3).`); } }
@@ -123,10 +137,15 @@ function drawVfr(){
   cx.save(); cx.font = `11px ${typeof FONT_L !== 'undefined' ? FONT_L : 'monospace'}`;
   for (const v of VFR.list) {
     if (v.st === 'GONE') continue;
-    const X = sx(v.x), Y = sy(v.y), col = v.st === 'CALL' ? '#f0a020' : '#c7a6ff';
+    const X = sx(v.x), Y = sy(v.y), col = v.st === 'INBOUND' ? 'rgba(170,180,190,.75)' : v.st === 'CALL' ? '#f0a020' : '#c7a6ff';
+    // APT.vfrRoutes: the way it means to go, dashed: in to where it will call and wait, then across the zone and out
+    if (APT.vfrRoutes) { const pts = [[v.x, v.y], ...(v.st === 'INBOUND' ? [v.wait] : []), v.to];
+      cx.save(); cx.strokeStyle = col; cx.globalAlpha = v.st === 'TRANSIT' ? 0.55 : 0.4; cx.lineWidth = 1.2; cx.setLineDash([6, 5]); cx.beginPath(); pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](sx(q[0]), sy(q[1]))); cx.stroke();
+      if (v.st === 'INBOUND') { const q = v.wait; cx.setLineDash([]); cx.globalAlpha = 0.6; cx.beginPath(); cx.arc(sx(q[0]), sy(q[1]), 6, 0, 7); cx.stroke(); }
+      cx.restore(); }
     vfrShape(v, X, Y, col);
     const off = Math.max(14, (v.heli ? 12 : 8.5)*Math.max(V.scale/1852, 16/(v.heli ? 12 : 8.5))*0.6 + 4);
-    cx.fillStyle = col; cx.fillText(`${v.cs} ${String(Math.round(v.alt/100)).padStart(3, '0')} VFR${v.st === 'CALL' ? ' ?' : v.st === 'ORBIT' ? ' ⟳' : ''}`, X + off, Y - 6);
+    cx.fillStyle = col; cx.fillText(`${v.cs} ${String(Math.round(v.alt/100)).padStart(3, '0')} VFR${v.st === 'CALL' ? ' ?' : v.st === 'ORBIT' ? ' ⟳' : v.st === 'INBOUND' ? ' ' + v.t + (v.heli ? ' ' + v.who : '') : ''}`, X + off, Y - 6);
   }
   cx.restore();
 }
@@ -138,8 +157,8 @@ function vfrStrips(doc = document){
     d.innerHTML = `<span class="bar"></span><span class="c-a"><span class="cs"></span><span class="ty"></span></span><span class="c-b"><span class="rte"></span><span class="lv"></span></span><span class="c-c"><span class="stt"></span></span>`;
     d.querySelector('.cs').textContent = v.cs; d.querySelector('.ty').textContent = `${v.t} · ${v.who}`;
     d.querySelector('.rte').textContent = `${v.asked} → ${v.dest}`; d.querySelector('.lv').textContent = `${nm} NM · ≤${v.alt} ft`;
-    d.querySelector('.stt').textContent = v.st === 'CALL' ? `◆ Zone transit${v.hems ? ' (HEMS priority)' : ''}` : v.st === 'ORBIT' ? 'Orbiting' : 'Crossing';
-    if (v.st !== 'TRANSIT') {
+    d.querySelector('.stt').textContent = v.st === 'INBOUND' ? 'Inbound, not called yet' : v.st === 'CALL' ? `◆ Zone transit${v.hems ? ' (HEMS priority)' : ''}` : v.st === 'ORBIT' ? 'Orbiting' : 'Crossing';
+    if (v.st !== 'TRANSIT' && v.st !== 'INBOUND') {
       const acts = doc.createElement('span'); acts.className = 'vacts';
       const bt = (label, c, cls) => { const b = doc.createElement('button'); b.type = 'button'; b.textContent = label; if (cls) b.className = cls; b.onclick = e => { e.stopPropagation(); vfrCommand([v.id, c]); if (v.cb && v.cb.st === 'RING') { v.cb.st = 'DONE'; v.cb.ans = label; cbRender(); } renderStrips(true); }; acts.append(b); };
       bt(svfr ? 'Special VFR' : 'Cross', svfr ? 'SVFR' : 'CROSS', 'go'); if (v.st === 'CALL') bt('Orbit', 'HOLD');

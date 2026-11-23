@@ -1706,7 +1706,8 @@ function commandRun(str){
   const rbPlan = !snap && !taker && !aiCtx && humanWorking() && !ac.rbErr && toks.length === 1 && garbleable(ac, toks) && rbKind(toks[0]) && Math.random() < RB_RATE ? toks[0] : null;
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]; let r;
-    if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
+    if (ac.fxCct && ac.fxCct.leg && air && typeof fxCctCmd === 'function' && fxCctCmd(ac, t, said, reads)) { /* circuit traffic (fieldfx.js) */ }
+    else if ((r = t.match(/^([HLR])(\d{1,3})$/)) && air) {
       const h = (+r[2]) % 360 || 360; ac.mode = 'HDG'; ac.tgtHdg = h; ac.turnDir = r[1]==='L' ? -1 : r[1]==='R' ? 1 : 0; ac.route = []; ac.onSid = false; ac.divDct = false;
       if (['HOLDING','INBOUND','FINAL'].includes(ac.state)) ac.state = 'VECTORS';
       if (ac.appId) rnpCancel(ac);
@@ -2283,6 +2284,7 @@ function step(dt){
 }
 
 function stepAir(ac, dt){
+  if (ac.fxCct && ac.fxCct.leg && typeof fxCctStep === 'function') return fxCctStep(ac, dt);   // a light aircraft in the visual circuit (fieldfx.js)
   const Pf = ac.perf, Wv = windAt(ac.alt);
   const dGBR = Math.hypot(ac.x - RADAR_REF[0], ac.y - RADAR_REF[1]);
   let fin = ac.mode === 'FINAL' ? onFinal(ac, finOf(ac)) : null;
