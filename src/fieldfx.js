@@ -317,7 +317,12 @@ function fxSuggest(){
   if (prev === 'STAND' || prev === 'GATE') { for (const s of (typeof standChoices === 'function' ? standChoices(ac) : []).filter(s => !s.occ).slice(0, 6)) add(s.id, 'free'); add('AUTO', 'pick one'); return out; }
   if (prev === 'CROSS' || prev === 'X') { for (const r of RW_ENDS || []) add(r, 'runway'); return out; }
   const nx = typeof stripNext === 'function' && stripNext(ac); if (nx) add(nx.cmd.split(' ')[0], nx.label);
-  if (ac.fxCct && ac.fxCct.leg && ac.airborne) { add('TG', 'touch and go'); add('CTL', 'land, full stop'); add('RF', 'report final'); add('EXT', 'extend downwind'); add('BASE', 'turn base'); add('FS', 'make it a full stop'); add('GA', 'go around'); return out.slice(0, 9); }
+  if (ac.fxCct && ac.fxCct.leg && ac.airborne) { const c = ac.fxCct;
+    if (ac.need === 'Request practice ILS') { add('PILS', 'approve practice ILS'); add('NEG', 'continue circuits'); }
+    if (c.leg === 'DEAD') add('REJOIN', 'rejoin crosswind');
+    if (c.pi && c.leg === 'FINAL') add('LOW', 'low approach');
+    add('TG', 'touch and go'); add('CTL', 'land, full stop'); add('RF', 'report final'); add('ORB', 'orbit'); add('DEAD', 'to the deadside'); add('EXT', 'extend downwind'); add('BASE', 'turn base'); add('FS', 'make it a full stop'); add('GA', 'go around');
+    return out.slice(0, 10); }
   if (ac.fxGA && ac.kind === 'ARR' && prev === undefined) add('TAXI', 'to the southside');
   if (!air) {
     if (st === 'PARKED' && ac.kind === 'DEP') { add('PUSH', 'start-up and push'); add('TAXI', 'taxi out'); add('TSAT', 'start-up delay'); }
@@ -614,6 +619,10 @@ APT.vfrLead = 14; APT.vfrRoutes = true;
 //   TG    cleared touch and go          CTL   cleared to land (a full stop)      GA    go around
 //   RF    number in traffic, report final (answers the downwind call)            FS    make the next one a full stop
 //   EXT   extend downwind (until BASE)  BASE  turn base now
+//   ORB   orbit (a 360, away from the runway; ORBL / ORBR to say which way), then carry on
+//   DEAD  route to the deadside (north of the runway) and orbit there; REJOIN brings it back, crosswind
+//   PILS  approve a practice ILS (instrument students ask now and then on downwind); NEG continue in the circuit
+//   LOW   cleared low approach (the practice ILS ends in a go-around at about 200 ft)
 // Without a clearance at a quarter of a mile they go around. They fit themselves in behind airline traffic on final
 // (extending downwind until it has passed), and a few circuits later make a full stop, vacate and ask to taxi back to
 // the southside (TAXI H1). Only in VMC (5 km, cloud 1,500 ft) and daylight; they make a full stop if it closes in.
@@ -635,7 +644,7 @@ function gaSpawn(){
   const t = ['C172', 'PA28', 'DA40', 'C172'][Math.floor(Math.random()*4)];
   const ac = new Aircraft({ cs, t, d: 'CCT', o: APT.icao, gate, m: 0 });
   Object.assign(ac, { kind: 'DEP', freq: 'TWR', ground: true, state: 'READY', leftStand: true, pushed: false, reqAt: Infinity, readyAt: Infinity, fxGA: true,
-    x: n.p[0], y: n.p[1], hdg: brg(...n.p, ...n2.p), fxCct: { leg: null, left: 2 + Math.floor(Math.random()*4), clr: null, n: 0 } });
+    x: n.p[0], y: n.p[1], hdg: brg(...n.p, ...n2.p), fxCct: { leg: null, left: 2 + Math.floor(Math.random()*4), clr: null, n: 0, ifr: Math.random() < 0.4 } });
   ac.alt = gElev(ac); GA.regs.add(ac.cs); S.acs.push(ac); emit('spawn', ac);
   ac.need = 'Ready to taxi';
   pilot(ac, `${(typeof EGGD !== 'undefined' && EGGD.UNITS && EGGD.UNITS.gnd && EGGD.UNITS.gnd.name) || APT.tower[0]}, ${spoken(ac.cs)}, ${typeSay(t) === t ? TYPES[t].name : typeSay(t)} at the southside, information ${phonetic(S.atis)}, request taxi for circuits`);
@@ -661,25 +670,50 @@ function fxCctStep(ac, dt){
     if (c.roll > 7 && ac.ias >= P.vr) { ac.onRwy = false; c.roll = 0; c.leg = 'UP'; c.n++; ac.alt += 10; }
     return;
   }
+  // an orbit (ORB, or holding on the deadside): rate one round, height held, then on with the leg it was on
+  if (c.orbit) {
+    const O = c.orbit, turn = 3*dt; O.deg += turn; ac.hdg = norm(ac.hdg + O.dir*turn);
+    ac.ias += clamp(80 - ac.ias, -3*dt, 3*dt); ac.gs = ac.ias; ac.vs = 0; ac.alt += clamp((O.alt || ac.alt) - ac.alt, -P.desc/60*dt, P.climb/60*dt);
+    const mv = ac.gs/3600*dt; ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv; ac.trk = ac.hdg;
+    if (O.deg >= 360 && !O.hold) { c.orbit = null; pilot(ac, 'orbit complete'); }
+    return;
+  }
+  if (c.leg === 'DEAD') { tgt = F.P(F.end*0.5, -W); alt = Hc; if (dist(ac.x, ac.y, ...tgt) < 0.25) { c.orbit = { deg: 0, dir: -GA.side*(F.dir), hold: true, alt: Hc }; if (!c.deadTold) { c.deadTold = true; pilot(ac, 'deadside, orbiting'); } } }
+  if (c.leg === 'PIOUT') {   // out for the practice ILS: away on the circuit side, 2,000 ft above the field, to about 6 NM, then in on the localiser
+    tgt = F.P(-12500, W); alt = E + 2000; spd = 95;
+    if (a < -11000) { c.leg = 'BASE'; c.pi = true; }
+  }
   if (c.leg === 'UP') { tgt = F.P(F.end + 900, 0); alt = Hc; if (a > F.end + 600 && ac.alt > E + 450) c.leg = 'CROSS'; }
   if (c.leg === 'CROSS') { tgt = F.P(F.end + 900, W); if (Math.abs(o - W) < 250) { c.leg = 'DOWN'; c.called = false; } }
   if (c.leg === 'DOWN') {
     tgt = F.P(-6000, W);
     if (!c.called && a < F.end*0.7) { c.called = true; const fs = c.left <= 0 || !gaVmc() || !gaDay();
-      if (fs) c.left = 0; ac.need = 'Downwind'; pilot(ac, `downwind${fs ? ', full stop' : ', touch and go'}`); }
+      if (fs) c.left = 0;
+      if (!fs && c.ifr && c.n >= 2 && !c.piAsked) { c.piAsked = true; ac.need = 'Request practice ILS'; pilot(ac, `downwind, request a practice ILS approach runway ${F.rw}`); }
+      else { ac.need = 'Downwind'; pilot(ac, `downwind${fs ? ', full stop' : ', touch and go'}`); } }
+    if (c.wantPi) { c.wantPi = false; c.leg = 'PIOUT'; ac.need = null; }
     // fit in behind airline traffic: extend while one is on final inside 4.5 NM and not yet past us
     // (an airliner inside 7 NM gets there before a base and final are flown, about two minutes: wait for it to pass)
     const ifr = S.acs.find(x => x !== ac && x.airborne && x.mode === 'FINAL' && x.app === F.rw && x.state !== 'MISSED' && typeof finalDist === 'function' && finalDist(x) < 7 && finalDist(x) > 0.6)
       || S.acs.find(x => x !== ac && x.fxCct && (x.fxCct.leg === 'BASE' || (x.fxCct.leg === 'FINAL' && F.A([x.x, x.y]) < -200)));   // another club aircraft turning in ahead
     if (ifr && !c.ext && !c.toldExt && a < -800) { c.toldExt = ifr.cs; pilot(ac, `extending downwind, traffic in sight, the ${ifr.fxGA ? TYPES[ifr.t].name : typeSay(ifr.t)} ${ifr.fxCct && ifr.fxCct.leg === 'BASE' ? 'on base' : 'on final'}`); }
     const turn = a < -1300 && !c.ext && !(ifr && a > -5500);
-    if (turn || a < -6000) { c.leg = 'BASE'; c.toldExt = null; }
+    if ((turn || a < -6000) && c.leg === 'DOWN') { c.leg = 'BASE'; c.toldExt = null; if (ac.need === 'Request practice ILS') { ac.need = null; pilot(ac, 'continuing in the circuit'); } }
   }
-  if (c.leg === 'BASE') { tgt = F.P(Math.min(a, -1300) - 300, 0); alt = E + 600; if (Math.abs(o) < 300) { c.leg = 'FINAL'; if (!c.clr) { ac.need = c.left <= 0 ? 'Final, full stop' : 'Final, touch and go'; pilot(ac, `final${c.left <= 0 ? ', full stop' : ', touch and go'}`); } } }
+  if (c.leg === 'BASE') { tgt = F.P(Math.min(a, -1300) - 300, 0); alt = c.pi ? E + 2000 : E + 600; spd = c.pi ? 95 : spd;
+    if (Math.abs(o) < 300) { c.leg = 'FINAL';
+      if (c.pi) { ac.need = 'Final, practice ILS'; pilot(ac, `established ILS runway ${F.rw}, practice approach, low approach and go around`); }
+      else if (!c.clr) { ac.need = c.left <= 0 ? 'Final, full stop' : 'Final, touch and go'; pilot(ac, `final${c.left <= 0 ? ', full stop' : ', touch and go'}`); } } }
   if (c.leg === 'FINAL') {
-    tgt = F.P(Math.max(a + 400, 150), 0); spd = P.vapp; alt = E + Math.max(0, -a)*0.0524*3.281 + 15;
+    tgt = F.P(Math.max(a + 400, 150), 0); spd = c.pi && a < -3700 ? P.vapp + 20 : P.vapp; alt = E + Math.max(0, -a)*0.0524*3.281 + 15;
+    // a practice ILS with an airliner catching up behind on the same final (within 2.5 NM and closing): break off to the
+    // circuit side and rejoin crosswind, before it is a near miss
+    if (c.pi) { const me = -a/1852, chase = S.acs.find(x => x !== ac && !x.fxGA && x.airborne && x.mode === 'FINAL' && x.app === F.rw && typeof finalDist === 'function' && finalDist(x) > me && finalDist(x) - me < 2.5 && (x.gs || 140) > ac.gs);
+      if (chase && a < -1500) { c.pi = false; c.piDone = true; c.clr = null; ac.need = null; c.leg = 'CROSS'; pilot(ac, `breaking off the practice approach to the ${GA.side < 0 ? 'south' : 'north'}, traffic behind, rejoining crosswind`); return; } }
+    // a practice ILS cleared for a low approach: around at about 200 ft, back into the circuit
+    if (c.clr === 'LOW' && a > -1100) { c.clr = null; c.pi = false; c.piDone = true; ac.need = null; c.leg = 'UP'; pilot(ac, 'going around, practice approach complete, rejoining the circuit'); return; }
     const occ = S.acs.some(x => x !== ac && x.onRwy && (x.rwyId || RWYS[0].id) === F.R.id) || (typeof vehOnRwy === 'function' && vehOnRwy(F.rw));
-    if (a > -420 && (!c.clr || occ)) return gaAround(ac, !c.clr ? 'no clearance' : 'runway occupied');
+    if (a > -420 && (!c.clr || occ)) { c.pi = false; return gaAround(ac, !c.clr ? 'no clearance' : 'runway occupied'); }
     if (a > 120) {   // touchdown
       if (c.clr === 'LAND') return gaLand(ac, F);
       c.leg = 'ROLL'; c.clr = null; c.left--; ac.need = null; return;
@@ -718,7 +752,16 @@ function fxCctCmd(ac, t, said, reads){
   if (t === 'FS') { c.left = 0; said.push('make this a full stop'); reads.push('full stop'); return true; }
   if (t === 'EXT' && c.leg === 'DOWN') { c.ext = true; said.push("extend downwind, I'll call your base"); reads.push('extending downwind'); return true; }
   if (t === 'BASE' && (c.leg === 'DOWN' || c.leg === 'CROSS')) { c.ext = false; c.leg = 'BASE'; said.push('turn base now'); reads.push('turning base'); return true; }
-  if (!aiCtx) sys(`${ac.cs} is in the circuit: TG (touch and go), CTL (land), GA, RF (report final), FS (full stop), EXT / BASE.`);
+  if (/^ORB[LR]?$/.test(t) && c.leg !== 'FINAL') {   // a 360: away from the runway unless told which way
+    const right = [Math.cos(ac.hdg*D2R), -Math.sin(ac.hdg*D2R)], away = Math.abs(F.O([ac.x + right[0]*0.06, ac.y + right[1]*0.06])) > Math.abs(F.O([ac.x, ac.y])) ? 1 : -1;
+    const dir = t === 'ORBL' ? -1 : t === 'ORBR' ? 1 : away, w = dir > 0 ? 'right' : 'left';
+    c.orbit = { deg: 0, dir, alt: ac.alt }; said.push(`orbit ${w}, report complete`); reads.push(`orbit ${w}, wilco`); return true; }
+  if (t === 'DEAD') { c.orbit = null; c.leg = 'DEAD'; c.deadTold = false; ac.need = null; said.push(`route to the deadside, ${Math.round((gaElev() + GA.H)/100)*100} feet, orbit there, I'll call you back`); reads.push('deadside, wilco'); return true; }
+  if (t === 'REJOIN' && (c.leg === 'DEAD' || c.orbit)) { c.orbit = null; c.leg = 'CROSS'; said.push('rejoin the circuit crosswind, report downwind'); reads.push('rejoining crosswind'); return true; }
+  if (t === 'PILS' && (ac.need === 'Request practice ILS' || c.leg === 'DOWN')) { c.wantPi = true; c.orbit = null; said.push(`practice ILS runway ${F.rw} approved, fly downwind, climb to ${altWords(Math.round((gaElev() + 2000)/100)*100)}, report established`); reads.push('practice ILS approved, wilco'); return true; }
+  if (t === 'NEG' && ac.need === 'Request practice ILS') { ac.need = null; said.push('negative, no practice approaches at this time, continue in the circuit'); reads.push('continuing in the circuit'); return true; }
+  if (t === 'LOW' && c.leg === 'FINAL') { c.clr = 'LOW'; ac.need = null; said.push(`runway ${F.rw}, cleared low approach, not below 200 feet, surface wind ${wind}`); reads.push('cleared low approach'); return true; }
+  if (!aiCtx) sys(`${ac.cs} is in the circuit: TG, CTL, GA, RF, FS, EXT / BASE, ORB (orbit), DEAD (deadside) / REJOIN, PILS / NEG, LOW.`);
   return true;
 }
 // separation: circuit traffic is not radar-separated from the airliners (Class D: traffic information); only a real
@@ -728,6 +771,9 @@ function fxCctCmd(ac, t, said, reads){
 if (typeof aiTower === 'function') { const at = aiTower; aiTower = function(ac){
   if (ac.fxCct && ac.fxCct.leg && ac.airborne) { const n = ac.need || '', F = gaFrame();
     if (n === 'Downwind' && aiDue(ac, n + ac.fxCct.n, 2, 5)) return aiDo('TWR', ac, 'RF');
+    // a practice ILS only with nothing inbound inside 20 NM (it is slow down the final): otherwise no
+    if (n === 'Request practice ILS' && aiDue(ac, n, 3, 6)) return aiDo('TWR', ac, S.acs.some(x => x.kind === 'ARR' && x.airborne && x.state !== 'PRE' && !x.fxGA && Math.hypot(x.x - RADAR_REF[0], x.y - RADAR_REF[1]) < 20) ? 'NEG' : 'PILS');
+    if (n === 'Final, practice ILS' && aiDue(ac, n, 2, 5)) return aiDo('TWR', ac, 'LOW');
     if (/^Final/.test(n) && aiDue(ac, n + ac.fxCct.n, 2, 4)) {
       const me = F.A([ac.x, ac.y]), busy = S.acs.some(x => x !== ac && (x.onRwy || (x.airborne && x.mode === 'FINAL' && x.app === F.rw && finalDist(x) < 3) || ['LINEUP', 'LINEDUP', 'TAKEOFF'].includes(x.state) || (x.fxCct && x.fxCct.leg === 'FINAL' && F.A([x.x, x.y]) > me)));
       return busy ? null : aiDo('TWR', ac, n === 'Final, full stop' ? 'CTL' : 'TG'); }
@@ -756,13 +802,19 @@ function fxDrawCct(){
   const L = S.acs.filter(a => a.fxCct && a.fxCct.leg && a.airborne); if (!L.length || V.scale < 25) return;
   const F = gaFrame(), W = GA.side*GA.W, pts = [[-300, 0], [F.end + 900, 0], [F.end + 900, W], [-1300, W], [-1600, 0], [150, 0]].map(([a, o]) => F.P(a, o));
   cx.save(); cx.strokeStyle = C.name === 'dark' ? 'rgba(199,166,255,.38)' : 'rgba(110,70,180,.4)'; cx.lineWidth = 1.2; cx.setLineDash([7, 6]);
-  cx.beginPath(); pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](sx(q[0]), sy(q[1]))); cx.stroke(); cx.restore();
+  cx.beginPath(); pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](sx(q[0]), sy(q[1]))); cx.stroke();
+  if (L.some(a => ['PIOUT'].includes(a.fxCct.leg) || a.fxCct.pi)) {   // the practice ILS: out to 6 NM and in on the localiser
+    cx.beginPath(); [[-1300, W], [-11500, W], [-11500, 0], [0, 0]].map(([a, o]) => F.P(a, o)).forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](sx(q[0]), sy(q[1]))); cx.stroke(); }
+  if (L.some(a => a.fxCct.leg === 'DEAD')) { const q = F.P(F.end*0.5, -W); cx.setLineDash([3, 4]); cx.beginPath(); cx.arc(sx(q[0]), sy(q[1]), Math.max(8, 830/1852*V.scale), 0, 7); cx.stroke(); }
+  cx.restore();
 }
 { const df = fxDrawField; fxDrawField = function(){ df(); fxDrawCct(); }; }
 
 // one tap on the strip for the circuit calls
 if (typeof stripNext === 'function') { const sn = stripNext; stripNext = function(ac){
   if (ac && ac.fxCct && ac.fxCct.leg && ac.airborne && !aiOwns(ac)) { const n = ac.need || '';
+    if (n === 'Request practice ILS') return { cmd: 'PILS', label: 'Approve ILS' }; if (n === 'Final, practice ILS') return { cmd: 'LOW', label: 'Low approach' };
+    if (ac.fxCct.leg === 'DEAD') return { cmd: 'REJOIN', label: 'Rejoin' };
     return n === 'Downwind' ? { cmd: 'RF', label: 'Report final' } : n === 'Final, touch and go' ? { cmd: 'TG', label: 'Touch & go' } : n === 'Final, full stop' ? { cmd: 'CTL', label: 'Land' } : null; }
   if (ac && ac.fxGA && ac.kind === 'ARR' && ac.need === 'Request taxi' && !aiOwns(ac)) return { cmd: `TAXI ${GA.ihp}`, label: 'Taxi home' };
   return sn(ac); }; }
