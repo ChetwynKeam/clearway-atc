@@ -65,6 +65,20 @@ const STANDS = G.gates.map(([id, term, [e, n], node, hdg, line, out]) => { const
   return { id, term, p, m: mOf(p), off: offOf(p), node, area: 'civil', occ: null, noLead: !line, h0: hdg, line: line ? line.map(([e, n]) => EN(e, n)) : null,
     ...(out ? { out: { node: out[0], pts: out[1].map(([e, n]) => EN(e, n)) } } : {}) }; });   // out: a drive-through stand's way out to the far lane
 STANDS.forEach(s => { s.lp = GN[s.node].p; s.hdg = s.h0 ?? brg(...s.lp, ...s.p); });
+// the stand plan (Bristol Airport Aerodrome Manual, version 2026-03, Part C 1.3 Aircraft Parking Chart, northside): the
+// largest aircraft each stand takes, and whether it is a contact stand (passengers walk to and from the terminal) or a
+// non-contact one (coached). Its limits are lengths more than spans: "A320" stands take nothing longer than an A320
+// (no 737-800 or MAX 8), "737 MAX 8 / A320" ones nothing longer than a 737-800 or MAX 8 (no A321), "737 MAX 10 / A321"
+// ones the A321; every one is Code C except 26 (787-9 / A330). Self-manoeuvring stands (8-11, 28, 31, 33) noted.
+// [label, longest aircraft (m), contact (1 walk, 0 coach), self-manoeuvring, widest span (m)]
+const STAND_PLAN = (() => { const A320 = ['A320', 37.6, 'A320'], MAX8 = ['737-8 / A320', 39.5, '738'], A321 = ['A321 / 737-10', 44.5, 'A321'];
+  const P = {}, put = (ids, t, c, sm, sp = 36) => String(ids).split(' ').forEach(id => P[id] = { maxType: t[0], maxLen: t[1], maxShort: t[2], contact: !!c, selfMan: !!sm, maxSpan: sp });
+  put('1 2 3', A321, 1); put('5', MAX8, 1); put('6', A320, 1); put('7 12 14 15 16', A320, 0); put('8 9 10 11', A320, 0, 1);
+  put('17 18 19 20', A321, 0); put('21', MAX8, 1); put('22 23 24 25', A321, 1); put('26', ['787-9 / A330', 63.7, 'A330'], 1, 0, 65);
+  put('28 31', MAX8, 0, 1); put('29', MAX8, 1); put('30', A321, 1); put('32 37', MAX8, 0); put('33', A321, 0, 1);
+  put('34 35', A320, 0); put('36 38 39 40', A321, 0);
+  return P; })();
+STANDS.forEach(s => { if (STAND_PLAN[s.id]) Object.assign(s, STAND_PLAN[s.id]); });
 // the mapped stand line ends where the nose stops: the stand's point is the aircraft's middle, set back from that end by
 // the stop-bar distance of the largest aircraft the stand takes (as at Madrid and Manchester)
 { const at = new Map();

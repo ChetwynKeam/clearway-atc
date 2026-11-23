@@ -932,7 +932,9 @@ function refreshShut(){
 }
 function standBy(st, ac){ for (const [o, d] of st.nb || []) { const a = o.ownOcc; if (a && a !== ac && d < (spanOf(a) + spanOf(ac))/2) return a; } return null; }
 // a stand takes nothing wider than its size (st.maxSpan: published at Heathrow, from the room around it elsewhere)
-const standRoom = (st, ac) => !standBy(st, ac) && !(st.maxSpan && spanOf(ac) > st.maxSpan + 1);
+const standRoom = (st, ac) => !standBy(st, ac) && !(st.maxSpan && spanOf(ac) > st.maxSpan + 1) && !(st.maxLen && ((ac.perf && ac.perf.len) || 0) > st.maxLen + 0.3);
+// why a stand can't take it, for the controller: a neighbour in the way, or bigger than the stand is published for (st.maxType: Bristol's stand plan)
+const noRoomWhy = (st, ac) => { const b = standBy(st, ac); return b ? `is too wide for ${APT.standWord || 'stand'} ${st.id} with ${b.cs} next to it` : `is too big for ${APT.standWord || 'stand'} ${st.id}${st.maxType ? ` (${st.maxType} at most)` : ''}`; };
 // (a stand an arrival is waiting for, st.waitBy, is kept for it: nothing else is given it)
 const standFree = (s, ac) => !s.occ && !(s.waitBy && s.waitBy !== ac) && standRoom(s, ac);
 const standChoices = ac => { const pa = prefArea(ac); return STANDS.filter(s => s.occ === ac || standFree(s, ac)).sort((a, b) => pa.has(b) - pa.has(a)); };
@@ -1864,7 +1866,7 @@ function commandRun(str){
       // a stand whose departure is about to leave can be given: it waits for it
       if (st.occ && st.occ !== ac && !(standLeaver(st.occ) && !(st.waitBy && st.waitBy !== ac))) { sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is occupied (${st.occ.cs}${st.waitBy && st.waitBy !== ac ? `, and ${st.waitBy.cs} is waiting for it` : ''}).`); continue; }
       if (st === ac.stand && held && !id) { sys(`No free ${sw} for ${ac.cs}: it waits for ${sw} ${st.id}.`); continue; }
-      if (!standRoom(st, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for ${sw} ${st.id} with ${standBy(st, ac).cs} next to it.`); continue; }
+      if (!standRoom(st, ac)) { sys(`${ac.cs} (${ac.t}) ${noRoomWhy(st, ac)}.`); continue; }
       if (ac.taxiIn && ac.stand !== st) { sys(`${ac.cs} is taxiing to ${sw} ${ac.stand.id}: re-route it with TAXI ${st.id}.`); continue; }
       assignStand(ac, st); ac.standPref = st.id;
       if (ac.standWait) sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is still occupied by ${st.occ.cs}, ${standFreeWords(st.occ)}: ${ac.cs} will wait for it.`);
@@ -1880,7 +1882,7 @@ function commandRun(str){
       else if (toks[i+1] && holdPt(toks[i+1])) hold = holdPt(toks[++i]);
       if (!hold && toks[i+1] && toks[i+1] !== 'VIA') { const want = STANDS.find(x => x.id.toUpperCase() === toks[i+1]); if (!want) { sys(`There is no stand ${toks[i+1]}.`); continue; } i++;
         if (want.occ && want.occ !== ac) { sys(`Stand ${want.id} is occupied (${want.occ.cs}).`); continue; }
-        if (!standRoom(want, ac)) { sys(`${ac.cs} (${ac.t}) is too wide for stand ${want.id} with ${standBy(want, ac).cs} next to it.`); continue; } st = want; }
+        if (!standRoom(want, ac)) { sys(`${ac.cs} (${ac.t}) ${noRoomWhy(want, ac)}.`); continue; } st = want; }
       if (!hold && st && st.occ && st.occ !== ac) { const sw = APT.standWord || 'stand', o = st.occ, hp = standWaitPt(ac);
         sys(`${sw[0].toUpperCase() + sw.slice(1)} ${st.id} is still occupied${o.cs ? ` by ${o.cs}${standLeaver(o) ? `, ${standFreeWords(o)}` : ''}` : ''}. Taxi ${ac.cs} to a holding point to wait (${ac.cs} TAXI ${hp || '<holding point>'}), or give it another ${sw} (${ac.cs} TAXI <${sw}>).`); continue; }
       if (!st && !hold) { const sw = APT.standWord || 'stand'; sys(`${ac.cs} has no ${sw} yet. Assign one first (${ac.cs} STAND takes the first free one in its usual area; ${ac.cs} STAND ${(standChoices(ac)[0] || STANDS[0]).id} picks one), or taxi it to a holding point out of the way to wait.`); continue; }
