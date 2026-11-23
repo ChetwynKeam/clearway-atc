@@ -806,6 +806,13 @@ function setRwy(r){
   const wasCustom = !!S.rops; S.rops = null; S.ropsV++;
   if (S.rwy === r && !wasCustom) return; S.rwy = r; if (APT.depFor) S.depRwy = APT.depFor(r); nextAtis(false); sys(`Runway ${r} in use. Information ${phonetic(S.atis)} is current.`);
   rerouteArrivals();
+  // departures caught by the change: lined up on the old runway, or waiting at (or taxiing to) its holding points.
+  // The AI works them off (ai.js aiRwyChange); for yours, a reminder of what each needs
+  { const old = S.acs.filter(a => a.kind === 'DEP' && a.ground && !a.airborne && a.state !== 'TAKEOFF' && seatOf(a) && !aiOwns(a));
+    const lined = old.filter(a => ['LINEUP', 'LINEDUP'].includes(a.state) && a.depRwyLock && a.depRwy && a.depRwy !== depRw(a));
+    const far = old.filter(a => !lined.includes(a) && ['HOLDPT', 'TAXI'].includes(a.state) && a.hp && !a.depVac && !holdServes(a.hp, depRw(a)));
+    if (lined.length) sys(`${lined.map(a => a.cs).join(', ')} ${lined.length > 1 ? 'are' : 'is'} lined up on runway ${lined[0].depRwy}, no longer in use: vacate (VAC), then taxi to runway ${depRw(lined[0])}.`, true);
+    if (far.length) sys(`${far.map(a => `${a.cs} (at ${a.hp.replace(/~\d+$/, '')})`).join(', ')} ${far.length > 1 ? 'are' : 'is'} at the old end: taxi ${far.length > 1 ? 'them' : 'it'} to runway ${depRw(far[0])} (TAXI${far[0].cto || far[0].luq ? ', after CXL' : ''}).`, true); }
   renderAtis(); emit('rwy', r);
 }
 // airports that land one way and depart the other (Innsbruck) choose the departure runway separately

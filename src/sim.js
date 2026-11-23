@@ -162,6 +162,15 @@ for (const h of APT.ihps || []) {
 for (const h of APT.ihps || []) for (const a of h.alias || []) if (IHPS[h.id] && !(a in IHPS)) Object.defineProperty(IHPS, a, { value: IHPS[h.id], enumerable: false });
 // a named one (Dublin's Neptune) can be typed in capitals, as every command is: a hidden alias in capitals
 for (const id of Object.keys(IHPS)) if (id !== id.toUpperCase() && !(id.toUpperCase() in IHPS)) Object.defineProperty(IHPS, id.toUpperCase(), { value: IHPS[id], enumerable: false });
+// does this runway holding point serve departures off rw? One at the far end of the runway (the runway in use changed
+// while the aircraft taxied or waited) does not: from there it would face the wrong way or have no runway ahead
+function holdServes(hp, rw){
+  const H = HOLDS[hp]; if (!H || !rw) return true;
+  if (H.on && RWYS.length > 1 && rwyOf(rw).id !== H.on) return false;
+  if (H.end) return H.end === rw;
+  const d = Array.isArray(H.dirs) ? H.dirs : H.dirs ? String(H.dirs).split(',') : null;
+  return !d || !d.length || d.includes(rw);
+}
 // any named holding point: a runway holding point or an intermediate one
 const holdPt = id => HOLDS[id] ? { id, node: HOLDS[id].node, rwy: true } : IHPS[id] ? { id: IHPS[id].id, node: IHPS[id].node, rwy: false } : null;
 // something on the pavement of the runway that rw names (either direction)
@@ -1889,7 +1898,7 @@ function commandRun(str){
       if (!(ac.state === 'READY' || ac.state === 'HOLDPT' || ac.state === 'TAXI' || ac.state === 'HELD' || (ac.state === 'PARKED' && ac.need))) { sys(`${ac.cs} is not ready to taxi.`); return; }
       if (ac.depVac) { sys(`${ac.cs} is still vacating the runway: give it its taxi once it is clear.`); continue; }
       const ihp = toks[i+1] && IHPS[toks[i+1]] && !HOLDS[toks[i+1]] ? IHPS[toks[++i]] : null;   // an intermediate holding point on the way
-      let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' && !(APT.taxiCheck && APT.taxiCheck(ac, ac.hp)) ? ac.hp : depHold(ac));   // its holding point, unless the runway has changed under it
+      let hp = toks[i+1] && HOLDS[toks[i+1]] ? toks[++i] : (ac.hp && ac.state !== 'READY' && ac.state !== 'PARKED' && !(APT.taxiCheck && APT.taxiCheck(ac, ac.hp)) && holdServes(ac.hp, depRw(ac)) ? ac.hp : depHold(ac));   // its holding point, unless the runway has changed under it
       if (APT.depHoldAs) hp = APT.depHoldAs(ac, hp);   // a name with a holding point each side of the runway: the side departures use
       if (toks[i+1] === 'VIA' && /^(RWY|RUNWAY)$/.test(toks[i+2] || '') && toks[i-1] && HOLDS[toks[i]]) { i += 2; if (!rwyTaxi(ac, toks[i-2], said, reads)) return; continue; }   // along the runway
       const via = []; if (toks[i+1] === 'VIA') i = readVia(toks, i + 1, via);
