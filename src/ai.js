@@ -1294,6 +1294,7 @@ function stepAI(dt){
   // learn how long landings occupy each runway
   for (const ac of S.acs) if (ac.aiTd && ac.ground && !ac.onRwy) { const id = ac.rwyId || RWYS[0].id, o = S.t - ac.aiTd; ac.aiTd = null; (S.aiOcc ||= {})[id] = S.aiOcc[id] ? S.aiOcc[id]*0.6 + o*0.4 : o; }
   if (S.seats.APP === 'AI' || S.seats.DEP === 'AI' || S.seats.TWR === 'AI' || S.acs.some(a => a.aiSeat)) aiProbe();
+  aiRwyChange();
   if (S.seats.GND === 'AI') aiGroundVehicles();
   if (S.seats.TWR === 'AI') { aiTowerVehicles(); aiRoad(); }
   // the release for a departure taxiing out is Tower's to ask for
@@ -1330,3 +1331,21 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => { if (e.target && e.target.id === 'aiHear') { S.aiHear = e.target.checked; try { localStorage.setItem('cw-ai-hear', S.aiHear ? '1' : '0'); } catch(_) {} } });
 renderSeats();
 window.__ai = { seatOf, aiOwns, setSeat, takeOver, handToAi };
+
+// the runway in use changed under departures the AI is working: one lined up on the old runway can't go (a tailwind
+// out of limits) and would block the new one for good, so it vacates; one waiting at, or taxiing to, a holding point
+// at the far end has its clearance cancelled and is taxied to the new runway's holding point
+function aiRwyChange(){
+  for (const ac of S.acs) {
+    if (ac.kind !== 'DEP' || !ac.ground || ac.state === 'TAKEOFF' || !aiOwns(ac) || S.t < (ac.aiNext || 0) || ac.lost) continue;
+    const rw = depRw(ac), s = seatOf(ac);
+    if (['LINEUP', 'LINEDUP'].includes(ac.state) && !ac.vacq && !ac.depVac && ac.depRwyLock && ac.depRwy && !depRwys().includes(ac.depRwy)) {
+      if (depExits(ac).length && aiDue(ac, 'rwyvac' + ac.depRwy, 2, 5)) { ac.aiWhy = `runway ${ac.depRwy} no longer in use`; aiDo('TWR', ac, 'VAC'); }
+      continue;
+    }
+    if (!['HOLDPT', 'TAXI'].includes(ac.state) || ac.onRwy || ac.depVac || !ac.hp || holdServes(ac.hp, rw)) continue;
+    if (ac.cto || ac.luq || ac.luAfter) { if (aiDue(ac, 'rwycxl', 2, 4)) aiDo(s || 'TWR', ac, 'CXL'); continue; }
+    const k = depHold(ac); if (!k || k === ac.hp || !holdServes(k, rw)) continue;
+    if (aiDue(ac, 'rwytaxi' + rw, 2, 6)) { ac.aiWhy = `runway ${rw} now in use`; aiDo(s === 'TWR' ? 'TWR' : 'GND', ac, 'TAXI ' + k); }
+  }
+}
