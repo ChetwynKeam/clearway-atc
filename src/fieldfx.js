@@ -182,7 +182,11 @@ const fxFull = ac => Object.keys(HOLDS).filter(k => HOLDS[k].end === depRw(ac) |
 APT.taxiCheck = (ac, hp) => { if (!ac || ac.kind !== 'DEP' || !fxServes(ac, hp)) return null; const need = fxTodrOf(ac), have = fxTora(ac, hp);
   const full = fxFull(ac); if (have >= need || !full || have >= fxTora(ac, full) - 20) return null;
   return `${ac.cs} (${ac.t} to ${AP[ac.d] ? AP[ac.d][2] : ac.d}) needs ${need.toLocaleString('en-GB')} m to take off today and from ${hp} there is ${have.toLocaleString('en-GB')} m${full ? `: taxi it to ${full} for the full length (${fxTora(ac, full).toLocaleString('en-GB')} m)` : ''}.`; };
-if (typeof depHold === 'function') { const dh = depHold; depHold = function(ac){ const k = dh(ac); if (!ac || ac.kind !== 'DEP' || !ac.cs || !k || !fxServes(ac, k)) return k; const full = fxFull(ac); return fxTora(ac, k) >= fxTodrOf(ac) || !full ? k : full; }; }
+if (typeof depHold === 'function') { const dh = depHold; depHold = function(ac){
+  if (ac && ac.fxGA && ac.kind === 'DEP') {   // the club aircraft: from the south-side intersection nearest them, if it is long enough (it always is)
+    const need = fxTodrOf(ac), ks = Object.keys(HOLDS).filter(k => fxServes(ac, k) && HOLDS[k].off < 0 && fxTora(ac, k) >= need && GN[HOLDS[k].node]);
+    const k = ks.sort((a, b) => dist(ac.x, ac.y, ...GN[HOLDS[a].node].p) - dist(ac.x, ac.y, ...GN[HOLDS[b].node].p))[0]; if (k) return k; }
+  const k = dh(ac); if (!ac || ac.kind !== 'DEP' || !ac.cs || !k || !fxServes(ac, k)) return k; const full = fxFull(ac); return fxTora(ac, k) >= fxTodrOf(ac) || !full ? k : full; }; }
 function fxSelLine(ac){
   if (ac.kind !== 'DEP' || !ac.ground || ac.state === 'PRE') return '';
   const need = fxTodrOf(ac), hp = ac.hp || depHold(ac), have = hp ? fxTora(ac, hp) : null, short = have != null && have < need;
@@ -306,13 +310,15 @@ function fxSuggest(){
   const st = ac.state, air = ac.airborne;
   // arguments for the word before
   if (prev === 'TAXI' && ac.kind === 'DEP') { for (const k of Object.keys(HOLDS).filter(k => HOLDS[k].end === depRw(ac))) add(k, fxTora(ac, k) >= fxTodrOf(ac) ? `${fxTora(ac, k).toLocaleString('en-GB')} m` : 'too short'); add('VIA', 'route'); return out; }
-  if (prev === 'TAXI' && ac.kind === 'ARR') { if (ac.stand) add(ac.stand.id, 'its stand'); add('VIA', 'route'); return out; }
+  if (prev === 'TAXI' && ac.kind === 'ARR') { if (ac.fxGA) add(GA.ihp, 'the southside'); if (ac.stand) add(ac.stand.id, 'its stand'); add('VIA', 'route'); return out; }
   if (prev === 'VIA' || (words.includes('VIA') && done)) { const tws = [...new Set(GE.map(e => e.tw).filter(t => t && t !== 'APRON' && !/~/.test(t)))].sort(); for (const t of tws) add(t, 'taxiway'); return out; }
   if (prev === 'VAC') { for (const e of (typeof vacChoices === 'function' ? vacChoices(ac) : [])) add(e.replace(/~\d+$/, ''), 'exit'); return out; }
   if (prev === 'PUSH') { for (const d of ['N', 'E', 'S', 'W']) add(d, 'facing'); return out; }
   if (prev === 'STAND' || prev === 'GATE') { for (const s of (typeof standChoices === 'function' ? standChoices(ac) : []).filter(s => !s.occ).slice(0, 6)) add(s.id, 'free'); add('AUTO', 'pick one'); return out; }
   if (prev === 'CROSS' || prev === 'X') { for (const r of RW_ENDS || []) add(r, 'runway'); return out; }
   const nx = typeof stripNext === 'function' && stripNext(ac); if (nx) add(nx.cmd.split(' ')[0], nx.label);
+  if (ac.fxCct && ac.fxCct.leg && ac.airborne) { add('TG', 'touch and go'); add('CTL', 'land, full stop'); add('RF', 'report final'); add('EXT', 'extend downwind'); add('BASE', 'turn base'); add('FS', 'make it a full stop'); add('GA', 'go around'); return out.slice(0, 9); }
+  if (ac.fxGA && ac.kind === 'ARR' && prev === undefined) add('TAXI', 'to the southside');
   if (!air) {
     if (st === 'PARKED' && ac.kind === 'DEP') { add('PUSH', 'start-up and push'); add('TAXI', 'taxi out'); add('TSAT', 'start-up delay'); }
     if (['READY', 'TAXI', 'HOLDPT', 'HELD'].includes(st)) { add('TAXI', 'to a holding point'); add('HP', 'hold position'); add('RES', 'continue'); add('CROSS', 'cross a runway'); }
@@ -593,3 +599,185 @@ function fxDrawPaxWays(mpx){
     cx.font = `600 9px ${FONT_D}`; cx.textAlign = 'center'; cx.fillStyle = dark ? 'rgba(190,212,206,.7)' : 'rgba(30,45,65,.7)'; cx.fillText(k, X, Y - 9*mpx - 4); cx.textAlign = 'left'; }
 }
 { const df = fxDrawField; fxDrawField = function(){ df(); if (fxField()) fxDrawPaxWays(V.scale/1852); }; }
+
+// ═════════ helicopters and VFR transits: seen further out, with their route ═════════
+// They show 14 NM beyond the point where they call, flying in (grey, not on frequency yet), and every VFR flight shows
+// where it means to go as a dashed line: in to its calling point, across the zone, out the far side (vfr.js).
+APT.vfrLead = 14; APT.vfrRoutes = true;
+
+// ═════════ local light aircraft: circuits, touch-and-goes and the taxi ═════════
+// Club and training aircraft from the southside apron (the hangars at the south end of Juliett): they call for taxi
+// for circuits, taxi, line up and go like any departure (TAXI, LU, CTO), then fly the visual circuit to the south of the
+// runway at 1,000 ft above the field, calling downwind and final. On final each needs a clearance:
+//   TG    cleared touch and go          CTL   cleared to land (a full stop)      GA    go around
+//   RF    number in traffic, report final (answers the downwind call)            FS    make the next one a full stop
+//   EXT   extend downwind (until BASE)  BASE  turn base now
+// Without a clearance at a quarter of a mile they go around. They fit themselves in behind airline traffic on final
+// (extending downwind until it has passed), and a few circuits later make a full stop, vacate and ask to taxi back to
+// the southside (TAXI H1). Only in VMC (5 km, cloud 1,500 ft) and daylight; they make a full stop if it closes in.
+Object.assign(TYPES, {
+  C172: { name: 'Cessna 172', wake: 'L', vapp: 65, vr: 55, climb: 700, desc: 500, cruise: 110, span: 11.0, len: 8.3, shape: 'prop' },
+  PA28: { name: 'Piper PA-28', wake: 'L', vapp: 70, vr: 60, climb: 700, desc: 500, cruise: 115, span: 10.7, len: 7.3, shape: 'prop' },
+  DA40: { name: 'Diamond DA40', wake: 'L', vapp: 70, vr: 59, climb: 750, desc: 500, cruise: 125, span: 11.9, len: 8.0, shape: 'prop' }
+});
+Object.assign(FX_TODR, { C172: 500, PA28: 560, DA40: 460 });
+const GA = { next: 0, regs: new Set(), home: 'n7', ihp: 'H1', side: -1, W: 1850, H: 1000 };   // side: -1 south of the runway; W: downwind 1 NM out
+{ const sp = spoken; spoken = cs => GA.regs.has(cs) ? ['Golf', ...cs.slice(1).split('').map(phonetic)].join(' ') : sp(cs); }   // G-ABCD: "Golf Alfa Bravo Charlie Delta"
+const gaVmc = () => S.wx && S.wx.vis >= 5000 && S.wx.ceil >= 1500 && (S.wx.gust || S.wx.spd) < 25;
+const gaDay = () => { const h = new Date(S.start + S.t*1000).getUTCHours(); return h >= 7 && h < 20; };
+const gaElev = () => (typeof ELEV !== 'undefined' ? +ELEV : 0) || 600;
+function gaSpawn(){
+  const n = GN[GA.home], n2 = GN.n8; if (!n || !n2) return;
+  const gate = (S.acs.find(a => a.kind === 'DEP' && a.gate) || S.sched.find(f => f.k === 'DEP' && f.gate) || {}).gate; if (!gate) return;
+  let cs; do { cs = 'G' + 'ABCDEFGHJKLMNOPRSTUVWXYZ'.split('').sort(() => Math.random() - 0.5).slice(0, 4).join(''); } while (S.acs.some(a => a.cs === cs));
+  const t = ['C172', 'PA28', 'DA40', 'C172'][Math.floor(Math.random()*4)];
+  const ac = new Aircraft({ cs, t, d: 'CCT', o: APT.icao, gate, m: 0 });
+  Object.assign(ac, { kind: 'DEP', freq: 'TWR', ground: true, state: 'READY', leftStand: true, pushed: false, reqAt: Infinity, readyAt: Infinity, fxGA: true,
+    x: n.p[0], y: n.p[1], hdg: brg(...n.p, ...n2.p), fxCct: { leg: null, left: 2 + Math.floor(Math.random()*4), clr: null, n: 0 } });
+  ac.alt = gElev(ac); GA.regs.add(ac.cs); S.acs.push(ac); emit('spawn', ac);
+  ac.need = 'Ready to taxi';
+  pilot(ac, `${(typeof EGGD !== 'undefined' && EGGD.UNITS && EGGD.UNITS.gnd && EGGD.UNITS.gnd.name) || APT.tower[0]}, ${spoken(ac.cs)}, ${typeSay(t) === t ? TYPES[t].name : typeSay(t)} at the southside, information ${phonetic(S.atis)}, request taxi for circuits`);
+}
+// the runway frame for the circuit: a point a metres along the landing direction from the threshold, o metres off the centreline (north +)
+function gaFrame(){
+  const rw = S.rwy, R = rwyOf(rw), dir = rw === R.lo ? 1 : -1, thr = R.thr ? R.thr[rw] : (dir > 0 ? THR_LO_M : THR_HI_M), L = R.len || RWY_M;
+  return { rw, R, dir, end: dir > 0 ? L - thr : thr, P: (a, o) => R.rm(thr + dir*a, o), A: q => (R.mOf(q) - thr)*dir, O: q => R.offOf(q) };
+}
+S.listeners.push((ev, ac) => {
+  if (ev === 'start') { GA.next = 0; GA.regs.clear(); }
+  if (ev === 'airborne' && ac && ac.fxGA && ac.fxCct) { const c = ac.fxCct; c.leg = 'UP'; c.n++; ac.mode = 'FXCCT'; ac.freq = 'TWR'; ac.need = null; ac.cto = false; ac.tgtAlt = ac.cleared = gaElev() + GA.H; ac.onSid = false; }
+});
+// circuit legs: UP (climb out past the end), CROSS (out to the downwind line), DOWN, BASE, FINAL, ROLL (a touch and go)
+function fxCctStep(ac, dt){
+  const c = ac.fxCct, F = gaFrame(), E = gaElev(), Hc = E + GA.H, P = ac.perf, W = GA.side*GA.W;
+  const a = F.A([ac.x, ac.y]), o = F.O([ac.x, ac.y]);
+  let tgt, alt = Hc, spd = 85;
+  if (c.leg === 'ROLL') {   // the touch and go: down, along the runway, power on and away
+    ac.onRwy = true; ac.rwyId = F.R.id; ac.alt = F.R.elev ? (F.R.elev[F.rw] || E) : E;
+    c.roll = (c.roll || 0) + dt; ac.ias = c.roll < 7 ? Math.max(42, ac.ias - 3.5*dt) : ac.ias + 4*dt; ac.gs = ac.ias; ac.hdg = crsOf(F.rw);
+    const mv = ac.ias/3600*dt; ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv;
+    if (c.roll > 7 && ac.ias >= P.vr) { ac.onRwy = false; c.roll = 0; c.leg = 'UP'; c.n++; ac.alt += 10; }
+    return;
+  }
+  if (c.leg === 'UP') { tgt = F.P(F.end + 900, 0); alt = Hc; if (a > F.end + 600 && ac.alt > E + 450) c.leg = 'CROSS'; }
+  if (c.leg === 'CROSS') { tgt = F.P(F.end + 900, W); if (Math.abs(o - W) < 250) { c.leg = 'DOWN'; c.called = false; } }
+  if (c.leg === 'DOWN') {
+    tgt = F.P(-6000, W);
+    if (!c.called && a < F.end*0.7) { c.called = true; const fs = c.left <= 0 || !gaVmc() || !gaDay();
+      if (fs) c.left = 0; ac.need = 'Downwind'; pilot(ac, `downwind${fs ? ', full stop' : ', touch and go'}`); }
+    // fit in behind airline traffic: extend while one is on final inside 4.5 NM and not yet past us
+    // (an airliner inside 7 NM gets there before a base and final are flown, about two minutes: wait for it to pass)
+    const ifr = S.acs.find(x => x !== ac && x.airborne && x.mode === 'FINAL' && x.app === F.rw && x.state !== 'MISSED' && typeof finalDist === 'function' && finalDist(x) < 7 && finalDist(x) > 0.6)
+      || S.acs.find(x => x !== ac && x.fxCct && (x.fxCct.leg === 'BASE' || (x.fxCct.leg === 'FINAL' && F.A([x.x, x.y]) < -200)));   // another club aircraft turning in ahead
+    if (ifr && !c.ext && !c.toldExt && a < -800) { c.toldExt = ifr.cs; pilot(ac, `extending downwind, traffic in sight, the ${ifr.fxGA ? TYPES[ifr.t].name : typeSay(ifr.t)} ${ifr.fxCct && ifr.fxCct.leg === 'BASE' ? 'on base' : 'on final'}`); }
+    const turn = a < -1300 && !c.ext && !(ifr && a > -5500);
+    if (turn || a < -6000) { c.leg = 'BASE'; c.toldExt = null; }
+  }
+  if (c.leg === 'BASE') { tgt = F.P(Math.min(a, -1300) - 300, 0); alt = E + 600; if (Math.abs(o) < 300) { c.leg = 'FINAL'; if (!c.clr) { ac.need = c.left <= 0 ? 'Final, full stop' : 'Final, touch and go'; pilot(ac, `final${c.left <= 0 ? ', full stop' : ', touch and go'}`); } } }
+  if (c.leg === 'FINAL') {
+    tgt = F.P(Math.max(a + 400, 150), 0); spd = P.vapp; alt = E + Math.max(0, -a)*0.0524*3.281 + 15;
+    const occ = S.acs.some(x => x !== ac && x.onRwy && (x.rwyId || RWYS[0].id) === F.R.id) || (typeof vehOnRwy === 'function' && vehOnRwy(F.rw));
+    if (a > -420 && (!c.clr || occ)) return gaAround(ac, !c.clr ? 'no clearance' : 'runway occupied');
+    if (a > 120) {   // touchdown
+      if (c.clr === 'LAND') return gaLand(ac, F);
+      c.leg = 'ROLL'; c.clr = null; c.left--; ac.need = null; return;
+    }
+  }
+  // fly it: turn towards the target (standard rate and a bit), speed and level by the leg
+  const want = brg(ac.x, ac.y, ...tgt), d = angDiff(ac.hdg, want);
+  ac.hdg = norm(ac.hdg + clamp(d, -5*dt, 5*dt));
+  ac.ias += clamp(spd - ac.ias, -3*dt, 3*dt); ac.gs = ac.ias;
+  const vs = alt > ac.alt ? P.climb : -P.desc, dz = alt - ac.alt; ac.vs = Math.abs(dz) < 20 ? 0 : vs; ac.alt += clamp(dz, -P.desc/60*dt, P.climb/60*dt);
+  const mv = ac.gs/3600*dt; ac.x += Math.sin(ac.hdg*D2R)*mv; ac.y += Math.cos(ac.hdg*D2R)*mv; ac.trk = ac.hdg;
+}
+function gaAround(ac, why){
+  const c = ac.fxCct; c.leg = 'UP'; c.clr = null; ac.need = null; ac.onRwy = false;
+  pilot(ac, `going around${why ? ', ' + why : ''}`);
+  if (why === 'no clearance' && seatOf(ac) && !aiOwns(ac)) { S.score.pts -= 5; sys(`${ac.cs} went around: no clearance on final (−5).`); }
+}
+// a full stop: handed to the engine as a landing roll, then off the runway and back to the southside
+function gaLand(ac, F){
+  const R = F.R; Object.assign(ac, { ground: true, onRwy: true, rwyId: R.id, state: 'ROLLOUT', mode: 'GROUND', vs: 0, kind: 'ARR', app: null, ctl: false, rollDir: F.dir, need: null });
+  ac.alt = R.elev ? (R.elev[F.rw] || gaElev()) : gaElev(); ac.hdg = crsOf(F.rw); ac.ias = Math.min(ac.ias, 50); ac.fxCct.leg = null; ac.fxCct.done = true;
+  // off to the south, the side the southside is on: the first south exit it can make
+  const sx_ = Object.keys(HOLDS).filter(k => HOLDS[k].off < 0 && String(HOLDS[k].dirs || '').split(',').includes(F.rw) && GN[HOLDS[k].node]);
+  try { const ok = sx_.filter(k => { const c = exitCheck(ac, k); return c && c.ok && !c.back; }).sort((x, y) => exitCheck(ac, x).ahead - exitCheck(ac, y).ahead); if (ok.length) { ac.reqExit = ok[0]; planVac(ac); } } catch (e) {}
+  emit('landed', ac);
+}
+{ const pv = PH.vacated; if (pv) PH.vacated = ac => ac.fxGA ? `runway vacated via ${PHON[ac.exit] || String(ac.exit).replace(/~\d+$/, '')}, request taxi to the southside` : pv(ac); }
+{ const pc = PH.cto; if (pc) PH.cto = (ac, sid, chg) => ac.fxGA ? [`runway ${depRw(ac)}, cleared for take-off, ${GA.side < 0 === (depRw(ac) === rwyOf(depRw(ac)).lo) ? 'right' : 'left'} hand circuit`, `cleared for take-off runway ${depRw(ac)}, ${GA.side < 0 === (depRw(ac) === rwyOf(depRw(ac)).lo) ? 'right' : 'left'} hand`] : pc(ac, sid, chg); }
+function fxCctCmd(ac, t, said, reads){
+  const c = ac.fxCct, F = gaFrame(), w = S.wx, wind = w.vrb ? `variable ${w.spd} knots` : `${hdg3(w.dir)} degrees ${w.spd} knots`;
+  const num = () => 1 + S.acs.filter(x => x !== ac && x.airborne && ((x.mode === 'FINAL' && x.app === F.rw && finalDist(x) < 6) || (x.fxCct && x.fxCct.leg === 'FINAL') || (x.fxCct && x.fxCct.leg === 'BASE'))).length;
+  if (t === 'TG' && c.left > 0) { c.clr = 'TG'; ac.need = null; said.push(`runway ${F.rw}, cleared touch and go, surface wind ${wind}`); reads.push(`cleared touch and go runway ${F.rw}`); return true; }
+  if (t === 'CTL' || t === 'LAND' || (t === 'TG' && c.left <= 0)) { c.clr = 'LAND'; c.left = 0; ac.need = null; said.push(`runway ${F.rw}, cleared to land, surface wind ${wind}`); reads.push(`cleared to land runway ${F.rw}`); return true; }
+  if (t === 'GA') { said.push('go around'); reads.push('going around'); gaAround(ac, null); return true; }
+  if (t === 'RF') { const n = num(); ac.need = null; said.push(`number ${NUM_WORD[n] || n}${n > 1 ? ', follow the traffic ahead' : ''}, report final`); reads.push(`number ${NUM_WORD[n] || n}, wilco`); return true; }
+  if (t === 'FS') { c.left = 0; said.push('make this a full stop'); reads.push('full stop'); return true; }
+  if (t === 'EXT' && c.leg === 'DOWN') { c.ext = true; said.push("extend downwind, I'll call your base"); reads.push('extending downwind'); return true; }
+  if (t === 'BASE' && (c.leg === 'DOWN' || c.leg === 'CROSS')) { c.ext = false; c.leg = 'BASE'; said.push('turn base now'); reads.push('turning base'); return true; }
+  if (!aiCtx) sys(`${ac.cs} is in the circuit: TG (touch and go), CTL (land), GA, RF (report final), FS (full stop), EXT / BASE.`);
+  return true;
+}
+// separation: circuit traffic is not radar-separated from the airliners (Class D: traffic information); only a real
+// near miss counts
+{ const so = APT.sepOk; APT.sepOk = (a, b, d) => { if ((a.fxCct && a.fxCct.leg) || (b.fxCct && b.fxCct.leg)) return d > 0.35 || Math.abs(a.alt - b.alt) > 300; return so ? so(a, b, d) : false; }; }
+// the AI controllers work them too
+if (typeof aiTower === 'function') { const at = aiTower; aiTower = function(ac){
+  if (ac.fxCct && ac.fxCct.leg && ac.airborne) { const n = ac.need || '', F = gaFrame();
+    if (n === 'Downwind' && aiDue(ac, n + ac.fxCct.n, 2, 5)) return aiDo('TWR', ac, 'RF');
+    if (/^Final/.test(n) && aiDue(ac, n + ac.fxCct.n, 2, 4)) {
+      const me = F.A([ac.x, ac.y]), busy = S.acs.some(x => x !== ac && (x.onRwy || (x.airborne && x.mode === 'FINAL' && x.app === F.rw && finalDist(x) < 3) || ['LINEUP', 'LINEDUP', 'TAKEOFF'].includes(x.state) || (x.fxCct && x.fxCct.leg === 'FINAL' && F.A([x.x, x.y]) > me)));
+      return busy ? null : aiDo('TWR', ac, n === 'Final, full stop' ? 'CTL' : 'TG'); }
+    return; }
+  return at(ac); }; }
+if (typeof aiGround === 'function') { const ag = aiGround; aiGround = function(ac){
+  if (ac.fxGA && ac.kind === 'ARR') { if (/^(Request taxi|Needs a stand)$/.test(ac.need || '') && aiDue(ac, 'gahome', 3, 7)) aiDo('GND', ac, `TAXI ${GA.ihp}`); return; }
+  return ag(ac); }; }
+function gaStep(){
+  if (!S.running || EXERCISES[S.mode]) return;
+  if (!GA.next) GA.next = S.t + rnd(90, 420);
+  if (S.t >= GA.next) { GA.next = S.t + rnd(18, 35)*60; if (gaVmc() && gaDay() && S.acs.filter(a => a.fxGA).length < 2) gaSpawn(); }
+  for (const ac of S.acs.slice()) {
+    if (!ac.fxGA) continue;
+    // back at the southside after a full stop: parked, off the frequency
+    if (ac.kind === 'ARR' && ac.stand) { if (ac.stand.occ === ac) ac.stand.occ = null; ac.stand = null; }   // no airline stand for it: it goes home to the southside
+    if (ac.kind === 'ARR' && ac.ground && !ac.onRwy && (ac.need === `Holding at ${GA.ihp}` || (!ac.path && GN.n45 && dist(ac.x, ac.y, ...GN.n45.p) < 0.03))) { ac.gaHome ??= S.t;
+      if (S.t - ac.gaHome > 20) { pilot(ac, 'parking at the southside, thanks for your help'); GA.regs.delete(ac.cs); S.acs = S.acs.filter(x => x !== ac); if (S.sel === ac) S.sel = null; } }   // parked: gone quietly, not "removed"
+    if (ac.kind === 'ARR' && ac.need === 'Needs a stand') ac.need = 'Request taxi';
+    if (ac.kind === 'ARR' && ac.need === 'Request taxi' && !ac.gaHint && seatOf(ac) && !aiOwns(ac)) { ac.gaHint = true; sys(`${ac.cs} wants the southside: ${ac.cs} TAXI ${GA.ihp}.`); }
+  }
+}
+{ const fs = fxStep; fxStep = function(dt){ fs(dt); gaStep(); }; }
+// the circuit drawn faintly for each one flying it, the leg it is on brighter
+function fxDrawCct(){
+  const L = S.acs.filter(a => a.fxCct && a.fxCct.leg && a.airborne); if (!L.length || V.scale < 25) return;
+  const F = gaFrame(), W = GA.side*GA.W, pts = [[-300, 0], [F.end + 900, 0], [F.end + 900, W], [-1300, W], [-1600, 0], [150, 0]].map(([a, o]) => F.P(a, o));
+  cx.save(); cx.strokeStyle = C.name === 'dark' ? 'rgba(199,166,255,.38)' : 'rgba(110,70,180,.4)'; cx.lineWidth = 1.2; cx.setLineDash([7, 6]);
+  cx.beginPath(); pts.forEach((q, i) => cx[i ? 'lineTo' : 'moveTo'](sx(q[0]), sy(q[1]))); cx.stroke(); cx.restore();
+}
+{ const df = fxDrawField; fxDrawField = function(){ df(); fxDrawCct(); }; }
+
+// one tap on the strip for the circuit calls
+if (typeof stripNext === 'function') { const sn = stripNext; stripNext = function(ac){
+  if (ac && ac.fxCct && ac.fxCct.leg && ac.airborne && !aiOwns(ac)) { const n = ac.need || '';
+    return n === 'Downwind' ? { cmd: 'RF', label: 'Report final' } : n === 'Final, touch and go' ? { cmd: 'TG', label: 'Touch & go' } : n === 'Final, full stop' ? { cmd: 'CTL', label: 'Land' } : null; }
+  if (ac && ac.fxGA && ac.kind === 'ARR' && ac.need === 'Request taxi' && !aiOwns(ac)) return { cmd: `TAXI ${GA.ihp}`, label: 'Taxi home' };
+  return sn(ac); }; }
+
+// no airline stand for a club aircraft after a full stop, and off the runway to the south, the southside's side
+if (typeof planStand === 'function') { const ps_ = planStand; planStand = function(ac){ if (ac && ac.fxGA) return; return ps_.apply(this, arguments); }; }
+{ const vp = APT.vacPrefs; if (vp) APT.vacPrefs = (st, ac) => { const L = vp(st, ac) || [];
+  if (!(ac && ac.fxGA)) return L; const south = Object.keys(HOLDS).filter(k => HOLDS[k].off < 0 && FIL[k]); return [...south, ...L.filter(k => !south.includes(k))]; }; }
+
+// the AI Tower keeps departures off the runway while a club aircraft cleared for a touch and go (or to land) is on
+// short final or rolling, as it would for any arrival
+if (typeof aiDepart === 'function') { const ad = aiDepart; aiDepart = function(ac){
+  const F = gaFrame(), g = S.acs.find(x => x.fxCct && x.airborne && ((x.fxCct.leg === 'FINAL' && x.fxCct.clr && F.A([x.x, x.y]) > -2600) || x.fxCct.leg === 'ROLL'));
+  if (g && ac.state !== 'LINEDUP') { ac.aiWhy = `${g.cs} on final for a ${g.fxCct.clr === 'LAND' ? 'full stop' : 'touch and go'}`; return; }
+  // a club aircraft departing: two minutes' wake gap behind a medium jet, and slow away, so it only goes into a real
+  // gap. Not lined up with an airliner inside 6 NM; caught lined up with one inside 3 NM, it vacates and waits
+  if (ac.fxGA && typeof arrNear === 'function') { const A = arrNear(rwyOf(depRw(ac)), ac);
+    if (ac.state === 'HOLDPT' && A.nm < 6) { ac.aiWhy = `waiting for a gap after the arrival ${A.nm.toFixed(1)} NM out`; return; }
+    if (ac.state === 'LINEDUP' && A.nm < 3 && !ac.vacq && depExits(ac).length) { ac.aiWhy = 'off the runway for the arrival'; return aiDo('TWR', ac, 'VAC'); } }
+  return ad(ac); }; }

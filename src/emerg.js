@@ -1,4 +1,5 @@
 // ═════════════════════════ emergencies and things going wrong ═════════════════════════
+// (Club aircraft flying circuits, ac.fxGA, are never picked: fieldfx.js flies them, and they are not airline traffic.)
 // A scheduler picks an event that fits the traffic on frequency: a MAYDAY, a medical PAN, a medical diversion from an
 // overflight, a bird strike, debris or an inspection closing the runway, a pedestrian jumping the barrier on the
 // avenue, or a windshear report in the levanter. The first transmission to an emergency acknowledges it.
@@ -49,7 +50,7 @@ function block(why, mins, rw = S.rwy){
 
 const EVENTS = {
   mayday(){
-    const c = S.acs.filter(a => a.airborne && !a.emerg && a.state !== 'PRE' && !a.handed && a.state !== 'MISSED' && a.state !== 'DIVERTING' &&
+    const c = S.acs.filter(a => !a.fxGA && a.airborne && !a.emerg && a.state !== 'PRE' && !a.handed && a.state !== 'MISSED' && a.state !== 'DIVERTING' &&
       ((a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state) && Math.hypot(a.x - RADAR_REF[0], a.y - RADAR_REF[1]) > 10) || (a.kind === 'DEP' && a.state === 'CLIMB' && a.alt > 2500)));
     if (!c.length) return false;
     const ac = c[Math.floor(Math.random()*c.length)], why = MAYDAYS[Math.floor(Math.random()*MAYDAYS.length)];
@@ -59,7 +60,7 @@ const EVENTS = {
     return true;
   },
   gear(){
-    const c = S.acs.filter(a => a.airborne && !a.emerg && a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state) && !a.handed && Math.hypot(a.x - RADAR_REF[0], a.y - RADAR_REF[1]) > 12);
+    const c = S.acs.filter(a => !a.fxGA && a.airborne && !a.emerg && a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state) && !a.handed && Math.hypot(a.x - RADAR_REF[0], a.y - RADAR_REF[1]) > 12);
     if (!c.length) return false;
     const ac = c[Math.floor(Math.random()*c.length)];
     ac.gearPass = {};
@@ -67,14 +68,14 @@ const EVENTS = {
     return true;
   },
   medical(){
-    const c = S.acs.filter(a => a.airborne && !a.emerg && a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state));
+    const c = S.acs.filter(a => !a.fxGA && a.airborne && !a.emerg && a.kind === 'ARR' && ['INBOUND','VECTORS','HOLDING'].includes(a.state));
     if (!c.length) return false;
     const ac = c[Math.floor(Math.random()*c.length)];
     declare(ac, 'PAN', `medical emergency, ${MEDICAL[Math.floor(Math.random()*MEDICAL.length)]}`, 'request priority and an ambulance on arrival');
     return true;
   },
   divert(){
-    if (S.acs.filter(a => a.airborne && a.kind === 'ARR').length > 5) return false;
+    if (S.acs.filter(a => !a.fxGA && a.airborne && a.kind === 'ARR').length > 5) return false;
     const opts = DIVERTS.filter(d => !S.acs.some(a => a.cs === d.cs)); if (!opts.length) return false;
     const d = opts[Math.floor(Math.random()*opts.length)];
     // an airport without its own diversion list borrows Gibraltar's: their entry gates may not exist here
@@ -85,14 +86,14 @@ const EVENTS = {
     return true;
   },
   bird(){
-    const dep = S.acs.filter(a => a.kind === 'DEP' && a.airborne && !a.emerg && a.alt < 2500 && a.alt > 400);
+    const dep = S.acs.filter(a => !a.fxGA && a.kind === 'DEP' && a.airborne && !a.emerg && a.alt < 2500 && a.alt > 400);
     if (dep.length) {
       const ac = dep[0]; makeReturn(ac); ac.tgtSpd = ac.perf.vapp + 40;
       declare(ac, 'PAN', 'bird strike on departure, vibration on number two engine', `${altShort(Math.round(ac.alt/100)*100)}, request return runway ${S.rwy}`);
       S.emg.inspectAfter = 'bird'; block('runway inspection after a bird strike on departure', rnd(3, 5));
       return true;
     }
-    const arr = S.acs.find(a => a.kind === 'ARR' && (a.state === 'ROLLED' || a.state === 'ROLLOUT'));
+    const arr = S.acs.find(a => !a.fxGA && a.kind === 'ARR' && (a.state === 'ROLLED' || a.state === 'ROLLOUT'));
     if (arr) { pilot(arr, `be advised, we had a bird strike on short final, birds over the runway`); block('bird strike reported on short final, runway inspection and bird scaring', rnd(3, 5)); return true; }
     return false;
   },
@@ -103,7 +104,7 @@ const EVENTS = {
   },
   incursion(){
     if (!APT.xing || S.xing.st !== 'CLOSED' || S.emg.incursion) return false;
-    const ac = S.acs.find(a => onFinalNear(a, 4) && finalDist(a) > 1.2); if (!ac) return false;
+    const ac = S.acs.find(a => !a.fxGA && onFinalNear(a, 4) && finalDist(a) > 1.2); if (!ac) return false;
     S.emg.incursion = { until: S.t + rnd(70, 110), ac: ac.cs, gaBy: null };
     sys(`RUNWAY INCURSION: a pedestrian has climbed the barrier at Winston Churchill Avenue and is on the runway. ${ac.cs} is on ${finalDist(ac).toFixed(1)} NM final: send it around (GA).`, true);
     emit('incursion', ac); if (S.sel !== ac) select(ac);
@@ -112,7 +113,7 @@ const EVENTS = {
   windshear(){
     const w = S.wx, lev = w.dir >= 40 && w.dir <= 140 && w.spd >= 15;
     if (!lev && (w.gust || 0) < 25) return false;
-    const ac = S.acs.find(a => onFinalNear(a, 4)) || S.acs.find(a => a.kind === 'ARR' && (a.state === 'ROLLED' || a.state === 'ROLLOUT'));
+    const ac = S.acs.find(a => !a.fxGA && onFinalNear(a, 4)) || S.acs.find(a => !a.fxGA && a.kind === 'ARR' && (a.state === 'ROLLED' || a.state === 'ROLLOUT'));
     if (!ac) return false;
     shearReport(ac, ac.app || S.rwy); return true;
   }
