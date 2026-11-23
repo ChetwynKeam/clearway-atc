@@ -20147,8 +20147,8 @@ const EGGD_WXCLIM = {"src":"Iowa Environmental Mesonet METAR archive, EGGD 2019-
 // Built into an airport's page only when its build entry lists it (build.py: fx). Everything here hooks the engine through
 // the typeof-guarded calls in sim.js and ui.js (fxStep, fxTaxiSpd, fxBrake, fxToShort, fxReject, fxFrame, fxDrawField,
 // fxLabelPos, fxAcCol, fxSelLine, fxStrip), so an airport without it is untouched.
-//   1. Airfield map: our own airside-only chart (grass inside the field, pavement, buildings, stand size tags) in place of
-//      the street map, which stays one tap away (the Airfield button).
+//   1. Map: the street map (OpenStreetMap) as everywhere else, with stand size tags; our own airside-only chart (grass
+//      inside the field, pavement, buildings) is one tap away (the Map button).
 //   2. Labels: ground tags without boxes, placed round each aircraft where they overlap least, with a leader line.
 //   3. Runway surface condition from the weather (UK RCR/GRF): wet or contaminated braking on the roll-out and exits,
 //      longer take-off distances, the condition on the ATIS.
@@ -20162,9 +20162,12 @@ const EGGD_WXCLIM = {"src":"Iowa Environmental Mesonet METAR archive, EGGD 2019-
 //      a Doppler shift as it passes (Web Audio, no sound files).
 //   9. Rejected take-off (STOP or RTO on the take-off roll) and cancelling a landing clearance (CXL on approach).
 
-const FX = { map: 'field', snd: true, lab: new Map(), placed: [], icons: [], blast: [], rc: null, tod: new Map() };
-try { const m = localStorage.getItem('cw-fx-map'); if (m === 'street') FX.map = 'street'; FX.snd = localStorage.getItem('cw-fx-snd') !== '0'; } catch (_) {}
-const fxField = () => FX.map === 'field' && cv && cv.id === 'scope';
+const FX = { map: 'street', snd: true, lab: new Map(), placed: [], icons: [], blast: [], rc: null, tod: new Map() };
+try { const m = localStorage.getItem('cw-fx-map2'); if (m === 'field') FX.map = 'field'; FX.snd = localStorage.getItem('cw-fx-snd') !== '0'; } catch (_) {}
+// the features (labels, liveries, stand tags, walkways...) work on the console's scope over either map; the drawn
+// airfield chart itself (dark ground, grass, perimeter) only when it is chosen. The street map (OpenStreetMap) is the default.
+const fxField = () => !!(cv && cv.id === 'scope');
+const fxChart = () => FX.map === 'field' && fxField();
 
 // ── 1. the airfield map ───────────────────────────────────
 // the street map only when chosen (the website's previews and thumbnails keep it)
@@ -20197,7 +20200,7 @@ function fxHull(){
   }
   return FX_HULL = ring;
 }
-{ const base = drawGroundBase; drawGroundBase = function(){ base(); if (!fxField() || APT.drawnTown) return;
+{ const base = drawGroundBase; drawGroundBase = function(){ base(); if (!fxChart() || APT.drawnTown) return;
   const ring = fxHull(), dark = C.name === 'dark';
   cx.save();
   cx.beginPath(); ring.forEach((p, i) => cx[i ? 'lineTo' : 'moveTo'](sx(p[0]), sy(p[1]))); cx.closePath();
@@ -20210,8 +20213,8 @@ const FX_DARK = { ground: '#0a100f', concrete: '#2d3639', asphalt: '#262d30', rw
   acDep: '#f5b83d', acArr: '#62c7ff' };
 function fxFrame(){
   FX.placed.length = 0; FX.icons.length = 0;
-  const on = fxField() && C.name === 'dark', base = PAL[C.name === 'dark' ? 'dark' : 'light'];
-  for (const k in FX_DARK) C[k] = on ? FX_DARK[k] : base[k];
+  const dark = C.name === 'dark', on = fxChart() && dark, base = PAL[dark ? 'dark' : 'light'];
+  for (const k in FX_DARK) C[k] = (on || (dark && fxField() && (k === 'acDep' || k === 'acArr'))) ? FX_DARK[k] : base[k];   // the chart's ground colours only on the chart; amber and blue traffic on either map
   // every ground aircraft's footprint on the screen, so tags are kept off the aircraft themselves
   if (V.scale > 150) for (const ac of S.acs) { if (!ac.ground) continue; const M = acMid(ac), r = Math.max(6, (ac.perf.span || 30)/2*V.scale/1852); FX.icons.push([sx(M[0]) - r, sy(M[1]) - r, 2*r, 2*r]); }
 }
@@ -20564,8 +20567,8 @@ function fxStep(dt){
 { const tb = document.querySelector('.scopewrap .toolbar'), fids = $('tgFids');
   if (tb && !$('tgField')) {
     const b = document.createElement('button'); b.id = 'tgField'; b.type = 'button'; b.title = 'Airfield chart or street map under the ground and tower views';
-    const lbl = () => { b.textContent = FX.map === 'field' ? 'Airfield' : 'Street map'; b.classList.toggle('on', FX.map === 'field'); };
-    b.onclick = () => { FX.map = FX.map === 'field' ? 'street' : 'field'; try { localStorage.setItem('cw-fx-map', FX.map); } catch (_) {} lbl(); };
+    const lbl = () => { b.textContent = FX.map === 'field' ? 'Chart' : 'Street map'; b.classList.toggle('on', FX.map === 'field'); };
+    b.onclick = () => { FX.map = FX.map === 'field' ? 'street' : 'field'; try { localStorage.setItem('cw-fx-map2', FX.map); } catch (_) {} lbl(); };
     lbl(); fids && fids.nextSibling ? tb.insertBefore(b, fids.nextSibling) : tb.appendChild(b);
   }
   // phones: the toolbar is full, so the switch is in the menu there
