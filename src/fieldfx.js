@@ -78,7 +78,7 @@ function fxAcCol(ac){ if (!fxField() || C.name !== 'dark') return null;
 const fxCode = span => span <= 15 ? 'A' : span <= 24 ? 'B' : span <= 36 ? 'C' : span <= 52 ? 'D' : span <= 65 ? 'E' : 'F';
 function fxDrawField(){
   const sc = V.scale; if (!fxField() || sc > 5200) return;
-  if (sc < 1250) { fxDrawBlast(sc/1852); return; }
+  if (sc < 1800) { fxDrawBlast(sc/1852); return; }
   const tags = [];
   const mpx = sc/1852, dark = C.name === 'dark';
   cx.save(); cx.font = `600 9px ${FONT_D}`; cx.textAlign = 'center';
@@ -87,7 +87,7 @@ function fxDrawField(){
     const sz = standSize(s), f = sz.f || 0.62, head = (sz.l*f + 7)*M2NM, h = s.hdg*D2R;
     const X = sx(s.p[0] + Math.sin(h)*head), Y = sy(s.p[1] + Math.cos(h)*head);
     if (X < -40 || Y < -20 || X > W + 40 || Y > H + 20) continue;
-    const code = fxCode(s.maxSpan || 36), t = `${s.id} · ${code}`, w = cx.measureText(t).width + 6, box = [X - w/2, Y - 7, w, 13];
+    const code = s.maxShort || fxCode(s.maxSpan || 36), t = `${s.id} ${code}${s.contact === false ? ' BUS' : ''}`, w = cx.measureText(t).width + 6, box = [X - w/2, Y - 7, w, 13];
     if (tags.some(q => fxOver(q, box) > 0)) continue; tags.push(box);   // stands close together: the first tag only
     cx.lineWidth = 3; cx.lineJoin = 'round'; cx.strokeStyle = dark ? 'rgba(8,13,13,.9)' : 'rgba(255,255,255,.9)'; cx.strokeText(t, X, Y + 3);
     cx.fillStyle = dark ? (s.occ ? 'rgba(160,185,180,.38)' : 'rgba(190,212,206,.78)') : (s.occ ? 'rgba(30,45,65,.4)' : 'rgba(30,45,65,.8)'); cx.fillText(t, X, Y + 3);
@@ -529,7 +529,9 @@ function fxWalk(st, P){
   }
   FX_WALK.set(key, r); return r;
 }
-{ const bs = bussed; bussed = function(ac, br){ if (bs(ac, br)) return true; const st = ac.stand; if (!st || br || small(ac) || st.area === 'hangar') return false; return !fxWalk(st, ac.perf); }; }
+{ const bs = bussed; bussed = function(ac, br){ const st = ac.stand; if (!st || br || small(ac) || st.area === 'hangar') return bs(ac, br);
+  if (st.contact != null) return !st.contact;   // the published stand plan: contact (walk) or non-contact (coach)
+  if (bs(ac, br)) return true; return !fxWalk(st, ac.perf); }; }
 { const ps = paxStreams; paxStreams = function(ac){
   const out = ps(ac); if (!out.length || !ac.stand) return out;
   const Wk = fxWalk(ac.stand, ac.perf), P = ac.perf, M = ac.stand.p, h = ac.hdg, w = fusW(P)/2;
