@@ -50,6 +50,7 @@ function setTheme(t){ Object.assign(C, PAL[t === 'dark' ? 'dark' : 'light']); C.
 
 function draw(){
   cx.setTransform(DPR,0,0,DPR,0,0);
+  if (typeof fxFrame === 'function') fxFrame();   // the airfield view's colours, and a fresh start for label placement (fieldfx.js)
   const sc = V.scale, ground = sc > 70;
   cx.fillStyle = C.sea; cx.fillRect(0,0,W,H);
   // land (even-odd so traced harbours/bays inside the chart frame stay water)
@@ -65,6 +66,7 @@ function draw(){
   if (!ground) drawRadarMap(); else if (!img) drawRockRelief();
   if (S.showProc && sc >= 3) drawProcedures();
   drawAirport();
+  if (typeof fxDrawField === 'function') fxDrawField();
   if (typeof drawLvpLights === 'function') drawLvpLights();
   if (typeof drawWorks === 'function') drawWorks();
   if (typeof drawVfr === 'function') drawVfr();
@@ -564,7 +566,7 @@ function drawAc(ac){
   const mpx = sc/1852;
   if ((ac.ground && sc > 150) || (sc > 400 && ac.alt < 2000)) {
     if (ac.ground && C.gShadow) { const d = Math.max(1.5, 2.5*mpx); silhouette(ac, X + d, Y + d*0.7, mpx, C.gShadow, true); }
-    const sz = silhouette(ac, X, Y, mpx, ac.ground ? (ac.kind === 'ARR' ? C.acArr : C.acDep) : col);
+    const sz = silhouette(ac, X, Y, mpx, ac.ground ? ((typeof fxAcCol === 'function' && fxAcCol(ac)) || (ac.kind === 'ARR' ? C.acArr : C.acDep)) : col);
     if (sel || ac.need) { cx.strokeStyle = sel ? C.sel : rgba('proc', .9); cx.lineWidth = 1.2; cx.setLineDash(sel ? [] : [3,3]); cx.beginPath(); cx.arc(X, Y, sz/2 + 5, 0, 7); cx.stroke(); cx.setLineDash([]); }
   } else {
     cx.strokeStyle = col; cx.lineWidth = sel ? 2 : 1.3;
@@ -575,8 +577,6 @@ function drawAc(ac){
   }
   if (ac.ground && sc < 70) return;
   if (dormant(ac) && !sel) return;   // parked with nothing due: no data block
-  const lx = X + 16, ly = Y - 26;
-  cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(X+8, Y-8); cx.lineTo(lx-2, ly+6); cx.stroke(); cx.globalAlpha = 1;
   cx.font = `500 11.5px ${FONT_D}`;
   const ai = aiOwns(ac);   // worked by an AI controller (ai.js): an AI mark, a dashed teal tag, no ◆
   const l1 = ac.cs + (ac.emerg && !ac.emerg.done ? ' ' + ac.emerg.k : '') + (ac.need && !ai ? ' ◆' : '');
@@ -591,16 +591,29 @@ function drawAc(ac){
   }
   const w = Math.max(cx.measureText(l1).width, cx.measureText(l2).width, l3 ? cx.measureText(l3).width : 0);
   const clr = clrOf(ac), ck = clr ? ` ✓ ${clr}` : '', ckW = clr ? cx.measureText(ck).width : 0, W1 = Math.max(w, cx.measureText(l1).width + ckW + 3);
-  { cx.fillStyle = C.tagBg; cx.fillRect(lx-3, ly-11, W1+6, (l3 ? 3 : 2)*13 + 3);
+  // where the tag goes: up and to the right, or (the airfield view, fieldfx.js) wherever round the aircraft it overlaps least
+  const LP = typeof fxLabelPos === 'function' ? fxLabelPos(ac, X, Y, W1 + 6 + (ai && ac.ground ? 46 : 0), (l3 ? 3 : 2)*13 + 3) : null, lx = LP ? LP.x : X + 16, ly = LP ? LP.y : Y - 26;
+  cx.strokeStyle = col; cx.globalAlpha = 0.6; cx.lineWidth = 1; cx.beginPath();
+  if (LP) { cx.moveTo(LP.lead[0], LP.lead[1]); cx.lineTo(LP.lead[2], LP.lead[3]); } else { cx.moveTo(X+8, Y-8); cx.lineTo(lx-2, ly+6); }
+  cx.stroke(); cx.globalAlpha = 1;
+  const bare = LP && LP.bare;   // a ground tag on the airfield view: no box, the text on a dark halo
+  if (!bare) { cx.fillStyle = C.tagBg; cx.fillRect(lx-3, ly-11, W1+6, (l3 ? 3 : 2)*13 + 3);
     if (ai) cx.setLineDash([4, 3]);
     cx.strokeStyle = clr ? C.clr : ai ? C.ai : C.tagEdge; cx.lineWidth = clr || ai ? 2 : 1; cx.strokeRect(lx-3.5, ly-11.5, W1+7, (l3 ? 3 : 2)*13 + 4); cx.setLineDash([]); }
-  cx.fillStyle = col; cx.fillText(l1, lx, ly); cx.fillText(l2, lx, ly+13); if (l3) cx.fillText(l3, lx, ly+26);
-  if (clr) { cx.fillStyle = C.clr; cx.font = `700 11.5px ${FONT_D}`; cx.fillText(ck, lx + cx.measureText(l1).width - 1, ly); }
-  if (ai) { cx.font = `700 9.5px ${FONT_D}`; const t = 'AI ' + seatOf(ac), tw = cx.measureText(t).width; cx.fillStyle = C.ai; cx.fillRect(lx + W1 - tw - 1, ly - 25, tw + 6, 12); cx.fillStyle = '#fff'; cx.fillText(t, lx + W1 - tw + 2, ly - 16); }
+  if (bare) {
+    const dark = C.name === 'dark', c1 = sel ? C.sel : conf || (ac.emerg && !ac.emerg.done) ? C.conf : !dark ? col : ac.kind === 'ARR' ? C.acArr : C.acDep, c2 = dark ? '#9fb8b0' : '#4a5a6a';
+    cx.lineJoin = 'round'; cx.lineWidth = 3.2; cx.strokeStyle = dark ? 'rgba(6,10,10,.88)' : 'rgba(255,255,255,.9)';
+    for (const [t, y] of [[l1, ly], [l2, ly+13], [l3, ly+26]]) if (t) cx.strokeText(t, lx, y);
+    cx.fillStyle = c1; cx.font = `700 11.5px ${FONT_D}`; cx.fillText(l1, lx, ly); cx.font = `500 11.5px ${FONT_D}`;
+    cx.fillStyle = c2; cx.fillText(l2, lx, ly+13); if (l3) { cx.fillStyle = ac.held || ac.waiting ? C.xMid : c2; cx.fillText(l3, lx, ly+26); }
+  } else { cx.fillStyle = col; cx.fillText(l1, lx, ly); cx.fillText(l2, lx, ly+13); if (l3) cx.fillText(l3, lx, ly+26); }
+  if (clr) { cx.fillStyle = C.clr; cx.font = `700 11.5px ${FONT_D}`; if (bare) cx.strokeText(ck, lx + cx.measureText(l1).width - 1, ly); cx.fillText(ck, lx + cx.measureText(l1).width - 1, ly); }
+  if (ai && bare) { cx.font = `700 9.5px ${FONT_D}`; const t = 'AI ' + seatOf(ac), x = lx + W1 + 6; cx.strokeText(t, x, ly); cx.fillStyle = C.ai; cx.fillText(t, x, ly); }   // the AI mark beside the callsign
+  else if (ai) { cx.font = `700 9.5px ${FONT_D}`; const t = 'AI ' + seatOf(ac), tw = cx.measureText(t).width; cx.fillStyle = C.ai; cx.fillRect(lx + W1 - tw - 1, ly - 25, tw + 6, 12); cx.fillStyle = '#fff'; cx.fillText(t, lx + W1 - tw + 2, ly - 16); }
 }
 
 function stateLabel(ac){
-  return ({ PARKED:(ac.stand && ac.stand.area === 'hangar' ? 'HANGAR ' : 'STAND ')+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', PULL:'PULL FORWARD', READY:'STARTED', TAXI:ac.depVac ? 'VACATING' : ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : 'TAXI '+(ac.hp||''), HOLDPT:'HOLDING '+(ac.hp||''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:ac.towHold ? 'TOW HOLDING '+ac.towHold : 'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
+  return ({ PARKED:(ac.stand && ac.stand.area === 'hangar' ? 'HANGAR ' : 'STAND ')+(ac.stand?ac.stand.id:''), PUSH:'PUSHBACK', PULL:'PULL FORWARD', READY:'STARTED', TAXI:ac.depVac ? 'VACATING' : ac.holdAt && !ac.path ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : 'TAXI '+(ac.hp||'').replace(/~\d+$/, ''), HOLDPT:'HOLDING '+(ac.hp||'').replace(/~\d+$/, ''), LINEUP:'LINING UP', LINEDUP:'LINED UP', TAKEOFF:'TAKE-OFF', AIRBORNE:'AIRBORNE', CLIMB:'CLIMBING', INBOUND:'INBOUND', VECTORS:'VECTORS', FINAL:(ac.appId ? finOf(ac).short : APT.appShort)+' '+(ac.app||''), HOLDING:'HOLDING', MISSED:'MISSED APP', DIVERTING:'DIVERTING', ROLLOUT:'LANDING ROLL', TOW:ac.towHold ? 'TOW HOLDING '+ac.towHold : 'UNDER TOW', PRE:'PENDING', ROLLED:'ON RUNWAY', VACATING:ac.taxiIn ? 'TAXI IN' : ac.holdAt ? 'HOLDING '+ac.holdAt.replace(/~\d+$/, '') : ac.vacated ? 'VACATED' : 'VACATING', ONSTAND:'ON STAND' })[ac.state] || ac.state;
 }
 
 // ═════════════════════════ console UI ═════════════════════════
@@ -847,6 +860,7 @@ function renderSel(){
   if (ac.airborne) html += `<div class="restr"><b>Restrictions</b> ${restrLines(ac).map(esc).join(' · ')}</div>`;
   if (ac.kind === 'ARR' && !['PRE', 'ONSTAND', 'DIVERTING', 'TOW'].includes(ac.state)) html += standLine(ac);
   if (ac.kind === 'DEP' && ac.ground && ac.state !== 'PRE') html += `<div class="relline ${needRel(ac) ? relCls(ac) : 'ok'}">${relText(ac)}</div>`;
+  if (typeof fxSelLine === 'function') html += fxSelLine(ac);   // take-off distance against the runway from its entry (fieldfx.js)
   // a parked departure that hasn't called yet: say when it will, so the greyed-out buttons make sense
   if (ac.kind === 'DEP' && !ac.airborne && SLOT[ac.cs] && SLOT[ac.cs].ctot != null) { const c = SLOT[ac.cs].ctot; html += `<div class="meta">Slot (CTOT) <b>${hhmm(c)}Z</b>: take-off between ${hhmm(c - 5)} and ${hhmm(c + 10)}Z.</div>`; }
   if (towOn(ac)) html += `<div class="meta">Under tow to ${towDest(ac.tow.to)}${ac.towHold ? `, the tug holding at ${ac.towHold}: send it on, or pick another route or holding point.` : ac.towTgt ? `, stopping at holding point ${ac.towTgt} to wait for you.` : '. Hold position stops it.'}</div>`;
@@ -1240,6 +1254,7 @@ function makeStrip(ac, doc = document){
     c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); centreOn(ac); } };
     d.querySelector('.c-a').prepend(c);
   }
+  if (typeof fxStrip === 'function') fxStrip(ac, d);
   return d;
 }
 // ── the next instruction from the strip bay ──

@@ -64,7 +64,7 @@ AIRPORTS = {
                  geo='airports/egaa.geo.json', profile=['airports/egaa.js', 'airports/egaa-ground.js', 'airports/egaa-engine.js'], site=['airports/egaa-site.js'], artifact='belfast-atc.html', page='egaa/index.html',
                  data=('EGAA', 'airports/egaa.js')),
     'EGGD': dict(title='Bristol · Clearway ATC Simulator', desc='Clearway: air traffic control at Bristol (EGGD), on Broadfield Down: one runway, 09/27, with a parallel taxiway, the BRI hold over the field, conventional SIDs, ILS approaches and live traffic.',
-                 geo='airports/eggd.geo.json', profile=['airports/eggd.js', 'airports/eggd-ground.js', 'airports/eggd-engine.js'], site=['airports/eggd-site.js'], artifact='bristol-atc.html', page='eggd/index.html',
+                 geo='airports/eggd.geo.json', profile=['airports/eggd.js', 'airports/eggd-ground.js', 'airports/eggd-engine.js'], site=['airports/eggd-site.js'], fx=['airports/eggd-wx.js', 'fieldfx.js'], artifact='bristol-atc.html', page='eggd/index.html',
                  data=('EGGD', 'airports/eggd.js')),
     'LSGG': dict(title='Geneva · Clearway ATC Simulator', desc='Clearway: air traffic control at Geneva (LSGG), between the Jura and the Alps: one runway, 04/22, three round satellites with taxi-in, taxi-out stands and apron buses, RNAV SIDs, ILS approaches and live traffic.',
                  geo='airports/lsgg.geo.json', profile=['airports/lsgg.js', 'airports/lsgg-ground.js', 'airports/lsgg-engine.js'], site=['airports/lsgg-site.js'], artifact='geneva-atc.html', page='lsgg/index.html',
@@ -122,7 +122,8 @@ def page(icao, A):
     ap_data = '{' + ', '.join(f'{k}: {g}' for k, (g, f) in others) + '}'
     vf = src/'airports'/f'{icao.lower()}-veh.js'   # the airside roads and ground-vehicle places (tools/vehicles_osm.py)
     veh = vf.read_text() if vf.exists() else ''
-    site = '\n'.join(r(n) for n in A.get('site', []))   # the airport's own Academy coach steps, after site.js
+    site = '\n'.join(r(n) for n in A.get('site', []))
+    fx = '\n'.join(r(n) for n in A.get('fx', []))   # the airfield view and ground realism (fieldfx.js), for the airports that have it   # the airport's own Academy coach steps, after site.js
     out = f'''<meta charset="utf-8">
 <title>{A['title']}</title>
 <link rel="icon" type="image/svg+xml" href="{fav}">
@@ -180,6 +181,7 @@ const AP_DATA = {ap_data};
 {r('liveshift.js')}
 {r('standblock.js')}
 {r('radio.js')}
+{fx}
 {r('site.js')}
 {site}
 </script>
