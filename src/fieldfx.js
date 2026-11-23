@@ -428,3 +428,168 @@ function fxStep(dt){
     lbl(); vb && vb.nextSibling ? mp.insertBefore(b, vb.nextSibling) : mp.appendChild(b);
   }
 }
+
+// ═════════ aircraft in their airline colours ═════════
+// Seen from above: a white crown with the belly colour showing along each side, the fin, the winglets and the engine
+// cowlings in the airline's colours, light grey wings. Colours only (no logos or titles). The state colour (amber
+// departure, blue arrival, grey parked) stays as a thin outline, and the tag says the rest. Used once an aircraft is big
+// enough on the screen to show it (about 12 px across); smaller than that it stays the plain coloured shape.
+const FX_LIV = {
+  EZY: { fin: '#ff6600', eng: '#ff6600', wl: '#ff6600' }, EJU: 'EZY', EZS: 'EZY',
+  RYR: { belly: '#073590', fin: '#073590', eng: '#073590', wl: '#f1c933' }, RUK: 'RYR', MAY: 'RYR', LDM: 'RYR',
+  EXS: { belly: '#d50032', fin: '#d50032', wl: '#d50032' },
+  TOM: { belly: '#6cc4f0', fin: '#6cc4f0', eng: '#0b2d5b', wl: '#6cc4f0' }, TUI: 'TOM',
+  KLM: { belly: '#00a1de', fin: '#00a1de', eng: '#00a1de', wl: '#00a1de' }, KLC: 'KLM',
+  EIN: { belly: '#00857d', fin: '#00857d', wl: '#00857d' }, EAI: 'EIN',
+  LOG: { fin: '#1d3767', eng: '#1d3767', wl: '#1d3767' },
+  AUR: { fin: '#f6c400', eng: '#f6c400' },
+  BAW: { belly: '#1b3d7a', fin: '#1b3d7a', eng: '#c8ced6', wl: '#1b3d7a' }, CFE: 'BAW', SHT: 'BAW',
+  WZZ: { belly: '#c6007e', fin: '#c6007e', eng: '#c6007e', wl: '#c6007e' }, WUK: 'WZZ', WMT: 'WZZ',
+  DLH: { fin: '#05164d', eng: '#05164d', wl: '#05164d' }, AFR: { fin: '#002157', eng: '#d0d4d9' },
+  VLG: { fin: '#f7d117', eng: '#5c5c5c', wl: '#f7d117' }, IBE: { fin: '#d7192d', eng: '#f5b400' },
+  VJT: { fin: '#c8102e', eng: '#c8102e' }, NJE: { fin: '#3d4550', eng: '#3d4550' }, BCI: { fin: '#1360b0', eng: '#1360b0' },
+  TAP: { fin: '#d91f26', eng: '#1d8c3b' }, SWR: { fin: '#e2001a' }, BEL: { fin: '#06235a', eng: '#06235a' }
+};
+const FX_GENERIC = { fin: '#8f99a3', eng: '#d2d6db' };
+function fxLivery(ac){
+  let L = FX_LIV[String(ac.cs || '').slice(0, 3)]; if (typeof L === 'string') L = FX_LIV[L];
+  L = L || FX_GENERIC;
+  return { body: '#f3f5f7', wing: '#c5cbd2', eng: L.eng || '#dfe3e7', fin: L.fin || '#8f99a3', belly: L.belly || null, wl: L.wl || null };
+}
+function fxDrawLivery(sh, X, Y, hdg, m, L, edge, o){
+  cx.save(); cx.translate(X, Y); cx.rotate(hdg*D2R); cx.scale(m, m); cx.lineJoin = 'round';
+  const both = f => { f(); cx.scale(-1, 1); f(); cx.scale(-1, 1); }, fill = (p, c) => { cx.fillStyle = c; cx.fill(p); };
+  const lw = (o.lw || 1)*2/m, stroke = p => { cx.strokeStyle = edge; cx.lineWidth = lw; cx.stroke(p); };
+  // the outline of the whole aircraft first (state colour), the fills over it, so only the outside edge shows
+  both(() => stroke(sh.under)); stroke(sh.body); both(() => stroke(sh.half)); both(() => stroke(sh.over)); stroke(sh.centre);
+  both(() => fill(sh.under, L.eng)); both(() => fill(sh.under, 'rgba(20,28,40,.12)')); both(() => fill(sh.intake, 'rgba(14,20,30,.6)'));
+  both(() => fill(sh.half, L.wing));
+  // the wing root and walkway a shade darker, the control surfaces a hinge line, the winglets in colour
+  if (m > 0.5) { cx.strokeStyle = 'rgba(20,28,40,.28)'; cx.lineWidth = 0.6/m; both(() => cx.stroke(sh.hinge)); }
+  if (L.wl) both(() => { cx.save(); cx.clip(sh.half); cx.fillStyle = L.wl; cx.fillRect(sh.tip[0] - Math.max(1.4, sh.size*0.035), -200, 30, 400); cx.restore(); });
+  fill(sh.body, L.body);
+  if (L.belly) { cx.save(); cx.clip(sh.body); cx.fillStyle = L.belly; cx.fillRect(sh.h*0.58, -200, sh.h, 400); cx.fillRect(-sh.h*1.58, -200, sh.h, 400); cx.restore(); }
+  if (!sh.gradL) { const g = cx.createLinearGradient(-sh.h, 0, sh.h, 0);
+    g.addColorStop(0, 'rgba(10,18,30,.22)'); g.addColorStop(.25, 'rgba(10,18,30,0)'); g.addColorStop(.45, 'rgba(255,255,255,.35)'); g.addColorStop(.62, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(10,18,30,.2)'); sh.gradL = g; }
+  fill(sh.body, sh.gradL);
+  if (m > 0.35) fill(sh.win, 'rgba(14,22,34,.85)');
+  // the fin seen from above, a little wider than it is so the colour reads
+  cx.save(); cx.scale(2.4, 1); fill(sh.fin, L.fin); cx.restore();
+  both(() => fill(sh.over, L.eng)); fill(sh.centre, L.eng); both(() => fill(sh.over, 'rgba(20,28,40,.12)'));
+  if (sh.props.length) {
+    cx.strokeStyle = 'rgba(20,24,30,.85)'; cx.lineWidth = Math.max(0.25, 1.1/m);
+    cx.beginPath(); for (const [x, y, d] of sh.props) { cx.moveTo(x - d/2, y); cx.lineTo(x + d/2, y); } cx.stroke();
+    if (o.spin) { cx.fillStyle = 'rgba(20,24,30,.14)'; for (const [x, y, d] of sh.props) { cx.beginPath(); cx.ellipse(x, y, d/2, d*0.08, 0, 0, 7); cx.fill(); } }
+  }
+  cx.restore();
+}
+{ const ds = drawShape; drawShape = function(sh, X, Y, hdg, m, col, o){ const L = FX.liv; if (!L || o.shadow) return ds.apply(this, arguments); fxDrawLivery(sh, X, Y, hdg, m, L, FX.edge, { ...o, lw: FX.edgeW }); }; }
+{ const si = silhouette; silhouette = function(ac, X, Y, mpx, col, shadow){
+  const big = ac.ground && !shadow && fxField() && (Math.max(ac.perf.span || 30, ac.perf.len || 30)*mpx >= 12);
+  if (big) { const parked = (ac.state === 'PARKED' || ac.state === 'ONSTAND') && !ac.need && S.sel !== ac, dark = C.name === 'dark';
+    FX.liv = fxLivery(ac); FX.edge = parked ? (dark ? 'rgba(0,0,0,.7)' : 'rgba(40,50,60,.55)') : dark ? col : (ac.kind === 'ARR' ? C.arr : C.dep); FX.edgeW = parked ? 0.7 : 1.5; }
+  try { return si.apply(this, arguments); } finally { FX.liv = null; } }; }
+
+// ═════════ passengers on foot and by bus ═════════
+// Walk-out stands: the passengers walk a marked route, never straight across the apron. From the terminal door nearest
+// the stand out to the head of the stand (in front of the noses, where the service road and the walkways are), along it
+// to the stand, down the left side to the front steps; the rear steps are reached round the outside of the left
+// wingtip, never under the wing. A stand whose walk would be long (over 170 m) or would cross a taxiway is a bus stand.
+// The buses load at the departure bus gate and drop at the arrivals door, with the passengers walking between the
+// terminal and the bus there too.
+const FX_WALK = new Map();
+const fxSegX = (a, b, c, d) => { const o = (p, q, r) => Math.sign((q[0]-p[0])*(r[1]-p[1]) - (q[1]-p[1])*(r[0]-p[0])); return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b); };
+function fxTermDoors(){ return (VD.terms || []).map(VP); }
+// the walk from the terminal to a stand, for an aircraft of this size (null: no sensible walk, so it is bussed)
+function fxWalk(st, P){
+  const key = st.id + '|' + P.len + '|' + P.span; if (FX_WALK.has(key)) return FX_WALK.get(key);
+  const doors = fxTermDoors(), M = st.p, h = st.hdg, L = P.len, S2 = P.span/2, w = (typeof fusW === 'function' ? fusW(P) : 4)/2, pt = (f, s) => mPt(M, h, f, s);
+  const inv = q => { const dx = (q[0] - M[0])/VM, dy = (q[1] - M[1])/VM; return [dx*Math.sin(h*D2R) + dy*Math.cos(h*D2R), dx*Math.cos(h*D2R) - dy*Math.sin(h*D2R)]; };   // world → stand frame [f, s]
+  let r = null;
+  if (doors.length) {
+    const fH = L/2 + 9, sH = -(w + 5), Hn = pt(fH, sH);
+    const D = doors.slice().sort((a, b) => dist(...a, ...Hn) - dist(...b, ...Hn))[0], [fD, sD] = inv(D);
+    const K = Math.abs(sD - sH) > 6 && fD > fH ? pt(fH, sD) : null;   // out from the door to the head of the stand line, then along it
+    const legs = K ? [D, K, Hn] : [D, Hn];
+    let len = 0; for (let i = 1; i < legs.length; i++) len += dist(...legs[i - 1], ...legs[i])/VM;
+    const twys = GE.filter(e => e.tw && e.tw !== 'APRON').map(e => [GN[e.a].p, GN[e.b].p]);
+    const crosses = legs.some((p, i) => i && twys.some(([a, b]) => fxSegX(legs[i - 1], p, a, b)));
+    if (len <= 170 && !crosses) {
+      const term = legs.slice().reverse();   // stand end first
+      r = { len, term,
+        front: f => [pt(f, -(w + 5.8)), Hn, ...term.slice(1)],
+        rear: f => [pt(f, -(w + 5.8)), pt(f, -(S2 + 4)), pt(L/2 - L*0.27, -(S2 + 4)), Hn, ...term.slice(1)] };
+    }
+  }
+  FX_WALK.set(key, r); return r;
+}
+{ const bs = bussed; bussed = function(ac, br){ if (bs(ac, br)) return true; const st = ac.stand; if (!st || br || small(ac) || st.area === 'hangar') return false; return !fxWalk(st, ac.perf); }; }
+{ const ps = paxStreams; paxStreams = function(ac){
+  const out = ps(ac); if (!out.length || !ac.stand) return out;
+  const Wk = fxWalk(ac.stand, ac.perf), P = ac.perf, M = ac.stand.p, h = ac.hdg, w = fusW(P)/2;
+  for (const st of out) {
+    if (st.walk && Wk) {   // the marked route instead of the straight line
+      const foot = st.pts[1], fF = doorFirst(P).f, fR = doorLast(P).f, rear = dist(...foot, ...mPt(M, h, fR, -(w + 1.6))) < dist(...foot, ...mPt(M, h, fF, -(w + 1.6)));
+      st.pts = [st.pts[0], st.pts[1], ...(rear ? Wk.rear(fR) : Wk.front(fF))]; st.route = true;
+    } else if (!st.walk && !st.inside) {   // to a bus: only one that is really at the foot of the steps
+      const b = st.pts[st.pts.length - 1]; if (dist(...b, ...st.pts[2]) > 40*VM) st.pts.length = 0;
+    }
+  }
+  return out.filter(s => s.pts.length);
+}; }
+// the bus gate (departures load here) and the arrivals door, each a bay 14 m out from its own terminal door
+let FX_BAYS = null;
+function fxBays(){
+  if (FX_BAYS) return FX_BAYS;
+  const arr = typeof termBay === 'function' && termBay(), doors = fxTermDoors(); if (!arr || !doors.length) return FX_BAYS = {};
+  const da = doors.slice().sort((a, b) => dist(...a, ...arr.p) - dist(...b, ...arr.p))[0];
+  const c = STANDS.reduce((s, t) => [s[0] + t.p[0]/STANDS.length, s[1] + t.p[1]/STANDS.length], [0, 0]);
+  const dd = doors.filter(q => dist(...q, ...da)/VM > 45).sort((a, b) => dist(...a, ...c) - dist(...b, ...c))[0];
+  // out from a door: towards the stand nearest it (square to the terminal face), the kerb at right angles to that
+  const out = d => { const n = STANDS.slice().sort((a, b) => dist(...a.p, ...d) - dist(...b.p, ...d))[0]; return n ? brg(...d, ...n.p) : brg(...d, ...c); };
+  const bay = d => { const h = out(d); return { p: [d[0] + Math.sin(h*D2R)*14*VM, d[1] + Math.cos(h*D2R)*14*VM], h, door: d }; };
+  return FX_BAYS = { arr: { ...arr, h: out(da), door: da }, dep: dd ? bay(dd) : null };
+}
+// departure buses: start at the bus gate, load there (the passengers walk out of the terminal into it), then drive to the aircraft
+if (typeof taPlan === 'function' && typeof VEH_GO !== 'undefined') {
+  const tp = taPlan; taPlan = function(ac, T, arr, hdg){ const J = tp(ac, T, arr, hdg); for (const j of J) if (j.type === 'bus' && !j.arr && !j.bay) { j.at -= 200; j.fxLoad = true; } return J; };
+  VEH_GO.fxToStand = (v, a) => { v.fxGate = null; driveTo(v, a[0], a[1]); v.parked = false; v.endH = a[1]; };
+  const dp = dispatch; dispatch = function(type, p, h, job, urgent){
+    const B = fxBays().dep; if (type !== 'bus' || !job || !job.fxLoad || !B) return dp.apply(this, arguments);
+    const n = VEH.list.filter(w => w.fxGate && S.t < w.fxGate.until).length, k = norm(B.h + 90), at = [B.p[0] + Math.sin(k*D2R)*n*16*VM, B.p[1] + Math.cos(k*D2R)*n*16*VM];   // along the kerb, one behind the other
+    const v = newVeh('bus', at, k, { job }); v.parked = true; v.fxGate = { until: S.t + rnd(150, 210), door: B.door };
+    v.leaveAt = v.fxGate.until; v.go = ['fxToStand', [p, h]]; return v;
+  };
+}
+// the walkways in use (a pale band with its barriers, under the passengers) and the people at the bus gate and arrivals door
+function fxDrawPaxWays(mpx){
+  if (V.scale < (typeof VEH_MIN_SCALE !== 'undefined' ? VEH_MIN_SCALE : 260) || typeof paxStreams !== 'function') return;
+  const dark = C.name === 'dark';
+  for (const ac of S.acs) {
+    if (!ac.ta || !ac.stand || !onStandNow(ac)) continue;
+    for (const st of paxStreams(ac)) { if (!st.route) continue;
+      const pts = st.pts.slice(1).map(q => [sx(q[0]), sy(q[1])]);
+      cx.save(); cx.lineJoin = cx.lineCap = 'round';
+      cx.strokeStyle = dark ? 'rgba(210,225,220,.12)' : 'rgba(255,255,255,.55)'; cx.lineWidth = Math.max(3, 3*mpx); cx.beginPath(); pts.forEach((q, i) => i ? cx.lineTo(...q) : cx.moveTo(...q)); cx.stroke();
+      if (mpx > 1.2) { cx.fillStyle = '#ff7a1a'; for (const q of pts.slice(1, -1)) { cx.beginPath(); cx.arc(q[0], q[1], Math.max(1.2, 0.5*mpx), 0, 7); cx.fill(); } }   // a cone at each corner of the barriers
+      cx.restore(); }
+  }
+  // the terminal ends of the buses: a stream between the door and a bus loading at the gate or unloading at arrivals
+  const B = fxBays(), r = Math.max(1.4, 0.55*mpx);
+  for (const v of VEH.list) {
+    if (v.type !== 'bus' || !v.parked) continue;
+    let from = null, to = null;
+    if (v.fxGate && B.dep && S.t < v.fxGate.until - 15 && dist(v.x, v.y, ...B.dep.p) < 60*VM) { from = v.fxGate.door; to = [v.x, v.y]; }
+    else if (v.job && v.job.k === 'shuttle' && B.arr && B.arr.door && dist(v.x, v.y, ...B.arr.p) < 15*VM && v.visitUntil && v.visitUntil - S.t > 100) { from = [v.x, v.y]; to = B.arr.door; }
+    if (!from) continue;
+    const A = [sx(from[0]), sy(from[1])], Z = [sx(to[0]), sy(to[1])], Lm = dist(...from, ...to)/VM, gap = 1.6;
+    for (let u = (S.t*1.4) % gap; u < Lm; u += gap) { const f = u/Lm, id = Math.floor(S.t*1.4/gap - u/gap);
+      cx.fillStyle = PAX_COL[((id*7) % 10 + 10) % 10]; cx.beginPath(); cx.arc(A[0] + (Z[0] - A[0])*f, A[1] + (Z[1] - A[1])*f, r, 0, 7); cx.fill(); }
+  }
+  // the bays themselves, marked on the apron
+  if (V.scale > 900) for (const [k, b] of [['BUS GATE', B.dep], ['ARRIVALS', B.arr]]) { if (!b) continue;
+    const X = sx(b.p[0]), Y = sy(b.p[1]); cx.save(); cx.translate(X, Y); cx.rotate((b.h + 90)*D2R);
+    cx.strokeStyle = dark ? 'rgba(230,236,232,.55)' : 'rgba(255,255,255,.9)'; cx.lineWidth = Math.max(1, 0.25*mpx); cx.setLineDash([2*mpx, 1.5*mpx]); cx.strokeRect(-2*mpx, -8*mpx, 4*mpx, 30*mpx); cx.restore();
+    cx.font = `600 9px ${FONT_D}`; cx.textAlign = 'center'; cx.fillStyle = dark ? 'rgba(190,212,206,.7)' : 'rgba(30,45,65,.7)'; cx.fillText(k, X, Y - 9*mpx - 4); cx.textAlign = 'left'; }
+}
+{ const df = fxDrawField; fxDrawField = function(){ df(); if (fxField()) fxDrawPaxWays(V.scale/1852); }; }
