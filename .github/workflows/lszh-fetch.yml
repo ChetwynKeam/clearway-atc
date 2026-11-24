@@ -1,0 +1,45 @@
+name: Fetch LSZH approach map data
+# One-off for the Zurich (LSZH) airport build: from OpenStreetMap (Overpass), the lakes (Lake Zurich, the Greifensee, Lake
+# Constance and the rest), the Rhine, the Swiss-German border, the towns and the other airfields round Zurich for the
+# approach map (tools/lszh/make_geo.py). The aerodrome itself comes from the OpenStreetMap API (tools/lszh/osm_fetch.py).
+# Published to the osm-data-lszh branch (Overpass is not reachable from the workspace).
+on:
+  workflow_dispatch:
+  push:
+    branches: [zurich-lszh-data]
+    paths: ['.github/workflows/lszh-fetch.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir out && cd out
+          UA="clearway-atc-build/1.0 (github.com/ChetwynKeam/clearway-atc)"
+          q() {
+            S=$(date +%s)
+            while [ $(( $(date +%s) - S )) -lt 600 ]; do
+              for H in https://overpass-api.de https://overpass.private.coffee https://overpass.kumi.systems https://maps.mail.ru/osm/tools/overpass; do
+                if curl -sSf -m 240 -A "$UA" --data-urlencode "data=$2" "$H/api/interpreter" -o "$1.tmp" && head -c 1 "$1.tmp" | grep -q '{'; then mv "$1.tmp" "$1.json"; echo "OK $1 from $H"; return 0; fi
+                echo "retry $1 ($H)"; sleep 8
+              done
+            done
+            echo "FAILED $1"; rm -f "$1.tmp"
+          }
+          B="46.95,7.75,47.95,9.75"
+          q water "[out:json][timeout:240];(relation[natural=water][water~\"lake|reservoir\"]($B)(if:length()>4000);way[natural=water][water~\"lake|reservoir\"]($B)(if:length()>4000);relation[natural=water][name~\"Bodensee|Zürichsee|Untersee|Obersee\"](46.9,7.6,48.0,9.9););out geom;" &
+          q rivers "[out:json][timeout:240];(relation[waterway=river][name~\"^(Rhein|Rhine|Limmat|Aare|Thur|Glatt|Reuss)$\"]($B););out geom;" &
+          q borders "[out:json][timeout:240];relation[boundary=administrative][admin_level=2][name~\"Schweiz|Deutschland|Österreich\"];way(r)($B);out geom;" &
+          q towns "[out:json][timeout:120];node[place~\"^(city|town)$\"]($B);out;" &
+          q airports "[out:json][timeout:120];nwr[aeroway=aerodrome][icao]($B);out center;" &
+          wait
+          ls -la
+      - name: Publish to osm-data-lszh branch
+        run: |
+          cd out
+          git init -q -b osm-data-lszh
+          git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "OSM data for LSZH"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" osm-data-lszh
