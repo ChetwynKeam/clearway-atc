@@ -1,29 +1,36 @@
 {
- "updated": "2026-11-24T01:08:13Z",
+ "updated": "2026-11-24T10:56:31Z",
  "source": "avionio.com",
  "days": {
   "2026-11-24": {
    "utcOffsetMin": 0,
    "arr": [
     {
-     "place": "Belfast",
-     "flight": "U267",
-     "sched": "07:40",
-     "status": "Scheduled",
-     "expected": ""
+     "place": "Paris",
+     "flight": "A51058",
+     "sched": "10:30",
+     "status": "Estimated",
+     "expected": "10:38"
     },
     {
-     "place": "Dublin",
-     "flight": "EA3350",
-     "sched": "08:15",
-     "status": "Scheduled",
+     "place": "Amsterdam",
+     "flight": "KL955",
+     "sched": "10:30",
+     "status": "Cancelled",
      "expected": ""
     },
     {
      "place": "Dubai",
      "flight": "EK35",
      "sched": "11:20",
-     "status": "Scheduled",
+     "status": "Estimated",
+     "expected": "11:10"
+    },
+    {
+     "place": "London",
+     "flight": "BA1330",
+     "sched": "11:35",
+     "status": "Estimated",
      "expected": ""
     },
     {
@@ -34,9 +41,93 @@
      "expected": ""
     },
     {
+     "place": "Amsterdam",
+     "flight": "KL957",
+     "sched": "12:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "BY1211",
+     "sched": "13:00",
+     "status": "Estimated",
+     "expected": "12:44"
+    },
+    {
+     "place": "Reykjavik",
+     "flight": "U25644",
+     "sched": "13:00",
+     "status": "Estimated",
+     "expected": "12:51"
+    },
+    {
      "place": "Malaga",
      "flight": "FR430",
      "sched": "13:10",
+     "status": "Estimated",
+     "expected": "13:39"
+    },
+    {
+     "place": "London",
+     "flight": "BA1332",
+     "sched": "15:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Marrakech",
+     "flight": "U25650",
+     "sched": "15:45",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "BA1334",
+     "sched": "16:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Marrakech",
+     "flight": "LS1966",
+     "sched": "16:20",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Amsterdam",
+     "flight": "KL959",
+     "sched": "16:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "LS584",
+     "sched": "17:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Lanzarote",
+     "flight": "LS1912",
+     "sched": "17:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tenerife",
+     "flight": "BY1257",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tenerife",
+     "flight": "LS1988",
+     "sched": "19:15",
      "status": "Scheduled",
      "expected": ""
     },
@@ -46,48 +137,69 @@
      "sched": "20:30",
      "status": "Scheduled",
      "expected": ""
+    },
+    {
+     "place": "Sharm el-Sheikh",
+     "flight": "BY871",
+     "sched": "20:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Gran Canaria",
+     "flight": "LS542",
+     "sched": "20:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Tenerife",
+     "flight": "LS548",
+     "sched": "21:15",
+     "status": "Scheduled",
+     "expected": ""
     }
    ],
    "dep": [
     {
+     "place": "Gran Canaria",
+     "flight": "LS541",
+     "sched": "10:10",
+     "status": "Departed",
+     "expected": "10:16"
+    },
+    {
+     "place": "Tenerife",
+     "flight": "LS547",
+     "sched": "10:40",
+     "status": "Estimated",
+     "expected": "10:52"
+    },
+    {
      "place": "Amsterdam",
-     "flight": "KL952",
-     "sched": "05:50",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Alicante",
-     "flight": "BY1210",
-     "sched": "06:05",
-     "status": "Scheduled",
-     "expected": ""
-    },
-    {
-     "place": "Malaga",
-     "flight": "FR431",
-     "sched": "06:10",
-     "status": "Scheduled",
+     "flight": "KL956",
+     "sched": "11:10",
+     "status": "Cancelled",
      "expected": ""
     },
     {
      "place": "Paris",
-     "flight": "A51559",
-     "sched": "06:20",
-     "status": "Scheduled",
-     "expected": ""
+     "flight": "A51059",
+     "sched": "11:15",
+     "status": "Estimated",
+     "expected": "11:25"
     },
     {
      "place": "London",
-     "flight": "BA1341",
-     "sched": "06:45",
+     "flight": "BA1331",
+     "sched": "12:25",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "Reykjavik",
-     "flight": "U25643",
-     "sched": "07:00",
+     "place": "Dubai",
+     "flight": "EK36",
+     "sched": "13:15",
      "status": "Scheduled",
      "expected": ""
     },
@@ -99,9 +211,44 @@
      "expected": ""
     },
     {
+     "place": "Amsterdam",
+     "flight": "KL958",
+     "sched": "13:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Hurghada",
+     "flight": "U25641",
+     "sched": "13:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Alicante",
      "flight": "FR4080",
      "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Alicante",
+     "flight": "U25603",
+     "sched": "14:10",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "BA1333",
+     "sched": "15:55",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London",
+     "flight": "BA1335",
+     "sched": "16:50",
      "status": "Scheduled",
      "expected": ""
     }
