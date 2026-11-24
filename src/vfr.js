@@ -19,8 +19,9 @@ const VFR_TYPES = [
 ];
 const regLetters = () => 'ABCDEFGHJKLMNPRSTUVWXYZ'.split('').sort(() => Math.random() - 0.5).slice(0, 4).join('');
 function vfrSpawn(){
-  const T = VFR_TYPES[Math.floor(Math.random()*VFR_TYPES.length)];
-  const cs = T.reg ? `G-${regLetters()}` : `${T.cs}${Math.floor(rnd(10, 99))}`, id = cs.replace('-', '');
+  // an airport's own mix (APT.vfrTypes: Zurich's Rega and Kantonspolizei helicopters) and registrations (APT.vfrReg: HB-)
+  const L = APT.vfrTypes || VFR_TYPES, T = L[Math.floor(Math.random()*L.length)];
+  const cs = T.reg ? (APT.vfrReg ? APT.vfrReg() : `G-${regLetters()}`) : `${T.cs}${Math.floor(rnd(10, 99))}`, id = cs.replace('-', '');
   const R = RADAR_REF, b = rnd(0, 360)*D2R, b2 = b + Math.PI + rnd(-0.6, 0.6), r = 11;
   const from = [R[0] + Math.sin(b)*r, R[1] + Math.cos(b)*r], to = [R[0] + Math.sin(b2)*(r + 3), R[1] + Math.cos(b2)*(r + 3)];
   const compass = a => ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'][Math.round(((a/D2R) % 360 + 360) % 360/45) % 8];

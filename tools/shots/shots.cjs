@@ -26,6 +26,7 @@ const AIRPORTS = [
   { k: 'omdb', twr: 1.1, gnd: 1.4, file: 'dubai-atc.html', mins: 40, hour: '08' },
   { k: 'egph', twr: 1.3, gnd: 1.6, file: 'edinburgh-atc.html', mins: 40, hour: '12' },
   { k: 'eham', twr: 1.0, gnd: 1.3, file: 'amsterdam-atc.html', mins: 40, hour: '11', ai: true },   // Schiphol's peak is too busy for the bot: the AI works every seat
+  { k: 'lszh', twr: 1.2, gnd: 1.5, file: 'zurich-atc.html', mins: 40, hour: '10', ai: true },    // Zurich's hub waves: the AI works every seat
 ];
 fs.mkdirSync(OUT, { recursive: true });
 const jpg = p => ({ path: path.join(OUT, p), type: 'jpeg', quality: 84 });

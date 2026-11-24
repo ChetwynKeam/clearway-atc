@@ -413,7 +413,9 @@ function aiDepart(ac){
   const dh = parseInt(rw, 10)*10, over = S.acs.find(o => o.kind === 'ARR' && o.airborne && o.state !== 'PRE' && !o.handed && o.alt < ELEV + 3000 && dist(o.x, o.y, ac.x, ac.y) < (o.app ? 6 + (o.gs || 180)*depSecs(ac)/3600 : 3) && Math.abs(((o.hdg - dh + 540) % 360) - 180) > 90
     // one on its approach still behind the departure's start (turning onto final out on the approach side: Newcastle's
     // D1, at the 25 end with the intercepts out past it) is spaced by the arrival gap below, not passing overhead
-    && !(o.app && (o.x - ac.x)*Math.sin(dh*D2R) + (o.y - ac.y)*Math.cos(dh*D2R) < -1));
+    && !(o.app && (o.x - ac.x)*Math.sin(dh*D2R) + (o.y - ac.y)*Math.cos(dh*D2R) < -1)
+    // an approach to another runway that never comes near this one's climb-out (Zurich: 14 arrivals and 28 departures)
+    && !(APT.indepArr && o.app && APT.indepArr(o.app, rw)));
   if (over) return why(`${over.cs} passing overhead`);
   // the inspection car is waiting at a holding point for this runway: the departures hold, so there is a gap for it
   { const C = S.rc; if (!lined && C && C.st === 'READY' && C.v.need && C.R === R && S.t - (C.t || S.t) < 420) return why('holding for the runway inspection'); }   // from when it got there (C.t): its "still holding" calls (C.asked) don't start the wait again

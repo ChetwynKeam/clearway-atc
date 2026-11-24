@@ -1,4 +1,4 @@
-// ═════════════════════════ field effects: the airfield view and ground realism (Bristol first) ═════════════════════════
+// ═════════════════════════ field effects: the airfield view and ground realism (Bristol, then Zurich) ═════════════════════════
 // Built into an airport's page only when its build entry lists it (build.py: fx). Everything here hooks the engine through
 // the typeof-guarded calls in sim.js and ui.js (fxStep, fxTaxiSpd, fxBrake, fxToShort, fxReject, fxFrame, fxDrawField,
 // fxLabelPos, fxAcCol, fxSelLine, fxStrip), so an airport without it is untouched.
@@ -11,7 +11,7 @@
 //      that is too short is refused and the crew asks for the full length.
 //   5. Jet blast: take-off thrust and breakaway thrust leaving a stand blow a cone behind; crews stop short of it, and a
 //      light aircraft caught in it is an incident.
-//   6. Typical weather: a real METAR for this month drawn from six years of reports (eggd-wx.js).
+//   6. Typical weather: a real METAR for this month drawn from six years of reports (eggd-wx.js, lszh-wx.js).
 //   7. Command suggestions: the instructions that make sense next for the flight in the box, one tap to add.
 //   8. Engine sound: every aircraft near the middle of the screen heard where it is, louder at take-off thrust, with
 //      a Doppler shift as it passes (Web Audio, no sound files).
@@ -149,7 +149,8 @@ function fxBrake(){ return (FX.rc || fxRwyCond()).brake; }
 // Canaries; the distance goes with the square of the weight. Then 10% per 1,000 ft of elevation, 1% per °C above ISA,
 // the runway condition, and the wind: half the headwind, one and a half times the tailwind, 1% per knot each way.
 const FX_TODR = { A319: 1850, A320: 2100, A20N: 1950, A21N: 2250, B738: 2300, B38M: 2450, E190: 2050, E145: 1970, AT76: 1370,
-  C56X: 1080, GLF6: 1920, PC12: 790, A332: 2500, A400: 980, DH8D: 1420, CRJ9: 1940 };
+  C56X: 1080, GLF6: 1920, PC12: 790, A332: 2500, A400: 980, DH8D: 1420, CRJ9: 1940,
+  A321: 2350, BCS1: 1600, BCS3: 1900, E195: 2100, E295: 1900, A333: 2770, A343: 3000, A359: 2600, B77W: 3050, B788: 2600, B789: 2800, B763: 2550, A388: 3000, B744: 3100 };
 function fxStageNM(ac){
   const a = AP[APT.icao] || AP.EGGD, b = AP[ac.d]; if (!a || !b) return 600;
   const p1 = a[0]*D2R, p2 = b[0]*D2R, dl = (b[1] - a[1])*D2R;
@@ -289,8 +290,10 @@ function fxRtoStep(ac, dt){
 }
 
 // ── 6. typical weather from real reports ──────────────────
-if (typeof EGGD_WXCLIM !== 'undefined' && typeof WX_PRESETS !== 'undefined') {
-  const pick = () => { const L = EGGD_WXCLIM.m[new Date().getUTCMonth()] || EGGD_WXCLIM.m[0]; return APT.icao + ' ' + L[Math.floor(Math.random()*L.length)]; };
+// the airport's own climatology file: eggd-wx.js (EGGD_WXCLIM) or lszh-wx.js (LSZH_WXCLIM)
+const FX_CLIM = typeof LSZH_WXCLIM !== 'undefined' && APT.icao === 'LSZH' ? LSZH_WXCLIM : typeof EGGD_WXCLIM !== 'undefined' ? EGGD_WXCLIM : null;
+if (FX_CLIM && typeof WX_PRESETS !== 'undefined') {
+  const pick = () => { const L = FX_CLIM.m[new Date().getUTCMonth()] || FX_CLIM.m[0]; return APT.icao + ' ' + L[Math.floor(Math.random()*L.length)]; };
   const mon = new Date().toLocaleString('en-GB', { month: 'long', timeZone: 'UTC' });
   WX_PRESETS.clim = { name: `Typical ${mon}: a real ${APT.name || 'Bristol'} METAR`, short: 'Typical', get metar(){ return pick(); } };
   if (typeof wxSel !== 'undefined' && wxSel && !wxSel.querySelector('option[value="clim"]')) {
@@ -462,7 +465,13 @@ const FX_LIV = {
   DLH: { fin: '#05164d', eng: '#05164d', wl: '#05164d' }, AFR: { fin: '#002157', eng: '#d0d4d9' },
   VLG: { fin: '#f7d117', eng: '#5c5c5c', wl: '#f7d117' }, IBE: { fin: '#d7192d', eng: '#f5b400' },
   VJT: { fin: '#c8102e', eng: '#c8102e' }, NJE: { fin: '#3d4550', eng: '#3d4550' }, BCI: { fin: '#1360b0', eng: '#1360b0' },
-  TAP: { fin: '#d91f26', eng: '#1d8c3b' }, SWR: { fin: '#e2001a' }, BEL: { fin: '#06235a', eng: '#06235a' }
+  TAP: { fin: '#d91f26', eng: '#1d8c3b' }, SWR: { fin: '#e2001a' }, BEL: { fin: '#06235a', eng: '#06235a' },
+  EDW: { fin: '#b0182c', eng: '#b0182c', wl: '#b0182c' }, OAW: { fin: '#8c1d2f', eng: '#8c1d2f' }, EWG: { fin: '#8a1538', eng: '#8a1538', wl: '#e4007b' },
+  AUA: { fin: '#e3001b', eng: '#e3001b', belly: '#e3001b' }, BTI: { fin: '#a4c41e', eng: '#a4c41e' }, UAE: { fin: '#d71921', eng: '#c8ced6' },
+  QTR: { fin: '#5c0632', eng: '#5c0632' }, ETD: { fin: '#b8924a', eng: '#b8924a' }, THY: { fin: '#c8102e', eng: '#c8ced6' }, UAL: { fin: '#0033a0', eng: '#0033a0', belly: '#0033a0' },
+  SIA: { fin: '#1d2b5a', eng: '#1d2b5a', wl: '#f2a900' }, CPA: { fin: '#00646a', eng: '#c8ced6' }, CFG: { fin: '#f7b500', eng: '#f7b500' }, LOT: { fin: '#0a2a6b', eng: '#0a2a6b' },
+  AEE: { fin: '#1b3a87', eng: '#1b3a87' }, ITY: { fin: '#0071ce', eng: '#0071ce' }, SAS: { fin: '#00205b', eng: '#9a9a9a' }, FIN: { fin: '#0b1560', eng: '#0b1560' },
+  ACA: { fin: '#111111', eng: '#111111' }, DAL: { fin: '#c8102e', eng: '#0d2a5c', belly: '#0d2a5c' }, AAL: { fin: '#36495a', eng: '#c8ced6' }, ETH: { fin: '#078930', eng: '#fcd116' }
 };
 const FX_GENERIC = { fin: '#8f99a3', eng: '#d2d6db' };
 function fxLivery(ac){
@@ -616,7 +625,7 @@ function fxDrawPaxWays(mpx){
 APT.vfrLead = 14; APT.vfrRoutes = true;
 
 // ═════════ local light aircraft: circuits, touch-and-goes and the taxi ═════════
-// Club and training aircraft from the southside apron (the hangars at the south end of Juliett): they call for taxi
+// Bristol only (APT.gaCircuits: Zurich has no circuit training). Club and training aircraft from the southside apron (the hangars at the south end of Juliett): they call for taxi
 // for circuits, taxi, line up and go like any departure (TAXI, LU, CTO), then fly the visual circuit to the south of the
 // runway at 1,000 ft above the field, calling downwind and final. On final each needs a clearance:
 //   TG    cleared touch and go          CTL   cleared to land (a full stop)      GA    go around
@@ -785,8 +794,9 @@ if (typeof aiTower === 'function') { const at = aiTower; aiTower = function(ac){
 if (typeof aiGround === 'function') { const ag = aiGround; aiGround = function(ac){
   if (ac.fxGA && ac.kind === 'ARR') { if (/^(Request taxi|Needs a stand)$/.test(ac.need || '') && aiDue(ac, 'gahome', 3, 7)) aiDo('GND', ac, `TAXI ${GA.ihp}`); return; }
   return ag(ac); }; }
+APT.gaCircuits ??= APT.icao === 'EGGD';
 function gaStep(){
-  if (!S.running || EXERCISES[S.mode]) return;
+  if (!S.running || EXERCISES[S.mode] || !APT.gaCircuits) return;
   if (!GA.next) GA.next = S.t + rnd(90, 420);
   if (S.t >= GA.next) { GA.next = S.t + rnd(18, 35)*60; if (gaVmc() && gaDay() && S.acs.filter(a => a.fxGA).length < 2) gaSpawn(); }
   for (const ac of S.acs.slice()) {
@@ -830,7 +840,7 @@ if (typeof planStand === 'function') { const ps_ = planStand; planStand = functi
 // the AI Tower keeps departures off the runway while a club aircraft cleared for a touch and go (or to land) is on
 // short final or rolling, as it would for any arrival
 if (typeof aiDepart === 'function') { const ad = aiDepart; aiDepart = function(ac){
-  const F = gaFrame(), g = S.acs.find(x => x.fxCct && x.airborne && ((x.fxCct.leg === 'FINAL' && x.fxCct.clr && F.A([x.x, x.y]) > -2600) || x.fxCct.leg === 'ROLL'));
+  const g = S.acs.find(x => x.fxCct && x.airborne && ((x.fxCct.leg === 'FINAL' && x.fxCct.clr && gaFrame().A([x.x, x.y]) > -2600) || x.fxCct.leg === 'ROLL'));
   if (g && ac.state !== 'LINEDUP') { ac.aiWhy = `${g.cs} on final for a ${g.fxCct.clr === 'LAND' ? 'full stop' : 'touch and go'}`; return; }
   // a club aircraft departing: two minutes' wake gap behind a medium jet, and slow away, so it only goes into a real
   // gap. Not lined up with an airliner inside 6 NM; caught lined up with one inside 3 NM, it vacates and waits
