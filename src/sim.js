@@ -1845,7 +1845,10 @@ function commandRun(str){
       return renderSel && renderSel();
     } else if (t === 'PUSH') {
       if (ac.state !== 'PARKED' || !ac.need || ac.need === 'Request tow') { sys(`${ac.cs} has not asked for start-up.`); continue; }
-      if (driveOut(ac)) { sys(`${APT.standWord === 'gate' ? 'Gate' : 'Stand'} ${ac.stand.id} is a taxi-in, taxi-out stand: no push back. Give ${ac.cs} its taxi (TAXI) and it taxis out forwards.`); continue; }
+      if (driveOut(ac)) {   // a taxi-in, taxi-out stand: no push back, so PUSH (and any direction after it) is taken as the taxi
+        sys(`${APT.standWord === 'gate' ? 'Gate' : 'Stand'} ${ac.stand.id} is a taxi-in, taxi-out stand: no push back, so ${ac.cs} taxis out forwards. Next time just give it TAXI.`);
+        if (pushDir(ac, toks[i+1]) || /^(N|S|E|W|NE|NW|SE|SW|NORTH|SOUTH|EAST|WEST)$/.test(toks[i+1] || '')) toks.splice(i + 1, 1);
+        toks[i] = 'TAXI'; i--; continue; }
       const dir = pushDir(ac, toks[i+1]); if (dir) i++;
       { const why = typeof blkPushCheck === 'function' && blkPushCheck(ac, dir || pushFace(ac)); if (why) { sys(why, true); continue; } }   // something parked in the way (standblock.js)
       const face = dir || pushFace(ac); ac.state = 'PUSH'; ac.need = null; ac.face = face; ac.sid = sidName(ac.gate, depRw(ac), ac);
