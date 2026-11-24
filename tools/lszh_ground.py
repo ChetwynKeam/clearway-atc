@@ -1,0 +1,951 @@
+# Zurich (LSZH) aerodrome layout from OpenStreetMap + the Jeppesen charts (10-9 series) -> src/airports/lszh-ground.js
+# usage: python3 tools/lszh_ground.py aerodrome.json src/airports/lszh-ground.js
+# Three runways, each with its own frame (m from its low-numbered end, offset to the left), holding points and crossings:
+#   16/34 (3,700 x 60 m; the 34 threshold displaced 455 m), 14/32 (3,300 x 60 m; the 14 threshold displaced 150 m) and
+#   10/28 (2,500 x 60 m), which crosses 16/34 west of the terminals.
+# Adapted from tools/eham_ground.py. Sources: the runway pavement ends and thresholds are OpenStreetMap's runway ways (they
+# agree with the charts' lengths and displaced thresholds to a few metres); the taxiway centrelines, aprons and buildings
+# OpenStreetMap's (the API's map call in tiles: tools/lszh/osm_fetch.py); the holding positions OpenStreetMap's
+# holding_position nodes (runway ones named as on the Jeppesen 10-9 charts: A1, B1, E1 ...; the CAT II/III ones (type ILS)
+# left out; the intermediate ones the IHPs); the stands OpenStreetMap's parking position lines, the stop point at the end
+# away from the lane (checked against the Jeppesen 10-9D list).
+import json, math, re, sys, os, collections
+import numpy as np
+OSM, OUT = sys.argv[1:3]
+A = (47.458, 8.548)                                                  # ARP N47 27.48 E008 32.88 (Jeppesen 10-9)
+KX = 60*1852*math.cos(math.radians(A[0])); KY = 60*1852
+def en(lat, lon): return ((lon - A[1])*KX, (lat - A[0])*KY)
+r1 = lambda v: round(v, 1)
+E = json.load(open(OSM))['elements']
+NODE = {}
+for e in E:
+    if e['type'] == 'node': NODE[e['id']] = en(e['lat'], e['lon'])
+for e in E:   # the API's map call gives ways as node lists: add their geometry
+    if e['type'] == 'way' and 'geometry' not in e and all(n in NODE for n in e['nodes']):
+        e['geometry'] = [{'lat': A[0] + NODE[n][1]/KY, 'lon': A[1] + NODE[n][0]/KX} for n in e['nodes']]
+def _ll(p): return (A[0] + p[1]/KY, A[1] + p[0]/KX)
+_new = [-100]
+def _nn(p, tags=None):
+    _new[0] -= 1; i = _new[0]; NODE[i] = p; la, lo = _ll(p)
+    E.append({'type': 'node', 'id': i, 'lat': la, 'lon': lo, **({'tags': tags} if tags else {})}); return i
+ways = [e for e in E if e['type'] == 'way']
+WAY = {w['id']: w for w in ways}
+def tagged(w, *k): return w.get('tags', {}).get('aeroway') in k
+def insert_at(w, i, q, tags=None):
+    n = _nn(q, tags); la, lo = _ll(q); w['nodes'].insert(i + 1, n); w['geometry'].insert(i + 1, {'lat': la, 'lon': lo}); return n
+
+
+# ── runways: pavement ends a (the low-numbered end) and b, thresholds in metres from each end, elevations (Jeppesen)
+P = lambda la, lo: en(la, lo)
+RWYS = [
+    ('1634', '16', '34', P(47.475713, 8.535937), P(47.445562, 8.556699), {'16': 0, '34': 455}, 1390, 1388),
+    ('1432', '14', '32', P(47.483075, 8.534723), P(47.461291, 8.564461), {'14': 150, '32': 0}, 1402, 1402),
+    ('1028', '10', '28', P(47.458939, 8.537479), P(47.456599, 8.570453), {'10': 0, '28': 0}, 1391, 1416),
+]
+runways, FR = [], {}
+EXT = {}
+for rid, lo, hi, a, b, dth, elo, ehi in RWYS:
+    if rid in EXT:
+        d = math.dist(a, b); u_ = ((b[0]-a[0])/d, (b[1]-a[1])/d); e0, e1 = EXT[rid]
+        a = (a[0] - u_[0]*e0, a[1] - u_[1]*e0); b = (b[0] + u_[0]*e1, b[1] + u_[1]*e1); dth = {lo: dth[lo] + e0, hi: dth[hi] + e1}
+    if a is None:
+        t = P('521858.19N', '0044646.89E'); d = math.dist(t, b); a = (t[0] + (t[0]-b[0])/d*575, t[1] + (t[1]-b[1])/d*575)
+    L = math.dist(a, b); U = ((b[0]-a[0])/L, (b[1]-a[1])/L); N = (-U[1], U[0])
+    mo = (lambda a, U, N: lambda p: ((p[0]-a[0])*U[0] + (p[1]-a[1])*U[1], (p[0]-a[0])*N[0] + (p[1]-a[1])*N[1]))(a, U, N)
+    thr = {lo: r1(dth[lo]), hi: r1(L - dth[hi])}
+    print(rid, 'len', r1(L), 'thr', thr)
+    runways.append({'id': rid, 'lo': lo, 'hi': hi, 'a': [r1(a[0]), r1(a[1])], 'b': [r1(b[0]), r1(b[1])], 'len': r1(L), 'thr': thr, 'elev': {lo: elo, hi: ehi}, 'width': 60})
+    FR[rid] = {'a': a, 'U': U, 'N': N, 'L': L, 'mo': mo, 'thr': thr, 'lo': lo, 'hi': hi, 'w': 60}
+def onC_of(R): return lambda p: abs(p[1]) < 3 and -60 < p[0] < R['L'] + 60
+def onAny(p): return any(onC_of(R)(R['mo'](p)) for R in FR.values())
+
+# ── taxi ways
+ALIAS = {'ECHO': 'E', 'ROMEO': 'R', 'ZULU': 'Z'}
+def tname(r):
+    """the charts' names as written (A, E10, LINK4, INNER); OpenStreetMap's "Link 4" is LINK4, "Echo" is E"""
+    if not r: return None
+    r = re.sub(r'\(.*?\)', '', r).strip().upper()
+    r = ALIAS.get(r, r)
+    if re.fullmatch(r'LINK ?\d', r): return r.replace(' ', '')
+    if r == 'INNER': return r
+    r = re.sub(r'^([A-Z]+)-?(\d+)(-\d+)?$', r'\1\2', r).replace('-', '').replace(' ', '')
+    return r if re.fullmatch(r'[A-Z]{1,2}\d{0,2}[A-Z]?', r) and r not in ('SSH',) else None
+taxi = [w for w in ways if tagged(w, 'taxiway', 'taxilane') and 'geometry' in w and w.get('tags', {}).get('access') != 'no'
+        and w.get('tags', {}).get('service') != 'drive-through' and not re.search(r'(?i)vehicle|road', w.get('tags', {}).get('name', ''))]
+taxi = [w for w in taxi if any(-1900 < NODE[n][0] < 2400 and -1900 < NODE[n][1] < 3000 for n in w['nodes'])]
+def seg_d(p, a, b):
+    dx, dy = b[0]-a[0], b[1]-a[1]; L2 = dx*dx + dy*dy or 1e-9; u = max(0, min(1, ((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L2))
+    return math.dist(p, (a[0] + dx*u, a[1] + dy*u))
+def way_d(p, w): return min(seg_d(p, NODE[w['nodes'][i]], NODE[w['nodes'][i+1]]) for i in range(len(w['nodes']) - 1))
+# the intermediate holding positions OpenStreetMap names (as on the 10-9B chart: A2 and B2 by the 28 end, P1, P2, Y1, Z1)
+IHP_NAMES = {'A2', 'B2', 'P1', 'P2', 'Y1', 'Z1'}
+OLS_HOLDS = set()
+# ── OpenStreetMap against the chart: what it lacks
+def nearest_taxi_node(p, ok=lambda w: True):
+    return min(((math.dist(NODE[n], p), n) for w in taxi if ok(w) for n in w['nodes']), key=lambda t: t[0])[1]
+def add_way(ref, pts, start=None, end=None):
+    ids = ([start] if start else []) + [_nn(q) for q in pts] + ([end] if end else [])
+    w = {'type': 'way', 'id': -len(ways) - 1000, 'nodes': ids, 'geometry': [{'lat': _ll(NODE[i])[0], 'lon': _ll(NODE[i])[1]} for i in ids], 'tags': {'aeroway': 'taxiway', 'ref': ref}}
+    E.append(w); ways.append(w); taxi.append(w); WAY[w['id']] = w; return w
+def on_centre(rid, m):
+    R = FR[rid]; return (R['a'][0] + R['U'][0]*m, R['a'][1] + R['U'][1]*m)
+# taxiways that cross with no shared node in OpenStreetMap (A19 over A19W and A19E): a junction where they cross
+def _xpt(p, q, a, b):
+    d = (q[0]-p[0])*(b[1]-a[1]) - (q[1]-p[1])*(b[0]-a[0])
+    if abs(d) < 1e-9: return None
+    t = ((a[0]-p[0])*(b[1]-a[1]) - (a[1]-p[1])*(b[0]-a[0]))/d; u = ((a[0]-p[0])*(q[1]-p[1]) - (a[1]-p[1])*(q[0]-p[0]))/d
+    return (p[0] + t*(q[0]-p[0]), p[1] + t*(q[1]-p[1])) if 0.02 < t < 0.98 and 0.02 < u < 0.98 else None
+_cell = collections.defaultdict(list)
+for w in taxi:
+    for i in range(len(w['nodes']) - 1):
+        a, b = NODE[w['nodes'][i]], NODE[w['nodes'][i+1]]
+        for cx_ in range(int(min(a[0], b[0])//80), int(max(a[0], b[0])//80) + 1):
+            for cy_ in range(int(min(a[1], b[1])//80), int(max(a[1], b[1])//80) + 1): _cell[(cx_, cy_)].append((w['id'], i))
+_hits, _seen = collections.defaultdict(list), set()
+for lst in _cell.values():
+    for j, (w1, i1) in enumerate(lst):
+        for w2, i2 in lst[j+1:]:
+            if w1 == w2 or (w1, i1, w2, i2) in _seen: continue
+            _seen.add((w1, i1, w2, i2)); A1, B1 = WAY[w1]['nodes'][i1:i1+2]; A2, B2 = WAY[w2]['nodes'][i2:i2+2]
+            if {A1, B1} & {A2, B2}: continue
+            if WAY[w1].get('tags', {}).get('layer') != WAY[w2].get('tags', {}).get('layer'): continue
+            q = _xpt(NODE[A1], NODE[B1], NODE[A2], NODE[B2])
+            if q: _hits[w1].append((i1, q)); _hits[w2].append((i2, q))
+_jn = {}
+for wid, hs_ in _hits.items():
+    w = WAY[wid]
+    for i, q in sorted(hs_, key=lambda t: (-t[0], -math.dist(NODE[w['nodes'][t[0]]], t[1]))):
+        k = (round(q[0], 1), round(q[1], 1))
+        if k in _jn:
+            n = _jn[k]; la, lo = _ll(q); w['nodes'].insert(i + 1, n); w['geometry'].insert(i + 1, {'lat': la, 'lon': lo})
+        else: _jn[k] = insert_at(w, i, q)
+print('junctions added where taxiways cross', len(_jn))
+MANUAL_HOLDS = []
+
+# ── holding positions: OpenStreetMap's. Runway-holding ones (type runway) are holding points, named by their ref or their
+# taxiway's name; the CAT II/III ones (type ILS, further out on the same taxiway) are left out; the intermediate ones are
+# the IHPs (the named ones keep their names, the rest are numbered along their taxiway further on).
+CHART_HOLDS = []
+_waysof = collections.defaultdict(list)
+for w in taxi:
+    for i, n in enumerate(w['nodes']): _waysof[n].append((w, i))
+for e in list(E):
+    if e['type'] != 'node' or e.get('tags', {}).get('aeroway') != 'holding_position': continue
+    t = e['tags']; typ = t.get('holding_position:type', 'runway' if t.get('ref') else 'intermediate'); n = e['id']; p = NODE[n]
+    e['tags'] = {k: v for k, v in t.items() if k != 'aeroway'}
+    if typ == 'ILS': continue
+    if not (-1900 < p[0] < 2400 and -1900 < p[1] < 3000): continue
+    if n not in _waysof:   # not on a mapped taxiway: onto the nearest one within 12 m
+        best = min(((seg_d(p, NODE[w['nodes'][i]], NODE[w['nodes'][i+1]]), w, i) for w in taxi for i in range(len(w['nodes']) - 1)), key=lambda x: x[0])
+        if best[0] > 12: print('holding position off the taxiways at', [round(c) for c in p]); continue
+        _, w, i = best; a_, b_ = NODE[w['nodes'][i]], NODE[w['nodes'][i+1]]; dx, dy = b_[0]-a_[0], b_[1]-a_[1]
+        u = max(0.02, min(0.98, ((p[0]-a_[0])*dx + (p[1]-a_[1])*dy)/(dx*dx + dy*dy or 1)))
+        n = insert_at(w, i, (a_[0] + dx*u, a_[1] + dy*u)); _waysof[n].append((w, i + 1))
+    ref = t.get('ref')
+    ref = re.sub(r'\s', '', ref).upper() if ref else None
+    tw = [tname(w['tags'].get('ref')) for w, _ in _waysof[n] if tname(w['tags'].get('ref'))]
+    if typ == 'runway':
+        # OpenStreetMap often names the stop bar after the parallel taxiway (E) where the chart names the link (E4): the link's
+        # own name wins when it has a number and the same letter
+        name = ref if ref and re.fullmatch(r'[A-Z]{1,2}\d{0,2}', ref) else (tw[0] if tw else ref)
+        spec = [x for x in tw if re.search(r'\d', x) and (not name or x[0] == name[0])]
+        if name and not re.search(r'\d', name) and spec: name = spec[0]
+        CHART_HOLDS.append((n, name, False))
+    else:
+        CHART_HOLDS.append((n, ref if ref in IHP_NAMES else (tw[0] if tw else None), ref in IHP_NAMES))
+def _rwy_off(p): return min(abs(R['mo'](p)[1]) for R in FR.values())
+# two runway holds with one name on one taxiway within 150 m: the one nearer the runway
+_keep = []
+for n, name, ihp in CHART_HOLDS:
+    twin = [m for m, nm2, i2 in CHART_HOLDS if m != n and nm2 == name and not ihp and not i2 and math.dist(NODE[m], NODE[n]) < 150]
+    if twin and _rwy_off(NODE[n]) > min(_rwy_off(NODE[m]) for m in twin): continue
+    _keep.append((n, name, ihp))
+CHART_HOLDS = _keep
+HP = {}; HPTYPE = {}
+def near_runway(p):
+    for R in FR.values():
+        m, o = R['mo'](p)
+        if -400 < m < R['L'] + 400 and abs(o) < 260: return True
+    return False
+for n, name, ihp in CHART_HOLDS:
+    HP[n] = name; HPTYPE[n] = 'intermediate' if ihp or not near_runway(NODE[n]) else 'runway'
+for e in E:
+    if e['type'] == 'node' and e['id'] in HP: e.setdefault('tags', {}).update({'aeroway': 'holding_position', 'ref': HP[e['id']]})
+print('holding positions off the chart', len(HP), collections.Counter(HPTYPE.values()))
+print(sorted((str(v), HPTYPE[k]) for k, v in HP.items()))
+print('unnamed holding positions', [[round(c) for c in NODE[k]] for k, v in HP.items() if not v])
+use = collections.Counter(n for w in taxi for n in w['nodes'])
+ends = set(n for w in taxi for n in (w['nodes'][0], w['nodes'][-1]))
+gnodes = set(n for n, c in use.items() if c > 1) | ends | (set(HP) & set(use))
+def inpoly(p, poly):
+    x, y = p; c = False
+    for i in range(len(poly)):
+        x1, y1 = poly[i]; x2, y2 = poly[i-1]
+        if (y1 > y) != (y2 > y) and x < (x2-x1)*(y-y1)/(y2-y1) + x1: c = not c
+    return c
+apron_ways = [w for w in ways if tagged(w, 'apron') and w['nodes'][0] == w['nodes'][-1]]
+aprons = [[NODE[n] for n in w['nodes']] for w in apron_ways]
+for e in E:
+    if e['type'] == 'relation' and e.get('tags', {}).get('aeroway') == 'apron':
+        for m in e.get('members', []):
+            if m.get('role') == 'outer' and 'geometry' in m: aprons.append([en(g['lat'], g['lon']) for g in m['geometry']])
+segs = []                                                          # [u, v, name, [mid points], wayid]
+for w in taxi:
+    ref = tname(w['tags'].get('ref') or (w['tags'].get('name') if re.match(r'^[A-Za-z]{1,5}-?\d{0,2}[A-Za-z]?$', w['tags'].get('name') or '') else None)); ns = w['nodes']; cur = [ns[0]]
+    for n in ns[1:]:
+        cur.append(n)
+        if n in gnodes: segs.append([cur[0], cur[-1], ref, cur[1:-1], w['id']]); cur = [n]
+adj = collections.defaultdict(list)
+for s in segs: adj[s[0]].append(s); adj[s[1]].append(s)
+for it in range(8):
+    for s in segs:
+        if s[2]: continue
+        mid = NODE[s[3][len(s[3])//2]] if s[3] else tuple((NODE[s[0]][i] + NODE[s[1]][i])/2 for i in range(2))
+        if it == 0:
+            if any(inpoly(mid, p) for p in aprons): s[2] = 'APRON'
+            continue
+        na = [t[2] for t in adj[s[0]] if t is not s and t[2] and t[2] != 'APRON']; nb = [t[2] for t in adj[s[1]] if t is not s and t[2] and t[2] != 'APRON']
+        common = [x for x in na if x in nb]
+        if common: s[2] = common[0]
+        elif it >= 2 and (na or nb): s[2] = (nb or na)[0]
+for s in segs:
+    if not s[2]: s[2] = 'APRON'
+# ── each runway's entries and exits: from each holding position near it, every way down to its centreline
+nid = {}
+def NID(n): return nid.setdefault(n, 'n%d' % len(nid))
+holds, fil, rnodes, hs = {}, {}, [], {}
+usedBy = {}
+paths = []
+cnt = collections.Counter()
+drop = set()
+def nearest_rwy(p):
+    best = None
+    for rid, R in FR.items():
+        m, o = R['mo'](p)
+        if -350 < m < R['L'] + 350 and abs(o) < 235 and (best is None or abs(o) < best[1]): best = (rid, abs(o))
+    return best and best[0]
+def near_rwys(p):
+    out = []
+    for rid, R in FR.items():
+        m, o = R['mo'](p)
+        if -350 < m < R['L'] + 350 and abs(o) < 260: out.append((abs(o), rid))
+    return [r for _, r in sorted(out)]
+def inward(hp, R):
+    onC = onC_of(R); mo = R['mo']; res = []
+    def dfs(n, pts, used, depth):
+        if depth > 6 or len(res) > 6: return
+        for t in adj[n]:
+            if t in used: continue
+            seq = (t[3] if t[0] == n else t[3][::-1]) + [t[1] if t[0] == n else t[0]]
+            Pp = pts[:]; hit = False; bad = False
+            for q in seq:
+                pq = mo(NODE[q])
+                if abs(pq[1]) > abs(Pp[-1][1]) + 2 and abs(Pp[-1][1]) > 6: bad = True; break
+                Pp.append(pq)
+                if onC(pq): hit = True; break
+            if bad: continue
+            o = seq[-1]
+            if hit: res.append((Pp, used + [t])); continue
+            if o in HP: continue
+            dfs(o, Pp, used + [t], depth + 1)
+    dfs(hp, [mo(NODE[hp])], [], 0)
+    return res
+def hairpin(pl, win=80, most=150):
+    """the line doubles back on itself: within win metres its heading swings round by more than most degrees"""
+    L, B = [], []
+    for i in range(1, len(pl)):
+        d = math.dist(pl[i-1], pl[i])
+        if d < 0.5: continue
+        L.append(d); B.append(math.degrees(math.atan2(pl[i][0]-pl[i-1][0], pl[i][1]-pl[i-1][1])))
+    for i in range(len(B)):
+        acc = 0
+        for j in range(i + 1, len(B)):
+            acc += L[j-1]
+            if acc > win: break
+            if abs((B[j] - B[i] + 180) % 360 - 180) > most: return True
+    return False
+hold_used = []
+byrwy = collections.defaultdict(list)
+for n in HP:
+    if n not in use: continue
+    if HPTYPE.get(n) != 'runway': continue   # intermediate and ILS holding positions are not runway holding points (intermediate ones become IHPs)
+    for rid in near_rwys(NODE[n]): byrwy[rid].append(n)
+for rid, R in FR.items():
+    mo = R['mo']; thr = R['thr']; lo, hi = R['lo'], R['hi']; a, U, N = R['a'], R['U'], R['N']
+    for h in sorted(byrwy[rid], key=lambda n: mo(NODE[n])[0]):
+        # a holding position near two runways serves the nearer one it has a way onto
+        if any(inward(h, FR[r2]) for r2 in near_rwys(NODE[h])[:near_rwys(NODE[h]).index(rid)]): continue
+        ps = inward(h, R)
+        if not ps or not HP[h]: continue
+        ref = HP[h]
+        hs[NID(h)] = rid
+        for Pp, used in ps:
+            for t in used: drop.add(id(t))
+            hold_used.append((h, used))
+            Pp = Pp[::-1]
+            # where the lead lines leave the taxiway: about 10 m out from the runway edge; at a runway end, where the line-up
+            # turn is a hook through more than 90 degrees (E6 at the 18L end), further out so it sweeps round more widely
+            _hm = mo(NODE[h])[0]; _end = (Pp[0][0] < 250 and _hm < 120) or (Pp[0][0] > R['L'] - 250 and _hm > R['L'] - 120)
+            lim = min(50 if _end else 32, abs(Pp[-1][1])*0.5)
+            f = [Pp[0]]; rest = []
+            for i in range(1, len(Pp)):
+                if abs(Pp[i][1]) >= lim:
+                    p0, p1 = Pp[i-1], Pp[i]; k = (lim - abs(p0[1]))/(abs(p1[1]) - abs(p0[1]) or 1)
+                    f.append((p0[0] + (p1[0]-p0[0])*k, p0[1] + (p1[1]-p0[1])*k)); rest = Pp[i:-1]; break
+                f.append(Pp[i])
+            hp_m = mo(NODE[h])[0]
+            d = f[-1][0] - f[0][0]; ang = math.degrees(math.atan2(abs(f[-1][1] - f[0][1]), abs(d)))
+            dirs = [lo, hi] if ang > 55 else ([lo] if d > 0 else [hi])
+            m0 = f[0][0]; endr = lo if m0 < 250 and hp_m < 120 else hi if m0 > R['L'] - 250 and hp_m > R['L'] - 120 else ''
+            if endr: dirs = [lo, hi]
+            elif hairpin(Pp): dirs = []                  # it doubles back between the runway and the hold: no way off (or on) there
+            cnt[ref] += 1; key = ref if cnt[ref] == 1 else '%s~%d' % (ref, cnt[ref])
+            rn = 'R%d' % len(rnodes); fe, fn = (a[0] + U[0]*f[-1][0] + N[0]*f[-1][1], a[1] + U[1]*f[-1][0] + N[1]*f[-1][1])
+            rnodes.append([rn, r1(fe), r1(fn)])
+            hp = mo(NODE[h])
+            tws = [t[2] or 'APRON' for t in used]; tw = next((t for t in tws if t != 'APRON'), ref)
+            usedBy[key] = (h, used)
+            holds[key] = [NID(h), rn, rid, r1(hp[0]), r1(hp[1]), ','.join(dirs), endr, [[r1(m), r1(o)] for m, o in rest], tw]
+            fil[key] = [[r1(m), r1(o)] for m, o in f]
+            paths.append((h, f[0], key, rid))
+# ── a holding position meets its runway by several routes through the junction (B's nine ways onto 16R/34L), all drawn
+# as fillet lines. Of the routes that serve the same directions only the most direct stays; the taxiways the others ran
+# along are ordinary taxiways again (they were dropped as runway links).
+def flen(k):
+    pts = fil[k] + holds[k][7]; return sum(math.dist(pts[j], pts[j+1]) for j in range(len(pts) - 1))
+pick = {}
+for k, h in holds.items():
+    g = (h[0], h[2], h[5], h[6])
+    if g not in pick or flen(k) < flen(pick[g]) - 1: pick[g] = k
+keepk = set(pick.values()); ren = {}; nref = collections.Counter(); newh, newf = {}, {}
+for k in holds:
+    if k not in keepk: continue
+    base = k.split('~')[0]; nref[base] += 1; ren[k] = base if nref[base] == 1 else '%s~%d' % (base, nref[base])
+    newh[ren[k]] = holds[k]; newf[ren[k]] = fil[k]
+print('holds', len(holds), '->', len(newh))
+print('runway holding positions with no way onto a runway', sorted((str(HP[n]), [round(c) for c in NODE[n]]) for n in HP if HPTYPE[n] == 'runway' and not any(usedBy[k][0] == n for k in usedBy)))
+paths_all, holds_all, fil_all = paths, holds, fil
+paths = [(h, c, ren[k], rid) for h, c, k, rid in paths if k in ren]
+hold_used = [usedBy[k] for k in holds if k in keepk]
+drop = {id(t) for h, used in hold_used for t in used}
+holds, fil = newh, newf
+# a dropped taxiway the runway links don't actually run along (a connector a hold's path only passed through) is a taxiway again
+def to_world(k):
+    R = FR[holds[k][2]]; a, U, N = R['a'], R['U'], R['N']
+    return [(a[0] + U[0]*m + N[0]*o, a[1] + U[1]*m + N[1]*o) for m, o in fil[k] + holds[k][7]]
+def pdist(p, a, b):
+    dx, dy = b[0]-a[0], b[1]-a[1]; L2 = dx*dx + dy*dy or 1e-9; u = max(0, min(1, ((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L2)); return math.dist(p, (a[0] + dx*u, a[1] + dy*u))
+LINKS = [to_world(k) for k in holds]
+restored = 0
+for t in segs:
+    if id(t) not in drop or any(onAny(NODE[n]) for n in [t[0], t[1]] + t[3]): continue
+    pts = [NODE[t[0]]] + [NODE[n] for n in t[3]] + [NODE[t[1]]]; S = []
+    for j in range(len(pts) - 1):
+        L = math.dist(pts[j], pts[j+1]); k = max(1, int(L / 6))
+        S += [(pts[j][0] + (pts[j+1][0]-pts[j][0])*i/k, pts[j][1] + (pts[j+1][1]-pts[j][1])*i/k) for i in range(k)]
+    cov = sum(1 for q in S if any(pdist(q, w[i], w[i+1]) < 22 for w in LINKS for i in range(len(w) - 1)))
+    if cov < 0.5*len(S): drop.discard(id(t)); restored += 1
+print('taxiway segments restored', restored)
+# a holding point short of a junction (ZW2/ZW3: the parallel taxiway and W1 meet between the holds and runway 18R/36L):
+# the way on to the last junction that leads anywhere else stays a taxiway, so the taxiways there stay joined up; only
+# the rest is the runway link
+def on_rwy(t): return any(onAny(NODE[q]) for q in [t[0], t[1]] + t[3])
+keep = set()
+for h, used in hold_used:
+    n, seq = h, []
+    for t in used: n = t[1] if t[0] == n else t[0]; seq.append(n)
+    last = -1
+    for i, n in enumerate(seq[:-1]):
+        if any(t not in used and id(t) not in drop and not on_rwy(t) for t in adj[n]): last = i
+    for t in used[:last + 1]: keep.add(id(t))
+drop -= keep
+print('kept as taxiway', len(keep))
+# crossings: holding positions either side of one runway that reach the same centreline point
+xedges, XN, pairs = [], {}, set()
+for h1, c1, k1, r1d in paths_all:
+    for h2, c2, k2, r2d in paths_all:
+        if r1d != r2d or (h1, h2) in pairs or h1 >= h2: continue
+        R = FR[r1d]; mo = R['mo']
+        if abs(c1[0] - c2[0]) < 15 and mo(NODE[h1])[1]*mo(NODE[h2])[1] < 0 and abs(mo(NODE[h1])[0] - mo(NODE[h2])[0]) < 260 and 120 < c1[0] < R['L'] - 120:   # not over a runway end's threshold   # facing each other across the runway, not diagonally
+            pairs.add((h1, h2)); x = 'x%d' % len(XN); a, U, N = R['a'], R['U'], R['N']
+            XN[x] = (a[0] + U[0]*c1[0], a[1] + U[1]*c1[0])
+            for h, k in ((h1, k1), (h2, k2)):
+                Rr = [fil_all[k][-1]] + holds_all[k][7]   # straight over the runway from the centreline to where its taxiway meets the edge, then on to the hold
+                xedges.append([x, NID(h), holds_all[k][8], [[r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)] for m, o in Rr]])
+print('holds', len(holds), 'crossings', len(XN))
+def runway_seg(s): return id(s) in drop or any(onAny(NODE[n]) for n in [s[0], s[1]] + s[3])
+edges = []
+for s in segs:
+    if runway_seg(s): continue
+    edges.append([NID(s[0]), NID(s[1]), s[2], [[r1(x) for x in NODE[n]] for n in s[3]]])
+edges += xedges
+g = collections.defaultdict(set)
+for e in edges: g[e[0]].add(e[1]); g[e[1]].add(e[0])
+for h in holds.values(): g[h[0]].add(h[1]); g[h[1]].add(h[0])
+seen = set(); comps = []
+for n0 in list(g):
+    if n0 in seen: continue
+    st = [n0]; comp = set()
+    while st:
+        x = st.pop()
+        if x in comp: continue
+        comp.add(x); st += list(g[x])
+    seen |= comp; comps.append(comp)
+big = max(comps, key=len); print('components', sorted(len(c) for c in comps)[-6:])
+edges = [e for e in edges if e[0] in big]
+inv = {v: k for k, v in nid.items()}
+for x, p in XN.items(): inv[x] = x; NODE[x] = p
+holds = {k: h for k, h in holds.items() if h[0] in big}
+nodes = [[k, r1(NODE[inv[k]][0]), r1(NODE[inv[k]][1])] for k in sorted({x for e in edges for x in e[:2]} | {h[0] for h in holds.values()}, key=lambda s: (s[0], int(s[1:])))]
+hs = {k: v for k, v in hs.items() if k in big}
+fil = {k: fil[k] for k in holds}
+# ── one junction is often mapped as several nodes a few metres apart (one per overlapping way: B, B8 and B9 over the same
+# pavement), which draws the junction as a mesh of near-parallel lines. Nodes within 7 m become one, and of the edges that
+# then join the same two nodes only the shortest stays.
+MERGE_M = 7
+deg = collections.Counter()
+for e in edges: deg[e[0]] += 1; deg[e[1]] += 1
+hold_nodes = {h[0] for h in holds.values()}
+ids = sorted({x for e in edges for x in e[:2]} | hold_nodes, key=lambda i: (i not in hold_nodes, -deg[i], i))
+grid = collections.defaultdict(list); M = {}
+for i in ids:
+    if i[0] == 'x': M[i] = i; continue
+    p = NODE[inv[i]]; gx, gy = int(p[0] // MERGE_M), int(p[1] // MERGE_M)
+    rep = next((q for dx in (-1, 0, 1) for dy in (-1, 0, 1) for q in grid[(gx + dx, gy + dy)] if math.dist(NODE[inv[q]], p) < MERGE_M), None)
+    if rep is None: grid[(gx, gy)].append(i); rep = i
+    M[i] = rep
+def elen(e): 
+    pts = [NODE[inv[e[0]]]] + [tuple(q) for q in e[3]] + [NODE[inv[e[1]]]]
+    return sum(math.dist(pts[j], pts[j+1]) for j in range(len(pts) - 1))
+best = {}
+for e in edges:
+    a, b = M[e[0]], M[e[1]]
+    if a == b: continue
+    k = (min(a, b), max(a, b)); L = elen(e)
+    if k not in best or L < best[k][0] - 0.5 or (abs(L - best[k][0]) <= 0.5 and (best[k][1][2] == 'APRON') and e[2] != 'APRON'): best[k] = (L, [a, b, e[2], e[3]])
+print('merged nodes', len(ids) - len(set(M.values())), 'edges', len(edges), '->', len(best))
+edges = [v[1] for v in best.values()]
+holds = {k: [M.get(h[0], h[0])] + h[1:] for k, h in holds.items()}
+hs = {M.get(k, k): v for k, v in hs.items()}
+nid = {k: M.get(v, v) for k, v in nid.items()}
+nodes = [[k, r1(NODE[inv[k]][0]), r1(NODE[inv[k]][1])] for k in sorted({x for e in edges for x in e[:2]} | {h[0] for h in holds.values()}, key=lambda s: (s[0], int(s[1:])))]
+# ── IHPs: the intermediate holding positions. The ones the AIP names (VK, VL, VM on V; AS on A, BS on B; GD and GL at the
+# K-apron; HN on H) keep their names; any other stop bar away from a runway is named after its taxiway, numbered along
+# it past every name already in use (taxiways, holding points and stands: A31 is a stand, so A's go on from there)
+ihps = []
+hnodes = {h[0] for h in holds.values()}
+_byref = collections.defaultdict(list)
+# the stands: OpenStreetMap's parking position lines; the stop point is the end away from the taxiway network
+def _netd(p): return min(seg_d(p, NODE[w['nodes'][i]], NODE[w['nodes'][i+1]]) for w in taxi for i in range(0, len(w['nodes']) - 1))
+osm_lines = collections.defaultdict(list)
+for w in ways:
+    r = w.get('tags', {}).get('ref')
+    if tagged(w, 'parking_position') and r and len(w['nodes']) > 1 and all(n in NODE for n in w['nodes']): osm_lines[r.strip().upper()].append([NODE[n] for n in w['nodes']])
+AIP = {}
+for sid, ls in osm_lines.items():
+    q = max(ls, key=lambda q: math.dist(q[0], q[-1]))
+    if not (-1900 < q[0][0] < 2400 and -1900 < q[0][1] < 3000): continue
+    AIP[sid] = q[-1] if _netd(q[-1]) > _netd(q[0]) else q[0]
+# GA stands in dead-end nooks that can only be reached by turning round on the lane (the ground audit): left out
+for sid in ['315', '316', '317', '318', '319', '320', 'W41', 'W42', 'W43', 'W44', 'W45', 'W46']: AIP.pop(sid, None)
+STAND_IDS = sorted(AIP)
+TAKEN = {tname(w['tags'].get('ref') or '') for w in taxi} | {re.sub(r'~\d+$', '', k) for k in holds} | {v for v in HP.values() if v} | set(STAND_IDS)
+for n, ref in HP.items():
+    if HPTYPE.get(n) == 'runway' or not ref or n not in nid or nid[n] not in big or nid[n] in hnodes: continue
+    if ref in IHP_NAMES or ref in OLS_HOLDS:
+        if ref not in [x[0] for x in ihps]: ihps.append([ref, nid[n]])
+        continue
+    if any(math.dist(NODE[n], NODE[inv_h]) < 25 for inv_h in [k for k, v in nid.items() if v in hnodes]): continue
+    _byref[re.match(r'[A-Z]+', ref)[0]].append(n)
+for ref, ns in sorted(_byref.items()):
+    ns.sort(key=lambda n: (round(-NODE[n][1]/60), NODE[n][0]))
+    seen = set(); num = 0
+    for n in ns:
+        if nid[n] in seen: continue
+        seen.add(nid[n]); num += 1
+        while ref + str(num) in TAKEN: num += 1
+        TAKEN.add(ref + str(num)); ihps.append(['%s%d' % (ref, num), nid[n]])
+# ── stands: every one at the AIP's INS coordinates (the stop position). The lead-in is OpenStreetMap's painted line for
+# the stand where it ends within 15 m of the AIP position; otherwise a straight line back from the stop position along
+# the heading of the nearest mapped stand line on the same row (or square to the lane in front) to the lane.
+segpts = []
+for e in edges:
+    pl = [NODE[inv[e[0]]]] + [tuple(p) for p in e[3]] + [NODE[inv[e[1]]]]
+    for i in range(len(pl) - 1): segpts.append((e, i, pl[i], pl[i+1]))
+def ray_hit(p, dvec, maxd=160):
+    best = None
+    for e, i, q0, q1 in segpts:
+        ex, ey = q1[0]-q0[0], q1[1]-q0[1]; den = dvec[0]*ey - dvec[1]*ex
+        if abs(den) < 1e-9: continue
+        t = ((q0[0]-p[0])*ey - (q0[1]-p[1])*ex)/den; u = ((q0[0]-p[0])*dvec[1] - (q0[1]-p[1])*dvec[0])/den
+        if 5 < t < maxd and -0.001 <= u <= 1.001 and (best is None or t < best[0]): best = (t, e, i, u)
+    return best
+def nearest_seg(p):
+    best = None
+    for e, i, q0, q1 in segpts:
+        ex, ey = q1[0]-q0[0], q1[1]-q0[1]; LL = ex*ex + ey*ey or 1; u = max(0, min(1, ((p[0]-q0[0])*ex + (p[1]-q0[1])*ey)/LL))
+        q = (q0[0] + ex*u, q0[1] + ey*u); d = math.dist(p, q)
+        if best is None or d < best[0]: best = (d, e, i, u, q)
+    return best
+def segpts_of(e, i):
+    pl = [NODE[inv[e[0]]]] + [tuple(p) for p in e[3]] + [NODE[inv[e[1]]]]
+    return pl[i], pl[i+1]
+def crosses(a, b, skip):
+    def cr(o, p, q): return (p[0]-o[0])*(q[1]-o[1]) - (p[1]-o[1])*(q[0]-o[0])
+    for e, i, q0, q1 in segpts:
+        if e is skip: continue
+        d1, d2, d3, d4 = cr(a, b, q0), cr(a, b, q1), cr(q0, q1, a), cr(q0, q1, b)
+        if d1*d2 < 0 and d3*d4 < 0:
+            den = (b[0]-a[0])*(q1[1]-q0[1]) - (b[1]-a[1])*(q1[0]-q0[0]); tt = ((q0[0]-a[0])*(q1[1]-q0[1]) - (q0[1]-a[1])*(q1[0]-q0[0]))/den
+            Lab = math.dist(a, b)
+            if 6 < tt*Lab < Lab - 6: return True
+    return False
+def bear(a, b): return math.degrees(math.atan2(b[0]-a[0], b[1]-a[1])) % 360
+LINE, MAPPED_HD = {}, []
+for sid, ap in AIP.items():
+    best = None
+    for q in osm_lines.get(sid, []):
+        if math.dist(q[0], ap) < math.dist(q[-1], ap): q = q[::-1]
+        if math.dist(q[-1], ap) < 15 and (best is None or math.dist(q[-1], ap) < math.dist(best[-1], ap)): best = q
+    if best and math.dist(best[0], best[-1]) > 12:
+        LINE[sid] = best[:-1] + [ap]; MAPPED_HD.append((ap, bear(best[-2] if math.dist(best[-2], best[-1]) > 3 else best[0], best[-1]), sid))
+# the parking areas (Jeppesen 10-9B/C): Dock A, Dock B and Dock E (the midfield dock), the remote C, D, G, H, I, P and T
+# stands and W01-W30 south-west of 16/34, the freight stands F, and the general aviation sectors (V, W33-W60, the numbered
+# ones in the east by the 28 end, SD)
+def term(sid):
+    if sid[0].isdigit() or sid == 'SD' or re.fullmatch(r'P3[A-Z]', sid): return 'GA'
+    k = re.match(r'[A-Z]+', sid)[0]; n = int(re.sub(r'\D', '', sid) or 0)
+    if k == 'V' or (k == 'W' and n >= 33): return 'GA'
+    return k[0]
+def use_of(sid): return 'P'
+gates, splits = [], []
+for sid, ap in sorted(AIP.items(), key=lambda kv: ((re.match(r'[A-Z]*', kv[0])[0]), int(re.sub(r'\D', '', kv[0]) or 0), kv[0])):
+    p = ap; line = LINE.get(sid)
+    if line:
+        hd = bear(line[-2], p) if math.dist(line[-2], p) > 3 else bear(line[0], p)
+        n0 = nearest_seg(line[0])
+        hit = (n0[0], n0[1], n0[2], n0[3]) if n0[0] < 30 else ray_hit(p, (-math.sin(math.radians(hd)), -math.cos(math.radians(hd))), 200)
+    else:
+        # the heading of the nearest mapped stand line on its row (same apron, within 70 m), else square to the lane in front
+        near = sorted((math.dist(q, p), h) for q, h, s2 in MAPPED_HD if term(s2) == term(sid))
+        ns = nearest_seg(p)
+        hd = near[0][1] if near and near[0][0] < 70 else bear(ns[4], p)
+        hit = ray_hit(p, (-math.sin(math.radians(hd)), -math.cos(math.radians(hd))), 200)
+    if not hit:
+        ns = nearest_seg(p)
+        if ns[0] > 220: print('stand', sid, 'no lane'); continue
+        hit = (ns[0], ns[1], ns[2], ns[3])
+    t, e, i, u = hit; q0, q1 = segpts_of(e, i); lq = (q0[0] + (q1[0]-q0[0])*u, q0[1] + (q1[1]-q0[1])*u)
+    # the painted line may run on through the lane in front of the stand to one further away: the lead-in starts at the
+    # first lane met going back from the stop point along the stand's heading
+    rb = (-math.sin(math.radians(hd)), -math.cos(math.radians(hd))); h2 = ray_hit(p, rb, 200)
+    if h2 and h2[0] < math.dist(p, lq) - 12:
+        t, e, i, u = h2; q0, q1 = segpts_of(e, i); lq = (q0[0] + (q1[0]-q0[0])*u, q0[1] + (q1[1]-q0[1])*u); hit = (t, e, i, u); line = None
+    paint = [lq] + (line[1:] if line else [p]) if line or math.dist(p, lq) <= 110 else None
+    if paint and any(crosses(paint[j], paint[j+1], e) for j in range(len(paint) - 1)): paint = None
+    splits.append((sid, hit))
+    gates.append([sid, term(sid), [r1(p[0]), r1(p[1])], hit, round(hd, 1), [[r1(x) for x in pt] for pt in paint] if paint else 0, '', use_of(sid)])
+# the largest wingspan each stand takes: the AIP charts give it only for some (A-apron 36 m and so on), so it is worked
+# out from the spacing of the stands on the row: the distance to the nearest stand it can be used alongside, less a 7.5 m
+# clearance (code C 3 m to code E/F 4.5 m either side, AD 2.20 para 4.1), between 24 m and 80 m. Stands closer together
+# than 32 m overlap (the MARS-style alternatives: U10E/U10W, M61/M62/M63 ...) and are never used together ("vac").
+POS_ = {g[0]: tuple(g[2]) for g in gates}
+vac = collections.defaultdict(set)
+for a_ in POS_:
+    for b_ in POS_:
+        if a_ < b_ and term(a_) == term(b_) and math.dist(POS_[a_], POS_[b_]) < 32: vac[a_].add(b_); vac[b_].add(a_)
+for g in gates:
+    sid = g[0]; others = [math.dist(POS_[sid], POS_[o]) for o in POS_ if o != sid and o not in vac[sid] and term(o) == term(sid)]
+    d = min(others) if others else 80
+    g[6] = r1(max(24, min(80, d - 7.5)))
+vac = {k: sorted(v) for k, v in sorted(vac.items())}
+print('stands', len(gates), 'overlapping pairs', sum(len(v) for v in vac.values())//2)
+byedge = collections.defaultdict(list)
+for sid, (t, e, i, u) in splits: byedge[id(e)].append((i + u, sid, e))
+newedges, gnode, POS = [], {}, {}
+for e in edges:
+    lst = sorted(byedge.get(id(e), []))
+    if not lst: newedges.append(e); continue
+    pl = [NODE[inv[e[0]]]] + [tuple(p) for p in e[3]] + [NODE[inv[e[1]]]]
+    prev, mids, k = e[0], [], 0
+    for idx in range(len(pl) - 1):
+        while k < len(lst) and lst[k][0] <= idx + 1:
+            f = lst[k][0] - idx; q0, q1 = pl[idx], pl[idx+1]; q = (q0[0] + (q1[0]-q0[0])*f, q0[1] + (q1[1]-q0[1])*f)
+            sid = lst[k][1]
+            if mids == [] and prev in POS and math.dist(POS[prev], q) < 4: gnode[sid] = prev; k += 1; continue
+            if mids == [] and prev not in POS and math.dist(NODE[inv[prev]], q) < 3: gnode[sid] = prev; k += 1; continue
+            nn = 's' + sid
+            nodes.append([nn, r1(q[0]), r1(q[1])]); POS[nn] = q
+            newedges.append([prev, nn, e[2], [[r1(x) for x in m] for m in mids]]); prev, mids = nn, []; gnode[sid] = nn; k += 1
+        if idx + 1 < len(pl) - 1: mids.append(pl[idx+1])
+    newedges.append([prev, e[1], e[2], [[r1(x) for x in m] for m in mids]])
+    for j in range(k, len(lst)): gnode[lst[j][1]] = e[1]
+edges = newedges
+for gt in gates: gt[3] = gnode[gt[0]]
+# ── aprons, buildings, hangars
+def ring(pts): return [[r1(x) for x in p] for p in pts]
+aprons_out = [ring(p) for p in aprons]
+# a stand OpenStreetMap leaves just outside its apron outline (K11-K16 along G, M53-M57 by the M-apron road): a patch of
+# apron round the stand and back to its lane, so it is drawn on pavement
+for g in gates:
+    p = g[2]; q = g[5][0] if g[5] else p; hd = math.radians(g[4]); u = (math.sin(hd), math.cos(hd)); v = (u[1], -u[0])
+    L = max(20, math.dist(p, q)); W_ = 24
+    mid = (p[0] - u[0]*min(34, L*0.4), p[1] - u[1]*min(34, L*0.4))   # where the game puts the aircraft's middle
+    if g[7] in ('TT', 'DI') or all(any(inpoly(x, ap) for ap in aprons) for x in (p, mid)): continue
+    pts = [(p[0] + u[0]*20 + v[0]*s_*W_, p[1] + u[1]*20 + v[1]*s_*W_) for s_ in (-1, 1)] + [(p[0] - u[0]*L + v[0]*s_*W_, p[1] - u[1]*L + v[1]*s_*W_) for s_ in (1, -1)]
+    aprons_out.append(ring(pts))
+AIRSIDE = [n for w in taxi for n in w['nodes'][::3] if n in NODE] + [n for w in apron_ways for n in w['nodes'] if n in NODE]
+blds = []
+for w in ways:
+    t = w.get('tags', {})
+    if 'geometry' not in w or w['nodes'][0] != w['nodes'][-1]: continue
+    if t.get('aeroway') in ('terminal', 'hangar') or (t.get('building') and len(w['nodes']) > 4):
+        pts = ring([NODE[n] for n in w['nodes']]); xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
+        area = abs(sum(pts[i][0]*pts[i-1][1] - pts[i-1][0]*pts[i][1] for i in range(len(pts))))/2
+        if area < 900 or not (-3500 < xs[0] < 3500 and -3500 < ys[0] < 3500): continue
+        cxy = (sum(xs)/len(xs), sum(ys)/len(ys))
+        if t.get('aeroway') not in ('terminal', 'hangar') and min(math.dist(cxy, NODE[n]) for n in AIRSIDE) > 140: continue
+        hang = t.get('aeroway') == 'hangar' or t.get('building') == 'hangar'
+        blds.append({'pts': pts, 'h': 18 if hang else 16 if t.get('aeroway') == 'terminal' else 9, **({'roof': 'hangar'} if hang else {}), **({'name': t['name']} if t.get('name') else {})})
+for e in E:
+    if e['type'] == 'relation' and e.get('tags', {}).get('aeroway') == 'terminal':
+        for m in e.get('members', []):
+            if m.get('role') == 'outer' and 'geometry' in m:
+                blds.append({'pts': ring([en(g['lat'], g['lon']) for g in m['geometry']]), 'h': 18, 'name': e['tags'].get('name')})
+# no taxiway along or diagonally over a runway's pavement: OpenStreetMap joins some taxiways across a runway (B10 to L over
+# 16R/34L), but the way over a runway is a crossing (x) or a holding point's own link, never an ordinary taxiway
+def on_rwy_pave(p):
+    for R in FR.values():
+        m, o = R['mo'](p)
+        if -60 < m < R['L'] + 60 and abs(o) < 30: return True
+    return False
+_posn = {n[0]: (n[1], n[2]) for n in nodes}
+_before = len(edges)
+def _over(e):
+    if e[0][0] in 'xR' or e[1][0] in 'xR': return False
+    pl = [_posn[e[0]]] + [tuple(p) for p in e[3]] + [_posn[e[1]]]
+    mids = pl + [((pl[i][0]+pl[i+1][0])/2, (pl[i][1]+pl[i+1][1])/2) for i in range(len(pl) - 1)]
+    return sum(on_rwy_pave(p) for p in mids) >= 1
+edges = [e for e in edges if not _over(e)]
+print('taxiway stretches over a runway removed', _before - len(edges))
+# lanes that just stop (an OpenStreetMap taxilane mapped on past the last stand, a stub at an apron edge): pruned back to the
+# junction they leave (up to 1,500 m: the lanes towards the R-apron, closed for rebuilding, and the like). Holding points, stands' lead-in nodes, IHPs and crossings stay.
+keep = {h[0] for h in holds.values()} | {g[3] for g in gates} | {i[1] for i in ihps} | set(hs)
+_pos = {n[0]: (n[1], n[2]) for n in nodes}
+def _elen(e): pl = [_pos[e[0]]] + [tuple(q) for q in e[3]] + [_pos[e[1]]]; return sum(math.dist(pl[i], pl[i+1]) for i in range(len(pl) - 1))
+pruned = 0
+def _near_pt(e, n): pl = [_pos[e[0]]] + [tuple(q) for q in e[3]] + [_pos[e[1]]]; return pl[1] if e[0] == n else pl[-2]
+while True:
+    deg = collections.Counter(x for e in edges for x in e[:2])
+    gone = set()
+    # two curves left meeting in a V where the lane they joined was pruned (N, by the closed stretch east of E7)
+    for n, d in deg.items():
+        if d != 2 or n in keep or n[0] in 'xRs': continue
+        es = [e for e in edges if n in e[:2]]; P0 = _pos[n]; a, b = (_near_pt(e, n) for e in es)
+        h1, h2 = math.atan2(a[0]-P0[0], a[1]-P0[1]), math.atan2(b[0]-P0[0], b[1]-P0[1])
+        if abs((math.degrees(h1 - h2) + 180) % 360 - 180) < 30 and all(deg[e[0] if e[1] == n else e[1]] >= 3 for e in es): gone |= {id(e) for e in es}
+    for n, d in deg.items():
+        if d != 1 or n in keep or n[0] in 'xRs': continue
+        chain, cur, L = [], n, 0
+        while True:
+            e = next(e for e in edges if cur in e[:2] and id(e) not in {id(c) for c in chain}); chain.append(e); L += _elen(e)
+            nx = e[1] if e[0] == cur else e[0]
+            if deg[nx] != 2 or nx in keep or nx[0] in 'xRs' or L > 1500: break
+            cur = nx
+        if L <= 1500 and (deg[nx] >= 3 or nx in keep): gone |= {id(e) for e in chain}
+    if not gone: break
+    pruned += len(gone); edges[:] = [e for e in edges if id(e) not in gone]
+used_n = {x for e in edges for x in e[:2]} | {h[0] for h in holds.values()}
+nodes[:] = [n for n in nodes if n[0] in used_n or n[0] in keep]
+print('dead-end lane stubs pruned', pruned)
+# shape points on top of an edge's own end (a stand's lead-in node mapped on a lane vertex) make a zero-length stub
+for e in edges: e[3] = [q for q in e[3] if math.dist(q, _pos[e[0]]) > 0.5 and math.dist(q, _pos[e[1]]) > 0.5]
+# ── junction fillets: OpenStreetMap has the taxiways meeting at sharp corners, where the painted centrelines (and
+# the pavement) sweep round in curves. At every junction or bend, each pair of taxiway stretches that turns between 30
+# and 150 degrees gets a curve from a point up to 45 m along one to a point along the other; at a plain bend the sharp
+# corner goes. Holding points, stands, runway and crossing points keep their corners.
+FIL_R = 45
+pos = {n[0]: (n[1], n[2]) for n in nodes}
+keepN = {h[0] for h in holds.values()} | set(hs) | set(gnode.values()) | {n for n in pos if n[0] in 'Rxs'}
+def plen(pl): return sum(math.dist(pl[i], pl[i+1]) for i in range(len(pl) - 1))
+def epl(e): return [pos[e[0]]] + [tuple(p) for p in e[3]] + [pos[e[1]]]
+def cut_at(pl, d):
+    """split a polyline d metres from its start: (point, the part before, the part after)"""
+    for i in range(len(pl) - 1):
+        L = math.dist(pl[i], pl[i+1])
+        if d <= L:
+            f = d/L if L else 0; q = (pl[i][0] + (pl[i+1][0]-pl[i][0])*f, pl[i][1] + (pl[i+1][1]-pl[i][1])*f)
+            return q, pl[:i+1] + [q], [q] + pl[i+1:]
+        d -= L
+    return None
+inc = collections.defaultdict(list)
+for e in edges: inc[e[0]].append(e); inc[e[1]].append(e)
+def away(e, n): pl = epl(e); return pl if e[0] == n else pl[::-1]
+fid = [0]; newn = []; fillets = []; cut = {}   # cut[(id(edge), node)] = distance from that node to its new point
+for n, es in inc.items():
+    if n in keepN or len(es) < 2: continue
+    es = [e for e in es if e[2] != 'APRON']   # apron lanes keep their own mapped paint
+    pairs = []
+    for i in range(len(es)):
+        for j in range(i + 1, len(es)):
+            a, b = away(es[i], n), away(es[j], n)
+            if len(a) < 2 or len(b) < 2: continue
+            pa_, pb_ = (cut_at(a, min(12, plen(a)*0.5)) or (a[1],))[0], (cut_at(b, min(12, plen(b)*0.5)) or (b[1],))[0]   # the heading over its first 12 m
+            ha = math.atan2(pa_[0]-a[0][0], pa_[1]-a[0][1]); hb = math.atan2(pb_[0]-b[0][0], pb_[1]-b[0][1])
+            turn = 180 - abs((math.degrees(ha - hb) + 180) % 360 - 180)   # 0: straight on, 180: back the way it came
+            if 30 <= turn <= 150: pairs.append((es[i], es[j], turn))   # (above 115 an aircraft can't make the corner itself)
+    for ea, eb, turn in pairs:
+        la, lb = plen(away(ea, n)), plen(away(eb, n))
+        r = min(FIL_R*(1 if turn < 100 else 0.7 if turn <= 125 else 0.55), 0.42*la, 0.42*lb)
+        if r < (10 if turn <= 115 else 5): continue   # a sharp turn gets a curve however short its stretches: without one it can't be made
+        for e in (ea, eb): cut[(id(e), n)] = max(cut.get((id(e), n), 0), r)
+        fillets.append((n, ea, eb, r))
+# split each edge at its cut points (one at either end at most), keeping the middle; the corner bits stay only at a junction
+def split(e):
+    pl = epl(e); L = sum(math.dist(pl[i], pl[i+1]) for i in range(len(pl) - 1))
+    da, db = cut.get((id(e), e[0]), 0), cut.get((id(e), e[1]), 0)
+    if da + db > L - 4: return None
+    pts, ids = pl, [e[0], e[1]]; segs = []
+    na = nb = None
+    if da:
+        q, pre, pl = cut_at(pl, da); na = 'f%d' % fid[0]; fid[0] += 1; newn.append([na, r1(q[0]), r1(q[1])]); pos[na] = q
+        segs.append([e[0], na, e[2], [[r1(x) for x in p] for p in pre[1:-1]]])
+    if db:
+        q, mid, post = cut_at(pl, sum(math.dist(pl[i], pl[i+1]) for i in range(len(pl) - 1)) - db); nb = 'f%d' % fid[0]; fid[0] += 1; newn.append([nb, r1(q[0]), r1(q[1])]); pos[nb] = q
+        segs.append([na or e[0], nb, e[2], [[r1(x) for x in p] for p in mid[1:-1]]]); segs.append([nb, e[1], e[2], [[r1(x) for x in p] for p in post[1:-1]]])
+    else: segs.append([na or e[0], e[1], e[2], [[r1(x) for x in p] for p in pl[1:-1]]])
+    return segs, na, nb
+cutn = {}; out_edges = []
+for e in edges:
+    if (id(e), e[0]) in cut or (id(e), e[1]) in cut:
+        r = split(e)
+        if r is None: out_edges.append(e); continue
+        segs, na, nb = r; out_edges.extend(segs)
+        if na: cutn[(id(e), e[0])] = na
+        if nb: cutn[(id(e), e[1])] = nb
+    else: out_edges.append(e)
+nfil = 0
+for n, ea, eb, r in fillets:
+    pa, pb = cutn.get((id(ea), n)), cutn.get((id(eb), n))
+    if not pa or not pb: continue
+    A, B, C = pos[pa], pos[pb], pos[n]
+    curve = [[r1((1-t)**2*A[0] + 2*(1-t)*t*C[0] + t*t*B[0]), r1((1-t)**2*A[1] + 2*(1-t)*t*C[1] + t*t*B[1])] for t in [j/12 for j in range(1, 12)]]
+    tw = ea[2] if ea[2] == eb[2] or eb[2] == 'APRON' else eb[2] if ea[2] == 'APRON' else min(ea[2], eb[2], key=lambda t: (len(t), t))
+    out_edges.append([pa, pb, tw, curve]); nfil += 1
+# a plain bend (two stretches, both cut): the sharp corner goes
+corner_drop = 0
+for n, es in inc.items():
+    if n in keepN or len(es) != 2: continue
+    if all((id(e), n) in cutn for e in es):
+        before = len(out_edges)
+        out_edges = [e for e in out_edges if not ((e[0] == n or e[1] == n) and (e[0] in (cutn[(id(es[0]), n)], cutn[(id(es[1]), n)]) or e[1] in (cutn[(id(es[0]), n)], cutn[(id(es[1]), n)])))]
+        corner_drop += before - len(out_edges)
+edges = out_edges
+used = {x for e in edges for x in e[:2]}
+nodes = [nd for nd in nodes if nd[0] in used or nd[0] in keepN] + [nd for nd in newn if nd[0] in used]
+print('junction fillets', nfil, 'corner stubs dropped', corner_drop)
+# a stub that ends on a runway's pavement (N4's mapped way on along the 10L/28R edge towards the 16 threshold, cut where it
+# runs over the runway) leads nowhere: dropped
+while True:
+    dg = collections.Counter(x for e in edges for x in e[:2]); _p = {n[0]: (n[1], n[2]) for n in nodes + newn}
+    dead = {x for x, c in dg.items() if c == 1 and x[0] not in 'sR' and x not in (keepN - {h[0] for h in holds.values() if abs(h[4]) < 40} - {n for n in keepN if n[0] == 'x'}) and x in _p and on_rwy_pave(_p[x])}
+    if not dead: break
+    edges = [e for e in edges if e[0] not in dead and e[1] not in dead]; print('stub on a runway dropped', sorted(dead))
+used = {x for e in edges for x in e[:2]}
+nodes = [nd for nd in nodes if nd[0] in used or nd[0] in keepN]
+# ── holding point names: one name per stop bar. OSM names a holding position after its taxiway, so a taxiway that crosses
+# a runway (F, G) has one each side, and G meets two runways: where a name is shared the side of the runway it is on
+# goes after it (F West, F East: FW and FE), with a number on the end only if that is still not enough. The variants of
+# one stop bar (the turn each way onto the runway) keep the one name, with ~2, ~3 on the key as before.
+SIDE = {}
+for k, h in holds.items():
+    R = FR[h[2]]; o = h[4]; nx, ny = R['N'][0]*o, R['N'][1]*o
+    SIDE[k] = ('E' if nx > 0 else 'W') if abs(nx) >= abs(ny) else ('N' if ny > 0 else 'S')
+base = {}
+for k, h in holds.items(): base.setdefault(re.sub(r'~\d+$', '', k).rstrip(), set())
+bars = collections.defaultdict(dict)       # ref -> {hold node: [keys]}
+for k, h in holds.items(): bars[re.sub(r'~\d+$', '', k)].setdefault(h[0], []).append(k)
+rename, hside = {}, {}
+taken = set()
+for ref, byn in sorted(bars.items()):
+    if len(byn) == 1:
+        nm = {n: ref for n in byn}
+    else:
+        nm = {}
+        for n, ks in byn.items(): nm[n] = ref + SIDE[ks[0]]
+        cnt = collections.Counter(nm.values())
+        per = collections.Counter(holds[ks[0]][2] for ks in byn.values())
+        for side in [v for v, c in cnt.items() if c > 1]:
+            same = [n for n in byn if nm[n] == side]
+            if len({holds[byn[n][0]][2] for n in same}) == len(same):   # on different runways: the one where the taxiway crosses keeps it, the others take their runway
+                same.sort(key=lambda n: -per[holds[byn[n][0]][2]])
+                for n in same[1:]: nm[n] = ref + FR[holds[byn[n][0]][2]]['lo']
+            else:
+                same.sort(key=lambda n: holds[byn[n][0]][3])
+                for i, n in enumerate(same): nm[n] = side + str(i + 1)
+    for n, ks in byn.items():
+        new = nm[n]
+        while new in taken and new not in [rename.get(x) for x in ks]: new += "'"
+        taken.add(new)
+        if new != ref:
+            rest = new[len(ref):]
+            hside[new] = [ref, {'E': 'east', 'W': 'west', 'N': 'north', 'S': 'south'}[rest[0]] + (' ' + rest[1:] if rest[1:] else '') if rest[0] in 'EWNS' and not rest[0].isdigit() else 'runway ' + rest]
+        for i, k in enumerate(sorted(ks, key=lambda k: (k != ref, int(k.split('~')[1]) if '~' in k else 1))): rename[k] = new if i == 0 else '%s~%d' % (new, i + 1)
+holds = {rename[k]: h for k, h in holds.items()}
+fil = {rename[k]: f for k, f in fil.items()}
+print('holding points', len({re.sub(r'~\d+$', '', k) for k in holds}), 'stop bars; renamed', sorted(hside))
+# ── lead-on/lead-off lines: OpenStreetMap often carries a taxiway straight on across the runway to the far side, so the
+# mapped way from the runway edge to the centreline can be a long diagonal over the runway. Each one is drawn instead as the
+# painted curve: from where the taxiway meets the runway edge, along the taxiway's own heading, sweeping round onto the
+# centreline in the direction it serves (a turn of the taxiway's angle to the runway, no tighter than its distance out).
+# The two-way ones (a taxiway square to the runway) go straight to the centreline.
+def bez(P0, P1, P2, P3, n=10):
+    return [tuple((1-t)**3*P0[i] + 3*(1-t)**2*t*P1[i] + 3*(1-t)*t*t*P2[i] + t**3*P3[i] for i in (0, 1)) for t in [j/n for j in range(n + 1)]]
+nsmooth = 0
+leads = {}   # paint only, where it differs from the path an aircraft takes: a two-way entry's curve each way
+# the variants of one stop bar (each turn onto the runway) leave it by one way to the runway edge, the most direct of them;
+# the lead lines fan out from there
+prim = {}
+for k, h in holds.items():
+    L = sum(math.dist(p, q) for p, q in zip(([(h[3], h[4])] + h[7][::-1])[:-1], ([(h[3], h[4])] + h[7][::-1])[1:])) + math.dist((h[7][0] if h[7] else (h[3], h[4])), fil[k][-1])
+    if h[0] not in prim or L < prim[h[0]][1]: prim[h[0]] = (k, L)
+for k, h in holds.items():
+    p = prim[h[0]][0]
+    if p != k and math.dist(fil[k][-1], fil[p][-1]) < 45:   # a separate way onto the runway (T4's rapid exit, 400 m on) keeps its own
+        d0 = 1 if fil[k][-1][0] > fil[k][0][0] else -1
+        holds[k][1] = holds[p][1]; holds[k][7] = holds[p][7]; E = fil[p][-1]
+        fil[k] = [[E[0] - d0*10, 0.0], E]   # only its direction matters here; the curve is drawn below
+def back_dir(k, E, want=25):
+    """the taxiway's heading onto the runway at E: from a point about 25 m back along its link towards the holding point"""
+    h = holds[k]; path = [E] + list(h[7]) + [(h[3], h[4])]; acc = 0
+    for i in range(1, len(path)):
+        acc += math.dist(path[i-1], path[i])
+        if acc >= want or i == len(path) - 1: q = path[i]; break
+    v = (E[0] - q[0], E[1] - q[1]); L = math.hypot(*v)
+    return (v[0]/L, v[1]/L) if L > 1 else None
+for k, f in list(fil.items()):
+    h = holds[k]; E = f[-1]; C0 = f[0]
+    if abs(E[1]) < 5: continue
+    tv = back_dir(k, E)
+    if not tv or tv[1]*E[1] > -0.2: continue                   # not heading in towards the centreline: leave the mapped line
+    oe = abs(E[1]); t = oe/abs(tv[1]); X = (E[0] + tv[0]*t, 0.0)   # where the taxiway's line meets the centreline
+    two = set(h[5].split(',')) >= {FR[h[2]]['lo'], FR[h[2]]['hi']} and len(h[5].split(',')) == 2
+    d = 1 if E[0] > C0[0] else -1                              # the way along the runway it serves (as the mapped line did)
+    def curve(dd, reach=0):   # the painted fillet for a turn onto the centreline heading dd (None: a turn of more than 135 degrees)
+        if dd*(-tv[0]) < -0.7 or t > 4*oe: return None
+        C = (X[0] - dd*max(t, reach), 0.0)
+        return [[r1((1-u)**2*C[0] + 2*(1-u)*u*X[0] + u*u*E[0]), r1((1-u)**2*C[1] + 2*(1-u)*u*X[1] + u*u*E[1])] for u in [j/16 for j in range(17)]]
+    if h[6]:
+        # at a runway end the only turn is onto the runway, away from the end: lining up there, or a landing that has
+        # rolled to the end turning off (the same curve), never a line out over the end
+        dEnd = -1 if h[6] == FR[h[2]]['lo'] else 1
+        # the line-up turn there sweeps round onto the centreline at least 90 m in (E6 at the 18L end comes in square and
+        # turns through 140 degrees): the threshold is displaced well beyond that wherever the entry is a hook
+        tv60 = back_dir(k, E, 60) or tv
+        c = curve(dEnd, 90 if tv60[0]*dEnd > 0.2 else 0)   # the aircraft travels -dEnd along the runway
+        if c: fil[k] = c; leads[k] = [c]; nsmooth += 1; continue
+    if two or not h[5] or d*(-tv[0]) < -0.7 or t > 4*oe:
+        # both ways (or a turn of more than 135 degrees): the aircraft goes straight on along its line to the centreline;
+        # what is painted is a curve each way it can turn (and the straight line only where it is square to the runway)
+        mc = X[0] if t <= 1.3*oe else E[0]
+        fil[k] = [[r1(mc), 0.0], [r1(E[0]), r1(E[1])]]; nsmooth += 1
+        if two: leads[k] = [c for c in (curve(1), curve(-1)) if c] + ([fil[k]] if abs(tv[0]) < 0.35 else [])
+        continue
+    # one way: the painted fillet, a smooth curve tangent to the taxiway's line at E and to the centreline, as far back
+    # along it from where the two lines meet as E is from there (a quadratic, so it never bulges or doubles back)
+    C = (X[0] - d*t, 0.0)
+    pts = [((1-u)**2*C[0] + 2*(1-u)*u*X[0] + u*u*E[0], (1-u)**2*C[1] + 2*(1-u)*u*X[1] + u*u*E[1]) for u in [j/16 for j in range(17)]]
+    fil[k] = [[r1(p[0]), r1(p[1])] for p in pts]; nsmooth += 1
+print('lead lines drawn as curves', nsmooth, 'of', len(fil))
+# runway crossings: from each holding point the same way to the runway edge as its stop bar's turn-ons use, straight over
+# between the two edge points, the crossing node on the centreline halfway between them
+def W(rid, m, o): R = FR[rid]; a, U, N = R['a'], R['U'], R['N']; return [r1(a[0] + U[0]*m + N[0]*o), r1(a[1] + U[1]*m + N[1]*o)]
+pkey = {h[0]: prim[h[0]][0] for h in holds.values()}
+xs = collections.defaultdict(list)
+for e in edges:
+    if e[0][0] == 'x' and e[1] in pkey: xs[e[0]].append(e)
+npos = {n[0]: n for n in nodes}
+for x, es in xs.items():
+    Es = []
+    for e in es:
+        k = pkey[e[1]]; h = holds[k]; E = fil[k][-1]
+        e[3] = [W(h[2], *E)] + [W(h[2], m, o) for m, o in h[7]]; Es.append((h[2], E[0]))
+    if x in npos and Es: rid = Es[0][0]; mm = sum(m for _, m in Es)/len(Es); p = W(rid, mm, 0); npos[x][1], npos[x][2] = p[0], p[1]
+# where a crossing bends at the runway edge (the taxiways either side are offset: P1 to W3, M1 to W2), it is rounded off
+# so an aircraft sweeps through the turn instead of pivoting on the edge line (two rounds of corner cutting)
+def chaikin(pl, n=2):
+    for _ in range(n):
+        out = [pl[0]]
+        for i in range(len(pl) - 1):
+            a, b = pl[i], pl[i+1]; out += [(0.75*a[0] + 0.25*b[0], 0.75*a[1] + 0.25*b[1]), (0.25*a[0] + 0.75*b[0], 0.25*a[1] + 0.75*b[1])]
+        pl = out[:1] + out[2:-1] + [pl[-1]] if len(pl) > 2 else pl
+        pl = [pl[0]] + pl[1:-1] + [pl[-1]]
+    return pl
+_np = {n[0]: (n[1], n[2]) for n in nodes}
+for x, es in xs.items():
+    for e in es:
+        pl = [_np[x]] + [tuple(q) for q in e[3]] + [_np[e[1]]]
+        if len(pl) > 2: e[3] = [[r1(q[0]), r1(q[1])] for q in chaikin(pl)[1:-1]]
+print('crossings redrawn', len(xs))
+
+
+# ── the runway-end entries (AD 2.13: the full-length take-off positions) and where the AIP allows intersection take-offs
+# from. Every other runway holding point is an exit (or a crossing).
+
+# ── the runway-end entries and the intersection take-off positions with their take-off run available (Jeppesen 10-9A):
+# 10 from B7 (2,000 m), L7 (1,900 m), E (1,480 m); 28 from K (1,900 m); 32 from H2 (2,700 m), H1 (2,300 m);
+# 16 from E3 (3,000 m); 34 from E8/R8 (3,270 m) and E7/R7 (2,570 m)
+# (in the game: B7 is not a mapped stop bar; E's is ES, south of 10/28)
+INTX = {'10': ['L7', 'ES'], '28': ['K'], '16': ['E3'], '34': ['E8']}
+TORA = {('10', 'L7'): 1900, ('10', 'ES'): 1480, ('28', 'K'): 1900, ('16', 'E3'): 3000, ('34', 'E8'): 3270}
+# runway crossings only straight over: the two holding points within 110 m of each other along the runway (the generator
+# also pairs holds diagonally across 10/28, from K to H and B, which no one taxis)
+_hm = {h[0]: h[3] for h in holds.values()}
+_xs = collections.defaultdict(list)
+for e in edges:
+    for a_, b_ in ((e[0], e[1]), (e[1], e[0])):
+        if a_[0] == 'x': _xs[a_].append(b_)
+_bad = {x for x, hs_ in _xs.items() if len(hs_) == 2 and abs(_hm.get(hs_[0], 0) - _hm.get(hs_[1], 0)) > 110}
+edges = [e for e in edges if e[0] not in _bad and e[1] not in _bad]; nodes = [n for n in nodes if n[0] not in _bad]
+print('diagonal crossings dropped', sorted(_bad))
+# the north-side stop bars of the J and K crossings are on B in OpenStreetMap; E5 off its link's name
+REN = {'BN3': 'JN', 'BN4': 'KN', 'E5E1': 'E5'}
+def _ren(k): b, _, t = k.partition('~'); return REN.get(b, b) + ('~' + t if t else '')
+holds = {_ren(k): h for k, h in holds.items()}; fil = {_ren(k): f for k, f in fil.items()}; leads = {_ren(k): v for k, v in leads.items()}
+hside = {REN.get(k, k): v for k, v in hside.items() if k not in REN}
+ends_found = collections.defaultdict(list)
+for k, h in holds.items():
+    if h[6]: ends_found[h[6]].append(k)
+print('runway-end entries', dict(ends_found))
+print('IHPs', ihps)
+# taxiway bridges (OpenStreetMap bridge=yes): A and B over the A4 south of 36C, V over the Hoofdvaart and the Hoofdweg on
+# the way to the Polderbaan (where V and Y cross the A5 the motorway is in a tunnel under them: nothing to draw)
+bridges = [[tname(w['tags'].get('ref')) or '', [[r1(NODE[n][0]), r1(NODE[n][1])] for n in w['nodes']]] for w in ways
+           if w.get('tags', {}).get('aeroway') == 'taxiway' and w.get('tags', {}).get('bridge') not in (None, 'no')]
+print('taxiway bridges', [(b[0], len(b[1])) for b in bridges])
+out = {'runways': runways, 'nodes': nodes, 'edges': edges, 'rnodes': rnodes,
+       'holds': {k: h[:7] + [h[8]] for k, h in holds.items()}, 'hlink': {k: h[7] for k, h in holds.items() if h[7]}, 'fil': fil, 'hs': hs,
+       'gates': gates, 'ihps': ihps, 'aprons': aprons_out, 'buildings': blds, 'hside': hside, 'leads': leads, 'vac': vac,
+       'bridges': bridges, 'intx': INTX, 'tora': {f'{a}|{b}': v for (a, b), v in TORA.items()}}
+HEADER = """// ═════════════════════════ Zurich (LSZH): aerodrome layout ═════════════════════════
+// Generated by tools/lszh_ground.py from OpenStreetMap (runway ends, taxiway centrelines, holding positions, stands, aprons,
+// terminals, hangars) checked against the Jeppesen 10-9 charts. Positions are metres east and north of the ARP
+// (N47 27.48 E008 32.88).
+// runways: pavement ends a (the low-numbered end) and b, length, thresholds in metres from a, elevations (ft), width
+// nodes [id, east, north] (x: on a runway centreline, s: a stand's lead-in), edges [a, b, taxiway, intermediate points],
+// rnodes: runway-edge points on each entry/exit; holds key: [hold node, runway-edge node, runway, m along it, offset,
+// directions that can turn off there, runway end it serves, taxiway]; hlink: the bend between the runway edge and the
+// holding point; fil: centreline to runway-edge fillet in the runway frame; hs: holding positions before a runway;
+// gates: [stand, parking area, stop point [e, n], lead-in node, heading into the stand, the painted lead-in line from the
+// lane (0: none), largest wingspan (m), use]; ihps: [name, node] holding points away from the runways; vac: stands never
+// in use together; intx: intersection take-off points by runway; tora: their take-off run available (m); bridges:
+// [taxiway, centreline] where it crosses a road on a bridge.
+const LSZH_GROUND = """
+with open(OUT, 'w') as fo:
+    fo.write(HEADER)
+    fo.write(json.dumps(out, separators=(',', ':')))
+    fo.write(";\nif (typeof module !== 'undefined') module.exports = LSZH_GROUND;\n")
+print('nodes', len(nodes), 'edges', len(edges), 'holds', len(holds), 'gates', len(gates), 'ihps', len(ihps), 'blds', len(blds))
+for rid in FR:
+    print(rid, sorted([(k, h[3], h[4], h[5], h[6]) for k, h in holds.items() if h[2] == rid], key=lambda x: x[1]))
+

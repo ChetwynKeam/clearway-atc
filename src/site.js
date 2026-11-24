@@ -1,9 +1,9 @@
 // ═════════════════════════ site: routing, overview, training, coach ═════════════════════════
-const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'egnt', 'egaa', 'lsgg', 'yssy', 'eidw', 'omdb', 'egph', 'eham', 'sim', 'training', 'career'];
+const ROUTES = ['home', 'airports', 'lxgb', 'lpma', 'eglc', 'lowi', 'kjfk', 'egkk', 'lemd', 'egcc', 'egll', 'eggd', 'egnt', 'egaa', 'lsgg', 'yssy', 'eidw', 'omdb', 'egph', 'eham', 'lszh', 'sim', 'training', 'career'];
 // One website: SITE_HOST's page (index.html) shows the whole site, with every airport's briefing and the whole Academy.
 // Every other airport's page (SITE, from build.py) only runs its simulator: #sim, #ex/<exercise>, #wx/<preset>, #live, #resume.
 // Anything else there goes to the host page. #embed turns a page into a map renderer for the host (see embedDraw).
-const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd', EGNT: 'egnt', EGAA: 'egaa', LSGG: 'lsgg', YSSY: 'yssy', EIDW: 'eidw', OMDB: 'omdb', EGPH: 'egph', EHAM: 'eham' }, HOME_RT = AP_ROUTE[APT.icao];
+const AP_ROUTE = { LXGB: 'lxgb', LPMA: 'lpma', EGLC: 'eglc', LOWI: 'lowi', KJFK: 'kjfk', EGKK: 'egkk', LEMD: 'lemd', EGCC: 'egcc', EGLL: 'egll', EGGD: 'eggd', EGNT: 'egnt', EGAA: 'egaa', LSGG: 'lsgg', YSSY: 'yssy', EIDW: 'eidw', OMDB: 'omdb', EGPH: 'egph', EHAM: 'eham', LSZH: 'lszh' }, HOME_RT = AP_ROUTE[APT.icao];
 const LIVE_APS = Object.keys(AP_ROUTE);
 // an airport still in development (status 'dev' on the Airports list) shows in the Academy only on its own page
 const apShown = ic => (AIRPORTS_NET.find(a => a.icao === ic) || {}).status !== 'dev' || ic === APT.icao;
@@ -64,7 +64,7 @@ function topClock(){ const d = new Date(); $('topClock').textContent = 'UTC ' + 
 setInterval(topClock, 10000); topClock();
 
 // ── airport network ──
-// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD, EGCC, EGLL, EGGD, EGNT, EGAA, LSGG, YSSY, EIDW, OMDB, EGPH and EHAM are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
+// LXGB, LPMA, EGLC, LOWI, KJFK, EGKK, LEMD, EGCC, EGLL, EGGD, EGNT, EGAA, LSGG, YSSY, EIDW, OMDB, EGPH, EHAM and LSZH are built and open. The rest are the roadmap: real airports and runway designators, no invented performance data.
 // ll: aerodrome reference point [lat, lon], for the pins on the Airports map.
 const AIRPORTS_NET = [
   { icao:'LXGB', ll:[36.151, -5.349], iata:'GIB', name:'Gibraltar', ctry:'Gibraltar (UK)', region:'Europe', rwys:['09/27'], status:'live', pos:['APP','TWR','GND'], diff:4, blurb:'A public road across the runway, the levanter off the Rock, and Spanish restricted airspace at the fence.' },
@@ -82,6 +82,7 @@ const AIRPORTS_NET = [
   { icao:'EHAM', ll:[52.308, 4.764], iata:'AMS', name:'Amsterdam Schiphol', ctry:'Netherlands', region:'Europe', rwys:['18R/36L','18C/36C','18L/36R','06/24','09/27','04/22'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'Six runways: the Polderbaan far to the north-west over the A5 and the Hoofdvaart, the preferential runway system with its peak modes and night configuration, the Dutch noise rules, and a full day of KLM, Transavia and easyJet at the piers and aprons.' },
   { icao:'EGGD', ll:[51.383, -2.719], iata:'BRS', name:'Bristol', ctry:'United Kingdom', region:'UK & Ireland', rwys:['09/27'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:3, blurb:'One runway on a hilltop 600 ft up, with a parallel taxiway and three aprons. Arrivals from the BRI hold over the field, conventional SIDs that stop at 6,000 ft, and hill fog on Broadfield Down.' },
   { icao:'EGNT', ll:[55.038, -1.690], iata:'NCL', name:'Newcastle', ctry:'United Kingdom', region:'UK & Ireland', rwys:['07/25'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:3, blurb:'One runway in the north-east with taxiway Delta along its whole north side, a runway crossing to the south-side aprons, RNAV arrivals to the ETSES hold and every departure released by Newcastle Radar.' },
+  { icao:'LSZH', ll:[47.458, 8.548], iata:'ZRH', name:'Zurich', ctry:'Switzerland', region:'Europe', rwys:['14/32','16/34','10/28'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:5, blurb:'Swiss\u2019s hub: three runways, two converging and one crossing, run by fixed operating concepts (north by day, east in the evening, south in the early morning) because of the German ordinance over the border, RNAV STARs to GIPOL, AMIKI and RILAX, the DEGES, GERSA and VEBIT SIDs, and Dock E out in the middle of the field across runway 28.' },
   { icao:'LSGG', ll:[46.238, 6.109], iata:'GVA', name:'Geneva', ctry:'Switzerland', region:'Europe', rwys:['04/22'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'One long runway between the Jura and the Alps, three round satellites whose stands are taxi-in, taxi-out with apron buses carrying the passengers, RNAV SIDs and STARs over the lake and the bise.' },
   { icao:'YSSY', ll:[-33.946, 151.177], iata:'SYD', name:'Sydney', ctry:'Australia', region:'Oceania', rwys:['07/25','16L/34R','16R/34L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'Three runways on Botany Bay: a long parallel for the heavy jets and a short one for the landings, the crossing 07/25, RNAV SIDs and STARs, and a curfew at 23:00.' },
   { icao:'EGKK', ll:[51.148, -0.19], iata:'LGW', name:'London Gatwick', ctry:'United Kingdom', region:'UK & Ireland', rwys:['08R/26L'], status:'live', isNew: true, pos:['APP','TWR','GND'], diff:4, blurb:'The world’s busiest single runway, in mixed mode: fit every departure into the gaps between arrivals from the TIMBA and WILLO holds. The old 08L/26R is now a taxiway.' },
@@ -597,6 +598,13 @@ const SCEN_TEXT = { LPMA: {
   east: 'An easterly. Land 06 and depart from 36L, with arrivals off ARTIP over the Markermeer.',
   fog: 'Fog over the polders. Low visibility procedures: CAT III approaches, stop bars everywhere and no intersection take-offs.',
   calm: 'High pressure, light and variable. A quiet day to learn the piers, the stands and the long taxi to the Polderbaan.'
+}, LSZH: {
+  north: 'The usual day. The north concept: land 14 from the north over the Rhine, depart 28 to the west, with 16 for the heavies and in the outbound waves. Every arrival crosses 10/28 to reach the docks.',
+  bise: 'Bise, the cold north-easterly. Still the north concept, but the departures go off 10 to the east instead of 28: the left turn round the north of the field for GERSA and VEBIT.',
+  west: 'A westerly gale: 14 has a tailwind, so the east concept by day: land 28 into the wind, depart 32 and 34 to the north.',
+  fog: 'Fog in the Glatt valley. Low visibility procedures: CAT III on 14, localiser intercepts at least 9 NM out, runway vacated only past the holding point.',
+  foehn: 'Föhn: a warm, gusty southerly off the Alps, turbulence on final and a crosswind on 14.',
+  calm: 'High pressure, light and variable: a quiet day to learn the docks, the crossings of 10/28 and the long taxi up E to the 16 end.'
 }, EIDW: {
   west: 'The usual westerly. Land 28L on the south runway, depart from 28R on the North Runway. Arrivals fly the point merge arcs over the Irish Sea: send each one direct to PIZSA or OBINU when the gap is right.',
   east: 'An easterly. Land 10L on the North Runway, depart from 10R. Arrivals come round the west on the IFBAP and OSLEX arcs, departures head out over Dublin Bay.',
@@ -707,6 +715,7 @@ const ENDORSE = {
   EIDW: { name: 'Dublin', ex: ['edep', 'earr', 'emix'], badge: 'collinstown', p: 'Two independent parallel runways and the crossing 16/34, point merge arrivals over the Irish Sea, RNAV SIDs for jets and turboprops, the North Runway\'s hours, hot spots HS1 and HS2, and Ryanair and Aer Lingus at four piers.' },
   EGPH: { name: 'Edinburgh', ex: ['tdep', 'tarr', 'tmix'], p: 'One runway with taxiway Alfa the length of it: the early noise turn onto 042° off 06, Talla, Gosam and Grice SIDs that stop at 6,000 ft, arrivals vectored off the TARTN and STIRA holds onto the ILS, intersection departures from Bravo 1 and Charlie 1 and the HS1 hot spot.' },
   EHAM: { name: 'Amsterdam', ex: ['sdep', 'sarr', 'smix'], p: 'Six runways and the preferential runway system: the Polderbaan and its long taxi over the A5, arrivals from ARTIP, RIVER and SUGOL onto the ILS, intersection take-offs from the AIP list, and KLM, Transavia and easyJet at the piers.' },
+  LSZH: { name: 'Zurich', ex: ['zdep', 'zarr', 'zmix'], p: 'Three runways and the operating concepts: land 14 and depart 28 by day, land 28 in the evening, land 34 in the early morning, the German ordinance, arrivals to GIPOL, AMIKI and RILAX and the crossings of 10/28 to Dock E.' },
   OMDB: { name: 'Dubai', ex: ['ddep', 'darr', 'dmix'], badge: 'garhoud', p: 'Two staggered parallel runways run dependent, one for landing and one for take-off, RNAV STARs whose long downwind legs you cut short, RNAV SIDs off both runways of a direction, and a ground layout of named stop bars you clear the traffic through one by one.' },
   KJFK: { name: 'New York JFK', ex: ['kdep', 'karr', 'kcross'], badge: 'kennedy', p: 'Four runways in two parallel pairs, the Kennedy Five, ILS approaches, runway crossings, calls for release on flow-restricted routes and FAA phraseology.' }
 };
@@ -737,7 +746,7 @@ function renderFigure(){
   renderHub();
   document.querySelectorAll('canvas[data-fig="aerodrome"]').forEach(c => {
     const ap = blockAp(c) || APT.icao;
-    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'YSSY' ? '1.3 / 1' : ap === 'EIDW' ? '1.6 / 1' : ap === 'OMDB' ? '2.4 / 1' : ap === 'EGPH' ? '1.9 / 1' : ap === 'EHAM' ? '0.8 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : ap === 'EGGD' ? '2.6 / 1' : ap === 'EGNT' ? '2.6 / 1' : ap === 'LSGG' ? '2 / 1' : ap === 'EGAA' ? '1.6 / 1' : '2.25 / 1';
+    c.style.aspectRatio = ap === 'LPMA' ? '1.9 / 1' : ap === 'EGLC' ? '3.6 / 1' : ap === 'LOWI' ? '3 / 1' : ap === 'KJFK' ? '1.5 / 1' : ap === 'YSSY' ? '1.3 / 1' : ap === 'EIDW' ? '1.6 / 1' : ap === 'OMDB' ? '2.4 / 1' : ap === 'EGPH' ? '1.9 / 1' : ap === 'EHAM' ? '0.8 / 1' : ap === 'LSZH' ? '0.9 / 1' : ap === 'EGKK' ? '2.4 / 1' : ap === 'LEMD' ? '1.15 / 1' : ap === 'EGCC' ? '1 / 1' : ap === 'EGLL' ? '1.9 / 1' : ap === 'EGGD' ? '2.6 / 1' : ap === 'EGNT' ? '2.6 / 1' : ap === 'LSGG' ? '2 / 1' : ap === 'EGAA' ? '1.6 / 1' : '2.25 / 1';
     if (!c.getBoundingClientRect().width) return;
     if (ap === APT.icao) drawTo(c, 'gnd', { acs: [], proc: false, tweak: APT.figView });   // (APT.figView: the whole aerodrome where the ground view shows only part, Schiphol) else embedDraw(c, ap, 'fig');
   });
