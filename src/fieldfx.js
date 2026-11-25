@@ -1,4 +1,4 @@
-// ═════════════════════════ field effects: the airfield view and ground realism (Bristol, then Zurich) ═════════════════════════
+// ═════════════════════════ field effects: the airfield view and ground realism (Bristol, then Zurich and Copenhagen) ═════════════════════════
 // Built into an airport's page only when its build entry lists it (build.py: fx). Everything here hooks the engine through
 // the typeof-guarded calls in sim.js and ui.js (fxStep, fxTaxiSpd, fxBrake, fxToShort, fxReject, fxFrame, fxDrawField,
 // fxLabelPos, fxAcCol, fxSelLine, fxStrip), so an airport without it is untouched.
@@ -11,7 +11,7 @@
 //      that is too short is refused and the crew asks for the full length.
 //   5. Jet blast: take-off thrust and breakaway thrust leaving a stand blow a cone behind; crews stop short of it, and a
 //      light aircraft caught in it is an incident.
-//   6. Typical weather: a real METAR for this month drawn from six years of reports (eggd-wx.js, lszh-wx.js).
+//   6. Typical weather: a real METAR for this month drawn from six years of reports (eggd-wx.js, lszh-wx.js, ekch-wx.js).
 //   7. Command suggestions: the instructions that make sense next for the flight in the box, one tap to add.
 //   8. Engine sound: every aircraft near the middle of the screen heard where it is, louder at take-off thrust, with
 //      a Doppler shift as it passes (Web Audio, no sound files).
@@ -150,7 +150,7 @@ function fxBrake(){ return (FX.rc || fxRwyCond()).brake; }
 // the runway condition, and the wind: half the headwind, one and a half times the tailwind, 1% per knot each way.
 const FX_TODR = { A319: 1850, A320: 2100, A20N: 1950, A21N: 2250, B738: 2300, B38M: 2450, E190: 2050, E145: 1970, AT76: 1370,
   C56X: 1080, GLF6: 1920, PC12: 790, A332: 2500, A400: 980, DH8D: 1420, CRJ9: 1940,
-  A321: 2350, BCS1: 1600, BCS3: 1900, E195: 2100, E295: 1900, A333: 2770, A343: 3000, A359: 2600, B77W: 3050, B788: 2600, B789: 2800, B763: 2550, A388: 3000, B744: 3100 };
+  A321: 2350, BCS1: 1600, BCS3: 1900, E195: 2100, E295: 1900, A333: 2770, A343: 3000, A359: 2600, B77W: 3050, B788: 2600, B789: 2800, B763: 2550, A388: 3000, B744: 3100, A306: 2400 };
 function fxStageNM(ac){
   const a = AP[APT.icao] || AP.EGGD, b = AP[ac.d]; if (!a || !b) return 600;
   const p1 = a[0]*D2R, p2 = b[0]*D2R, dl = (b[1] - a[1])*D2R;
@@ -290,8 +290,9 @@ function fxRtoStep(ac, dt){
 }
 
 // ── 6. typical weather from real reports ──────────────────
-// the airport's own climatology file: eggd-wx.js (EGGD_WXCLIM) or lszh-wx.js (LSZH_WXCLIM)
-const FX_CLIM = typeof LSZH_WXCLIM !== 'undefined' && APT.icao === 'LSZH' ? LSZH_WXCLIM : typeof EGGD_WXCLIM !== 'undefined' ? EGGD_WXCLIM : null;
+// the airport's own climatology file: eggd-wx.js (EGGD_WXCLIM), lszh-wx.js (LSZH_WXCLIM) or ekch-wx.js (EKCH_WXCLIM)
+const FX_CLIM = typeof LSZH_WXCLIM !== 'undefined' && APT.icao === 'LSZH' ? LSZH_WXCLIM : typeof EKCH_WXCLIM !== 'undefined' && APT.icao === 'EKCH' ? EKCH_WXCLIM
+  : typeof EGGD_WXCLIM !== 'undefined' ? EGGD_WXCLIM : null;
 if (FX_CLIM && typeof WX_PRESETS !== 'undefined') {
   const pick = () => { const L = FX_CLIM.m[new Date().getUTCMonth()] || FX_CLIM.m[0]; return APT.icao + ' ' + L[Math.floor(Math.random()*L.length)]; };
   const mon = new Date().toLocaleString('en-GB', { month: 'long', timeZone: 'UTC' });
@@ -471,6 +472,9 @@ const FX_LIV = {
   QTR: { fin: '#5c0632', eng: '#5c0632' }, ETD: { fin: '#b8924a', eng: '#b8924a' }, THY: { fin: '#c8102e', eng: '#c8ced6' }, UAL: { fin: '#0033a0', eng: '#0033a0', belly: '#0033a0' },
   SIA: { fin: '#1d2b5a', eng: '#1d2b5a', wl: '#f2a900' }, CPA: { fin: '#00646a', eng: '#c8ced6' }, CFG: { fin: '#f7b500', eng: '#f7b500' }, LOT: { fin: '#0a2a6b', eng: '#0a2a6b' },
   AEE: { fin: '#1b3a87', eng: '#1b3a87' }, ITY: { fin: '#0071ce', eng: '#0071ce' }, SAS: { fin: '#00205b', eng: '#9a9a9a' }, FIN: { fin: '#0b1560', eng: '#0b1560' },
+  NSZ: { fin: '#d81939', eng: '#d81939' }, NAX: { fin: '#d81939', eng: '#d81939' }, DNU: { fin: '#1c3f94', eng: '#1c3f94' }, MMD: { fin: '#0a7ab8', eng: '#0a7ab8' },
+  DTR: { fin: '#1c3f94', eng: '#1c3f94' }, FLI: { fin: '#00205b', eng: '#00205b' }, GRL: { fin: '#d50032', eng: '#d50032' }, VKG: { fin: '#00a0e1', eng: '#00a0e1' },
+  BCS: { fin: '#ffcc00', eng: '#ffcc00', belly: '#d40511' }, BLX: { fin: '#70d4f0', eng: '#70d4f0' }, BCY: { fin: '#00205b', eng: '#00205b' },
   ACA: { fin: '#111111', eng: '#111111' }, DAL: { fin: '#c8102e', eng: '#0d2a5c', belly: '#0d2a5c' }, AAL: { fin: '#36495a', eng: '#c8ced6' }, ETH: { fin: '#078930', eng: '#fcd116' }
 };
 const FX_GENERIC = { fin: '#8f99a3', eng: '#d2d6db' };

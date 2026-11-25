@@ -7,7 +7,8 @@ EGCC: dist/egcc/index.html and dist/manchester-atc.html; EGLL: dist/egll/index.h
 EGGD: dist/eggd/index.html and dist/bristol-atc.html; LSGG: dist/lsgg/index.html and dist/geneva-atc.html; YSSY: dist/yssy/index.html and dist/sydney-atc.html;
 EIDW: dist/eidw/index.html and dist/dublin-atc.html; OMDB: dist/omdb/index.html and dist/dubai-atc.html;
 EGPH: dist/egph/index.html and dist/edinburgh-atc.html; EHAM: dist/eham/index.html and dist/amsterdam-atc.html;
-EGNT: dist/egnt/index.html and dist/newcastle-atc.html; LSZH: dist/lszh/index.html and dist/zurich-atc.html."""
+EGNT: dist/egnt/index.html and dist/newcastle-atc.html; LSZH: dist/lszh/index.html and dist/zurich-atc.html;
+EKCH: dist/ekch/index.html and dist/copenhagen-atc.html."""
 import pathlib
 root = pathlib.Path(__file__).parent
 src = root/'src'
@@ -75,6 +76,9 @@ AIRPORTS = {
     'LSZH': dict(title='Zurich · Clearway ATC Simulator', desc='Clearway: air traffic control at Zurich (LSZH): three runways, 14/32, 16/34 and the crossing 10/28, the north, east and south concepts and the German ordinance, RNAV STARs to GIPOL, AMIKI and RILAX, the DEGES, GERSA and VEBIT SIDs, Docks A, B and E with their real stands and a real day of Swiss hub traffic.',
                  geo='airports/lszh.geo.json', profile=['airports/lszh.js', 'airports/lszh-ground.js', 'airports/lszh-engine.js'], site=['airports/lszh-site.js'], fx=['airports/lszh-wx.js', 'fieldfx.js'], artifact='zurich-atc.html', page='lszh/index.html',
                  data=('LSZH', 'airports/lszh.js')),
+    'EKCH': dict(title='Copenhagen · Clearway ATC Simulator', desc='Clearway: air traffic control at Copenhagen Kastrup (EKCH): the staggered parallels 04L/22R and 04R/22L and the crossing 12/30, the preferential runway system with dependent parallel approaches in SAS\'s banks, the ERNOV, MONAK, TESPI, TUDLO and TIDVU arrivals, twelve SID exits off every runway, Piers A to F with their real stands and a real day of SAS hub traffic.',
+                 geo='airports/ekch.geo.json', profile=['airports/ekch.js', 'airports/ekch-ground.js', 'airports/ekch-engine.js'], site=['airports/ekch-site.js'], fx=['airports/ekch-wx.js', 'fieldfx.js'], artifact='copenhagen-atc.html', page='ekch/index.html',
+                 data=('EKCH', 'airports/ekch.js')),
 }
 # One website: the airport whose page is index.html hosts every page of the site (home, airports, every briefing, the
 # whole Academy, Career). The other airports' pages only run their simulator (#sim, #ex/<key>, #wx/<preset>, #live)
