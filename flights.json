@@ -1,56 +1,7 @@
 {
- "updated": "2026-11-24T20:57:21Z",
+ "updated": "2026-11-25T03:54:03Z",
  "source": "gibraltarairport.gi",
  "days": {
-  "2026-11-24": {
-   "utcOffsetMin": 60,
-   "arr": [
-    {
-     "place": "Manchester",
-     "flight": "EZY2267",
-     "sched": "10:45",
-     "status": "Arrived",
-     "expected": "10:37"
-    },
-    {
-     "place": "London Heathrow",
-     "flight": "BA490",
-     "sched": "13:15",
-     "status": "Arrived",
-     "expected": ""
-    },
-    {
-     "place": "London Heathrow",
-     "flight": "BA492",
-     "sched": "18:00",
-     "status": "Arrived",
-     "expected": "18:13"
-    }
-   ],
-   "dep": [
-    {
-     "place": "Manchester",
-     "flight": "EZY2268",
-     "sched": "11:20",
-     "status": "Departed",
-     "expected": "11:18"
-    },
-    {
-     "place": "London Heathrow",
-     "flight": "BA491",
-     "sched": "14:15",
-     "status": "Departed",
-     "expected": "14:02"
-    },
-    {
-     "place": "London Heathrow",
-     "flight": "BA493",
-     "sched": "18:50",
-     "status": "Estimated",
-     "expected": ""
-    }
-   ]
-  },
   "2026-11-25": {
    "utcOffsetMin": 60,
    "arr": [
@@ -120,15 +71,15 @@
    ],
    "dep": [
     {
-     "place": "Manchester",
-     "flight": "EZY2268",
+     "place": "London Gatwick",
+     "flight": "EZY8792",
      "sched": "11:45",
      "status": "Scheduled",
      "expected": ""
     },
     {
-     "place": "London Gatwick",
-     "flight": "EZY8792",
+     "place": "Manchester",
+     "flight": "EZY2268",
      "sched": "11:45",
      "status": "Scheduled",
      "expected": ""
@@ -389,6 +340,41 @@
      "place": "Manchester",
      "flight": "EZY2268",
      "sched": "21:20",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-12-02": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "London Heathrow",
+     "flight": "BA490",
+     "sched": "10:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Heathrow",
+     "flight": "BA492",
+     "sched": "15:30",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "London Heathrow",
+     "flight": "BA491",
+     "sched": "11:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "London Heathrow",
+     "flight": "BA493",
+     "sched": "16:25",
      "status": "Scheduled",
      "expected": ""
     }
