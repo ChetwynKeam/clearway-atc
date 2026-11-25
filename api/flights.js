@@ -26,6 +26,7 @@ const BOARDS = {
   EGNT: { codes: ['ncl'], tz: 'Europe/London', pages: [-1, 0, 1, 2] },
   EHAM: { codes: ['ams'], tz: 'Europe/Amsterdam', pages: [-1, 0, 1, 2, 3, 4] },
   LSZH: { codes: ['zrh'], tz: 'Europe/Zurich', pages: [-1, 0, 1, 2, 3] },
+  EKCH: { codes: ['cph'], tz: 'Europe/Copenhagen', pages: [-1, 0, 1, 2, 3] },
 };
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, OPTIONS' };
 const MON = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
