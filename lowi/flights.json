@@ -1,10 +1,31 @@
 {
- "updated": "2026-11-27T22:57:51Z",
+ "updated": "2026-11-28T04:28:24Z",
  "source": "avionio.com",
  "days": {
   "2026-11-28": {
    "utcOffsetMin": 60,
    "arr": [
+    {
+     "place": "Amsterdam",
+     "flight": "HV6609",
+     "sched": "08:35",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Prague",
+     "flight": "AAO56",
+     "sched": "08:59",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Palma de Mallorca",
+     "flight": "DGJ567",
+     "sched": "12:12",
+     "status": "Scheduled",
+     "expected": ""
+    },
     {
      "place": "Vienna",
      "flight": "OS105",
@@ -15,9 +36,58 @@
    ],
    "dep": [
     {
+     "place": "Amsterdam",
+     "flight": "HV6610",
+     "sched": "09:25",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Munich",
+     "flight": "VJT602",
+     "sched": "10:40",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
      "place": "Vienna",
      "flight": "OS106",
      "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ]
+  },
+  "2026-11-29": {
+   "utcOffsetMin": 60,
+   "arr": [
+    {
+     "place": "Vienna",
+     "flight": "OS105",
+     "sched": "14:00",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS107",
+     "sched": "18:10",
+     "status": "Scheduled",
+     "expected": ""
+    }
+   ],
+   "dep": [
+    {
+     "place": "Vienna",
+     "flight": "OS106",
+     "sched": "15:15",
+     "status": "Scheduled",
+     "expected": ""
+    },
+    {
+     "place": "Vienna",
+     "flight": "OS108",
+     "sched": "18:50",
      "status": "Scheduled",
      "expected": ""
     }
